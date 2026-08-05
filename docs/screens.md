@@ -103,8 +103,12 @@ Exhaustive inventory of all platform user interfaces, grouped by surface, route,
 - **Components**: Alert Feed, Filter Toggles, Click-through Navigation.
 
 ### C12. HR Video Call Console (`/hr/interview/:applicationId`)
-- **Purpose**: Live 1:1 WebRTC video call room for HR to conduct the final human assessment round with candidate.
-- **Components**: Candidate Video Feed, HR Camera Self-Preview, Audio Mic Toggle, Video Camera Toggle, End Call Button, Candidate Resume & AI Score Summary Drawer, Post-Call "Mark as Pass" and "Mark as Fail" Action Buttons.
+- **Purpose**: Live 1:1 human-to-human video call between HR and candidate for final stage gating.
+- **Components**: Video Grid, Evaluation Form (Pass/Fail radio buttons, Notes box), Submit Decision button.
+
+### C13. Sentiment + Stress Analyser (`/hr/sentiment-analysis`)
+- **Purpose**: Audio biomarker inspection, Emotional Journey Graph timeline, and candidate nervousness evaluator.
+- **Components**: Candidate Selector, Biomarkers Engine Cards, Interactive Heatmap Timeline Graph, Synchronized Vocal Transcript with Emotion Badges & HR AI Insights.
 
 ---
 
@@ -177,6 +181,10 @@ Exhaustive inventory of all platform user interfaces, grouped by surface, route,
 ### D16. Prep Detail (`/candidate/prep/:companyId/:roleArchetype`)
 - **Purpose**: Question banks and company culture guides.
 - **Components**: Question Bank Accordion, Culture Tips Panel, "Start Mock" CTA.
+
+### D17. AI Voice Resume Builder (`/candidate/resume-builder`)
+- **Purpose**: 15-minute voice interview session & live ATS resume generation.
+- **Components**: Target Role Configuration Card, Production 2-Sided Voice/Video Interview Room (Glowing AI Voice Orb, Camera Stream, Mic controls), Live Extracted Points Drawer, Formatted ATS Paper Preview, ATS Compliance Score Gauge (96/100), Theme Switcher, PDF Download button.
 
 ---
 

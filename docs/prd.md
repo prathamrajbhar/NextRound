@@ -42,11 +42,13 @@ NextRound operates as a two-sided AI talent marketplace:
 - Registers organization and manages team member access levels.
 - Posts job listings, utilizes AI JD parsing, and sets rubric weightings.
 - Views real-time pipeline Kanban, candidate evaluation detail cards, and interview replays.
+- Accesses **Sentiment + Stress Analyser** (`/hr/sentiment-analysis`) to review audio tone, speech pace, pitch variation, and Emotional Journey Graphs to distinguish genuine skill gaps from interview nervousness.
 - Conducts live 1:1 Human HR Round video calls with candidates after all AI assessments pass threshold, manually marking Pass/Fail.
 - Configures auto-offer toggles, platform availability slots, and custom email templates.
 
 ### B. Job Candidate (Platform User)
 - Builds a platform-wide candidate profile (resume, skills, target compensation, work authorization).
+- Uses **AI Voice Resume Builder** (`/candidate/resume-builder`) to complete a 15-minute voice interview with an AI agent to automatically generate a formatted, ATS-compliant resume with quantified bullet points and PDF download options.
 - Applies to jobs across multiple companies without re-entering application details.
 - Completes automated scheduling, voice interviews, coding sandboxes, aptitude assessments, and final Human HR Round video call.
 - Receives automated decisions, digital offer letters with signature pads, or feedback-rich rejection emails.

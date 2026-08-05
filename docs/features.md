@@ -116,3 +116,21 @@ NextRound (HireOS) provides an end-to-end, multi-modal recruitment platform powe
 
 - Global candidate discovery search with AI keyword matching and filter tags.
 - Passive candidate bookmarking and direct email outreach sequence triggers.
+
+---
+
+## 12. AI Voice Resume Builder (`/candidate/resume-builder`)
+
+- **15-Minute Conversational Voice Interview**: Candidates complete a 15-minute voice interview with an AI agent — no forms or manual writing required.
+- **Production-Grade Call Interface**: 2-sided video/voice call room featuring glowing 3D AI Voice Orb, local WebCam preview, eye-contact telemetry (`Eye Contact: 98%`), and audio spectrum visualizers.
+- **Live Background ATS Extraction**: Real-time extraction of quantified bullet points ("78% latency reduction", "2.5M DAU scale"), skills, and leadership achievements as the candidate speaks.
+- **ATS Resume Studio**: Generates a single-column, ATS-friendly resume with an **ATS Compliance Score** gauge (96/100), template theme options (Classic ATS, Modern Minimal, Executive), copy plain text, and PDF download.
+
+---
+
+## 13. Sentiment + Stress Analyser (`/hr/sentiment-analysis`)
+
+- **Vocal Biomarker Engine**: Real-time analysis of candidate audio tone harmony, speech pace (WPM), pitch micro-variations, and pause patterns during AI voice interviews.
+- **Emotional Journey Graph**: Interactive visual timeline tracking confidence, stress, and hesitation levels across interview topics.
+- **Synchronized HR Transcript**: Line-by-line transcript annotated with real-time emotion markers (`[Confident]`, `[Hesitant]`, `[Stressed]`) and pitch/pace metrics.
+- **Skill Gap vs. Interview Nervousness Evaluator**: AI recommendation callouts distinguishing temporary interview nervousness from genuine technical skill gaps for HR decision-making.
