@@ -21,21 +21,24 @@ import {
   ShieldCheck,
 } from '@/lib/lucide-google-icons';
 import { useTheme } from '@/contexts/ThemeContext';
+import { getOrganizationSettings } from '@/lib/mockData';
 
 export default function HrSettingsPage() {
   const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'notifications' | 'team' | 'emails'>('general');
   const [savedSuccess, setSavedSuccess] = useState(false);
   const { theme, toggleTheme, setTheme } = useTheme();
 
+  const orgSettings = getOrganizationSettings();
+
   // General Settings state
-  const [orgName, setOrgName] = useState('Swiggy Inc.');
-  const [orgDomain, setOrgDomain] = useState('https://swiggy.com');
-  const [supportEmail, setSupportEmail] = useState('careers@swiggy.in');
-  const [timezone, setTimezone] = useState('Asia/Kolkata (GMT+5:30)');
-  const [defaultThreshold, setDefaultThreshold] = useState(80);
-  const [autoInvite, setAutoInvite] = useState(true);
-  const [defaultVoice, setDefaultVoice] = useState('Serena (Warm/Professional)');
-  const [anonymizeResumes, setAnonymizeResumes] = useState(true);
+  const [orgName, setOrgName] = useState(orgSettings.orgName);
+  const [orgDomain, setOrgDomain] = useState(orgSettings.domain);
+  const [supportEmail, setSupportEmail] = useState(orgSettings.supportEmail);
+  const [timezone, setTimezone] = useState(orgSettings.timezone);
+  const [defaultThreshold, setDefaultThreshold] = useState(orgSettings.defaultThreshold);
+  const [autoInvite, setAutoInvite] = useState(orgSettings.autoOfferEnabled);
+  const [defaultVoice, setDefaultVoice] = useState(orgSettings.defaultVoice);
+  const [anonymizeResumes, setAnonymizeResumes] = useState(orgSettings.anonymizeResumes);
 
   // Appearance & Theme State
   const [brandColor, setBrandColor] = useState('orange');
@@ -300,7 +303,7 @@ export default function HrSettingsPage() {
                     </label>
                     <select
                       value={defaultVoice}
-                      onChange={(e) => setDefaultVoice(e.target.value)}
+                      onChange={(e) => setDefaultVoice(e.target.value as any)}
                       className="w-full p-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none cursor-pointer"
                     >
                       <option value="Serena (Warm/Professional)">Serena (Warm &amp; Professional)</option>

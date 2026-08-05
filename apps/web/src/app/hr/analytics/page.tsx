@@ -17,32 +17,21 @@ import {
   ShieldCheck,
   Sparkles,
 } from '@/lib/lucide-google-icons';
-import { mockJobs } from '@/lib/mockData';
+import { getStoredJobs, getHRAnalytics } from '@/lib/mockData';
 
 export default function HrAnalyticsDashboard() {
   const [timeframe, setTimeframe] = useState<'30d' | '90d' | 'ytd'>('30d');
   const [department, setDepartment] = useState<string>('all');
   const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
 
+  const analyticsData = getHRAnalytics();
+  const mockJobs = getStoredJobs();
+
   // Simple funnel steps
-  const funnelSteps = [
-    { name: 'Total Applicants', count: 142, pct: 100 },
-    { name: 'Passed Resume Screen', count: 98, pct: 69 },
-    { name: 'Passed MCQ & Coding Test', count: 54, pct: 38 },
-    { name: 'Completed AI Voice Interview', count: 28, pct: 20 },
-    { name: 'Offers Sent', count: 18, pct: 13 },
-  ];
+  const funnelSteps = analyticsData.funnel.map(f => ({ name: f.stage, count: f.count, pct: f.pct }));
 
   // Monthly candidate numbers
-  const trendData = [
-    { month: 'Jan', count: 32, hires: 4 },
-    { month: 'Feb', count: 48, hires: 6 },
-    { month: 'Mar', count: 42, hires: 5 },
-    { month: 'Apr', count: 74, hires: 9 },
-    { month: 'May', count: 62, hires: 7 },
-    { month: 'Jun', count: 88, hires: 12 },
-    { month: 'Jul', count: 104, hires: 15 },
-  ];
+  const trendData = analyticsData.monthlyTrends.map(t => ({ month: t.month, count: t.applicants, hires: t.hires }));
 
   const getSvgCoordinates = () => {
     const width = 420;

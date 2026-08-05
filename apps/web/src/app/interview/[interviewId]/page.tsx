@@ -2,7 +2,7 @@
 
 import React, { use } from 'react';
 import { useRouter } from 'next/navigation';
-import { mockApplications } from '@/lib/mockData';
+import { getApplicationById, allMockApplications } from '@/lib/mockData';
 import { useInterviewSession } from '@/hooks/useInterviewSession';
 import InterviewCheckScreen from '@/components/interview/InterviewCheckScreen';
 import InterviewActiveConsole from '@/components/interview/InterviewActiveConsole';
@@ -10,7 +10,7 @@ import InterviewActiveConsole from '@/components/interview/InterviewActiveConsol
 export default function LiveInterviewRoom({ params }: { params: Promise<{ interviewId: string }> }) {
   const router = useRouter();
   const { interviewId } = use(params);
-  const app = mockApplications.find((a) => a.id === interviewId) || mockApplications[0];
+  const app = getApplicationById(interviewId) || allMockApplications[0];
 
   const {
     stage,

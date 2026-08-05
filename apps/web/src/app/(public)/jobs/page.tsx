@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import PublicNavbar from '@/components/PublicNavbar';
 import PublicFooter from '@/components/PublicFooter';
-import { mockJobs, mockApplications } from '@/lib/mockData';
+import { getStoredJobs, allMockApplications, Job } from '@/lib/mockData';
 import { JobCard } from '@/components/ui';
 import { Search, MapPin, DollarSign, Briefcase, Filter } from 'lucide-react';
 
@@ -12,9 +12,14 @@ export default function JobsPage() {
   const [search, setSearch] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedExperience, setSelectedExperience] = useState('All');
+  const [jobs, setJobs] = useState<Job[]>([]);
+
+  useEffect(() => {
+    setJobs(getStoredJobs());
+  }, []);
 
   // Filter jobs based on criteria
-  const filteredJobs = mockJobs.filter((job) => {
+  const filteredJobs = jobs.filter((job) => {
     const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase()) || 
                           job.orgName.toLowerCase().includes(search.toLowerCase()) ||
                           job.description.toLowerCase().includes(search.toLowerCase());
@@ -92,7 +97,7 @@ export default function JobsPage() {
         {filteredJobs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredJobs.map((job) => {
-              const hasApplied = mockApplications.some((a) => a.jobId === job.id);
+              const hasApplied = allMockApplications.some((a) => a.jobId === job.id);
               const matchPercent = job.id === 'job-101' ? 98 : job.id === 'job-102' ? 89 : 74;
 
               return (

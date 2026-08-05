@@ -2,11 +2,11 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { mockApplications } from '@/lib/mockData';
+import { getCandidateApplications } from '@/lib/mockData';
 import { Compass, Briefcase, ChevronRight } from '@/lib/lucide-google-icons';
 
 export default function CandidateApplications() {
-  const janeApps = mockApplications.filter((app) => app.candidateEmail === 'ananya.iyer@gmail.com');
+  const janeApps = getCandidateApplications('ananya.iyer@gmail.com');
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">

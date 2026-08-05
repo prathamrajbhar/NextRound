@@ -2,17 +2,16 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { mockApplications, mockJobs } from '@/lib/mockData';
+import { getCandidateApplications, getStoredJobs, getMockSessionFeedback } from '@/lib/mockData';
 import { JobCard } from '@/components/ui';
 import { Briefcase, Calendar, ArrowRight, Mic, Award } from '@/lib/lucide-google-icons';
 
 export default function CandidateDashboard() {
-  // Ananya Iyer applications:
-  const janeApps = mockApplications.filter((app) => app.candidateEmail === 'ananya.iyer@gmail.com');
+  const janeApps = getCandidateApplications('ananya.iyer@gmail.com');
+  const mockJobs = getStoredJobs();
+  const latestMockFeedback = getMockSessionFeedback('mock-session-1');
 
   const scheduledInterviews = janeApps.filter((app) => app.status === 'interview_scheduled');
-
-  // Recommendations: jobs that are not Swiggy (where Ananya already applied)
   const recommendations = mockJobs.filter((job) => job.orgId !== 'org-swiggy').slice(0, 2);
 
   return (
@@ -61,7 +60,7 @@ export default function CandidateDashboard() {
             <Award className="h-5 w-5" />
           </div>
           <div>
-            <span className="block text-xl font-extrabold text-slate-800 dark:text-slate-100">85%</span>
+            <span className="block text-xl font-extrabold text-slate-800 dark:text-slate-100">{latestMockFeedback?.overallScore || 85}%</span>
             <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase">Latest Mock Score</span>
           </div>
         </div>

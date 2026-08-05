@@ -1,15 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { mockJobs } from '@/lib/mockData';
+import { getStoredJobs, Job } from '@/lib/mockData';
 import { Plus, Search, ChevronRight, Briefcase } from '@/lib/lucide-google-icons';
 
 export default function HrJobsList() {
   const [filter, setFilter] = useState<'all' | 'active' | 'draft' | 'closed'>('all');
   const [search, setSearch] = useState('');
+  const [jobs, setJobs] = useState<Job[]>([]);
 
-  const filteredJobs = mockJobs.filter((job) => {
+  useEffect(() => {
+    setJobs(getStoredJobs());
+  }, []);
+
+  const filteredJobs = jobs.filter((job) => {
     const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = filter === 'all' || job.status === filter;
     return matchesSearch && matchesFilter;

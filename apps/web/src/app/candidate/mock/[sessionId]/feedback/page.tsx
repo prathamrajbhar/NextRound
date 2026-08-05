@@ -2,7 +2,7 @@
 
 import React, { use, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { mockSessions } from '@/lib/mockData';
+import { getMockSessionFeedback } from '@/lib/mockData';
 import {
   CheckCircle2,
   ChevronRight,
@@ -22,60 +22,30 @@ import {
 } from '@/lib/lucide-google-icons';
 import { CompanyLogo } from '@/components/ui';
 
-const defaultTranscriptItems = [
-  {
-    question: 'How do you handle virtualization and performance optimization for long scroll lists in high-throughput applications?',
-    answer: 'I implement windowing libraries like react-window to render only visible items within the viewport. Additionally, I memoize item row components using React.memo and compute dynamic height offsets using binary search indices to maintain 60fps scrolling.',
-    feedback: 'Excellent explanation of windowing techniques and memory optimization. Good mention of React.memo and viewport boundaries.',
-  },
-  {
-    question: 'What strategies do you use for managing state isolation in micro-frontend architectures?',
-    answer: 'I enforce loose coupling by keeping micro-frontend state scoped locally within module boundaries and communicating across boundaries via lightweight custom event buses or RXJS subjects.',
-    feedback: 'Clear understanding of event-driven communication between isolated modules.',
-  },
-];
-
-const defaultStrengths = [
-  'Strong algorithmic reasoning and Big-O complexity analysis.',
-  'Clear verbal articulation of state isolation and React rendering performance.',
-  'Excellent gaze focus and camera engagement throughout the session.',
-];
-
-const defaultGrowthAreas = [
-  'Include explicit error validation paths in system edge-case handling.',
-  'Provide more quantitative metrics when describing system scale benchmarks.',
-];
-
 export default function MockFeedbackPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = use(params);
-  const defaultSession = mockSessions.find((s) => s.id === sessionId) || mockSessions[0];
-  const [session, setSession] = useState(defaultSession);
+  const feedbackData = getMockSessionFeedback(sessionId);
 
-  useEffect(() => {
-    const defaultSessionObj = mockSessions.find((s) => s.id === sessionId) || mockSessions[0];
-    const localData = localStorage.getItem(`mockSession_${sessionId}`);
-    if (localData) {
-      try {
-        const parsed = JSON.parse(localData);
-        const nextSession = {
-          id: sessionId,
-          targetCompany: defaultSessionObj.targetCompany,
-          targetRole: defaultSessionObj.targetRole,
-          difficulty: defaultSessionObj.difficulty,
-          rubric: parsed.rubric || defaultSessionObj.rubric,
-          score: parsed.score || defaultSessionObj.score,
-          date: defaultSessionObj.date,
-          feedback: parsed.feedback || defaultSessionObj.feedback,
-          transcript: parsed.transcript && parsed.transcript.length > 0 ? parsed.transcript : defaultTranscriptItems,
-        };
-        setTimeout(() => setSession(nextSession), 0);
-      } catch {
-        setTimeout(() => setSession(defaultSessionObj), 0);
-      }
-    } else {
-      setTimeout(() => setSession({ ...defaultSessionObj, transcript: defaultTranscriptItems }), 0);
-    }
-  }, [sessionId]);
+  const [session, setSession] = useState({
+    id: sessionId,
+    targetCompany: feedbackData?.targetRole.split(' ')[0] || 'Swiggy',
+    targetRole: feedbackData?.targetRole || 'Senior Full Stack Engineer',
+    difficulty: 'senior',
+    score: feedbackData?.overallScore || 84,
+    feedback: feedbackData?.detailedBreakdown[0]?.feedback || 'Demonstrated deep familiarity with architecture.',
+    rubric: {
+      technical: feedbackData?.metrics['Technical Depth'] || 88,
+      communication: feedbackData?.metrics['Communication & Tone'] || 85,
+      cultureFit: feedbackData?.metrics['System Architecture'] || 80,
+    },
+    strengths: feedbackData?.keyStrengths || [],
+    growthAreas: feedbackData?.areasToImprove || [],
+    transcript: feedbackData?.transcriptHighlights.map(t => ({
+      question: t.text,
+      answer: t.note,
+      feedback: `Speaker: ${t.speaker} (${t.timestamp})`
+    })) || []
+  });
 
   const performance =
     session.score >= 85
@@ -84,7 +54,13 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
       ? { text: 'Strong Match', bg: 'bg-brand-50 dark:bg-orange-950/60 text-brand-700 dark:text-orange-300 border-brand-200 dark:border-orange-900/60' }
       : { text: 'Needs Calibration', bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/60' };
 
-  const transcript = session.transcript && session.transcript.length > 0 ? session.transcript : defaultTranscriptItems;
+  const transcript = session.transcript && session.transcript.length > 0 ? session.transcript : [
+    {
+      question: 'How do you handle virtualization and performance optimization for long scroll lists in high-throughput applications?',
+      answer: 'I implement windowing libraries like react-window to render only visible items within the viewport. Additionally, I memoize item row components using React.memo.',
+      feedback: 'Excellent explanation of windowing techniques and memory optimization.',
+    }
+  ];
 
   return (
     <div className="w-full space-y-6 pb-12 animate-in fade-in duration-300">
@@ -165,7 +141,11 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Key Strengths
                 </div>
                 <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                  {defaultStrengths.map((s, idx) => (
+                  {(session.strengths.length > 0 ? session.strengths : [
+                    'Strong algorithmic reasoning and Big-O complexity analysis.',
+                    'Clear verbal articulation of state isolation and React rendering performance.',
+                    'Excellent gaze focus and camera engagement throughout the session.'
+                  ]).map((s, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></span>
                       <span>{s}</span>
@@ -179,7 +159,10 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
                   <Target className="h-4 w-4 text-amber-500" /> Focus Areas for Growth
                 </div>
                 <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                  {defaultGrowthAreas.map((g, idx) => (
+                  {(session.growthAreas.length > 0 ? session.growthAreas : [
+                    'Include explicit error validation paths in system edge-case handling.',
+                    'Provide more quantitative metrics when describing system scale benchmarks.'
+                  ]).map((g, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0"></span>
                       <span>{g}</span>
@@ -239,7 +222,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
             </div>
 
             <div className="space-y-6">
-              {transcript.map((item, idx) => (
+              {transcript.map((item: { question: string; answer: string; feedback?: string }, idx: number) => (
                 <div key={idx} className="space-y-3 pb-5 border-b border-slate-200/60 dark:border-slate-800/60 last:border-none last:pb-0">
                   <div className="flex items-center gap-2">
                     <span className="px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-orange-950/60 border border-brand-200/60 dark:border-orange-900/60 text-[10px] font-extrabold text-brand-700 dark:text-orange-300 uppercase">

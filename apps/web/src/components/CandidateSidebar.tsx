@@ -9,6 +9,7 @@ import {
   Compass,
   Briefcase,
   Mic,
+  FileText,
   User,
   Settings,
   LogOut
@@ -35,6 +36,7 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
       title: 'Prep',
       items: [
         { name: 'Mock Interview', path: '/candidate/mock/new', icon: Mic },
+        { name: 'AI Resume Builder', path: '/candidate/resume-builder', icon: FileText },
       ],
     },
     {
