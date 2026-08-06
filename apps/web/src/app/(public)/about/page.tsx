@@ -6,16 +6,10 @@ import PublicNavbar from '@/components/PublicNavbar';
 import PublicFooter from '@/components/PublicFooter';
 import {
   Target,
-  Layers,
-  Scale,
   Sparkles,
   Zap,
   ShieldCheck,
-  CheckCircle2,
-  Clock,
   Users,
-  Award,
-  ArrowRight,
   Briefcase,
 } from '@/lib/lucide-google-icons';
 

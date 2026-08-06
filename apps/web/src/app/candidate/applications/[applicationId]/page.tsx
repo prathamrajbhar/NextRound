@@ -11,28 +11,21 @@ import {
   mockOnboarding,
   mockJobs,
 } from '@/lib/mockData';
-import { CompanyLogo } from '@/components/ui';
 import {
   ChevronRight,
   Calendar,
   Video,
-  FileText,
-  CheckCircle2,
-  ArrowRight,
   Gift,
   ClipboardCheck,
   Camera,
   Code,
   UserPlus,
-  Check,
-  Building2,
-  Award,
   Sparkles,
-  ShieldCheck,
-  Clock,
-  Briefcase,
-  Layers,
+  ArrowRight,
 } from '@/lib/lucide-google-icons';
+import { ApplicationHeaderBanner } from './_components/ApplicationHeaderBanner';
+import { StagePipelineTimeline } from './_components/StagePipelineTimeline';
+import { CandidateScorecard } from './_components/CandidateScorecard';
 
 export default function CandidateApplicationDetailPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
@@ -159,178 +152,17 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       </div>
 
       {/* Header Banner Card */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/60 dark:border-slate-800 bg-gradient-to-br from-white/70 via-white/50 to-slate-50/50 dark:from-slate-900/80 dark:via-slate-900/60 dark:to-slate-950/80 p-6 md:p-8 shadow-md backdrop-blur-md glass-panel flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="flex items-center gap-4 min-w-0">
-          {/* Company Logo Component */}
-          <CompanyLogo name={app.orgName} logoUrl={job?.orgLogo} size="xl" className="shadow-md flex-shrink-0" />
-
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">
-                Application Tracking
-              </span>
-              <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3" /> {matchPercent}% AI Qualification Score
-              </span>
-            </div>
-
-            <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight mt-1 font-display leading-tight">
-              {app.jobTitle}
-            </h1>
-
-            <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-600 dark:text-slate-400">
-              <span className="font-bold text-brand-600 dark:text-orange-400 flex items-center gap-1">
-                {app.orgName}
-                <ShieldCheck className="h-3.5 w-3.5 text-blue-500 fill-blue-500/10" />
-              </span>
-              <span className="text-slate-300 dark:text-slate-700">•</span>
-              <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                <Clock className="h-3.5 w-3.5" /> Applied on {app.appliedDate}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Status Pill Badge */}
-        <div className="flex items-center gap-3 flex-shrink-0 self-start md:self-auto">
-          <span
-            className={`text-xs font-extrabold px-4 py-1.5 rounded-full border uppercase tracking-wider shadow-2xs ${
-              app.status === 'decided'
-                ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-                : app.status === 'interview_scheduled'
-                ? 'bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
-                : 'bg-brand-50 dark:bg-orange-950/80 text-brand-700 dark:text-orange-300 border-brand-200 dark:border-orange-800'
-            }`}
-          >
-            {app.status.replace('_', ' ')}
-          </span>
-        </div>
-      </div>
+      <ApplicationHeaderBanner app={app} jobLogo={job?.orgLogo} matchPercent={matchPercent} />
 
       {/* Main Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column (2 Cols): Stage Pipeline & AI Scorecard */}
         <div className="lg:col-span-2 space-y-8">
           {/* Stage Pipeline Timeline Card */}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 p-6 md:p-8 shadow-sm backdrop-blur-md glass-panel space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-4">
-              <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
-                <Layers className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
-                Stage Pipeline
-              </h2>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                Stage {stages.filter((s) => s.done).length} of {stages.length} Completed
-              </span>
-            </div>
-
-            <div className="space-y-8 relative before:absolute before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200/80 dark:before:bg-slate-800">
-              {stages.map((st, idx) => (
-                <div key={idx} className="flex items-start gap-4 relative z-10">
-                  <div
-                    className={`h-8 w-8 rounded-full border-2 flex items-center justify-center font-extrabold text-xs shadow-2xs transition-all flex-shrink-0 ${
-                      st.done
-                        ? 'bg-emerald-500 border-emerald-600 dark:bg-emerald-600 dark:border-emerald-500 text-white'
-                        : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-400 dark:text-slate-500'
-                    }`}
-                  >
-                    {st.done ? <Check className="h-4 w-4 stroke-[3]" /> : idx + 1}
-                  </div>
-
-                  <div className="min-w-0 flex-1 pt-0.5">
-                    <div className="flex items-center justify-between gap-2">
-                      <h4
-                        className={`text-sm font-extrabold font-display ${
-                          st.done ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500'
-                        }`}
-                      >
-                        {st.name}
-                      </h4>
-                      {st.done && (
-                        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
-                          {st.date}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-normal leading-relaxed">
-                      {st.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <StagePipelineTimeline stages={stages} />
 
           {/* AI Scorecard Breakdown (if scores exist) */}
-          {app.scores && (
-            <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 p-6 md:p-8 shadow-sm backdrop-blur-md glass-panel space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-4">
-                <div className="flex items-center gap-2">
-                  <Award className="h-5 w-5 text-indigo-500" />
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 font-display">
-                    AI Evaluation Scorecard
-                  </h3>
-                </div>
-                <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-900/60">
-                  Overall Composite: {app.scores.composite}%
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-                  <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-slate-700 dark:text-slate-300">Technical Qualification</span>
-                    <span className="text-brand-600 dark:text-orange-400">{app.scores.technical}%</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-brand-500 dark:bg-orange-500"
-                      style={{ width: `${app.scores.technical}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-                  <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-slate-700 dark:text-slate-300">Communication & Articulation</span>
-                    <span className="text-purple-600 dark:text-purple-400">{app.scores.communication}%</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-purple-500 dark:bg-purple-400"
-                      style={{ width: `${app.scores.communication}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-                  <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-slate-700 dark:text-slate-300">Problem Solving & Logic</span>
-                    <span className="text-pink-600 dark:text-pink-400">{app.scores.problemSolving}%</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-pink-500 dark:bg-pink-400"
-                      style={{ width: `${app.scores.problemSolving}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-                  <div className="flex justify-between items-center text-xs font-bold">
-                    <span className="text-slate-700 dark:text-slate-300">Experience Alignment</span>
-                    <span className="text-emerald-600 dark:text-emerald-400">{app.scores.experience}%</span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-emerald-500 dark:bg-emerald-400"
-                      style={{ width: `${app.scores.experience}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {app.scores && <CandidateScorecard scores={app.scores} />}
         </div>
 
         {/* Right Column: Decision Action Panel & Next Steps */}
@@ -457,7 +289,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
               <h3 className="text-xs font-display">Practice Before Your Interview</h3>
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-              Prepare using interactive voice interview models tailored for {app.orgName}'s evaluation criteria.
+              Prepare using interactive voice interview models tailored for {app.orgName}&apos;s evaluation criteria.
             </p>
             <Link
               href={`/candidate/mock/new?company=${encodeURIComponent(app.orgName)}&role=${encodeURIComponent(app.jobTitle)}`}
@@ -472,3 +304,4 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
     </div>
   );
 }
+

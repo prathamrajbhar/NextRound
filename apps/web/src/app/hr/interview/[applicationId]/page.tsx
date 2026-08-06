@@ -14,32 +14,25 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
-  ShieldCheck,
   FileText,
   User,
-  Building2,
   Award,
   ArrowLeft,
-  MessageSquare,
-  Sparkles,
 } from '@/lib/lucide-google-icons';
 
 export default function HrVideoCallConsole({ params }: { params: Promise<{ applicationId: string }> }) {
   const router = useRouter();
   const { applicationId } = use(params);
 
-  const [app, setApp] = useState<Application | null>(null);
+  const [app] = useState<Application>(
+    () => mockApplications.find((a) => a.id === applicationId) || mockApplications[0]
+  );
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
   const [callDuration, setCallDuration] = useState(0);
   const [callEnded, setCallEnded] = useState(false);
   const [selectedResult, setSelectedResult] = useState<'pass' | 'fail' | null>(null);
   const [notes, setNotes] = useState('');
-
-  useEffect(() => {
-    const foundApp = mockApplications.find((a) => a.id === applicationId) || mockApplications[0];
-    setApp(foundApp);
-  }, [applicationId]);
 
   // Call timer effect
   useEffect(() => {

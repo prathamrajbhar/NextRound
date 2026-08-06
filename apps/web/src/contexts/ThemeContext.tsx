@@ -17,19 +17,21 @@ const ThemeContext = createContext<ThemeContextValue>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark');
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') === 'light' ? 'light' : 'dark';
+    }
+    return 'dark';
+  });
 
   useEffect(() => {
     const root = document.documentElement;
-    const storedTheme = localStorage.getItem('theme');
-    if (storedTheme === 'light') {
-      root.classList.remove('dark');
-      setThemeState('light');
-    } else {
+    if (theme === 'dark') {
       root.classList.add('dark');
-      setThemeState('dark');
+    } else {
+      root.classList.remove('dark');
     }
-  }, []);
+  }, [theme]);
 
   const applyTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
@@ -41,7 +43,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
     try {
       localStorage.setItem('theme', newTheme);
-    } catch (e) {
+    } catch {
       // Handle private browsing quota errors gracefully
     }
   };

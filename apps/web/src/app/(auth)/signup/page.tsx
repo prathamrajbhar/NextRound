@@ -11,7 +11,6 @@ import {
   Lock,
   UserPlus,
   ArrowRight,
-  Sparkles,
   CheckCircle2,
 } from '@/lib/lucide-google-icons';
 
@@ -125,11 +124,10 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setRole('candidate')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-                  role === 'candidate'
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${role === 'candidate'
                     ? 'bg-orange-600 text-white shadow-md'
                     : 'text-slate-300 hover:text-white'
-                }`}
+                  }`}
               >
                 <User className="h-3.5 w-3.5" />
                 <span>I&apos;m a Candidate</span>
@@ -138,11 +136,10 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setRole('hr')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-                  role === 'hr'
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${role === 'hr'
                     ? 'bg-orange-600 text-white shadow-md'
                     : 'text-slate-300 hover:text-white'
-                }`}
+                  }`}
               >
                 <Building className="h-3.5 w-3.5" />
                 <span>I&apos;m an Employer</span>

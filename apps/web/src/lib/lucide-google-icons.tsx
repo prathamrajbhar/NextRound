@@ -204,7 +204,13 @@ export const Wifi = createMaterialIcon('wifi');
 export const X = createMaterialIcon('close');
 export const XCircle = createMaterialIcon('cancel');
 export const Zap = createMaterialIcon('bolt');
+export const IndianRupee = createMaterialIcon('currency_rupee');
+export const PenTool = createMaterialIcon('draw');
+export const Printer = createMaterialIcon('print');
+export const FileEdit = createMaterialIcon('edit_note');
+export const CheckCheck = createMaterialIcon('done_all');
 export const Bold = createMaterialIcon('format_bold');
+
 export const Italic = createMaterialIcon('format_italic');
 export const List = createMaterialIcon('format_list_bulleted');
 export const Heading = createMaterialIcon('title');
@@ -213,3 +219,4 @@ export const AudioLines = createMaterialIcon('graphic_eq');
 export const ChevronLeft = createMaterialIcon('chevron_left');
 export const Sun = createMaterialIcon('light_mode');
 export const Moon = createMaterialIcon('dark_mode');
+

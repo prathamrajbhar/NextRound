@@ -10,9 +10,6 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
-  Zap,
-  ShieldCheck,
-  Building2,
   ArrowRight,
 } from '@/lib/lucide-google-icons';
 

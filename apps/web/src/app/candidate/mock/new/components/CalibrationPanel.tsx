@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Activity, VideoOff, Mic, MicOff, Video, CheckCircle2, ShieldCheck } from '@/lib/lucide-google-icons';
-import { getCompanyCultureNotes, getRubricWeights } from '@/lib/mockSetupHelpers';
+import { getCompanyCultureNotes } from '@/lib/mockSetupHelpers';
 import { CompanyLogo } from '@/components/ui';
 
 export type AssessmentTrack = 'aptitude' | 'technical' | 'coding' | 'comprehensive';
@@ -28,7 +28,6 @@ const trackWeightMap: Record<AssessmentTrack, { primaryName: string; primaryVal:
 
 export default function CalibrationPanel({
   company,
-  role,
   track = 'technical',
   micActive,
   camActive,

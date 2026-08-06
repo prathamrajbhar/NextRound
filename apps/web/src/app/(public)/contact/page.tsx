@@ -6,25 +6,21 @@ import PublicFooter from '@/components/PublicFooter';
 import {
   Mail,
   MapPin,
-  Clock,
   Send,
   MessageSquare,
-  Sparkles,
-  CheckCircle2,
-  Calendar,
-  Zap,
   ChevronDown,
   ChevronUp,
   HelpCircle,
+  Sparkles,
+  CheckCircle2,
+  Calendar,
   Building2,
-  ArrowRight,
-  Bot,
 } from '@/lib/lucide-google-icons';
 
 export default function ContactPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [subject, setSubject] = useState('Enterprise Sales & Demo');
+  const [subject] = useState('Enterprise Sales & Demo');
   const [message, setMessage] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);

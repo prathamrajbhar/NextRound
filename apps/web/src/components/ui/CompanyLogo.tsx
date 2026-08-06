@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/cn';
-import { Building2 } from '@/lib/lucide-google-icons';
 
 interface CompanyLogoProps {
   name: string;

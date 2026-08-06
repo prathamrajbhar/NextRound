@@ -8,34 +8,26 @@ import { mockApplications, Application } from '@/lib/mockData';
 import {
   Mic,
   MicOff,
-  Video,
   VideoOff,
   PhoneOff,
   CheckCircle2,
   Clock,
-  ShieldCheck,
-  Building2,
   ArrowLeft,
   Video as VideoIcon,
-  Sparkles,
   UserCheck,
-  AlertCircle,
 } from '@/lib/lucide-google-icons';
 
 export default function CandidateHrRoundRoom({ params }: { params: Promise<{ applicationId: string }> }) {
   const router = useRouter();
   const { applicationId } = use(params);
 
-  const [app, setApp] = useState<Application | null>(null);
+  const [app] = useState<Application>(
+    () => mockApplications.find((a) => a.id === applicationId) || mockApplications[0]
+  );
   const [joined, setJoined] = useState(false);
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
   const [callDuration, setCallDuration] = useState(0);
-
-  useEffect(() => {
-    const foundApp = mockApplications.find((a) => a.id === applicationId) || mockApplications[0];
-    setApp(foundApp);
-  }, [applicationId]);
 
   // Call timer effect when joined
   useEffect(() => {

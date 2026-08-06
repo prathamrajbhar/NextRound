@@ -3,21 +3,17 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import {
-  BarChart3,
   TrendingUp,
-  Scale,
-  Clock,
-  DollarSign,
   Download,
-  ArrowUpRight,
-  CheckCircle2,
   AlertCircle,
   Users,
-  Award,
-  ShieldCheck,
   Sparkles,
+  ArrowUpRight,
+  CheckCircle2,
 } from '@/lib/lucide-google-icons';
 import { getStoredJobs, getHRAnalytics } from '@/lib/mockData';
+import { AnalyticsKpiCards } from './_components/AnalyticsKpiCards';
+import { StageBreakdownChart } from './_components/StageBreakdownChart';
 
 export default function HrAnalyticsDashboard() {
   const [timeframe, setTimeframe] = useState<'30d' | '90d' | 'ytd'>('30d');
@@ -146,118 +142,14 @@ export default function HrAnalyticsDashboard() {
       </div>
 
       {/* Top 4 KPI Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Time to Hire */}
-        <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel flex items-center justify-between hover:scale-[1.01] transition-all">
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
-              Average Time to Hire
-            </span>
-            <span className="text-2xl font-black text-slate-900 dark:text-slate-100 font-display block">42 Hours</span>
-            <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-              <TrendingUp className="h-3 w-3" /> 72% faster than 14-day average
-            </span>
-          </div>
-          <div className="h-11 w-11 rounded-2xl bg-orange-50 dark:bg-orange-950/60 border border-orange-200 dark:border-orange-900/60 flex items-center justify-center text-orange-600 dark:text-orange-400 flex-shrink-0">
-            <Clock className="h-5.5 w-5.5" />
-          </div>
-        </div>
-
-        {/* Card 2: Pass Rate */}
-        <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel flex items-center justify-between hover:scale-[1.01] transition-all">
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
-              Candidates Passing AI Test
-            </span>
-            <span className="text-2xl font-black text-slate-900 dark:text-slate-100 font-display block">64.2%</span>
-            <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 block">
-              48 out of 74 candidates passed
-            </span>
-          </div>
-          <div className="h-11 w-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-900/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 flex-shrink-0">
-            <Award className="h-5.5 w-5.5" />
-          </div>
-        </div>
-
-        {/* Card 3: Fairness Check */}
-        <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel flex items-center justify-between hover:scale-[1.01] transition-all">
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
-              Fairness &amp; Bias Check
-            </span>
-            <span className="text-2xl font-black text-slate-900 dark:text-slate-100 font-display block">99.2%</span>
-            <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-              <ShieldCheck className="h-3 w-3" /> 100% Fair Evaluation
-            </span>
-          </div>
-          <div className="h-11 w-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-            <Scale className="h-5.5 w-5.5" />
-          </div>
-        </div>
-
-        {/* Card 4: Cost Savings */}
-        <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel flex items-center justify-between hover:scale-[1.01] transition-all">
-          <div className="space-y-1">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
-              Cost Saved Per Hire
-            </span>
-            <span className="text-2xl font-black text-slate-900 dark:text-slate-100 font-display block">$3,420</span>
-            <span className="text-[10px] font-extrabold text-purple-600 dark:text-purple-400 block">
-              24 hours saved per candidate
-            </span>
-          </div>
-          <div className="h-11 w-11 rounded-2xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-900/60 flex items-center justify-center text-purple-600 dark:text-purple-400 flex-shrink-0">
-            <DollarSign className="h-5.5 w-5.5" />
-          </div>
-        </div>
-      </div>
+      <AnalyticsKpiCards />
 
       {/* Main Grid Section (8 Cols / 4 Cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         {/* Left Column (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Chart 1: Hiring Stage Breakdown */}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
-              <div>
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 font-display">
-                  <BarChart3 className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
-                  Hiring Stage Breakdown
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                  Number of candidates remaining at each interview stage.
-                </p>
-              </div>
-              <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900">
-                12.6% Final Pass Rate
-              </span>
-            </div>
-
-            <div className="space-y-4">
-              {funnelSteps.map((step, idx) => (
-                <div key={idx} className="space-y-1.5">
-                  <div className="flex justify-between items-center text-xs font-extrabold text-slate-900 dark:text-slate-100">
-                    <span className="flex items-center gap-2">
-                      <span className="h-5 w-5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                        {idx + 1}
-                      </span>
-                      {step.name}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-slate-500 dark:text-slate-400 font-bold">{step.count} candidates</span>
-                      <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">{step.pct}%</span>
-                    </div>
-                  </div>
-                  <div className="w-full bg-slate-200/60 dark:bg-slate-800/60 rounded-full h-3 overflow-hidden p-0.5">
-                    <div
-                      className="bg-gradient-to-r from-brand-600 to-indigo-600 dark:from-orange-500 dark:to-indigo-500 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${step.pct}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <StageBreakdownChart funnelSteps={funnelSteps} />
 
           {/* Chart 2: Monthly Applicants Evaluated */}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-6">
@@ -502,3 +394,4 @@ export default function HrAnalyticsDashboard() {
     </div>
   );
 }
+

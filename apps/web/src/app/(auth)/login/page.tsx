@@ -9,7 +9,6 @@ import {
   Lock,
   LogIn,
   ArrowRight,
-  Sparkles,
   CheckCircle2,
 } from '@/lib/lucide-google-icons';
 import { useToast } from '@/contexts/ToastContext';

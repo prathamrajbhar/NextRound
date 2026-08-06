@@ -8,21 +8,14 @@ import {
   ShieldCheck,
   ShieldAlert,
   CheckCircle2,
-  Clock,
   ExternalLink,
   Award,
   MessageSquare,
   Eye,
   Zap,
-  Briefcase,
   ChevronRight,
   Download,
   FileText,
-  MapPin,
-  DollarSign,
-  Calendar,
-  Sparkles,
-  UserCheck,
   GithubIcon,
   LinkedinIcon,
 } from '@/lib/lucide-google-icons';
@@ -378,7 +371,7 @@ export default function CandidateProfileDrawer({
                     <span className="text-[10px] font-extrabold text-brand-600 dark:text-brand-400 uppercase">Question 1</span>
                     <p className="font-extrabold text-slate-900 dark:text-slate-100">How do you handle virtualization for long scroll lists?</p>
                     <p className="text-slate-700 dark:text-slate-300 bg-white/70 dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800 text-xs leading-relaxed font-medium">
-                      "I use windowing libraries like react-window to compute dynamic row height indices and maintain 60fps scrolling."
+                      &ldquo;I use windowing libraries like react-window to compute dynamic row height indices and maintain 60fps scrolling.&rdquo;
                     </p>
                   </div>
                 </div>

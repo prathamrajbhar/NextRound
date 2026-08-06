@@ -1,22 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
 import PublicNavbar from '@/components/PublicNavbar';
 import PublicFooter from '@/components/PublicFooter';
 import { getStoredJobs, allMockApplications, Job } from '@/lib/mockData';
 import { JobCard } from '@/components/ui';
-import { Search, MapPin, DollarSign, Briefcase, Filter } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 
 export default function JobsPage() {
   const [search, setSearch] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedExperience, setSelectedExperience] = useState('All');
-  const [jobs, setJobs] = useState<Job[]>([]);
-
-  useEffect(() => {
-    setJobs(getStoredJobs());
-  }, []);
+  const [jobs] = useState<Job[]>(() => getStoredJobs());
 
   // Filter jobs based on criteria
   const filteredJobs = jobs.filter((job) => {

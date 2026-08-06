@@ -10,21 +10,15 @@ import {
   DollarSign,
   Briefcase,
   Calendar,
-  Award,
   ChevronRight,
   Check,
-  Sparkles,
-  Mic,
-  Code,
   Building2,
-  CheckCircle2,
   Share2,
   Bookmark,
-  Users,
-  ShieldCheck,
-  Layers,
-  ArrowRight,
 } from '@/lib/lucide-google-icons';
+import { JobHeaderCard } from './_components/JobHeaderCard';
+import { JobRubricCard } from './_components/JobRubricCard';
+import { JobPrepArenaCard } from './_components/JobPrepArenaCard';
 
 // Mapping tech skills / tags per job for richer visual representation
 const jobSkillsMap: Record<string, string[]> = {
@@ -107,82 +101,12 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
       </div>
 
       {/* Hero Job Header Card */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/60 dark:border-slate-800 bg-gradient-to-br from-white/70 via-white/50 to-slate-50/50 dark:from-slate-900/80 dark:via-slate-900/60 dark:to-slate-950/80 p-6 md:p-8 shadow-md backdrop-blur-md glass-panel">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
-          <div className="flex items-start sm:items-center gap-4 min-w-0">
-            {/* Redesigned Company Logo Component */}
-            <CompanyLogo name={job.orgName} logoUrl={job.orgLogo} size="xl" className="shadow-md flex-shrink-0" />
-
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-bold text-brand-600 dark:text-orange-400 flex items-center gap-1">
-                  {job.orgName}
-                  <CheckCircle2 className="h-3.5 w-3.5 text-blue-500 fill-blue-500/10" />
-                </span>
-                <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/60 uppercase">
-                  Active Hiring
-                </span>
-              </div>
-
-              <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight mt-1 font-display leading-tight">
-                {job.title}
-              </h1>
-
-              {/* Header metadata chips */}
-              <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-600 dark:text-slate-400">
-                <span className="flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-                  {job.location}
-                </span>
-                <span className="text-slate-300 dark:text-slate-700">•</span>
-                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
-                  <DollarSign className="h-3.5 w-3.5" />
-                  {job.salary}
-                </span>
-                <span className="text-slate-300 dark:text-slate-700">•</span>
-                <span className="flex items-center gap-1.5">
-                  <Briefcase className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" />
-                  {job.experienceLevel}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Action CTAs */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto flex-shrink-0">
-            {applied ? (
-              <div className="inline-flex items-center justify-center gap-2 text-xs font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800/80 rounded-full px-6 py-3 shadow-sm animate-in scale-in duration-200">
-                <Check className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                Application Submitted
-              </div>
-            ) : (
-              <button
-                onClick={handleApply}
-                className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 px-8 py-3 text-xs font-extrabold text-white shadow-md hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <span>Apply to this Role</span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Tech Skills Pills */}
-        <div className="mt-6 pt-5 border-t border-slate-200/60 dark:border-slate-800 flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 flex items-center gap-1">
-            <Layers className="h-3 w-3" /> Tech Stack:
-          </span>
-          {skills.map((skill) => (
-            <span
-              key={skill}
-              className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/80"
-            >
-              {skill}
-            </span>
-          ))}
-        </div>
-      </div>
+      <JobHeaderCard
+        job={job}
+        applied={applied}
+        onApply={handleApply}
+        skills={skills}
+      />
 
       {/* Main Grid Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
@@ -229,109 +153,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
           </div>
 
           {/* Rubric: What We Look For Section */}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 p-6 md:p-8 shadow-sm backdrop-blur-md glass-panel space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-4">
-              <div className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-amber-500 dark:text-amber-400" />
-                <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100 font-display">
-                  What We Look For
-                </h2>
-              </div>
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200/60 dark:border-amber-900/60 uppercase">
-                AI Evaluation Rubric
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-              Our automated Evaluation Agent evaluates candidate submissions and interview transcripts across 4 weighted core dimensions:
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Technical Knowledge */}
-              <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-brand-600 dark:text-orange-400 uppercase tracking-wider">
-                    Technical Knowledge
-                  </span>
-                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100">
-                    {job.rubric.technical}%
-                  </span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-brand-500 dark:bg-orange-500 transition-all duration-500"
-                    style={{ width: `${job.rubric.technical}%` }}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  Syntax proficiency, algorithm efficiency, and architecture design.
-                </p>
-              </div>
-
-              {/* Communication Skill */}
-              <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
-                    Communication Skill
-                  </span>
-                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100">
-                    {job.rubric.communication}%
-                  </span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-purple-500 dark:bg-purple-400 transition-all duration-500"
-                    style={{ width: `${job.rubric.communication}%` }}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  Clarity of thought, active listening, and structured explanation.
-                </p>
-              </div>
-
-              {/* Problem Solving */}
-              <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400 uppercase tracking-wider">
-                    Problem Solving
-                  </span>
-                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100">
-                    {job.rubric.problemSolving}%
-                  </span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-pink-500 dark:bg-pink-400 transition-all duration-500"
-                    style={{ width: `${job.rubric.problemSolving}%` }}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  Deconstruction of ambiguous edge cases and solution trade-offs.
-                </p>
-              </div>
-
-              {/* Relevant Experience */}
-              <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
-                    Relevant Experience
-                  </span>
-                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100">
-                    {job.rubric.experience}%
-                  </span>
-                </div>
-                <div className="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-emerald-500 dark:bg-emerald-400 transition-all duration-500"
-                    style={{ width: `${job.rubric.experience}%` }}
-                  />
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  Domain depth, past production deployments, and leadership background.
-                </p>
-              </div>
-            </div>
-          </div>
+          <JobRubricCard rubric={job.rubric} />
         </div>
 
         {/* Sidebar Column */}
@@ -393,55 +215,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
           </div>
 
           {/* AI Practice & Prep Arena Card */}
-          <div className="rounded-3xl border border-amber-200 dark:border-amber-900/60 bg-gradient-to-b from-amber-50/40 to-amber-100/20 dark:from-amber-950/30 dark:to-amber-900/10 p-6 shadow-sm backdrop-blur-md glass-panel space-y-4">
-            <div>
-              <h3 className="text-sm font-extrabold text-amber-900 dark:text-amber-300 flex items-center gap-2">
-                <Sparkles className="h-4.5 w-4.5 text-amber-600 dark:text-amber-400" />
-                AI Practice & Prep Arena
-              </h3>
-              <p className="text-[10px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed mt-1.5">
-                Prepare for official rounds using interactive AI mock evaluations matching {job.orgName}'s rubric.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              {/* Voice Mock Interview */}
-              <div className="p-3.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 rounded-2xl space-y-2 shadow-2xs">
-                <div className="flex items-center gap-2 text-brand-600 dark:text-orange-400">
-                  <Mic className="h-4 w-4" />
-                  <span className="text-xs font-bold">Voice Interview Practice</span>
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                  Practice dynamic conversational questions scored by our AI Agent.
-                </p>
-                <Link
-                  href={`/candidate/mock/new?company=${encodeURIComponent(job.orgName)}&role=${encodeURIComponent(job.title)}&track=technical`}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-bold py-2 text-xs transition-all cursor-pointer shadow-xs"
-                >
-                  <span>Start Mock Session</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-
-              {/* Coding & MCQ Practice */}
-              <div className="p-3.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 rounded-2xl space-y-2 shadow-2xs">
-                <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
-                  <Code className="h-4 w-4" />
-                  <span className="text-xs font-bold">Coding &amp; MCQ Practice</span>
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                  Try a simulated online assessment environment with real-time feedback.
-                </p>
-                <Link
-                  href={`/candidate/mock/new?company=${encodeURIComponent(job.orgName)}&role=${encodeURIComponent(job.title)}&track=coding`}
-                  className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-amber-600 dark:bg-amber-600 hover:bg-amber-700 dark:hover:bg-amber-700 text-white font-bold py-2 text-xs transition-all cursor-pointer shadow-xs"
-                >
-                  <span>Launch Practice Test</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-            </div>
-          </div>
+          <JobPrepArenaCard orgName={job.orgName} title={job.title} />
 
           {/* Similar Roles */}
           <div className="space-y-3">
@@ -470,3 +244,4 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
     </div>
   );
 }
+

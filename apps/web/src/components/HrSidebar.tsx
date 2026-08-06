@@ -13,7 +13,6 @@ import {
   User,
   LogOut,
   Users2,
-  Library
 } from '@/lib/lucide-google-icons';
 
 interface HrSidebarProps {
@@ -82,8 +81,8 @@ export default function HrSidebar({ avatar = '/avatar-boy.jpg', name = 'Karan Ma
                     key={item.path}
                     href={item.path}
                     className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all border-l-2 duration-200 select-none ${isActive
-                        ? 'bg-orange-500/10 dark:bg-orange-500/15 text-slate-900 dark:text-slate-100 border-orange-500 dark:border-orange-400 shadow-sm font-bold'
-                        : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200'
+                      ? 'bg-orange-500/10 dark:bg-orange-500/15 text-slate-900 dark:text-slate-100 border-orange-500 dark:border-orange-400 shadow-sm font-bold'
+                      : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200'
                       }`}
                   >
                     <Icon className={`h-4.5 w-4.5 transition-transform duration-200 ease-out group-hover:scale-110 ${isActive ? 'text-orange-600 dark:text-orange-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'

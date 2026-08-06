@@ -10,20 +10,13 @@ import {
   Sparkles,
   ChevronRight,
   TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
   Clock,
-  User,
-  Zap,
-  ShieldAlert,
   ShieldCheck,
   LayoutDashboard,
   Users2,
   Volume2,
-  BarChart3,
-  Filter
 } from '@/lib/lucide-google-icons';
-import { mockSentimentProfiles, CandidateSentimentProfile } from '@/lib/mockData/sentimentAnalysis';
+import { mockSentimentProfiles } from '@/lib/mockData/sentimentAnalysis';
 
 export default function SentimentAnalysisPage() {
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>(mockSentimentProfiles[0].id);
@@ -353,7 +346,7 @@ export default function SentimentAnalysisPage() {
               </div>
 
               <p className="text-xs md:text-sm text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
-                "{t.text}"
+                &ldquo;{t.text}&rdquo;
               </p>
 
               {/* HR AI Assessment Callout */}

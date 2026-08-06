@@ -5,28 +5,22 @@ import {
   Settings,
   Users,
   Mail,
-  Plus,
-  Building2,
-  Trash2,
-  Save,
   CheckCircle2,
-  Bot,
-  Sun,
-  Moon,
   Palette,
   Bell,
-  BellRing,
-  Sparkles,
-  Sliders,
-  ShieldCheck,
 } from '@/lib/lucide-google-icons';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getOrganizationSettings } from '@/lib/mockData';
+import { GeneralSettingsTab } from './_components/GeneralSettingsTab';
+import { AppearanceTab } from './_components/AppearanceTab';
+import { NotificationsTab } from './_components/NotificationsTab';
+import { TeamTab } from './_components/TeamTab';
+import { EmailTemplatesTab } from './_components/EmailTemplatesTab';
 
 export default function HrSettingsPage() {
   const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'notifications' | 'team' | 'emails'>('general');
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const { theme, toggleTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   const orgSettings = getOrganizationSettings();
 
@@ -49,7 +43,6 @@ export default function HrSettingsPage() {
   const [notifyShortlist, setNotifyShortlist] = useState(true);
   const [notifyHighScore, setNotifyHighScore] = useState(true);
   const [dailyDigest, setDailyDigest] = useState(true);
-  const [slackAlerts, setSlackAlerts] = useState(false);
 
   // Team Members state
   const [team, setTeam] = useState([
@@ -205,560 +198,74 @@ export default function HrSettingsPage() {
 
         {/* Right Content Panel */}
         <div className="lg:col-span-3 space-y-6">
-          {/* TAB 1: General & AI Thresholds */}
           {activeTab === 'general' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              {/* Company Profile Card */}
-              <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
-                <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
-                  <Building2 className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display">
-                    Organization &amp; Workspace Profile
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-                      Company Name
-                    </label>
-                    <input
-                      type="text"
-                      value={orgName}
-                      onChange={(e) => setOrgName(e.target.value)}
-                      className="w-full p-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-                      Website URL
-                    </label>
-                    <input
-                      type="url"
-                      value={orgDomain}
-                      onChange={(e) => setOrgDomain(e.target.value)}
-                      className="w-full p-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-                      Support Contact Email
-                    </label>
-                    <input
-                      type="email"
-                      value={supportEmail}
-                      onChange={(e) => setSupportEmail(e.target.value)}
-                      className="w-full p-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-                      Primary Timezone
-                    </label>
-                    <select
-                      value={timezone}
-                      onChange={(e) => setTimezone(e.target.value)}
-                      className="w-full p-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none cursor-pointer"
-                    >
-                      <option value="Asia/Kolkata (GMT+5:30)">Asia/Kolkata (GMT+5:30)</option>
-                      <option value="America/New_York (EST)">America/New_York (EST)</option>
-                      <option value="Europe/London (GMT)">Europe/London (GMT)</option>
-                      <option value="America/Los_Angeles (PST)">America/Los_Angeles (PST)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Global AI Screening Parameters Card */}
-              <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
-                <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
-                  <Bot className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display">
-                    Global AI Screening &amp; Cutoff Rules
-                  </h3>
-                </div>
-
-                <div className="space-y-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  <div>
-                    <div className="flex justify-between mb-1 text-[11px] font-bold">
-                      <span>Default Candidate Passing Score Cutoff</span>
-                      <span className="text-brand-600 dark:text-orange-400 font-extrabold">{defaultThreshold}% Score</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="60"
-                      max="95"
-                      value={defaultThreshold}
-                      onChange={(e) => setDefaultThreshold(Number(e.target.value))}
-                      className="w-full accent-brand-600 dark:accent-orange-500 cursor-pointer"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-                      Default Voice Interviewer Persona
-                    </label>
-                    <select
-                      value={defaultVoice}
-                      onChange={(e) => setDefaultVoice(e.target.value as any)}
-                      className="w-full p-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none cursor-pointer"
-                    >
-                      <option value="Serena (Warm/Professional)">Serena (Warm &amp; Professional)</option>
-                      <option value="Marcus (Technical/Direct)">Marcus (Technical &amp; Direct)</option>
-                      <option value="Charlotte (Conversational)">Charlotte (Conversational &amp; Friendly)</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-3 pt-2 border-t border-slate-200/60 dark:border-slate-800">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Auto-Send Assessment Links</span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
-                          Automatically invite candidates who pass initial resume evaluation
-                        </span>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={autoInvite}
-                          onChange={(e) => setAutoInvite(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600 dark:peer-checked:bg-orange-600"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Anonymize Demographic Resumes</span>
-                        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
-                          Hide candidate names and locations for Double-Pass Bias Norm Compliance
-                        </span>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={anonymizeResumes}
-                          onChange={(e) => setAnonymizeResumes(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600 dark:peer-checked:bg-orange-600"></div>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={triggerSaveNotification}
-                  className="px-6 py-2.5 rounded-xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Save className="h-4 w-4" />
-                  <span>Save General Settings</span>
-                </button>
-              </div>
-            </div>
+            <GeneralSettingsTab
+              orgName={orgName}
+              setOrgName={setOrgName}
+              orgDomain={orgDomain}
+              setOrgDomain={setOrgDomain}
+              supportEmail={supportEmail}
+              setSupportEmail={setSupportEmail}
+              timezone={timezone}
+              setTimezone={setTimezone}
+              defaultThreshold={defaultThreshold}
+              setDefaultThreshold={setDefaultThreshold}
+              defaultVoice={defaultVoice}
+              setDefaultVoice={(val) => setDefaultVoice(val as 'Serena' | 'Alloy' | 'Echo' | 'Fable' | 'Nova' | 'Onyx' | 'Shimmer')}
+              autoInvite={autoInvite}
+              setAutoInvite={setAutoInvite}
+              anonymizeResumes={anonymizeResumes}
+              setAnonymizeResumes={setAnonymizeResumes}
+              onSave={triggerSaveNotification}
+            />
           )}
 
-          {/* TAB 2: Theme & Visual Appearance */}
           {activeTab === 'appearance' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              {/* Theme Mode Selector Card */}
-              <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
-                <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
-                  <Palette className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display">
-                    Theme Mode &amp; Color Scheme
-                  </h3>
-                </div>
-
-                {/* Light vs Dark Cards */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div
-                    onClick={() => setTheme('light')}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col items-center gap-2 text-center select-none ${
-                      theme === 'light'
-                        ? 'border-brand-600 dark:border-orange-500 bg-brand-50/50 dark:bg-orange-950/40 ring-2 ring-brand-500/20'
-                        : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-800/40 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="h-10 w-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
-                      <Sun className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Light Theme</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Clean high-contrast daytime UI</span>
-                    </div>
-                  </div>
-
-                  <div
-                    onClick={() => setTheme('dark')}
-                    className={`p-4 rounded-2xl border cursor-pointer transition-all flex flex-col items-center gap-2 text-center select-none ${
-                      theme === 'dark'
-                        ? 'border-brand-600 dark:border-orange-500 bg-brand-50/50 dark:bg-orange-950/40 ring-2 ring-brand-500/20'
-                        : 'border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-800/40 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="h-10 w-10 rounded-full bg-slate-800 text-indigo-300 flex items-center justify-center">
-                      <Moon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Dark Theme</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">Sleek dark mode interface</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Primary Accent Color Selector */}
-                <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 space-y-3">
-                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Primary Accent Palette</span>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[
-                      { id: 'orange', name: 'HireOS Orange', bg: 'bg-orange-500' },
-                      { id: 'indigo', name: 'Royal Indigo', bg: 'bg-indigo-600' },
-                      { id: 'emerald', name: 'Emerald Mint', bg: 'bg-emerald-500' },
-                      { id: 'purple', name: 'Vibrant Purple', bg: 'bg-purple-600' },
-                    ].map((c) => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => setBrandColor(c.id)}
-                        className={`p-2.5 rounded-xl border text-left flex items-center gap-2 cursor-pointer transition-all ${
-                          brandColor === c.id
-                            ? 'border-slate-900 dark:border-white ring-2 ring-slate-400/20 bg-slate-50 dark:bg-slate-800'
-                            : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50/50'
-                        }`}
-                      >
-                        <span className={`h-4 w-4 rounded-full ${c.bg} flex-shrink-0`} />
-                        <span className="text-[10px] font-extrabold text-slate-800 dark:text-slate-200 truncate">{c.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Visual Density & Backdrop Toggles */}
-                <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Glassmorphism Backdrop Blur</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
-                        Enable frosted glass panel styling across HR cards
-                      </span>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={glassmorphism}
-                        onChange={(e) => setGlassmorphism(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600 dark:peer-checked:bg-orange-600"></div>
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Compact View Density</span>
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
-                        Reduce list padding for maximum screen data density
-                      </span>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={compactDensity}
-                        onChange={(e) => setCompactDensity(e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600 dark:peer-checked:bg-orange-600"></div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={triggerSaveNotification}
-                  className="px-6 py-2.5 rounded-xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Save className="h-4 w-4" />
-                  <span>Save Appearance Preferences</span>
-                </button>
-              </div>
-            </div>
+            <AppearanceTab
+              theme={theme}
+              setTheme={setTheme}
+              brandColor={brandColor}
+              setBrandColor={setBrandColor}
+              glassmorphism={glassmorphism}
+              setGlassmorphism={setGlassmorphism}
+              compactDensity={compactDensity}
+              setCompactDensity={setCompactDensity}
+              onSave={triggerSaveNotification}
+            />
           )}
 
-          {/* TAB 3: Notification Preferences */}
           {activeTab === 'notifications' && (
-            <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5 animate-in fade-in duration-200">
-              <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
-                <BellRing className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display">
-                  Recruiter Notification &amp; Alert Preferences
-                </h3>
-              </div>
-
-              <div className="space-y-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Candidate Shortlist Alerts</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
-                      Receive email when a candidate completes the AI Voice Interview
-                    </span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={notifyShortlist}
-                      onChange={(e) => setNotifyShortlist(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600 dark:peer-checked:bg-orange-600"></div>
-                  </label>
-                </div>
-
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">High-Score Candidate Push Alerts</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
-                      Instant notification when a candidate scores &gt;90% overall match rating
-                    </span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={notifyHighScore}
-                      onChange={(e) => setNotifyHighScore(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600 dark:peer-checked:bg-orange-600"></div>
-                  </label>
-                </div>
-
-                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white/50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-                  <div>
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Daily Pipeline Summary Digest</span>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
-                      Morning email recap of new applicants, interviews scheduled, and offer decisions
-                    </span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={dailyDigest}
-                      onChange={(e) => setDailyDigest(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-brand-600 dark:peer-checked:bg-orange-600"></div>
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={triggerSaveNotification}
-                  className="px-6 py-2.5 rounded-xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Save className="h-4 w-4" />
-                  <span>Save Notification Settings</span>
-                </button>
-              </div>
-            </div>
+            <NotificationsTab
+              notifyShortlist={notifyShortlist}
+              setNotifyShortlist={setNotifyShortlist}
+              notifyHighScore={notifyHighScore}
+              setNotifyHighScore={setNotifyHighScore}
+              dailyDigest={dailyDigest}
+              setDailyDigest={setDailyDigest}
+              onSave={triggerSaveNotification}
+            />
           )}
 
-          {/* TAB 4: Team & Recruiter Roles */}
           {activeTab === 'team' && (
-            <div className="space-y-6 animate-in fade-in duration-200">
-              {/* Invite Recruiter Card */}
-              <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
-                <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
-                  <Users className="h-4.5 w-4.5 text-indigo-600 dark:text-indigo-400" />
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display">
-                    Invite New Recruiting Partner
-                  </h3>
-                </div>
-
-                <form onSubmit={handleInviteSubmit} className="flex flex-col sm:flex-row gap-3">
-                  <input
-                    type="email"
-                    required
-                    placeholder="recruiter@company.com"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    className="flex-grow p-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none"
-                  />
-
-                  <select
-                    value={inviteRole}
-                    onChange={(e: any) => setInviteRole(e.target.value)}
-                    className="p-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 font-bold focus:outline-none cursor-pointer"
-                  >
-                    <option value="Admin">Admin</option>
-                    <option value="Recruiter">Recruiter</option>
-                    <option value="Reviewer">Reviewer</option>
-                  </select>
-
-                  <button
-                    type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 justify-center cursor-pointer"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Send Invite</span>
-                  </button>
-                </form>
-              </div>
-
-              {/* Active Team Table */}
-              <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 font-display">
-                  Active Team Members ({team.length})
-                </h3>
-
-                <div className="space-y-3">
-                  {team.map((member) => (
-                    <div
-                      key={member.id}
-                      className="flex items-center justify-between p-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-800 bg-white/50 dark:bg-slate-800/50 text-xs font-semibold text-slate-800 dark:text-slate-200"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-brand-100 dark:bg-orange-950/80 text-brand-700 dark:text-orange-400 font-extrabold flex items-center justify-center border border-brand-200 dark:border-orange-800">
-                          {member.name.charAt(0)}
-                        </div>
-                        <div>
-                          <span className="block font-extrabold text-slate-900 dark:text-slate-100">{member.name}</span>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 block">{member.email}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-900 px-2.5 py-0.5 rounded-full uppercase">
-                          {member.role}
-                        </span>
-
-                        {member.role !== 'Owner' && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMember(member.id)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 transition-colors cursor-pointer"
-                            title="Remove member"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <TeamTab
+              team={team}
+              inviteEmail={inviteEmail}
+              setInviteEmail={setInviteEmail}
+              inviteRole={inviteRole}
+              setInviteRole={setInviteRole}
+              handleInviteSubmit={handleInviteSubmit}
+              handleRemoveMember={handleRemoveMember}
+            />
           )}
 
-          {/* TAB 5: Email & Candidate Templates */}
           {activeTab === 'emails' && (
-            <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5 animate-in fade-in duration-200">
-              <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
-                <div>
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
-                    <Mail className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
-                    Candidate Communication Templates
-                  </h3>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-                    Customize automated emails sent to applicants during screening.
-                  </p>
-                </div>
-              </div>
-
-              {/* Template Selectors */}
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { id: 'interview', label: 'Interview Invitation' },
-                  { id: 'assessment', label: 'Assessment Test Link' },
-                  { id: 'offer', label: 'Offer Letter' },
-                  { id: 'rejection', label: 'Rejection Courtesy' },
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    type="button"
-                    onClick={() => setActiveTemplate(t.id as any)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer border ${
-                      activeTemplate === t.id
-                        ? 'bg-brand-600 dark:bg-orange-600 text-white border-transparent shadow-xs'
-                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100'
-                    }`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Template Editor */}
-              <div className="space-y-4">
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-                    Subject Line
-                  </label>
-                  <input
-                    type="text"
-                    value={templates[activeTemplate].subject}
-                    onChange={(e) =>
-                      setTemplates({
-                        ...templates,
-                        [activeTemplate]: { ...templates[activeTemplate], subject: e.target.value },
-                      })
-                    }
-                    className="w-full p-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-                    Email Body Content
-                  </label>
-                  <textarea
-                    rows={8}
-                    value={templates[activeTemplate].body}
-                    onChange={(e) =>
-                      setTemplates({
-                        ...templates,
-                        [activeTemplate]: { ...templates[activeTemplate], body: e.target.value },
-                      })
-                    }
-                    className="w-full p-3 text-xs font-mono rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 focus:outline-none leading-relaxed"
-                  />
-                </div>
-
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">
-                    Available Dynamic Variables
-                  </span>
-                  <div className="flex flex-wrap gap-1.5 text-[10px] font-mono text-brand-600 dark:text-orange-400 font-bold">
-                    <span>{'{{candidate_name}}'}</span>
-                    <span>{'{{role_title}}'}</span>
-                    <span>{'{{company_name}}'}</span>
-                    <span>{'{{interview_link}}'}</span>
-                    <span>{'{{assessment_link}}'}</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={triggerSaveNotification}
-                    className="px-5 py-2.5 rounded-xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Save className="h-4 w-4" />
-                    <span>Save Email Template</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+            <EmailTemplatesTab
+              activeTemplate={activeTemplate}
+              setActiveTemplate={setActiveTemplate}
+              templates={templates}
+              setTemplates={setTemplates}
+              onSave={triggerSaveNotification}
+            />
           )}
         </div>
       </div>

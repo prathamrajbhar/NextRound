@@ -1,45 +1,55 @@
 'use client';
 
-import React, { useState, use, useEffect } from 'react';
+import React, { useState, use } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { mockApplications, getStoredJobs } from '@/lib/mockData';
 import {
   ChevronRight,
   Scale,
-  Link2,
-  Globe,
   Video,
-  Code,
-  ClipboardCheck,
   CheckCircle2,
-  ChevronDown,
   Download,
   FileText,
-  Clock,
-  Eye,
-  Zap,
-  Briefcase,
-  ShieldCheck,
-  ShieldAlert,
   ArrowLeft,
-  GithubIcon,
-  LinkedinIcon,
 } from '@/lib/lucide-google-icons';
 import SkillsScorecard from './components/SkillsScorecard';
 import DecisionControl from './components/DecisionControl';
+import { CandidateHeader } from './components/CandidateHeader';
+import { AssessmentScorecard } from './components/AssessmentScorecard';
+
+import { Application } from '@/lib/mockData';
+
+interface VoiceData {
+  score?: number;
+  rubric?: { technical?: number; communication?: number; cultureFit?: number };
+  feedback?: string;
+}
+
+interface AssessData {
+  overallScore?: number;
+  codingScore?: number;
+  mcqScore?: number;
+}
 
 export default function HrCandidateEvaluationPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
-  const [app, setApp] = useState<any>(null);
-  const [assessmentData, setAssessmentData] = useState<any>(null);
-  const [viewCodeOpen, setViewCodeOpen] = useState(true);
 
-  useEffect(() => {
+  const [assessmentData] = useState<Record<string, number | string | undefined> | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const localAssess = localStorage.getItem(`assessmentResult_${applicationId}`);
+    if (localAssess) {
+      try {
+        return JSON.parse(localAssess);
+      } catch {}
+    }
+    return null;
+  });
+
+  const [app] = useState<Application>(() => {
     const defaultAppObj = mockApplications.find((a) => a.id === applicationId) || mockApplications[0];
-    
-    // Check for AI Voice interview logs
-    let voiceInterviewData: any = null;
+    if (typeof window === 'undefined') return defaultAppObj;
+
+    let voiceInterviewData: VoiceData | null = null;
     const localVoice = localStorage.getItem(`candidateInterview_${applicationId}`);
     if (localVoice) {
       try {
@@ -47,17 +57,14 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
       } catch {}
     }
 
-    // Check for Online Assessment (MCQ + Coding) logs
-    let assessData: any = null;
+    let assessData: AssessData | null = null;
     const localAssess = localStorage.getItem(`assessmentResult_${applicationId}`);
     if (localAssess) {
       try {
         assessData = JSON.parse(localAssess);
-        setAssessmentData(assessData);
       } catch {}
     }
 
-    // Merge scores and feedback fallback
     let mergedScores = defaultAppObj.scores || {
       composite: 86,
       technical: 88,
@@ -79,23 +86,24 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
       };
       mergedReasoning = `Online Vetting Assessment: Completed (${assessData.overallScore}% score). MCQ Logic: ${assessData.mcqScore}%, Coding algorithm: ${assessData.codingScore}%. ` + (voiceInterviewData?.feedback || mergedReasoning);
     } else if (voiceInterviewData) {
+      const vScore = voiceInterviewData.score || 80;
       mergedScores = {
-        composite: voiceInterviewData.score,
-        technical: voiceInterviewData.rubric.technical,
-        communication: voiceInterviewData.rubric.communication,
-        problemSolving: Math.floor(voiceInterviewData.score * 0.95),
-        experience: Math.floor(voiceInterviewData.score * 0.92),
-        confidence: Math.floor(voiceInterviewData.score * 0.98),
+        composite: vScore,
+        technical: voiceInterviewData.rubric?.technical || 80,
+        communication: voiceInterviewData.rubric?.communication || 80,
+        problemSolving: Math.floor(vScore * 0.95),
+        experience: Math.floor(vScore * 0.92),
+        confidence: Math.floor(vScore * 0.98),
       };
       mergedReasoning = voiceInterviewData.feedback || mergedReasoning;
     }
 
-    setApp({
+    return {
       ...defaultAppObj,
       scores: mergedScores,
       reasoning: mergedReasoning,
-    });
-  }, [applicationId]);
+    };
+  });
 
   if (!app) {
     return <div className="text-center text-xs text-slate-400 dark:text-slate-500 p-8 font-bold">Loading candidate profile...</div>;
@@ -103,7 +111,6 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
 
   const jobsList = getStoredJobs();
   const job = jobsList.find((j) => j.id === app.jobId);
-  const hasFlags = app.biasReport && app.biasReport.flaggedPhrases?.length > 0;
 
   // Handler to generate and download candidate PDF resume
   const handleDownloadResume = () => {
@@ -151,87 +158,8 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
         </div>
       </div>
 
-      {/* Main Candidate Header Card */}
-      <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
-        <div className="flex items-center gap-4">
-          <Image
-            src={app.candidateAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'}
-            alt={app.candidateName}
-            width={60}
-            height={60}
-            className="h-15 w-15 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-md object-cover flex-shrink-0"
-            unoptimized
-          />
-          <div className="space-y-1">
-            <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-display">
-                {app.candidateName}
-              </h1>
-              <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 bg-brand-50 dark:bg-orange-950/80 border border-brand-200/60 dark:border-orange-900/60 px-2.5 py-0.5 rounded-full uppercase">
-                Stage: {app.stage}
-              </span>
-            </div>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{app.candidateEmail}</p>
-            <div className="flex items-center gap-3 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
-              <span className="flex items-center gap-1">
-                <Clock className="h-3.5 w-3.5 text-slate-400" /> Applied on {app.appliedDate}
-              </span>
-              <span>•</span>
-              <div className="flex items-center gap-2">
-                <a
-                  href={`https://linkedin.com/in/${app.candidateName.toLowerCase().replace(/\s+/g, '-')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/80 border border-blue-200/60 dark:border-blue-900/60 px-2.5 py-0.5 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/80 transition-colors"
-                >
-                  <LinkedinIcon className="h-3 w-3" />
-                  <span>LinkedIn</span>
-                </a>
-
-                <a
-                  href={`https://github.com/${app.candidateName.toLowerCase().replace(/\s+/g, '')}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                >
-                  <GithubIcon className="h-3 w-3" />
-                  <span>GitHub</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Composite Readiness Rating */}
-        <div className="text-left sm:text-right bg-emerald-50/50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/60 p-4 rounded-2xl">
-          <span className="block text-3xl md:text-4xl font-black text-emerald-600 dark:text-emerald-400 font-display">
-            {app.scores?.composite || 86}%
-          </span>
-          <span className="text-[10px] text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider block mt-0.5">
-            Composite AI Rating
-          </span>
-        </div>
-      </div>
-
-      {/* Profile Snapshot Meta Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
-          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Total Experience</span>
-          <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mt-1 block">5+ Years</span>
-        </div>
-        <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
-          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Location</span>
-          <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mt-1 block truncate">San Francisco, CA</span>
-        </div>
-        <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
-          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Notice Period</span>
-          <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">2 Weeks</span>
-        </div>
-        <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
-          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Expected Comp</span>
-          <span className="text-sm font-extrabold text-brand-600 dark:text-orange-400 mt-1 block">$165,000/yr</span>
-        </div>
-      </div>
+      {/* Candidate Profile Header Card */}
+      <CandidateHeader app={app} />
 
       {/* Main Grid: Left Column 8 / Right Column 4 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -318,57 +246,8 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
             </div>
           </div>
 
-          {/* Dynamic Assessment Section (Displays if completed) */}
-          {assessmentData && (
-            <div className="rounded-3xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/20 dark:bg-amber-950/20 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
-              <div className="flex items-center justify-between border-b border-amber-200/60 dark:border-amber-900/60 pb-2.5">
-                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 font-bold">
-                  <ClipboardCheck className="h-5 w-5" />
-                  <h3 className="text-sm font-display font-extrabold">Online Assessment Scorecard</h3>
-                </div>
-                <span className="text-[10px] font-extrabold bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-900/60 px-3 py-0.5 rounded-full uppercase">
-                  Vetting Score: {assessmentData.overallScore}%
-                </span>
-              </div>
-
-              {/* Subsection scores */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 p-3 rounded-2xl text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase block">MCQ Logic Vetting</span>
-                  <span className="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-1 block">{assessmentData.mcqScore}%</span>
-                </div>
-                <div className="bg-white/50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 p-3 rounded-2xl text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase block">Coding Algorithmic Logic</span>
-                  <span className="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-1 block">{assessmentData.codingScore}%</span>
-                </div>
-              </div>
-
-              {/* Monospace Code Viewer */}
-              {assessmentData.submittedCode && (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setViewCodeOpen(!viewCodeOpen)}
-                    className="w-full flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                  >
-                    <span>Submitted Algorithm Code ({assessmentData.selectedLanguage})</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${viewCodeOpen ? 'rotate-180' : ''}`} />
-                  </button>
-
-                  {viewCodeOpen && (
-                    <div className="relative rounded-2xl overflow-hidden border border-slate-900 shadow-md">
-                      <div className="bg-slate-950 text-[10px] font-mono p-4 overflow-x-auto text-emerald-400 whitespace-pre leading-relaxed max-h-72">
-                        <div className="absolute top-2 right-2 text-[9px] bg-slate-900 border border-slate-800 text-slate-400 px-2 py-0.5 rounded font-sans uppercase font-bold">
-                          {assessmentData.selectedLanguage}
-                        </div>
-                        {assessmentData.submittedCode}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+          {/* Dynamic Assessment Section */}
+          <AssessmentScorecard assessmentData={assessmentData} />
 
           {/* Gap Analysis */}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">

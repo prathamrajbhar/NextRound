@@ -66,7 +66,7 @@ export default function PipelineConfigCard({
     }
   };
 
-  const handleConfigChange = (key: string, value: any) => {
+  const handleConfigChange = (key: string, value: string | number | boolean) => {
     setAssessmentConfig({
       ...assessmentConfig,
       [key]: value,

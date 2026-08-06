@@ -11,7 +11,6 @@ import {
   ArrowRight,
   Home,
   Mail,
-  Sparkles,
 } from '@/lib/lucide-google-icons';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
@@ -57,11 +56,10 @@ export default function PublicNavbar() {
                 <Link
                   key={link.path}
                   href={link.path}
-                  className={`text-xs font-extrabold transition-all flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-slate-100/70 dark:hover:bg-slate-800/60 ${
-                    isActive
+                  className={`text-xs font-extrabold transition-all flex items-center gap-1.5 px-3 py-1.5 rounded-full hover:bg-slate-100/70 dark:hover:bg-slate-800/60 ${isActive
                       ? 'text-brand-600 dark:text-orange-400 bg-brand-50/80 dark:bg-orange-950/60 font-black'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                    }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
                   <span>{link.name}</span>

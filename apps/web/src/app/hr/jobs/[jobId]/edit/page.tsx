@@ -1,71 +1,56 @@
 'use client';
 
-import React, { useState, use, useEffect } from 'react';
+import React, { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { getStoredJobs, saveStoredJob } from '@/lib/mockData';
-import { Sliders, Briefcase, ArrowLeft, Building2, MapPin, DollarSign, Layers, Award, Sparkles, Check } from 'lucide-react';
+import { Sliders, Briefcase, ArrowLeft, Building2, MapPin, DollarSign, Layers } from 'lucide-react';
 import Link from 'next/link';
 import { Autocomplete } from '@/components/ui';
 import { SUGGESTED_ROLES } from '@/lib/mockSetupHelpers';
 import PipelineConfigCard from '../../new/components/PipelineConfigCard';
 
+import { Job } from '@/lib/mockData';
+
 export default function HrEditJobPage({ params }: { params: Promise<{ jobId: string }> }) {
   const router = useRouter();
   const { jobId } = use(params);
 
-  // Load active job parameters
-  const [job, setJob] = useState<any>(null);
+  const initialJob = () => {
+    const list = getStoredJobs();
+    return list.find((j) => j.id === jobId) || list[0];
+  };
 
-  // Form states
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('Remote (Worldwide)');
-  const [salary, setSalary] = useState('$140,000 - $180,000');
-  const [experienceLevel, setExperienceLevel] = useState('Senior (5+ yrs)');
-  const [skills, setSkills] = useState<string[]>(['React', 'TypeScript', 'Next.js', 'System Architecture']);
+  const [job] = useState<Job>(initialJob);
 
-  const [techWeight, setTechWeight] = useState(25);
-  const [commWeight, setCommWeight] = useState(25);
-  const [probWeight, setProbWeight] = useState(25);
-  const [expWeight, setExpWeight] = useState(25);
+  // Form states initialized lazily
+  const [title, setTitle] = useState(job.title);
+  const [description, setDescription] = useState(job.description);
+  const [location, setLocation] = useState(job.location || 'Remote (Worldwide)');
+  const [salary, setSalary] = useState(job.salary || '$140,000 - $180,000');
+  const [experienceLevel, setExperienceLevel] = useState(job.experienceLevel || 'Senior (5+ yrs)');
+  const [skills] = useState<string[]>(['React', 'TypeScript', 'Next.js', 'System Architecture']);
 
-  const [minScore, setMinScore] = useState(80);
-  const [autoOffer, setAutoOffer] = useState(false);
+  const [techWeight, setTechWeight] = useState(job.rubric.technical);
+  const [commWeight, setCommWeight] = useState(job.rubric.communication);
+  const [probWeight, setProbWeight] = useState(job.rubric.problemSolving || 25);
+  const [expWeight, setExpWeight] = useState(job.rubric.experience || 25);
+
+  const [minScore, setMinScore] = useState(job.thresholds.minScore);
+  const [autoOffer, setAutoOffer] = useState(job.thresholds.autoOffer || false);
   const [qCount, setQCount] = useState(5);
   const [enableSourcing, setEnableSourcing] = useState(true);
   const [voiceProfile, setVoiceProfile] = useState('Serena (Warm/Professional)');
 
-  const [stages, setStages] = useState<('screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision')[]>([]);
-  const [assessmentConfig, setAssessmentConfig] = useState({
-    mcqCount: 5,
-    codingProblemId: 'virtualized-list',
-    passingScore: 80,
-  });
-
-  useEffect(() => {
-    const list = getStoredJobs();
-    const found = list.find((j) => j.id === jobId) || list[0];
-    if (found) {
-      setJob(found);
-      setTitle(found.title);
-      setDescription(found.description);
-      setLocation(found.location || 'Remote (Worldwide)');
-      setSalary(found.salary || '$140,000 - $180,000');
-      setExperienceLevel(found.experienceLevel || 'Senior (5+ yrs)');
-      setTechWeight(found.rubric.technical);
-      setCommWeight(found.rubric.communication);
-      setProbWeight(found.rubric.problemSolving || 25);
-      setExpWeight(found.rubric.experience || 25);
-      setMinScore(found.thresholds.minScore);
-      setAutoOffer(found.thresholds.autoOffer || false);
-      setStages(found.stages || ['screening', 'assessment', 'voice_screen', 'hr_round', 'decision']);
-      setAssessmentConfig(found.assessmentConfig || {
-        mcqCount: 5,
-        codingProblemId: 'virtualized-list',
-        passingScore: 80,
-      });
+  const [stages, setStages] = useState<('screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision')[]>(
+    job.stages || ['screening', 'assessment', 'voice_screen', 'hr_round', 'decision']
+  );
+  const [assessmentConfig, setAssessmentConfig] = useState(
+    job.assessmentConfig || {
+      mcqCount: 5,
+      codingProblemId: 'virtualized-list',
+      passingScore: 80,
     }
-  }, [jobId]);
+  );
 
   if (!job) {
     return <div className="text-center p-8 text-xs text-slate-400 font-bold">Loading job configuration...</div>;

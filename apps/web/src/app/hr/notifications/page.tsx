@@ -1,154 +1,227 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { Bell, ArrowRight, CheckCircle2, Sparkles, Scale, Mic, Send, AlertTriangle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Bell, ArrowUpRight, CheckCircle2, Sparkles, Scale, Mic, Send, AlertTriangle, CheckCheck, Trash2, Check, Clock } from 'lucide-react';
 import { mockNotifications, type Notification } from '@/lib/mockData';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/Badge';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 
-type FilterKey = 'all' | 'unread' | Notification['type'];
+type FilterKey = 'all' | 'unread';
 
-const typeMeta: Record<Notification['type'], { label: string; icon: React.ReactNode; className: string }> = {
-  pipeline: { label: 'Pipeline', icon: <Sparkles className="h-3.5 w-3.5" />, className: 'bg-indigo-50 border-indigo-100 text-indigo-600' },
-  decision: { label: 'Decision', icon: <Scale className="h-3.5 w-3.5" />, className: 'bg-purple-50 border-purple-100 text-purple-600' },
-  interview: { label: 'Interview', icon: <Mic className="h-3.5 w-3.5" />, className: 'bg-sky-50 border-sky-100 text-sky-600' },
-  offer: { label: 'Offer', icon: <Send className="h-3.5 w-3.5" />, className: 'bg-emerald-50 border-emerald-100 text-emerald-600' },
-  alert: { label: 'Alert', icon: <AlertTriangle className="h-3.5 w-3.5" />, className: 'bg-amber-50 border-amber-100 text-amber-600' },
+const typeMeta: Record<Notification['type'], { label: string; icon: React.ReactNode }> = {
+  pipeline: { label: 'Pipeline', icon: <Sparkles className="h-4 w-4 text-brand-500" /> },
+  decision: { label: 'Decision', icon: <Scale className="h-4 w-4 text-purple-500" /> },
+  interview: { label: 'Interview', icon: <Mic className="h-4 w-4 text-sky-500" /> },
+  offer: { label: 'Offer', icon: <Send className="h-4 w-4 text-emerald-500" /> },
+  alert: { label: 'Alert', icon: <AlertTriangle className="h-4 w-4 text-amber-500" /> },
 };
 
-const filters: { key: FilterKey; label: string }[] = [
-  { key: 'all', label: 'All' },
-  { key: 'unread', label: 'Unread' },
-  { key: 'pipeline', label: 'Pipeline' },
-  { key: 'decision', label: 'Decision' },
-  { key: 'interview', label: 'Interview' },
-  { key: 'offer', label: 'Offer' },
-  { key: 'alert', label: 'Alert' },
-];
-
 export default function HrNotificationsPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<FilterKey>('all');
 
   useEffect(() => {
-    // Simulated fetch — mock-data-driven for now, real endpoint wiring is a
-    // later phase; the skeleton loading state below is real, not mocked away.
     const t = setTimeout(() => {
       setNotifications(mockNotifications);
       setLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(t);
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const visible = useMemo(() => {
-    if (filter === 'all') return notifications;
     if (filter === 'unread') return notifications.filter((n) => !n.read);
-    return notifications.filter((n) => n.type === filter);
+    return notifications;
   }, [notifications, filter]);
 
-  const markAsRead = (id: string) => {
+  const markAsRead = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+  };
+
+  const deleteNotification = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   };
 
   const markAllAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
+  const clearAll = () => {
+    setNotifications([]);
+  };
+
+  const handleRowClick = (n: Notification) => {
+    if (!n.read) markAsRead(n.id);
+    router.push(n.link);
+  };
+
   return (
-    <div className="space-y-6 max-w-2xl mx-auto anim-fade-in">
-      <div className="border-b border-slate-100 pb-4 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <Bell className="h-6 w-6 text-purple-600" />
-            System Notifications
-            {unreadCount > 0 && <Badge intent="rose">{unreadCount} new</Badge>}
-          </h1>
-          <p className="text-xs text-slate-500 font-semibold mt-1">
-            Review critical events triggered by pipeline and evaluation agents.
-          </p>
+    <div className="space-y-6 max-w-5xl mx-auto pb-16 animate-in fade-in duration-200">
+      {/* Header Bar */}
+      <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
+            <Bell className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
+              Recruiter Notifications Feed
+              {unreadCount > 0 && (
+                <span className="px-2 py-0.5 rounded-full bg-brand-500 text-white text-xs font-black">
+                  {unreadCount} Unread
+                </span>
+              )}
+            </h1>
+            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+              Review critical events triggered by pipeline agents, decision algorithms, and candidate evaluations.
+            </p>
+          </div>
         </div>
-        {unreadCount > 0 && (
-          <Button variant="secondary" size="sm" leftIcon={<CheckCircle2 className="h-3.5 w-3.5" />} onClick={markAllAsRead}>
-            Mark all read
-          </Button>
-        )}
-      </div>
 
-      {/* Filter tabs */}
-      <div className="flex flex-wrap gap-1.5">
-        {filters.map((f) => (
+        <div className="flex items-center gap-2 text-xs font-bold self-end sm:self-auto">
+          {unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={markAllAsRead}
+              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-200 dark:border-slate-700"
+            >
+              <CheckCheck className="h-3.5 w-3.5 text-brand-500" />
+              Mark all read
+            </button>
+          )}
           <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={`px-3 py-1.5 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
-              filter === f.key
-                ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                : 'bg-white/50 text-slate-500 border-slate-200/80 hover:bg-white hover:text-slate-800'
-            }`}
+            type="button"
+            onClick={clearAll}
+            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 text-slate-500 dark:text-slate-400 transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-200 dark:border-slate-700"
           >
-            {f.label}
+            <Trash2 className="h-3.5 w-3.5" />
+            Clear feed
           </button>
-        ))}
+        </div>
       </div>
 
+      {/* Streamlined Filter Bar (All / Unread Only) */}
+      <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs font-bold w-fit">
+        <button
+          type="button"
+          onClick={() => setFilter('all')}
+          className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer ${
+            filter === 'all'
+              ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          All ({notifications.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilter('unread')}
+          className={`px-4 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+            filter === 'unread'
+              ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm'
+              : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <span>Unread</span>
+          {unreadCount > 0 && (
+            <span className="px-1.5 py-0.2 rounded-full bg-brand-500 text-white text-[9px] font-black">
+              {unreadCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Activity Feed Table */}
       {loading ? (
-        <div className="space-y-3">
-          <CardSkeleton />
+        <div className="space-y-2">
           <CardSkeleton />
           <CardSkeleton />
         </div>
-      ) : visible.length === 0 ? (
-        <EmptyState
-          icon={<Bell className="h-6 w-6" />}
-          title="No notifications here"
-          description="You're all caught up — new agent activity will show up in this feed as it happens."
-        />
       ) : (
-        <div className="rounded-3xl border border-white/60 bg-white/45 p-6 shadow-md backdrop-blur-md glass-panel space-y-3">
-          {visible.map((n) => {
-            const meta = typeMeta[n.type];
-            return (
-              <div
-                key={n.id}
-                className={`flex items-start justify-between gap-4 p-4 rounded-2xl border text-xs font-semibold transition-all hover:shadow-sm ${
-                  n.read ? 'border-slate-100 bg-white/40 text-slate-500' : 'border-indigo-100 bg-white/60 text-slate-700'
-                }`}
-              >
-                <div className="flex gap-3">
-                  <span className={`h-7 w-7 rounded-lg border flex items-center justify-center flex-shrink-0 mt-0.5 ${meta.className}`}>
-                    {meta.icon}
-                  </span>
-                  <div>
-                    <p className={n.read ? 'text-slate-600 leading-relaxed' : 'text-slate-800 leading-relaxed'}>{n.text}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[10px] text-slate-400 font-semibold">{n.time}</span>
-                      {!n.read && (
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-sm overflow-hidden">
+          {visible.length > 0 ? (
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+              {visible.map((n) => {
+                const meta = typeMeta[n.type];
+
+                return (
+                  <div
+                    key={n.id}
+                    onClick={() => handleRowClick(n)}
+                    className={`group p-4 px-5 transition-all text-xs cursor-pointer flex items-center justify-between gap-4 ${
+                      n.read
+                        ? 'hover:bg-slate-50 dark:hover:bg-slate-800/40 text-slate-600 dark:text-slate-400'
+                        : 'bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-100/60 dark:hover:bg-slate-800/60 text-slate-900 dark:text-white font-bold'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      {/* Status Pulse Dot */}
+                      <span
+                        className={`h-2 w-2 rounded-full shrink-0 ${
+                          n.read ? 'bg-transparent' : 'bg-brand-500 animate-pulse'
+                        }`}
+                      />
+
+                      {/* Icon Badge */}
+                      <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200/60 dark:border-slate-700/60">
+                        {meta.icon}
+                      </div>
+
+                      {/* Notification Text */}
+                      <p className="truncate text-xs font-semibold leading-relaxed">
+                        {n.text}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-4 shrink-0">
+                      {/* Timestamp */}
+                      <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {n.time}
+                      </span>
+
+                      {/* Action Toolbar on Hover */}
+                      <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                        {!n.read && (
+                          <button
+                            type="button"
+                            onClick={(e) => markAsRead(n.id, e)}
+                            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
+                            title="Mark as read"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
-                          onClick={() => markAsRead(n.id)}
-                          className="text-[10px] font-bold text-indigo-600 hover:underline cursor-pointer"
+                          type="button"
+                          onClick={(e) => deleteNotification(n.id, e)}
+                          className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
+                          title="Remove"
                         >
-                          Mark as read
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
-                      )}
+                        <ArrowUpRight className="h-4 w-4 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
+                      </div>
                     </div>
                   </div>
-                </div>
-                <Link
-                  href={n.link}
-                  className="inline-flex items-center gap-0.5 text-xs font-bold text-purple-600 hover:text-purple-700 transition-colors mt-0.5 flex-shrink-0"
-                >
-                  Details
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-16 space-y-2">
+              <span className="text-sm font-bold text-slate-800 dark:text-slate-200 block">
+                No notifications in this view
+              </span>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                You are all caught up! New system alerts and application updates will appear here.
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

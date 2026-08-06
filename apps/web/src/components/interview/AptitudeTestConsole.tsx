@@ -9,7 +9,6 @@ import {
   ChevronRight,
   ChevronLeft,
   Award,
-  ShieldCheck,
   Send,
 } from '@/lib/lucide-google-icons';
 

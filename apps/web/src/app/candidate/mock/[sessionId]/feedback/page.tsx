@@ -1,6 +1,6 @@
 'use client';
 
-import React, { use, useState, useEffect } from 'react';
+import React, { use, useState } from 'react';
 import Link from 'next/link';
 import { getMockSessionFeedback } from '@/lib/mockData';
 import {
@@ -10,7 +10,6 @@ import {
   Compass,
   Sparkles,
   MessageSquare,
-  Activity,
   Layers,
   LayoutDashboard,
   Target,
@@ -26,7 +25,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
   const { sessionId } = use(params);
   const feedbackData = getMockSessionFeedback(sessionId);
 
-  const [session, setSession] = useState({
+  const [session] = useState({
     id: sessionId,
     targetCompany: feedbackData?.targetRole.split(' ')[0] || 'Swiggy',
     targetRole: feedbackData?.targetRole || 'Senior Full Stack Engineer',

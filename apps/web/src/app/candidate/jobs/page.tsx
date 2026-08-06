@@ -1,10 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { mockJobs, mockApplications } from '@/lib/mockData';
 import { JobCard } from '@/components/ui';
-import { Search, MapPin, DollarSign, Briefcase, Filter } from '@/lib/lucide-google-icons';
+import { Search, Filter } from '@/lib/lucide-google-icons';
 
 export default function CandidateJobsPage() {
   const [search, setSearch] = useState('');

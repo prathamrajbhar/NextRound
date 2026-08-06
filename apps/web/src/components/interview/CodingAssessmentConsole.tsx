@@ -10,11 +10,14 @@ import {
   Award,
   Send,
   Code,
-  Layers,
   ChevronDown,
-  RotateCcw,
   Sparkles,
+  Zap,
+  Cpu,
+  Check,
+  ArrowRight,
   ShieldCheck,
+  RotateCcw,
 } from '@/lib/lucide-google-icons';
 
 interface CodingConsoleProps {
@@ -256,7 +259,7 @@ export default function CodingAssessmentConsole({
                   <div className="space-y-1.5">
                     <span className="font-bold text-slate-200 block">Example 1:</span>
                     <div className="p-3 rounded-xl bg-[#1e1e1e] border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300">
-                      <p><strong className="text-slate-400">Input:</strong> userId = "usr_9921", maxRequests = 5</p>
+                      <p><strong className="text-slate-400">Input:</strong> userId = &quot;usr_9921&quot;, maxRequests = 5</p>
                       <p><strong className="text-slate-400">Output:</strong> true</p>
                       <p><strong className="text-slate-400">Explanation:</strong> First request within 1000ms sliding window (1 of 5 limit).</p>
                     </div>
@@ -266,7 +269,7 @@ export default function CodingAssessmentConsole({
                   <div className="space-y-1.5">
                     <span className="font-bold text-slate-200 block">Example 2:</span>
                     <div className="p-3 rounded-xl bg-[#1e1e1e] border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300">
-                      <p><strong className="text-slate-400">Input:</strong> userId = "usr_9921", maxRequests = 5 (6th burst request)</p>
+                      <p><strong className="text-slate-400">Input:</strong> userId = &quot;usr_9921&quot;, maxRequests = 5 (6th burst request)</p>
                       <p><strong className="text-slate-400">Output:</strong> false</p>
                       <p><strong className="text-slate-400">Explanation:</strong> User exceeded the 5-request capacity within 1000ms window.</p>
                     </div>
@@ -379,7 +382,7 @@ export default function CodingAssessmentConsole({
                       <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-400">Case 3</span>
                     </div>
                     <div className="p-2 rounded bg-slate-900 border border-slate-800 text-[11px] space-y-1">
-                      <p><span className="text-slate-500">userId = </span>"usr_9921"</p>
+                      <p><span className="text-slate-500">userId = </span>&quot;usr_9921&quot;</p>
                       <p><span className="text-slate-500">maxRequests = </span>5</p>
                     </div>
                   </div>
@@ -397,7 +400,7 @@ export default function CodingAssessmentConsole({
                         </div>
                       ))
                     ) : (
-                      <p className="text-slate-500 text-xs">Click "Run" to execute test cases against your solution.</p>
+                      <p className="text-slate-500 text-xs">Click &quot;Run&quot; to execute test cases against your solution.</p>
                     )}
                   </div>
                 )}
@@ -420,31 +423,110 @@ export default function CodingAssessmentConsole({
           </div>
         </main>
       ) : (
-        /* Submission Modal */
-        <div className="w-full max-w-md mx-auto my-auto p-8 rounded-3xl border border-slate-800 bg-[#141414] text-center space-y-6 shadow-2xl animate-in zoom-in-95 duration-200">
-          <div className="h-16 w-16 rounded-full bg-emerald-950 border border-emerald-800 text-emerald-400 flex items-center justify-center mx-auto shadow-md">
-            <Award className="h-8 w-8" />
+        /* Redesigned Submission Completion View */
+        <div className="w-full max-w-xl mx-auto my-auto p-8 rounded-3xl border border-slate-800/90 bg-[#121214]/95 backdrop-blur-xl text-left space-y-6 shadow-2xl animate-in zoom-in-95 duration-200">
+          {/* Header Banner */}
+          <div className="flex items-center gap-4 pb-5 border-b border-slate-800/80">
+            <div className="relative">
+              <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                <Check className="h-7 w-7 stroke-[3]" />
+              </div>
+              <span className="absolute -bottom-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-[#121214]"></span>
+              </span>
+            </div>
+
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                  Solution Accepted
+                </span>
+                <span className="text-xs text-slate-500 font-mono">• {language}</span>
+              </div>
+              <h2 className="text-xl font-bold text-white tracking-tight mt-1 font-display">
+                All Test Cases Passed Successfully
+              </h2>
+              <p className="text-xs text-slate-400">
+                Your code passed all automated functional and performance test suites.
+              </p>
+            </div>
           </div>
 
-          <div>
-            <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">
-              Accepted
-            </span>
-            <h2 className="text-2xl font-extrabold text-white tracking-tight mt-2 font-display">
-              Runtime: 2ms • Beat 98.4%
-            </h2>
-            <p className="text-xs text-slate-400 font-medium mt-1">
-              Memory Usage: 42.1 MB (Beat 91.2% of TypeScript submissions).
-            </p>
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-3 gap-3">
+            {/* Metric 1: Runtime */}
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition-all">
+              <div className="flex items-center justify-between text-slate-400 mb-1.5">
+                <span className="text-[11px] font-semibold">Runtime</span>
+                <Zap className="h-4 w-4 text-amber-400" />
+              </div>
+              <div className="text-xl font-extrabold text-white tracking-tight font-mono">
+                2ms
+              </div>
+              <span className="inline-block mt-1 text-[10px] text-emerald-400 font-medium">
+                Fast execution
+              </span>
+            </div>
+
+            {/* Metric 2: Memory */}
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition-all">
+              <div className="flex items-center justify-between text-slate-400 mb-1.5">
+                <span className="text-[11px] font-semibold">Memory</span>
+                <Cpu className="h-4 w-4 text-cyan-400" />
+              </div>
+              <div className="text-xl font-extrabold text-white tracking-tight font-mono">
+                42.1 MB
+              </div>
+              <span className="inline-block mt-1 text-[10px] text-slate-400 font-medium">
+                V8 Sandbox
+              </span>
+            </div>
+
+            {/* Metric 3: Test Cases */}
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition-all">
+              <div className="flex items-center justify-between text-slate-400 mb-1.5">
+                <span className="text-[11px] font-semibold">Test Cases</span>
+                <ShieldCheck className="h-4 w-4 text-emerald-400" />
+              </div>
+              <div className="text-xl font-extrabold text-white tracking-tight font-mono">
+                3 / 3
+              </div>
+              <span className="inline-block mt-1 text-[10px] text-emerald-400 font-medium">
+                100% Passed
+              </span>
+            </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => onComplete(98)}
-            className="w-full py-3.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs transition-all shadow-md cursor-pointer"
-          >
-            View Evaluation Feedback
-          </button>
+          {/* Execution Specs */}
+          <div className="p-3.5 rounded-xl bg-slate-900/40 border border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-indigo-400" />
+              <span>Complexity: <strong className="text-slate-200 font-mono">O(N) Time</strong> • <strong className="text-slate-200 font-mono">O(1) Space</strong></span>
+            </div>
+            <span className="text-[11px] text-slate-500 font-mono">Verified AST</span>
+          </div>
+
+          {/* Action CTAs */}
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setSubmitted(false)}
+              className="px-4 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span>Review Code</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onComplete(98)}
+              className="flex-1 py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-950/50 hover:shadow-emerald-900/60 cursor-pointer"
+            >
+              <span>View Evaluation Feedback</span>
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       )}
     </div>

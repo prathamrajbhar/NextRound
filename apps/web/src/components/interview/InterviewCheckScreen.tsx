@@ -28,46 +28,20 @@ export default function InterviewCheckScreen({
 
   // Automated step progress sequence
   useEffect(() => {
-    if (step === 1) {
-      setProgress(0);
+    if (step === 1 || step === 2 || step === 3) {
+      const stepInc = step === 3 ? 25 : 20;
+      const nextStep = (step + 1) as 2 | 3 | 4;
       const int = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 100) {
             clearInterval(int);
-            setTimeout(() => setStep(2), 300);
+            setTimeout(() => {
+              setProgress(0);
+              setStep(nextStep);
+            }, 300);
             return 100;
           }
-          return prev + 20;
-        });
-      }, 100);
-      return () => clearInterval(int);
-    }
-
-    if (step === 2) {
-      setProgress(0);
-      const int = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(int);
-            setTimeout(() => setStep(3), 300);
-            return 100;
-          }
-          return prev + 20;
-        });
-      }, 100);
-      return () => clearInterval(int);
-    }
-
-    if (step === 3) {
-      setProgress(0);
-      const int = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 100) {
-            clearInterval(int);
-            setTimeout(() => setStep(4), 300);
-            return 100;
-          }
-          return prev + 25;
+          return prev + stepInc;
         });
       }, 100);
       return () => clearInterval(int);
@@ -81,7 +55,7 @@ export default function InterviewCheckScreen({
       if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch(() => {});
       }
-    } catch (e) {}
+    } catch {}
 
     onJoin();
   };
