@@ -1,137 +1,188 @@
-# NextRound — Product Requirements Document (PRD)
+# NextRound — Product Requirements Document
 
-NextRound (HireOS) is an AI-native recruitment marketplace with a zero-human-step hiring pipeline. Companies post jobs on the platform, and candidates create one reusable profile to apply across any company. Autonomous AI agents run the entire hiring process — sourcing, resume screening, aptitude testing, interactive coding assessments, AI voice interviewing, video screening, bias auditing, hiring decision making, digital offer extensions, and post-offer onboarding — with zero manual intervention required. HR managers only view the final pre-vetted shortlist, evaluation transcripts, and bias audit reports.
+NextRound (HireOS) is an AI-native recruitment marketplace where companies post jobs and candidates maintain one reusable profile to apply across any participating company. Autonomous AI agents run the entire hiring pipeline — sourcing, resume screening, aptitude testing, coding assessment, voice interviewing, video screening, bias auditing, decision making, offer extension, and onboarding — with zero required human intervention. HR managers access a pre-vetted shortlist, evaluation transcripts, and bias audit reports only after the pipeline completes.
 
 ---
 
 ## 1. Problem Statement
 
-1. **Massive Recruiter Inefficiency**: Recruiter time is wasted on repetitive manual tasks: scanning resumes, scheduling calls, conducting introductory interviews, and routing emails (30+ day industry average time-to-hire).
-2. **Persistent Hiring Bias**: Human evaluation suffers from conscious and unconscious bias based on candidate names, school prestige, age, gender codes, and geography.
-3. **High ATS Cost & Complexity**: Small-to-midsize companies cannot afford enterprise ATS subscriptions or dedicated talent acquisition teams.
-4. **Candidate Ghosting & Black Hole**: Candidates submit dozens of applications, wait weeks for responses, and receive zero constructive feedback upon rejection.
-5. **Lack of Candidate Readiness Tools**: Candidates have no reliable, company-specific practice environments to prepare for real-world automated or technical interviews.
+| # | Problem | Industry Impact |
+|---|---|---|
+| 1 | **Recruiter Inefficiency** | Recruiters waste 70–80% of their time on repetitive manual tasks: scanning resumes, scheduling calls, conducting introductory screens, and routing emails. Industry average time-to-hire exceeds 30 days. |
+| 2 | **Persistent Hiring Bias** | Human evaluation introduces conscious and unconscious bias based on candidate names, school prestige, age, gender cues, and geography, resulting in legally and ethically compromised outcomes. |
+| 3 | **High ATS Cost & Complexity** | Enterprise ATS subscriptions (Greenhouse, Lever, Workday) are prohibitively expensive for small-to-midsize companies and still require significant recruiter headcount to operate. |
+| 4 | **Candidate Ghosting & Black Hole** | Candidates submit dozens of applications, wait weeks for responses, and receive zero constructive feedback upon rejection, leading to a broken candidate experience. |
+| 5 | **No Candidate Readiness Tools** | Candidates have no reliable, company-specific practice environments to prepare for automated, technical, or AI-conducted interviews before they face them in the real world. |
 
 ---
 
 ## 2. Product Solution
 
-NextRound operates as a two-sided AI talent marketplace:
+NextRound is a **two-sided AI talent marketplace**:
 
-- **For Companies (HR Portal)**: Organizations post jobs, configure scoring rubrics and auto-offer thresholds, and receive pre-screened shortlists. AI agents handle sourcing, screening, scheduling, multi-modal assessment, interviewing, evaluating, bias auditing, decision delivery, and offer extensions.
-- **For Candidates (Candidate Portal)**: Candidates maintain one universal profile (resume, skills, target roles, GitHub/LinkedIn links), browse open positions across all participating companies, apply with one click, and complete dynamic multi-modal vetting (Voice AI Interview, Aptitude Test, Coding Sandbox, Video Screening). Candidates also access self-serve **Mock Interview Agents** and **Company Prep Libraries**.
+**For Companies (HR Portal):** Organizations register, post jobs with AI-assisted JD generation, configure scoring rubrics and auto-offer thresholds, and receive a pre-screened, ranked shortlist. AI agents handle sourcing, screening, scheduling, multi-modal assessment, voice interviewing, evaluation, bias auditing, decision delivery, and offer extension automatically.
+
+**For Candidates (Candidate Portal):** Candidates maintain one universal profile (resume, skills, target roles, GitHub/LinkedIn), browse open positions across all participating companies, apply with one click, and complete dynamic multi-modal vetting. Candidates also access self-serve **Mock Interview Agents** and **Company Prep Libraries** to practice before real applications.
 
 ---
 
-## 3. Core Objectives & Metrics
+## 3. Core Objectives & Success Metrics
 
-| Goal | Metric / Target | Description |
-|---|---|---|
-| **Zero Human Steps** | 100% pipeline automation | Sourcing to offer letter delivered with 0 recruiter touchpoints required |
-| **Fast Time-to-Hire** | < 72 Hours | From application submission to automated decision/offer letter delivery |
-| **Bias Transparency** | 100% Audit Coverage | Every evaluation produces a demographic anomaly audit report |
-| **Marketplace Liquidity** | Single Profile Reuse | 1 candidate profile applies across all registered platform companies |
-| **Candidate Readiness** | Integrated Practice Mode | On-demand mock voice interviews with instant scoring feedback |
-| **Data Isolation** | Multi-tenant Security | Strict server-side `org_id` boundaries backed by Prisma 7.9.0 |
+| Objective | Metric & Target |
+|---|---|
+| **Zero Human Steps** | 100% pipeline automation — sourcing to offer delivered with 0 required recruiter touchpoints |
+| **Fast Time-to-Hire** | < 72 hours from application submission to automated decision or offer letter delivery |
+| **Bias Transparency** | 100% audit coverage — every evaluation produces a demographic anomaly report |
+| **Marketplace Liquidity** | One candidate profile applies across all registered companies with 1-click |
+| **Candidate Readiness** | On-demand mock voice interviews with instant scoring feedback, independent of live applications |
+| **Multi-Tenant Security** | Strict server-side `org_id` isolation — cross-org data access is technically impossible |
 
 ---
 
 ## 4. User Personas
 
-### A. HR Manager / Talent Lead (Company User)
-- Registers organization and manages team member access levels.
-- Posts job listings, utilizes AI JD parsing, and sets rubric weightings.
-- Views real-time pipeline Kanban, candidate evaluation detail cards, and interview replays.
-- Accesses **Sentiment + Stress Analyser** (`/hr/sentiment-analysis`) to review audio tone, speech pace, pitch variation, and Emotional Journey Graphs to distinguish genuine skill gaps from interview nervousness.
-- Conducts live 1:1 Human HR Round video calls with candidates after all AI assessments pass threshold, manually marking Pass/Fail.
-- Configures auto-offer toggles, platform availability slots, and custom email templates.
+### A. HR Manager / Talent Lead
 
-### B. Job Candidate (Platform User)
-- Builds a platform-wide candidate profile (resume, skills, target compensation, work authorization).
-- Uses **AI Voice Resume Builder** (`/candidate/resume-builder`) to complete a 15-minute voice interview with an AI agent to automatically generate a formatted, ATS-compliant resume with quantified bullet points and PDF download options.
+- Registers the organization and manages team member access.
+- Posts job listings using the AI JD Assistant and sets rubric dimension weightings.
+- Views real-time pipeline Kanban, candidate evaluation detail cards, and interview transcripts/replays.
+- Accesses the **Sentiment + Stress Analyser** to review audio tone, speech pace, pitch variation, and Emotional Journey Graphs to distinguish genuine skill gaps from interview nervousness.
+- Conducts the final live **Human HR Round** — a 1:1 video call with shortlisted candidates — and manually marks Pass or Fail. This is the only required human step in the pipeline.
+- Configures auto-offer toggles, platform availability hours, and custom organization email templates.
+- Reviews bias audit reports to ensure fairness compliance before any hiring decision is finalized.
+
+### B. Job Candidate
+
+- Creates one platform-wide profile: resume, skills, target compensation, work authorization, proud projects, and work values.
+- Uses the **AI Voice Resume Builder** (`/candidate/resume-builder`) to complete a 15-minute voice interview with an AI agent, automatically generating an ATS-compliant resume with quantified bullet points and a PDF download — no manual writing required.
 - Applies to jobs across multiple companies without re-entering application details.
-- Completes automated scheduling, voice interviews, coding sandboxes, aptitude assessments, and final Human HR Round video call.
-- Receives automated decisions, digital offer letters with signature pads, or feedback-rich rejection emails.
-- Utilizes Mock Interview Console and Company Prep Libraries for skill development.
+- Completes automated scheduling, AI voice interviews, coding sandboxes, aptitude assessments, video screening, and the final Human HR Round video call.
+- Receives automated offer letters with a digital signature pad or feedback-rich rejection emails.
+- Uses the **Mock Interview Console** and **Company Prep Library** for independent skill development before and after applying.
 
-### C. Compliance Auditor / Admin
-- Reviews aggregate bias audit logs, score distribution trends, and proctoring telemetry data.
-- Ensures computer vision proctoring signals remain isolated from hiring decision logic.
+### C. Compliance Auditor / Platform Admin
+
+- Reviews aggregate bias audit logs across all organizations and score distribution trends.
+- Verifies that computer vision proctoring signals from `Interview.proctor_flags` are not present in Decision Agent scoring inputs.
+- Accesses platform-wide `AgentLog` streams for pipeline health monitoring and failure inspection.
+- Manages platform-level user data requests (GDPR soft deletes, data purge verification).
 
 ---
 
-## 5. Technology Stack (Locked 2026 Stable Versions)
+## 5. Technology Stack
 
-| Layer | Technologies & Versions |
+| Layer | Technologies |
 |---|---|
-| **Frontend Web App** | Next.js 16.2.11 (App Router), React 19.2.8, TypeScript 6.0, Tailwind CSS 4.3.3 (Oxide engine), Lucide React 1.23.0 |
+| **Frontend** | Next.js 16.2.11 (App Router), React 19.2.8, TypeScript 6.0, Tailwind CSS 4.3.3 (Oxide engine), Lucide React 1.23.0 |
 | **Backend REST API** | Express.js 5.2.1, TypeScript 6.0, Zod 4.4.3, Prisma ORM 7.9.0, PostgreSQL 16 + pgvector, Custom JWT Auth |
 | **AI & Agent Service** | Python 3.13, FastAPI 0.139.2, Uvicorn 0.50, LangGraph, Gemini API (`google-genai` SDK v2.10) |
-| **STT / TTS Audio Engine** | Groq API v1.5 (Whisper-large-v3 STT), Piper / Coqui TTS, WebRTC real-time audio |
-| **Client-Side Computer Vision** | MediaPipe (browser-side face detection, multi-person detection, posture/engagement flags) |
-| **Task Queue & Caching** | BullMQ 5.80.10 + Redis 8 (async queues for 8 agent pipelines) |
+| **STT / TTS Audio** | Groq API v1.5 (Whisper-large-v3 STT), Piper / Coqui TTS, WebRTC real-time audio |
+| **Client-Side CV** | MediaPipe (browser-side face detection, gaze tracking, posture/engagement flags) |
+| **Task Queue & Cache** | BullMQ 5.80.10 + Redis 8 (async queue channels for all agent pipelines) |
 | **Storage & Email** | AWS S3 / MinIO (audio recordings, resume PDFs), Nodemailer 8 (SMTP email automation) |
-| **Monorepo Infra** | Turborepo 2.10, Vercel (Frontend), Managed Cloud / VPS (Express, Python, Redis, Postgres) |
+| **Monorepo** | Turborepo 2.10 managing `apps/web`, `apps/api`, `apps/ai-service`, `packages/*` |
+
+> Stack is locked. Do not substitute any dependency without an explicit team decision.
 
 ---
 
-## 6. Data Model Architecture (Prisma 7 Entities)
+## 6. Business Model
 
-```
-User: id, email, password_hash, role (hr | candidate), org_id (nullable), created_at
-Organization: id, name, logo_url, industry, size, settings (json), created_at
-Job: id, org_id, title, description, rubric (json), thresholds (json), status (draft|active|closed), created_at
-CandidateProfile: id, user_id, resume_url, linkedin_url, github_url, skills (json), target_roles (json), expected_salary, notice_period, work_authorization, proud_project, work_values (json), created_at
-Application: id, candidate_id, job_id, status (applied|screening|interview_scheduled|interviewed|hr_round|decided|offered|accepted), hr_round_status (pending|scheduled|passed|failed), hr_round_scheduled_at, hr_round_completed_at, applied_at
-Evaluation: id, application_id, stage, resume_score, interview_score, composite_score, bias_flag, bias_report (json), decision (hire|reject|hold), reasoning
-Interview: id, application_id, scheduled_at, transcript (json), audio_url, proctor_flags (json), engagement_signal (json), video_consent (bool), status
-Assessment: id, application_id, test_type (aptitude|coding|video), questions (json), responses (json), score, status
-CodingSubmission: id, application_id, language, code, test_results (json), pass_rate, execution_time_ms
-Offer: id, application_id, role_title, salary, equity, start_date, status (pending|accepted|declined), signature_svg, valid_until
-AgentLog: id, job_id, agent_name, action, input (json), output (json), status, created_at
-MockSession: id, candidate_id, target_company, target_role, rubric (json), transcript (json), score, feedback (json), created_at
-PrepContent: id, company_name, role_archetype, questions (json), culture_notes, updated_at
-```
+| Tier | Target | Pricing | Limits |
+|---|---|---|---|
+| **Free** | Startups & SMBs | $0 | 1 active job, 50 candidates/month, basic AI pipeline |
+| **Pro** | Growing companies | ~$299/month | 10 active jobs, unlimited candidates, full multi-modal assessment |
+| **Enterprise** | Large orgs | Custom | Unlimited jobs, SSO, custom branding, dedicated queue priority |
+
+Candidates always use the platform for free. Monetization is purely on the employer (HR) side.
 
 ---
 
 ## 7. Non-Functional Requirements
 
-- **Latency**: Voice AI interview turn-taking response latency < 1.0 second; Express API non-AI response latency < 15ms.
-- **Processing Time**: Resume parsing and vector embedding generated in < 30 seconds.
-- **Email Delivery**: Automated offer/rejection notification emails sent within 2 minutes of decision generation.
-- **Privacy & Consent**: MediaPipe computer vision processing runs 100% client-side; explicit video consent required before session initialization.
-- **Multi-Tenant Security**: Strict server-side `org_id` verification on all HR queries via JWT payload; cross-org data access strictly forbidden.
-- **High Availability**: 99.5% uptime target for web API and agent workers.
+| Requirement | Target |
+|---|---|
+| **Voice Latency** | AI interview turn-taking response < 1.0 second end-to-end |
+| **API Latency** | Express non-AI endpoints < 15ms p99 |
+| **Resume Processing** | PDF parse + vector embedding generation < 30 seconds |
+| **Email Delivery** | Offer/rejection email sent within 2 minutes of Decision Agent completion |
+| **Privacy** | MediaPipe CV runs 100% client-side; raw video frames never leave the candidate's device |
+| **Multi-Tenant Security** | Server-side `org_id` derived exclusively from JWT payload; never from request body |
+| **Uptime** | 99.5% SLA for web API and AI agent workers |
+| **Code Execution Safety** | Candidate code submissions run inside isolated, resource-capped sandboxes with timeout limits |
 
 ---
 
-## 8. Build Roadmap (5-Month Phased Rollout)
+## 8. Build Roadmap
 
-- **Month 1 — Core Foundation**: Postgres schema + Prisma 7 ORM setup, custom JWT auth, multi-tenant organization boundaries, HR job creation UI, JD Parser Agent.
-- **Month 2 — Sourcing & Screening**: Sourcing Agent, resume parser, pgvector semantic search RAG pipeline, public job catalog, application tracking primitives.
-- **Month 3 — Voice & Computer Vision**: WebRTC voice interview room, Scheduler Agent, Groq Whisper STT + Piper/Coqui TTS engine, client-side MediaPipe proctoring integration.
-- **Month 4 — Multi-Modal Vetting & Intelligence**: Aptitude Test Console, Coding Sandbox, Evaluator + Bias Audit Agent, Decision Agent, Offer letter extension & digital signatures, Mock Interview Agent.
-- **Month 5 — Analytics & Polish**: Analytics Agent, PDF report generation, candidate progress tracking, Talent Pool search console, end-to-end integration verification.
+### Phase 1 — Core Foundation
+**Deliverables:**
+- PostgreSQL 16 schema with Prisma 7 ORM (`User`, `Organization`, `Job`, `CandidateProfile`)
+- Custom JWT authentication with httpOnly cookie strategy
+- Multi-tenant RBAC middleware enforcing `org_id` isolation on all HR routes
+- HR job creation UI with AI JD Parser Agent (BullMQ + Python FastAPI)
+- Public job catalog with search and filtering
+
+### Phase 2 — Sourcing & Screening
+**Deliverables:**
+- Sourcing Agent: multi-source candidate discovery with deduplication
+- Resume upload endpoint + PDF/DOCX parser
+- pgvector embedding generation and cosine similarity search pipeline
+- Screening Agent: rubric-matched scoring, gap analysis, auto-rejection emails
+- Candidate 1-click apply flow and application status tracking
+
+### Phase 3 — Voice & Computer Vision
+**Deliverables:**
+- WebRTC voice interview room with mic/cam pre-check and video consent flow
+- Scheduler Agent: 3-slot auto-proposer, email reminders, rescheduling
+- Groq Whisper-large-v3 STT integration for real-time transcription
+- Piper/Coqui TTS integration for AI voice responses
+- Dynamic Conversational Loop Interviewer Agent (LangGraph)
+- Client-side MediaPipe proctoring HUD with telemetry transmission
+
+### Phase 4 — Multi-Modal Vetting & Intelligence
+**Deliverables:**
+- Aptitude Test Console (4 cognitive categories, real-time timer)
+- Coding Sandbox Console (Monaco editor, multi-language, isolated test execution)
+- Video Screening Console (async video prompts + auto-transcription)
+- Evaluator + Bias Audit Agent (LLM-as-judge composite scoring + demographic audit)
+- Decision Agent (threshold matching, auto-offer/rejection, Nodemailer delivery)
+- Digital Offer Letter with signature canvas and onboarding checklist
+- Mock Interview Agent (practice voice sessions with instant feedback)
+- AI Voice Resume Builder Agent (15-minute voice → ATS resume generation)
+- Human HR Round video call console
+
+### Phase 5 — Analytics & Polish
+**Deliverables:**
+- Analytics Agent: weekly funnel metrics, time-to-hire trends, bias score stability charts
+- PDF report generation and export
+- Sentiment + Stress Analyser dashboard
+- Candidate progress tracking and skill improvement charts
+- HR Talent Pool search console with passive candidate bookmarking
+- Company Prep Library with AI-generated question banks
+- End-to-end integration verification across all agent pipelines
 
 ---
 
-## 9. Risk Analysis & Mitigation Matrix
+## 9. Risk Analysis & Mitigation
 
-| Risk | Potential Impact | Technical Mitigation |
+| Risk | Impact | Mitigation |
 |---|---|---|
-| **LLM Decision Errors** | Incorrect candidate hiring decisions | Confidence threshold gates route low-confidence outputs to "Hold for Review"; structured JSON schemas prevent hallucinated outputs. |
-| **Voice Latency Spikes** | Poor candidate interview experience | Automatic fallback to chat-style text-only interview mode if audio latency exceeds 3 seconds. |
-| **Computer Vision Bias** | Ethical / legal compliance risks | MediaPipe flags are logged strictly for HR audit review and explicitly excluded from Decision Agent scoring functions. |
-| **Unrestricted Code Execution** | Security vulnerability in coding assessment | Code submissions executed inside isolated, resource-capped WebAssembly / sandbox environments with short execution timeouts. |
-| **Two-Sided Cold Start** | Initial lack of job listings | Seed platform with pre-populated demo company accounts, jobs, and candidate profiles. |
+| **LLM Decision Errors** | Incorrect hiring outcomes | Confidence threshold gates (`< 0.70`) route low-confidence outputs to `hold_for_review`; structured JSON schemas prevent hallucinated outputs |
+| **Voice Latency Spikes** | Poor interview experience | Automatic fallback to chat-style text-only interview mode if audio round-trip latency exceeds 3 seconds |
+| **CV Proctoring Bias** | Ethical / legal risk | MediaPipe flags logged to `Interview.proctor_flags` strictly for HR review; programmatically excluded from all Decision Agent scoring inputs |
+| **Unsafe Code Execution** | Security vulnerability | Code submissions run inside isolated, resource-capped WebAssembly sandbox with hard execution timeouts |
+| **Two-Sided Cold Start** | No listings, no candidates | Seed platform with pre-populated demo company accounts, active jobs, and candidate profiles |
+| **Schema Drift (Dual Write)** | Data consistency bugs | Python AI service never writes to Postgres directly; all DB writes go through Express internal callback endpoints |
 
 ---
 
 ## 10. Success Criteria
 
-1. End-to-end execution of a candidate application through sourcing, resume screening, voice interview, coding assessment, bias audit, decision, and offer letter generation with zero human interventions across multiple companies.
-2. Verified multi-tenant data isolation preventing Organization A from querying Organization B data.
-3. Candidate candidate profile reusable across multiple company postings with 1-click apply.
-4. Client-side MediaPipe proctoring telemetry stored without influencing Decision Agent composite scores.
-5. Functional Mock Interview Console providing instant feedback to candidates independent of live job postings.
+1. A candidate application advances from submission → sourcing → screening → aptitude → coding → video screening → voice interview → bias audit → decision → offer letter with **zero human interventions**.
+2. Multi-tenant isolation verified: Organization A cannot query any resource belonging to Organization B.
+3. A single `CandidateProfile` applies to multiple job postings across different companies using 1-click apply.
+4. Client-side MediaPipe proctoring telemetry is stored in `Interview.proctor_flags` and is **absent** from Decision Agent scoring inputs.
+5. The Mock Interview Console delivers instant AI coaching feedback independent of any live job application.
+6. The AI Voice Resume Builder produces a downloadable, ATS-compliant PDF resume from a voice interview session.
+7. The Human HR Round video call is successfully gated — offer letter is only released after HR marks `Pass`.

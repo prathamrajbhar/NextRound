@@ -3,7 +3,7 @@
 ## Project
 - **Name**: NextRound / HireOS
 - **Description**: AI-native recruitment marketplace with zero-human-step hiring pipeline (sourcing, screening, voice interview, evaluator + bias audit, decision, offer) and candidate prep/mock interview layer.
-- **Documentation**: Detailed specs in `docs/` (`prd.md`, `architecture.md`, `features.md`, `screens.md`, `api.md`).
+- **Documentation**: Full specs in `docs/` — `prd.md` (product), `architecture.md` (system), `features.md` (feature specs + agent triggers), `api.md` (all REST endpoints), `screens.md` (all screens + components), `schema.md` (Prisma schema), `agents.md` (per-agent LangGraph specs).
 
 ## Stack (LOCKED — do not substitute)
 - **Frontend**: Next.js 16.2.11 (App Router), React 19.2.8, TypeScript 6.0, Tailwind CSS 4.3.3, Lucide React 1.23, WebRTC, MediaPipe (client-side CV)
