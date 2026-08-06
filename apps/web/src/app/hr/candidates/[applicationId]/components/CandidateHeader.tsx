@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { Clock, LinkedinIcon, GithubIcon } from '@/lib/lucide-google-icons';
 
-import { Application } from '@/lib/mockData';
+import { Application } from '@/types';
 
 interface CandidateHeaderProps {
   app: Application;

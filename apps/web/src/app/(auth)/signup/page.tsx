@@ -14,8 +14,13 @@ import {
   CheckCircle2,
 } from '@/lib/lucide-google-icons';
 
+import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/hooks/useAuth';
+
 export default function SignupPage() {
   const router = useRouter();
+  const { register } = useAuth();
+  const { toast } = useToast();
   const [role, setRole] = useState<'candidate' | 'hr'>('candidate');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,7 +29,7 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password || (role === 'hr' && !companyName)) {
       setError('Please fill in all required fields.');
@@ -33,14 +38,19 @@ export default function SignupPage() {
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
+    const result = await register(email, password, role, role === 'hr' ? companyName : undefined);
+    setLoading(false);
+
+    if (result.success && result.user) {
+      toast({ title: 'Account created successfully', variant: 'success' });
       if (role === 'candidate') {
-        router.push('/candidate/dashboard');
+        router.push('/onboarding/candidate');
       } else {
-        router.push('/hr/dashboard');
+        router.push('/onboarding/company');
       }
-    }, 1000);
+    } else {
+      setError(result.error || 'Registration failed');
+    }
   };
 
   return (

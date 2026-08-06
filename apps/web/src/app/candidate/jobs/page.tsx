@@ -1,27 +1,55 @@
 'use client';
 
-import React, { useState } from 'react';
-import { mockJobs, mockApplications } from '@/lib/mockData';
+import React, { useEffect, useState } from 'react';
+import { apiClient } from '@/lib/apiClient';
+import { Job, Application } from '@/types';
 import { JobCard } from '@/components/ui';
 import { Search, Filter } from '@/lib/lucide-google-icons';
 
 export default function CandidateJobsPage() {
+  const [loading, setLoading] = useState(true);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [search, setSearch] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedExperience, setSelectedExperience] = useState('All');
 
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [jobsRes, appsRes] = await Promise.allSettled([
+          apiClient.get<Job[]>('/jobs'),
+          apiClient.get<Application[]>('/candidate/applications'),
+        ]);
+
+        if (jobsRes.status === 'fulfilled' && jobsRes.value) {
+          setJobs(jobsRes.value);
+        }
+        if (appsRes.status === 'fulfilled' && appsRes.value) {
+          setApplications(appsRes.value);
+        }
+      } catch (err) {
+        console.error('Failed to load opportunities:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   // Filter jobs based on search criteria
-  const filteredJobs = mockJobs.filter((job) => {
-    const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase()) || 
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase()) ||
                           job.orgName.toLowerCase().includes(search.toLowerCase()) ||
                           job.description.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesLocation = selectedLocation === 'All' || 
+
+    const matchesLocation = selectedLocation === 'All' ||
                             (selectedLocation === 'Remote' && job.location.toLowerCase().includes('remote')) ||
                             (selectedLocation === 'Hybrid' && job.location.toLowerCase().includes('hybrid')) ||
                             (selectedLocation === 'Onsite' && !job.location.toLowerCase().includes('remote') && !job.location.toLowerCase().includes('hybrid'));
 
-    const matchesExperience = selectedExperience === 'All' || 
+    const matchesExperience = selectedExperience === 'All' ||
                               (selectedExperience === 'Senior' && job.experienceLevel.toLowerCase().includes('senior')) ||
                               (selectedExperience === 'Mid' && !job.experienceLevel.toLowerCase().includes('senior') && !job.experienceLevel.toLowerCase().includes('lead')) ||
                               (selectedExperience === 'Lead' && job.experienceLevel.toLowerCase().includes('lead'));
@@ -86,7 +114,7 @@ export default function CandidateJobsPage() {
       {filteredJobs.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredJobs.map((job) => {
-            const hasApplied = mockApplications.some((a) => a.jobId === job.id && a.candidateEmail === 'ananya.iyer@gmail.com');
+            const hasApplied = applications.some((a) => a.jobId === job.id);
             const matchPercent = job.id === 'job-101' ? 98 : job.id === 'job-102' ? 89 : 74;
 
             return (

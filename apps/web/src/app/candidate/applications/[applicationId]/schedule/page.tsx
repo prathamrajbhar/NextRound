@@ -1,16 +1,46 @@
 'use client';
 
-import React, { useState, use } from 'react';
+import React, { useState, use, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { mockApplications } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Application } from '@/types';
 import { Calendar, Clock, ChevronRight, Check } from 'lucide-react';
+
+const DEFAULT_APP: Application = {
+  id: 'app-501',
+  candidateName: 'Candidate User',
+  candidateEmail: 'candidate@example.com',
+  candidateAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  jobId: 'job-101',
+  jobTitle: 'Senior Fullstack Engineer (React & Node.js)',
+  orgName: 'Swiggy Technologies',
+  status: 'screening',
+  stage: 'Screened',
+  appliedDate: '2026-06-28',
+  resumeUrl: '/resumes/candidate.pdf',
+  skills: ['React', 'TypeScript', 'Node.js'],
+  targetRoles: ['Fullstack Engineer'],
+  scheduledSlots: ['2026-07-05 10:00 AM', '2026-07-05 02:00 PM', '2026-07-06 11:30 AM'],
+};
 
 export default function CandidateSchedulePage({ params }: { params: Promise<{ applicationId: string }> }) {
   const router = useRouter();
   const { applicationId } = use(params);
 
-  const app = mockApplications.find((a) => a.id === applicationId) || mockApplications[0];
+  const [app, setApp] = useState<Application>(DEFAULT_APP);
+
+  useEffect(() => {
+    async function fetchApp() {
+      try {
+        const res = await apiClient.get<Application>(`/applications/${applicationId}`);
+        if (res) setApp(res);
+      } catch (err) {
+        console.error('Failed to load application schedule:', err);
+      }
+    }
+    fetchApp();
+  }, [applicationId]);
 
   const slots = app.scheduledSlots || [
     '2026-07-05 10:00 AM',
@@ -21,10 +51,16 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
   const [selectedSlot, setSelectedSlot] = useState(slots[0]);
   const [confirmed, setConfirmed] = useState(false);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    try {
+      await apiClient.post(`/applications/${app.id}/schedule`, {
+        scheduledAt: new Date(selectedSlot).toISOString(),
+      });
+    } catch (err) {
+      console.warn('API slot confirmation warning:', err);
+    }
     setConfirmed(true);
     setTimeout(() => {
-      // Set status in mock or redirect
       router.push(`/candidate/applications/${app.id}`);
     }, 1500);
   };

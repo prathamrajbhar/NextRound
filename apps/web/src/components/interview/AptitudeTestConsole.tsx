@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { CompanyLogo } from '@/components/ui';
+import { apiClient } from '@/lib/apiClient';
 import {
   Clock,
   CheckCircle2,
@@ -10,19 +11,22 @@ import {
   ChevronLeft,
   Award,
   Send,
+  AlertCircle,
 } from '@/lib/lucide-google-icons';
 
 interface AptitudeTestConsoleProps {
   company?: string;
   role?: string;
+  applicationId?: string;
   onComplete: (score: number) => void;
 }
 
 interface Question {
-  id: number;
+  id: string | number;
+  category?: string;
   question: string;
   options: string[];
-  correctIndex: number;
+  correctIndex?: number;
 }
 
 const mockAptitudeQuestions: Question[] = [
@@ -61,13 +65,42 @@ const mockAptitudeQuestions: Question[] = [
 export default function AptitudeTestConsole({
   company = 'Google',
   role = 'Software Engineer',
+  applicationId,
   onComplete,
 }: AptitudeTestConsoleProps) {
+  const [questions, setQuestions] = useState<Question[]>(mockAptitudeQuestions);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
+  const [answers, setAnswers] = useState<Record<string | number, number>>({});
   const [timeLeft, setTimeLeft] = useState(900); // 15 mins
   const [submitted, setSubmitted] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    async function loadQuestions() {
+      if (!applicationId) return;
+      try {
+        const res = await apiClient.get<{ questions: Question[] }>(`/applications/${applicationId}/assessment/aptitude`);
+        if (res?.questions && res.questions.length > 0) {
+          setQuestions(res.questions);
+        }
+      } catch (err) {
+        console.warn('Using seed question set:', err);
+      }
+    }
+    loadQuestions();
+  }, [applicationId]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setTabSwitchCount((prev) => prev + 1);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
   useEffect(() => {
     if (submitted) return;
@@ -77,21 +110,40 @@ export default function AptitudeTestConsole({
     return () => clearInterval(interval);
   }, [submitted]);
 
-  const currentQ = mockAptitudeQuestions[currentIndex];
+  const currentQ = questions[currentIndex] || mockAptitudeQuestions[0];
 
   const handleSelectOption = (optIndex: number) => {
     setAnswers((prev) => ({ ...prev, [currentQ.id]: optIndex }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
     let correctCount = 0;
-    mockAptitudeQuestions.forEach((q) => {
-      if (answers[q.id] === q.correctIndex) {
+    questions.forEach((q) => {
+      if (q.correctIndex !== undefined && answers[q.id] === q.correctIndex) {
         correctCount++;
       }
     });
-    const percentage = Math.round((correctCount / mockAptitudeQuestions.length) * 100);
+    const percentage = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 80;
+
+    if (applicationId) {
+      try {
+        const formattedAnswers = Object.entries(answers).map(([qId, sel]) => ({
+          questionId: qId,
+          selectedOption: sel,
+        }));
+        await apiClient.post(`/applications/${applicationId}/assessment/aptitude`, {
+          answers: formattedAnswers,
+          totalTimeSeconds: 900 - timeLeft,
+          tabSwitchCount,
+        });
+      } catch (err) {
+        console.warn('API submission warning:', err);
+      }
+    }
+
     setFinalScore(percentage);
+    setIsSubmitting(false);
     setSubmitted(true);
   };
 
@@ -126,7 +178,7 @@ export default function AptitudeTestConsole({
           </div>
 
           <span className="text-xs font-bold text-slate-400 hidden sm:inline">
-            Question {currentIndex + 1} of {mockAptitudeQuestions.length}
+            Question {currentIndex + 1} of {questions.length}
           </span>
         </div>
       </div>
@@ -192,7 +244,7 @@ export default function AptitudeTestConsole({
                 <ChevronLeft className="h-4 w-4" /> Previous
               </button>
 
-              {currentIndex < mockAptitudeQuestions.length - 1 ? (
+              {currentIndex < questions.length - 1 ? (
                 <button
                   type="button"
                   onClick={() => setCurrentIndex((prev) => prev + 1)}
@@ -204,9 +256,10 @@ export default function AptitudeTestConsole({
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="px-6 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
+                  disabled={isSubmitting}
+                  className="px-6 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-md disabled:opacity-50"
                 >
-                  <Send className="h-4 w-4" /> Submit Aptitude Test
+                  <Send className="h-4 w-4" /> {isSubmitting ? 'Submitting...' : 'Submit Aptitude Test'}
                 </button>
               )}
             </div>
@@ -224,7 +277,7 @@ export default function AptitudeTestConsole({
             </div>
 
             <div className="grid grid-cols-5 gap-2.5">
-              {mockAptitudeQuestions.map((q, idx) => {
+              {questions.map((q, idx) => {
                 const isAnswered = answers[q.id] !== undefined;
                 const isCurrent = idx === currentIndex;
                 return (
@@ -250,15 +303,21 @@ export default function AptitudeTestConsole({
               <div className="flex justify-between items-center text-slate-400">
                 <span>Answered:</span>
                 <span className="text-emerald-400 font-bold">
-                  {Object.keys(answers).length} / {mockAptitudeQuestions.length}
+                  {Object.keys(answers).length} / {questions.length}
                 </span>
               </div>
               <div className="flex justify-between items-center text-slate-400">
                 <span>Remaining:</span>
                 <span className="text-amber-400 font-bold">
-                  {mockAptitudeQuestions.length - Object.keys(answers).length}
+                  {questions.length - Object.keys(answers).length}
                 </span>
               </div>
+              {tabSwitchCount > 0 && (
+                <div className="flex justify-between items-center text-rose-400 font-semibold pt-1 border-t border-slate-800/80">
+                  <span className="flex items-center gap-1"><AlertCircle className="h-3.5 w-3.5" /> Focus Lost Count:</span>
+                  <span className="font-extrabold">{tabSwitchCount} times</span>
+                </div>
+              )}
             </div>
 
             <button
@@ -285,8 +344,8 @@ export default function AptitudeTestConsole({
               Aptitude Score: {finalScore}%
             </h2>
             <p className="text-xs text-slate-400 font-medium mt-1">
-              You answered {Math.round((finalScore / 100) * mockAptitudeQuestions.length)} out of{' '}
-              {mockAptitudeQuestions.length} questions correctly.
+              You answered {Math.round((finalScore / 100) * questions.length)} out of{' '}
+              {questions.length} questions correctly.
             </p>
           </div>
 

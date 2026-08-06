@@ -1,7 +1,8 @@
 'use client';
 
-import React, { use, useState } from 'react';
-import { mockOffers } from '@/lib/mockData';
+import React, { use, useState, useEffect } from 'react';
+import { apiClient } from '@/lib/apiClient';
+import { Offer } from '@/types';
 import { OfferHeader } from './components/OfferHeader';
 import { ExecutiveRewardsGrid } from './components/ExecutiveRewardsGrid';
 import { EmbeddedDocumentViewer } from './components/EmbeddedDocumentViewer';
@@ -10,6 +11,30 @@ import { OfferDocumentModal } from './components/OfferDocumentModal';
 import { ActionModals } from './components/ActionModals';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
+const DEFAULT_OFFER: Offer = {
+  id: 'off-101',
+  applicationId: 'app-501',
+  candidateName: 'Candidate User',
+  candidateAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  jobId: 'job-101',
+  jobTitle: 'Senior Fullstack Engineer',
+  orgName: 'Swiggy Technologies',
+  status: 'sent',
+  baseSalary: '₹38,000,000',
+  bonus: '₹4,000,000 Performance Bonus',
+  equity: '₹12,000,000 ESOPs over 4 years',
+  joiningDate: 'August 15, 2026',
+  expiryDate: 'July 15, 2026',
+  benefits: [
+    'Comprehensive Health & Dental Plan for Dependents',
+    '₹150,000 Annual Learning & Conference Budget',
+    'Flexible Work Location & Home Office Setup Stipend',
+    'Unlimited Paid Time Off (PTO) Policy',
+  ],
+  negotiationHistory: [],
+  letterUrl: '/documents/offer-letter.pdf',
+};
+
 export default function CandidateOfferPage({
   params,
 }: {
@@ -17,16 +42,35 @@ export default function CandidateOfferPage({
 }) {
   const { applicationId } = use(params);
 
-  const initialOffer =
-    mockOffers.find((o) => o.applicationId === applicationId) || mockOffers[0];
-  const [offer, setOffer] = useState(initialOffer);
+  const [offer, setOffer] = useState<Offer>(DEFAULT_OFFER);
+
+  useEffect(() => {
+    async function fetchOffer() {
+      try {
+        const res = await apiClient.get<Offer>(`/candidate/applications/${applicationId}/offer`);
+        if (res) setOffer(res);
+      } catch (err) {
+        console.error('Failed to load offer:', err);
+      }
+    }
+    fetchOffer();
+  }, [applicationId]);
 
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [actionDone, setActionDone] = useState<'accepted' | 'declined' | null>(null);
 
-  const handleAccept = () => {
+  const handleAccept = async (signatureSvg: string) => {
+    try {
+      await fetch(`/api/v1/applications/${applicationId}/offer/sign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ signature_svg: signatureSvg }),
+      });
+    } catch (err) {
+      console.error('Failed to post digital signature to API:', err);
+    }
     setOffer((prev) => ({ ...prev, status: 'accepted' }));
     setActionDone('accepted');
     setShowAcceptModal(false);

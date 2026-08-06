@@ -3,7 +3,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bell, ArrowUpRight, CheckCircle2, Sparkles, Scale, Mic, Send, AlertTriangle, CheckCheck, Trash2, Check, Clock } from 'lucide-react';
-import { mockNotifications, type Notification } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Notification } from '@/types';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 
 type FilterKey = 'all' | 'unread';
@@ -23,11 +24,20 @@ export default function HrNotificationsPage() {
   const [filter, setFilter] = useState<FilterKey>('all');
 
   useEffect(() => {
-    const t = setTimeout(() => {
-      setNotifications(mockNotifications);
-      setLoading(false);
-    }, 200);
-    return () => clearTimeout(t);
+    async function fetchNotifications() {
+      try {
+        setLoading(true);
+        const data = await apiClient.get<Notification[]>('/notifications');
+        if (data) {
+          setNotifications(data);
+        }
+      } catch (err) {
+        console.error('Failed to load notifications:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchNotifications();
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;

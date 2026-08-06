@@ -18,9 +18,10 @@ import {
   Target,
   CheckCircle2,
 } from '@/lib/lucide-google-icons';
-import { SUGGESTED_COMPANIES, SUGGESTED_ROLES } from '@/lib/mockSetupHelpers';
+import { SUGGESTED_COMPANIES, SUGGESTED_ROLES } from '@/lib/constants';
 import CalibrationPanel, { AssessmentTrack } from './components/CalibrationPanel';
 import { Autocomplete, CompanyLogo } from '@/components/ui';
+import { apiClient } from '@/lib/apiClient';
 
 function MockInterviewSetupForm() {
   const router = useRouter();
@@ -57,13 +58,29 @@ function MockInterviewSetupForm() {
     return () => clearTimeout(t);
   }, [isCalibrating]);
 
-  const handleStart = (e: React.FormEvent) => {
+  const handleStart = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!consent) return;
     setLoading(true);
-    setTimeout(() => {
-      router.push(`/candidate/mock/mock-session-123?direct=true&track=${track}`);
-    }, 1200);
+    try {
+      const res = await apiClient.post<{ sessionId: string }>('/mock/sessions', {
+        topic: track === 'coding' ? 'Data Structures & Algorithms' : track === 'aptitude' ? 'Behavioral & STAR Method' : 'System Design & Architecture',
+        targetCompany: company,
+        targetRole: role,
+        difficulty,
+        focusAreas: [track],
+      });
+      if (res?.sessionId) {
+        router.push(`/candidate/mock/${res.sessionId}`);
+      } else {
+        router.push(`/candidate/mock/mock-session-123`);
+      }
+    } catch (err) {
+      console.error('Failed to create mock session:', err);
+      router.push(`/candidate/mock/mock-session-123`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const tracks = [

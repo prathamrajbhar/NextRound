@@ -4,6 +4,7 @@ import React, { useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Lock, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function ResetPasswordPage({ params }: { params: Promise<{ token: string }> }) {
   const router = useRouter();
@@ -15,7 +16,7 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password || !confirmPassword) {
       setError('Please fill in all fields.');
@@ -28,13 +29,20 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
+    const res = await api.post('/auth/reset-password', {
+      token,
+      password,
+    });
+    setLoading(false);
+
+    if (res.success) {
       setSuccess(true);
       setTimeout(() => {
         router.push('/login');
       }, 1500);
-    }, 1000);
+    } else {
+      setError(typeof res.error === 'string' ? res.error : res.error?.message || 'Password reset failed.');
+    }
   };
 
   return (

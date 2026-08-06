@@ -1,0 +1,29 @@
+import pytest
+from agents.mock_interviewer_agent import run_mock_interviewer_agent, MockInterviewerState
+
+def test_run_mock_interviewer_agent_first_turn():
+    state: MockInterviewerState = {
+        "session_id": "mock-session-123",
+        "topic": "System Design",
+        "difficulty": "medium",
+        "target_role": "Backend Architect",
+        "target_company": "Stripe",
+        "turn_number": 0,
+        "latest_candidate_response": ""
+    }
+    result = run_mock_interviewer_agent(state)
+    assert "latest_ai_response" in result
+    assert result["coaching_hint"] is not None
+    assert result["turn_number"] == 1
+    assert result["is_complete"] is False
+
+def test_run_mock_interviewer_agent_completes_after_6_turns():
+    state: MockInterviewerState = {
+        "session_id": "mock-session-456",
+        "topic": "Algorithms",
+        "turn_number": 5,
+        "latest_candidate_response": "I used a hash map to achieve O(N) time complexity."
+    }
+    result = run_mock_interviewer_agent(state)
+    assert result["turn_number"] == 6
+    assert result["is_complete"] is True

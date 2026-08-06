@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
-import { CheckCircle2, XCircle, PenTool, AlertTriangle } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { CheckCircle2, XCircle, PenTool, RefreshCw } from 'lucide-react';
 
 interface ActionModalsProps {
   showAccept: boolean;
   showDecline: boolean;
   onCloseAccept: () => void;
   onCloseDecline: () => void;
-  onConfirmAccept: () => void;
+  onConfirmAccept: (signatureSvg: string) => void;
   onConfirmDecline: (reason: string) => void;
   orgName: string;
   candidateName: string;
@@ -29,6 +29,54 @@ export function ActionModals({
   const [signatureText, setSignatureText] = useState(candidateName);
   const [agreeTerms, setAgreeTerms] = useState(true);
   const [declineReason, setDeclineReason] = useState('');
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [paths, setPaths] = useState<string[]>([]);
+  const [currentPath, setCurrentPath] = useState('');
+  const svgRef = useRef<SVGSVGElement | null>(null);
+
+  const handleMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setIsDrawing(true);
+    setCurrentPath(`M ${x} ${y}`);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!isDrawing || !svgRef.current) return;
+    const rect = svgRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setCurrentPath((prev) => `${prev} L ${x} ${y}`);
+  };
+
+  const handleMouseUp = () => {
+    if (isDrawing && currentPath) {
+      setPaths((prev) => [...prev, currentPath]);
+      setCurrentPath('');
+      setIsDrawing(false);
+    }
+  };
+
+  const handleClearSignature = () => {
+    setPaths([]);
+    setCurrentPath('');
+  };
+
+  const generateSignatureSvgString = () => {
+    if (paths.length > 0) {
+      const pathsXml = paths.map((p) => `<path d="${p}" stroke="#059669" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" />`).join('');
+      return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120">${pathsXml}</svg>`;
+    }
+    // Fallback: styled text SVG signature
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120"><text x="20" y="70" font-family="serif" font-size="32" font-style="italic" fill="#059669">${signatureText || candidateName}</text></svg>`;
+  };
+
+  const handleConfirmSignature = () => {
+    const svgStr = generateSignatureSvgString();
+    onConfirmAccept(svgStr);
+  };
 
   if (!showAccept && !showDecline) return null;
 
@@ -52,19 +100,75 @@ export function ActionModals({
               </p>
             </div>
 
-            <div className="space-y-3">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
-                Type Full Legal Signature:
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={signatureText}
-                  onChange={(e) => setSignatureText(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-serif italic text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-inner"
-                  placeholder="e.g. Ananya Iyer"
-                />
-                <PenTool className="h-4 w-4 text-slate-400 absolute right-3.5 top-3.5" />
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Type Full Legal Name:
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={signatureText}
+                    onChange={(e) => setSignatureText(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-serif italic text-base focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-inner"
+                    placeholder="e.g. Ananya Iyer"
+                  />
+                  <PenTool className="h-4 w-4 text-slate-400 absolute right-3.5 top-3.5" />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Draw E-Signature:
+                  </label>
+                  {paths.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearSignature}
+                      className="text-[10px] text-slate-400 hover:text-rose-400 font-bold flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw className="h-3 w-3" /> Clear Canvas
+                    </button>
+                  )}
+                </div>
+                <div className="border border-slate-300 dark:border-slate-700 rounded-2xl bg-slate-50 dark:bg-slate-950 overflow-hidden relative cursor-crosshair">
+                  <svg
+                    ref={svgRef}
+                    className="w-full h-28 touch-none select-none"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
+                    onMouseLeave={handleMouseUp}
+                  >
+                    {paths.map((p, idx) => (
+                      <path
+                        key={idx}
+                        d={p}
+                        stroke="#059669"
+                        strokeWidth="3"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    ))}
+                    {currentPath && (
+                      <path
+                        d={currentPath}
+                        stroke="#059669"
+                        strokeWidth="3"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    )}
+                  </svg>
+                  {paths.length === 0 && !currentPath && (
+                    <div className="absolute inset-0 flex items-center justify-center text-xs font-mono text-slate-400 pointer-events-none opacity-50">
+                      Sign here using mouse or touchpad
+                    </div>
+                  )}
+                </div>
               </div>
 
               <label className="flex items-start gap-2 text-xs font-medium text-slate-600 dark:text-slate-400 cursor-pointer pt-1">
@@ -81,8 +185,8 @@ export function ActionModals({
             <div className="flex gap-3 pt-2">
               <button
                 type="button"
-                disabled={!agreeTerms || !signatureText.trim()}
-                onClick={onConfirmAccept}
+                disabled={!agreeTerms || (!signatureText.trim() && paths.length === 0)}
+                onClick={handleConfirmSignature}
                 className="flex-1 rounded-2xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-extrabold py-3 text-xs shadow-lg shadow-emerald-600/20 transition-all cursor-pointer"
               >
                 Confirm Signature & Accept

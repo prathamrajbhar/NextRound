@@ -4,6 +4,7 @@ import "./globals.css";
 import RoleSwitcher from "@/components/RoleSwitcher";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -66,13 +67,15 @@ export default function RootLayout({
         </div>
 
         <ThemeProvider>
-          <ToastProvider>
-            {/* Page Content */}
-            <main className="flex-grow flex flex-col">{children}</main>
+          <AuthProvider>
+            <ToastProvider>
+              {/* Page Content */}
+              <main className="flex-grow flex flex-col">{children}</main>
 
-            {/* Global Developer/Reviewer Menu */}
-            <RoleSwitcher />
-          </ToastProvider>
+              {/* Global Developer/Reviewer Menu */}
+              <RoleSwitcher />
+            </ToastProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

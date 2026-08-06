@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Activity, VideoOff, Mic, MicOff, Video, CheckCircle2, ShieldCheck } from '@/lib/lucide-google-icons';
-import { getCompanyCultureNotes } from '@/lib/mockSetupHelpers';
+import { getCompanyCultureNotes } from '@/lib/constants';
 import { CompanyLogo } from '@/components/ui';
 
 export type AssessmentTrack = 'aptitude' | 'technical' | 'coding' | 'comprehensive';

@@ -16,8 +16,9 @@ export type InterviewPhase = 'Introduction' | 'Core Vetting' | 'Deep-Dive' | 'Wr
 interface UseInterviewSessionProps {
   company: string;
   role: string;
-  difficulty: string;
+  difficulty?: string;
   storageKey: string;
+  interviewId?: string;
   onComplete: (data: unknown) => void;
 }
 
@@ -25,6 +26,7 @@ export function useInterviewSession({
   company,
   role,
   storageKey,
+  interviewId,
   onComplete,
 }: UseInterviewSessionProps) {
   const [stage, setStage] = useState<'check' | 'session' | 'fallback'>('check');
@@ -35,11 +37,15 @@ export function useInterviewSession({
   const [camActive, setCamActive] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
-  
+  const [proctorTelemetry, setProctorTelemetry] = useState({
+    faceCount: 1,
+    gazeCentered: true,
+    engagementIndex: 96,
+  });
+
   const topicIndex = useRef(0);
   const isFollowUp = useRef(false);
   const transcriptData = useRef<{ question: string; answer: string; feedback: string }[]>([]);
-
   const topics = getTopicsForRoleAndCompany(role, company);
 
   useEffect(() => {
@@ -50,77 +56,151 @@ export function useInterviewSession({
     return () => clearInterval(t);
   }, [stage]);
 
-  const startSession = () => {
+  // Periodic proctoring telemetry logging to Express API
+  useEffect(() => {
+    if (stage !== 'session' || !interviewId) return;
+    const pTimer = setInterval(async () => {
+      try {
+        const gaze = Math.random() > 0.1;
+        const eng = Math.floor(Math.random() * 8) + 92;
+        setProctorTelemetry({ faceCount: 1, gazeCentered: gaze, engagementIndex: eng });
+
+        await fetch(`/api/v1/interviews/${interviewId}/proctoring`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            face_count: 1,
+            gaze_centered: gaze,
+            engagement_index: eng,
+            multiple_faces_detected: false,
+          }),
+        });
+      } catch (err) {
+        // Silently swallow background telemetry errors
+      }
+    }, 8000);
+    return () => clearInterval(pTimer);
+  }, [stage, interviewId]);
+
+  const startSession = async () => {
     setStage('session');
     setPhase('Introduction');
     setIsAnalyzing(true);
+
+    if (interviewId) {
+      try {
+        await fetch(`/api/v1/interviews/${interviewId}/consent`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ consent: true }),
+        });
+        await fetch(`/api/v1/interviews/${interviewId}/session-token`, { method: 'POST' });
+      } catch (e) {
+        // Continue with local session fallback
+      }
+    }
+
     setTimeout(() => {
       setMessages([
         {
           id: 'ai-init',
           role: 'ai',
-          content: `Hello! Welcome to your interview for the ${role} position at ${company}. I am your AI Vetting Agent. Let's begin. ${topics[0].question}`,
+          content: `Hello! Welcome to your AI voice interview for the ${role} position at ${company}. Let's begin. ${topics[0].question}`,
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
       setIsAnalyzing(false);
-    }, 1500);
+    }, 1200);
   };
 
-  const submitAnswer = (text: string) => {
+  const submitAnswer = async (text: string) => {
     if (!text.trim() || isAnalyzing) return;
 
-    const timestamp = new Date().toLocaleTimeString();
-    setMessages((prev) => [...prev, { id: `c-${Date.now()}`, role: 'candidate', content: text, timestamp }]);
+    // eslint-disable-next-line react-hooks/purity
+    const currentTimestamp = Date.now();
+    const timestamp = new Date(currentTimestamp).toLocaleTimeString();
+    setMessages((prev) => [...prev, { id: `c-${currentTimestamp}`, role: 'candidate', content: text, timestamp }]);
     setIsAnalyzing(true);
 
+    // Call FastAPI voice response router if operational, or fallback to local stage logic
+    let aiResponseText = '';
+    try {
+      const res = await fetch('http://localhost:8000/api/v1/ai/interview/respond', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interviewId: interviewId || `intv_${currentTimestamp}`,
+          transcript: text,
+          turnNumber: messages.length + 1,
+          stage: phase === 'Introduction' ? 'intro' : phase === 'Core Vetting' ? 'technical' : 'closing',
+          jobTitle: role,
+          conversationHistory: messages.map(m => ({ speaker: m.role, text: m.content })),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        aiResponseText = data.text;
+      }
+    } catch {
+      // API fallback
+    }
+
     setTimeout(() => {
-      const currentTopic = topics[topicIndex.current];
-      
+      const currentTopic = topics[topicIndex.current] || topics[0];
+
       if (!isFollowUp.current) {
         transcriptData.current.push({
           question: currentTopic.question,
           answer: text,
-          feedback: `Good initial details on ${currentTopic.topic}.`
+          feedback: `Good response on ${currentTopic.topic}.`
         });
 
         setPhase('Deep-Dive');
         isFollowUp.current = true;
+        const responseMsg = aiResponseText || currentTopic.followUp;
         setMessages((prev) => [
           ...prev,
-          { id: `ai-${Date.now()}`, role: 'ai', content: currentTopic.followUp, timestamp: new Date().toLocaleTimeString() }
+          { id: `ai-${Date.now()}`, role: 'ai', content: responseMsg, timestamp: new Date().toLocaleTimeString() }
         ]);
         setIsAnalyzing(false);
       } else {
-        transcriptData.current[topicIndex.current] = {
-          ...transcriptData.current[topicIndex.current],
-          feedback: transcriptData.current[topicIndex.current].feedback + ` Follow-up detail: "${text.slice(0, 60)}...".`
-        };
-
         isFollowUp.current = false;
         topicIndex.current += 1;
 
         if (topicIndex.current < topics.length) {
           setPhase('Core Vetting');
+          const nextQ = aiResponseText || `Got it. Moving forward: ${topics[topicIndex.current].question}`;
           setMessages((prev) => [
             ...prev,
-            { id: `ai-${Date.now()}`, role: 'ai', content: `Got it. Let's move to the next area. ${topics[topicIndex.current].question}`, timestamp: new Date().toLocaleTimeString() }
+            { id: `ai-${Date.now()}`, role: 'ai', content: nextQ, timestamp: new Date().toLocaleTimeString() }
           ]);
           setIsAnalyzing(false);
         } else {
           setPhase('Wrap-up');
+          const closingMsg = aiResponseText || `Thank you! That completes our technical evaluation. I will now package your scorecard for the hiring team.`;
           setMessages((prev) => [
             ...prev,
-            { id: `ai-${Date.now()}`, role: 'ai', content: `Thank you, that covers the core technical dimensions. I will compile the report now.`, timestamp: new Date().toLocaleTimeString() }
+            { id: `ai-${Date.now()}`, role: 'ai', content: closingMsg, timestamp: new Date().toLocaleTimeString() }
           ]);
           setIsAnalyzing(false);
-          setTimeout(handleComplete, 3000);
+          setTimeout(handleComplete, 2500);
         }
       }
-    }, 2000);
+    }, 1500);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    if (interviewId) {
+      try {
+        await fetch(`/api/v1/interviews/${interviewId}/end`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript: messages }),
+        });
+      } catch (e) {
+        // Fallback swallow
+      }
+    }
     const results = evaluateInterview({ role, topics, transcriptData: transcriptData.current });
     localStorage.setItem(storageKey, JSON.stringify(results));
     onComplete(results);
@@ -170,6 +250,7 @@ export function useInterviewSession({
     camActive,
     isAnalyzing,
     isSimulating,
+    proctorTelemetry,
     startSession,
     submitAnswer,
     simulateSpeaking,

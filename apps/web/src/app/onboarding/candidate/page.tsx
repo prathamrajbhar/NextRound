@@ -3,16 +3,35 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileUp, Plus, X, ArrowRight, Check, Globe, Link2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function CandidateOnboarding() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   // --- STEP 1 STATES ---
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
+  const [progress, setProgress] = useState(0);
+
+  const handleUploadSimulate = () => {
+    setUploading(true);
+    setProgress(20);
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(timer);
+          setUploading(false);
+          return 100;
+        }
+        return prev + 20;
+      });
+    }, 300);
+  };
 
 
   // --- STEP 2 STATES ---
@@ -37,22 +56,51 @@ export default function CandidateOnboarding() {
     'Team Collaboration'
   ]);
 
-  const handleUploadSimulate = () => {
-    setUploading(true);
-    setProgress(10);
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setTimeout(() => {
-            setUploading(false);
-            setStep(2); // Auto move to step 2 on upload success
-          }, 400);
-          return 100;
-        }
-        return prev + 30;
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setResumeFile(e.target.files[0]);
+    }
+  };
+
+  const handleComplete = async () => {
+    setSubmitting(true);
+    setError('');
+
+    try {
+      const profileData = {
+        skills,
+        targetRoles,
+        expectedSalary: Number(expectedSalary) || 0,
+        noticePeriod,
+        workAuthorization: workAuth,
+        proudProject,
+        workValues,
+      };
+
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(profileData));
+      if (resumeFile) {
+        formData.append('resume', resumeFile);
+      }
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api/v1'}/candidate/profile`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
       });
-    }, 400);
+
+      const data = await res.json();
+      setSubmitting(false);
+
+      if (data.success) {
+        router.push('/candidate/dashboard');
+      } else {
+        setError(data.error || 'Failed to complete profile onboarding');
+      }
+    } catch (e) {
+      setSubmitting(false);
+      setError('Failed to upload profile data');
+    }
   };
 
   const handleAddSkill = (e: React.FormEvent) => {
@@ -87,10 +135,6 @@ export default function CandidateOnboarding() {
     valuesCopy[idx] = valuesCopy[idx + 1];
     valuesCopy[idx + 1] = temp;
     setWorkValues(valuesCopy);
-  };
-
-  const handleComplete = () => {
-    router.push('/candidate/dashboard');
   };
 
   return (

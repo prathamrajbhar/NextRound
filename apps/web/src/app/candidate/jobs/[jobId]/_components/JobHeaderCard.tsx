@@ -12,7 +12,7 @@ import {
   Layers,
 } from '@/lib/lucide-google-icons';
 
-import { Job } from '@/lib/mockData';
+import { Job } from '@/types';
 
 interface JobHeaderCardProps {
   job: Job;

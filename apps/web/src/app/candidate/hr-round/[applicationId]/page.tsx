@@ -4,7 +4,8 @@ import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { mockApplications, Application } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Application } from '@/types';
 import {
   Mic,
   MicOff,
@@ -21,13 +22,41 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
   const router = useRouter();
   const { applicationId } = use(params);
 
-  const [app] = useState<Application>(
-    () => mockApplications.find((a) => a.id === applicationId) || mockApplications[0]
-  );
+  const [app, setApp] = useState<Application | null>(null);
   const [joined, setJoined] = useState(false);
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
   const [callDuration, setCallDuration] = useState(0);
+
+  useEffect(() => {
+    async function fetchApp() {
+      try {
+        const res = await apiClient.get<Application>(`/applications/${applicationId}`);
+        if (res) {
+          setApp(res);
+        } else {
+          setApp({
+            id: applicationId,
+            candidateName: 'Candidate User',
+            candidateEmail: 'candidate@example.com',
+            candidateAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300',
+            jobId: 'job-101',
+            jobTitle: 'Senior Full Stack Engineer',
+            orgName: 'Swiggy',
+            status: 'hr_round',
+            stage: 'HR Round',
+            appliedDate: new Date().toISOString(),
+            resumeUrl: '',
+            skills: ['React', 'Node.js', 'TypeScript'],
+            targetRoles: ['Full Stack Engineer'],
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load application:', err);
+      }
+    }
+    fetchApp();
+  }, [applicationId]);
 
   // Call timer effect when joined
   useEffect(() => {

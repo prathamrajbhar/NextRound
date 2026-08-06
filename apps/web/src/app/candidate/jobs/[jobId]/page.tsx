@@ -1,9 +1,10 @@
 'use client';
 
-import React, { use, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { mockJobs, mockApplications } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Job, Application } from '@/types';
 import { CompanyLogo } from '@/components/ui';
 import {
   MapPin,
@@ -19,6 +20,7 @@ import {
 import { JobHeaderCard } from './_components/JobHeaderCard';
 import { JobRubricCard } from './_components/JobRubricCard';
 import { JobPrepArenaCard } from './_components/JobPrepArenaCard';
+import { JobPrepSection } from './_components/JobPrepSection';
 
 // Mapping tech skills / tags per job for richer visual representation
 const jobSkillsMap: Record<string, string[]> = {
@@ -28,22 +30,75 @@ const jobSkillsMap: Record<string, string[]> = {
   'job-104': ['Python', 'NLP', 'PyTorch', 'Vector DBs', 'RAG Pipelines', 'Machine Learning'],
 };
 
+const DEFAULT_JOB: Job = {
+  id: 'job-101',
+  orgId: 'org-swiggy',
+  orgName: 'Swiggy Technologies',
+  orgLogo: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=120&auto=format&fit=crop&q=80',
+  title: 'Senior Fullstack Engineer (React & Node.js)',
+  description: 'We are looking for a Senior Fullstack Engineer to design, build, and scale our core candidate evaluation dashboard and web services.',
+  location: 'Remote (Bengaluru, IN)',
+  salary: '₹32,000,000 - ₹45,000,000 / yr',
+  experienceLevel: 'Senior Level (5+ Yrs)',
+  postedDate: '2 days ago',
+  applicantsCount: 42,
+  status: 'active',
+  rubric: {
+    technical: 50,
+    communication: 25,
+    problemSolving: 15,
+    experience: 10,
+  },
+  thresholds: {
+    minScore: 75,
+    autoOffer: true,
+  },
+};
+
 export default function CandidateJobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
+  const router = useRouter();
 
-  const job = mockJobs.find((j) => j.id === jobId) || mockJobs[0];
-  const initialApplied = mockApplications.some(
-    (a) => a.jobId === job.id && a.candidateEmail === 'ananya.iyer@gmail.com'
-  );
-
-  const [applied, setApplied] = useState(initialApplied);
+  const [loading, setLoading] = useState(true);
+  const [job, setJob] = useState<Job>(DEFAULT_JOB);
+  const [similarJobs, setSimilarJobs] = useState<Job[]>([]);
+  const [applied, setApplied] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const similarJobs = mockJobs.filter((j) => j.id !== job.id).slice(0, 2);
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [jobRes, allJobsRes, appsRes] = await Promise.allSettled([
+          apiClient.get<Job>(`/jobs/${jobId}`),
+          apiClient.get<Job[]>('/jobs'),
+          apiClient.get<Application[]>('/candidate/applications'),
+        ]);
+
+        if (jobRes.status === 'fulfilled' && jobRes.value) {
+          setJob(jobRes.value);
+        }
+
+        if (allJobsRes.status === 'fulfilled' && allJobsRes.value) {
+          setSimilarJobs(allJobsRes.value.filter((j) => j.id !== jobId).slice(0, 2));
+        }
+
+        if (appsRes.status === 'fulfilled' && appsRes.value) {
+          const hasApplied = appsRes.value.some((a) => a.jobId === jobId);
+          setApplied(hasApplied);
+        }
+      } catch (err) {
+        console.error('Failed to load job detail:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [jobId]);
+
   const skills = jobSkillsMap[job.id] || ['TypeScript', 'React', 'Node.js', 'System Design'];
 
-  const router = useRouter();
   const handleApply = () => {
     setApplied(true);
     setTimeout(() => {
@@ -154,6 +209,9 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
 
           {/* Rubric: What We Look For Section */}
           <JobRubricCard rubric={job.rubric} />
+
+          {/* AI Prep Content Section */}
+          <JobPrepSection jobId={job.id} companyName={job.orgName} roleTitle={job.title} />
         </div>
 
         {/* Sidebar Column */}

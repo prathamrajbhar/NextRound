@@ -3,15 +3,28 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Mail, ArrowLeft, Send } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    setSent(true);
+    setLoading(true);
+    setError('');
+
+    const res = await api.post('/auth/forgot-password', { email });
+    setLoading(false);
+
+    if (res.success) {
+      setSent(true);
+    } else {
+      setError(typeof res.error === 'string' ? res.error : res.error?.message || 'Failed to send reset link');
+    }
   };
 
   return (

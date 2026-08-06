@@ -1,16 +1,17 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { apiClient } from '@/lib/apiClient';
 import {
-  mockApplications,
-  mockOffers,
-  mockAssessments,
-  mockAsyncScreenings,
-  mockTakeHomeProjects,
-  mockOnboarding,
-  mockJobs,
-} from '@/lib/mockData';
+  Application,
+  Job,
+  Offer,
+  AssessmentResult,
+  AsyncScreening,
+  TakeHomeProject,
+  OnboardingRecord,
+} from '@/types';
 import {
   ChevronRight,
   Calendar,
@@ -27,17 +28,81 @@ import { ApplicationHeaderBanner } from './_components/ApplicationHeaderBanner';
 import { StagePipelineTimeline } from './_components/StagePipelineTimeline';
 import { CandidateScorecard } from './_components/CandidateScorecard';
 
+const DEFAULT_APP: Application = {
+  id: 'app-501',
+  candidateName: 'Candidate User',
+  candidateEmail: 'candidate@example.com',
+  candidateAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  jobId: 'job-101',
+  jobTitle: 'Senior Fullstack Engineer (React & Node.js)',
+  orgName: 'Swiggy Technologies',
+  status: 'screening',
+  stage: 'Screened',
+  appliedDate: '2026-06-28',
+  resumeUrl: '/resumes/candidate.pdf',
+  skills: ['React', 'TypeScript', 'Node.js'],
+  targetRoles: ['Fullstack Engineer'],
+  scores: {
+    composite: 94,
+    technical: 96,
+    communication: 92,
+    problemSolving: 95,
+    experience: 90,
+    confidence: 94,
+  },
+};
+
 export default function CandidateApplicationDetailPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
 
-  const app = mockApplications.find((a) => a.id === applicationId) || mockApplications[0];
-  const job = mockJobs.find((j) => j.id === app.jobId) || mockJobs[0];
+  const [loading, setLoading] = useState(true);
+  const [app, setApp] = useState<Application>(DEFAULT_APP);
+  const [job, setJob] = useState<Job | null>(null);
+  const [offer, setOffer] = useState<Offer | null>(null);
+  const [assessments, setAssessments] = useState<AssessmentResult[]>([]);
+  const [asyncScreening, setAsyncScreening] = useState<AsyncScreening | null>(null);
+  const [takeHome, setTakeHome] = useState<TakeHomeProject | null>(null);
+  const [onboarding, setOnboarding] = useState<OnboardingRecord | null>(null);
 
-  const offer = mockOffers.find((o) => o.applicationId === app.id);
-  const assessments = mockAssessments.filter((a) => a.applicationId === app.id);
-  const asyncScreening = mockAsyncScreenings.find((s) => s.applicationId === app.id);
-  const takeHome = mockTakeHomeProjects.find((t) => t.applicationId === app.id);
-  const onboarding = mockOnboarding.find((o) => o.applicationId === app.id);
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [appRes, offerRes, asyncRes, takeHomeRes, onboardingRes] = await Promise.allSettled([
+          apiClient.get<Application>(`/applications/${applicationId}`),
+          apiClient.get<Offer>(`/candidate/applications/${applicationId}/offer`),
+          apiClient.get<AsyncScreening>(`/candidate/applications/${applicationId}/video-screening`),
+          apiClient.get<TakeHomeProject>(`/candidate/applications/${applicationId}/take-home`),
+          apiClient.get<OnboardingRecord>(`/candidate/applications/${applicationId}/onboarding`),
+        ]);
+
+        if (appRes.status === 'fulfilled' && appRes.value) {
+          setApp(appRes.value);
+          if (appRes.value.jobId) {
+            const jRes = await apiClient.get<Job>(`/jobs/${appRes.value.jobId}`);
+            if (jRes) setJob(jRes);
+          }
+        }
+        if (offerRes.status === 'fulfilled' && offerRes.value) {
+          setOffer(offerRes.value);
+        }
+        if (asyncRes.status === 'fulfilled' && asyncRes.value) {
+          setAsyncScreening(asyncRes.value);
+        }
+        if (takeHomeRes.status === 'fulfilled' && takeHomeRes.value) {
+          setTakeHome(takeHomeRes.value);
+        }
+        if (onboardingRes.status === 'fulfilled' && onboardingRes.value) {
+          setOnboarding(onboardingRes.value);
+        }
+      } catch (err) {
+        console.error('Failed to fetch application details:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [applicationId]);
 
   const nextSteps = [
     offer && {

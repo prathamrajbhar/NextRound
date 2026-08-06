@@ -1,16 +1,47 @@
 'use client';
 
-import React, { use, useState } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { mockOnboarding } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { OnboardingRecord } from '@/types';
 import { ChevronRight, UserPlus } from 'lucide-react';
+
+const DEFAULT_ONBOARDING: OnboardingRecord = {
+  id: 'onb-101',
+  applicationId: 'app-501',
+  candidateName: 'Candidate User',
+  candidateAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  jobTitle: 'Senior Fullstack Engineer',
+  orgName: 'Swiggy Technologies',
+  startDate: 'August 15, 2026',
+  buddyName: 'Ananya Roy',
+  managerName: 'Vikram Sethi',
+  progressPercent: 40,
+  tasks: [
+    { id: 't1', title: 'Submit Govt ID & Tax Documents', category: 'paperwork', owner: 'New Hire', status: 'completed', dueDate: 'August 01, 2026' },
+    { id: 't2', title: 'Sign Laptop Hardware Agreement', category: 'equipment', owner: 'New Hire', status: 'completed', dueDate: 'August 05, 2026' },
+    { id: 't3', title: 'Setup Corporate Google Workspace & Slack', category: 'access', owner: 'IT', status: 'pending', dueDate: 'August 10, 2026' },
+    { id: 't4', title: 'Complete Security & Compliance Training', category: 'training', owner: 'New Hire', status: 'pending', dueDate: 'August 14, 2026' },
+    { id: 't5', title: 'Attend 1:1 Intro Call with Onboarding Buddy', category: 'social', owner: 'HR', status: 'pending', dueDate: 'August 16, 2026' },
+  ],
+};
 
 export default function CandidateOnboardingPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
 
-  // Find matching onboarding record or default to first
-  const initialOnboarding = mockOnboarding.find((o) => o.applicationId === applicationId) || mockOnboarding[0];
-  const [onboard, setOnboard] = useState(initialOnboarding);
+  const [onboard, setOnboard] = useState<OnboardingRecord>(DEFAULT_ONBOARDING);
+
+  useEffect(() => {
+    async function fetchOnboarding() {
+      try {
+        const res = await apiClient.get<OnboardingRecord>(`/candidate/applications/${applicationId}/onboarding`);
+        if (res) setOnboard(res);
+      } catch (err) {
+        console.error('Failed to load onboarding:', err);
+      }
+    }
+    fetchOnboarding();
+  }, [applicationId]);
 
   const handleToggleTask = (taskId: string) => {
     const updatedTasks = onboard.tasks.map((task) => {

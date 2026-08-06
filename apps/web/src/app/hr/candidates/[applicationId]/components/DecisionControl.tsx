@@ -5,6 +5,7 @@ import { ShieldCheck } from '@/lib/lucide-google-icons';
 
 interface DecisionControlProps {
   appId: string;
+  evaluationId?: string;
   initialDecision: 'hire' | 'reject' | 'hold';
   initialReasoning: string;
   showApprovalButtons: boolean;
@@ -12,6 +13,7 @@ interface DecisionControlProps {
 
 export default function DecisionControl({
   appId,
+  evaluationId,
   initialDecision,
   initialReasoning,
   showApprovalButtons,
@@ -19,10 +21,36 @@ export default function DecisionControl({
   const [decision, setDecision] = useState(initialDecision);
   const [reasoning, setReasoning] = useState(initialReasoning);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSaveDecision = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+  const handleSaveDecision = async () => {
+    setLoading(true);
+    setErrorMsg('');
+    try {
+      const evalId = evaluationId || appId;
+      const res = await fetch(`/api/v1/hr/evaluations/${evalId}/hr-override`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          decision: decision === 'hire' ? 'hire' : 'reject',
+          notes: reasoning,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Failed to save HR decision override');
+      }
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save decision';
+      setErrorMsg(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,11 +96,18 @@ export default function DecisionControl({
 
         <button
           type="button"
+          disabled={loading}
           onClick={handleSaveDecision}
-          className="w-full rounded-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold py-2.5 text-xs shadow-sm transition-all cursor-pointer"
+          className="w-full rounded-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold py-2.5 text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50"
         >
-          Save Decision parameters
+          {loading ? 'Saving Parameters...' : 'Save Decision parameters'}
         </button>
+
+        {errorMsg && (
+          <div className="text-center text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border border-rose-100 dark:border-rose-900/60 rounded p-1.5">
+            {errorMsg}
+          </div>
+        )}
 
         {showApprovalButtons && (
           <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 space-y-2">

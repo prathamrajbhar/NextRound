@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Settings, HelpCircle, AudioLines, Code, ClipboardCheck, Video, ChevronRight, Eye } from 'lucide-react';
-import { mockCodingProblems } from '@/lib/mockData';
+import { DEFAULT_CODING_PROBLEMS } from '@/lib/constants';
 
 interface PipelineConfigCardProps {
   minScore: number;
@@ -249,7 +249,7 @@ export default function PipelineConfigCard({
                 onChange={(e) => handleConfigChange('codingProblemId', e.target.value)}
                 className="w-full p-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-slate-900 dark:text-slate-100 font-extrabold focus:outline-none cursor-pointer"
               >
-                {mockCodingProblems.map((prob) => (
+                {DEFAULT_CODING_PROBLEMS.map((prob) => (
                   <option key={prob.id} value={prob.id}>
                     {prob.title} ({prob.difficulty})
                   </option>

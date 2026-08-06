@@ -12,16 +12,18 @@ import {
   CheckCircle2,
 } from '@/lib/lucide-google-icons';
 import { useToast } from '@/contexts/ToastContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setError('Please fill in all fields.');
@@ -30,15 +32,19 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    setTimeout(() => {
-      setLoading(false);
+    const result = await login(email, password);
+    setLoading(false);
+
+    if (result.success && result.user) {
       toast({ title: 'Signed in successfully', variant: 'success' });
-      if (email.toLowerCase().includes('candidate') || email.toLowerCase().includes('ananya')) {
+      if (result.user.role === 'candidate') {
         router.push('/candidate/dashboard');
       } else {
         router.push('/hr/dashboard');
       }
-    }, 1000);
+    } else {
+      setError(result.error || 'Login failed');
+    }
   };
 
   return (

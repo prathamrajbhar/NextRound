@@ -27,6 +27,11 @@ interface ActiveConsoleProps {
   isAnalyzing: boolean;
   isSimulating: boolean;
   isDarkTheme?: boolean;
+  proctorTelemetry?: {
+    faceCount: number;
+    gazeCentered: boolean;
+    engagementIndex: number;
+  };
   onSubmitAnswer: (text: string) => void;
   onSimulateSpeaking: () => void;
   onEndSession: () => void;
@@ -36,6 +41,7 @@ interface ActiveConsoleProps {
   role?: string;
 }
 
+// ML_BYPASS: video engagement ML — upgrade to fer+ or DeepFace for expression analysis (with consent)
 export default function InterviewActiveConsole({
   messages,
   timeRemaining,
@@ -43,6 +49,8 @@ export default function InterviewActiveConsole({
   camActive,
   isAnalyzing,
   isSimulating,
+  proctorTelemetry,
+  onSubmitAnswer,
   onSimulateSpeaking,
   onEndSession,
   onToggleMic,
@@ -50,6 +58,7 @@ export default function InterviewActiveConsole({
   company = 'Swiggy',
   role = 'Senior Frontend Engineer',
 }: ActiveConsoleProps) {
+  const [textInput, setTextInput] = useState('');
   const [eyeContactScore, setEyeContactScore] = useState(96);
 
   useEffect(() => {
@@ -61,11 +70,13 @@ export default function InterviewActiveConsole({
   const lastMsg = messages[messages.length - 1];
   const aiSpeaking = lastMsg && lastMsg.role === 'ai';
 
+  const voiceOrbState = isAnalyzing ? 'Analyzing' : isSimulating ? 'Listening' : aiSpeaking ? 'Speaking' : 'Idle';
+
   const getStatusText = () => {
     if (isAnalyzing) return 'Analyzing response...';
     if (isSimulating) return 'Listening to candidate...';
-    if (aiSpeaking) return 'AI Interviewer Speaking...';
-    return 'AI Waiting...';
+    if (aiSpeaking) return 'AI Interviewer speaking...';
+    return 'AI Interviewer Ready';
   };
 
   const formatTime = (seconds: number) => {
@@ -177,18 +188,48 @@ export default function InterviewActiveConsole({
           </div>
         </div>
 
-        {/* Dynamic Speech Caption Glass Card */}
-        <div className="mt-2 p-3 sm:p-4 rounded-xl bg-slate-900/90 border border-slate-800/90 backdrop-blur-md shadow-md w-full max-w-3xl mx-auto text-center space-y-0.5 flex-shrink-0">
-          <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
-            {aiSpeaking ? 'AI Interviewer' : isSimulating ? 'You (Candidate)' : 'Live Transcript'}
-          </span>
-          <p className="text-xs sm:text-sm font-extrabold text-white leading-relaxed font-display line-clamp-2">
-            {isSimulating
-              ? `"${lastMsg?.content || ''}"`
-              : lastMsg
-              ? `"${lastMsg.content}"`
-              : 'Connecting to dynamic conversation stream...'}
-          </p>
+        {/* Dynamic Speech Caption & Chat Fallback Glass Card */}
+        <div className="mt-2 p-3 sm:p-4 rounded-xl bg-slate-900/90 border border-slate-800/90 backdrop-blur-md shadow-md w-full max-w-3xl mx-auto text-center space-y-2 flex-shrink-0">
+          <div>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 block">
+              {aiSpeaking ? 'AI Interviewer' : isSimulating ? 'You (Candidate)' : 'Live Transcript'}
+            </span>
+            <p className="text-xs sm:text-sm font-extrabold text-white leading-relaxed font-display line-clamp-2">
+              {isSimulating
+                ? `"${lastMsg?.content || ''}"`
+                : lastMsg
+                ? `"${lastMsg.content}"`
+                : 'Connecting to dynamic conversation stream...'}
+            </p>
+          </div>
+
+          {/* Text Fallback Input Form */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (textInput.trim()) {
+                onSubmitAnswer(textInput);
+                setTextInput('');
+              }
+            }}
+            className="flex items-center gap-2 pt-1 border-t border-slate-800/80"
+          >
+            <input
+              type="text"
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder="Type your response or use voice mic..."
+              disabled={isAnalyzing}
+              className="flex-1 bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 font-medium"
+            />
+            <button
+              type="submit"
+              disabled={!textInput.trim() || isAnalyzing}
+              className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-500 disabled:opacity-50 text-white font-bold text-xs cursor-pointer transition-colors"
+            >
+              Send
+            </button>
+          </form>
         </div>
       </div>
 

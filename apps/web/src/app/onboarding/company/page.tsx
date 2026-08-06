@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Building, Calendar, ArrowRight, Check, Plus, Trash2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 export default function CompanyOnboarding() {
   const router = useRouter();
@@ -12,6 +13,8 @@ export default function CompanyOnboarding() {
   const [industry, setIndustry] = useState('Technology');
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   // Invites list
   const [invites, setInvites] = useState<string[]>([]);
@@ -37,8 +40,23 @@ export default function CompanyOnboarding() {
     setInvites(invites.filter((item) => item !== email));
   };
 
-  const handleComplete = () => {
-    router.push('/hr/dashboard');
+  const handleComplete = async () => {
+    setSubmitting(true);
+    setError('');
+
+    const res = await api.post('/organizations', {
+      name: orgName,
+      size: orgSize,
+      industry,
+    });
+
+    setSubmitting(false);
+
+    if (res.success) {
+      router.push('/hr/dashboard');
+    } else {
+      setError(typeof res.error === 'string' ? res.error : res.error?.message || 'Failed to setup organization');
+    }
   };
 
   return (

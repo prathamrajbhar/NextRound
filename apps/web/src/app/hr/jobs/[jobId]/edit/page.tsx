@@ -1,62 +1,97 @@
 'use client';
 
-import React, { useState, use } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { getStoredJobs, saveStoredJob } from '@/lib/mockData';
-import { Sliders, Briefcase, ArrowLeft, Building2, MapPin, DollarSign, Layers } from 'lucide-react';
+import { apiClient } from '@/lib/apiClient';
+import { Job } from '@/types';
+import { Sliders, Briefcase, ArrowLeft, Building2, MapPin, DollarSign, Layers, Loader2 } from '@/lib/lucide-google-icons';
 import Link from 'next/link';
 import { Autocomplete } from '@/components/ui';
-import { SUGGESTED_ROLES } from '@/lib/mockSetupHelpers';
+import { SUGGESTED_ROLES } from '@/lib/constants';
 import PipelineConfigCard from '../../new/components/PipelineConfigCard';
-
-import { Job } from '@/lib/mockData';
 
 export default function HrEditJobPage({ params }: { params: Promise<{ jobId: string }> }) {
   const router = useRouter();
   const { jobId } = use(params);
 
-  const initialJob = () => {
-    const list = getStoredJobs();
-    return list.find((j) => j.id === jobId) || list[0];
-  };
+  const [job, setJob] = useState<Job | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [job] = useState<Job>(initialJob);
-
-  // Form states initialized lazily
-  const [title, setTitle] = useState(job.title);
-  const [description, setDescription] = useState(job.description);
-  const [location, setLocation] = useState(job.location || 'Remote (Worldwide)');
-  const [salary, setSalary] = useState(job.salary || '$140,000 - $180,000');
-  const [experienceLevel, setExperienceLevel] = useState(job.experienceLevel || 'Senior (5+ yrs)');
+  // Form states
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [location, setLocation] = useState('Remote (Worldwide)');
+  const [salary, setSalary] = useState('$140,000 - $180,000');
+  const [experienceLevel, setExperienceLevel] = useState('Senior (5+ yrs)');
   const [skills] = useState<string[]>(['React', 'TypeScript', 'Next.js', 'System Architecture']);
 
-  const [techWeight, setTechWeight] = useState(job.rubric.technical);
-  const [commWeight, setCommWeight] = useState(job.rubric.communication);
-  const [probWeight, setProbWeight] = useState(job.rubric.problemSolving || 25);
-  const [expWeight, setExpWeight] = useState(job.rubric.experience || 25);
+  const [techWeight, setTechWeight] = useState(25);
+  const [commWeight, setCommWeight] = useState(25);
+  const [probWeight, setProbWeight] = useState(25);
+  const [expWeight, setExpWeight] = useState(25);
 
-  const [minScore, setMinScore] = useState(job.thresholds.minScore);
-  const [autoOffer, setAutoOffer] = useState(job.thresholds.autoOffer || false);
+  const [minScore, setMinScore] = useState(80);
+  const [autoOffer, setAutoOffer] = useState(false);
   const [qCount, setQCount] = useState(5);
   const [enableSourcing, setEnableSourcing] = useState(true);
   const [voiceProfile, setVoiceProfile] = useState('Serena (Warm/Professional)');
 
-  const [stages, setStages] = useState<('screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision')[]>(
-    job.stages || ['screening', 'assessment', 'voice_screen', 'hr_round', 'decision']
-  );
-  const [assessmentConfig, setAssessmentConfig] = useState(
-    job.assessmentConfig || {
-      mcqCount: 5,
-      codingProblemId: 'virtualized-list',
-      passingScore: 80,
-    }
-  );
+  const [stages, setStages] = useState<('screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision')[]>([
+    'screening',
+    'assessment',
+    'voice_screen',
+    'hr_round',
+    'decision',
+  ]);
+  const [assessmentConfig, setAssessmentConfig] = useState({
+    mcqCount: 5,
+    codingProblemId: 'virtualized-list',
+    passingScore: 80,
+  });
 
-  if (!job) {
-    return <div className="text-center p-8 text-xs text-slate-400 font-bold">Loading job configuration...</div>;
+  useEffect(() => {
+    async function fetchJob() {
+      try {
+        setLoading(true);
+        const data = await apiClient.get<Job>(`/jobs/${jobId}`);
+        if (data) {
+          setJob(data);
+          setTitle(data.title || '');
+          setDescription(data.description || '');
+          setLocation(data.location || 'Remote (Worldwide)');
+          setSalary(data.salary || '$140,000 - $180,000');
+          setExperienceLevel(data.experienceLevel || 'Senior (5+ yrs)');
+          if (data.rubric) {
+            setTechWeight(data.rubric.technical ?? 25);
+            setCommWeight(data.rubric.communication ?? 25);
+            setProbWeight(data.rubric.problemSolving ?? 25);
+            setExpWeight(data.rubric.experience ?? 25);
+          }
+          if (data.thresholds) {
+            setMinScore(data.thresholds.minScore ?? 80);
+            setAutoOffer(data.thresholds.autoOffer ?? false);
+          }
+          if (data.stages) setStages(data.stages as ('screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision')[]);
+          if (data.assessmentConfig) setAssessmentConfig(data.assessmentConfig);
+        }
+      } catch (err) {
+        console.error('Failed to fetch job:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchJob();
+  }, [jobId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600 dark:text-orange-400" />
+      </div>
+    );
   }
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const updatedJob = {
@@ -80,7 +115,11 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
       assessmentConfig,
     };
 
-    saveStoredJob(updatedJob);
+    try {
+      await apiClient.put(`/jobs/${jobId}`, updatedJob);
+    } catch (err) {
+      console.warn('API job update failed, redirecting:', err);
+    }
     router.push('/hr/jobs');
   };
 

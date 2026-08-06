@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, use } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { mockApplications, getStoredJobs } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Application, Job } from '@/types';
 import {
   ChevronRight,
   Scale,
@@ -11,13 +12,12 @@ import {
   Download,
   FileText,
   ArrowLeft,
+  Loader2,
 } from '@/lib/lucide-google-icons';
 import SkillsScorecard from './components/SkillsScorecard';
 import DecisionControl from './components/DecisionControl';
 import { CandidateHeader } from './components/CandidateHeader';
 import { AssessmentScorecard } from './components/AssessmentScorecard';
-
-import { Application } from '@/lib/mockData';
 
 interface VoiceData {
   score?: number;
@@ -34,83 +34,92 @@ interface AssessData {
 export default function HrCandidateEvaluationPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
 
-  const [assessmentData] = useState<Record<string, number | string | undefined> | null>(() => {
-    if (typeof window === 'undefined') return null;
-    const localAssess = localStorage.getItem(`assessmentResult_${applicationId}`);
-    if (localAssess) {
+  const [app, setApp] = useState<Application | null>(null);
+  const [job, setJob] = useState<Job | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const [assessmentData, setAssessmentData] = useState<Record<string, number | string | undefined> | null>(null);
+
+  useEffect(() => {
+    async function fetchCandidateData() {
       try {
-        return JSON.parse(localAssess);
-      } catch {}
+        setLoading(true);
+        const appData = await apiClient.get<Application>(`/applications/${applicationId}`);
+        if (appData) {
+          let voiceInterviewData: VoiceData | null = null;
+          if (typeof window !== 'undefined') {
+            const localVoice = localStorage.getItem(`candidateInterview_${applicationId}`);
+            if (localVoice) {
+              try { voiceInterviewData = JSON.parse(localVoice); } catch {}
+            }
+            const localAssess = localStorage.getItem(`assessmentResult_${applicationId}`);
+            if (localAssess) {
+              try {
+                const parsed = JSON.parse(localAssess);
+                setAssessmentData(parsed);
+              } catch {}
+            }
+          }
+
+          let mergedScores = appData.scores || {
+            composite: 86,
+            technical: 88,
+            communication: 82,
+            problemSolving: 85,
+            experience: 89,
+            confidence: 90,
+          };
+          let mergedReasoning = appData.reasoning || 'Demonstrated competent understanding of senior software engineering architecture.';
+
+          if (voiceInterviewData) {
+            const vScore = voiceInterviewData.score || 80;
+            mergedScores = {
+              composite: vScore,
+              technical: voiceInterviewData.rubric?.technical || 80,
+              communication: voiceInterviewData.rubric?.communication || 80,
+              problemSolving: Math.floor(vScore * 0.95),
+              experience: Math.floor(vScore * 0.92),
+              confidence: Math.floor(vScore * 0.98),
+            };
+            mergedReasoning = voiceInterviewData.feedback || mergedReasoning;
+          }
+
+          const finalApp = {
+            ...appData,
+            scores: mergedScores,
+            reasoning: mergedReasoning,
+          };
+          setApp(finalApp);
+
+          if (finalApp.jobId) {
+            try {
+              const jobData = await apiClient.get<Job>(`/jobs/${finalApp.jobId}`);
+              setJob(jobData);
+            } catch (jobErr) {
+              console.warn('Failed to fetch associated job:', jobErr);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load candidate application:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-    return null;
-  });
+    fetchCandidateData();
+  }, [applicationId]);
 
-  const [app] = useState<Application>(() => {
-    const defaultAppObj = mockApplications.find((a) => a.id === applicationId) || mockApplications[0];
-    if (typeof window === 'undefined') return defaultAppObj;
-
-    let voiceInterviewData: VoiceData | null = null;
-    const localVoice = localStorage.getItem(`candidateInterview_${applicationId}`);
-    if (localVoice) {
-      try {
-        voiceInterviewData = JSON.parse(localVoice);
-      } catch {}
-    }
-
-    let assessData: AssessData | null = null;
-    const localAssess = localStorage.getItem(`assessmentResult_${applicationId}`);
-    if (localAssess) {
-      try {
-        assessData = JSON.parse(localAssess);
-      } catch {}
-    }
-
-    let mergedScores = defaultAppObj.scores || {
-      composite: 86,
-      technical: 88,
-      communication: 82,
-      problemSolving: 85,
-      experience: 89,
-      confidence: 90,
-    };
-    let mergedReasoning = defaultAppObj.reasoning || 'Demonstrated competent understanding of senior software engineering architecture. Clean execution paths and solid Big-O analysis.';
-
-    if (assessData) {
-      mergedScores = {
-        composite: Math.round(((assessData.overallScore || 80) + (voiceInterviewData?.score || 78)) / 2),
-        technical: assessData.codingScore || 80,
-        communication: voiceInterviewData?.rubric?.communication || mergedScores.communication || 75,
-        problemSolving: assessData.mcqScore || 80,
-        experience: mergedScores.experience || 75,
-        confidence: voiceInterviewData?.rubric?.cultureFit || mergedScores.confidence || 80,
-      };
-      mergedReasoning = `Online Vetting Assessment: Completed (${assessData.overallScore}% score). MCQ Logic: ${assessData.mcqScore}%, Coding algorithm: ${assessData.codingScore}%. ` + (voiceInterviewData?.feedback || mergedReasoning);
-    } else if (voiceInterviewData) {
-      const vScore = voiceInterviewData.score || 80;
-      mergedScores = {
-        composite: vScore,
-        technical: voiceInterviewData.rubric?.technical || 80,
-        communication: voiceInterviewData.rubric?.communication || 80,
-        problemSolving: Math.floor(vScore * 0.95),
-        experience: Math.floor(vScore * 0.92),
-        confidence: Math.floor(vScore * 0.98),
-      };
-      mergedReasoning = voiceInterviewData.feedback || mergedReasoning;
-    }
-
-    return {
-      ...defaultAppObj,
-      scores: mergedScores,
-      reasoning: mergedReasoning,
-    };
-  });
-
-  if (!app) {
-    return <div className="text-center text-xs text-slate-400 dark:text-slate-500 p-8 font-bold">Loading candidate profile...</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-600 dark:text-orange-400" />
+      </div>
+    );
   }
 
-  const jobsList = getStoredJobs();
-  const job = jobsList.find((j) => j.id === app.jobId);
+  if (!app) {
+    return <div className="text-center text-xs text-slate-400 dark:text-slate-500 p-8 font-bold">Candidate profile not found.</div>;
+  }
 
   // Handler to generate and download candidate PDF resume
   const handleDownloadResume = () => {

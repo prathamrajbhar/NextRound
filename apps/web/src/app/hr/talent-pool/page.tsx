@@ -1,38 +1,68 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { mockApplications } from '@/lib/mockData';
-import { Search, ChevronRight, Users, Filter, UserCheck, Brain } from '@/lib/lucide-google-icons';
+import { apiClient } from '@/lib/apiClient';
+import { Application } from '@/types';
+import { Search, ChevronRight, Users, Filter, UserCheck, Brain, Loader2 } from '@/lib/lucide-google-icons';
 import Image from 'next/image';
 
 export default function HrTalentPoolPage() {
+  const [candidates, setCandidates] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [minScore, setMinScore] = useState<number>(70);
   const [selectedSkill, setSelectedSkill] = useState<string>('All');
   const [selectedStatus, setSelectedStatus] = useState<string>('All');
 
+  useEffect(() => {
+    async function fetchTalentPool() {
+      try {
+        setLoading(true);
+        const data = await apiClient.get<Application[]>('/hr/talent-pool').catch(() =>
+          apiClient.get<Application[]>('/applications')
+        );
+        if (data) {
+          setCandidates(data);
+        }
+      } catch (err) {
+        console.error('Failed to load talent pool:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTalentPool();
+  }, []);
+
   // Derive unique skills and statuses for filter dropdowns
   const allSkills = Array.from(
-    new Set(mockApplications.flatMap((app) => app.skills || []))
+    new Set(candidates.flatMap((app) => app.skills || []))
   ).sort();
 
   const allStatuses = Array.from(
-    new Set(mockApplications.map((app) => app.status))
+    new Set(candidates.map((app) => app.status))
   ).sort();
 
-  const filteredCandidates = mockApplications.filter((app) => {
-    const nameMatch = app.candidateName.toLowerCase().includes(search.toLowerCase()) ||
-      app.candidateEmail.toLowerCase().includes(search.toLowerCase());
-    
+  const filteredCandidates = candidates.filter((app) => {
+    const nameMatch = (app.candidateName || '').toLowerCase().includes(search.toLowerCase()) ||
+      (app.candidateEmail || '').toLowerCase().includes(search.toLowerCase());
+
     const compositeScore = app.scores?.composite || 75;
     const scoreMatch = compositeScore >= minScore;
-    
-    const skillMatch = selectedSkill === 'All' || app.skills.includes(selectedSkill);
+
+    const skillMatch = selectedSkill === 'All' || (app.skills && app.skills.includes(selectedSkill));
     const statusMatch = selectedStatus === 'All' || app.status === selectedStatus;
 
     return nameMatch && scoreMatch && skillMatch && statusMatch;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600 dark:text-orange-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">

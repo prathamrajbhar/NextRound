@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   TrendingUp,
@@ -10,24 +10,84 @@ import {
   Sparkles,
   ArrowUpRight,
   CheckCircle2,
+  Loader2,
 } from '@/lib/lucide-google-icons';
-import { getStoredJobs, getHRAnalytics } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Job } from '@/types';
 import { AnalyticsKpiCards } from './_components/AnalyticsKpiCards';
 import { StageBreakdownChart } from './_components/StageBreakdownChart';
+
+interface HRAnalyticsData {
+  totalCandidatesProcessed: number;
+  zeroHumanHires: number;
+  avgTimeToOfferDays: number;
+  biasReductionScore: number;
+  funnel: { stage: string; count: number; pct: number }[];
+  monthlyTrends: { month: string; applicants: number; hires: number; passRate: number }[];
+}
+
+const DEFAULT_ANALYTICS: HRAnalyticsData = {
+  totalCandidatesProcessed: 1248,
+  zeroHumanHires: 142,
+  avgTimeToOfferDays: 4.2,
+  biasReductionScore: 98.4,
+  funnel: [
+    { stage: 'Sourced', count: 1248, pct: 100 },
+    { stage: 'Screened', count: 840, pct: 67.3 },
+    { stage: 'Assessment', count: 480, pct: 38.4 },
+    { stage: 'Voice Interview', count: 210, pct: 16.8 },
+    { stage: 'Evaluation', count: 160, pct: 12.8 },
+    { stage: 'Offer Sent', count: 142, pct: 11.3 },
+  ],
+  monthlyTrends: [
+    { month: 'Jan', applicants: 120, hires: 12, passRate: 10.0 },
+    { month: 'Feb', applicants: 155, hires: 18, passRate: 11.6 },
+    { month: 'Mar', applicants: 180, hires: 22, passRate: 12.2 },
+    { month: 'Apr', applicants: 210, hires: 24, passRate: 11.4 },
+    { month: 'May', applicants: 245, hires: 28, passRate: 11.4 },
+    { month: 'Jun', applicants: 290, hires: 32, passRate: 11.0 },
+    { month: 'Jul', applicants: 310, hires: 36, passRate: 11.6 },
+  ],
+};
 
 export default function HrAnalyticsDashboard() {
   const [timeframe, setTimeframe] = useState<'30d' | '90d' | 'ytd'>('30d');
   const [department, setDepartment] = useState<string>('all');
   const [activeTooltip, setActiveTooltip] = useState<number | null>(null);
 
-  const analyticsData = getHRAnalytics();
-  const mockJobs = getStoredJobs();
+  const [analyticsData, setAnalyticsData] = useState<HRAnalyticsData>(DEFAULT_ANALYTICS);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [analyticsRes, jobsRes] = await Promise.allSettled([
+          apiClient.get<HRAnalyticsData>('/hr/analytics'),
+          apiClient.get<Job[]>('/jobs'),
+        ]);
+
+        if (analyticsRes.status === 'fulfilled' && analyticsRes.value) {
+          setAnalyticsData(analyticsRes.value);
+        }
+        if (jobsRes.status === 'fulfilled' && jobsRes.value) {
+          setJobs(jobsRes.value);
+        }
+      } catch (err) {
+        console.error('Failed to load HR analytics data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   // Simple funnel steps
-  const funnelSteps = analyticsData.funnel.map(f => ({ name: f.stage, count: f.count, pct: f.pct }));
+  const funnelSteps = analyticsData.funnel.map((f) => ({ name: f.stage, count: f.count, pct: f.pct }));
 
   // Monthly candidate numbers
-  const trendData = analyticsData.monthlyTrends.map(t => ({ month: t.month, count: t.applicants, hires: t.hires }));
+  const trendData = analyticsData.monthlyTrends.map((t) => ({ month: t.month, count: t.applicants, hires: t.hires }));
 
   const getSvgCoordinates = () => {
     const width = 420;
@@ -367,7 +427,7 @@ export default function HrAnalyticsDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-200">
-              {mockJobs.slice(0, 5).map((j) => (
+              {jobs.slice(0, 5).map((j) => (
                 <tr key={j.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
                   <td className="py-3.5 px-4">
                     <div className="font-extrabold text-slate-900 dark:text-slate-100 font-display">{j.title}</div>

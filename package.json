@@ -1,0 +1,23 @@
+{
+  "name": "nextround-monorepo",
+  "private": true,
+  "packageManager": "npm@11.13.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "check:ml-bypass": "grep -rn \"ML_BYPASS\" apps/ packages/",
+    "db:generate": "npm run generate --workspace=@nextround/database",
+    "db:migrate": "npm run migrate --workspace=@nextround/database"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "turbo": "^2.10.0",
+    "typescript": "^6.0.0"
+  }
+}

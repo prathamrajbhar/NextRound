@@ -1,18 +1,57 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getCandidateApplications, getStoredJobs, getMockSessionFeedback } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Application, Job } from '@/types';
 import { JobCard } from '@/components/ui';
 import { Briefcase, Calendar, ArrowRight, Mic, Award } from '@/lib/lucide-google-icons';
 
-export default function CandidateDashboard() {
-  const janeApps = getCandidateApplications('ananya.iyer@gmail.com');
-  const mockJobs = getStoredJobs();
-  const latestMockFeedback = getMockSessionFeedback('mock-session-1');
+interface CandidateDashboardData {
+  applications: Application[];
+  jobs: Job[];
+  latestMockScore?: number;
+}
 
-  const scheduledInterviews = janeApps.filter((app) => app.status === 'interview_scheduled');
-  const recommendations = mockJobs.filter((job) => job.orgId !== 'org-swiggy').slice(0, 2);
+export default function CandidateDashboard() {
+  const [loading, setLoading] = useState(true);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [latestMockScore, setLatestMockScore] = useState<number>(85);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [dashRes, appsRes, jobsRes] = await Promise.allSettled([
+          apiClient.get<CandidateDashboardData>('/candidate/dashboard'),
+          apiClient.get<Application[]>('/candidate/applications'),
+          apiClient.get<Job[]>('/jobs'),
+        ]);
+
+        if (dashRes.status === 'fulfilled' && dashRes.value) {
+          if (dashRes.value.applications) setApplications(dashRes.value.applications);
+          if (dashRes.value.jobs) setJobs(dashRes.value.jobs);
+          if (dashRes.value.latestMockScore) setLatestMockScore(dashRes.value.latestMockScore);
+        } else {
+          if (appsRes.status === 'fulfilled' && appsRes.value) {
+            setApplications(appsRes.value);
+          }
+          if (jobsRes.status === 'fulfilled' && jobsRes.value) {
+            setJobs(jobsRes.value);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load candidate dashboard:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const scheduledInterviews = applications.filter((app) => app.status === 'interview_scheduled');
+  const recommendations = jobs.slice(0, 2);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -40,7 +79,7 @@ export default function CandidateDashboard() {
             <Briefcase className="h-5 w-5" />
           </div>
           <div>
-            <span className="block text-xl font-extrabold text-slate-800 dark:text-slate-100">{janeApps.length}</span>
+            <span className="block text-xl font-extrabold text-slate-800 dark:text-slate-100">{applications.length}</span>
             <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase">Total Applications</span>
           </div>
         </div>
@@ -60,7 +99,7 @@ export default function CandidateDashboard() {
             <Award className="h-5 w-5" />
           </div>
           <div>
-            <span className="block text-xl font-extrabold text-slate-800 dark:text-slate-100">{latestMockFeedback?.overallScore || 85}%</span>
+            <span className="block text-xl font-extrabold text-slate-800 dark:text-slate-100">{latestMockScore}%</span>
             <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase">Latest Mock Score</span>
           </div>
         </div>
@@ -82,7 +121,7 @@ export default function CandidateDashboard() {
           </div>
 
           <div className="space-y-4">
-            {janeApps.map((app) => (
+            {applications.map((app) => (
               <div
                 key={app.id}
                 className="glass-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"

@@ -1,14 +1,31 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getStoredJobs, Job } from '@/lib/mockData';
-import { Plus, Search, ChevronRight, Briefcase } from '@/lib/lucide-google-icons';
+import { apiClient } from '@/lib/apiClient';
+import { Job } from '@/types';
+import { Plus, Search, ChevronRight, Briefcase, Loader2 } from '@/lib/lucide-google-icons';
 
 export default function HrJobsList() {
   const [filter, setFilter] = useState<'all' | 'active' | 'draft' | 'closed'>('all');
   const [search, setSearch] = useState('');
-  const [jobs] = useState<Job[]>(() => getStoredJobs());
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchJobs() {
+      try {
+        setLoading(true);
+        const data = await apiClient.get<Job[]>('/jobs/org').catch(() => apiClient.get<Job[]>('/jobs'));
+        setJobs(data || []);
+      } catch (err) {
+        console.error('Failed to fetch jobs:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchJobs();
+  }, []);
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase());
@@ -66,7 +83,11 @@ export default function HrJobsList() {
       </div>
 
       {/* Table grid */}
-      {filteredJobs.length > 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center min-h-[300px]">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-600 dark:text-orange-400" />
+        </div>
+      ) : filteredJobs.length > 0 ? (
         <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 shadow-md backdrop-blur-md glass-panel overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left min-w-[700px]">
@@ -97,7 +118,7 @@ export default function HrJobsList() {
                         {job.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{job.applicantsCount} active</td>
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{job.applicantsCount || 0} active</td>
                     <td className="px-6 py-4 text-slate-400 dark:text-slate-400">{job.postedDate}</td>
                     <td className="px-6 py-4 text-right space-x-3">
                       <Link
@@ -108,7 +129,7 @@ export default function HrJobsList() {
                       </Link>
                       <Link
                         href={`/hr/jobs/${job.id}/pipeline`}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-orange-400 hover:underline transition-colors cursor-pointer"
                       >
                         View Pipeline
                         <ChevronRight className="h-4 w-4" />

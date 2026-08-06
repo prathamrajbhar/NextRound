@@ -1,0 +1,83 @@
+import logging
+import httpx
+from core.config import settings
+from core.http_client import callback_client
+from agents.decision_agent import run_decision_agent
+
+logger = logging.getLogger("decision_worker")
+
+
+async def process_decision_job(job_data: dict) -> bool:
+    """
+    Process decision job.
+    1. Extract applicationId, evaluationId, compositeScore, confidence.
+    2. Execute Decision LangGraph agent.
+    3. Send decision result & drafted content back to Express internal endpoint.
+    4. Log agent audit record.
+    """
+    application_id = job_data.get("applicationId")
+    if not application_id:
+        logger.error("Missing applicationId in decision job payload.")
+        return False
+
+    logger.info(f"Processing decision job for applicationId: {application_id}")
+
+    try:
+        evaluation_id = job_data.get("evaluationId")
+        composite_score = float(job_data.get("compositeScore", 0.0))
+        confidence = float(job_data.get("confidence", 1.0))
+
+        # Run Decision LangGraph Agent
+        result = await run_decision_agent(
+            application_id=application_id,
+            evaluation_id=evaluation_id,
+            composite_score=composite_score,
+            confidence=confidence,
+        )
+
+        eval_id = evaluation_id or f"eval_{application_id}"
+
+        # Send decision result to Express API internal callback endpoint
+        patch_payload = {
+            "application_id": application_id,
+            "decision": result.get("decision"),
+            "decision_rationale": result.get("reasoning"),
+            "auto_offer": result.get("auto_offer"),
+            "offer_letter_content": result.get("offer_letter_content"),
+            "rejection_email_content": result.get("rejection_email_content"),
+        }
+
+        async with httpx.AsyncClient() as client:
+            resp = await client.patch(
+                f"{settings.express_api_base_url}/internal/evaluations/{eval_id}/decision",
+                json=patch_payload,
+                headers={"X-Internal-Service-Secret": settings.internal_service_secret},
+            )
+            resp.raise_for_request()
+
+        # Log agent execution
+        log_payload = {
+            "agent_name": "decision_agent",
+            "action": "automated_decision",
+            "input": {"application_id": application_id, "composite_score": composite_score, "confidence": confidence},
+            "output": result,
+            "status": "completed",
+        }
+        await callback_client.post_callback("internal/agent-logs", log_payload)
+
+        logger.info(f"Successfully processed decision job for applicationId: {application_id} (Decision: {result.get('decision')})")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to process decision job for applicationId {application_id}: {e}")
+        try:
+            log_payload = {
+                "agent_name": "decision_agent",
+                "action": "automated_decision",
+                "status": "failed",
+                "error": str(e),
+            }
+            await callback_client.post_callback("internal/agent-logs", log_payload)
+        except Exception:
+            pass
+        return False

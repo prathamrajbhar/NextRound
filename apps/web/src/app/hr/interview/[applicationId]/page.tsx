@@ -4,7 +4,8 @@ import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { mockApplications, Application } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Application } from '@/types';
 import {
   Mic,
   MicOff,
@@ -24,15 +25,29 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
   const router = useRouter();
   const { applicationId } = use(params);
 
-  const [app] = useState<Application>(
-    () => mockApplications.find((a) => a.id === applicationId) || mockApplications[0]
-  );
+  const [app, setApp] = useState<Application | null>(null);
+  const [loading, setLoading] = useState(true);
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
   const [callDuration, setCallDuration] = useState(0);
   const [callEnded, setCallEnded] = useState(false);
   const [selectedResult, setSelectedResult] = useState<'pass' | 'fail' | null>(null);
   const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    async function fetchApp() {
+      try {
+        setLoading(true);
+        const data = await apiClient.get<Application>(`/applications/${applicationId}`);
+        setApp(data);
+      } catch (err) {
+        console.error('Failed to load application:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchApp();
+  }, [applicationId]);
 
   // Call timer effect
   useEffect(() => {
@@ -53,9 +68,22 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
     setCallEnded(true);
   };
 
-  const handleCompleteHRRound = (result: 'pass' | 'fail') => {
+  const handleCompleteHRRound = async (result: 'pass' | 'fail') => {
     setSelectedResult(result);
-    
+
+    try {
+      await fetch(`/api/v1/interviews/hr/${applicationId}/result`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          result,
+          notes: notes || 'Completed 1:1 human video call evaluation.',
+        }),
+      });
+    } catch (e) {
+      // API fallback
+    }
+
     // Persist HR round outcome to localStorage mock state
     if (app) {
       const updatedApp = {
@@ -67,7 +95,7 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
         decision: result === 'pass' ? ('hire' as const) : ('reject' as const),
         reasoning: `Human HR Round completed. Result: ${result.toUpperCase()}. Notes: "${notes || 'Completed 1:1 human video call evaluation.'}"`,
       };
-      
+
       localStorage.setItem(`hrRoundResult_${app.id}`, JSON.stringify(updatedApp));
     }
 

@@ -1,0 +1,38 @@
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export function middleware(request: NextRequest) {
+  const accessToken = request.cookies.get('access_token')?.value;
+  const refreshToken = request.cookies.get('refresh_token')?.value;
+  const hasToken = !!(accessToken || refreshToken);
+
+  const { pathname } = request.nextUrl;
+
+  // Protected route checking
+  if (pathname.startsWith('/hr')) {
+    if (!hasToken) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('from', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  if (pathname.startsWith('/candidate')) {
+    if (!hasToken) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('from', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+  }
+
+  // Redirect away from auth pages if logged in
+  if (hasToken && (pathname === '/login' || pathname === '/signup')) {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ['/hr/:path*', '/candidate/:path*', '/login', '/signup'],
+};

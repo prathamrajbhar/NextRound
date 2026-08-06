@@ -1,8 +1,9 @@
 'use client';
 
-import React, { use, Suspense } from 'react';
+import React, { use, Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { mockSessions, mockApplications, mockJobs } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { MockSession, Application } from '@/types';
 import { useInterviewSession } from '@/hooks/useInterviewSession';
 import InterviewCheckScreen from '@/components/interview/InterviewCheckScreen';
 import InterviewActiveConsole from '@/components/interview/InterviewActiveConsole';
@@ -16,16 +17,50 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
   const applicationId = searchParams.get('applicationId');
 
   const { sessionId } = use(params);
-  const session = mockSessions.find((s) => s.id === sessionId) || mockSessions[0];
+  const [session, setSession] = useState<Partial<MockSession>>({
+    id: sessionId,
+    targetCompany: 'Swiggy',
+    targetRole: 'Senior Full Stack Engineer',
+    difficulty: 'senior',
+  });
+  const [app, setApp] = useState<Partial<Application> | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        if (sessionId) {
+          const res = await apiClient.get<{ session: MockSession }>(`/mock/sessions/${sessionId}`);
+          if (res?.session) setSession(res.session);
+        }
+        if (applicationId) {
+          const resApp = await apiClient.get<Application>(`/applications/${applicationId}`);
+          if (resApp) setApp(resApp);
+        }
+      } catch (err) {
+        console.error('Failed to load session details:', err);
+      }
+    }
+    fetchData();
+  }, [sessionId, applicationId]);
 
   // Resolve target company & role (supports both real candidate application and mock practice mode)
-  const app = applicationId ? mockApplications.find((a) => a.id === applicationId) : null;
-  const job = app ? mockJobs.find((j) => j.id === app.jobId) : null;
+  const targetCompany = app?.orgName || session.targetCompany || 'Swiggy';
+  const targetRole = app?.jobTitle || session.targetRole || 'Senior Full Stack Engineer';
 
-  const targetCompany = app?.orgName || job?.orgName || session.targetCompany;
-  const targetRole = app?.jobTitle || job?.title || session.targetRole;
-
-  const handleComplete = (score?: number) => {
+  const handleComplete = async (score?: number) => {
+    try {
+      if (sessionId && sessionId !== 'mock-session-123') {
+        await apiClient.post(`/mock/sessions/${sessionId}/end`, {
+          transcript: messages.map((m) => ({
+            role: m.role === 'candidate' ? 'candidate' : 'interviewer',
+            text: m.content,
+            timestamp: m.timestamp,
+          })),
+        });
+      }
+    } catch (err) {
+      console.error('Error ending mock session:', err);
+    }
     if (applicationId) {
       localStorage.setItem(`candidateAssessmentCompleted_${applicationId}`, 'true');
       const scoreObj = {
@@ -57,7 +92,7 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
   } = useInterviewSession({
     company: targetCompany,
     role: targetRole,
-    difficulty: session.difficulty,
+    difficulty: session.difficulty || 'senior',
     storageKey: `mockSession_${sessionId}`,
     onComplete: () => handleComplete(),
   });

@@ -1,23 +1,59 @@
 'use client';
 
-import React, { useState, use } from 'react';
+import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { mockJobs, mockApplications } from '@/lib/mockData';
-import { ChevronRight, Search, Users } from 'lucide-react';
+import { apiClient } from '@/lib/apiClient';
+import { Job, Application } from '@/types';
+import { ChevronRight, Search, Users, Loader2 } from '@/lib/lucide-google-icons';
 import Image from 'next/image';
 
 export default function HrJobCandidatesList({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
 
-  const job = mockJobs.find((j) => j.id === jobId) || mockJobs[0];
-  const jobApps = mockApplications.filter((app) => app.jobId === job.id);
-
+  const [job, setJob] = useState<Job | null>(null);
+  const [jobApps, setJobApps] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  const filteredApps = jobApps.filter((app) =>
-    app.candidateName.toLowerCase().includes(search.toLowerCase()) ||
-    app.candidateEmail.toLowerCase().includes(search.toLowerCase())
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [jobRes, appsRes] = await Promise.allSettled([
+          apiClient.get<Job>(`/jobs/${jobId}`),
+          apiClient.get<Application[]>(`/jobs/${jobId}/applications`).catch(() =>
+            apiClient.get<Application[]>(`/applications?jobId=${jobId}`)
+          ),
+        ]);
+
+        if (jobRes.status === 'fulfilled' && jobRes.value) {
+          setJob(jobRes.value);
+        }
+        if (appsRes.status === 'fulfilled' && appsRes.value) {
+          setJobApps(appsRes.value);
+        }
+      } catch (err) {
+        console.error('Failed to load candidate list:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, [jobId]);
+
+  const filteredApps = jobApps.filter(
+    (app) =>
+      app.candidateName.toLowerCase().includes(search.toLowerCase()) ||
+      app.candidateEmail.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600 dark:text-orange-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -25,7 +61,9 @@ export default function HrJobCandidatesList({ params }: { params: Promise<{ jobI
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
         <Link href="/hr/jobs" className="hover:text-purple-600 transition-colors">Jobs</Link>
         <ChevronRight className="h-3 w-3 text-slate-300" />
-        <Link href={`/hr/jobs/${job.id}/pipeline`} className="hover:text-purple-600 transition-colors">{job.title}</Link>
+        <Link href={`/hr/jobs/${job?.id || jobId}/pipeline`} className="hover:text-purple-600 transition-colors">
+          {job?.title || 'Job Pipeline'}
+        </Link>
         <ChevronRight className="h-3 w-3 text-slate-300" />
         <span className="text-slate-800">Candidates</span>
       </div>

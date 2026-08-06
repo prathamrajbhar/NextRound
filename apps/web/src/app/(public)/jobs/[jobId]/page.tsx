@@ -1,10 +1,11 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import Link from 'next/link';
 import PublicNavbar from '@/components/PublicNavbar';
 import PublicFooter from '@/components/PublicFooter';
-import { mockJobs } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Job } from '@/types';
 import { CompanyLogo } from '@/components/ui';
 import {
   MapPin,
@@ -31,8 +32,62 @@ const jobSkillsMap: Record<string, string[]> = {
 export default function JobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
 
-  const job = mockJobs.find((j) => j.id === jobId) || mockJobs[0];
-  const similarJobs = mockJobs.filter((j) => j.id !== job.id).slice(0, 2);
+  const [job, setJob] = useState<Job | null>(null);
+  const [similarJobs, setSimilarJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchJobData() {
+      try {
+        setLoading(true);
+        const res = await apiClient.get<Job>(`/jobs/${jobId}`);
+        if (res) {
+          setJob(res);
+        } else {
+          setJob({
+            id: jobId,
+            orgId: 'org-swiggy',
+            orgName: 'Swiggy',
+            orgLogo: 'https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=150',
+            title: 'Senior Full Stack Engineer',
+            description: 'Join Swiggy tech team to scale dynamic ordering engines and high-concurrency real-time delivery tracking systems.',
+            rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 },
+            thresholds: { minScore: 75, autoOffer: true },
+            status: 'active',
+            location: 'Bangalore / Remote',
+            department: 'Engineering',
+            salary: '₹35L - ₹48L per annum',
+            experienceLevel: 'Senior Level (5+ Yrs)',
+            postedDate: '2026-03-01',
+            applicantsCount: 42,
+          });
+        }
+
+        const allJobs = await apiClient.get<Job[]>('/jobs');
+        if (allJobs) {
+          setSimilarJobs(allJobs.filter((j) => j.id !== jobId).slice(0, 2));
+        }
+      } catch (err) {
+        console.error('Failed to load job details:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchJobData();
+  }, [jobId]);
+
+  if (loading || !job) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <PublicNavbar />
+        <main className="flex-1 flex items-center justify-center text-xs font-bold text-slate-400">
+          Loading job details...
+        </main>
+        <PublicFooter />
+      </div>
+    );
+  }
+
   const skills = jobSkillsMap[job.id] || ['TypeScript', 'React', 'Node.js', 'System Design'];
 
   return (

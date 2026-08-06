@@ -6,6 +6,13 @@ web_modules/
 # Next.js build and cache
 .next/
 out/
+.turbo/
+
+# Python caches
+__pycache__/
+*.pyc
+.venv/
+venv/
 
 # Production build output
 build/
@@ -57,4 +64,3 @@ coverage/
 
 # Internal reviewer prep
 docs/reviewer-prep.md
-

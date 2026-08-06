@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ChevronRight, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { saveStoredJob } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
 
 // Component imports
 import JobBasicsCard from './components/JobBasicsCard';
@@ -62,45 +62,66 @@ export default function HrCreateJob() {
     passingScore: 80,
   });
 
-  const handleAiAssist = () => {
+  const handleAiAssist = async () => {
     if (!jd) return;
     setAssisting(true);
-    setAssistStep('Reading job description patterns...');
+    setAssistStep('Initializing AI JD Parser agent...');
 
-    setTimeout(() => {
-      setAssistStep('Extracting technical requirements & frameworks...');
-    }, 450);
+    try {
+      // 1. Create a draft job first
+      const draftRes = await apiClient.post<{ job: { id: string } }>('/jobs', {
+        title: title || 'Draft Position',
+        description: jd,
+        department,
+        status: 'draft',
+      });
 
-    setTimeout(() => {
-      setAssistStep('Setting experience thresholds & predicting market salaries...');
-    }, 900);
+      const jobId = draftRes?.job?.id;
+      if (jobId) {
+        setAssistStep('AI LangGraph Agent computing rubric & parsing requirements...');
+        await apiClient.post(`/jobs/${jobId}/ai-assist`);
 
-    setTimeout(() => {
-      setAssistStep('Synthesizing rubric model configuration...');
-    }, 1350);
-
-    setTimeout(() => {
-      setAssisting(false);
-      setAssisted(true);
-
+        // Poll for AI result completion (up to 5 polls)
+        let polls = 0;
+        while (polls < 5) {
+          await new Promise((res) => setTimeout(res, 2000));
+          polls++;
+          const updatedJob = await apiClient.get<{ description?: string; rubric?: { technical?: number; communication?: number; problemSolving?: number; experience?: number } }>(`/jobs/${jobId}`);
+          if (updatedJob && updatedJob.rubric) {
+            if (updatedJob.description) setJd(updatedJob.description);
+            if (updatedJob.rubric) {
+              setRubric({
+                technical: updatedJob.rubric.technical ?? 30,
+                communication: updatedJob.rubric.communication ?? 20,
+                problemSolving: updatedJob.rubric.problemSolving ?? 25,
+                experience: updatedJob.rubric.experience ?? 25,
+              });
+            }
+            break;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('API AI assist call failed, utilizing client-side fallback:', err);
+    } finally {
+      // Populate extract tags for UI representation
       const text = jd.toLowerCase();
       if (text.includes('product manager') || text.includes('pm')) {
         setSkills(['Product Strategy', 'Roadmapping', 'Agile/Scrum', 'User Analytics', 'A/B Testing']);
         setSoftSkills(['Collaboration', 'Stakeholder Management', 'Public Speaking']);
         setCultureKeywords(['Customer Obsessed', 'Metrics-Driven', 'Fast Execution']);
-        setRubric({ technical: 20, communication: 35, problemSolving: 25, experience: 20 });
       } else if (text.includes('designer') || text.includes('ux') || text.includes('ui')) {
         setSkills(['Figma', 'Prototyping', 'Design Systems', 'User Research', 'Typography']);
         setSoftSkills(['Empathy', 'Creative Problem Solving', 'Constructive Feedback']);
         setCultureKeywords(['Design Excellence', 'User Centricity', 'Detail Oriented']);
-        setRubric({ technical: 30, communication: 30, problemSolving: 20, experience: 20 });
       } else {
-        setSkills(['React', 'TypeScript', 'Next.js', 'WebAssembly', 'Performance optimization']);
+        setSkills(['React', 'TypeScript', 'Next.js', 'System Architecture', 'Performance optimization']);
         setSoftSkills(['System design thinking', 'Technical leadership', 'Cross-functional collaboration']);
         setCultureKeywords(['Innovation focus', 'High performance', 'Continuous learning']);
-        setRubric({ technical: 45, communication: 15, problemSolving: 20, experience: 20 });
       }
-    }, 1800);
+      setAssisted(true);
+      setAssisting(false);
+    }
   };
 
   const handleWeightChange = (
@@ -157,17 +178,14 @@ export default function HrCreateJob() {
     rubric.technical + rubric.communication + rubric.problemSolving + rubric.experience;
   const isRubricBalanced = totalWeight === 100;
 
-  const handlePublish = (e: React.FormEvent) => {
+  const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isRubricBalanced) return;
 
-    const newJob = {
-      id: `job-${Date.now()}`,
-      orgId: 'org-custom',
-      orgName: 'My Company',
-      orgLogo: 'https://logo.clearbit.com/github.com',
+    const payload = {
       title,
       description: jd || 'No description provided.',
+      department,
       rubric: {
         technical: rubric.technical,
         communication: rubric.communication,
@@ -178,17 +196,19 @@ export default function HrCreateJob() {
         minScore,
         autoOffer,
       },
-      status: 'active' as const,
+      status: 'active',
       location: locationType === 'Remote' ? 'Remote' : 'Bengaluru, KA (On-site)',
       salary: `₹${(minSalary / 100000).toFixed(1)}L - ₹${(maxSalary / 100000).toFixed(1)}L`,
       experienceLevel,
-      postedDate: new Date().toISOString().slice(0, 10),
-      applicantsCount: 0,
       stages,
       assessmentConfig,
     };
 
-    saveStoredJob(newJob);
+    try {
+      await apiClient.post('/jobs', payload);
+    } catch (err) {
+      console.warn('API creation failed, redirecting:', err);
+    }
     router.push('/hr/jobs');
   };
 

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { use, useState } from 'react';
+import React, { use, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getMockSessionFeedback } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
 import {
   CheckCircle2,
   ChevronRight,
@@ -21,45 +21,92 @@ import {
 } from '@/lib/lucide-google-icons';
 import { CompanyLogo } from '@/components/ui';
 
+interface FeedbackData {
+  id?: string;
+  targetCompany?: string;
+  targetRole?: string;
+  difficulty?: string;
+  overallScore?: number;
+  detailedBreakdown?: { category: string; score: number; feedback: string }[];
+  keyStrengths?: string[];
+  areasToImprove?: string[];
+  metrics?: Record<string, number>;
+  transcriptHighlights?: { speaker: string; timestamp: string; text: string; note: string }[];
+}
+
+const DEFAULT_FEEDBACK: FeedbackData = {
+  targetCompany: 'Swiggy',
+  targetRole: 'Senior Full Stack Engineer',
+  overallScore: 84,
+  detailedBreakdown: [{ category: 'Architecture', score: 85, feedback: 'Demonstrated deep familiarity with microservices and system architecture.' }],
+  keyStrengths: [
+    'Strong algorithmic reasoning and Big-O complexity analysis.',
+    'Clear verbal articulation of state isolation and React rendering performance.',
+    'Excellent gaze focus and camera engagement throughout the session.',
+  ],
+  areasToImprove: [
+    'Include explicit error validation paths in system edge-case handling.',
+    'Provide more quantitative metrics when describing system scale benchmarks.',
+  ],
+  metrics: {
+    'Technical Depth': 88,
+    'Communication & Tone': 85,
+    'System Architecture': 80,
+  },
+  transcriptHighlights: [
+    {
+      speaker: 'Candidate',
+      timestamp: '02:15',
+      text: 'How do you handle virtualization and performance optimization for long scroll lists in high-throughput applications?',
+      note: 'I implement windowing libraries like react-window to render only visible items within the viewport. Additionally, I memoize item row components using React.memo.',
+    },
+  ],
+};
+
 export default function MockFeedbackPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = use(params);
-  const feedbackData = getMockSessionFeedback(sessionId);
 
-  const [session] = useState({
-    id: sessionId,
-    targetCompany: feedbackData?.targetRole.split(' ')[0] || 'Swiggy',
-    targetRole: feedbackData?.targetRole || 'Senior Full Stack Engineer',
-    difficulty: 'senior',
-    score: feedbackData?.overallScore || 84,
-    feedback: feedbackData?.detailedBreakdown[0]?.feedback || 'Demonstrated deep familiarity with architecture.',
-    rubric: {
-      technical: feedbackData?.metrics['Technical Depth'] || 88,
-      communication: feedbackData?.metrics['Communication & Tone'] || 85,
-      cultureFit: feedbackData?.metrics['System Architecture'] || 80,
-    },
-    strengths: feedbackData?.keyStrengths || [],
-    growthAreas: feedbackData?.areasToImprove || [],
-    transcript: feedbackData?.transcriptHighlights.map(t => ({
-      question: t.text,
-      answer: t.note,
-      feedback: `Speaker: ${t.speaker} (${t.timestamp})`
-    })) || []
-  });
+  const [feedbackData, setFeedbackData] = useState<FeedbackData>(DEFAULT_FEEDBACK);
+
+  useEffect(() => {
+    async function fetchFeedback() {
+      try {
+        const res = await apiClient.get<FeedbackData>(`/mock/sessions/${sessionId}/feedback`);
+        if (res) setFeedbackData(res);
+      } catch (err) {
+        console.error('Failed to fetch session feedback:', err);
+      }
+    }
+    fetchFeedback();
+  }, [sessionId]);
+
+  const targetCompany = feedbackData.targetCompany || 'Swiggy';
+  const targetRole = feedbackData.targetRole || 'Senior Full Stack Engineer';
+  const score = feedbackData.overallScore || 84;
+  const feedback = feedbackData.detailedBreakdown?.[0]?.feedback || 'Demonstrated deep familiarity with architecture.';
+  const technicalScore = feedbackData.metrics?.['Technical Depth'] || 88;
+  const commScore = feedbackData.metrics?.['Communication & Tone'] || 85;
+  const sysScore = feedbackData.metrics?.['System Architecture'] || 80;
+  const strengths = feedbackData.keyStrengths || [];
+  const growthAreas = feedbackData.areasToImprove || [];
+  const transcriptHighlights = feedbackData.transcriptHighlights || [];
 
   const performance =
-    session.score >= 85
+    score >= 85
       ? { text: 'Excellent Match', bg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/60' }
-      : session.score >= 75
+      : score >= 75
       ? { text: 'Strong Match', bg: 'bg-brand-50 dark:bg-orange-950/60 text-brand-700 dark:text-orange-300 border-brand-200 dark:border-orange-900/60' }
       : { text: 'Needs Calibration', bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/60' };
 
-  const transcript = session.transcript && session.transcript.length > 0 ? session.transcript : [
-    {
-      question: 'How do you handle virtualization and performance optimization for long scroll lists in high-throughput applications?',
-      answer: 'I implement windowing libraries like react-window to render only visible items within the viewport. Additionally, I memoize item row components using React.memo.',
-      feedback: 'Excellent explanation of windowing techniques and memory optimization.',
-    }
-  ];
+  const transcript = feedbackData.transcriptHighlights && feedbackData.transcriptHighlights.length > 0
+    ? feedbackData.transcriptHighlights.map(t => ({ question: t.speaker, answer: t.text, feedback: t.note }))
+    : [
+        {
+          question: 'How do you handle virtualization and performance optimization for long scroll lists in high-throughput applications?',
+          answer: 'I implement windowing libraries like react-window to render only visible items within the viewport. Additionally, I memoize item row components using React.memo.',
+          feedback: 'Excellent explanation of windowing techniques and memory optimization.',
+        }
+      ];
 
   return (
     <div className="w-full space-y-6 pb-12 animate-in fade-in duration-300">
@@ -79,16 +126,16 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
       {/* Hero Scorecard Banner */}
       <div className="relative overflow-hidden rounded-3xl border border-white/60 dark:border-slate-800 bg-gradient-to-br from-white/80 via-white/50 to-slate-50/50 dark:from-slate-900/90 dark:via-slate-900/70 dark:to-slate-950/90 p-6 md:p-8 shadow-md backdrop-blur-md glass-panel flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex gap-4 items-center">
-          <CompanyLogo name={session.targetCompany} size="lg" className="shadow-md flex-shrink-0" />
+          <CompanyLogo name={targetCompany} size="lg" className="shadow-md flex-shrink-0" />
           <div>
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider text-brand-700 dark:text-orange-300 bg-brand-50 dark:bg-orange-950/60 border border-brand-200/60 dark:border-orange-900/60 mb-1">
               <Sparkles className="h-3 w-3 text-brand-600 dark:text-orange-400" /> AI Evaluator Scorecard
             </div>
             <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-display">
-              {session.targetRole} Evaluation
+              {targetRole} Evaluation
             </h1>
             <div className="flex items-center gap-3 text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">
-              <span>Target Blueprint: <strong className="text-emerald-600 dark:text-emerald-400">{session.targetCompany}</strong></span>
+              <span>Target Blueprint: <strong className="text-emerald-600 dark:text-emerald-400">{targetCompany}</strong></span>
               <span>•</span>
               <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-slate-400" /> Session Completed</span>
             </div>
@@ -102,7 +149,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
             </span>
             <div className="flex items-baseline gap-1 mt-0.5">
               <span className="text-3xl md:text-4xl font-extrabold text-emerald-600 dark:text-emerald-400 font-display">
-                {session.score}%
+                {score}%
               </span>
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500">/ 100</span>
             </div>
@@ -130,7 +177,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
             </div>
 
             <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-semibold italic border-l-4 border-brand-500 dark:border-orange-400 pl-4 py-3 bg-slate-50/60 dark:bg-slate-800/40 rounded-r-2xl">
-              &ldquo;{session.feedback}&rdquo;
+              &ldquo;{feedback}&rdquo;
             </p>
 
             {/* Key Strengths & Growth Grid */}
@@ -140,7 +187,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Key Strengths
                 </div>
                 <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                  {(session.strengths.length > 0 ? session.strengths : [
+                  {(strengths.length > 0 ? strengths : [
                     'Strong algorithmic reasoning and Big-O complexity analysis.',
                     'Clear verbal articulation of state isolation and React rendering performance.',
                     'Excellent gaze focus and camera engagement throughout the session.'
@@ -158,7 +205,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
                   <Target className="h-4 w-4 text-amber-500" /> Focus Areas for Growth
                 </div>
                 <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                  {(session.growthAreas.length > 0 ? session.growthAreas : [
+                  {(growthAreas.length > 0 ? growthAreas : [
                     'Include explicit error validation paths in system edge-case handling.',
                     'Provide more quantitative metrics when describing system scale benchmarks.'
                   ]).map((g, idx) => (
@@ -186,9 +233,9 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
               {[
-                { name: 'Technical Architecture', score: session.rubric.technical, color: 'bg-emerald-500' },
-                { name: 'Communication & Pacing', score: session.rubric.communication, color: 'bg-indigo-500' },
-                { name: 'Culture & Principles', score: session.rubric.cultureFit, color: 'bg-purple-500' },
+                { name: 'Technical Architecture', score: technicalScore, color: 'bg-emerald-500' },
+                { name: 'Communication & Pacing', score: commScore, color: 'bg-indigo-500' },
+                { name: 'System Architecture', score: sysScore, color: 'bg-purple-500' },
               ].map((c) => (
                 <div key={c.name} className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
                   <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">

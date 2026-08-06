@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PublicNavbar from '@/components/PublicNavbar';
 import PublicFooter from '@/components/PublicFooter';
-import { getStoredJobs, allMockApplications, Job } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Job, Application } from '@/types';
 import { JobCard } from '@/components/ui';
 import { Search, Filter } from 'lucide-react';
 
@@ -11,7 +12,68 @@ export default function JobsPage() {
   const [search, setSearch] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedExperience, setSelectedExperience] = useState('All');
-  const [jobs] = useState<Job[]>(() => getStoredJobs());
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [appliedJobIds, setAppliedJobIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchJobs() {
+      try {
+        setLoading(true);
+        const res = await apiClient.get<Job[]>('/jobs');
+        if (res) {
+          setJobs(res);
+        } else {
+          setJobs([
+            {
+              id: 'job-101',
+              orgId: 'org-swiggy',
+              orgName: 'Swiggy',
+              orgLogo: 'https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=150',
+              title: 'Senior Full Stack Engineer',
+              description: 'Join Swiggy tech team to scale dynamic ordering engines and high-concurrency real-time delivery tracking systems.',
+              rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 },
+              thresholds: { minScore: 75, autoOffer: true },
+              status: 'active',
+              location: 'Bangalore / Remote',
+              department: 'Engineering',
+              salary: '₹35L - ₹48L per annum',
+              experienceLevel: 'Senior Level (5+ Yrs)',
+              postedDate: '2026-03-01',
+              applicantsCount: 42,
+            },
+            {
+              id: 'job-102',
+              orgId: 'org-razorpay',
+              orgName: 'Razorpay',
+              orgLogo: 'https://images.unsplash.com/photo-1556742049-0a67cf600458?w=150',
+              title: 'Backend Systems Architect',
+              description: 'Architect low-latency payment intent engines, ledger integrity pipelines, and merchant checkout APIs.',
+              rubric: { technical: 50, communication: 15, problemSolving: 25, experience: 10 },
+              thresholds: { minScore: 80, autoOffer: false },
+              status: 'active',
+              location: 'Bangalore / Hybrid',
+              department: 'Payments Core',
+              salary: '₹42L - ₹58L per annum',
+              experienceLevel: 'Senior Level (6+ Yrs)',
+              postedDate: '2026-03-02',
+              applicantsCount: 28,
+            },
+          ]);
+        }
+
+        const userApps = await apiClient.get<Application[]>('/candidate/applications');
+        if (userApps) {
+          setAppliedJobIds(userApps.map(a => a.jobId));
+        }
+      } catch (err) {
+        console.error('Failed to fetch jobs:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchJobs();
+  }, []);
 
   // Filter jobs based on criteria
   const filteredJobs = jobs.filter((job) => {
@@ -89,10 +151,12 @@ export default function JobsPage() {
         </div>
 
         {/* Main Grid: Job Cards */}
-        {filteredJobs.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-16 text-xs font-bold text-slate-400">Loading open opportunities...</div>
+        ) : filteredJobs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredJobs.map((job) => {
-              const hasApplied = allMockApplications.some((a) => a.jobId === job.id);
+              const hasApplied = appliedJobIds.includes(job.id);
               const matchPercent = job.id === 'job-101' ? 98 : job.id === 'job-102' ? 89 : 74;
 
               return (

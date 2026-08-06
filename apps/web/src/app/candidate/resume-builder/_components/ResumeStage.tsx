@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Award, Sliders, Check, Copy, Download } from '@/lib/lucide-google-icons';
-import { ATSResumeData } from '@/lib/mockData/resumeBuilder';
+import { ATSResumeData } from '@/types';
 
 interface ResumeStageProps {
   resumeData: ATSResumeData;

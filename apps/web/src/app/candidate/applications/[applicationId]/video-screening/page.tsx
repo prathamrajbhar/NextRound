@@ -2,15 +2,54 @@
 
 import React, { use, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { mockAsyncScreenings } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { AsyncScreening } from '@/types';
 import { ChevronRight, Camera, Video, Play, Clock, AlertTriangle, RefreshCw, StopCircle } from 'lucide-react';
+
+const DEFAULT_SCREENING: AsyncScreening = {
+  id: 'scr-101',
+  applicationId: 'app-501',
+  candidateName: 'Candidate User',
+  jobTitle: 'Senior Fullstack Engineer (React & Node.js)',
+  status: 'invited',
+  invitedDate: '2026-06-29',
+  deadline: '2026-07-08',
+  responses: [
+    {
+      questionId: 'q1',
+      question: 'Walk us through how you optimize core web vitals and React render cycles in a large dashboard app.',
+      videoUrl: '/videos/sample-1.mp4',
+      durationSeconds: 105,
+      attempts: 1,
+      aiSummary: 'Explained React memoization, code-splitting, and lazy loading assets to reduce total blocking time.',
+    },
+    {
+      questionId: 'q2',
+      question: 'Describe a challenging architectural trade-off you had to make between REST vs GraphQL.',
+      videoUrl: '/videos/sample-2.mp4',
+      durationSeconds: 120,
+      attempts: 2,
+      aiSummary: 'Compared client payload overhead vs backend caching complexity, advocating for REST with tight schemas.',
+    },
+  ],
+};
 
 export default function CandidateVideoScreeningPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
 
-  // Find matching video screening or default to first
-  const initialScreening = mockAsyncScreenings.find((s) => s.applicationId === applicationId) || mockAsyncScreenings[0];
-  const [screening, setScreening] = useState(initialScreening);
+  const [screening, setScreening] = useState<AsyncScreening>(DEFAULT_SCREENING);
+
+  useEffect(() => {
+    async function fetchScreening() {
+      try {
+        const res = await apiClient.get<AsyncScreening>(`/candidate/applications/${applicationId}/video-screening`);
+        if (res) setScreening(res);
+      } catch (err) {
+        console.error('Failed to load video screening:', err);
+      }
+    }
+    fetchScreening();
+  }, [applicationId]);
 
   // Recording console simulator states
   const [recordingActive, setRecordingActive] = useState(false);

@@ -18,7 +18,7 @@ import {
   Sparkles
 } from '@/lib/lucide-google-icons';
 import { Autocomplete } from '@/components/ui';
-import { SUGGESTED_COMPANIES, SUGGESTED_ROLES } from '@/lib/mockSetupHelpers';
+import { SUGGESTED_COMPANIES, SUGGESTED_ROLES } from '@/lib/constants';
 
 export default function HrProfile() {
   const [name, setName] = useState('John Recruiter');

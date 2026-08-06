@@ -1,12 +1,32 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { mockSessions } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { MockSession } from '@/types';
 import { ChevronRight, TrendingUp } from 'lucide-react';
 import { getCompanyDomain } from '@/utils/logo';
 
 export default function MockHistoryPage() {
+  const [loading, setLoading] = useState(true);
+  const [sessions, setSessions] = useState<MockSession[]>([]);
+
+  useEffect(() => {
+    async function fetchSessions() {
+      try {
+        setLoading(true);
+        const data = await apiClient.get<MockSession[]>('/mock/sessions');
+        if (data) {
+          setSessions(data);
+        }
+      } catch (err) {
+        console.error('Failed to load mock history:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchSessions();
+  }, []);
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <div className="border-b border-slate-100 pb-4">
@@ -33,7 +53,7 @@ export default function MockHistoryPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs font-semibold text-slate-700">
-                {mockSessions.map((session) => (
+                {sessions.map((session) => (
                   <tr key={session.id} className="hover:bg-white/20 transition-colors">
                     <td className="px-6 py-4 font-bold text-slate-800">{session.targetRole}</td>
                     <td className="px-6 py-4 text-indigo-650 flex items-center gap-2">

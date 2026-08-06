@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Settings,
   Users,
@@ -10,29 +10,59 @@ import {
   Bell,
 } from '@/lib/lucide-google-icons';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getOrganizationSettings } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
 import { GeneralSettingsTab } from './_components/GeneralSettingsTab';
 import { AppearanceTab } from './_components/AppearanceTab';
 import { NotificationsTab } from './_components/NotificationsTab';
 import { TeamTab } from './_components/TeamTab';
 import { EmailTemplatesTab } from './_components/EmailTemplatesTab';
 
+const DEFAULT_ORG_SETTINGS = {
+  orgName: 'Swiggy Technologies',
+  domain: 'swiggy.in',
+  supportEmail: 'ta-support@swiggy.in',
+  timezone: 'Asia/Kolkata (IST)',
+  defaultThreshold: 80,
+  autoOfferEnabled: true,
+  defaultVoice: 'Serena' as const,
+  anonymizeResumes: true,
+};
+
 export default function HrSettingsPage() {
   const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'notifications' | 'team' | 'emails'>('general');
   const [savedSuccess, setSavedSuccess] = useState(false);
   const { theme, setTheme } = useTheme();
 
-  const orgSettings = getOrganizationSettings();
-
   // General Settings state
-  const [orgName, setOrgName] = useState(orgSettings.orgName);
-  const [orgDomain, setOrgDomain] = useState(orgSettings.domain);
-  const [supportEmail, setSupportEmail] = useState(orgSettings.supportEmail);
-  const [timezone, setTimezone] = useState(orgSettings.timezone);
-  const [defaultThreshold, setDefaultThreshold] = useState(orgSettings.defaultThreshold);
-  const [autoInvite, setAutoInvite] = useState(orgSettings.autoOfferEnabled);
-  const [defaultVoice, setDefaultVoice] = useState(orgSettings.defaultVoice);
-  const [anonymizeResumes, setAnonymizeResumes] = useState(orgSettings.anonymizeResumes);
+  const [orgName, setOrgName] = useState(DEFAULT_ORG_SETTINGS.orgName);
+  const [orgDomain, setOrgDomain] = useState(DEFAULT_ORG_SETTINGS.domain);
+  const [supportEmail, setSupportEmail] = useState(DEFAULT_ORG_SETTINGS.supportEmail);
+  const [timezone, setTimezone] = useState(DEFAULT_ORG_SETTINGS.timezone);
+  const [defaultThreshold, setDefaultThreshold] = useState(DEFAULT_ORG_SETTINGS.defaultThreshold);
+  const [autoInvite, setAutoInvite] = useState(DEFAULT_ORG_SETTINGS.autoOfferEnabled);
+  const [defaultVoice, setDefaultVoice] = useState<'Serena' | 'Alloy' | 'Echo' | 'Fable' | 'Nova' | 'Onyx' | 'Shimmer'>(DEFAULT_ORG_SETTINGS.defaultVoice);
+  const [anonymizeResumes, setAnonymizeResumes] = useState(DEFAULT_ORG_SETTINGS.anonymizeResumes);
+
+  useEffect(() => {
+    async function fetchSettings() {
+      try {
+        const data = await apiClient.get<typeof DEFAULT_ORG_SETTINGS>('/organizations/me/settings');
+        if (data) {
+          if (data.orgName) setOrgName(data.orgName);
+          if (data.domain) setOrgDomain(data.domain);
+          if (data.supportEmail) setSupportEmail(data.supportEmail);
+          if (data.timezone) setTimezone(data.timezone);
+          if (data.defaultThreshold) setDefaultThreshold(data.defaultThreshold);
+          if (typeof data.autoOfferEnabled === 'boolean') setAutoInvite(data.autoOfferEnabled);
+          if (data.defaultVoice) setDefaultVoice(data.defaultVoice);
+          if (typeof data.anonymizeResumes === 'boolean') setAnonymizeResumes(data.anonymizeResumes);
+        }
+      } catch (err) {
+        console.error('Failed to fetch org settings:', err);
+      }
+    }
+    fetchSettings();
+  }, []);
 
   // Appearance & Theme State
   const [brandColor, setBrandColor] = useState('orange');

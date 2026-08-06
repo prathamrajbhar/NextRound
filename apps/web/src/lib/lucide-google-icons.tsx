@@ -134,6 +134,7 @@ export const Layers = createMaterialIcon('layers');
 export const LayoutDashboard = createMaterialIcon('dashboard');
 export const LayoutGrid = createMaterialIcon('grid_view');
 export const Library = createMaterialIcon('local_library');
+export const Lightbulb = createMaterialIcon('lightbulb');
 export const Link = createMaterialIcon('link');
 export const Link2 = createMaterialIcon('link');
 export const ListChecks = createMaterialIcon('checklist');
@@ -219,4 +220,5 @@ export const AudioLines = createMaterialIcon('graphic_eq');
 export const ChevronLeft = createMaterialIcon('chevron_left');
 export const Sun = createMaterialIcon('light_mode');
 export const Moon = createMaterialIcon('dark_mode');
+export const Loader2 = createMaterialIcon('progress_activity');
 

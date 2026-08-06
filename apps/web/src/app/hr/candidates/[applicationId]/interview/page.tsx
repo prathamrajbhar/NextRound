@@ -2,43 +2,64 @@
 
 import React, { useState, use, useEffect } from 'react';
 import Link from 'next/link';
-import { mockApplications, Application } from '@/lib/mockData';
-import { ChevronRight, Play, Pause, Download } from 'lucide-react';
+import { apiClient } from '@/lib/apiClient';
+import { Application } from '@/types';
+import { ChevronRight, Play, Pause, Download, Loader2 } from '@/lib/lucide-google-icons';
 
 export default function HrInterviewReplayPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
   const [app, setApp] = useState<Application | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const currentTime = '02:40';
   const progress = 30; // percentage
 
   useEffect(() => {
-    const defaultAppObj = mockApplications.find((a) => a.id === applicationId) || mockApplications[0];
-    const local = localStorage.getItem(`candidateInterview_${applicationId}`);
-    if (local) {
+    async function fetchReplay() {
       try {
-        const parsed = JSON.parse(local);
-        const nextApp = {
-          ...defaultAppObj,
-          scores: parsed.rubric ? {
-            composite: parsed.score,
-            technical: parsed.rubric.technical,
-            communication: parsed.rubric.communication,
-            problemSolving: Math.floor(parsed.score * 0.95),
-            experience: Math.floor(parsed.score * 0.92),
-            confidence: Math.floor(parsed.score * 0.98),
-          } : defaultAppObj.scores,
-          transcript: parsed.transcript,
-        };
-        setTimeout(() => setApp(nextApp), 0);
-      } catch {
-        setTimeout(() => setApp(defaultAppObj), 0);
+        setLoading(true);
+        const data = await apiClient.get<Application>(`/applications/${applicationId}`);
+        if (data) {
+          let nextApp = data;
+          if (typeof window !== 'undefined') {
+            const local = localStorage.getItem(`candidateInterview_${applicationId}`);
+            if (local) {
+              try {
+                const parsed = JSON.parse(local);
+                nextApp = {
+                  ...data,
+                  scores: parsed.rubric ? {
+                    composite: parsed.score,
+                    technical: parsed.rubric.technical,
+                    communication: parsed.rubric.communication,
+                    problemSolving: Math.floor(parsed.score * 0.95),
+                    experience: Math.floor(parsed.score * 0.92),
+                    confidence: Math.floor(parsed.score * 0.98),
+                  } : data.scores,
+                  transcript: parsed.transcript || data.transcript,
+                };
+              } catch {}
+            }
+          }
+          setApp(nextApp);
+        }
+      } catch (err) {
+        console.error('Failed to load application replay:', err);
+      } finally {
+        setLoading(false);
       }
-    } else {
-      setTimeout(() => setApp(defaultAppObj), 0);
     }
+    fetchReplay();
   }, [applicationId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+      </div>
+    );
+  }
 
   if (!app) {
     return <div className="text-center text-xs text-slate-400 p-8">Loading replay...</div>;

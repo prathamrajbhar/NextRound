@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { ChevronRight, ShieldCheck, ShieldAlert, Clock } from '@/lib/lucide-google-icons';
-import { Application } from '@/lib/mockData';
+import { Application } from '@/types';
 
 interface CandidateCardProps {
   app: Application;

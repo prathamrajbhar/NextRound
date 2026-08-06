@@ -4,7 +4,7 @@ import React from 'react';
 import { CompanyLogo } from '@/components/ui';
 import { CheckCircle2, ShieldCheck, Clock } from '@/lib/lucide-google-icons';
 
-import { Application } from '@/lib/mockData';
+import { Application } from '@/types';
 
 interface ApplicationHeaderBannerProps {
   app: Application;

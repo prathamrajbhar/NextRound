@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState, use } from 'react';
-import { getStoredJobs, mockApplications, Job, Application } from '@/lib/mockData';
+import React, { useState, useEffect, use } from 'react';
+import { apiClient } from '@/lib/apiClient';
+import { Job, Application } from '@/types';
+import { Loader2 } from '@/lib/lucide-google-icons';
 
 // Subcomponents
 import PipelineHeader from './components/PipelineHeader';
@@ -13,38 +15,13 @@ import CandidateProfileDrawer from './components/CandidateProfileDrawer';
 export default function HrJobPipeline({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
 
-  const initialData = () => {
-    const jobsList = getStoredJobs();
-    const foundJob = jobsList.find((j) => j.id === jobId) || jobsList[0];
-    const jobApps = mockApplications.filter((app) => app.jobId === foundJob.id);
-    const activeStages = foundJob.stages || ['screening', 'assessment', 'voice_screen', 'decision'];
-    const normalizedApps = jobApps.map((app) => {
-      let appStage = app.stage;
-      if (appStage === 'Screened' && !activeStages.includes('screening')) {
-        appStage = 'Sourced';
-      }
-      if (appStage === 'Assessment' && !activeStages.includes('assessment')) {
-        appStage = activeStages.includes('screening') ? 'Screened' : 'Sourced';
-      }
-      if (appStage === 'Interview' && !activeStages.includes('voice_screen')) {
-        appStage = activeStages.includes('assessment') ? 'Assessment' : activeStages.includes('screening') ? 'Screened' : 'Sourced';
-      }
-      return {
-        ...app,
-        stage: appStage
-      };
-    });
-    return { foundJob, normalizedApps };
-  };
-
-  const [{ foundJob, normalizedApps }] = useState(initialData);
-
-  const [job] = useState<Job>(foundJob);
-  const [candidates, setCandidates] = useState<Application[]>(normalizedApps);
+  const [job, setJob] = useState<Job | null>(null);
+  const [candidates, setCandidates] = useState<Application[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Gating thresholds state
-  const [minScore, setMinScore] = useState(foundJob.thresholds.minScore);
-  const [autoOffer, setAutoOffer] = useState(foundJob.thresholds.autoOffer);
+  const [minScore, setMinScore] = useState(80);
+  const [autoOffer, setAutoOffer] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Candidate Profile Review Drawer state
@@ -53,8 +30,66 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
 
   const [pipelineActive, setPipelineActive] = useState(true);
 
+  useEffect(() => {
+    async function fetchPipelineData() {
+      try {
+        setLoading(true);
+        const [jobRes, appsRes] = await Promise.allSettled([
+          apiClient.get<Job>(`/jobs/${jobId}`),
+          apiClient.get<Application[]>(`/jobs/${jobId}/applications`).catch(() =>
+            apiClient.get<Application[]>(`/applications?jobId=${jobId}`)
+          ),
+        ]);
+
+        let loadedJob: Job | null = null;
+        if (jobRes.status === 'fulfilled' && jobRes.value) {
+          loadedJob = jobRes.value;
+          setJob(loadedJob);
+          setMinScore(loadedJob.thresholds?.minScore ?? 80);
+          setAutoOffer(loadedJob.thresholds?.autoOffer ?? false);
+        }
+
+        if (appsRes.status === 'fulfilled' && appsRes.value) {
+          const rawApps = appsRes.value;
+          const activeStages = loadedJob?.stages || ['screening', 'assessment', 'voice_screen', 'decision'];
+          const normalizedApps = rawApps.map((app) => {
+            let appStage = app.stage;
+            if (appStage === 'Screened' && !activeStages.includes('screening')) {
+              appStage = 'Sourced';
+            }
+            if (appStage === 'Assessment' && !activeStages.includes('assessment')) {
+              appStage = activeStages.includes('screening') ? 'Screened' : 'Sourced';
+            }
+            if (appStage === 'Interview' && !activeStages.includes('voice_screen')) {
+              appStage = activeStages.includes('assessment')
+                ? 'Assessment'
+                : activeStages.includes('screening')
+                ? 'Screened'
+                : 'Sourced';
+            }
+            return { ...app, stage: appStage };
+          });
+          setCandidates(normalizedApps);
+        }
+      } catch (err) {
+        console.error('Failed to load pipeline data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchPipelineData();
+  }, [jobId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-600 dark:text-orange-400" />
+      </div>
+    );
+  }
+
   if (!job) {
-    return <div className="text-center p-8 text-xs font-bold text-slate-400">Loading pipeline...</div>;
+    return <div className="text-center p-8 text-xs font-bold text-slate-400">Job not found</div>;
   }
 
   // Generate dynamic columns based on job stages
@@ -81,7 +116,7 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
   }
   columns.push({ id: 'Decision', name: 'Final Decision' });
 
-  const handleAdvanceCandidateStage = (appId: string) => {
+  const handleAdvanceCandidateStage = async (appId: string) => {
     const candidate = candidates.find((c) => c.id === appId);
     if (!candidate) return;
 
@@ -92,6 +127,12 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
     setCandidates((prev) =>
       prev.map((c) => (c.id === appId ? { ...c, stage: nextStage } : c))
     );
+
+    try {
+      await apiClient.patch(`/applications/${appId}`, { stage: nextStage });
+    } catch (err) {
+      console.warn('API update stage failed:', err);
+    }
   };
 
   const getColCandidates = (stage: string) => {

@@ -1,12 +1,31 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getCandidateApplications } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Application } from '@/types';
 import { Compass, Briefcase, ChevronRight } from '@/lib/lucide-google-icons';
 
 export default function CandidateApplications() {
-  const janeApps = getCandidateApplications('ananya.iyer@gmail.com');
+  const [loading, setLoading] = useState(true);
+  const [applications, setApplications] = useState<Application[]>([]);
+
+  useEffect(() => {
+    async function fetchApplications() {
+      try {
+        setLoading(true);
+        const data = await apiClient.get<Application[]>('/candidate/applications');
+        if (data) {
+          setApplications(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch candidate applications:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchApplications();
+  }, []);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -17,7 +36,7 @@ export default function CandidateApplications() {
         </p>
       </div>
 
-      {janeApps.length > 0 ? (
+      {applications.length > 0 ? (
         <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 shadow-md backdrop-blur-md glass-panel overflow-hidden">
           <table className="w-full border-collapse text-left">
             <thead>
@@ -30,7 +49,7 @@ export default function CandidateApplications() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {janeApps.map((app) => (
+              {applications.map((app) => (
                 <tr key={app.id} className="hover:bg-white/20 dark:hover:bg-slate-800/40 transition-colors">
                   <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-100">{app.jobTitle}</td>
                   <td className="px-6 py-4 text-brand-600 dark:text-orange-400 font-bold">{app.orgName}</td>

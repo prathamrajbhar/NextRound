@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { apiClient } from '@/lib/apiClient';
+import { CandidateSentimentProfile } from '@/types';
 import {
   Activity,
   Mic,
@@ -15,14 +17,50 @@ import {
   LayoutDashboard,
   Users2,
   Volume2,
+  Loader2,
 } from '@/lib/lucide-google-icons';
-import { mockSentimentProfiles } from '@/lib/mockData/sentimentAnalysis';
 
 export default function SentimentAnalysisPage() {
-  const [selectedCandidateId, setSelectedCandidateId] = useState<string>(mockSentimentProfiles[0].id);
+  const [profiles, setProfiles] = useState<CandidateSentimentProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string>('');
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
-  const currentProfile = mockSentimentProfiles.find(p => p.id === selectedCandidateId) || mockSentimentProfiles[0];
+  useEffect(() => {
+    async function fetchProfiles() {
+      try {
+        setLoading(true);
+        const data = await apiClient.get<CandidateSentimentProfile[]>('/hr/sentiment');
+        if (data && data.length > 0) {
+          setProfiles(data);
+          setSelectedCandidateId(data[0].id);
+        }
+      } catch (err) {
+        console.error('Failed to load sentiment profiles:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProfiles();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-orange-600 dark:text-orange-400" />
+      </div>
+    );
+  }
+
+  const currentProfile = profiles.find(p => p.id === selectedCandidateId) || profiles[0];
+
+  if (!currentProfile) {
+    return (
+      <div className="text-center py-16 text-xs text-slate-400">
+        No sentiment profiles available.
+      </div>
+    );
+  }
 
   const filteredTranscript = selectedTopic
     ? currentProfile.transcriptWithSentiment.filter(t => t.topic === selectedTopic)
@@ -81,7 +119,7 @@ export default function SentimentAnalysisPage() {
                 }}
                 className="text-xs font-bold text-slate-800 dark:text-slate-200 bg-transparent focus:outline-none cursor-pointer pr-4"
               >
-                {mockSentimentProfiles.map((p) => (
+                {profiles.map((p) => (
                   <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
                     {p.candidateName} ({p.role})
                   </option>

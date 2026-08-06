@@ -1,8 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { mockJobs, mockApplications } from '@/lib/mockData';
+import { apiClient } from '@/lib/apiClient';
+import { Job, Application, HRDashboardData } from '@/types';
 import {
   Briefcase,
   Users,
@@ -15,21 +16,52 @@ import {
   Activity,
   ShieldAlert,
   Calendar,
-  Clock
+  Clock,
+  Loader2
 } from '@/lib/lucide-google-icons';
 
 export default function HrDashboard() {
-  const activeJobs = mockJobs.filter((j) => j.status === 'active');
-  const totalCandidates = mockApplications.length;
-  const interviewingCandidates = mockApplications.filter((app) => app.status === 'interview_scheduled').length;
-  const decisionsCount = mockApplications.filter((app) => app.status === 'decided').length;
+  const [loading, setLoading] = useState(true);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [dashboardData, setDashboardData] = useState<HRDashboardData | null>(null);
 
-  // Vetting action queue candidates
-  const vettedCandidates = [...mockApplications].map((app) => {
-    const tech = app.scores?.technical || (app.status === 'decided' ? 90 : 75);
-    const comm = app.scores?.communication || (app.status === 'decided' ? 85 : 72);
-    const composite = app.scores?.composite || Math.floor((tech + comm) / 2);
-    const proctorFlagsCount = app.proctorFlags?.length || (app.status === 'sourced' ? 1 : 0);
+  useEffect(() => {
+    async function fetchDashboard() {
+      try {
+        setLoading(true);
+        const [dashRes, jobsRes] = await Promise.allSettled([
+          apiClient.get<HRDashboardData>('/hr/dashboard'),
+          apiClient.get<Job[]>('/jobs/org'),
+        ]);
+
+        if (dashRes.status === 'fulfilled' && dashRes.value) {
+          setDashboardData(dashRes.value);
+          setApplications(dashRes.value.recentApplications || []);
+        }
+
+        if (jobsRes.status === 'fulfilled' && jobsRes.value) {
+          setJobs(jobsRes.value);
+        }
+      } catch (err) {
+        console.error('Failed to load HR dashboard data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDashboard();
+  }, []);
+
+  const activeJobs = jobs.filter((j) => j.status === 'active');
+  const totalCandidates = dashboardData?.totalApplicationsCount ?? applications.length;
+  const interviewingCandidates = applications.filter((app) => app.status === 'interview_scheduled').length;
+  const decisionsCount = dashboardData?.decisionsCount?.hire ?? applications.filter((app) => app.status === 'decided' && app.decision === 'hire').length;
+
+  const vettedCandidates = applications.map((app) => {
+    const tech = app.scores?.technical ?? 75;
+    const comm = app.scores?.communication ?? 72;
+    const composite = app.scores?.composite ?? Math.floor((tech + comm) / 2);
+    const proctorFlagsCount = app.proctorFlags?.length ?? 0;
 
     return {
       ...app,
@@ -40,28 +72,32 @@ export default function HrDashboard() {
     };
   });
 
-  // Upcoming scheduled vetting assessments
-  const upcomingAssessments = mockApplications
+  const upcomingAssessments = applications
     .filter((app) => app.confirmedSlot || app.status === 'interview_scheduled')
     .map((app) => ({
       id: app.id,
       candidateName: app.candidateName,
-      jobTitle: app.jobTitle.split('—')[0],
-      slot: app.confirmedSlot || '2026-07-06 02:00 PM',
+      jobTitle: app.jobTitle ? app.jobTitle.split('—')[0] : 'Job Position',
+      slot: app.confirmedSlot || 'Scheduled',
     }));
 
-  // Dynamic funnel calculation counts
   const totalApplied = totalCandidates;
-  const totalVetted = mockApplications.filter((a) => a.status === 'interviewed' || a.status === 'decided').length;
-  const totalHired = mockApplications.filter((a) => a.status === 'decided' && a.decision === 'hire').length;
+  const totalVetted = applications.filter((a) => a.status === 'interviewed' || a.status === 'decided').length;
+  const totalHired = decisionsCount;
 
-  // Percentage rates
   const vettedPct = totalApplied > 0 ? Math.round((totalVetted / totalApplied) * 100) : 0;
   const hiredPct = totalApplied > 0 ? Math.round((totalHired / totalApplied) * 100) : 0;
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-600 dark:text-orange-400" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-350">
-
       {/* Console Top branding */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-5">
         <div>
@@ -86,7 +122,7 @@ export default function HrDashboard() {
             <Briefcase className="h-5 w-5" />
           </div>
           <div>
-            <span className="block text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{activeJobs.length}</span>
+            <span className="block text-xl font-black text-slate-800 dark:text-slate-100 tracking-tight">{dashboardData?.activeJobsCount ?? activeJobs.length}</span>
             <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider block mt-0.5">Active Jobs</span>
           </div>
         </div>
@@ -124,38 +160,39 @@ export default function HrDashboard() {
 
       {/* Main Workspace grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
         {/* Left Section: Active Postings & Vetting Action Queue */}
         <div className="lg:col-span-2 space-y-8">
-
           {/* Active Postings */}
           <div className="space-y-4">
             <h2 className="text-base font-extrabold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
               <Layers className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
               Active Jobs
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {activeJobs.slice(0, 2).map((job) => (
-                <div
-                  key={job.id}
-                  className="glass-card p-5 flex flex-col justify-between min-h-[120px]"
-                >
-                  <div>
-                    <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight">{job.title}</h3>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold block mt-1">{job.location} • {job.salary}</span>
+            {activeJobs.length === 0 ? (
+              <div className="glass-card p-6 text-center text-sm text-slate-500 dark:text-slate-400 font-medium">
+                No active job postings found. Click &quot;Post a New Job&quot; to get started.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {activeJobs.slice(0, 2).map((job) => (
+                  <div key={job.id} className="glass-card p-5 flex flex-col justify-between min-h-[120px]">
+                    <div>
+                      <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight">{job.title}</h3>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold block mt-1">{job.location} • {job.salary}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800">
+                      <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400">{job.applicantsCount || 0} in pipeline</span>
+                      <Link
+                        href={`/hr/jobs/${job.id}/pipeline`}
+                        className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                      >
+                        View Pipeline
+                      </Link>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200/60 dark:border-slate-800">
-                    <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400">{job.applicantsCount} in pipeline</span>
-                    <Link
-                      href={`/hr/jobs/${job.id}/pipeline`}
-                      className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
-                    >
-                      View Pipeline
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Unified Vetting Action Grid */}
@@ -171,84 +208,88 @@ export default function HrDashboard() {
             </div>
 
             <div className="glass-card overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-left min-w-[600px]">
-                  <thead>
-                    <tr className="border-b border-slate-200/60 dark:border-slate-800 bg-white/20 dark:bg-slate-800/40 text-slate-400 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-                      <th className="px-6 py-4.5">Candidate</th>
-                      <th className="px-6 py-4.5">Evaluation Score</th>
-                      <th className="px-6 py-4.5">Skills (Tech / Comm)</th>
-                      <th className="px-6 py-4.5">Warnings</th>
-                      <th className="px-6 py-4.5 text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    {vettedCandidates.map((app) => (
-                      <tr key={app.id} className="hover:bg-white/20 dark:hover:bg-slate-800/40 transition-colors">
-                        <td className="px-6 py-4">
-                          <span className="block font-black text-slate-800 dark:text-slate-100 text-sm">{app.candidateName}</span>
-                          <span className="block text-xs text-slate-400 dark:text-slate-400 font-bold mt-0.5">{app.jobTitle.split('—')[0]}</span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-orange-950/60 text-brand-700 dark:text-orange-300 border border-brand-100 dark:border-orange-900/60">
-                            <TrendingUp className="h-3.5 w-3.5" />
-                            {app.composite}%
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 space-y-1.5">
-                          <div>
-                            <div className="flex justify-between text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-0.5">
-                              <span>Technical</span>
-                              <span>{app.tech}%</span>
-                            </div>
-                            <div className="w-24 bg-slate-200/50 dark:bg-slate-700/50 rounded-full h-1">
-                              <div className="bg-brand-500 dark:bg-orange-400 h-1 rounded-full" style={{ width: `${app.tech}%` }} />
-                            </div>
-                          </div>
-                          <div>
-                            <div className="flex justify-between text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-0.5">
-                              <span>Communication</span>
-                              <span>{app.comm}%</span>
-                            </div>
-                            <div className="w-24 bg-slate-200/50 dark:bg-slate-700/50 rounded-full h-1">
-                              <div className="bg-brand-500 dark:bg-orange-400 h-1 rounded-full" style={{ width: `${app.comm}%` }} />
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          {app.proctorFlagsCount > 0 ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-100 dark:border-rose-900/60 px-2.5 py-1 rounded-full">
-                              <ShieldAlert className="h-3.5 w-3.5" />
-                              {app.proctorFlagsCount === 1 ? '1 Warning' : `${app.proctorFlagsCount} Warnings`}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/60 px-2.5 py-1 rounded-full">
-                              No Flags
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 text-right whitespace-nowrap">
-                          <Link
-                            href={`/hr/candidates/${app.id}`}
-                            className="inline-flex items-center gap-0.5 text-sm font-extrabold text-brand-600 dark:text-orange-400 hover:underline transition-colors"
-                          >
-                            Review Profile
-                            <ChevronRight className="h-4.5 w-4.5" />
-                          </Link>
-                        </td>
+              {vettedCandidates.length === 0 ? (
+                <div className="p-8 text-center text-sm text-slate-500 dark:text-slate-400 font-medium">
+                  No applications pending review.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-left min-w-[600px]">
+                    <thead>
+                      <tr className="border-b border-slate-200/60 dark:border-slate-800 bg-white/20 dark:bg-slate-800/40 text-slate-400 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+                        <th className="px-6 py-4.5">Candidate</th>
+                        <th className="px-6 py-4.5">Evaluation Score</th>
+                        <th className="px-6 py-4.5">Skills (Tech / Comm)</th>
+                        <th className="px-6 py-4.5">Warnings</th>
+                        <th className="px-6 py-4.5 text-right">Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      {vettedCandidates.map((app) => (
+                        <tr key={app.id} className="hover:bg-white/20 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="px-6 py-4">
+                            <span className="block font-black text-slate-800 dark:text-slate-100 text-sm">{app.candidateName}</span>
+                            <span className="block text-xs text-slate-400 dark:text-slate-400 font-bold mt-0.5">{app.jobTitle ? app.jobTitle.split('—')[0] : 'Role'}</span>
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center gap-1 text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-orange-950/60 text-brand-700 dark:text-orange-300 border border-brand-100 dark:border-orange-900/60">
+                              <TrendingUp className="h-3.5 w-3.5" />
+                              {app.composite}%
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 space-y-1.5">
+                            <div>
+                              <div className="flex justify-between text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-0.5">
+                                <span>Technical</span>
+                                <span>{app.tech}%</span>
+                              </div>
+                              <div className="w-24 bg-slate-200/50 dark:bg-slate-700/50 rounded-full h-1">
+                                <div className="bg-brand-500 dark:bg-orange-400 h-1 rounded-full" style={{ width: `${app.tech}%` }} />
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex justify-between text-[10px] font-bold text-slate-400 dark:text-slate-400 mb-0.5">
+                                <span>Communication</span>
+                                <span>{app.comm}%</span>
+                              </div>
+                              <div className="w-24 bg-slate-200/50 dark:bg-slate-700/50 rounded-full h-1">
+                                <div className="bg-brand-500 dark:bg-orange-400 h-1 rounded-full" style={{ width: `${app.comm}%` }} />
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4">
+                            {app.proctorFlagsCount > 0 ? (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 border border-rose-100 dark:border-rose-900/60 px-2.5 py-1 rounded-full">
+                                <ShieldAlert className="h-3.5 w-3.5" />
+                                {app.proctorFlagsCount === 1 ? '1 Warning' : `${app.proctorFlagsCount} Warnings`}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/60 px-2.5 py-1 rounded-full">
+                                No Flags
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right whitespace-nowrap">
+                            <Link
+                              href={`/hr/candidates/${app.id}`}
+                              className="inline-flex items-center gap-0.5 text-sm font-extrabold text-brand-600 dark:text-orange-400 hover:underline transition-colors"
+                            >
+                              Review Profile
+                              <ChevronRight className="h-4.5 w-4.5" />
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
-
         </div>
 
         {/* Right Section: Scheduled Assessments & Conversion Funnel */}
         <div className="space-y-6">
-
           {/* Upcoming Vetting Assessments */}
           <div className="glass-card p-5 space-y-4">
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-800 pb-2 flex items-center gap-1.5">
@@ -256,23 +297,26 @@ export default function HrDashboard() {
               Upcoming Interviews
             </span>
 
-            <div className="space-y-3.5">
-              {upcomingAssessments.map((a) => (
-                <div key={a.id} className="space-y-1 border-b border-slate-200/60 dark:border-slate-800 pb-3 last:border-b-0 last:pb-0">
-                  <div className="flex justify-between items-center text-xs font-extrabold text-slate-800 dark:text-slate-100">
-                    <span>{a.candidateName}</span>
-                    <span className="text-brand-700 dark:text-orange-300 bg-brand-50 dark:bg-orange-950/60 border border-brand-100 dark:border-orange-900/60 px-2 py-0.5 rounded flex items-center gap-1 font-mono text-[10px]">
-                      <Clock className="h-3 w-3" />
-                      {a.slot.split(' ')[1]} {a.slot.split(' ')[2]}
-                    </span>
+            {upcomingAssessments.length === 0 ? (
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium text-center py-2">No interviews scheduled</p>
+            ) : (
+              <div className="space-y-3.5">
+                {upcomingAssessments.map((a) => (
+                  <div key={a.id} className="space-y-1 border-b border-slate-200/60 dark:border-slate-800 pb-3 last:border-b-0 last:pb-0">
+                    <div className="flex justify-between items-center text-xs font-extrabold text-slate-800 dark:text-slate-100">
+                      <span>{a.candidateName}</span>
+                      <span className="text-brand-700 dark:text-orange-300 bg-brand-50 dark:bg-orange-950/60 border border-brand-100 dark:border-orange-900/60 px-2 py-0.5 rounded flex items-center gap-1 font-mono text-[10px]">
+                        <Clock className="h-3 w-3" />
+                        {a.slot}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-tight">
+                      <span>{a.jobTitle}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-tight">
-                    <span>{a.jobTitle}</span>
-                    <span>{a.slot.split(' ')[0]}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Vetting Conversion Funnel */}
@@ -313,17 +357,7 @@ export default function HrDashboard() {
               </div>
             </div>
           </div>
-
-          {/* Recruiter Activity Metrics */}
-          <div className="glass-card p-5 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
-            <div className="flex justify-between items-center">
-              <span>Avg Vetting Time</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-100">14 days</span>
-            </div>
-          </div>
-
         </div>
-
       </div>
     </div>
   );
