@@ -72,14 +72,28 @@ export interface Job {
 export interface CandidateProfile {
   id: string;
   user_id: string;
+  full_name?: string | null;
+  headline?: string | null;
+  phone?: string | null;
+  location?: string | null;
+  timezone?: string | null;
   resume_url?: string | null;
+  linkedin_url?: string | null;
+  github_url?: string | null;
+  portfolio_url?: string | null;
+  bio?: string | null;
   skills: string[];
   target_roles: string[];
+  years_of_experience?: number | null;
+  work_mode?: string | null;
+  current_ctc?: number | null;
+  target_locations: string[];
   expected_salary?: number | null;
   notice_period?: string | null;
   work_authorization?: string | null;
   proud_project?: string | null;
   work_values: string[];
+  availability?: Record<string, unknown>;
   created_at: string;
 }
 

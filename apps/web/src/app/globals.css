@@ -573,6 +573,56 @@ aside {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* Auth ambient animations */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(28px, -22px) scale(1.1);
+  }
+}
+
+.anim-fade-up {
+  animation: fade-up 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-drift {
+  animation: drift 16s ease-in-out infinite;
+}
+
+.animate-drift-slow {
+  animation: drift 24s ease-in-out infinite reverse;
+}
+
+/* Respect reduced-motion preferences for ambient + entrance animations */
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-in,
+  .anim-zoom-in,
+  .anim-slide-in-right,
+  .anim-shimmer,
+  .anim-pulse-glow,
+  .anim-fade-up,
+  .animate-drift,
+  .animate-drift-slow {
+    animation: none !important;
+  }
+}
+
 /* Elegant ambient floating blobs styling */
 .blob-container {
   position: fixed;

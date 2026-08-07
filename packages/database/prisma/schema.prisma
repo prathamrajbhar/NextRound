@@ -151,16 +151,28 @@ model Job {
 model CandidateProfile {
   id                 String                     @id @default(uuid())
   user_id            String                     @unique
+  full_name          String?
+  headline           String?
+  phone              String?
+  location           String?
+  timezone           String?
   resume_url         String?
   linkedin_url       String?
   github_url         String?
+  portfolio_url      String?
+  bio                String?                    @db.Text
   skills             Json                       @default("[]")
   target_roles       Json                       @default("[]")
+  years_of_experience Float?
+  work_mode          String?
+  current_ctc        Int?
+  target_locations   Json                       @default("[]")
   expected_salary    Int?
   notice_period      String?
   work_authorization String?
   proud_project      String?                    @db.Text
   work_values        Json                       @default("[]")
+  availability       Json                       @default("{}")
   resume_embedding   Unsupported("vector(768)")?
   created_at         DateTime                   @default(now())
 

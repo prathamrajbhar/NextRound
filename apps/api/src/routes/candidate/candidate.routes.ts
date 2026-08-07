@@ -50,28 +50,60 @@ candidateRouter.post(
 
       const validated = CandidateProfileSchema.parse(bodyData);
 
+      // Only update fields the client actually sent, so partial updates
+      // (e.g. from the Settings page) never wipe existing profile data.
+      const bodyHas = (key: string) => Object.prototype.hasOwnProperty.call(bodyData, key);
+
       const profile = await prisma.candidateProfile.upsert({
         where: { user_id: req.user.userId },
         create: {
           user_id: req.user.userId,
+          full_name: validated.fullName,
+          headline: validated.headline,
+          phone: validated.phone,
+          location: validated.location,
+          timezone: validated.timezone,
+          linkedin_url: validated.linkedinUrl,
+          github_url: validated.githubUrl,
+          portfolio_url: validated.portfolioUrl,
+          bio: validated.bio,
           skills: validated.skills,
           target_roles: validated.targetRoles,
+          years_of_experience: validated.yearsOfExperience,
+          work_mode: validated.workMode,
+          current_ctc: validated.currentCtc,
+          target_locations: validated.targetLocations,
           expected_salary: validated.expectedSalary,
           notice_period: validated.noticePeriod,
           work_authorization: validated.workAuthorization,
           proud_project: validated.proudProject,
           work_values: validated.workValues,
+          availability: validated.availability,
           resume_url: resumeUrl || validated.resumeUrl,
         },
         update: {
-          skills: validated.skills,
-          target_roles: validated.targetRoles,
-          expected_salary: validated.expectedSalary,
-          notice_period: validated.noticePeriod,
-          work_authorization: validated.workAuthorization,
-          proud_project: validated.proudProject,
-          work_values: validated.workValues,
-          resume_url: resumeUrl || validated.resumeUrl || undefined,
+          ...(bodyHas('fullName') && validated.fullName !== undefined ? { full_name: validated.fullName } : {}),
+          ...(bodyHas('headline') && validated.headline !== undefined ? { headline: validated.headline } : {}),
+          ...(bodyHas('phone') && validated.phone !== undefined ? { phone: validated.phone } : {}),
+          ...(bodyHas('location') && validated.location !== undefined ? { location: validated.location } : {}),
+          ...(bodyHas('timezone') && validated.timezone !== undefined ? { timezone: validated.timezone } : {}),
+          ...(bodyHas('linkedinUrl') && validated.linkedinUrl !== undefined ? { linkedin_url: validated.linkedinUrl } : {}),
+          ...(bodyHas('githubUrl') && validated.githubUrl !== undefined ? { github_url: validated.githubUrl } : {}),
+          ...(bodyHas('portfolioUrl') && validated.portfolioUrl !== undefined ? { portfolio_url: validated.portfolioUrl } : {}),
+          ...(bodyHas('bio') && validated.bio !== undefined ? { bio: validated.bio } : {}),
+          ...(bodyHas('skills') ? { skills: validated.skills } : {}),
+          ...(bodyHas('targetRoles') ? { target_roles: validated.targetRoles } : {}),
+          ...(bodyHas('yearsOfExperience') && validated.yearsOfExperience !== undefined ? { years_of_experience: validated.yearsOfExperience } : {}),
+          ...(bodyHas('workMode') && validated.workMode !== undefined ? { work_mode: validated.workMode } : {}),
+          ...(bodyHas('currentCtc') && validated.currentCtc !== undefined ? { current_ctc: validated.currentCtc } : {}),
+          ...(bodyHas('targetLocations') ? { target_locations: validated.targetLocations } : {}),
+          ...(bodyHas('expectedSalary') && validated.expectedSalary !== undefined ? { expected_salary: validated.expectedSalary } : {}),
+          ...(bodyHas('noticePeriod') && validated.noticePeriod !== undefined ? { notice_period: validated.noticePeriod } : {}),
+          ...(bodyHas('workAuthorization') && validated.workAuthorization !== undefined ? { work_authorization: validated.workAuthorization } : {}),
+          ...(bodyHas('proudProject') && validated.proudProject !== undefined ? { proud_project: validated.proudProject } : {}),
+          ...(bodyHas('workValues') ? { work_values: validated.workValues } : {}),
+          ...(bodyHas('availability') ? { availability: validated.availability } : {}),
+          ...(resumeUrl || (bodyHas('resumeUrl') && validated.resumeUrl) ? { resume_url: resumeUrl || validated.resumeUrl } : {}),
         },
       });
 

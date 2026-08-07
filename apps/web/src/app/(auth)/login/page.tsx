@@ -2,203 +2,189 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
-  Mail,
-  Lock,
-  LogIn,
+  Activity,
   ArrowRight,
-  CheckCircle2,
   Eye,
   EyeOff,
+  LayoutDashboard,
+  Loader2,
+  Lock,
+  LogIn,
+  Mail,
+  ShieldCheck,
 } from '@/lib/lucide-google-icons';
+import AuthShell, { AuthBenefit } from '@/components/auth/AuthShell';
+import AuthField from '@/components/auth/AuthField';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/hooks/useAuth';
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const BENEFITS: AuthBenefit[] = [
+  {
+    icon: LayoutDashboard,
+    title: 'One workspace for hiring',
+    description: 'Jobs, candidates, interviews and offers — managed from a single dashboard.',
+  },
+  {
+    icon: Activity,
+    title: 'Live, bias-audited scorecards',
+    description: 'Follow structured evaluations in real time as every candidate progresses.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Org-scoped by design',
+    description: 'Role-based access keeps each tenant’s data isolated and auditable.',
+  },
+];
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
   const { toast } = useToast();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const clearError = (key: keyof typeof errors) => setErrors((prev) => ({ ...prev, [key]: undefined }));
+
+  const validate = (): boolean => {
+    const next: typeof errors = {};
+    if (!email.trim()) next.email = 'Email is required.';
+    else if (!EMAIL_RE.test(email.trim())) next.email = 'Enter a valid email address.';
+    if (!password) next.password = 'Password is required.';
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Please fill in all fields.');
-      return;
-    }
-    setError('');
+    setFormError('');
+    if (!validate()) return;
     setLoading(true);
 
-    const result = await login(email, password);
+    const result = await login(email.trim(), password);
     setLoading(false);
 
     if (result.success && result.user) {
       toast({ title: 'Signed in successfully', variant: 'success' });
-      if (result.user.role === 'candidate') {
-        router.push('/candidate/dashboard');
-      } else {
-        router.push('/hr/dashboard');
-      }
+      router.push(result.user.role === 'candidate' ? '/candidate/dashboard' : '/hr/dashboard');
     } else {
-      setError(result.error || 'Login failed');
+      setFormError(result.error || 'Unable to sign in. Please try again.');
     }
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-8 overflow-hidden font-sans select-none">
-      {/* Crisp Background Video */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="fixed inset-0 h-full w-full object-cover z-0 pointer-events-none filter brightness-[0.75] contrast-[1.05] saturate-[1.1]"
-      >
-        <source src="/bg.mp4" type="video/mp4" />
-      </video>
-
-      {/* Subtle Gradient Backdrop Overlay */}
-      <div className="fixed inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-slate-950/75 z-0 pointer-events-none" />
-
-      {/* Main Widescreen Container */}
-      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        {/* Left Column: Sign-in Specific Showcase */}
-        <div className="lg:col-span-6 space-y-6 text-white p-2 sm:p-4 animate-in fade-in duration-300">
-          <Link href="/" className="inline-flex items-center gap-2.5 group">
-            <div className="relative h-10 w-10 rounded-full overflow-hidden group-hover:scale-105 transition-transform flex-shrink-0 border border-white/40 shadow-md">
-              <Image
-                src="/logo.png"
-                alt="NextRound Logo"
-                fill
-                sizes="40px"
-                className="object-cover scale-[1.3]"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-black tracking-tight text-white font-display">
-                Next<span className="text-orange-400">Round</span>
-              </span>
-            </div>
-          </Link>
-
-          <div className="space-y-3">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white font-display">
-              Welcome Back to NextRound
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed max-w-lg">
-              Log in to manage job pipelines, review candidate scorecards, or continue interview practice sessions.
-            </p>
-          </div>
-
-          {/* Sign In Specific Badges */}
-          <div className="space-y-2.5 pt-1 max-w-md">
-            <div className="flex items-center gap-2.5 bg-slate-950/40 backdrop-blur-xl border border-white/15 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-200">
-              <CheckCircle2 className="h-4 w-4 text-orange-400 flex-shrink-0" />
-              <span>Instant Access to HR &amp; Candidate Portals</span>
-            </div>
-
-            <div className="flex items-center gap-2.5 bg-slate-950/40 backdrop-blur-xl border border-white/15 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-200">
-              <CheckCircle2 className="h-4 w-4 text-indigo-400 flex-shrink-0" />
-              <span>Real-time Scorecards &amp; Interview Records</span>
-            </div>
-
-            <div className="flex items-center gap-2.5 bg-slate-950/40 backdrop-blur-xl border border-white/15 px-3.5 py-2.5 rounded-xl text-xs font-bold text-slate-200">
-              <CheckCircle2 className="h-4 w-4 text-emerald-400 flex-shrink-0" />
-              <span>Secure, Encrypted Workspace</span>
-            </div>
-          </div>
+    <AuthShell
+      eyebrow="AI-Native Recruitment Platform"
+      headline={
+        <>
+          Your hiring pipeline, <span className="text-orange-400">in one place.</span>
+        </>
+      }
+      sub="Sourcing, AI screening, voice interviews and bias-audited decisions — all managed from a single workspace."
+      benefits={BENEFITS}
+    >
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <h2 className="font-display text-xl font-black tracking-tight text-white">Welcome back</h2>
+          <p className="text-xs font-medium text-slate-400">Sign in to your NextRound account.</p>
         </div>
 
-        {/* Right Column: Auth Card */}
-        <div className="lg:col-span-6 xl:col-span-5 lg:ml-auto w-full max-w-md">
-          <div className="rounded-3xl border border-white/20 border-t-white/30 bg-slate-950/40 p-6 sm:p-8 shadow-2xl shadow-slate-950/80 backdrop-blur-2xl text-white space-y-5 ring-1 ring-white/10 animate-in zoom-in-95 duration-200">
-            <div className="text-center sm:text-left space-y-1">
-              <h2 className="text-xl sm:text-2xl font-black text-white font-display">
-                Sign In to NextRound
-              </h2>
-              <p className="text-xs text-slate-300 font-medium">
-                Enter your credentials to access your account.
-              </p>
-            </div>
+        {formError && (
+          <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-950/40 p-3 text-xs font-semibold text-rose-300">
+            {formError}
+          </div>
+        )}
 
-            {error && (
-              <div className="rounded-xl border border-rose-500/40 bg-rose-950/60 p-3 text-xs font-bold text-rose-300 text-center backdrop-blur-md">
-                {error}
-              </div>
-            )}
+        <form onSubmit={handleSubmit} noValidate className="space-y-4">
+          <AuthField
+            id="email"
+            label="Email address"
+            type="email"
+            icon={Mail}
+            value={email}
+            onChange={(value) => {
+              setEmail(value);
+              clearError('email');
+            }}
+            placeholder="name@company.com"
+            autoComplete="email"
+            required
+            autoFocus
+            error={errors.email}
+          />
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-slate-300 block mb-1">Email Address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@company.com"
-                    className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl border border-white/15 bg-slate-900/40 text-white placeholder:text-slate-400 focus:outline-none focus:border-orange-400 focus:bg-slate-900/70 font-semibold transition-all"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-xs font-bold text-slate-300">Password</label>
-                  <Link href="/forgot-password" className="text-xs font-extrabold text-orange-400 hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl border border-white/15 bg-slate-900/40 text-white placeholder:text-slate-400 focus:outline-none focus:border-orange-400 focus:bg-slate-900/70 font-semibold transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.01]"
-                >
-                  <LogIn className="h-4 w-4" />
-                  <span>{loading ? 'Signing in...' : 'Sign In'}</span>
-                </button>
-              </div>
-            </form>
-
-            <div className="border-t border-white/10 pt-4 text-center text-xs text-slate-300 font-semibold">
-              Don&apos;t have an account?{' '}
-              <Link href="/signup" className="font-extrabold text-orange-400 hover:underline inline-flex items-center gap-0.5">
-                Sign Up
-                <ArrowRight className="h-3 w-3" />
+          <AuthField
+            id="password"
+            label="Password"
+            type={showPassword ? 'text' : 'password'}
+            icon={Lock}
+            value={password}
+            onChange={(value) => {
+              setPassword(value);
+              clearError('password');
+            }}
+            placeholder="Enter your password"
+            autoComplete="current-password"
+            required
+            error={errors.password}
+            labelRight={
+              <Link
+                href="/forgot-password"
+                className="text-[11px] font-extrabold text-orange-400 transition-colors hover:text-orange-300"
+              >
+                Forgot password?
               </Link>
-            </div>
-          </div>
-        </div>
+            }
+            rightSlot={
+              <button
+                type="button"
+                onClick={() => setShowPassword((visible) => !visible)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-500 transition-colors hover:text-slate-200"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            }
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 text-sm font-extrabold text-white shadow-lg shadow-orange-600/25 transition-all hover:bg-orange-500 hover:shadow-orange-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Signing in…
+              </>
+            ) : (
+              <>
+                <LogIn className="h-4 w-4" />
+                Sign in
+              </>
+            )}
+          </button>
+        </form>
+
+        <p className="pt-1 text-center text-xs font-medium text-slate-500">
+          New to NextRound?{' '}
+          <Link
+            href="/signup"
+            className="inline-flex items-center gap-1 font-extrabold text-orange-400 transition-colors hover:text-orange-300"
+          >
+            Create an account
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </p>
       </div>
-    </div>
+    </AuthShell>
   );
 }

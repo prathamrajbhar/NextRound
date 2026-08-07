@@ -44,14 +44,28 @@ export const OrganizationSchema = z.object({
 });
 
 export const CandidateProfileSchema = z.object({
-  targetRoles: z.array(z.string()).default([]),
+  fullName: z.string().max(120).optional().nullable(),
+  headline: z.string().max(160).optional().nullable(),
+  phone: z.string().max(40).optional().nullable(),
+  location: z.string().max(160).optional().nullable(),
+  timezone: z.string().max(80).optional().nullable(),
+  resumeUrl: z.string().url().optional().nullable(),
+  linkedinUrl: z.string().url().optional().nullable(),
+  githubUrl: z.string().url().optional().nullable(),
+  portfolioUrl: z.string().url().optional().nullable(),
+  bio: z.string().max(1000).optional().nullable(),
   skills: z.array(z.string()).default([]),
-  expectedSalary: z.number().optional().nullable(),
+  targetRoles: z.array(z.string()).default([]),
+  yearsOfExperience: z.number().min(0).max(60).optional().nullable(),
+  workMode: z.string().optional().nullable(),
+  currentCtc: z.number().min(0).optional().nullable(),
+  targetLocations: z.array(z.string()).default([]),
+  expectedSalary: z.number().min(0).optional().nullable(),
   noticePeriod: z.string().optional().nullable(),
   workAuthorization: z.string().optional().nullable(),
   proudProject: z.string().optional().nullable(),
   workValues: z.array(z.string()).default([]),
-  resumeUrl: z.string().url().optional().nullable(),
+  availability: z.record(z.string(), z.any()).optional(),
 });
 
 export const JobCreateSchema = z.object({
@@ -198,6 +212,17 @@ export const ApplicationScheduleSchema = z.object({
 });
 
 export const CandidateProfileUpdateSchema = z.object({
+  fullName: z.string().max(120).optional().nullable(),
+  headline: z.string().max(160).optional().nullable(),
+  phone: z.string().max(40).optional().nullable(),
+  location: z.string().max(160).optional().nullable(),
+  timezone: z.string().max(80).optional().nullable(),
+  portfolioUrl: z.string().url().optional().nullable(),
+  bio: z.string().max(1000).optional().nullable(),
+  yearsOfExperience: z.number().min(0).max(60).optional().nullable(),
+  workMode: z.string().optional().nullable(),
+  currentCtc: z.number().min(0).optional().nullable(),
+  targetLocations: z.array(z.string()).optional(),
   targetRoles: z.array(z.string()).optional(),
   skills: z.array(z.string()).optional(),
   expectedSalary: z.number().optional().nullable(),
@@ -205,6 +230,7 @@ export const CandidateProfileUpdateSchema = z.object({
   workAuthorization: z.string().optional().nullable(),
   proudProject: z.string().optional().nullable(),
   workValues: z.array(z.string()).optional(),
+  availability: z.record(z.string(), z.any()).optional(),
   resumeUrl: z.string().url().optional().nullable(),
   linkedinUrl: z.string().url().optional().nullable(),
   githubUrl: z.string().url().optional().nullable(),

@@ -64,3 +64,6 @@ coverage/
 
 # Internal reviewer prep
 docs/reviewer-prep.md
+
+# Playwright MCP session artifacts
+.playwright-mcp/
