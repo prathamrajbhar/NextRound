@@ -92,12 +92,10 @@ export default function CandidateVideoScreeningPage({ params }: { params: Promis
         const rec = recordedList[resp.questionId];
         return {
           ...resp,
-          durationSeconds: rec?.duration || 105,
+          durationSeconds: rec?.duration || 0,
           attempts: rec?.attempts || 1,
         };
       }),
-      reviewScore: 88,
-      reviewerNotes: 'Excellent UI optimization walkthrough. Confident delivery, answers are highly analytical.',
     });
   };
 

@@ -33,7 +33,7 @@ export function EmbeddedDocumentViewer({
               Official Employment Agreement Document
             </h3>
             <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 block">
-              swiggy_employment_contract.pdf • Signed & Verifiable
+              Employment contract document
             </span>
           </div>
         </div>
@@ -47,14 +47,13 @@ export function EmbeddedDocumentViewer({
             <Maximize2 className="h-3.5 w-3.5" />
             Full Screen
           </button>
-          <a
-            href="/mock-offer-letter.pdf"
-            download
+          <button
+            type="button"
             className="px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <Download className="h-3.5 w-3.5" />
             Download PDF
-          </a>
+          </button>
         </div>
       </div>
 
@@ -98,9 +97,9 @@ export function EmbeddedDocumentViewer({
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
             <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
               <ShieldCheck className="h-4 w-4" />
-              Verifiable Digital Offer Seal
+              Offer Document
             </div>
-            <span className="text-slate-400 text-[10px]">Page 1 of 2</span>
+            <span className="text-slate-400 text-[10px]">Page 1 of 1</span>
           </div>
         </div>
       </div>

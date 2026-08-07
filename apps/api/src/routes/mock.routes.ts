@@ -138,7 +138,7 @@ mockRouter.get(
   }
 );
 
-// Helper to build feedback object from real session transcript
+// Helper to build feedback object from real session transcript (no fabricated scores or telemetry)
 function generateDynamicFeedback(session: any, rawTranscript?: any, rawScore?: number) {
   const transcript = Array.isArray(rawTranscript) ? rawTranscript : (Array.isArray(session.transcript) ? session.transcript : []);
   const candidateMsgs = transcript.filter((t: any) => t.role === 'candidate' || t.speaker === 'candidate');
@@ -147,70 +147,42 @@ function generateDynamicFeedback(session: any, rawTranscript?: any, rawScore?: n
   const transcriptHighlights = [];
   const minLen = Math.min(interviewerMsgs.length, candidateMsgs.length);
   for (let i = 0; i < minLen; i++) {
-    const q = interviewerMsgs[i]?.text || interviewerMsgs[i]?.content || `Question ${i + 1}`;
+    const q = interviewerMsgs[i]?.text || interviewerMsgs[i]?.content || '';
     const a = candidateMsgs[i]?.text || candidateMsgs[i]?.content;
     if (a && a !== 'No response recorded.') {
       transcriptHighlights.push({
         speaker: q,
         timestamp: candidateMsgs[i]?.timestamp || new Date().toISOString(),
         text: a,
-        note: `Response evaluated for ${session.target_role || 'Software Engineer'}.`,
+        note: '',
       });
     }
   }
 
-  // Calculate actual speech WPM if candidate spoke
-  const totalWords = candidateMsgs.reduce((acc: number, m: any) => {
-    const text = m.text || m.content || '';
-    return acc + text.split(/\s+/).filter(Boolean).length;
-  }, 0);
-
-  const score = rawScore !== undefined ? rawScore : (session.score ?? (candidateMsgs.length > 0 ? 82 : 0));
-
-  const keyStrengths = candidateMsgs.length > 0
-    ? [
-        `Active participation in the ${session.topic || session.target_role || 'technical'} evaluation.`,
-        `Demonstrated domain knowledge for ${session.target_company || 'target company'} rubric.`,
-        `Completed session with audio/telemetry verification.`
-      ]
-    : [];
-
-  const areasToImprove = candidateMsgs.length > 0
-    ? [
-        `Elaborate with deeper architectural patterns and trade-off considerations.`,
-        `Provide quantitative metrics and benchmarks when describing problem solutions.`
-      ]
-    : [];
-
-  const speechWpm = totalWords > 0 ? Math.min(180, Math.max(90, Math.round(totalWords * 3))) : 0;
-  const gazeFocusPercent = candidateMsgs.length > 0 ? 92 : 0;
+  const score = rawScore !== undefined ? rawScore : (session.score ?? 0);
 
   return {
     sessionId: session.id,
-    targetCompany: session.target_company || 'Practice Mode',
-    targetRole: session.target_role || 'Software Engineer',
-    difficulty: session.difficulty || 'mid',
+    targetCompany: session.target_company || '',
+    targetRole: session.target_role || '',
+    difficulty: session.difficulty || '',
     overallScore: score,
     detailedBreakdown: [
       {
         category: 'Overall Evaluation',
         score,
         feedback: candidateMsgs.length > 0
-          ? `Evaluated candidate session for ${session.target_role} with ${candidateMsgs.length} response(s) recorded.`
+          ? `Evaluated candidate session with ${candidateMsgs.length} response(s) recorded.`
           : `Session completed without recorded candidate responses.`,
       },
     ],
-    keyStrengths,
-    areasToImprove,
-    metrics: {
-      'Technical Depth': score,
-      'Communication & Tone': Math.min(100, Math.round(score * 0.95)),
-      'System Architecture': Math.max(0, Math.round(score * 0.9)),
-    },
+    keyStrengths: [],
+    areasToImprove: [],
+    metrics: {},
     telemetry: {
-      gazeFocusPercent,
-      speechWpm,
-      verified: candidateMsgs.length > 0,
+      gazeFocusPercent: null,
+      speechWpm: null,
+      verified: false,
     },
     transcriptHighlights,
   };
@@ -236,7 +208,7 @@ mockRouter.post(
       }
 
       const transcript = req.body.transcript || session.transcript || [];
-      const score = req.body.score !== undefined ? req.body.score : (session.score ?? 80);
+      const score = req.body.score !== undefined ? req.body.score : (session.score ?? 0);
       const feedbackObj = generateDynamicFeedback(session, transcript, score);
 
       const updated = await prisma.mockSession.update({
@@ -259,7 +231,7 @@ mockRouter.post(
           updated.difficulty || undefined
         );
       } catch (e) {
-        console.warn('Queue worker bypassed, returning computed evaluation:', e);
+        console.warn('Queue worker bypassed; evaluation will not be ready until a real worker processes it.', e);
       }
 
       return res.json({

@@ -85,14 +85,20 @@ export function JobHeaderCard({ job, applied, onApply, skills }: JobHeaderCardPr
         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mr-1 flex items-center gap-1">
           <Layers className="h-3 w-3" /> Tech Stack:
         </span>
-        {skills.map((skill) => (
-          <span
-            key={skill}
-            className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/80"
-          >
-            {skill}
+        {skills.length > 0 ? (
+          skills.map((skill) => (
+            <span
+              key={skill}
+              className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/80"
+            >
+              {skill}
+            </span>
+          ))
+        ) : (
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 text-slate-400 border border-slate-200/60 dark:border-slate-700/80">
+            Not specified
           </span>
-        ))}
+        )}
       </div>
     </div>
   );

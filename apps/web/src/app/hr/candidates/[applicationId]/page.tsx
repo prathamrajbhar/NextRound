@@ -61,25 +61,18 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
             }
           }
 
-          let mergedScores = appData.scores || {
-            composite: 86,
-            technical: 88,
-            communication: 82,
-            problemSolving: 85,
-            experience: 89,
-            confidence: 90,
-          };
-          let mergedReasoning = appData.reasoning || 'Demonstrated competent understanding of senior software engineering architecture.';
+          let mergedScores = appData.scores;
+          let mergedReasoning = appData.reasoning || '';
 
           if (voiceInterviewData) {
-            const vScore = voiceInterviewData.score || 80;
+            const vScore = voiceInterviewData.score ?? 0;
             mergedScores = {
               composite: vScore,
-              technical: voiceInterviewData.rubric?.technical || 80,
-              communication: voiceInterviewData.rubric?.communication || 80,
-              problemSolving: Math.floor(vScore * 0.95),
-              experience: Math.floor(vScore * 0.92),
-              confidence: Math.floor(vScore * 0.98),
+              technical: voiceInterviewData.rubric?.technical ?? 0,
+              communication: voiceInterviewData.rubric?.communication ?? 0,
+              problemSolving: 0,
+              experience: 0,
+              confidence: 0,
             };
             mergedReasoning = voiceInterviewData.feedback || mergedReasoning;
           }
@@ -121,9 +114,9 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
     return <div className="text-center text-xs text-slate-400 dark:text-slate-500 p-8 font-bold">Candidate profile not found.</div>;
   }
 
-  // Handler to generate and download candidate PDF resume
+  // Handler to generate candidate resume from available application data only
   const handleDownloadResume = () => {
-    const content = `=================================================\nHireOS CANDIDATE DOSSIER & RESUME: ${app.candidateName.toUpperCase()}\nEmail: ${app.candidateEmail}\nPipeline Stage: ${app.stage}\nAI Readiness Score: ${app.scores?.composite || 85}%\n=================================================\n\nCANDIDATE SNAPSHOT:\n- Position Applied: ${job?.title || app.jobTitle || 'Senior Frontend Engineer'}\n- Total Experience: 5+ Years\n- Location: San Francisco, CA (Remote)\n- Availability: Immediate (2 Weeks Notice)\n- Primary Tech Stack: React, TypeScript, Next.js, Node.js, System Architecture\n\nPROFESSIONAL EXPERIENCE:\n\n1. Senior Frontend Engineer — TechCorp (2022 - Present)\n   - Built high-throughput order checkout pipelines serving 5M daily users.\n   - Virtualized menu lists and improved LCP by 42%.\n   - Managed micro-frontend state isolation and performance telemetry.\n\n2. Software Engineer — DataSystems (2020 - 2022)\n   - Architected React component libraries with TypeScript & Tailwind.\n   - Reduced bundle sizes by 35% through tree-shaking and dynamic code splitting.\n\nAI EVALUATION SUMMARY:\nTechnical Score: ${app.scores?.technical || 90}%\nCommunication Score: ${app.scores?.communication || 85}%\nProblem Solving Score: ${app.scores?.problemSolving || 88}%\nExperience Score: ${app.scores?.experience || 85}%\n\nEvaluator Notes: "${app.reasoning || 'Demonstrated competent understanding of senior software engineering architecture.'}"\n`;
+    const content = `=================================================\nHireOS CANDIDATE DOSSIER & RESUME: ${app.candidateName.toUpperCase()}\nEmail: ${app.candidateEmail}\nPipeline Stage: ${app.stage}\nAI Readiness Score: ${app.scores?.composite ?? 'N/A'}%\n=================================================\n\nCANDIDATE SNAPSHOT:\n- Position Applied: ${job?.title || app.jobTitle || 'N/A'}\n- Skills: ${(app.skills || []).join(', ') || 'N/A'}\n\nAI EVALUATION SUMMARY:\nTechnical Score: ${app.scores?.technical ?? 'N/A'}%\nCommunication Score: ${app.scores?.communication ?? 'N/A'}%\nProblem Solving Score: ${app.scores?.problemSolving ?? 'N/A'}%\nExperience Score: ${app.scores?.experience ?? 'N/A'}%\n\nEvaluator Notes: "${app.reasoning || 'No evaluation notes available.'}"\n`;
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -185,7 +178,7 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
                   {app.candidateName.replace(/\s+/g, '_')}_Resume.pdf
                 </h4>
                 <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block mt-0.5">
-                  Verified Candidate PDF Resume • 1.2 MB • Uploaded on {app.appliedDate}
+                  Candidate Resume PDF
                 </span>
               </div>
             </div>
@@ -206,7 +199,7 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
               Verified Tech Stack &amp; Skill Competencies
             </span>
             <div className="flex flex-wrap gap-2 pt-1">
-              {(app.skills || ['React', 'TypeScript', 'Next.js', 'Node.js', 'System Architecture', 'Tailwind CSS', 'GraphQL']).map((skill: string, idx: number) => (
+              {(app.skills || []).map((skill: string, idx: number) => (
                 <span
                   key={idx}
                   className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 text-xs font-extrabold flex items-center gap-1.5 shadow-2xs"
@@ -237,21 +230,7 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
               Work Experience History
             </h3>
             <div className="space-y-4 text-xs text-slate-700 dark:text-slate-300">
-              <div className="border-l-2 border-brand-500 pl-3.5 space-y-1">
-                <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">Senior Frontend Engineer — TechCorp</h4>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block">2022 - Present • 2 yrs 6 mos</span>
-                <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium mt-1">
-                  Built high-throughput order checkout pipelines serving 5M daily users. Virtualized menu lists and improved LCP by 42%.
-                </p>
-              </div>
-
-              <div className="border-l-2 border-indigo-500 pl-3.5 space-y-1">
-                <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">Software Engineer — DataSystems</h4>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block">2020 - 2022 • 2 yrs</span>
-                <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium mt-1">
-                  Architected React micro-frontends with TypeScript. Managed state isolation and dynamic event bus channels.
-                </p>
-              </div>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">Work experience history is not available for this candidate.</p>
             </div>
           </div>
 
@@ -264,14 +243,7 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
               Screening Gap Analysis
             </h3>
             <div className="space-y-3.5 text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
-              <div>
-                <span className="font-extrabold text-slate-900 dark:text-slate-100 block">Matched Qualifications</span>
-                <p className="mt-1 text-slate-600 dark:text-slate-300 font-medium">Excellent typescript configuration capabilities, react concurrent streaming, aspect ratio layout shift adjustments.</p>
-              </div>
-              <div>
-                <span className="font-extrabold text-slate-900 dark:text-slate-100 block">Gaps &amp; Growth Areas</span>
-                <p className="mt-1 text-slate-600 dark:text-slate-300 font-medium">Relatively light backend experience, lacks extensive distributed queuing knowledge (e.g. BullMQ, RabbitMQ).</p>
-              </div>
+              <p className="text-slate-500 dark:text-slate-400 font-medium">Screening gap analysis not yet available.</p>
             </div>
           </div>
 
@@ -352,11 +324,11 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
             <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-200/60 dark:border-slate-800 text-left">
               <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Gaze Contact</span>
-                <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 block">96% Direct</span>
+                <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 block">No data</span>
               </div>
               <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Speech Pacing</span>
-                <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 mt-0.5 block">140 WPM</span>
+                <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 mt-0.5 block">No data</span>
               </div>
             </div>
           </div>

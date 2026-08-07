@@ -20,7 +20,7 @@ export function TotalRewardsOverview({
 
   const parseLakhs = (valStr: string) => {
     const match = valStr.match(/₹?(\d+(\.\d+)?)L/i);
-    return match ? parseFloat(match[1]) : 34;
+    return match ? parseFloat(match[1]) : 0;
   };
 
   const baseLakhs = parseLakhs(baseSalary);
@@ -28,10 +28,7 @@ export function TotalRewardsOverview({
   const formattedMonthly = `₹${(monthlyInr / 100000).toFixed(2)}L/mo (~₹${monthlyInr.toLocaleString('en-IN')})`;
 
   const vestingSchedule = [
-    { period: 'Year 1 Cliff (12 Months)', percent: '25%', status: '1 Yr Cliff', desc: 'First vesting batch after 1st anniversary' },
-    { period: 'Year 2 (Quarterly Vest)', percent: '25%', status: '6.25% / Qtr', desc: 'Linear quarterly vesting after cliff' },
-    { period: 'Year 3 (Quarterly Vest)', percent: '25%', status: '6.25% / Qtr', desc: 'Linear quarterly vesting' },
-    { period: 'Year 4 (Quarterly Vest)', percent: '25%', status: '6.25% / Qtr', desc: 'Final vesting year' },
+    { period: 'Yr 1 (12-month cliff)', percent: '—', status: 'Per grant terms', desc: 'Vesting details per the signed grant.' },
   ];
 
   return (
@@ -108,7 +105,7 @@ export function TotalRewardsOverview({
               Stock Options Vesting Schedule (4-Year Plan)
             </h3>
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              0.02% equity grant with standard 1-year cliff and quarterly linear vesting thereafter.
+              Vesting details per the signed grant agreement.
             </p>
           </div>
           <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold self-start sm:self-auto">

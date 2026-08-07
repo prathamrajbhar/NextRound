@@ -22,14 +22,6 @@ import { JobRubricCard } from './_components/JobRubricCard';
 import { JobPrepArenaCard } from './_components/JobPrepArenaCard';
 import { JobPrepSection } from './_components/JobPrepSection';
 
-// Mapping tech skills / tags per job for richer visual representation
-const jobSkillsMap: Record<string, string[]> = {
-  'job-101': ['React', 'TypeScript', 'Next.js', 'Micro-frontends', 'Web Vitals', 'Tailwind CSS'],
-  'job-102': ['Product Strategy', 'UPI Payments', 'Checkout UX', 'Analytics', 'System Architecture'],
-  'job-103': ['Node.js', 'Go', 'PostgreSQL', 'React', 'Distributed Ledgers', 'High Throughput'],
-  'job-104': ['Python', 'NLP', 'PyTorch', 'Vector DBs', 'RAG Pipelines', 'Machine Learning'],
-};
-
 export default function CandidateJobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
   const router = useRouter();
@@ -75,7 +67,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
   const handleApply = () => {
     setApplied(true);
     setTimeout(() => {
-      router.push('/candidate/applications/app-503');
+      router.push('/candidate/jobs');
     }, 600);
   };
 
@@ -103,7 +95,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
     );
   }
 
-  const skills = jobSkillsMap[job.id] || ['TypeScript', 'React', 'Node.js', 'System Design'];
+  const skills: string[] = [];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">

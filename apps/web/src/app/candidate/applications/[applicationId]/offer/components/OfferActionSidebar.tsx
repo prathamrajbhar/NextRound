@@ -76,7 +76,7 @@ export function OfferActionSidebar({
       {/* Recruiter Contact Card */}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-sm space-y-3">
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
-          Primary Talent Recruiter
+          Hiring Team
         </span>
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-700 dark:text-slate-200 font-bold text-sm shrink-0 border border-slate-200 dark:border-slate-700">
@@ -84,21 +84,18 @@ export function OfferActionSidebar({
           </div>
           <div>
             <span className="text-xs font-extrabold text-slate-900 dark:text-white block">
-              Priya Sharma
+              Talent Team
             </span>
             <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 block">
-              Lead Talent Partner • {orgName}
+              {orgName}
             </span>
           </div>
         </div>
 
-        <a
-          href="mailto:priya.sharma@swiggy.in"
-          className="w-full py-2 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-center gap-2 transition-colors"
-        >
+        <div className="w-full py-2 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-2">
           <Mail className="h-3.5 w-3.5 text-brand-500" />
-          Email Recruiter
-        </a>
+          Contact via the platform
+        </div>
       </div>
     </aside>
   );

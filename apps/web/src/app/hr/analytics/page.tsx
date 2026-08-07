@@ -30,7 +30,7 @@ const INITIAL_ANALYTICS: HRAnalyticsData = {
   totalCandidatesProcessed: 0,
   zeroHumanHires: 0,
   avgTimeToOfferDays: 0,
-  biasReductionScore: 100,
+  biasReductionScore: 0,
   funnel: [
     { stage: 'Sourced', count: 0, pct: 0 },
     { stage: 'Screened', count: 0, pct: 0 },
@@ -77,9 +77,9 @@ export default function HrAnalyticsDashboard() {
 
           setAnalyticsData({
             totalCandidatesProcessed: raw.kpis?.totalApplications ?? 0,
-            zeroHumanHires: 0,
+            zeroHumanHires: raw.kpis?.zeroHumanHires ?? 0,
             avgTimeToOfferDays: raw.kpis?.avgTimeToHireDays ?? 0,
-            biasReductionScore: raw.kpis?.biasCleanRatePercent ?? 100,
+            biasReductionScore: raw.kpis?.biasCleanRatePercent ?? 0,
             funnel,
             monthlyTrends,
             ...raw,
@@ -241,7 +241,7 @@ export default function HrAnalyticsDashboard() {
               </h3>
               <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/60 px-2.5 py-1 rounded-full flex items-center gap-1">
                 <TrendingUp className="h-3 w-3" />
-                +25% Growth
+                {trendData.length > 0 ? `${trendData.length} period(s)` : 'No data'}
               </span>
             </div>
 
@@ -460,7 +460,7 @@ export default function HrAnalyticsDashboard() {
                     <td className="py-3.5 px-4 text-slate-600 dark:text-slate-400">{j.location || 'Remote'}</td>
                     <td className="py-3.5 px-4 font-bold">{j.applicantsCount || 0} candidates</td>
                     <td className="py-3.5 px-4 text-emerald-600 dark:text-emerald-400 font-extrabold">
-                      {j.applicantsCount ? `${Math.min(100, j.applicantsCount * 10)}%` : '0%'}
+                      {j.applicantsCount ? '—' : '0%'}
                     </td>
                     <td className="py-3.5 px-4 font-bold">{j.thresholds?.minScore ? `${j.thresholds.minScore}%` : 'N/A'}</td>
                     <td className="py-3.5 px-4 text-right">

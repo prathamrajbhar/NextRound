@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getTopicsForRoleAndCompany, defaultAnswers } from '@/lib/interviewTopics';
+import { getTopicsForRoleAndCompany } from '@/lib/interviewTopics';
 import { evaluateInterview } from '@/lib/interviewScorer';
 import { api } from '@/lib/api';
 
@@ -37,11 +37,10 @@ export function useInterviewSession({
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isSimulating, setIsSimulating] = useState(false);
   const [proctorTelemetry, setProctorTelemetry] = useState({
-    faceCount: 1,
-    gazeCentered: true,
-    engagementIndex: 96,
+    faceCount: null as number | null,
+    gazeCentered: null as boolean | null,
+    engagementIndex: null as number | null,
   });
 
   const topicIndex = useRef(0);
@@ -57,20 +56,16 @@ export function useInterviewSession({
     return () => clearInterval(t);
   }, [stage]);
 
-  // Periodic proctoring telemetry logging to Express API
+  // Periodic proctoring telemetry logging to Express API (only real CV signals, never fabricated)
   useEffect(() => {
     if (stage !== 'session' || !interviewId) return;
     const pTimer = setInterval(async () => {
       try {
-        const gaze = Math.random() > 0.1;
-        const eng = Math.floor(Math.random() * 8) + 92;
-        setProctorTelemetry({ faceCount: 1, gazeCentered: gaze, engagementIndex: eng });
-
         await api.patch(`/interviews/${interviewId}/proctoring`, {
-          face_count: 1,
-          gaze_centered: gaze,
-          engagement_index: eng,
-          multiple_faces_detected: false,
+          face_count: null,
+          gaze_centered: null,
+          engagement_index: null,
+          multiple_faces_detected: null,
         });
       } catch (err) {
         // Silently swallow background telemetry errors
@@ -145,7 +140,7 @@ export function useInterviewSession({
         transcriptData.current.push({
           question: currentTopic.question,
           answer: text,
-          feedback: `Good response on ${currentTopic.topic}.`
+          feedback: '',
         });
 
         setPhase('Deep-Dive');
@@ -196,38 +191,7 @@ export function useInterviewSession({
   };
 
   const simulateSpeaking = () => {
-    if (isSimulating || isAnalyzing) return;
-    setIsSimulating(true);
-
-    const currentTopic = topics[topicIndex.current];
-    const targetQuestion = messages[messages.length - 1]?.content || '';
-    const answer = defaultAnswers[targetQuestion] || defaultAnswers[currentTopic.question] || 'I would organize modular layers and validate inputs.';
-
-    let currentLen = 0;
-    const words = answer.split(' ');
-    let currentText = '';
-
-    const interval = setInterval(() => {
-      if (currentLen < words.length) {
-        currentText += (currentLen > 0 ? ' ' : '') + words[currentLen];
-        setMessages((prev) => {
-          const next = [...prev];
-          const last = next[next.length - 1];
-          if (last && last.role === 'candidate' && last.id.startsWith('c-sim-')) {
-            last.content = currentText;
-            return next;
-          } else {
-            return [...next, { id: `c-sim-${Date.now()}`, role: 'candidate', content: currentText, timestamp: new Date().toLocaleTimeString() }];
-          }
-        });
-        currentLen++;
-      } else {
-        clearInterval(interval);
-        setIsSimulating(false);
-        setMessages((prev) => prev.filter(m => !m.id.startsWith('c-sim-')));
-        submitAnswer(answer);
-      }
-    }, 100);
+    // No-op: fabricated speech simulation removed. Real candidates respond via live mic.
   };
 
   return {
@@ -238,7 +202,6 @@ export function useInterviewSession({
     micActive,
     camActive,
     isAnalyzing,
-    isSimulating,
     proctorTelemetry,
     startSession,
     submitAnswer,

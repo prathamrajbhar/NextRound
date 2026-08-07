@@ -20,14 +20,14 @@ import { EmailTemplatesTab } from './_components/EmailTemplatesTab';
 import { useAuthContext } from '@/contexts/AuthContext';
 
 const DEFAULT_ORG_SETTINGS = {
-  orgName: 'My Organization',
+  orgName: '',
   domain: '',
   supportEmail: '',
-  timezone: 'Asia/Kolkata (IST)',
-  defaultThreshold: 80,
-  autoOfferEnabled: true,
+  timezone: '',
+  defaultThreshold: 0,
+  autoOfferEnabled: false,
   defaultVoice: 'Serena' as const,
-  anonymizeResumes: true,
+  anonymizeResumes: false,
 };
 
 export default function HrSettingsPage() {

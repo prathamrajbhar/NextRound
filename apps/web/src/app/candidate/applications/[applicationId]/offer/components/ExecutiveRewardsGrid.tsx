@@ -20,7 +20,7 @@ export function ExecutiveRewardsGrid({
 
   const parseLakhs = (valStr: string) => {
     const match = valStr.match(/₹?(\d+(\.\d+)?)L/i);
-    return match ? parseFloat(match[1]) : 34;
+    return match ? parseFloat(match[1]) : 0;
   };
 
   const baseLakhs = parseLakhs(baseSalary);
@@ -28,10 +28,7 @@ export function ExecutiveRewardsGrid({
   const formattedMonthly = `₹${(monthlyInr / 100000).toFixed(2)}L/mo (~₹${monthlyInr.toLocaleString('en-IN')})`;
 
   const vestingTimeline = [
-    { label: 'Year 1 Cliff', pct: '25%', detail: '25% shares vest at 12-month anniversary' },
-    { label: 'Year 2', pct: '25%', detail: '6.25% vested quarterly' },
-    { label: 'Year 3', pct: '25%', detail: '6.25% vested quarterly' },
-    { label: 'Year 4', pct: '25%', detail: 'Final vesting quarter' },
+    { label: 'Vesting', pct: '—', detail: 'Schedule per the signed grant agreement.' },
   ];
 
   return (
@@ -119,9 +116,9 @@ export function ExecutiveRewardsGrid({
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 space-y-3 shadow-sm">
         <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 pb-2.5">
           <span className="flex items-center gap-1.5">
-            <Sparkles className="h-4 w-4 text-amber-500" /> 4-Year ESOP Vesting Schedule
+            <Sparkles className="h-4 w-4 text-amber-500" /> Equity Vesting Schedule
           </span>
-          <span className="text-slate-400 font-medium text-[11px]">25% per Year</span>
+          <span className="text-slate-400 font-medium text-[11px]">Per grant terms</span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           {vestingTimeline.map((item, idx) => (

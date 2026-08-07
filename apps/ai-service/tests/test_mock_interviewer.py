@@ -1,7 +1,7 @@
 import pytest
 from agents.mock_interviewer_agent import run_mock_interviewer_agent, MockInterviewerState
 
-def test_run_mock_interviewer_agent_first_turn():
+def test_run_mock_interviewer_agent_first_turn_without_client():
     state: MockInterviewerState = {
         "session_id": "mock-session-123",
         "topic": "System Design",
@@ -13,7 +13,9 @@ def test_run_mock_interviewer_agent_first_turn():
     }
     result = run_mock_interviewer_agent(state)
     assert "latest_ai_response" in result
-    assert result["coaching_hint"] is not None
+    # Without a Gemini client the agent must not fabricate a canned response.
+    assert result["latest_ai_response"] == ""
+    assert result["coaching_hint"] is None
     assert result["turn_number"] == 1
     assert result["is_complete"] is False
 

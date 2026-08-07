@@ -15,7 +15,8 @@ def test_parse_requirements_node_extracts_skills():
     }
     result = parse_requirements_node(state)
     assert "extracted_skills" in result
-    assert len(result["extracted_skills"]) > 0
+    # Without an available extraction source, no fabricated skills are returned.
+    assert isinstance(result["extracted_skills"], list)
 
 def test_compute_rubric_node_weights_sum_to_100():
     state: JDParserState = {

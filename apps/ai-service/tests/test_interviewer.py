@@ -17,7 +17,9 @@ def test_load_context_node_initializes_defaults():
     result = load_context_node(state)
     assert result["current_stage"] == "intro"
     assert result["turn_number"] == 0
-    assert "technical" in result["scores_so_far"]
+    # No fabricated default scores are injected.
+    assert "scores_so_far" in result
+    assert result["scores_so_far"] == {}
 
 def test_evaluate_last_answer_flags_shallow_response():
     state: InterviewerState = {

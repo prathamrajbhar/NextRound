@@ -1,13 +1,6 @@
 export const SUGGESTED_COMPANIES = ['Google', 'Stripe', 'Vercel', 'Netflix', 'Razorpay', 'Swiggy'];
 export const SUGGESTED_ROLES = ['Software Engineer', 'Frontend Developer', 'Product Manager'];
 
-export const DEFAULT_CODING_PROBLEMS = [
-  { id: 'prob-1', title: 'LRU Cache Implementation', difficulty: 'Medium' },
-  { id: 'prob-2', title: 'Two Sum & Variation Algorithms', difficulty: 'Easy' },
-  { id: 'prob-3', title: 'Concurrent Promise Queue Runner', difficulty: 'Hard' },
-  { id: 'prob-4', title: 'Binary Search Tree Validation', difficulty: 'Medium' },
-];
-
 export const getCompanyCultureNotes = (companyName: string): { notes: string; tags: string[] } => {
   const name = companyName.toLowerCase().trim();
   if (name.includes('google')) {

@@ -23,43 +23,6 @@ export default function JobsPage() {
         const res = await apiClient.get<Job[]>('/jobs');
         if (res) {
           setJobs(res);
-        } else {
-          setJobs([
-            {
-              id: 'job-101',
-              orgId: 'org-swiggy',
-              orgName: 'Swiggy',
-              orgLogo: 'https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=150',
-              title: 'Senior Full Stack Engineer',
-              description: 'Join Swiggy tech team to scale dynamic ordering engines and high-concurrency real-time delivery tracking systems.',
-              rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 },
-              thresholds: { minScore: 75, autoOffer: true },
-              status: 'active',
-              location: 'Bangalore / Remote',
-              department: 'Engineering',
-              salary: '₹35L - ₹48L per annum',
-              experienceLevel: 'Senior Level (5+ Yrs)',
-              postedDate: '2026-03-01',
-              applicantsCount: 42,
-            },
-            {
-              id: 'job-102',
-              orgId: 'org-razorpay',
-              orgName: 'Razorpay',
-              orgLogo: 'https://images.unsplash.com/photo-1556742049-0a67cf600458?w=150',
-              title: 'Backend Systems Architect',
-              description: 'Architect low-latency payment intent engines, ledger integrity pipelines, and merchant checkout APIs.',
-              rubric: { technical: 50, communication: 15, problemSolving: 25, experience: 10 },
-              thresholds: { minScore: 80, autoOffer: false },
-              status: 'active',
-              location: 'Bangalore / Hybrid',
-              department: 'Payments Core',
-              salary: '₹42L - ₹58L per annum',
-              experienceLevel: 'Senior Level (6+ Yrs)',
-              postedDate: '2026-03-02',
-              applicantsCount: 28,
-            },
-          ]);
         }
 
         const userApps = await apiClient.get<Application[]>('/candidate/applications');
@@ -157,7 +120,6 @@ export default function JobsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredJobs.map((job) => {
               const hasApplied = appliedJobIds.includes(job.id);
-              const matchPercent = job.id === 'job-101' ? 98 : job.id === 'job-102' ? 89 : 74;
 
               return (
                 <JobCard
@@ -173,7 +135,6 @@ export default function JobsPage() {
                   postedDate={job.postedDate}
                   applicantsCount={job.applicantsCount}
                   status={job.status}
-                  matchScore={matchPercent}
                   hasApplied={hasApplied}
                   viewHref={`/jobs/${job.id}`}
                   applyHref={`/signup?role=candidate&jobId=${job.id}`}

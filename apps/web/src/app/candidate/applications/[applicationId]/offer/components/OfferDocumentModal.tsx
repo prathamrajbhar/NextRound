@@ -36,14 +36,13 @@ export function OfferDocumentModal({
             </h3>
           </div>
           <div className="flex items-center gap-2">
-            <a
-              href="/mock-offer-letter.pdf"
-              download
+            <button
+              type="button"
               className="p-2 rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-colors"
             >
               <Download className="h-4 w-4" />
               Download
-            </a>
+            </button>
             <button
               type="button"
               onClick={() => window.print()}
@@ -121,7 +120,7 @@ export function OfferDocumentModal({
             <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex justify-between items-end">
               <div>
                 <span className="text-[10px] text-slate-400 uppercase tracking-widest block mb-2">Authorized Signatory</span>
-                <span className="font-italic text-sm font-serif text-slate-800 dark:text-slate-200">Swiggy Talent Team</span>
+                <span className="font-italic text-sm font-serif text-slate-800 dark:text-slate-200">{orgName} Talent Team</span>
               </div>
               <div className="flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                 <ShieldCheck className="h-3.5 w-3.5" />

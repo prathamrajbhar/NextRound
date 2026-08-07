@@ -133,7 +133,6 @@ export default function CandidateJobsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredJobs.map((job) => {
             const hasApplied = applications.some((a) => a.jobId === job.id);
-            const matchPercent = job.id === 'job-101' ? 98 : job.id === 'job-102' ? 89 : 74;
 
             return (
               <JobCard
@@ -149,7 +148,6 @@ export default function CandidateJobsPage() {
                 postedDate={job.postedDate}
                 applicantsCount={job.applicantsCount}
                 status={job.status}
-                matchScore={matchPercent}
                 hasApplied={hasApplied}
                 viewHref={`/candidate/jobs/${job.id}`}
               />

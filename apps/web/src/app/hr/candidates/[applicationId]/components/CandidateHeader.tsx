@@ -15,14 +15,20 @@ export function CandidateHeader({ app }: CandidateHeaderProps) {
     <>
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div className="flex items-center gap-4">
-          <Image
-            src={app.candidateAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150'}
-            alt={app.candidateName}
-            width={60}
-            height={60}
-            className="h-15 w-15 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-md object-cover flex-shrink-0"
-            unoptimized
-          />
+          {app.candidateAvatar ? (
+            <Image
+              src={app.candidateAvatar}
+              alt={app.candidateName}
+              width={60}
+              height={60}
+              className="h-15 w-15 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-md object-cover flex-shrink-0"
+              unoptimized
+            />
+          ) : (
+            <div className="h-15 w-15 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-md flex items-center justify-center bg-brand-50 dark:bg-orange-950/60 text-brand-600 dark:text-orange-400 font-black text-lg flex-shrink-0">
+              {(app.candidateName || '?').charAt(0).toUpperCase()}
+            </div>
+          )}
           <div className="space-y-1">
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-display">
@@ -65,8 +71,8 @@ export function CandidateHeader({ app }: CandidateHeaderProps) {
 
         {/* Composite Readiness Rating */}
         <div className="text-left sm:text-right bg-emerald-50/50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/60 p-4 rounded-2xl">
-          <span className="block text-3xl md:text-4xl font-black text-emerald-600 dark:text-emerald-400 font-display">
-            {app.scores?.composite || 86}%
+          <span className="text-md font-extrabold text-emerald-600 dark:text-emerald-400 font-display">
+            {app.scores?.composite ?? 0}%
           </span>
           <span className="text-[10px] text-slate-600 dark:text-slate-300 font-extrabold uppercase tracking-wider block mt-0.5">
             Composite AI Rating
@@ -78,19 +84,19 @@ export function CandidateHeader({ app }: CandidateHeaderProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Total Experience</span>
-          <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mt-1 block">5+ Years</span>
+          <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mt-1 block">N/A</span>
         </div>
         <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Location</span>
-          <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mt-1 block truncate">San Francisco, CA</span>
+          <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mt-1 block truncate">N/A</span>
         </div>
         <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Notice Period</span>
-          <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">2 Weeks</span>
+          <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">N/A</span>
         </div>
         <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Expected Comp</span>
-          <span className="text-sm font-extrabold text-brand-600 dark:text-orange-400 mt-1 block">$165,000/yr</span>
+          <span className="text-sm font-extrabold text-brand-600 dark:text-orange-400 mt-1 block">N/A</span>
         </div>
       </div>
     </>

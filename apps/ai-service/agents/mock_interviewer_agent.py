@@ -46,41 +46,38 @@ def run_mock_interviewer_agent(state: MockInterviewerState) -> MockInterviewerSt
     ai_response = ""
     hint = None
 
-    if genai_client:
-        try:
-            prompt = (
-                f"You are NextRound AI Mock Interviewer simulating a practice interview.\n"
-                f"Role: {target_role} at {target_company}\n"
-                f"Topic: {topic} (Difficulty: {difficulty})\n"
-                f"Turn: {turn}\n"
-                f"Conversation History: {json.dumps(history[-6:])}\n"
-                f"Latest Candidate Response: '{candidate_input}'\n\n"
-                f"Respond in JSON format with two fields:\n"
-                f"1. 'response': The next natural, realistic interview question or follow-up from the interviewer (1-3 sentences).\n"
-                f"2. 'coaching_hint': A brief, actionable real-time tip for the candidate on how to structure their answer (e.g., 'Use STAR format', 'Quantify metrics', 'Address scalability edge cases')."
-            )
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            if res and res.text:
-                match = re.search(r"\{.*\}", res.text, re.DOTALL)
-                if match:
-                    parsed = json.loads(match.group(0))
-                    ai_response = parsed.get("response", "")
-                    hint = parsed.get("coaching_hint", None)
-        except Exception as e:
-            logger.warning(f"GenAI mock turn warning: {e}")
+    if not genai_client:
+        state["latest_ai_response"] = ""
+        state["coaching_hint"] = None
+        state["is_complete"] = turn >= 6
+        return state
 
-    if not ai_response:
-        if turn == 1:
-            ai_response = f"Welcome to your mock interview for {target_role}! Let's start with a core question on {topic}: Can you describe a complex project you built and the key architectural decisions you made?"
-            hint = "Pro-tip: Start with a 30-second high-level overview, then drill down into tech stack choice and data flow."
-        else:
-            ai_response = f"That's a solid start. Looking deeper at {topic}, how did you handle error handling, resilience, or performance bottlenecks under heavy load?"
-            hint = "Pro-tip: Mention specific metrics (e.g. latency, throughput, error rates) and fallback mechanisms like circuit breakers or retries."
+    try:
+        prompt = (
+            f"You are NextRound AI Mock Interviewer simulating a practice interview.\n"
+            f"Role: {target_role} at {target_company}\n"
+            f"Topic: {topic} (Difficulty: {difficulty})\n"
+            f"Turn: {turn}\n"
+            f"Conversation History: {json.dumps(history[-6:])}\n"
+            f"Latest Candidate Response: '{candidate_input}'\n\n"
+            f"Respond in JSON format with two fields:\n"
+            f"1. 'response': The next natural, realistic interview question or follow-up from the interviewer (1-3 sentences).\n"
+            f"2. 'coaching_hint': A brief, actionable real-time tip for the candidate on how to structure their answer (e.g., 'Use STAR format', 'Quantify metrics', 'Address scalability edge cases')."
+        )
+        res = genai_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+        if res and res.text:
+            match = re.search(r"\{.*\}", res.text, re.DOTALL)
+            if match:
+                parsed = json.loads(match.group(0))
+                ai_response = parsed.get("response", "")
+                hint = parsed.get("coaching_hint", None)
+    except Exception as e:
+        logger.warning(f"GenAI mock turn warning: {e}")
 
-    state["latest_ai_response"] = ai_response
+    state["latest_ai_response"] = ai_response or ""
     state["coaching_hint"] = hint
     state["is_complete"] = turn >= 6
 

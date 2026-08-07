@@ -57,26 +57,24 @@ async def transcribe_audio(
     file: Optional[UploadFile] = File(None),
     payload: Optional[TranscribeRequest] = Body(None)
 ):
-    """STT Speech-to-Text endpoint using Groq Whisper API / Faster-Whisper or audio decoder fallback."""
+    """STT Speech-to-Text endpoint using Groq Whisper API / Faster-Whisper."""
     logger.info("Voice: Received audio transcription request")
-    transcript = ""
-    confidence = 0.95
 
-    # Check for text in payload or file
+    audio_bytes = None
     if payload and payload.audio_base64:
-        # Base64 audio provided
-        transcript = "I have experience building scalable web applications using React, TypeScript, and microservices architecture."
+        try:
+            audio_bytes = base64.b64decode(payload.audio_base64)
+        except Exception as e:
+            logger.error(f"Voice: Failed to decode base64 audio: {e}")
+            raise HTTPException(status_code=400, detail="Invalid base64 audio payload.")
     elif file:
-        content = await file.read()
-        logger.info(f"Received audio file {file.filename} of size {len(content)} bytes")
-        transcript = "My experience includes designing REST APIs and working with PostgreSQL and Redis."
-    else:
-        transcript = "I am excited for this interview and look forward to discussing my technical experience."
+        audio_bytes = await file.read()
+        logger.info(f"Received audio file {file.filename} of size {len(audio_bytes)} bytes")
 
-    return TranscribeResponse(
-        transcript=transcript,
-        confidence=confidence
-    )
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="No audio provided.")
+
+    raise HTTPException(status_code=501, detail="Speech-to-text service not available. No mock transcripts are returned.")
 
 
 @voice_router.post("/respond", response_model=InterviewRespondResponse)
@@ -119,12 +117,9 @@ def Boolean(val: Any) -> bool:
 
 @voice_router.post("/tts", response_model=TTSResponse)
 async def generate_tts(request: TTSRequest):
-    """Text-to-Speech endpoint using Piper/Coqui TTS or synthesis URL."""
+    """Text-to-Speech endpoint using Piper/Coqui TTS."""
     logger.info(f"Voice: Generating TTS for text length {len(request.text)}")
-    return TTSResponse(
-        audio_url="",
-        audio_format="mp3"
-    )
+    raise HTTPException(status_code=501, detail="Text-to-speech service not available. No mock audio is returned.")
 
 
 class MockRespondRequest(BaseModel):

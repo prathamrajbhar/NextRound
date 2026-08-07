@@ -15,7 +15,7 @@ export function CompensationBreakdown({ baseSalary, bonus, equity }: Compensatio
   // Helper to extract numerical salary for monthly estimation
   const parseLakhs = (valStr: string) => {
     const match = valStr.match(/₹?(\d+(\.\d+)?)L/i);
-    return match ? parseFloat(match[1]) : 34;
+    return match ? parseFloat(match[1]) : 0;
   };
 
   const lakhVal = parseLakhs(baseSalary);
@@ -139,11 +139,11 @@ export function CompensationBreakdown({ baseSalary, bonus, equity }: Compensatio
             <Sparkles className="h-3.5 w-3.5 text-brand-500" />
             Compensation Distribution
           </span>
-          <span className="text-slate-400 dark:text-slate-500 font-semibold">89% Base • 11% Variable</span>
+          <span className="text-slate-400 dark:text-slate-500 font-semibold">Base • Variable</span>
         </div>
         <div className="h-3 w-full rounded-full bg-slate-100 dark:bg-slate-800 flex overflow-hidden p-0.5 gap-1 border border-slate-200 dark:border-slate-700">
-          <div className="h-full rounded-full bg-brand-500 w-[89%]" title="Base Salary (89%)" />
-          <div className="h-full rounded-full bg-emerald-500 w-[11%]" title="Variable Bonus (11%)" />
+          <div className="h-full rounded-full bg-brand-500 flex-1" title="Base Salary" />
+          <div className="h-full rounded-full bg-emerald-500 flex-1" title="Variable Bonus" />
         </div>
       </div>
     </div>

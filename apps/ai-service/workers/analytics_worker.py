@@ -73,49 +73,43 @@ def compute_funnel_node(state: AnalyticsState) -> AnalyticsState:
                 accepted += 1
 
     state["funnel_metrics"] = {
-        "applied": total_apps or 120,
-        "screened": screened or 84,
-        "interviewed": interviewed or 42,
-        "offered": offered or 14,
-        "accepted": accepted or 12,
+        "applied": total_apps,
+        "screened": screened,
+        "interviewed": interviewed,
+        "offered": offered,
+        "accepted": accepted,
     }
 
     state["conversions"] = {
-        "appliedToScreened": round((screened / total_apps * 100) if total_apps else 70),
-        "screenedToInterviewed": round((interviewed / screened * 100) if screened else 50),
-        "interviewedToOffered": round((offered / interviewed * 100) if interviewed else 33),
-        "offerAcceptanceRate": round((accepted / offered * 100) if offered else 85),
+        "appliedToScreened": round((screened / total_apps * 100) if total_apps else 0),
+        "screenedToInterviewed": round((interviewed / screened * 100) if screened else 0),
+        "interviewedToOffered": round((offered / interviewed * 100) if interviewed else 0),
+        "offerAcceptanceRate": round((accepted / offered * 100) if offered else 0),
     }
 
-    state["time_to_hire_days"] = 12
+    state["time_to_hire_days"] = None
     return state
 
 
 def analyze_bias_trends_node(state: AnalyticsState) -> AnalyticsState:
     """Node 3: Analyze bias audit stability trends across evaluation runs."""
-    state["bias_audit_trend"] = [
-        {"week": "W1", "totalAudited": 12, "flagsTriggered": 0, "cleanRatePercent": 100},
-        {"week": "W2", "totalAudited": 18, "flagsTriggered": 1, "cleanRatePercent": 94},
-        {"week": "W3", "totalAudited": 24, "flagsTriggered": 0, "cleanRatePercent": 100},
-        {"week": "W4", "totalAudited": 20, "flagsTriggered": 0, "cleanRatePercent": 100},
-    ]
+    state["bias_audit_trend"] = []
     return state
 
 
 def generate_narrative_node(state: AnalyticsState) -> AnalyticsState:
     """Node 4: Synthesize executive summary narrative for HR leadership."""
     conversions = state.get("conversions", {})
-    state["executive_narrative"] = (
-        f"Recruitment pipeline demonstrated strong throughput with an overall offer acceptance rate of {conversions.get('offerAcceptanceRate', 85)}%. "
-        f"Average time-to-hire stands at {state.get('time_to_hire_days', 12)} days with 98% zero-bias compliance across automated evaluation gates."
-    )
+    state["executive_narrative"] = ""
     return state
 
 
 async def export_pdf_node(state: AnalyticsState) -> AnalyticsState:
     """Node 5: Register executive report and notify internal API."""
-    org_id = state.get("org_id", "default_org")
-    state["report_pdf_url"] = f"/api/v1/hr/analytics/export?format=pdf&org_id={org_id}"
+    org_id = state.get("org_id")
+    state["report_pdf_url"] = ""
+    if not org_id:
+        return state
 
     try:
         async with httpx.AsyncClient() as client:
@@ -142,7 +136,10 @@ async def process_analytics_job(job_data: dict) -> bool:
     2. Execute Analytics Agent pipeline.
     3. Register report metadata and log audit record.
     """
-    org_id = job_data.get("orgId") or job_data.get("org_id") or "default_org"
+    org_id = job_data.get("orgId") or job_data.get("org_id")
+    if not org_id:
+        logger.error("Missing org_id in analytics job payload. No default org is assumed.")
+        return False
     logger.info(f"Processing analytics job for org: {org_id}")
 
     try:

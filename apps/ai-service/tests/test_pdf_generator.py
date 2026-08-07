@@ -3,6 +3,10 @@ import pytest
 from services.pdf_generator import generate_resume_pdf
 
 def test_generate_resume_pdf_creates_file(tmp_path):
+    try:
+        import reportlab  # noqa: F401
+    except ImportError:
+        pytest.skip("ReportLab not installed; real PDF generation unavailable.")
     resume_data = {
         "summary": "Senior Software Architect with 8+ years experience in distributed systems.",
         "contact": {

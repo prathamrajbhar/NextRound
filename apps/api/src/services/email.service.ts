@@ -24,7 +24,7 @@ class EmailService {
         auth: { user, pass },
       });
     } else {
-      console.log('[EmailService] SMTP configuration missing. Using mock/log email transport.');
+      console.warn('[EmailService] SMTP configuration missing. Emails will not be sent.');
     }
   }
 
@@ -41,8 +41,8 @@ class EmailService {
         });
         console.log(`[EmailService] Email successfully sent to ${options.to}: ${options.subject}`);
       } else {
-        console.log(`[EmailService MOCK SEND] To: ${options.to} | Subject: ${options.subject}`);
-        console.log(`[Body Preview]: ${options.html.substring(0, 150)}...`);
+        console.warn(`[EmailService] SMTP not configured; email to ${options.to} not sent (subject: ${options.subject}).`);
+        return false;
       }
       return true;
     } catch (error) {

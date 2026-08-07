@@ -32,8 +32,8 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
 
   const [session, setSession] = useState<Partial<MockSession>>({
     id: sessionId,
-    targetCompany: searchCompany || 'Practice Mode',
-    targetRole: searchRole || 'Software Engineer',
+    targetCompany: searchCompany || '',
+    targetRole: searchRole || '',
     difficulty: 'senior',
   });
   const [app, setApp] = useState<Partial<Application> | null>(null);
@@ -59,8 +59,8 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     fetchData();
   }, [sessionId, applicationId]);
 
-  const targetCompany = app?.orgName || session.targetCompany || searchCompany || 'Practice Mode';
-  const targetRole = app?.jobTitle || session.targetRole || searchRole || 'Software Engineer';
+  const targetCompany = app?.orgName || session.targetCompany || searchCompany || '';
+  const targetRole = app?.jobTitle || session.targetRole || searchRole || '';
 
   const handleComplete = async (score?: number) => {
     // Exit full-screen mode to restore normal candidate layout & sidebar
@@ -71,7 +71,7 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     } catch {}
 
     try {
-      if (sessionId && sessionId !== 'mock-session-123') {
+      if (sessionId) {
         await apiClient.post(`/mock/sessions/${sessionId}/end`, {
           transcript: messages.map((m) => ({
             role: m.role === 'candidate' ? 'candidate' : 'interviewer',
@@ -86,7 +86,7 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     if (applicationId) {
       localStorage.setItem(`candidateAssessmentCompleted_${applicationId}`, 'true');
       const scoreObj = {
-        overallScore: score || 91,
+        overallScore: score ?? 0,
         completedDate: new Date().toISOString().slice(0, 10),
       };
       localStorage.setItem(`assessmentResult_${applicationId}`, JSON.stringify(scoreObj));
@@ -104,10 +104,8 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     micActive,
     camActive,
     isAnalyzing,
-    isSimulating,
     startSession,
     submitAnswer,
-    simulateSpeaking,
     wrapUp,
     toggleMic,
     toggleCam,
@@ -261,10 +259,8 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
         micActive={micActive}
         camActive={camActive}
         isAnalyzing={isAnalyzing}
-        isSimulating={isSimulating}
         isDarkTheme={true}
         onSubmitAnswer={submitAnswer}
-        onSimulateSpeaking={simulateSpeaking}
         onEndSession={wrapUp}
         onToggleMic={toggleMic}
         onToggleCam={toggleCam}

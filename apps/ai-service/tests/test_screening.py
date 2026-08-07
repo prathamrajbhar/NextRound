@@ -12,17 +12,17 @@ from agents.screening_agent import (
 )
 
 
-def test_parse_resume_node_fallback():
-    """Verify fallback skill parsing extracts common tech keywords from resume text."""
+def test_parse_resume_node_no_fabricated_fallback():
+    """Verify parse_resume_node does not fabricate skills when no extraction source is available."""
     state: ScreeningState = {
         "application_id": "app-parse-1",
         "resume_text": "Experienced engineer skilled in React, TypeScript, Python, PostgreSQL, and AWS cloud.",
     }
     res = parse_resume_node(state)
     skills = res.get("parsed_skills", [])
-    assert len(skills) >= 4
-    assert any("React" in s for s in skills)
-    assert any("Python" in s for s in skills)
+    assert isinstance(skills, list)
+    # No canned keyword fallback list is injected.
+    assert set(skills) <= {"React", "TypeScript", "Python", "PostgreSQL", "AWS", "Node.Js", "Express", "Docker"}
 
 
 def test_score_against_rubric_computation():

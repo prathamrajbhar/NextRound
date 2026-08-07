@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getTopicsForRoleAndCompany, defaultAnswers } from '../../src/lib/interviewTopics';
+import { getTopicsForRoleAndCompany } from '../../src/lib/interviewTopics';
 
 describe('apps/web/src/lib/interviewTopics.ts', () => {
   it('returns specialized Swiggy frontend topics when role is developer/engineer and company is Swiggy', () => {
@@ -25,11 +25,5 @@ describe('apps/web/src/lib/interviewTopics.ts', () => {
     const topics = getTopicsForRoleAndCompany('System Architect', 'Meta');
     expect(topics.length).toBeGreaterThan(0);
     expect(topics[0].topic).toBe('Architectural Scale');
-  });
-
-  it('contains pre-configured default answers for interview questions', () => {
-    const question = 'How would you optimize list rendering for a food delivery menu containing thousands of nested items?';
-    expect(defaultAnswers[question]).toBeDefined();
-    expect(defaultAnswers[question]).toContain('react-window');
   });
 });

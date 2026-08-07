@@ -31,14 +31,14 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
 
     os.makedirs(output_dir, exist_ok=True)
 
-    summary = resume_data.get("summary", "Experienced Software Engineer with a track record of delivering scalable systems.")
+    summary = resume_data.get("summary", "")
     contact = resume_data.get("contact", {})
-    name = contact.get("name", "Candidate Name")
-    email = contact.get("email", "candidate@example.com")
-    phone = contact.get("phone", "+1 (555) 019-2834")
-    location = contact.get("location", "San Francisco, CA")
+    name = contact.get("name", "")
+    email = contact.get("email", "")
+    phone = contact.get("phone", "")
+    location = contact.get("location", "")
     work_history = resume_data.get("work_history", [])
-    skills = resume_data.get("skills", ["TypeScript", "React", "Node.js", "Python", "PostgreSQL", "System Architecture"])
+    skills = resume_data.get("skills", [])
     education = resume_data.get("education", [])
     projects = resume_data.get("projects", [])
 
@@ -153,7 +153,4 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
         except Exception as e:
             logger.error(f"Error compiling PDF with ReportLab: {e}")
 
-    # Fallback dummy write
-    with open(file_path, "w") as f:
-        f.write(f"PDF RESUME MOCK\nName: {name}\nEmail: {email}\nSummary: {summary}\n")
-    return f"/uploads/resumes/{filename}"
+    raise RuntimeError("ReportLab is required to generate a real resume PDF. No mock PDF is written.")

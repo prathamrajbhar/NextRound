@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { FileUp, Plus, X, ArrowRight, Check, Globe, Link2 } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -8,45 +8,41 @@ import { api } from '@/lib/api';
 export default function CandidateOnboarding() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [uploading, setUploading] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- STEP 1 STATES ---
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
-  const [progress, setProgress] = useState(0);
 
-  const handleUploadSimulate = () => {
-    setUploading(true);
-    setProgress(20);
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(timer);
-          setUploading(false);
-          return 100;
-        }
-        return prev + 20;
-      });
-    }, 300);
+  const handleSelectResume = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setResumeFile(file);
+    }
+    e.target.value = '';
   };
 
 
   // --- STEP 2 STATES ---
-  const [targetRoles, setTargetRoles] = useState<string[]>(['Senior Frontend Engineer', 'UI Architect']);
+  const [targetRoles, setTargetRoles] = useState<string[]>([]);
   const [newRole, setNewRole] = useState('');
-  const [skills, setSkills] = useState<string[]>(['React', 'Next.js', 'TypeScript', 'Tailwind CSS']);
+  const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
-  const [experienceYears, setExperienceYears] = useState('5');
+  const [experienceYears, setExperienceYears] = useState('');
   const [workMode, setWorkMode] = useState<'Remote' | 'Hybrid' | 'Onsite'>('Remote');
-  const [targetLocation, setTargetLocation] = useState('San Francisco, CA');
+  const [targetLocation, setTargetLocation] = useState('');
 
   // --- STEP 3 STATES ---
-  const [expectedSalary, setExpectedSalary] = useState('150000');
-  const [noticePeriod, setNoticePeriod] = useState('Immediate');
-  const [workAuth, setWorkAuth] = useState('Authorized');
+  const [expectedSalary, setExpectedSalary] = useState('');
+  const [noticePeriod, setNoticePeriod] = useState('');
+  const [workAuth, setWorkAuth] = useState('');
   const [proudProject, setProudProject] = useState('');
   const [workValues, setWorkValues] = useState<string[]>([
     'Learning & Career Growth',
@@ -165,21 +161,34 @@ export default function CandidateOnboarding() {
               Upload your resume and links to sync social profile details with the AI Screening Agent.
             </p>
 
-            {uploading ? (
-              <div className="border border-dashed border-indigo-200 bg-indigo-50/20 rounded-2xl p-8 text-center space-y-4">
-                <div className="animate-spin rounded-full h-10 w-10 border-4 border-slate-200 border-t-indigo-600 mx-auto"></div>
-                <div className="space-y-1">
-                  <span className="text-sm font-bold text-slate-700 block">AI Screening Agent Parsing...</span>
-                  <span className="text-xs text-slate-400 block font-medium">Extracting CV metadata</span>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx"
+              className="hidden"
+              onChange={handleFileSelected}
+            />
+
+            {resumeFile ? (
+              <div className="border border-indigo-200 bg-indigo-50/20 rounded-2xl p-6 text-center space-y-2">
+                <div className="flex items-center justify-center gap-2 text-sm font-bold text-indigo-700">
+                  <Check className="h-4 w-4" />
+                  <span className="truncate max-w-xs">{resumeFile.name}</span>
                 </div>
-                <div className="w-full bg-slate-200/50 rounded-full h-1.5 max-w-xs mx-auto">
-                  <div className="bg-indigo-600 h-1.5 rounded-full transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={handleSelectResume}
+                    className="text-xs font-bold text-indigo-600 hover:underline cursor-pointer"
+                  >
+                    Choose a different file
+                  </button>
                 </div>
               </div>
             ) : (
               <button
                 type="button"
-                onClick={handleUploadSimulate}
+                onClick={handleSelectResume}
                 className="w-full border-2 border-dashed border-slate-350 hover:border-indigo-500 bg-white/30 hover:bg-indigo-50/10 rounded-2xl p-8 text-center transition-all cursor-pointer flex flex-col items-center justify-center group"
               >
                 <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 group-hover:scale-105 transition-all mb-3">

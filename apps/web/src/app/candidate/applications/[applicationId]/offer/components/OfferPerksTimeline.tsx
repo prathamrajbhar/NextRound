@@ -77,7 +77,7 @@ export function OfferPerksTimeline({
               Official Offer Letter PDF Document
             </span>
             <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-              swiggy_employment_offer.pdf • Signed & Verifiable
+              Employment offer document
             </span>
           </div>
         </div>
@@ -91,14 +91,13 @@ export function OfferPerksTimeline({
             <Eye className="h-3.5 w-3.5 text-brand-500" />
             Preview Letter
           </button>
-          <a
-            href="/mock-offer-letter.pdf"
-            download
+          <button
+            type="button"
             className="px-3.5 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white text-xs font-bold shadow-md shadow-brand-500/20 flex items-center gap-1.5 transition-all cursor-pointer"
           >
             <Download className="h-3.5 w-3.5" />
             Download PDF
-          </a>
+          </button>
         </div>
       </div>
 

@@ -22,40 +22,11 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
   const { applicationId } = use(params);
 
   const [app, setApp] = useState<Application | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [joined, setJoined] = useState(false);
 
-  useEffect(() => {
-    async function fetchApp() {
-      try {
-        const res = await apiClient.get<Application>(`/applications/${applicationId}`);
-        if (res) {
-          setApp(res);
-        } else {
-          setApp({
-            id: applicationId,
-            candidateName: 'Candidate User',
-            candidateEmail: 'candidate@example.com',
-            candidateAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300',
-            jobId: 'job-101',
-            jobTitle: 'Senior Full Stack Engineer',
-            orgName: 'Swiggy',
-            status: 'hr_round',
-            stage: 'HR Round',
-            appliedDate: new Date().toISOString(),
-            resumeUrl: '',
-            skills: ['React', 'Node.js', 'TypeScript'],
-            targetRoles: ['Full Stack Engineer'],
-          });
-        }
-      } catch (err) {
-        console.error('Failed to load application:', err);
-      }
-    }
-    fetchApp();
-  }, [applicationId]);
-
-  const companyName = app?.orgName || 'Swiggy';
-  const jobTitle = app?.jobTitle || 'Senior Full Stack Engineer';
+  const companyName = app?.orgName || 'Interview';
+  const jobTitle = app?.jobTitle || 'Candidate Interview';
 
   const {
     stage,
@@ -65,11 +36,9 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     micActive,
     camActive,
     isAnalyzing,
-    isSimulating,
     proctorTelemetry,
     startSession,
     submitAnswer,
-    simulateSpeaking,
     wrapUp,
     toggleMic,
     toggleCam,
@@ -80,11 +49,7 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     interviewId: applicationId,
     storageKey: `candidateHrRound_${applicationId}`,
     onComplete: () => {
-      if (app) {
-        router.push(`/candidate/applications/${app.id}`);
-      } else {
-        router.push('/candidate/dashboard');
-      }
+      router.push(`/candidate/applications/${applicationId}`);
     },
   });
 
@@ -92,6 +57,46 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     startSession();
     setJoined(true);
   };
+
+  useEffect(() => {
+    async function fetchApp() {
+      try {
+        const res = await apiClient.get<Application>(`/applications/${applicationId}`);
+        if (res) {
+          setApp(res);
+        } else {
+          setLoadError(true);
+        }
+      } catch (err) {
+        console.error('Failed to load application:', err);
+        setLoadError(true);
+      }
+    }
+    fetchApp();
+  }, [applicationId]);
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center px-6">
+        <div className="max-w-sm w-full text-center space-y-3">
+          <div className="h-14 w-14 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto">
+            <VideoOff className="h-6 w-6 text-red-400" />
+          </div>
+          <h1 className="text-lg font-extrabold text-white font-display">Application Not Found</h1>
+          <p className="text-xs text-slate-400 font-medium leading-relaxed">
+            We couldn't load this application. Please go back and try again.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push('/candidate/dashboard')}
+            className="mt-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-extrabold transition-all cursor-pointer"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!app) {
     return (
@@ -101,7 +106,7 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     );
   }
 
-  // Pre-call Waiting Room View
+  {/* Pre-call Waiting Room View */}
   if (!joined) {
     return (
       <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-slate-100 flex flex-col font-sans p-6 items-center justify-center overflow-y-auto">
@@ -199,11 +204,9 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
         micActive={micActive}
         camActive={camActive}
         isAnalyzing={isAnalyzing}
-        isSimulating={isSimulating}
         proctorTelemetry={proctorTelemetry}
         isDarkTheme={true}
         onSubmitAnswer={submitAnswer}
-        onSimulateSpeaking={simulateSpeaking}
         onEndSession={wrapUp}
         onToggleMic={toggleMic}
         onToggleCam={toggleCam}

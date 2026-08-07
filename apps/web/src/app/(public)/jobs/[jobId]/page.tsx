@@ -22,19 +22,13 @@ import {
   ArrowRight,
 } from '@/lib/lucide-google-icons';
 
-const jobSkillsMap: Record<string, string[]> = {
-  'job-101': ['React', 'TypeScript', 'Next.js', 'Micro-frontends', 'Web Vitals', 'Tailwind CSS'],
-  'job-102': ['Product Strategy', 'UPI Payments', 'Checkout UX', 'Analytics', 'System Architecture'],
-  'job-103': ['Node.js', 'Go', 'PostgreSQL', 'React', 'Distributed Ledgers', 'High Throughput'],
-  'job-104': ['Python', 'NLP', 'PyTorch', 'Vector DBs', 'RAG Pipelines', 'Machine Learning'],
-};
-
 export default function JobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
 
   const [job, setJob] = useState<Job | null>(null);
   const [similarJobs, setSimilarJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     async function fetchJobData() {
@@ -44,23 +38,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
         if (res) {
           setJob(res);
         } else {
-          setJob({
-            id: jobId,
-            orgId: 'org-swiggy',
-            orgName: 'Swiggy',
-            orgLogo: 'https://images.unsplash.com/photo-1572021335469-31706a17aaef?w=150',
-            title: 'Senior Full Stack Engineer',
-            description: 'Join Swiggy tech team to scale dynamic ordering engines and high-concurrency real-time delivery tracking systems.',
-            rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 },
-            thresholds: { minScore: 75, autoOffer: true },
-            status: 'active',
-            location: 'Bangalore / Remote',
-            department: 'Engineering',
-            salary: '₹35L - ₹48L per annum',
-            experienceLevel: 'Senior Level (5+ Yrs)',
-            postedDate: '2026-03-01',
-            applicantsCount: 42,
-          });
+          setNotFound(true);
         }
 
         const allJobs = await apiClient.get<Job[]>('/jobs');
@@ -69,6 +47,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
         }
       } catch (err) {
         console.error('Failed to load job details:', err);
+        setNotFound(true);
       } finally {
         setLoading(false);
       }
@@ -76,7 +55,7 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
     fetchJobData();
   }, [jobId]);
 
-  if (loading || !job) {
+  if (loading) {
     return (
       <div className="flex flex-col min-h-screen">
         <PublicNavbar />
@@ -88,7 +67,28 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
     );
   }
 
-  const skills = jobSkillsMap[job.id] || ['TypeScript', 'React', 'Node.js', 'System Design'];
+  if (notFound || !job) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <PublicNavbar />
+        <main className="flex-1 flex items-center justify-center px-6">
+          <div className="max-w-sm w-full text-center space-y-3">
+            <h1 className="text-lg font-extrabold text-slate-900 font-display">Job Not Found</h1>
+            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+              This job posting is no longer available.
+            </p>
+            <Link
+              href="/jobs"
+              className="inline-block mt-2 px-5 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-extrabold transition-all cursor-pointer"
+            >
+              Browse Jobs
+            </Link>
+          </div>
+        </main>
+        <PublicFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -164,14 +164,9 @@ export default function JobDetailPage({ params }: { params: Promise<{ jobId: str
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
               <Layers className="h-3 w-3" /> Tech Stack:
             </span>
-            {skills.map((skill) => (
-              <span
-                key={skill}
-                className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/60"
-              >
-                {skill}
-              </span>
-            ))}
+            <span className="text-xs font-semibold text-slate-400 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200/60">
+              Not specified
+            </span>
           </div>
         </div>
 

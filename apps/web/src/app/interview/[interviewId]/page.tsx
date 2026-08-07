@@ -12,6 +12,10 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
   const router = useRouter();
   const { interviewId } = use(params);
   const [app, setApp] = useState<Application | null>(null);
+  const [loadError, setLoadError] = useState(false);
+
+  const companyName = app?.orgName || 'Interview';
+  const jobTitle = app?.jobTitle || 'Candidate Interview';
 
   useEffect(() => {
     async function fetchApp() {
@@ -20,31 +24,15 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
         if (res) {
           setApp(res);
         } else {
-          setApp({
-            id: interviewId,
-            candidateName: 'Candidate User',
-            candidateEmail: 'candidate@example.com',
-            candidateAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300',
-            jobId: 'job-101',
-            jobTitle: 'Senior Full Stack Engineer',
-            orgName: 'Swiggy',
-            status: 'interviewed',
-            stage: 'Interview',
-            appliedDate: new Date().toISOString(),
-            resumeUrl: '',
-            skills: ['React', 'Node.js', 'TypeScript'],
-            targetRoles: ['Full Stack Engineer'],
-          });
+          setLoadError(true);
         }
       } catch (err) {
         console.error('Failed to load application details:', err);
+        setLoadError(true);
       }
     }
     fetchApp();
   }, [interviewId]);
-
-  const companyName = app?.orgName || 'Swiggy';
-  const jobTitle = app?.jobTitle || 'Senior Full Stack Engineer';
 
   const {
     stage,
@@ -54,11 +42,9 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
     micActive,
     camActive,
     isAnalyzing,
-    isSimulating,
     proctorTelemetry,
     startSession,
     submitAnswer,
-    simulateSpeaking,
     wrapUp,
     toggleMic,
     toggleCam,
@@ -72,6 +58,26 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
       router.push(`/candidate/applications/${interviewId}`);
     },
   });
+
+  if (loadError) {
+    return (
+      <div className="h-screen w-screen bg-slate-950 text-white flex items-center justify-center px-6">
+        <div className="max-w-sm w-full text-center space-y-3">
+          <h1 className="text-lg font-extrabold text-white font-display">Interview Not Found</h1>
+          <p className="text-xs text-slate-400 font-medium leading-relaxed">
+            We couldn't load this interview. Please go back and try again.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push('/candidate/dashboard')}
+            className="mt-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-extrabold transition-all cursor-pointer"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!app) {
     return (
@@ -101,11 +107,9 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
         micActive={micActive}
         camActive={camActive}
         isAnalyzing={isAnalyzing}
-        isSimulating={isSimulating}
         proctorTelemetry={proctorTelemetry}
         isDarkTheme={true}
         onSubmitAnswer={submitAnswer}
-        onSimulateSpeaking={simulateSpeaking}
         onEndSession={wrapUp}
         onToggleMic={toggleMic}
         onToggleCam={toggleCam}

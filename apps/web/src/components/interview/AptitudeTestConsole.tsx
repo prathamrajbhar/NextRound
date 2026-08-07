@@ -33,46 +33,13 @@ interface Question {
   correctIndex?: number;
 }
 
-const defaultAptitudeQuestions: Question[] = [
-  {
-    id: 1,
-    question: 'A food delivery system processes 1,200 orders per minute. If driver dispatch efficiency increases by 25%, how many orders are dispatched per 5-minute interval?',
-    options: ['6,000 orders', '7,500 orders', '8,000 orders', '9,200 orders'],
-    correctIndex: 1,
-  },
-  {
-    id: 2,
-    question: 'Find the next number in the pattern series: 4, 9, 19, 39, 79, ?',
-    options: ['119', '149', '159', '169'],
-    correctIndex: 2,
-  },
-  {
-    id: 3,
-    question: 'If Server A handles 40% of traffic with a 99.9% uptime and Server B handles 60% with a 99.5% uptime, what is the combined availability system SLA?',
-    options: ['99.66%', '99.75%', '99.80%', '99.90%'],
-    correctIndex: 0,
-  },
-  {
-    id: 4,
-    question: 'Five microservices (P, Q, R, S, T) communicate in sequence. P finishes before Q. R finishes after S. T finishes before P. Which service finishes first?',
-    options: ['Service P', 'Service Q', 'Service T', 'Service R'],
-    correctIndex: 2,
-  },
-  {
-    id: 5,
-    question: 'A database query execution time decreases from 400ms to 80ms after adding an index. What is the percentage speed improvement?',
-    options: ['75%', '80%', '400%', '500%'],
-    correctIndex: 1,
-  },
-];
-
 export default function AptitudeTestConsole({
-  company = 'Google',
-  role = 'Software Engineer',
+  company = '',
+  role = '',
   applicationId,
   onComplete,
 }: AptitudeTestConsoleProps) {
-  const [questions, setQuestions] = useState<Question[]>(defaultAptitudeQuestions);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string | number, number>>({});
   const [timeLeft, setTimeLeft] = useState(900); // 15 mins total
@@ -94,7 +61,7 @@ export default function AptitudeTestConsole({
           setQuestions(res.questions);
         }
       } catch (err) {
-        console.warn('Using seed question set:', err);
+        console.warn('Failed to load aptitude questions:', err);
       }
     }
     loadQuestions();
@@ -156,7 +123,7 @@ export default function AptitudeTestConsole({
     return () => clearInterval(interval);
   }, [submitted, showWarningModal]);
 
-  const currentQ = questions[currentIndex] || defaultAptitudeQuestions[0];
+  const currentQ = questions[currentIndex];
 
   const handleSelectOption = (optIndex: number) => {
     setAnswers((prev) => ({ ...prev, [currentQ.id]: optIndex }));
@@ -170,7 +137,7 @@ export default function AptitudeTestConsole({
         correctCount++;
       }
     });
-    const percentage = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 80;
+    const percentage = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0;
 
     if (applicationId) {
       try {
@@ -258,6 +225,31 @@ export default function AptitudeTestConsole({
   }
 
   const answeredCount = Object.keys(answers).length;
+
+  if (questions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[500px] p-8 text-center animate-in fade-in duration-300 font-sans">
+        <div className="p-8 rounded-3xl border border-slate-800 bg-slate-900 text-slate-200 shadow-2xl max-w-md w-full space-y-4">
+          <div className="h-16 w-16 mx-auto rounded-full flex items-center justify-center border border-slate-700 bg-slate-950 text-slate-300">
+            <Brain className="h-8 w-8" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-black font-display">Aptitude Assessment Not Configured</h2>
+            <p className="text-xs text-slate-400 font-semibold">
+              No aptitude questions are available yet. The assessment will be provisioned when configured for this application.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onComplete(0)}
+            className="w-full py-3.5 px-6 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col justify-between p-4 sm:p-6 bg-slate-950 text-slate-100 font-sans relative overflow-hidden">

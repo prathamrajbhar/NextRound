@@ -34,63 +34,43 @@ async def process_mock_job(job_data: dict) -> bool:
     topic = job_data.get("topic", "System Design & Architecture")
     difficulty = job_data.get("difficulty", "medium")
 
-    score = 85
-    feedback: Dict[str, Any] = {
-        "overallScore": 85,
-        "rubricScores": {
-            "clarity": 88,
-            "depth": 82,
-            "examples": 85,
-            "technicalAccuracy": 85,
-        },
-        "strengths": [
-            "Clear structural breakdown of key system components.",
-            "Effective use of real-world examples and O(N) complexity analysis.",
-        ],
-        "growthAreas": [
-            "Could quantify operational metrics (throughput, latency SLAs) more explicitly.",
-            "Consider addressing failover and database replica sync delays.",
-        ],
-        "starAnalysis": {
-            "situation": "Strong context setting for scalable architecture.",
-            "task": "Clearly outlined performance goals under high concurrency.",
-            "action": "Described load balancing, redis caching, and horizontal sharding.",
-            "result": "Demonstrated solid technical outcomes and SLA adherence.",
-        },
-        "recommendedPrep": [
-            f"Review {topic} deep-dive question bank in Company Prep Library.",
-            "Practice quantifying system metrics in 30-second STAR format.",
-        ],
-    }
+    if not genai_client or not transcript:
+        logger.error(f"No Gemini client or transcript available for mock evaluation of session {session_id}. Failing without fabricated feedback.")
+        return False
 
-    if genai_client and transcript:
-        try:
-            prompt = (
-                f"Analyze this candidate mock interview transcript.\n"
-                f"Topic: {topic} | Difficulty: {difficulty}\n"
-                f"Transcript: {json.dumps(transcript)}\n\n"
-                f"Return JSON format:\n"
-                f"{{\n"
-                f"  \"overallScore\": float (0-100),\n"
-                f"  \"rubricScores\": {{\"clarity\": float, \"depth\": float, \"examples\": float, \"technicalAccuracy\": float}},\n"
-                f"  \"strengths\": [str],\n"
-                f"  \"growthAreas\": [str],\n"
-                f"  \"starAnalysis\": {{\"situation\": str, \"task\": str, \"action\": str, \"result\": str}},\n"
-                f"  \"recommendedPrep\": [str]\n"
-                f"}}"
-            )
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            if res and res.text:
-                match = re.search(r"\{.*\}", res.text, re.DOTALL)
-                if match:
-                    parsed = json.loads(match.group(0))
-                    score = int(parsed.get("overallScore", 85))
-                    feedback = parsed
-        except Exception as e:
-            logger.warning(f"GenAI mock worker evaluation warning: {e}")
+    feedback: Dict[str, Any] = {}
+    try:
+        prompt = (
+            f"Analyze this candidate mock interview transcript.\n"
+            f"Topic: {topic} | Difficulty: {difficulty}\n"
+            f"Transcript: {json.dumps(transcript)}\n\n"
+            f"Return JSON format:\n"
+            f"{{\n"
+            f"  \"overallScore\": float (0-100),\n"
+            f"  \"rubricScores\": {{\"clarity\": float, \"depth\": float, \"examples\": float, \"technicalAccuracy\": float}},\n"
+            f"  \"strengths\": [str],\n"
+            f"  \"growthAreas\": [str],\n"
+            f"  \"starAnalysis\": {{\"situation\": str, \"task\": str, \"action\": str, \"result\": str}},\n"
+            f"  \"recommendedPrep\": [str]\n"
+            f"}}"
+        )
+        res = genai_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+        if res and res.text:
+            match = re.search(r"\{.*\}", res.text, re.DOTALL)
+            if match:
+                feedback = json.loads(match.group(0))
+    except Exception as e:
+        logger.warning(f"GenAI mock worker evaluation warning: {e}")
+        return False
+
+    if not feedback:
+        logger.error(f"GenAI returned no usable mock evaluation for session {session_id}. No fabricated fallback provided.")
+        return False
+
+    score = int(feedback.get("overallScore", 0))
 
     try:
         response = await callback_client.patch(

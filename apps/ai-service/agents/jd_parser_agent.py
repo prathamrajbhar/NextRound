@@ -57,7 +57,7 @@ def parse_requirements_node(state: JDParserState) -> JDParserState:
     raw = state.get("raw_description", "")
     logger.info(f"Parsing requirements for job {state.get('job_id')}")
 
-    skills = ["TypeScript", "React", "Node.js", "System Architecture", "Problem Solving"]
+    skills = []
     if genai_client and raw:
         try:
             prompt = f"Extract core technical skills and requirements from this job description prompt as a JSON list of strings:\n\n{raw}"
@@ -99,25 +99,7 @@ def generate_description_node(state: JDParserState) -> JDParserState:
         except Exception as e:
             logger.error(f"Gemini description generation failed: {e}")
 
-    # Fallback template description
-    formatted_skills = "\n".join([f"- {s}" for s in skills])
-    fallback_desc = f"""## Position Overview
-{raw or 'We are seeking a talented engineer to join our team and build scalable software solutions.'}
-
-## Key Responsibilities
-- Architect, build, and maintain high-performance software applications.
-- Collaborate with cross-functional teams to deliver robust features.
-- Participate in code reviews, technical designs, and system optimizations.
-
-## Technical Requirements
-{formatted_skills}
-
-## What We Offer
-- Competitive compensation and equity options.
-- Flexible remote-first work setup.
-- Continuous growth, mentorship, and professional development.
-"""
-    state["generated_description"] = fallback_desc
+    state["generated_description"] = ""
     return state
 
 

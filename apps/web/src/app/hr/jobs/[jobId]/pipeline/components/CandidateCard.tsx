@@ -26,14 +26,20 @@ export default function CandidateCard({ app, onSelectCandidate }: CandidateCardP
     >
       {/* Header Info */}
       <div className="flex items-start gap-3">
-        <Image
-          src={app.candidateAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
-          alt={app.candidateName}
-          width={36}
-          height={36}
-          className="h-9 w-9 rounded-full border border-slate-200 dark:border-slate-700 shadow-xs object-cover flex-shrink-0"
-          unoptimized
-        />
+        {app.candidateAvatar ? (
+          <Image
+            src={app.candidateAvatar}
+            alt={app.candidateName}
+            width={36}
+            height={36}
+            className="h-9 w-9 rounded-full border border-slate-200 dark:border-slate-700 shadow-xs object-cover flex-shrink-0"
+            unoptimized
+          />
+        ) : (
+          <div className="h-9 w-9 rounded-full border border-slate-200 dark:border-slate-700 shadow-xs flex items-center justify-center bg-brand-50 dark:bg-orange-950/60 text-brand-600 dark:text-orange-400 font-black text-xs flex-shrink-0">
+            {(app.candidateName || '?').charAt(0).toUpperCase()}
+          </div>
+        )}
         <div className="min-w-0 flex-1">
           <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block truncate leading-tight group-hover:text-brand-600 dark:group-hover:text-orange-400 transition-colors font-display">
             {app.candidateName}

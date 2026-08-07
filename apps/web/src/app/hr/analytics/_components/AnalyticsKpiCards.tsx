@@ -16,7 +16,7 @@ interface AnalyticsKpiCardsProps {
 export function AnalyticsKpiCards({ data }: AnalyticsKpiCardsProps) {
   const avgHours = data?.avgTimeToHireDays ? data.avgTimeToHireDays * 24 : 0;
   const passRate = data?.offerAcceptanceRatePercent ?? 0;
-  const biasCheck = data?.biasCleanRatePercent ?? 100;
+  const biasCheck = data?.biasCleanRatePercent ?? 0;
   const totalApps = data?.totalApplications ?? 0;
 
   return (

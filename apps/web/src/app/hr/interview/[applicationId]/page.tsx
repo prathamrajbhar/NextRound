@@ -159,17 +159,26 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
         <div className="lg:col-span-2 flex flex-col gap-4 relative h-full">
           {/* Primary Main Candidate Video Feed Container */}
           <div className="flex-1 relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 shadow-2xl flex items-center justify-center group min-h-[420px]">
-            {/* Candidate Stream Simulated Viewport */}
+            {/* Candidate Stream Viewport */}
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent z-10"></div>
             
-            <Image
-              src={app.candidateAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800'}
-              alt={app.candidateName}
-              fill
-              sizes="(max-width: 1024px) 100vw, 800px"
-              className="object-cover opacity-85 filter contrast-105"
-              unoptimized
-            />
+            {app.candidateAvatar ? (
+              <Image
+                src={app.candidateAvatar}
+                alt={app.candidateName}
+                fill
+                sizes="(max-width: 1024px) 100vw, 800px"
+                className="object-cover opacity-85 filter contrast-105"
+                unoptimized
+              />
+            ) : (
+              <div className="absolute inset-0 z-[5] flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3 text-slate-500">
+                  <User className="h-12 w-12" />
+                  <span className="text-xs font-bold">Camera feed unavailable</span>
+                </div>
+              </div>
+            )}
 
             {/* Candidate Label Tag */}
             <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-slate-950/80 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-slate-800 text-xs font-bold text-slate-200">
@@ -250,7 +259,7 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
                 Candidate Dossier
               </h3>
               <span className="text-[10px] font-extrabold text-emerald-400 bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-800">
-                AI Score: {app.scores?.composite || 86}%
+                AI Score: {app.scores?.composite ?? 0}%
               </span>
             </div>
 

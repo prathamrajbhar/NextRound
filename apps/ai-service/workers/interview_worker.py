@@ -40,26 +40,27 @@ async def process_interview_job(job_data: dict) -> bool:
         }
 
         output_state = run_interviewer_agent(initial_state)
-        scorecard = output_state.get("final_scorecard") or {
-            "overall_score": 85.0,
-            "technical_score": 84.0,
-            "communication_score": 88.0,
-            "problem_solving_score": 83.0,
-            "summary_feedback": "Candidate demonstrated strong technical clarity and problem-solving skills throughout the voice assessment.",
-        }
+        scorecard = output_state.get("final_scorecard")
+        if not scorecard or not scorecard.get("total_turns"):
+            logger.error(f"Interviewer agent produced no scorecard for interview {target_interview_id}. No fabricated score is applied.")
+            return False
 
-        composite_score = scorecard.get("overall_score", 85.0)
+        composite_score = scorecard.get("overall_score", 0.0)
+        technical_score = scorecard.get("technical_score", 0.0)
+        communication_score = scorecard.get("communication_score", 0.0)
+        problem_solving_score = scorecard.get("problem_solving_score", 0.0)
+        summary_feedback = scorecard.get("summary_feedback", "")
 
         patch_payload = {
             "interview_score": composite_score,
             "scores": {
                 "composite": composite_score,
-                "technical": scorecard.get("technical_score", 84.0),
-                "communication": scorecard.get("communication_score", 88.0),
-                "problemSolving": scorecard.get("problem_solving_score", 83.0),
+                "technical": technical_score,
+                "communication": communication_score,
+                "problemSolving": problem_solving_score,
             },
-            "reasoning": scorecard.get("summary_feedback", "Voice interview evaluation completed successfully."),
-            "feedback": scorecard.get("summary_feedback", "Solid technical performance."),
+            "reasoning": summary_feedback,
+            "feedback": summary_feedback,
             "transcript": raw_transcript,
         }
 

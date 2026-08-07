@@ -27,35 +27,8 @@ prepRouter.get('/jobs/:jobId', async (req: Request, res: Response, next: NextFun
       });
     }
 
-    // Default response structure if no custom prep content has been generated yet
-    const data = prepContent || {
-      company_name: job.organization.name,
-      role_archetype: job.title,
-      questions: [
-        {
-          dimension: 'System Architecture',
-          question: `How would you architect a distributed fault-tolerant backend system for ${job.organization.name}?`,
-          suggestedAnswerKey: 'Emphasize horizontal scalability, load balancing, caching tiers, and DB sharding.',
-        },
-        {
-          dimension: 'Problem Solving & Algorithms',
-          question: 'Walk through an algorithmic optimization that reduced runtime complexity from O(N^2) to O(N log N).',
-          suggestedAnswerKey: 'Focus on sorting algorithms, hash maps, binary search, or two-pointer patterns.',
-        },
-        {
-          dimension: 'Behavioral & Leadership',
-          question: 'Describe a situation where you resolved a major production outage under tight deadline pressure.',
-          suggestedAnswerKey: 'Use STAR format: Situation, Task, Action (monitoring/rollback), Result (SLA maintained).',
-        },
-        {
-          dimension: 'Technical Excellence',
-          question: 'How do you approach writing clean, testable, and maintainable production software?',
-          suggestedAnswerKey: 'Discuss unit testing, CI/CD pipelines, strict typing, and domain-driven design principles.',
-        },
-      ],
-      culture_notes: `Key values at ${job.organization.name}: Customer obsession, zero-latency execution, transparency, and continuous technical innovation.`,
-      skill_checklist: ['System Architecture', 'Algorithmic Optimization', 'CI/CD & Testing', 'Cross-functional Communication'],
-    };
+    // Return null when no prep content has been generated yet (no fabricated content).
+    const data = prepContent || null;
 
     return res.json({
       success: true,

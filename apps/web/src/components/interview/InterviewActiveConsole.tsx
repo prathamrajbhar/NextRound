@@ -18,7 +18,6 @@ import {
   X,
   Send,
   Eye,
-  AudioLines,
   Maximize2,
   Wifi,
   AlertCircle,
@@ -33,15 +32,13 @@ interface ActiveConsoleProps {
   micActive: boolean;
   camActive: boolean;
   isAnalyzing: boolean;
-  isSimulating: boolean;
   isDarkTheme?: boolean;
   proctorTelemetry?: {
-    faceCount: number;
-    gazeCentered: boolean;
-    engagementIndex: number;
+    faceCount: number | null;
+    gazeCentered: boolean | null;
+    engagementIndex: number | null;
   };
   onSubmitAnswer: (text: string) => void;
-  onSimulateSpeaking: () => void;
   onEndSession: () => void;
   onToggleMic: () => void;
   onToggleCam: () => void;
@@ -55,9 +52,7 @@ export default function InterviewActiveConsole({
   micActive,
   camActive,
   isAnalyzing,
-  isSimulating,
   onSubmitAnswer,
-  onSimulateSpeaking,
   onEndSession,
   onToggleMic,
   onToggleCam,
@@ -65,7 +60,6 @@ export default function InterviewActiveConsole({
   role = 'Software Engineer',
 }: ActiveConsoleProps) {
   const [textInput, setTextInput] = useState('');
-  const [eyeContactScore, setEyeContactScore] = useState(97);
   const [showTranscriptDrawer, setShowTranscriptDrawer] = useState(false);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
 
@@ -137,16 +131,6 @@ export default function InterviewActiveConsole({
     };
   }, [camActive, micActive]);
 
-  // Eye contact telemetry simulation
-  useEffect(() => {
-    if (!camActive) return;
-    const interval = setInterval(() => {
-      const variation = Math.floor(Math.random() * 5) - 2;
-      setEyeContactScore((prev) => Math.min(100, Math.max(90, prev + variation)));
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [camActive]);
-
   // Auto-scroll transcript drawer
   useEffect(() => {
     if (showTranscriptDrawer) {
@@ -164,14 +148,6 @@ export default function InterviewActiveConsole({
         bg: 'bg-indigo-950/80 border-indigo-700/60 text-indigo-300',
         dot: 'bg-indigo-400 animate-ping',
         icon: <Activity className="h-3.5 w-3.5 text-indigo-400 animate-spin" />,
-      };
-    }
-    if (isSimulating) {
-      return {
-        text: 'Candidate Speaking (Listening)',
-        bg: 'bg-emerald-950/80 border-emerald-700/60 text-emerald-300',
-        dot: 'bg-emerald-400 animate-pulse',
-        icon: <AudioLines className="h-3.5 w-3.5 text-emerald-400 animate-bounce" />,
       };
     }
     if (aiSpeaking) {
@@ -242,7 +218,7 @@ export default function InterviewActiveConsole({
         <div className="flex items-center gap-2.5 sm:gap-3">
           <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-xs font-bold text-emerald-400">
             <Eye className="h-3.5 w-3.5 text-emerald-400" />
-            <span>Gaze: {camActive ? `${eyeContactScore}%` : 'Disabled'}</span>
+            <span>Gaze: {camActive ? 'Analyzing' : 'Disabled'}</span>
           </div>
 
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-mono font-medium">
@@ -304,8 +280,6 @@ export default function InterviewActiveConsole({
                 className={`relative w-28 h-28 sm:w-36 sm:h-36 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl border-2 ${
                   aiSpeaking
                     ? 'bg-gradient-to-br from-amber-500/20 to-orange-600/30 border-amber-400 scale-105 shadow-amber-500/20'
-                    : isSimulating
-                    ? 'bg-gradient-to-br from-emerald-500/20 to-teal-600/30 border-emerald-400 scale-105 shadow-emerald-500/20'
                     : isAnalyzing
                     ? 'bg-gradient-to-br from-indigo-500/20 to-violet-600/30 border-indigo-400 scale-105 shadow-indigo-500/20'
                     : 'bg-slate-900 border-slate-700'
@@ -313,7 +287,7 @@ export default function InterviewActiveConsole({
               >
                 <Bot
                   className={`h-12 w-12 sm:h-16 sm:w-16 transition-all duration-300 ${
-                    aiSpeaking ? 'text-amber-400 scale-110' : isSimulating ? 'text-emerald-400' : 'text-slate-400'
+                    aiSpeaking ? 'text-amber-400 scale-110' : 'text-slate-400'
                   }`}
                 />
               </div>
@@ -329,7 +303,7 @@ export default function InterviewActiveConsole({
           <div className="z-10 bg-slate-950/85 backdrop-blur-md p-3.5 rounded-2xl border border-slate-800 space-y-1">
             <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider block">Live AI Question</span>
             <p className="text-xs text-slate-200 font-medium leading-relaxed line-clamp-3">
-              {lastMsg?.role === 'ai' ? lastMsg.content : 'Welcome! I am ready when you are. Explain how you structure production microservices for fault tolerance.'}
+              {lastMsg?.role === 'ai' ? lastMsg.content : 'Waiting for the AI interviewer to begin...'}
             </p>
           </div>
 
@@ -489,15 +463,15 @@ export default function InterviewActiveConsole({
           </button>
         </div>
 
-        {/* Center Primary Action: Voice Response / Answer Trigger */}
+        {/* Center Primary Action: Submit Response */}
         <button
           type="button"
-          onClick={onSimulateSpeaking}
+          onClick={() => onSubmitAnswer(textInput.trim() || 'No response recorded.')}
           disabled={isAnalyzing}
           className="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider shadow-lg transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 transform hover:scale-[1.02] active:scale-[0.98]"
         >
           <Sparkles className="h-4.5 w-4.5" />
-          <span>{isSimulating ? 'Speaking (Stop)...' : isAnalyzing ? 'AI Evaluating...' : 'Simulate Voice Response'}</span>
+          <span>{isAnalyzing ? 'AI Evaluating...' : 'Submit Response'}</span>
         </button>
 
         {/* Right End Call Button */}

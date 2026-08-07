@@ -56,33 +56,14 @@ sentimentRouter.get(
         return res.status(403).json({ success: false, error: 'Access denied: Interview belongs to another organization' });
       }
 
-      // Default structured sentiment fallback if not yet populated by AI service
-      const defaultSentimentReport = {
-        interviewId: interview.id,
-        overallTone: 'confident',
-        overallStressLevel: 'low',
-        speechPaceWpm: 142,
-        pitchVarianceHz: 14.2,
-        emotionalJourney: [
-          { turnNumber: 1, speaker: 'interviewer', text: 'Tell us about your background.', sentiment: 'neutral', confidence: 0.95, stressIndicator: 15 },
-          { turnNumber: 2, speaker: 'candidate', text: 'I have 6 years of experience in distributed backend systems.', sentiment: 'confident', confidence: 0.92, stressIndicator: 20 },
-          { turnNumber: 3, speaker: 'interviewer', text: 'How do you handle a production outage under tight SLAs?', sentiment: 'curious', confidence: 0.9, stressIndicator: 25 },
-          { turnNumber: 4, speaker: 'candidate', text: 'I immediately verify monitoring dashboards, isolate root causes, and notify stakeholders.', sentiment: 'enthusiastic', confidence: 0.94, stressIndicator: 30 },
-        ],
-        stressPeakMoments: [
-          {
-            turnIndex: 3,
-            questionText: 'How do you handle a production outage under tight SLAs?',
-            candidateResponseSnippet: 'I immediately verify monitoring dashboards...',
-            stressScore: 35,
-            reason: 'Slight micro-variance in pitch during high-pressure question scenario',
-          },
-        ],
-        summaryNarrative:
-          'Candidate demonstrated high confidence throughout the voice interview. Micro-pitch variance was stable (14.2 Hz) and speech pace averaged a steady 142 WPM.',
-      };
+      if (!interview.sentiment_report) {
+        return res.status(404).json({
+          success: false,
+          error: 'Sentiment report not yet available for this interview',
+        });
+      }
 
-      const report = interview.sentiment_report || defaultSentimentReport;
+      const report = interview.sentiment_report;
 
       return res.json({
         success: true,

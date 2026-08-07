@@ -28,30 +28,11 @@ interface CodingConsoleProps {
   onComplete: (score: number) => void;
 }
 
-const defaultCode = `/**
- * Problem 1: High-Throughput Order Rate Limiter
- * @param {string} userId
- * @param {number} maxRequests (default: 5 requests per 1000ms)
- * @returns {boolean} true if allowed, false if rate limited
- */
-function isRequestAllowed(userId: string, maxRequests: number = 5): boolean {
-  const windowMs = 1000;
-  const now = Date.now();
-  
-  // Log telemetry execution
-  console.log(\`[RateLimiter] Checking request for \${userId} at t=\${now}\`);
-  
-  // Sliding window execution check
-  return true;
-}
-
-// Test Suite Execution
-console.log(isRequestAllowed("usr_9921", 5));
-`;
+const defaultCode = ``;
 
 export default function CodingAssessmentConsole({
-  company = 'Swiggy',
-  role = 'Senior Frontend Engineer',
+  company = '',
+  role = '',
   applicationId,
   onComplete,
 }: CodingConsoleProps) {
@@ -68,7 +49,7 @@ export default function CodingAssessmentConsole({
     { name: string; input: string; expected: string; actual: string; status: 'passed' | 'failed'; time: string }[]
   >([]);
   const [complexityFeedback, setComplexityFeedback] = useState<string | null>(null);
-  const [finalPassRate, setFinalPassRate] = useState<number>(100);
+  const [finalPassRate, setFinalPassRate] = useState<number>(0);
 
   useEffect(() => {
     async function loadProblem() {
@@ -141,46 +122,18 @@ export default function CodingAssessmentConsole({
           }, 1500);
           return;
         }
-      } catch (err) {
+} catch (err) {
         console.warn('API execution warning, falling back to local simulation:', err);
       }
     }
 
-    setTimeout(() => {
-      setTestResults([
-        {
-          name: 'Case 1',
-          input: 'userId = "usr_9921", maxRequests = 5',
-          expected: 'true',
-          actual: 'true',
-          status: 'passed',
-          time: '2ms',
-        },
-        {
-          name: 'Case 2',
-          input: 'userId = "usr_9921", burstCount = 6',
-          expected: 'false',
-          actual: 'false',
-          status: 'passed',
-          time: '4ms',
-        },
-        {
-          name: 'Case 3',
-          input: 'userId = "usr_4040", slidingEviction = true',
-          expected: 'true',
-          actual: 'true',
-          status: 'passed',
-          time: '3ms',
-        },
-      ]);
-      setOutputLogs((prev) => [
-        ...prev,
-        `[Telemetry] [RateLimiter] Checking request for usr_9921 at t=${Date.now()}`,
-        `[Telemetry] Result: true`,
-        `✓ All 3 test cases passed successfully.`,
-      ]);
-      setIsRunning(false);
-    }, 500);
+    // No real sandbox available: surface an honest empty state instead of fabricated results.
+    setOutputLogs((prev) => [
+      ...prev,
+      'No test sandbox available. Connect to the assessment execution service to run your solution.',
+    ]);
+    setTestResults([]);
+    setIsRunning(false);
   };
 
   const handleSubmitSolution = async () => {
@@ -201,10 +154,10 @@ export default function CodingAssessmentConsole({
           <CompanyLogo name={company} size="sm" className="shadow-xs flex-shrink-0" />
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-slate-200 font-display">
-              1. High-Throughput Order Rate Limiter
+              {problem?.title || 'Coding Assessment'}
             </span>
             <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
-              Medium
+              {problem ? 'Coding' : 'Not Loaded'}
             </span>
             <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
               {company}
@@ -307,74 +260,33 @@ export default function CodingAssessmentConsole({
                 <>
                   <div className="space-y-2">
                     <h2 className="text-base font-extrabold text-slate-100 font-display">
-                      1. High-Throughput Order Rate Limiter
+                      {problem?.title || 'Coding Assessment'}
                     </h2>
                     <div className="flex items-center gap-2 flex-wrap text-[10px] font-semibold text-slate-400">
                       <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold">
-                        Medium
+                        {problem ? 'Coding' : 'Not Loaded'}
                       </span>
-                      <span>Acceptance: <strong>74.2%</strong></span>
-                      <span>•</span>
-                      <span>Topics: <strong className="text-slate-300">Array • Sliding Window • Hash Table</strong></span>
                     </div>
                   </div>
 
-                  <div className="space-y-2.5">
-                    <p>
-                      Implement an in-memory sliding window rate limiter function{' '}
-                      <code className="text-amber-300 bg-slate-900 border border-slate-800 px-1.5 py-0.5 rounded font-mono">
-                        isRequestAllowed(userId, maxRequests)
-                      </code>{' '}
-                      to handle order dispatch traffic spikes.
-                    </p>
-                    <p>
-                      Requests arriving within 1,000 milliseconds from the same{' '}
-                      <code className="text-amber-300 font-mono">userId</code> must be capped at{' '}
-                      <code className="text-amber-300 font-mono">maxRequests</code>. Excess requests exceeding the sliding threshold should return{' '}
-                      <code className="text-rose-400 font-mono">false</code>.
-                    </p>
-                  </div>
-
-                  {/* Example 1 */}
-                  <div className="space-y-1.5">
-                    <span className="font-bold text-slate-200 block">Example 1:</span>
-                    <div className="p-3 rounded-xl bg-[#1e1e1e] border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300">
-                      <p><strong className="text-slate-400">Input:</strong> userId = &quot;usr_9921&quot;, maxRequests = 5</p>
-                      <p><strong className="text-slate-400">Output:</strong> true</p>
-                      <p><strong className="text-slate-400">Explanation:</strong> First request within 1000ms sliding window (1 of 5 limit).</p>
+                  {problem?.description ? (
+                    <p>{problem.description}</p>
+                  ) : (
+                    <div className="p-4 text-center text-slate-400 border border-slate-800 rounded-xl">
+                      <p className="font-bold text-slate-200">No coding problem loaded</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        The assessment problem is not available yet. It will be provisioned when your assessment is configured.
+                      </p>
                     </div>
-                  </div>
-
-                  {/* Example 2 */}
-                  <div className="space-y-1.5">
-                    <span className="font-bold text-slate-200 block">Example 2:</span>
-                    <div className="p-3 rounded-xl bg-[#1e1e1e] border border-slate-800 font-mono text-[11px] space-y-1 text-slate-300">
-                      <p><strong className="text-slate-400">Input:</strong> userId = &quot;usr_9921&quot;, maxRequests = 5 (6th burst request)</p>
-                      <p><strong className="text-slate-400">Output:</strong> false</p>
-                      <p><strong className="text-slate-400">Explanation:</strong> User exceeded the 5-request capacity within 1000ms window.</p>
-                    </div>
-                  </div>
-
-                  {/* Constraints */}
-                  <div className="space-y-2 pt-2 border-t border-slate-800/80">
-                    <span className="font-bold text-slate-200 block">Constraints &amp; Complexity:</span>
-                    <ul className="list-disc list-inside space-y-1 font-mono text-[11px] text-slate-400">
-                      <li>1 &lt;= userId.length &lt;= 64</li>
-                      <li>1 &lt;= maxRequests &lt;= 10,000</li>
-                      <li>Time Complexity: <span className="text-emerald-400 font-bold">O(1)</span> average</li>
-                      <li>Space Complexity: <span className="text-indigo-400 font-bold">O(N)</span> memory</li>
-                    </ul>
-                  </div>
+                  )}
                 </>
               )}
 
               {activeLeftTab === 'editorial' && (
                 <div className="p-4 text-center text-slate-400">
                   <Sparkles className="h-6 w-6 text-brand-500 mx-auto mb-2" />
-                  <p className="font-bold text-slate-200">Sliding Window Log Algorithm</p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    Store timestamps in a queue per user ID. Evict timestamps older than (now - 1000ms). Allow request if queue length &lt; maxRequests.
-                  </p>
+                  <p className="font-bold text-slate-200">Editorial</p>
+                  <p className="text-xs text-slate-400 mt-1">Editorial solution is available after a successful submission.</p>
                 </div>
               )}
 
@@ -457,14 +369,20 @@ export default function CodingAssessmentConsole({
                 {activeBottomTab === 'testcases' && (
                   <div className="space-y-2 text-slate-300">
                     <div className="flex gap-2">
-                      <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-200 font-bold">Case 1</span>
-                      <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-400">Case 2</span>
-                      <span className="px-2 py-0.5 rounded bg-slate-900 text-slate-400">Case 3</span>
+                      {testResults.map((r, i) => (
+                        <span key={i} className="px-2 py-0.5 rounded bg-slate-800 text-slate-200 font-bold">{r.name}</span>
+                      ))}
                     </div>
-                    <div className="p-2 rounded bg-slate-900 border border-slate-800 text-[11px] space-y-1">
-                      <p><span className="text-slate-500">userId = </span>&quot;usr_9921&quot;</p>
-                      <p><span className="text-slate-500">maxRequests = </span>5</p>
-                    </div>
+                    {testResults.length > 0 ? (
+                      testResults.map((r, i) => (
+                        <div key={i} className="p-2 rounded bg-slate-900 border border-slate-800 text-[11px] space-y-1">
+                          <p><span className="text-slate-500">Input: </span>{r.input}</p>
+                          <p><span className="text-slate-500">Expected: </span>{r.expected}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-slate-500 text-xs">Run your solution to load test cases.</p>
+                    )}
                   </div>
                 )}
 
@@ -519,61 +437,67 @@ export default function CodingAssessmentConsole({
 
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                  Solution Accepted
+                <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${
+                  testResults.length > 0 && testResults.every((r) => r.status === 'passed')
+                    ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+                    : 'bg-slate-500/15 text-slate-400 border-slate-500/30'
+                }`}>
+                  {testResults.length > 0 ? 'Solution Evaluated' : 'Evaluation Pending'}
                 </span>
                 <span className="text-xs text-slate-500 font-mono">• {language}</span>
               </div>
               <h2 className="text-xl font-bold text-white tracking-tight mt-1 font-display">
-                All Test Cases Passed Successfully
+                {testResults.length > 0 && testResults.every((r) => r.status === 'passed') ? 'All Test Cases Passed Successfully' : 'Submission Recorded'}
               </h2>
               <p className="text-xs text-slate-400">
-                Your code passed all automated functional and performance test suites.
+                {testResults.length > 0
+                  ? `${testResults.filter((r) => r.status === 'passed').length} of ${testResults.length} test suites passed at ${finalPassRate}%.`
+                  : 'Your submission was recorded but has not yet been evaluated by the execution service.'}
               </p>
             </div>
           </div>
 
           {/* Metrics Grid */}
           <div className="grid grid-cols-3 gap-3">
-            {/* Metric 1: Runtime */}
+            {/* Metric 1: Passed Tests */}
             <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition-all">
               <div className="flex items-center justify-between text-slate-400 mb-1.5">
-                <span className="text-[11px] font-semibold">Runtime</span>
+                <span className="text-[11px] font-semibold">Tests Passed</span>
                 <Zap className="h-4 w-4 text-amber-400" />
               </div>
               <div className="text-xl font-extrabold text-white tracking-tight font-mono">
-                2ms
-              </div>
-              <span className="inline-block mt-1 text-[10px] text-emerald-400 font-medium">
-                Fast execution
-              </span>
-            </div>
-
-            {/* Metric 2: Memory */}
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition-all">
-              <div className="flex items-center justify-between text-slate-400 mb-1.5">
-                <span className="text-[11px] font-semibold">Memory</span>
-                <Cpu className="h-4 w-4 text-cyan-400" />
-              </div>
-              <div className="text-xl font-extrabold text-white tracking-tight font-mono">
-                42.1 MB
+                {testResults.filter((r) => r.status === 'passed').length} / {testResults.length}
               </div>
               <span className="inline-block mt-1 text-[10px] text-slate-400 font-medium">
-                V8 Sandbox
+                {testResults.length > 0 ? `${finalPassRate}% pass rate` : 'No results recorded'}
               </span>
             </div>
 
-            {/* Metric 3: Test Cases */}
+            {/* Metric 2: Complexity */}
             <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition-all">
               <div className="flex items-center justify-between text-slate-400 mb-1.5">
-                <span className="text-[11px] font-semibold">Test Cases</span>
+                <span className="text-[11px] font-semibold">Complexity</span>
+                <Cpu className="h-4 w-4 text-cyan-400" />
+              </div>
+              <div className="text-sm font-bold text-slate-200 tracking-tight">
+                {complexityFeedback || 'N/A'}
+              </div>
+              <span className="inline-block mt-1 text-[10px] text-slate-400 font-medium">
+                Sandbox analysis
+              </span>
+            </div>
+
+            {/* Metric 3: Language */}
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 hover:border-slate-700/80 transition-all">
+              <div className="flex items-center justify-between text-slate-400 mb-1.5">
+                <span className="text-[11px] font-semibold">Language</span>
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
               </div>
               <div className="text-xl font-extrabold text-white tracking-tight font-mono">
-                3 / 3
+                {language}
               </div>
-              <span className="inline-block mt-1 text-[10px] text-emerald-400 font-medium">
-                100% Passed
+              <span className="inline-block mt-1 text-[10px] text-slate-400 font-medium">
+                Submission recorded
               </span>
             </div>
           </div>
@@ -582,9 +506,9 @@ export default function CodingAssessmentConsole({
           <div className="p-3.5 rounded-xl bg-slate-900/40 border border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-indigo-400" />
-              <span>Complexity: <strong className="text-slate-200 font-mono">O(N) Time</strong> • <strong className="text-slate-200 font-mono">O(1) Space</strong></span>
+              <span>Pass Rate: <strong className="text-slate-200 font-mono">{finalPassRate}%</strong></span>
             </div>
-            <span className="text-[11px] text-slate-500 font-mono">Verified AST</span>
+            <span className="text-[11px] text-slate-500 font-mono">{testResults.length} case(s)</span>
           </div>
 
           {/* Action CTAs */}
@@ -600,7 +524,7 @@ export default function CodingAssessmentConsole({
 
             <button
               type="button"
-              onClick={() => onComplete(98)}
+              onClick={() => onComplete(finalPassRate)}
               className="flex-1 py-3 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-950/50 hover:shadow-emerald-900/60 cursor-pointer"
             >
               <span>View Evaluation Feedback</span>

@@ -124,8 +124,6 @@ def run_bias_audit_node(state: EvaluatorState) -> EvaluatorState:
     state["bias_report"] = {
         "severity": bias_severity,
         "anomalies": anomalies,
-        "linguistic_neutrality": "passed",
-        "demographic_isolation": "verified",
     }
     return state
 

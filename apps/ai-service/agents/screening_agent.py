@@ -82,9 +82,8 @@ def parse_resume_node(state: ScreeningState) -> ScreeningState:
             logger.error(f"Gemini resume parsing failed: {e}")
 
     if not skills:
-        # Fallback simple keyword extraction
-        common_tech = ["react", "typescript", "javascript", "node.js", "python", "postgresql", "aws", "docker", "express", "next.js", "graphql", "tailwind"]
-        skills = [t.title() for t in common_tech if t in resume_text.lower()]
+        state["parsed_skills"] = []
+        return state
 
     state["parsed_skills"] = skills
     return state
@@ -102,12 +101,12 @@ def score_against_rubric_node(state: ScreeningState) -> ScreeningState:
     similarity = cosine_similarity(job_vector, resume_vector)
     semantic_score = round(similarity * 100, 2)
 
-    # Calculate rubric dimension scores
+    # Calculate rubric dimension scores from extracted skills signal
     skills = state.get("parsed_skills", [])
-    tech_score = min(100.0, max(40.0, len(skills) * 15.0))
-    comm_score = 75.0
-    prob_score = 80.0
-    exp_score = 70.0
+    tech_score = min(100.0, max(0.0, len(skills) * 15.0))
+    comm_score = 0.0
+    prob_score = 0.0
+    exp_score = 0.0
 
     tech_w = rubric.get("technical", 30) / 100.0
     comm_w = rubric.get("communication", 20) / 100.0

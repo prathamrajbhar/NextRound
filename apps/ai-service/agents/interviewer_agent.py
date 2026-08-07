@@ -56,7 +56,7 @@ def load_context_node(state: InterviewerState) -> InterviewerState:
     if not state.get("turn_number"):
         state["turn_number"] = 0
     if not state.get("scores_so_far"):
-        state["scores_so_far"] = {"technical": 80.0, "communication": 85.0, "problemSolving": 80.0}
+        state["scores_so_far"] = {}
     if state.get("follow_up_depth") is None:
         state["follow_up_depth"] = 0
     if not state.get("evasion_flags"):
@@ -97,8 +97,7 @@ def evaluate_last_answer_node(state: InterviewerState) -> InterviewerState:
                     is_shallow = eval_data.get("shallow", is_shallow)
                     is_evasive = eval_data.get("evasive", is_evasive)
                     stage_key = "technical" if current_stage in ["intro", "technical", "project"] else "communication"
-                    current_score = state["scores_so_far"].get(stage_key, 80.0)
-                    state["scores_so_far"][stage_key] = round((current_score + float(eval_data.get("score", 80))) / 2, 1)
+                    state["scores_so_far"][stage_key] = round(float(eval_data.get("score", 0)), 2)
         except Exception as e:
             logger.warning(f"GenAI answer evaluation warning: {e}")
 
@@ -237,15 +236,10 @@ def advance_stage_node(state: InterviewerState) -> InterviewerState:
 
 def close_interview_node(state: InterviewerState) -> InterviewerState:
     """Node 7: Close interview session with polite concluding remark."""
-    closing_text = (
-        "Thank you so much for your time today! That wraps up our technical voice assessment. "
-        "Our AI evaluation engine is compiling your full evaluation scorecard and key insights for the HR team."
-    )
-    state["latest_ai_response"] = closing_text
+    state["latest_ai_response"] = ""
     state["is_complete"] = True
 
     history = state.get("conversation_history", [])
-    history.append({"speaker": "ai", "text": closing_text, "stage": "closing"})
     state["conversation_history"] = history
 
     return finalize_scores_node(state)
@@ -254,9 +248,9 @@ def close_interview_node(state: InterviewerState) -> InterviewerState:
 def finalize_scores_node(state: InterviewerState) -> InterviewerState:
     """Node 8: Aggregate turn scores into final evaluation scorecard."""
     scores = state.get("scores_so_far", {})
-    tech = scores.get("technical", 82.0)
-    comm = scores.get("communication", 85.0)
-    prob = scores.get("problemSolving", 80.0)
+    tech = scores.get("technical", 0.0)
+    comm = scores.get("communication", 0.0)
+    prob = scores.get("problemSolving", 0.0)
 
     composite = round((tech * 0.4) + (comm * 0.3) + (prob * 0.3), 1)
 
@@ -267,7 +261,7 @@ def finalize_scores_node(state: InterviewerState) -> InterviewerState:
         "problem_solving_score": prob,
         "evasion_flags_count": len(state.get("evasion_flags", [])),
         "total_turns": state.get("turn_number", 0),
-        "summary_feedback": f"Candidate demonstrated solid domain knowledge with an overall score of {composite}%. Communication was clear and structured.",
+        "summary_feedback": f"Candidate completed the interview with {state.get('turn_number', 0)} turn(s) recorded. No fabricated score is applied when no evaluation data exists.",
     }
     return state
 

@@ -51,45 +51,38 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
     ai_response = ""
     insight = None
 
-    if genai_client:
-        try:
-            prompt = (
-                f"You are the NextRound AI Voice Resume Builder Agent.\n"
-                f"Goal: Help candidate build an ATS-optimized resume for {target_role} at {target_company}.\n"
-                f"Current Stage: {current_stage}\n"
-                f"Turn: {turn}\n"
-                f"History: {json.dumps(history[-6:])}\n"
-                f"Candidate Input: '{candidate_input}'\n\n"
-                f"Respond in JSON format with two fields:\n"
-                f"1. 'response': Conversational, encouraging question asking for specific quantifiable details, metrics, technologies, or achievements for stage '{current_stage}'.\n"
-                f"2. 'realtime_insight': A brief extraction or tip highlighting a quantifiable metric or strong keyword derived from candidate input."
-            )
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            if res and res.text:
-                match = re.search(r"\{.*\}", res.text, re.DOTALL)
-                if match:
-                    parsed = json.loads(match.group(0))
-                    ai_response = parsed.get("response", "")
-                    insight = parsed.get("realtime_insight", None)
-        except Exception as e:
-            logger.warning(f"GenAI resume builder turn warning: {e}")
+    if not genai_client:
+        state["latest_ai_response"] = ""
+        state["realtime_insight"] = None
+        state["is_complete"] = current_stage == "closing" or turn >= 10
+        return state
 
-    if not ai_response:
-        stage_prompts = {
-            "intro": f"Welcome! I'm your AI Resume Builder assistant. To tailor your resume for {target_role}, tell me briefly about your background and top career goals.",
-            "work_history": "Let's discuss your recent work experience. What was your job title, key responsibilities, and major achievements?",
-            "skills": "What core technical skills, programming languages, tools, and frameworks do you use daily?",
-            "projects": "Can you highlight 1 or 2 key projects you've built? What impact or scale did they achieve?",
-            "education": "Please share your degree, university name, graduation year, and any relevant certifications.",
-            "closing": "Great work! I have captured all details needed. Let's finish up so I can generate your polished ATS-friendly resume.",
-        }
-        ai_response = stage_prompts.get(current_stage, stage_prompts["intro"])
-        insight = f"Focusing on {current_stage.replace('_', ' ')}: try to mention percentages, team size, or technologies used."
+    try:
+        prompt = (
+            f"You are the NextRound AI Voice Resume Builder Agent.\n"
+            f"Goal: Help candidate build an ATS-optimized resume for {target_role} at {target_company}.\n"
+            f"Current Stage: {current_stage}\n"
+            f"Turn: {turn}\n"
+            f"History: {json.dumps(history[-6:])}\n"
+            f"Candidate Input: '{candidate_input}'\n\n"
+            f"Respond in JSON format with two fields:\n"
+            f"1. 'response': Conversational, encouraging question asking for specific quantifiable details, metrics, technologies, or achievements for stage '{current_stage}'.\n"
+            f"2. 'realtime_insight': A brief extraction or tip highlighting a quantifiable metric or strong keyword derived from candidate input."
+        )
+        res = genai_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+        if res and res.text:
+            match = re.search(r"\{.*\}", res.text, re.DOTALL)
+            if match:
+                parsed = json.loads(match.group(0))
+                ai_response = parsed.get("response", "")
+                insight = parsed.get("realtime_insight", None)
+    except Exception as e:
+        logger.warning(f"GenAI resume builder turn warning: {e}")
 
-    state["latest_ai_response"] = ai_response
+    state["latest_ai_response"] = ai_response or ""
     state["realtime_insight"] = insight
     state["is_complete"] = current_stage == "closing" or turn >= 10
 

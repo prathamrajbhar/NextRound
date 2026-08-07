@@ -40,9 +40,9 @@ export default function CandidateProfileDrawer({
 
   const hasFlags = app.biasReport && app.biasReport.flaggedPhrases.length > 0;
 
-  // Handler to generate and download candidate PDF resume
+  // Handler to generate candidate resume from available application data only
   const handleDownloadResume = () => {
-    const content = `=================================================\nHireOS CANDIDATE DOSSIER & RESUME: ${app.candidateName.toUpperCase()}\nEmail: ${app.candidateEmail}\nPipeline Stage: ${app.stage}\nAI Readiness Score: ${app.scores?.composite || 85}%\n=================================================\n\nCANDIDATE SNAPSHOT:\n- Position Applied: Senior Frontend Engineer\n- Total Experience: 5+ Years\n- Location: San Francisco, CA (Remote)\n- Availability: Immediate (2 Weeks Notice)\n- Primary Tech Stack: React, TypeScript, Next.js, Node.js, System Architecture\n\nPROFESSIONAL EXPERIENCE:\n\n1. Senior Frontend Engineer — TechCorp (2022 - Present)\n   - Built high-throughput order checkout pipelines serving 5M daily users.\n   - Virtualized menu lists and improved LCP by 42%.\n   - Managed micro-frontend state isolation and performance telemetry.\n\n2. Software Engineer — DataSystems (2020 - 2022)\n   - Architected React component libraries with TypeScript & Tailwind.\n   - Reduced bundle sizes by 35% through tree-shaking and dynamic code splitting.\n\nAI EVALUATION SUMMARY:\nTechnical Score: ${app.scores?.technical || 90}%\nCommunication Score: ${app.scores?.communication || 85}%\nProblem Solving Score: ${app.scores?.problemSolving || 88}%\nExperience Score: ${app.scores?.experience || 85}%\n\nEvaluator Notes: "${app.reasoning || 'Demonstrated competent understanding of senior software engineering architecture.'}"\n`;
+    const content = `=================================================\nHireOS CANDIDATE DOSSIER & RESUME: ${app.candidateName.toUpperCase()}\nEmail: ${app.candidateEmail}\nPipeline Stage: ${app.stage}\nAI Readiness Score: ${app.scores?.composite ?? 'N/A'}%\n=================================================\n\nCANDIDATE SNAPSHOT:\n- Position Applied: ${app.jobTitle || 'N/A'}\n- Skills: ${(app.skills || []).join(', ') || 'N/A'}\n\nAI EVALUATION SUMMARY:\nTechnical Score: ${app.scores?.technical ?? 'N/A'}%\nCommunication Score: ${app.scores?.communication ?? 'N/A'}%\nProblem Solving Score: ${app.scores?.problemSolving ?? 'N/A'}%\nExperience Score: ${app.scores?.experience ?? 'N/A'}%\n\nEvaluator Notes: "${app.reasoning || 'No evaluation notes available.'}"\n`;
 
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -65,14 +65,20 @@ export default function CandidateProfileDrawer({
         {/* Drawer Header */}
         <div className="p-5 md:p-6 border-b border-slate-200/80 dark:border-slate-800/80 flex justify-between items-center bg-slate-50/80 dark:bg-[#0b0f19] flex-shrink-0">
           <div className="flex gap-3.5 items-center min-w-0">
-            <Image
-              src={app.candidateAvatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}
-              alt={app.candidateName}
-              width={52}
-              height={52}
-              className="h-13 w-13 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm object-cover flex-shrink-0"
-              unoptimized
-            />
+            {app.candidateAvatar ? (
+              <Image
+                src={app.candidateAvatar}
+                alt={app.candidateName}
+                width={52}
+                height={52}
+                className="h-13 w-13 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm object-cover flex-shrink-0"
+                unoptimized
+              />
+            ) : (
+              <div className="h-13 w-13 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center bg-brand-50 dark:bg-orange-950/60 text-brand-600 dark:text-orange-400 font-black text-lg flex-shrink-0">
+                {(app.candidateName || '?').charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base md:text-lg font-extrabold text-slate-900 dark:text-white font-display leading-tight truncate">
@@ -172,19 +178,19 @@ export default function CandidateProfileDrawer({
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800">
                   <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Experience</span>
-                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 mt-0.5 block">5+ Years</span>
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 mt-0.5 block">N/A</span>
                 </div>
                 <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800">
                   <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Location</span>
-                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 mt-0.5 block truncate">San Francisco, CA</span>
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 mt-0.5 block truncate">N/A</span>
                 </div>
                 <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800">
                   <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Notice Period</span>
-                  <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 block">2 Weeks</span>
+                  <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 block">N/A</span>
                 </div>
                 <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800">
                   <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Expected Comp</span>
-                  <span className="text-xs font-extrabold text-brand-600 dark:text-orange-400 mt-0.5 block">$165,000/yr</span>
+                  <span className="text-xs font-extrabold text-brand-600 dark:text-orange-400 mt-0.5 block">N/A</span>
                 </div>
               </div>
 
@@ -238,21 +244,7 @@ export default function CandidateProfileDrawer({
                   Work Experience History
                 </span>
                 <div className="space-y-4 text-xs text-slate-700 dark:text-slate-300">
-                  <div className="border-l-2 border-brand-500 pl-3.5 space-y-1">
-                    <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">Senior Frontend Engineer — TechCorp</h4>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block">2022 - Present • 2 yrs 6 mos</span>
-                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium mt-1">
-                      Built high-throughput order checkout pipelines serving 5M daily users. Virtualized menu lists and improved LCP by 42%.
-                    </p>
-                  </div>
-
-                  <div className="border-l-2 border-indigo-500 pl-3.5 space-y-1">
-                    <h4 className="font-extrabold text-slate-900 dark:text-white text-sm">Software Engineer — DataSystems</h4>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block">2020 - 2022 • 2 yrs</span>
-                    <p className="text-slate-600 dark:text-slate-300 leading-relaxed font-medium mt-1">
-                      Architected React micro-frontends with TypeScript. Managed state isolation and dynamic event bus channels.
-                    </p>
-                  </div>
+                  <p className="text-slate-500 dark:text-slate-400 font-medium">Work experience history is not available for this candidate.</p>
                 </div>
               </div>
             </div>

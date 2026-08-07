@@ -640,12 +640,12 @@ applicationRouter.post(
           stage: 'video_screening',
           reasoning: 'Video response submitted and queued for transcription.',
           bias_flag: false,
-          bias_report: { video_url: video_url || 's3://nextround-videos/sample.webm', duration_seconds },
+          bias_report: { video_url, duration_seconds },
         },
         update: {
           stage: 'video_screening',
           reasoning: 'Video response submitted and queued for transcription.',
-          bias_report: { video_url: video_url || 's3://nextround-videos/sample.webm', duration_seconds },
+          bias_report: { video_url, duration_seconds },
         },
       });
 
