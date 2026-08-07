@@ -26,9 +26,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(res.data.user);
       } else {
         setUser(null);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+        }
       }
     } catch {
       setUser(null);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+      }
     } finally {
       setLoading(false);
     }
@@ -44,10 +50,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(res.data.user);
           } else {
             setUser(null);
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('token');
+            }
           }
         }
       } catch {
-        if (mounted) setUser(null);
+        if (mounted) {
+          setUser(null);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('token');
+          }
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -102,10 +116,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    await api.post('/auth/logout');
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Ignore network errors on logout
+    }
     setUser(null);
     if (typeof window !== 'undefined') {
       localStorage.removeItem('token');
+      window.location.href = '/login';
     }
   };
 

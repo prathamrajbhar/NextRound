@@ -29,10 +29,13 @@ export default function HrNotificationsPage() {
         setLoading(true);
         const data = await apiClient.get<Notification[]>('/notifications');
         if (data) {
-          setNotifications(data);
+          setNotifications(Array.isArray(data) ? data : []);
+        } else {
+          setNotifications([]);
         }
       } catch (err) {
         console.error('Failed to load notifications:', err);
+        setNotifications([]);
       } finally {
         setLoading(false);
       }
@@ -40,12 +43,14 @@ export default function HrNotificationsPage() {
     fetchNotifications();
   }, []);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+
+  const unreadCount = safeNotifications.filter((n) => !n.read).length;
 
   const visible = useMemo(() => {
-    if (filter === 'unread') return notifications.filter((n) => !n.read);
-    return notifications;
-  }, [notifications, filter]);
+    if (filter === 'unread') return safeNotifications.filter((n) => !n.read);
+    return safeNotifications;
+  }, [safeNotifications, filter]);
 
   const markAsRead = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();

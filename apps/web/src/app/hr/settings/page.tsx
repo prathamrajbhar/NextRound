@@ -17,10 +17,12 @@ import { NotificationsTab } from './_components/NotificationsTab';
 import { TeamTab } from './_components/TeamTab';
 import { EmailTemplatesTab } from './_components/EmailTemplatesTab';
 
+import { useAuthContext } from '@/contexts/AuthContext';
+
 const DEFAULT_ORG_SETTINGS = {
-  orgName: 'Swiggy Technologies',
-  domain: 'swiggy.in',
-  supportEmail: 'ta-support@swiggy.in',
+  orgName: 'My Organization',
+  domain: '',
+  supportEmail: '',
   timezone: 'Asia/Kolkata (IST)',
   defaultThreshold: 80,
   autoOfferEnabled: true,
@@ -29,6 +31,7 @@ const DEFAULT_ORG_SETTINGS = {
 };
 
 export default function HrSettingsPage() {
+  const { user } = useAuthContext();
   const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'notifications' | 'team' | 'emails'>('general');
   const [savedSuccess, setSavedSuccess] = useState(false);
   const { theme, setTheme } = useTheme();
@@ -46,16 +49,17 @@ export default function HrSettingsPage() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const data = await apiClient.get<typeof DEFAULT_ORG_SETTINGS>('/organizations/me/settings');
-        if (data) {
-          if (data.orgName) setOrgName(data.orgName);
-          if (data.domain) setOrgDomain(data.domain);
-          if (data.supportEmail) setSupportEmail(data.supportEmail);
-          if (data.timezone) setTimezone(data.timezone);
-          if (data.defaultThreshold) setDefaultThreshold(data.defaultThreshold);
-          if (typeof data.autoOfferEnabled === 'boolean') setAutoInvite(data.autoOfferEnabled);
-          if (data.defaultVoice) setDefaultVoice(data.defaultVoice);
-          if (typeof data.anonymizeResumes === 'boolean') setAnonymizeResumes(data.anonymizeResumes);
+        const orgRes = await apiClient.get<{ organization: { name: string; settings: any } }>('/organizations/me').catch(() => null);
+        if (orgRes?.organization) {
+          if (orgRes.organization.name) setOrgName(orgRes.organization.name);
+          const s = orgRes.organization.settings || {};
+          if (s.domain) setOrgDomain(s.domain);
+          if (s.supportEmail) setSupportEmail(s.supportEmail);
+          if (s.timezone) setTimezone(s.timezone);
+          if (s.defaultThreshold) setDefaultThreshold(s.defaultThreshold);
+          if (typeof s.autoOfferEnabled === 'boolean') setAutoInvite(s.autoOfferEnabled);
+          if (s.defaultVoice) setDefaultVoice(s.defaultVoice);
+          if (typeof s.anonymizeResumes === 'boolean') setAnonymizeResumes(s.anonymizeResumes);
         }
       } catch (err) {
         console.error('Failed to fetch org settings:', err);
@@ -74,12 +78,14 @@ export default function HrSettingsPage() {
   const [notifyHighScore, setNotifyHighScore] = useState(true);
   const [dailyDigest, setDailyDigest] = useState(true);
 
-  // Team Members state
-  const [team, setTeam] = useState([
-    { id: 1, name: 'Karan Malhotra', email: 'karan@swiggy.in', role: 'Owner', status: 'Active' },
-    { id: 2, name: 'Ananya Sharma', email: 'ananya@swiggy.in', role: 'Admin', status: 'Active' },
-    { id: 3, name: 'Rohan Gupta', email: 'rohan.g@swiggy.in', role: 'Recruiter', status: 'Active' },
-  ]);
+  // Team Members state initialized dynamically with current user
+  const [team, setTeam] = useState<{ id: number; name: string; email: string; role: string; status: string }[]>(() => {
+    if (user?.email) {
+      return [{ id: 1, name: user.email.split('@')[0], email: user.email, role: 'Owner', status: 'Active' }];
+    }
+    return [];
+  });
+
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'Admin' | 'Recruiter' | 'Reviewer'>('Recruiter');
 

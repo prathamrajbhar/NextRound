@@ -98,13 +98,31 @@ hrRouter.get(
         timestamp: log.created_at.toISOString(),
       }));
 
+      // Compute avg time-to-hire in days
+      const hrCompletedApps = await prisma.application.findMany({
+        where: {
+          job: { org_id: orgId },
+          hr_round_completed_at: { not: null },
+        },
+        select: { applied_at: true, hr_round_completed_at: true },
+      });
+
+      const hireTimes = hrCompletedApps
+        .map((a) => a.hr_round_completed_at!.getTime() - a.applied_at.getTime())
+        .filter((t) => t > 0);
+
+      const avgTimeToHireDays =
+        hireTimes.length > 0
+          ? Math.round(hireTimes.reduce((acc, val) => acc + val, 0) / hireTimes.length / (1000 * 60 * 60 * 24))
+          : 0;
+
       return res.json({
         success: true,
         data: {
           kpis: {
             activeJobs: activeJobsCount,
             totalApplicants: totalApplicantsCount,
-            avgTimeToHireDays: 12, // Default benchmark average
+            avgTimeToHireDays,
             pendingInterviews: pendingInterviewsCount,
           },
           stageDistribution,
@@ -147,33 +165,46 @@ hrRouter.get(
         ? Math.round(((totalAudited - biasFlagsTriggered) / totalAudited) * 100)
         : 100;
 
-      // Stage conversion estimates
-      const totalApps = await prisma.application.count({ where: { job: { org_id: orgId } } });
-      const screenedApps = await prisma.application.count({
-        where: {
-          job: { org_id: orgId },
-          status: { notIn: ['applied', 'rejected', 'withdrawn'] },
-        },
-      });
-      const interviewedApps = await prisma.application.count({
-        where: {
-          job: { org_id: orgId },
-          status: { in: ['interview_scheduled', 'interviewed', 'evaluation', 'hr_round', 'decided', 'offered', 'accepted'] },
-        },
-      });
-      const offeredApps = await prisma.application.count({
-        where: {
-          job: { org_id: orgId },
-          status: { in: ['offered', 'accepted'] },
-        },
+      // Fetch applications with applied_at to compute actual weekly funnel
+      const allApps = await prisma.application.findMany({
+        where: { job: { org_id: orgId } },
+        select: { status: true, applied_at: true },
       });
 
+      const now = new Date();
+      const getWeekBucket = (date: Date) => {
+        const diffDays = Math.floor((now.getTime() - date.getTime()) / (24 * 60 * 60 * 1000));
+        if (diffDays <= 7) return 3; // Week 4
+        if (diffDays <= 14) return 2; // Week 3
+        if (diffDays <= 21) return 1; // Week 2
+        return 0; // Week 1
+      };
+
       const weeklyFunnel = [
-        { week: 'Week 1', applied: Math.round(totalApps * 0.25), screened: Math.round(screenedApps * 0.25), interviewed: Math.round(interviewedApps * 0.25), offered: Math.round(offeredApps * 0.25) },
-        { week: 'Week 2', applied: Math.round(totalApps * 0.30), screened: Math.round(screenedApps * 0.30), interviewed: Math.round(interviewedApps * 0.30), offered: Math.round(offeredApps * 0.30) },
-        { week: 'Week 3', applied: Math.round(totalApps * 0.25), screened: Math.round(screenedApps * 0.25), interviewed: Math.round(interviewedApps * 0.25), offered: Math.round(offeredApps * 0.25) },
-        { week: 'Week 4', applied: Math.round(totalApps * 0.20), screened: Math.round(screenedApps * 0.20), interviewed: Math.round(interviewedApps * 0.20), offered: Math.round(offeredApps * 0.20) },
+        { week: 'Week 1', applied: 0, screened: 0, interviewed: 0, offered: 0 },
+        { week: 'Week 2', applied: 0, screened: 0, interviewed: 0, offered: 0 },
+        { week: 'Week 3', applied: 0, screened: 0, interviewed: 0, offered: 0 },
+        { week: 'Week 4', applied: 0, screened: 0, interviewed: 0, offered: 0 },
       ];
+
+      allApps.forEach((app) => {
+        const bucket = getWeekBucket(app.applied_at);
+        weeklyFunnel[bucket].applied++;
+        if (['screening_completed', 'assessment', 'interview_scheduled', 'interviewed', 'evaluation', 'hr_round', 'decided', 'offered', 'accepted'].includes(app.status)) {
+          weeklyFunnel[bucket].screened++;
+        }
+        if (['interviewed', 'evaluation', 'hr_round', 'decided', 'offered', 'accepted'].includes(app.status)) {
+          weeklyFunnel[bucket].interviewed++;
+        }
+        if (['offered', 'accepted'].includes(app.status)) {
+          weeklyFunnel[bucket].offered++;
+        }
+      });
+
+      const totalApps = allApps.length;
+      const screenedApps = allApps.filter((a) => !['applied', 'rejected', 'withdrawn'].includes(a.status)).length;
+      const interviewedApps = allApps.filter((a) => ['interview_scheduled', 'interviewed', 'evaluation', 'hr_round', 'decided', 'offered', 'accepted'].includes(a.status)).length;
+      const offeredApps = allApps.filter((a) => ['offered', 'accepted'].includes(a.status)).length;
 
       return res.json({
         success: true,

@@ -7,49 +7,52 @@ import { apiClient } from '@/lib/apiClient';
 import { Application } from '@/types';
 import { Calendar, Clock, ChevronRight, Check } from 'lucide-react';
 
-const DEFAULT_APP: Application = {
-  id: 'app-501',
-  candidateName: 'Candidate User',
-  candidateEmail: 'candidate@example.com',
-  candidateAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  jobId: 'job-101',
-  jobTitle: 'Senior Fullstack Engineer (React & Node.js)',
-  orgName: 'Swiggy Technologies',
-  status: 'screening',
-  stage: 'Screened',
-  appliedDate: '2026-06-28',
-  resumeUrl: '/resumes/candidate.pdf',
-  skills: ['React', 'TypeScript', 'Node.js'],
-  targetRoles: ['Fullstack Engineer'],
-  scheduledSlots: ['2026-07-05 10:00 AM', '2026-07-05 02:00 PM', '2026-07-06 11:30 AM'],
-};
-
 export default function CandidateSchedulePage({ params }: { params: Promise<{ applicationId: string }> }) {
   const router = useRouter();
   const { applicationId } = use(params);
 
-  const [app, setApp] = useState<Application>(DEFAULT_APP);
+  const [app, setApp] = useState<Application | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchApp() {
       try {
+        setLoading(true);
         const res = await apiClient.get<Application>(`/applications/${applicationId}`);
         if (res) setApp(res);
       } catch (err) {
         console.error('Failed to load application schedule:', err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchApp();
   }, [applicationId]);
 
-  const slots = app.scheduledSlots || [
-    '2026-07-05 10:00 AM',
-    '2026-07-05 02:00 PM',
-    '2026-07-06 11:30 AM'
+  const slots = app?.scheduledSlots && app.scheduledSlots.length > 0 ? app.scheduledSlots : [
+    'Tomorrow at 10:00 AM',
+    'Tomorrow at 02:00 PM',
+    'Day after tomorrow at 11:30 AM'
   ];
 
   const [selectedSlot, setSelectedSlot] = useState(slots[0]);
   const [confirmed, setConfirmed] = useState(false);
+
+  if (loading) {
+    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading schedule options...</div>;
+  }
+
+  if (!app) {
+    return (
+      <div className="p-8 text-center space-y-4">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Application Not Found</h2>
+        <p className="text-xs text-slate-500">No application found to schedule.</p>
+        <Link href="/candidate/applications" className="inline-block text-xs font-bold text-emerald-600 hover:underline">
+          Back to Applications
+        </Link>
+      </div>
+    );
+  }
 
   const handleConfirm = async () => {
     try {

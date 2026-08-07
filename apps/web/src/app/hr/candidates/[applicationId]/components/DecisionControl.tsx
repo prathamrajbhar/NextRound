@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { ShieldCheck } from '@/lib/lucide-google-icons';
+import { api } from '@/lib/api';
 
 interface DecisionControlProps {
   appId: string;
@@ -29,18 +30,14 @@ export default function DecisionControl({
     setErrorMsg('');
     try {
       const evalId = evaluationId || appId;
-      const res = await fetch(`/api/v1/hr/evaluations/${evalId}/hr-override`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          decision: decision === 'hire' ? 'hire' : 'reject',
-          notes: reasoning,
-        }),
+      const res = await api.patch<{ message?: string }>(`/hr/evaluations/${evalId}/hr-override`, {
+        decision: decision === 'hire' ? 'hire' : 'reject',
+        notes: reasoning,
       });
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Failed to save HR decision override');
+      if (!res.success) {
+        const errorMsg = typeof res.error === 'string' ? res.error : res.error?.message || 'Failed to save HR decision override';
+        throw new Error(errorMsg);
       }
 
       setSaved(true);

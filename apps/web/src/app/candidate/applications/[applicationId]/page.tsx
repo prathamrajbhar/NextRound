@@ -28,35 +28,11 @@ import { ApplicationHeaderBanner } from './_components/ApplicationHeaderBanner';
 import { StagePipelineTimeline } from './_components/StagePipelineTimeline';
 import { CandidateScorecard } from './_components/CandidateScorecard';
 
-const DEFAULT_APP: Application = {
-  id: 'app-501',
-  candidateName: 'Candidate User',
-  candidateEmail: 'candidate@example.com',
-  candidateAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  jobId: 'job-101',
-  jobTitle: 'Senior Fullstack Engineer (React & Node.js)',
-  orgName: 'Swiggy Technologies',
-  status: 'screening',
-  stage: 'Screened',
-  appliedDate: '2026-06-28',
-  resumeUrl: '/resumes/candidate.pdf',
-  skills: ['React', 'TypeScript', 'Node.js'],
-  targetRoles: ['Fullstack Engineer'],
-  scores: {
-    composite: 94,
-    technical: 96,
-    communication: 92,
-    problemSolving: 95,
-    experience: 90,
-    confidence: 94,
-  },
-};
-
 export default function CandidateApplicationDetailPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
 
   const [loading, setLoading] = useState(true);
-  const [app, setApp] = useState<Application>(DEFAULT_APP);
+  const [app, setApp] = useState<Application | null>(null);
   const [job, setJob] = useState<Job | null>(null);
   const [offer, setOffer] = useState<Offer | null>(null);
   const [assessments, setAssessments] = useState<AssessmentResult[]>([]);
@@ -103,6 +79,22 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
     }
     fetchData();
   }, [applicationId]);
+
+  if (loading) {
+    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading application details...</div>;
+  }
+
+  if (!app) {
+    return (
+      <div className="p-8 text-center space-y-4">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Application Not Found</h2>
+        <p className="text-xs text-slate-500">No application record found for ID: {applicationId}</p>
+        <Link href="/candidate/applications" className="inline-block text-xs font-bold text-emerald-600 hover:underline">
+          Back to Applications
+        </Link>
+      </div>
+    );
+  }
 
   const nextSteps = [
     offer && {

@@ -6,49 +6,45 @@ import { apiClient } from '@/lib/apiClient';
 import { TakeHomeProject } from '@/types';
 import { ChevronRight, Code, CheckCircle2, Copy, FileText, Send, Check } from 'lucide-react';
 
-const DEFAULT_PROJECT: TakeHomeProject = {
-  id: 'th-101',
-  applicationId: 'app-501',
-  candidateName: 'Candidate User',
-  title: 'Real-Time Telemetry Dashboard Component',
-  description: 'Build a Next.js component that streams live web-socket events, calculates moving averages, and renders responsive Tailwind charts with zero layout shift.',
-  status: 'graded',
-  assignedDate: '2026-06-29',
-  dueDate: '2026-07-06',
-  submittedDate: '2026-07-02',
-  repoUrl: 'https://github.com/candidate/telemetry-dashboard',
-  rubric: [
-    { criterion: 'Architecture & Component Structure', weight: 35, score: 92 },
-    { criterion: 'TypeScript Strictness & Types', weight: 25, score: 95 },
-    { criterion: 'UI Design & Responsive Layouts', weight: 25, score: 88 },
-    { criterion: 'Performance & Optimization', weight: 15, score: 90 },
-  ],
-  overallScore: 91,
-  reviewerNotes: 'Clean modular code structure, proper state isolation, and great usage of custom hooks.',
-};
-
 export default function CandidateTakeHomeProjectPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
 
-  const [project, setProject] = useState<TakeHomeProject>(DEFAULT_PROJECT);
+  const [project, setProject] = useState<TakeHomeProject | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchProject() {
       try {
+        setLoading(true);
         const res = await apiClient.get<TakeHomeProject>(`/candidate/applications/${applicationId}/take-home`);
         if (res) setProject(res);
       } catch (err) {
         console.error('Failed to load take home project:', err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchProject();
   }, [applicationId]);
-  
+
   // Submission console states
   const [repoUrl, setRepoUrl] = useState('');
   const [comments, setComments] = useState('');
   const [copied, setCopied] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  if (loading) {
+    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading take-home assignment details...</div>;
+  }
+
+  if (!project) {
+    return (
+      <div className="p-8 text-center space-y-4">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">No Take-Home Project</h2>
+        <p className="text-xs text-slate-500">No take-home assignment assigned for this application stage.</p>
+      </div>
+    );
+  }
 
   const gitCommand = `git clone https://github.com/nextround-challenges/${project.id}.git`;
 

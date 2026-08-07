@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import RoleSwitcher from "@/components/RoleSwitcher";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -26,6 +25,14 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "NextRound — AI-Native Recruitment Marketplace",
   description: "Build hiring pipelines, run voice AI interviews, and get structured bias-audited recruitment shortlists with NextRound.",
+  icons: {
+    icon: [
+      { url: '/logo.png', type: 'image/png' },
+      { url: '/favicon.ico' },
+    ],
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 const themeInitScript = `
@@ -56,6 +63,9 @@ export default function RootLayout({
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <link rel="icon" href="/logo.png" type="image/png" sizes="any" />
+        <link rel="shortcut icon" href="/logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       </head>
       <body className="min-h-full flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white relative">
@@ -71,9 +81,6 @@ export default function RootLayout({
             <ToastProvider>
               {/* Page Content */}
               <main className="flex-grow flex flex-col">{children}</main>
-
-              {/* Global Developer/Reviewer Menu */}
-              <RoleSwitcher />
             </ToastProvider>
           </AuthProvider>
         </ThemeProvider>

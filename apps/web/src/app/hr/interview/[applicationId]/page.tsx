@@ -72,13 +72,9 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
     setSelectedResult(result);
 
     try {
-      await fetch(`/api/v1/interviews/hr/${applicationId}/result`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          result,
-          notes: notes || 'Completed 1:1 human video call evaluation.',
-        }),
+      await apiClient.post(`/interviews/hr/${applicationId}/result`, {
+        result,
+        notes: notes || 'Completed 1:1 human video call evaluation.',
       });
     } catch (e) {
       // API fallback
@@ -170,6 +166,7 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
               src={app.candidateAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=800'}
               alt={app.candidateName}
               fill
+              sizes="(max-width: 1024px) 100vw, 800px"
               className="object-cover opacity-85 filter contrast-105"
               unoptimized
             />

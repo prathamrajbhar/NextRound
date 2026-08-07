@@ -31,65 +31,57 @@ interface FeedbackData {
   keyStrengths?: string[];
   areasToImprove?: string[];
   metrics?: Record<string, number>;
+  telemetry?: { gazeFocusPercent?: number; speechWpm?: number; verified?: boolean };
   transcriptHighlights?: { speaker: string; timestamp: string; text: string; note: string }[];
 }
-
-const DEFAULT_FEEDBACK: FeedbackData = {
-  targetCompany: 'Swiggy',
-  targetRole: 'Senior Full Stack Engineer',
-  overallScore: 84,
-  detailedBreakdown: [{ category: 'Architecture', score: 85, feedback: 'Demonstrated deep familiarity with microservices and system architecture.' }],
-  keyStrengths: [
-    'Strong algorithmic reasoning and Big-O complexity analysis.',
-    'Clear verbal articulation of state isolation and React rendering performance.',
-    'Excellent gaze focus and camera engagement throughout the session.',
-  ],
-  areasToImprove: [
-    'Include explicit error validation paths in system edge-case handling.',
-    'Provide more quantitative metrics when describing system scale benchmarks.',
-  ],
-  metrics: {
-    'Technical Depth': 88,
-    'Communication & Tone': 85,
-    'System Architecture': 80,
-  },
-  transcriptHighlights: [
-    {
-      speaker: 'Candidate',
-      timestamp: '02:15',
-      text: 'How do you handle virtualization and performance optimization for long scroll lists in high-throughput applications?',
-      note: 'I implement windowing libraries like react-window to render only visible items within the viewport. Additionally, I memoize item row components using React.memo.',
-    },
-  ],
-};
 
 export default function MockFeedbackPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = use(params);
 
-  const [feedbackData, setFeedbackData] = useState<FeedbackData>(DEFAULT_FEEDBACK);
+  const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchFeedback() {
       try {
+        setLoading(true);
         const res = await apiClient.get<FeedbackData>(`/mock/sessions/${sessionId}/feedback`);
         if (res) setFeedbackData(res);
       } catch (err) {
-        console.error('Failed to fetch session feedback:', err);
+        console.error('Failed to load feedback:', err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchFeedback();
   }, [sessionId]);
 
-  const targetCompany = feedbackData.targetCompany || 'Swiggy';
-  const targetRole = feedbackData.targetRole || 'Senior Full Stack Engineer';
-  const score = feedbackData.overallScore || 84;
-  const feedback = feedbackData.detailedBreakdown?.[0]?.feedback || 'Demonstrated deep familiarity with architecture.';
-  const technicalScore = feedbackData.metrics?.['Technical Depth'] || 88;
-  const commScore = feedbackData.metrics?.['Communication & Tone'] || 85;
-  const sysScore = feedbackData.metrics?.['System Architecture'] || 80;
-  const strengths = feedbackData.keyStrengths || [];
-  const growthAreas = feedbackData.areasToImprove || [];
-  const transcriptHighlights = feedbackData.transcriptHighlights || [];
+  const targetCompany = feedbackData?.targetCompany || 'Practice Mode';
+  const targetRole = feedbackData?.targetRole || 'Software Engineering Role';
+  const score = feedbackData?.overallScore ?? 0;
+  const feedback = feedbackData?.detailedBreakdown?.[0]?.feedback || 'Practice session evaluation complete.';
+  const technicalScore = feedbackData?.metrics?.['Technical Depth'] ?? 0;
+  const commScore = feedbackData?.metrics?.['Communication & Tone'] ?? 0;
+  const sysScore = feedbackData?.metrics?.['System Architecture'] ?? 0;
+  const strengths = feedbackData?.keyStrengths || [];
+  const growthAreas = feedbackData?.areasToImprove || [];
+  const transcriptHighlights = feedbackData?.transcriptHighlights || [];
+
+  if (loading) {
+    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading interview feedback...</div>;
+  }
+
+  if (!feedbackData) {
+    return (
+      <div className="p-8 text-center space-y-4">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Feedback Unavailable</h2>
+        <p className="text-xs text-slate-500">Feedback for this session is being calculated or session was not completed.</p>
+        <Link href="/candidate/mock/new" className="inline-block text-xs font-bold text-emerald-600 hover:underline">
+          Start New Practice Mock
+        </Link>
+      </div>
+    );
+  }
 
   const performance =
     score >= 85
@@ -100,13 +92,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
 
   const transcript = feedbackData.transcriptHighlights && feedbackData.transcriptHighlights.length > 0
     ? feedbackData.transcriptHighlights.map(t => ({ question: t.speaker, answer: t.text, feedback: t.note }))
-    : [
-        {
-          question: 'How do you handle virtualization and performance optimization for long scroll lists in high-throughput applications?',
-          answer: 'I implement windowing libraries like react-window to render only visible items within the viewport. Additionally, I memoize item row components using React.memo.',
-          feedback: 'Excellent explanation of windowing techniques and memory optimization.',
-        }
-      ];
+    : [];
 
   return (
     <div className="w-full space-y-6 pb-12 animate-in fade-in duration-300">
@@ -187,16 +173,18 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
                   <CheckCircle2 className="h-4 w-4 text-emerald-500" /> Key Strengths
                 </div>
                 <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                  {(strengths.length > 0 ? strengths : [
-                    'Strong algorithmic reasoning and Big-O complexity analysis.',
-                    'Clear verbal articulation of state isolation and React rendering performance.',
-                    'Excellent gaze focus and camera engagement throughout the session.'
-                  ]).map((s, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></span>
-                      <span>{s}</span>
+                  {strengths.length > 0 ? (
+                    strengths.map((s, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0"></span>
+                        <span>{s}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-slate-400 dark:text-slate-500 text-xs italic">
+                      No specific strengths recorded for this session.
                     </li>
-                  ))}
+                  )}
                 </ul>
               </div>
 
@@ -205,15 +193,18 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
                   <Target className="h-4 w-4 text-amber-500" /> Focus Areas for Growth
                 </div>
                 <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium">
-                  {(growthAreas.length > 0 ? growthAreas : [
-                    'Include explicit error validation paths in system edge-case handling.',
-                    'Provide more quantitative metrics when describing system scale benchmarks.'
-                  ]).map((g, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0"></span>
-                      <span>{g}</span>
+                  {growthAreas.length > 0 ? (
+                    growthAreas.map((g, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0"></span>
+                        <span>{g}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-slate-400 dark:text-slate-500 text-xs italic">
+                      No specific growth areas recorded for this session.
                     </li>
-                  ))}
+                  )}
                 </ul>
               </div>
             </div>
@@ -245,7 +236,9 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
                     <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100 font-display">
                       {c.score}%
                     </span>
-                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Target Passed</span>
+                    <span className={`text-[10px] font-bold ${c.score >= 70 ? 'text-emerald-600 dark:text-emerald-400' : c.score > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400'}`}>
+                      {c.score >= 70 ? 'Target Passed' : c.score > 0 ? 'Needs Calibration' : 'Pending Evaluation'}
+                    </span>
                   </div>
                   <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                     <div className={`${c.color} h-full rounded-full`} style={{ width: `${c.score}%` }} />
@@ -267,36 +260,42 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
               </span>
             </div>
 
-            <div className="space-y-6">
-              {transcript.map((item: { question: string; answer: string; feedback?: string }, idx: number) => (
-                <div key={idx} className="space-y-3 pb-5 border-b border-slate-200/60 dark:border-slate-800/60 last:border-none last:pb-0">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-orange-950/60 border border-brand-200/60 dark:border-orange-900/60 text-[10px] font-extrabold text-brand-700 dark:text-orange-300 uppercase">
-                      Question {idx + 1}
-                    </span>
-                  </div>
+            {transcript.length > 0 ? (
+              <div className="space-y-6">
+                {transcript.map((item: { question: string; answer: string; feedback?: string }, idx: number) => (
+                  <div key={idx} className="space-y-3 pb-5 border-b border-slate-200/60 dark:border-slate-800/60 last:border-none last:pb-0">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-orange-950/60 border border-brand-200/60 dark:border-orange-900/60 text-[10px] font-extrabold text-brand-700 dark:text-orange-300 uppercase">
+                        Question {idx + 1}
+                      </span>
+                    </div>
 
-                  <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 leading-relaxed font-display">
-                    {item.question}
-                  </h4>
+                    <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 leading-relaxed font-display">
+                      {item.question}
+                    </h4>
 
-                  <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 p-4 rounded-2xl text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-semibold">
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase block mb-1">
-                      Candidate Response
-                    </span>
-                    {item.answer}
-                  </div>
+                    <div className="bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 p-4 rounded-2xl text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-semibold">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase block mb-1">
+                        Candidate Response
+                      </span>
+                      {item.answer}
+                    </div>
 
-                  <div className="flex items-start gap-2.5 bg-emerald-50/50 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-200/60 dark:border-emerald-900/60 text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <strong className="text-slate-900 dark:text-slate-100">Evaluator Calibration: </strong>
-                      {item.feedback}
+                    <div className="flex items-start gap-2.5 bg-emerald-50/50 dark:bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-200/60 dark:border-emerald-900/60 text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <strong className="text-slate-900 dark:text-slate-100">Evaluator Calibration: </strong>
+                        {item.feedback}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400 font-semibold border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
+                No recorded Q&amp;A responses found for this session.
+              </div>
+            )}
           </div>
         </div>
 
@@ -309,8 +308,12 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
                 <Eye className="h-4 w-4 text-indigo-500" />
                 Gaze &amp; Biometric Telemetry
               </h3>
-              <span className="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-900/60">
-                Verified
+              <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded border ${
+                feedbackData?.telemetry?.verified
+                  ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200/60 dark:border-emerald-900/60'
+                  : 'text-slate-400 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700'
+              }`}>
+                {feedbackData?.telemetry?.verified ? 'Verified' : 'Pending Verification'}
               </span>
             </div>
 
@@ -321,10 +324,12 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
                     Screen Gaze Focus
                   </span>
                   <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display">
-                    94% Direct Contact
+                    {feedbackData?.telemetry?.gazeFocusPercent && feedbackData.telemetry.gazeFocusPercent > 0
+                      ? `${feedbackData.telemetry.gazeFocusPercent}% Direct Contact`
+                      : 'No Video Stream'}
                   </span>
                 </div>
-                <ShieldCheck className="h-5 w-5 text-emerald-500" />
+                <ShieldCheck className={`h-5 w-5 ${feedbackData?.telemetry?.gazeFocusPercent ? 'text-emerald-500' : 'text-slate-400'}`} />
               </div>
 
               <div className="p-3.5 rounded-2xl bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
@@ -333,10 +338,12 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
                     Speech Pacing
                   </span>
                   <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display">
-                    142 WPM (Optimal)
+                    {feedbackData?.telemetry?.speechWpm && feedbackData.telemetry.speechWpm > 0
+                      ? `${feedbackData.telemetry.speechWpm} WPM (${feedbackData.telemetry.speechWpm >= 110 && feedbackData.telemetry.speechWpm <= 160 ? 'Optimal' : 'Measured'})`
+                      : '0 WPM (No Speech Recorded)'}
                   </span>
                 </div>
-                <Zap className="h-5 w-5 text-amber-500" />
+                <Zap className={`h-5 w-5 ${feedbackData?.telemetry?.speechWpm ? 'text-amber-500' : 'text-slate-400'}`} />
               </div>
             </div>
           </div>

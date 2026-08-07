@@ -2,17 +2,16 @@
 
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { Application } from '@/types';
+import { useInterviewSession } from '@/hooks/useInterviewSession';
+import InterviewActiveConsole from '@/components/interview/InterviewActiveConsole';
 import {
   Mic,
   MicOff,
   VideoOff,
-  PhoneOff,
   CheckCircle2,
-  Clock,
   ArrowLeft,
   Video as VideoIcon,
   UserCheck,
@@ -24,9 +23,6 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
 
   const [app, setApp] = useState<Application | null>(null);
   const [joined, setJoined] = useState(false);
-  const [micActive, setMicActive] = useState(true);
-  const [camActive, setCamActive] = useState(true);
-  const [callDuration, setCallDuration] = useState(0);
 
   useEffect(() => {
     async function fetchApp() {
@@ -58,26 +54,43 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     fetchApp();
   }, [applicationId]);
 
-  // Call timer effect when joined
-  useEffect(() => {
-    if (!joined) return;
-    const interval = setInterval(() => {
-      setCallDuration((prev) => prev + 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [joined]);
+  const companyName = app?.orgName || 'Swiggy';
+  const jobTitle = app?.jobTitle || 'Senior Full Stack Engineer';
 
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+  const {
+    stage,
+    phase,
+    messages,
+    timeRemaining,
+    micActive,
+    camActive,
+    isAnalyzing,
+    isSimulating,
+    proctorTelemetry,
+    startSession,
+    submitAnswer,
+    simulateSpeaking,
+    wrapUp,
+    toggleMic,
+    toggleCam,
+  } = useInterviewSession({
+    company: companyName,
+    role: jobTitle,
+    difficulty: 'senior',
+    interviewId: applicationId,
+    storageKey: `candidateHrRound_${applicationId}`,
+    onComplete: () => {
+      if (app) {
+        router.push(`/candidate/applications/${app.id}`);
+      } else {
+        router.push('/candidate/dashboard');
+      }
+    },
+  });
 
-  const handleLeaveCall = () => {
-    setJoined(false);
-    if (app) {
-      router.push(`/candidate/applications/${app.id}`);
-    }
+  const handleJoinCall = () => {
+    startSession();
+    setJoined(true);
   };
 
   if (!app) {
@@ -110,7 +123,7 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
 
             <div className="space-y-1">
               <span className="text-[10px] font-extrabold uppercase tracking-widest text-brand-400">
-                Final Step • Live 1:1 Call
+                Final Step • Live Studio Interview
               </span>
               <h1 className="text-2xl font-extrabold text-white font-display">
                 Human HR Round Waiting Room
@@ -123,10 +136,10 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
             <div className="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 text-xs text-slate-300 space-y-2 text-left">
               <div className="flex items-center gap-2 text-emerald-400 font-bold">
                 <CheckCircle2 className="h-4 w-4" />
-                <span>All AI Vetting Stages Completed</span>
+                <span>All Vetting Stages Completed</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                You have passed all AI-driven assessments. Your HR representative is ready to start your 1:1 video call.
+                Your HR representative and evaluation AI are ready to start your live studio video call.
               </p>
             </div>
 
@@ -139,7 +152,7 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
               <div className="flex items-center justify-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setMicActive(!micActive)}
+                  onClick={toggleMic}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                     micActive ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30' : 'bg-red-950 text-red-400 border border-red-800'
                   }`}
@@ -150,7 +163,7 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
 
                 <button
                   type="button"
-                  onClick={() => setCamActive(!camActive)}
+                  onClick={toggleCam}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                     camActive ? 'bg-slate-800 text-emerald-400 border border-emerald-500/30' : 'bg-red-950 text-red-400 border border-red-800'
                   }`}
@@ -164,11 +177,11 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
             {/* Join Call CTA Button */}
             <button
               type="button"
-              onClick={() => setJoined(true)}
+              onClick={handleJoinCall}
               className="w-full py-4 rounded-2xl bg-brand-600 hover:bg-brand-500 text-white font-extrabold text-sm shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2 hover:scale-[1.01]"
             >
               <VideoIcon className="h-5 w-5" />
-              <span>Join Live HR Video Call</span>
+              <span>Join Studio Video Call</span>
             </button>
           </div>
         </div>
@@ -176,117 +189,28 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     );
   }
 
-  // Active Live Video Call Room View
+  // Active Studio Video Call Room View (using real InterviewActiveConsole)
   return (
-    <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden">
-      {/* Top Call Header */}
-      <header className="h-16 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md px-6 flex items-center justify-between z-20">
-        <div className="flex items-center gap-3">
-          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <div>
-            <h1 className="text-sm font-extrabold text-white font-display">
-              Live HR 1:1 Video Call — {app.orgName}
-            </h1>
-            <p className="text-[11px] text-slate-400 font-medium">{app.jobTitle}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-slate-800/80 px-3.5 py-1.5 rounded-full border border-slate-700 text-xs font-mono font-bold text-slate-300">
-            <Clock className="h-3.5 w-3.5 text-brand-400" />
-            <span>{formatDuration(callDuration)}</span>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleLeaveCall}
-            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer shadow-md"
-          >
-            <PhoneOff className="h-4 w-4" />
-            <span>Leave Call</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Main Video Grid Viewport */}
-      <div className="flex-1 p-6 relative flex flex-col items-center justify-center">
-        <div className="w-full max-w-5xl flex-1 relative rounded-3xl overflow-hidden border border-slate-800 bg-slate-900 shadow-2xl flex items-center justify-center min-h-[480px]">
-          {/* Main HR Representative Simulated Video Feed */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent z-10"></div>
-          
-          <div className="relative z-10 text-center space-y-4 max-w-md p-6">
-            <div className="h-20 w-20 rounded-full bg-brand-500/20 border-2 border-brand-400 flex items-center justify-center mx-auto text-brand-400 font-bold text-2xl shadow-xl">
-              HR
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-extrabold text-white font-display">
-                HR Representative ({app.orgName})
-              </h3>
-              <span className="text-xs text-emerald-400 font-bold block">
-                Connected • High Definition WebRTC Stream
-              </span>
-            </div>
-            <p className="text-xs text-slate-400 leading-relaxed font-medium">
-              Live human interview in progress. Your HR manager is evaluating cultural fit and answering your candidate questions.
-            </p>
-          </div>
-
-          {/* Candidate Self Video PIP Box */}
-          <div className="absolute bottom-4 right-4 z-20 w-48 h-36 rounded-2xl overflow-hidden border-2 border-slate-700 bg-slate-950 shadow-2xl">
-            {camActive ? (
-              <Image
-                src={app.candidateAvatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300'}
-                alt="Your Preview"
-                fill
-                className="object-cover"
-                unoptimized
-              />
-            ) : (
-              <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-slate-500 gap-1">
-                <VideoOff className="h-6 w-6" />
-                <span className="text-[10px] font-bold">Your Camera Off</span>
-              </div>
-            )}
-            <div className="absolute bottom-2 left-2 z-10 bg-slate-950/80 px-2 py-0.5 rounded text-[9px] font-bold text-slate-300">
-              You
-            </div>
-          </div>
-
-          {/* Floating Controls Overlay */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-3 bg-slate-950/90 backdrop-blur-md px-6 py-3 rounded-full border border-slate-800 shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setMicActive(!micActive)}
-              className={`p-3 rounded-full transition-all cursor-pointer ${
-                micActive ? 'bg-slate-800 hover:bg-slate-700 text-slate-200' : 'bg-red-600 text-white'
-              }`}
-            >
-              {micActive ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCamActive(!camActive)}
-              className={`p-3 rounded-full transition-all cursor-pointer ${
-                camActive ? 'bg-slate-800 hover:bg-slate-700 text-slate-200' : 'bg-red-600 text-white'
-              }`}
-            >
-              {camActive ? <VideoIcon className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
-            </button>
-
-            <div className="h-6 w-px bg-slate-800 mx-2"></div>
-
-            <button
-              type="button"
-              onClick={handleLeaveCall}
-              className="px-6 py-2.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-extrabold transition-all cursor-pointer shadow-md flex items-center gap-2"
-            >
-              <PhoneOff className="h-4 w-4" />
-              <span>Leave Call</span>
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white flex flex-col justify-between overflow-hidden p-2">
+      <InterviewActiveConsole
+        messages={messages}
+        phase={phase}
+        timeRemaining={timeRemaining}
+        micActive={micActive}
+        camActive={camActive}
+        isAnalyzing={isAnalyzing}
+        isSimulating={isSimulating}
+        proctorTelemetry={proctorTelemetry}
+        isDarkTheme={true}
+        onSubmitAnswer={submitAnswer}
+        onSimulateSpeaking={simulateSpeaking}
+        onEndSession={wrapUp}
+        onToggleMic={toggleMic}
+        onToggleCam={toggleCam}
+        company={companyName}
+        role={jobTitle}
+      />
     </div>
   );
 }
+

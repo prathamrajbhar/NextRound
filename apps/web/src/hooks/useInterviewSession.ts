@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getTopicsForRoleAndCompany, defaultAnswers } from '@/lib/interviewTopics';
 import { evaluateInterview } from '@/lib/interviewScorer';
+import { api } from '@/lib/api';
 
 export interface Message {
   id: string;
@@ -65,15 +66,11 @@ export function useInterviewSession({
         const eng = Math.floor(Math.random() * 8) + 92;
         setProctorTelemetry({ faceCount: 1, gazeCentered: gaze, engagementIndex: eng });
 
-        await fetch(`/api/v1/interviews/${interviewId}/proctoring`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            face_count: 1,
-            gaze_centered: gaze,
-            engagement_index: eng,
-            multiple_faces_detected: false,
-          }),
+        await api.patch(`/interviews/${interviewId}/proctoring`, {
+          face_count: 1,
+          gaze_centered: gaze,
+          engagement_index: eng,
+          multiple_faces_detected: false,
         });
       } catch (err) {
         // Silently swallow background telemetry errors
@@ -89,12 +86,8 @@ export function useInterviewSession({
 
     if (interviewId) {
       try {
-        await fetch(`/api/v1/interviews/${interviewId}/consent`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ consent: true }),
-        });
-        await fetch(`/api/v1/interviews/${interviewId}/session-token`, { method: 'POST' });
+        await api.post(`/interviews/${interviewId}/consent`, { consent: true });
+        await api.post(`/interviews/${interviewId}/session-token`);
       } catch (e) {
         // Continue with local session fallback
       }
@@ -192,11 +185,7 @@ export function useInterviewSession({
   const handleComplete = async () => {
     if (interviewId) {
       try {
-        await fetch(`/api/v1/interviews/${interviewId}/end`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ transcript: messages }),
-        });
+        await api.post(`/interviews/${interviewId}/end`, { transcript: messages });
       } catch (e) {
         // Fallback swallow
       }

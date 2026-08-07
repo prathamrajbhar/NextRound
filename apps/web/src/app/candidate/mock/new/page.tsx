@@ -71,13 +71,12 @@ function MockInterviewSetupForm() {
         focusAreas: [track],
       });
       if (res?.sessionId) {
-        router.push(`/candidate/mock/${res.sessionId}`);
-      } else {
-        router.push(`/candidate/mock/mock-session-123`);
+        router.push(
+          `/candidate/mock/${res.sessionId}?track=${track}&company=${encodeURIComponent(company)}&role=${encodeURIComponent(role)}&difficulty=${difficulty}`
+        );
       }
     } catch (err) {
       console.error('Failed to create mock session:', err);
-      router.push(`/candidate/mock/mock-session-123`);
     } finally {
       setLoading(false);
     }

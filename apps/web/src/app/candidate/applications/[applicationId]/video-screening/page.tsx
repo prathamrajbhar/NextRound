@@ -6,46 +6,22 @@ import { apiClient } from '@/lib/apiClient';
 import { AsyncScreening } from '@/types';
 import { ChevronRight, Camera, Video, Play, Clock, AlertTriangle, RefreshCw, StopCircle } from 'lucide-react';
 
-const DEFAULT_SCREENING: AsyncScreening = {
-  id: 'scr-101',
-  applicationId: 'app-501',
-  candidateName: 'Candidate User',
-  jobTitle: 'Senior Fullstack Engineer (React & Node.js)',
-  status: 'invited',
-  invitedDate: '2026-06-29',
-  deadline: '2026-07-08',
-  responses: [
-    {
-      questionId: 'q1',
-      question: 'Walk us through how you optimize core web vitals and React render cycles in a large dashboard app.',
-      videoUrl: '/videos/sample-1.mp4',
-      durationSeconds: 105,
-      attempts: 1,
-      aiSummary: 'Explained React memoization, code-splitting, and lazy loading assets to reduce total blocking time.',
-    },
-    {
-      questionId: 'q2',
-      question: 'Describe a challenging architectural trade-off you had to make between REST vs GraphQL.',
-      videoUrl: '/videos/sample-2.mp4',
-      durationSeconds: 120,
-      attempts: 2,
-      aiSummary: 'Compared client payload overhead vs backend caching complexity, advocating for REST with tight schemas.',
-    },
-  ],
-};
-
 export default function CandidateVideoScreeningPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
 
-  const [screening, setScreening] = useState<AsyncScreening>(DEFAULT_SCREENING);
+  const [screening, setScreening] = useState<AsyncScreening | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchScreening() {
       try {
+        setLoading(true);
         const res = await apiClient.get<AsyncScreening>(`/candidate/applications/${applicationId}/video-screening`);
         if (res) setScreening(res);
       } catch (err) {
         console.error('Failed to load video screening:', err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchScreening();
@@ -82,7 +58,7 @@ export default function CandidateVideoScreeningPage({ params }: { params: Promis
   const handleStopRecord = () => {
     setRecordingActive(false);
     // save response
-    const qId = screening.responses[currentIdx]?.questionId || `q-${currentIdx}`;
+    const qId = screening?.responses[currentIdx]?.questionId || `q-${currentIdx}`;
     setRecordedList({
       ...recordedList,
       [qId]: { duration: recordingTimer || 45, attempts },
@@ -90,7 +66,7 @@ export default function CandidateVideoScreeningPage({ params }: { params: Promis
   };
 
   const handleNextQuestion = () => {
-    if (currentIdx < screening.responses.length - 1) {
+    if (screening && currentIdx < screening.responses.length - 1) {
       setCurrentIdx((prev) => prev + 1);
       setAttempts(1);
       setRecordingTimer(0);
@@ -105,6 +81,7 @@ export default function CandidateVideoScreeningPage({ params }: { params: Promis
   };
 
   const handleSubmitScreening = () => {
+    if (!screening) return;
     setIsCapturing(false);
     // Simulate updating screening results
     setScreening({
@@ -134,6 +111,22 @@ export default function CandidateVideoScreeningPage({ params }: { params: Promis
         return 'bg-indigo-50 text-indigo-700 border-indigo-100';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center text-slate-500 font-medium">
+        Loading video screening details...
+      </div>
+    );
+  }
+
+  if (!screening) {
+    return (
+      <div className="p-8 text-center text-slate-500 font-medium">
+        Video screening details not found.
+      </div>
+    );
+  }
 
   const currentQ = screening.responses[currentIdx];
   const currentRecorded = currentQ ? recordedList[currentQ.questionId] : undefined;
@@ -291,11 +284,11 @@ export default function CandidateVideoScreeningPage({ params }: { params: Promis
               </span>
               <div>
                 <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">Video Interview</h1>
-                <p className="text-xs text-slate-500 font-semibold">{screening.jobTitle} at <span className="text-indigo-600 font-bold">Swiggy</span></p>
+                <p className="text-xs text-slate-500 font-semibold">{screening?.jobTitle || 'Role Assessment'}</p>
               </div>
             </div>
-            <span className={`text-[10px] font-bold px-3 py-1 rounded-full border uppercase tracking-wider ${getStatusPill(screening.status)}`}>
-              {screening.status}
+            <span className={`text-[10px] font-bold px-3 py-1 rounded-full border uppercase tracking-wider ${screening ? getStatusPill(screening.status) : ''}`}>
+              {screening?.status || 'Invited'}
             </span>
           </div>
 

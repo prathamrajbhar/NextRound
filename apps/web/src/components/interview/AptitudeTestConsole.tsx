@@ -29,7 +29,7 @@ interface Question {
   correctIndex?: number;
 }
 
-const mockAptitudeQuestions: Question[] = [
+const defaultAptitudeQuestions: Question[] = [
   {
     id: 1,
     question: 'A food delivery system processes 1,200 orders per minute. If driver dispatch efficiency increases by 25%, how many orders are dispatched per 5-minute interval?',
@@ -68,7 +68,7 @@ export default function AptitudeTestConsole({
   applicationId,
   onComplete,
 }: AptitudeTestConsoleProps) {
-  const [questions, setQuestions] = useState<Question[]>(mockAptitudeQuestions);
+  const [questions, setQuestions] = useState<Question[]>(defaultAptitudeQuestions);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string | number, number>>({});
   const [timeLeft, setTimeLeft] = useState(900); // 15 mins
@@ -110,7 +110,7 @@ export default function AptitudeTestConsole({
     return () => clearInterval(interval);
   }, [submitted]);
 
-  const currentQ = questions[currentIndex] || mockAptitudeQuestions[0];
+  const currentQ = questions[currentIndex] || defaultAptitudeQuestions[0];
 
   const handleSelectOption = (optIndex: number) => {
     setAnswers((prev) => ({ ...prev, [currentQ.id]: optIndex }));

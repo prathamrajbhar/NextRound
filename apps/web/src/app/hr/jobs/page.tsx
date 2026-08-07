@@ -17,7 +17,7 @@ export default function HrJobsList() {
       try {
         setLoading(true);
         const data = await apiClient.get<Job[]>('/jobs/org').catch(() => apiClient.get<Job[]>('/jobs'));
-        setJobs(data || []);
+        setJobs(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Failed to fetch jobs:', err);
       } finally {

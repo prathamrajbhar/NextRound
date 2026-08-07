@@ -15,13 +15,16 @@ import {
   LogOut
 } from '@/lib/lucide-google-icons';
 
+import { useAuthContext } from '@/contexts/AuthContext';
+
 interface CandidateSidebarProps {
   avatar?: string;
   name?: string;
 }
 
-export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = 'Ananya Iyer' }: CandidateSidebarProps) {
+export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = 'Candidate User' }: CandidateSidebarProps) {
   const pathname = usePathname();
+  const { logout } = useAuthContext();
 
   const menuGroups = [
     {
@@ -58,6 +61,7 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
               src="/logo.png"
               alt="NextRound Logo"
               fill
+              sizes="36px"
               className="object-cover scale-[1.3]"
             />
           </div>
@@ -129,6 +133,7 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
             </div>
           </div>
           <button
+            onClick={() => logout()}
             className="p-1 rounded-lg text-slate-400 dark:text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-950/40 transition-colors duration-200 cursor-pointer"
             title="Log Out"
           >

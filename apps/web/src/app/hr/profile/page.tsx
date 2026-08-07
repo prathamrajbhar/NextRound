@@ -20,15 +20,19 @@ import {
 import { Autocomplete } from '@/components/ui';
 import { SUGGESTED_COMPANIES, SUGGESTED_ROLES } from '@/lib/constants';
 
+import { useAuthContext } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/apiClient';
+
 export default function HrProfile() {
-  const [name, setName] = useState('John Recruiter');
-  const [email, setEmail] = useState('john.recruiter@vercel.com');
-  const [role, setRole] = useState('Talent Acquisition Lead');
-  const [company, setCompany] = useState('Vercel');
-  const [linkedinUrl, setLinkedinUrl] = useState('https://linkedin.com/in/johnrecruiter');
+  const { user } = useAuthContext();
+  const [name, setName] = useState(() => user?.email ? user.email.split('@')[0] : '');
+  const [email, setEmail] = useState(() => user?.email || '');
+  const [role, setRole] = useState('Recruiter');
+  const [company, setCompany] = useState('');
+  const [linkedinUrl, setLinkedinUrl] = useState('');
   const [avatar, setAvatar] = useState('/avatar-boy.jpg');
-  const [licenseName, setLicenseName] = useState('vercel_hiring_auth_2026.pdf');
-  const [specialties, setSpecialties] = useState<string[]>(['Frontend Development', 'Backend Engineering', 'Product Management', 'AI Research']);
+  const [licenseName, setLicenseName] = useState('Verification Pending');
+  const [specialties, setSpecialties] = useState<string[]>([]);
   const [newSpecialty, setNewSpecialty] = useState('');
   
   const [detailsSaved, setDetailsSaved] = useState(false);
@@ -36,24 +40,44 @@ export default function HrProfile() {
   const [deleted, setDeleted] = useState(false);
 
   useEffect(() => {
-    const savedName = localStorage.getItem('hr_name');
-    const savedEmail = localStorage.getItem('hr_email');
-    const savedRole = localStorage.getItem('hr_role');
-    const savedCompany = localStorage.getItem('hr_company');
-    const savedLinkedin = localStorage.getItem('hr_linkedin');
-    const savedAvatar = localStorage.getItem('hr_avatar');
-    
-    setTimeout(() => {
-      if (savedName) setName(savedName);
-      if (savedEmail) setEmail(savedEmail);
-      if (savedRole) setRole(savedRole);
-      if (savedCompany) setCompany(savedCompany);
-      if (savedLinkedin) setLinkedinUrl(savedLinkedin);
-      if (savedAvatar) setAvatar(savedAvatar);
-    }, 0);
-  }, []);
+    async function loadHrProfile() {
+      if (user?.email) {
+        setEmail(user.email);
+        setName(user.email.split('@')[0]);
+      }
 
-  const handleSave = () => {
+      try {
+        const res = await apiClient.get<{ profile?: Record<string, unknown>; name?: string; full_name?: string; email?: string; role?: string; company?: string; org_name?: string; linkedin_url?: string }>('/hr/profile');
+        if (res) {
+          const profileObj = res.profile || res;
+          if (typeof profileObj.name === 'string') setName(profileObj.name);
+          if (typeof profileObj.full_name === 'string') setName(profileObj.full_name);
+          if (typeof profileObj.email === 'string') setEmail(profileObj.email);
+          if (typeof profileObj.role === 'string') setRole(profileObj.role);
+          if (typeof profileObj.company === 'string') setCompany(profileObj.company);
+          if (typeof profileObj.org_name === 'string') setCompany(profileObj.org_name);
+          if (typeof profileObj.linkedin_url === 'string') setLinkedinUrl(profileObj.linkedin_url);
+        }
+      } catch {
+        const savedName = localStorage.getItem('hr_name');
+        const savedEmail = localStorage.getItem('hr_email');
+        const savedRole = localStorage.getItem('hr_role');
+        const savedCompany = localStorage.getItem('hr_company');
+        const savedLinkedin = localStorage.getItem('hr_linkedin');
+        const savedAvatar = localStorage.getItem('hr_avatar');
+        
+        if (savedName) setName(savedName);
+        if (savedEmail) setEmail(savedEmail);
+        if (savedRole) setRole(savedRole);
+        if (savedCompany) setCompany(savedCompany);
+        if (savedLinkedin) setLinkedinUrl(savedLinkedin);
+        if (savedAvatar) setAvatar(savedAvatar);
+      }
+    }
+    loadHrProfile();
+  }, [user]);
+
+  const handleSave = async () => {
     localStorage.setItem('hr_name', name);
     localStorage.setItem('hr_email', email);
     localStorage.setItem('hr_role', role);

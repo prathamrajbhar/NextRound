@@ -4,9 +4,12 @@ import type { NextRequest } from 'next/server';
 export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('access_token')?.value;
   const refreshToken = request.cookies.get('refresh_token')?.value;
+  const userRole = request.cookies.get('user_role')?.value;
   const hasToken = !!(accessToken || refreshToken);
 
   const { pathname } = request.nextUrl;
+
+  const targetDashboard = userRole === 'hr' ? '/hr/dashboard' : '/candidate/dashboard';
 
   // Protected route checking
   if (pathname.startsWith('/hr')) {
@@ -25,9 +28,9 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Redirect away from auth pages if logged in
+  // Redirect away from auth pages if logged in directly to role-specific dashboard
   if (hasToken && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/', request.url));
+    return NextResponse.redirect(new URL(targetDashboard, request.url));
   }
 
   return NextResponse.next();

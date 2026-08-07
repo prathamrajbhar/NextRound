@@ -23,10 +23,13 @@ export default function HrTalentPoolPage() {
           apiClient.get<Application[]>('/applications')
         );
         if (data) {
-          setCandidates(data);
+          setCandidates(Array.isArray(data) ? data : []);
+        } else {
+          setCandidates([]);
         }
       } catch (err) {
         console.error('Failed to load talent pool:', err);
+        setCandidates([]);
       } finally {
         setLoading(false);
       }
@@ -34,16 +37,18 @@ export default function HrTalentPoolPage() {
     fetchTalentPool();
   }, []);
 
+  const safeCandidates = Array.isArray(candidates) ? candidates : [];
+
   // Derive unique skills and statuses for filter dropdowns
   const allSkills = Array.from(
-    new Set(candidates.flatMap((app) => app.skills || []))
+    new Set(safeCandidates.flatMap((app) => app.skills || []))
   ).sort();
 
   const allStatuses = Array.from(
-    new Set(candidates.map((app) => app.status))
+    new Set(safeCandidates.map((app) => app.status))
   ).sort();
 
-  const filteredCandidates = candidates.filter((app) => {
+  const filteredCandidates = safeCandidates.filter((app) => {
     const nameMatch = (app.candidateName || '').toLowerCase().includes(search.toLowerCase()) ||
       (app.candidateEmail || '').toLowerCase().includes(search.toLowerCase());
 

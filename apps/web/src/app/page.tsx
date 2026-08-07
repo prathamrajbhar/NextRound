@@ -5,9 +5,14 @@ import Link from 'next/link';
 import PublicNavbar from '@/components/PublicNavbar';
 import PublicFooter from '@/components/PublicFooter';
 import { Sparkles, Brain, Cpu, ShieldCheck, Clock, ArrowLeftRight, User } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function LandingPage() {
   const [activeAudience, setActiveAudience] = useState<'companies' | 'candidates'>('companies');
+  const { user } = useAuth();
+
+  const hrHref = user ? (user.role === 'hr' ? '/hr/dashboard' : '/candidate/dashboard') : '/signup?role=hr';
+  const candidateHref = user ? (user.role === 'candidate' ? '/candidate/dashboard' : '/hr/dashboard') : '/signup?role=candidate';
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -28,16 +33,16 @@ export default function LandingPage() {
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <Link
-              href="/signup?role=hr"
+              href={hrHref}
               className="rounded-full bg-indigo-600 dark:bg-orange-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-150 dark:shadow-orange-900/30 hover:bg-indigo-700 dark:hover:bg-orange-700 transition-all hover:scale-[1.02]"
             >
-              Hire Talent (Employers)
+              {user ? 'Go to HR Dashboard' : 'Hire Talent (Employers)'}
             </Link>
             <Link
-              href="/signup?role=candidate"
+              href={candidateHref}
               className="rounded-full bg-white dark:bg-slate-800 px-6 py-3.5 text-sm font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all hover:scale-[1.02] glass-panel"
             >
-              Explore Roles (Candidates)
+              {user ? 'Go to Candidate Dashboard' : 'Explore Roles (Candidates)'}
             </Link>
           </div>
         </div>

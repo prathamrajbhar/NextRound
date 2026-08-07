@@ -24,10 +24,22 @@ export default function CandidateJobsPage() {
         ]);
 
         if (jobsRes.status === 'fulfilled' && jobsRes.value) {
-          setJobs(jobsRes.value);
+          const rawVal = jobsRes.value as unknown;
+          const jobsList = Array.isArray(rawVal)
+            ? rawVal
+            : typeof rawVal === 'object' && rawVal !== null && 'jobs' in rawVal && Array.isArray((rawVal as { jobs: Job[] }).jobs)
+            ? (rawVal as { jobs: Job[] }).jobs
+            : [];
+          setJobs(jobsList);
         }
         if (appsRes.status === 'fulfilled' && appsRes.value) {
-          setApplications(appsRes.value);
+          const rawApps = appsRes.value as unknown;
+          const appsList = Array.isArray(rawApps)
+            ? rawApps
+            : typeof rawApps === 'object' && rawApps !== null && 'applications' in rawApps && Array.isArray((rawApps as { applications: Application[] }).applications)
+            ? (rawApps as { applications: Application[] }).applications
+            : [];
+          setApplications(appsList);
         }
       } catch (err) {
         console.error('Failed to load opportunities:', err);
@@ -38,8 +50,10 @@ export default function CandidateJobsPage() {
     fetchData();
   }, []);
 
+  const safeJobsList = Array.isArray(jobs) ? jobs : [];
+
   // Filter jobs based on search criteria
-  const filteredJobs = jobs.filter((job) => {
+  const filteredJobs = safeJobsList.filter((job) => {
     const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase()) ||
                           job.orgName.toLowerCase().includes(search.toLowerCase()) ||
                           job.description.toLowerCase().includes(search.toLowerCase());

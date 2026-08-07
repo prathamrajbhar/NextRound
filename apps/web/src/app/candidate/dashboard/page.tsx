@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { Application, Job } from '@/types';
 import { JobCard } from '@/components/ui';
 import { Briefcase, Calendar, ArrowRight, Mic, Award } from '@/lib/lucide-google-icons';
@@ -14,31 +15,42 @@ interface CandidateDashboardData {
 }
 
 export default function CandidateDashboard() {
+  const { user } = useAuthContext();
   const [loading, setLoading] = useState(true);
   const [applications, setApplications] = useState<Application[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [latestMockScore, setLatestMockScore] = useState<number>(85);
+  const [latestMockScore, setLatestMockScore] = useState<number | null>(null);
+
+  const candidateName = typeof window !== 'undefined' ? localStorage.getItem('candidate_name') || (user?.email ? user.email.split('@')[0] : 'Candidate') : (user?.email ? user.email.split('@')[0] : 'Candidate');
 
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
-        const [dashRes, appsRes, jobsRes] = await Promise.allSettled([
+        const [dashRes, appsRes, jobsRes, mockRes] = await Promise.allSettled([
           apiClient.get<CandidateDashboardData>('/candidate/dashboard'),
           apiClient.get<Application[]>('/candidate/applications'),
           apiClient.get<Job[]>('/jobs'),
+          apiClient.get<{ overall_score?: number }[]>('/mock/sessions'),
         ]);
 
         if (dashRes.status === 'fulfilled' && dashRes.value) {
           if (dashRes.value.applications) setApplications(dashRes.value.applications);
           if (dashRes.value.jobs) setJobs(dashRes.value.jobs);
-          if (dashRes.value.latestMockScore) setLatestMockScore(dashRes.value.latestMockScore);
+          if (dashRes.value.latestMockScore !== undefined) setLatestMockScore(dashRes.value.latestMockScore);
         } else {
           if (appsRes.status === 'fulfilled' && appsRes.value) {
             setApplications(appsRes.value);
           }
           if (jobsRes.status === 'fulfilled' && jobsRes.value) {
             setJobs(jobsRes.value);
+          }
+        }
+
+        if (mockRes.status === 'fulfilled' && Array.isArray(mockRes.value) && mockRes.value.length > 0) {
+          const validScores = mockRes.value.map(s => s.overall_score).filter((s): s is number => typeof s === 'number');
+          if (validScores.length > 0) {
+            setLatestMockScore(validScores[0]);
           }
         }
       } catch (err) {
@@ -49,16 +61,18 @@ export default function CandidateDashboard() {
     }
     fetchData();
   }, []);
+  const safeApps = Array.isArray(applications) ? applications : [];
+  const safeJobs = Array.isArray(jobs) ? jobs : [];
 
-  const scheduledInterviews = applications.filter((app) => app.status === 'interview_scheduled');
-  const recommendations = jobs.slice(0, 2);
+  const scheduledInterviews = safeApps.filter((app) => app.status === 'interview_scheduled');
+  const recommendations = safeJobs.slice(0, 2);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Welcome Banner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-5">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Welcome back, Ananya</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Welcome back, {candidateName}</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
             Track your applications, read interview transcripts, and practice mock interviews.
           </p>
@@ -99,7 +113,7 @@ export default function CandidateDashboard() {
             <Award className="h-5 w-5" />
           </div>
           <div>
-            <span className="block text-xl font-extrabold text-slate-800 dark:text-slate-100">{latestMockScore}%</span>
+            <span className="block text-xl font-extrabold text-slate-800 dark:text-slate-100">{latestMockScore !== null ? `${latestMockScore}%` : '--'}</span>
             <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase">Latest Mock Score</span>
           </div>
         </div>
@@ -121,7 +135,7 @@ export default function CandidateDashboard() {
           </div>
 
           <div className="space-y-4">
-            {applications.map((app) => (
+            {safeApps.map((app) => (
               <div
                 key={app.id}
                 className="glass-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"

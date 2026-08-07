@@ -17,10 +17,13 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
   const applicationId = searchParams.get('applicationId');
 
   const { sessionId } = use(params);
+  const searchCompany = searchParams.get('company') || undefined;
+  const searchRole = searchParams.get('role') || undefined;
+
   const [session, setSession] = useState<Partial<MockSession>>({
     id: sessionId,
-    targetCompany: 'Swiggy',
-    targetRole: 'Senior Full Stack Engineer',
+    targetCompany: searchCompany || 'Practice Mode',
+    targetRole: searchRole || 'Software Engineer',
     difficulty: 'senior',
   });
   const [app, setApp] = useState<Partial<Application> | null>(null);
@@ -44,8 +47,8 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
   }, [sessionId, applicationId]);
 
   // Resolve target company & role (supports both real candidate application and mock practice mode)
-  const targetCompany = app?.orgName || session.targetCompany || 'Swiggy';
-  const targetRole = app?.jobTitle || session.targetRole || 'Senior Full Stack Engineer';
+  const targetCompany = app?.orgName || session.targetCompany || searchCompany || 'Practice Mode';
+  const targetRole = app?.jobTitle || session.targetRole || searchRole || 'Software Engineer';
 
   const handleComplete = async (score?: number) => {
     try {
@@ -97,36 +100,23 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     onComplete: () => handleComplete(),
   });
 
-  // Render Aptitude Test Console (used for both real candidate applications & mock practice)
-  if (track === 'aptitude') {
-    return (
-      <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white overflow-y-auto p-4">
-        <AptitudeTestConsole
-          company={targetCompany}
-          role={targetRole}
-          onComplete={(score) => handleComplete(score)}
-        />
-      </div>
-    );
-  }
+  const [comprehensiveStep, setComprehensiveStep] = useState<'aptitude' | 'coding' | 'technical'>('aptitude');
 
-  // Render Coding Assessment Console (used for both real candidate applications & mock practice)
-  if (track === 'coding') {
-    return (
-      <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white overflow-y-auto p-4">
-        <CodingAssessmentConsole
-          company={targetCompany}
-          role={targetRole}
-          onComplete={(score) => handleComplete(score)}
-        />
-      </div>
-    );
-  }
+  // Handle Comprehensive (All-in-one) Multi-round Flow
+  const activeRoundTrack = track === 'comprehensive' ? comprehensiveStep : track;
 
-  // Hardware Check Screen
+  // Hardware & Safety Check Screen (Anti-cheating proctored verification before launching any round)
   if (stage === 'check') {
     return (
       <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white overflow-y-auto">
+        {track === 'comprehensive' && (
+          <div className="bg-purple-950/80 border border-purple-800/80 text-purple-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-between shadow-md m-4 mb-0">
+            <span>Full Mock Interview — Stage 1 of 3: System &amp; Safety Check</span>
+            <span className="text-[10px] bg-purple-900/90 text-purple-300 px-2.5 py-0.5 rounded-full border border-purple-700/60 uppercase">
+              Initial Check
+            </span>
+          </div>
+        )}
         <InterviewCheckScreen
           company={targetCompany}
           role={targetRole}
@@ -137,9 +127,75 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     );
   }
 
+  // Render Aptitude Test Console (used for both real candidate applications & mock practice)
+  if (activeRoundTrack === 'aptitude') {
+    return (
+      <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white overflow-y-auto p-4 flex flex-col space-y-2">
+        {track === 'comprehensive' && (
+          <div className="bg-brand-950/80 border border-brand-800/80 text-brand-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-between shadow-md">
+            <span>Full Mock Interview — Stage 1 of 3: Aptitude &amp; Reasoning</span>
+            <span className="text-[10px] bg-brand-900/90 text-brand-300 px-2.5 py-0.5 rounded-full border border-brand-700/60 uppercase">
+              Next: Live Coding Round
+            </span>
+          </div>
+        )}
+        <div className="flex-1">
+          <AptitudeTestConsole
+            company={targetCompany}
+            role={targetRole}
+            onComplete={(score) => {
+              if (track === 'comprehensive') {
+                setComprehensiveStep('coding');
+              } else {
+                handleComplete(score);
+              }
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Render Coding Assessment Console (used for both real candidate applications & mock practice)
+  if (activeRoundTrack === 'coding') {
+    return (
+      <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white overflow-y-auto p-4 flex flex-col space-y-2">
+        {track === 'comprehensive' && (
+          <div className="bg-amber-950/80 border border-amber-800/80 text-amber-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-between shadow-md">
+            <span>Full Mock Interview — Stage 2 of 3: Live Coding Round</span>
+            <span className="text-[10px] bg-amber-900/90 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-700/60 uppercase">
+              Next: Technical Voice AI
+            </span>
+          </div>
+        )}
+        <div className="flex-1">
+          <CodingAssessmentConsole
+            company={targetCompany}
+            role={targetRole}
+            onComplete={(score) => {
+              if (track === 'comprehensive') {
+                setComprehensiveStep('technical');
+              } else {
+                handleComplete(score);
+              }
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
   // AI Voice Conversational Interview Console
   return (
     <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white flex flex-col justify-between overflow-hidden p-2">
+      {track === 'comprehensive' && (
+        <div className="bg-purple-950/80 border border-purple-800/80 text-purple-200 px-4 py-1.5 rounded-xl text-xs font-bold flex items-center justify-between shadow-md mb-1">
+          <span>Full Mock Interview — Stage 3 of 3: Technical Voice AI</span>
+          <span className="text-[10px] bg-purple-900/90 text-purple-300 px-2 py-0.5 rounded-full border border-purple-700/60 uppercase">
+            Final Round
+          </span>
+        </div>
+      )}
       <InterviewActiveConsole
         messages={messages}
         phase={phase}

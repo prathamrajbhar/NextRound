@@ -1,6 +1,9 @@
 import { ApiEnvelope } from '@nextround/shared';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api/v1';
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  'http://localhost:4000/api/v1';
 
 let isRefreshing = false;
 
@@ -37,7 +40,9 @@ export async function fetchApi<T>(
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
           });
-          const refreshData = await refreshRes.json();
+          const refreshData = refreshRes.headers.get('content-type')?.includes('application/json')
+            ? await refreshRes.json()
+            : {};
           isRefreshing = false;
 
           if (refreshData.success && refreshData.data?.accessToken) {
@@ -52,8 +57,23 @@ export async function fetchApi<T>(
       }
     }
 
-    const data: ApiEnvelope<T> = await res.json();
-    return data;
+    const contentType = res.headers.get('content-type') || '';
+
+    if (contentType.includes('application/json')) {
+      const data: ApiEnvelope<T> = await res.json();
+      if (!res.ok && data.success !== false) {
+        return {
+          success: false,
+          error: typeof data.error === 'string' ? data.error : (data.error as { message?: string })?.message || `HTTP ${res.status}: ${res.statusText}`,
+        };
+      }
+      return data;
+    } else {
+      return {
+        success: false,
+        error: `HTTP ${res.status} (${res.statusText || 'Server Error'}): Non-JSON response received`,
+      };
+    }
   } catch (error) {
     return {
       success: false,

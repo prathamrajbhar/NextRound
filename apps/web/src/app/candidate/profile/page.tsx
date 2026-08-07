@@ -17,14 +17,18 @@ import {
   UploadCloud
 } from '@/lib/lucide-google-icons';
 
+import { useAuthContext } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/apiClient';
+
 export default function CandidateProfile() {
-  const [name, setName] = useState('Ananya Iyer');
-  const [email, setEmail] = useState('ananya.iyer@gmail.com');
+  const { user } = useAuthContext();
+  const [name, setName] = useState(() => user?.email ? user.email.split('@')[0] : '');
+  const [email, setEmail] = useState(() => user?.email || '');
   const [avatar, setAvatar] = useState('/avatar-girl.jpg');
-  const [linkedinUrl, setLinkedinUrl] = useState('https://linkedin.com/in/ananyaiyer');
-  const [githubUrl, setGithubUrl] = useState('https://github.com/ananyaiyer');
-  const [resumeName, setResumeName] = useState('ananya_iyer_cv.pdf');
-  const [skills, setSkills] = useState<string[]>(['React', 'Next.js', 'TypeScript', 'WebAssembly', 'CSS Architecture']);
+  const [linkedinUrl, setLinkedinUrl] = useState('');
+  const [githubUrl, setGithubUrl] = useState('');
+  const [resumeName, setResumeName] = useState('No resume uploaded');
+  const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
   
   const [isDeleting, setIsDeleting] = useState(false);
@@ -32,27 +36,59 @@ export default function CandidateProfile() {
   const [detailsSaved, setDetailsSaved] = useState(false);
 
   useEffect(() => {
-    const savedName = localStorage.getItem('candidate_name');
-    const savedEmail = localStorage.getItem('candidate_email');
-    const savedAvatar = localStorage.getItem('candidate_avatar');
-    const savedLinkedin = localStorage.getItem('candidate_linkedin');
-    const savedGithub = localStorage.getItem('candidate_github');
-    
-    setTimeout(() => {
-      if (savedName) setName(savedName);
-      if (savedEmail) setEmail(savedEmail);
-      if (savedAvatar) setAvatar(savedAvatar);
-      if (savedLinkedin) setLinkedinUrl(savedLinkedin);
-      if (savedGithub) setGithubUrl(savedGithub);
-    }, 0);
-  }, []);
+    async function loadProfile() {
+      if (user?.email) {
+        setEmail(user.email);
+        setName(user.email.split('@')[0]);
+      }
 
-  const handleSaveDetails = () => {
+      try {
+        const res = await apiClient.get<{ profile?: Record<string, unknown> }>('/candidate/profile');
+        if (res && res.profile) {
+          const profileObj = res.profile;
+          if (typeof profileObj.full_name === 'string') setName(profileObj.full_name);
+          if (typeof profileObj.email === 'string') setEmail(profileObj.email);
+          if (typeof profileObj.linkedin_url === 'string') setLinkedinUrl(profileObj.linkedin_url);
+          if (typeof profileObj.github_url === 'string') setGithubUrl(profileObj.github_url);
+          if (Array.isArray(profileObj.skills)) setSkills(profileObj.skills as string[]);
+          if (typeof profileObj.resume_url === 'string') setResumeName(profileObj.resume_url.split('/').pop() || 'uploaded_resume.pdf');
+        }
+      } catch {
+        // Fallback to local storage if API profile not found
+        const savedName = localStorage.getItem('candidate_name');
+        const savedEmail = localStorage.getItem('candidate_email');
+        const savedAvatar = localStorage.getItem('candidate_avatar');
+        const savedLinkedin = localStorage.getItem('candidate_linkedin');
+        const savedGithub = localStorage.getItem('candidate_github');
+        
+        if (savedName) setName(savedName);
+        if (savedEmail) setEmail(savedEmail);
+        if (savedAvatar) setAvatar(savedAvatar);
+        if (savedLinkedin) setLinkedinUrl(savedLinkedin);
+        if (savedGithub) setGithubUrl(savedGithub);
+      }
+    }
+
+    loadProfile();
+  }, [user]);
+
+  const handleSaveDetails = async () => {
     localStorage.setItem('candidate_name', name);
     localStorage.setItem('candidate_email', email);
     localStorage.setItem('candidate_avatar', avatar);
     localStorage.setItem('candidate_linkedin', linkedinUrl);
     localStorage.setItem('candidate_github', githubUrl);
+
+    try {
+      await apiClient.post('/candidate/profile', {
+        skills,
+        experience_years: 3,
+        linkedin_url: linkedinUrl,
+        github_url: githubUrl,
+      });
+    } catch {
+      // Ignore API sync errors for now
+    }
     
     // Dispatch event to update layout header
     window.dispatchEvent(new Event('profile_update'));

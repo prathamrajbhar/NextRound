@@ -2,6 +2,7 @@ import os
 import logging
 import uuid
 from typing import Dict, Any, List
+from core.config import settings
 
 logger = logging.getLogger("pdf_generator")
 
@@ -17,11 +18,13 @@ except ImportError:
     logger.warning("ReportLab not installed. Falling back to HTML/text-based PDF export mock.")
 
 
-def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = "/tmp") -> str:
+def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> str:
     """
     Generates an ATS-friendly single/two-page resume PDF from structured resume JSON.
-    Returns local file path or mock S3 download URL.
+    Returns local relative upload URL (/uploads/resumes/resume_xxxx.pdf).
     """
+    if not output_dir:
+        output_dir = os.path.join(settings.upload_dir, "resumes")
     file_id = str(uuid.uuid4())[:8]
     filename = f"resume_{file_id}.pdf"
     file_path = os.path.join(output_dir, filename)

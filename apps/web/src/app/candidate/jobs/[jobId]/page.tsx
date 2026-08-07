@@ -30,37 +30,12 @@ const jobSkillsMap: Record<string, string[]> = {
   'job-104': ['Python', 'NLP', 'PyTorch', 'Vector DBs', 'RAG Pipelines', 'Machine Learning'],
 };
 
-const DEFAULT_JOB: Job = {
-  id: 'job-101',
-  orgId: 'org-swiggy',
-  orgName: 'Swiggy Technologies',
-  orgLogo: 'https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=120&auto=format&fit=crop&q=80',
-  title: 'Senior Fullstack Engineer (React & Node.js)',
-  description: 'We are looking for a Senior Fullstack Engineer to design, build, and scale our core candidate evaluation dashboard and web services.',
-  location: 'Remote (Bengaluru, IN)',
-  salary: '₹32,000,000 - ₹45,000,000 / yr',
-  experienceLevel: 'Senior Level (5+ Yrs)',
-  postedDate: '2 days ago',
-  applicantsCount: 42,
-  status: 'active',
-  rubric: {
-    technical: 50,
-    communication: 25,
-    problemSolving: 15,
-    experience: 10,
-  },
-  thresholds: {
-    minScore: 75,
-    autoOffer: true,
-  },
-};
-
 export default function CandidateJobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
-  const [job, setJob] = useState<Job>(DEFAULT_JOB);
+  const [job, setJob] = useState<Job | null>(null);
   const [similarJobs, setSimilarJobs] = useState<Job[]>([]);
   const [applied, setApplied] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
@@ -97,8 +72,6 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
     fetchData();
   }, [jobId]);
 
-  const skills = jobSkillsMap[job.id] || ['TypeScript', 'React', 'Node.js', 'System Design'];
-
   const handleApply = () => {
     setApplied(true);
     setTimeout(() => {
@@ -113,6 +86,24 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
       setTimeout(() => setCopied(false), 2000);
     }
   };
+
+  if (loading) {
+    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading job details...</div>;
+  }
+
+  if (!job) {
+    return (
+      <div className="p-8 text-center space-y-4">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Job Posting Not Found</h2>
+        <p className="text-xs text-slate-500">The requested job listing could not be found or has expired.</p>
+        <Link href="/candidate/jobs" className="inline-block text-xs font-bold text-emerald-600 hover:underline">
+          Return to Job Search
+        </Link>
+      </div>
+    );
+  }
+
+  const skills = jobSkillsMap[job.id] || ['TypeScript', 'React', 'Node.js', 'System Design'];
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">

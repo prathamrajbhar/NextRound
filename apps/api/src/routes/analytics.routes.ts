@@ -115,7 +115,7 @@ analyticsRouter.get(
                 hireTimeMsList.length /
                 (1000 * 60 * 60 * 24)
             )
-          : 12; // default benchmark
+          : 0;
 
       // Bias Clean Rate calculation
       let totalAudited = 0;
@@ -129,23 +129,80 @@ analyticsRouter.get(
         }
       });
       const biasCleanRatePercent =
-        totalAudited > 0 ? Math.round(((totalAudited - biasFlags) / totalAudited) * 100) : 98;
+        totalAudited > 0 ? Math.round(((totalAudited - biasFlags) / totalAudited) * 100) : 100;
 
-      // Mocked / Aggregated 4-week funnel timeline
-      const weeklyFunnel = [
-        { week: 'Week 1', applied: Math.round(applied * 0.2), screened: Math.round(screened * 0.2), interviewed: Math.round(interviewed * 0.2), offered: Math.round(offered * 0.2) },
-        { week: 'Week 2', applied: Math.round(applied * 0.25), screened: Math.round(screened * 0.25), interviewed: Math.round(interviewed * 0.25), offered: Math.round(offered * 0.25) },
-        { week: 'Week 3', applied: Math.round(applied * 0.3), screened: Math.round(screened * 0.3), interviewed: Math.round(interviewed * 0.3), offered: Math.round(offered * 0.3) },
-        { week: 'Week 4', applied: Math.round(applied * 0.25), screened: Math.round(screened * 0.25), interviewed: Math.round(interviewed * 0.25), offered: Math.round(offered * 0.25) },
+      // Calculate actual weekly metrics based on applied_at timestamps
+      const now = new Date();
+      const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+      const getWeekBucket = (date: Date) => {
+        const diffDays = Math.floor((now.getTime() - date.getTime()) / (24 * 60 * 60 * 1000));
+        if (diffDays <= 7) return 3; // Week 4 (most recent)
+        if (diffDays <= 14) return 2; // Week 3
+        if (diffDays <= 21) return 1; // Week 2
+        return 0; // Week 1 (oldest)
+      };
+
+      const weeklyCounts = [
+        { week: 'Week 1', applied: 0, screened: 0, interviewed: 0, offered: 0 },
+        { week: 'Week 2', applied: 0, screened: 0, interviewed: 0, offered: 0 },
+        { week: 'Week 3', applied: 0, screened: 0, interviewed: 0, offered: 0 },
+        { week: 'Week 4', applied: 0, screened: 0, interviewed: 0, offered: 0 },
       ];
 
-      // Bias stability trend
-      const biasStabilityTrend = [
-        { week: 'W1', totalAudited: 12, flagsTriggered: 0, cleanRatePercent: 100 },
-        { week: 'W2', totalAudited: 18, flagsTriggered: 1, cleanRatePercent: 94 },
-        { week: 'W3', totalAudited: 24, flagsTriggered: 0, cleanRatePercent: 100 },
-        { week: 'W4', totalAudited: 20, flagsTriggered: 0, cleanRatePercent: 100 },
+      const weeklyAudits = [
+        { week: 'W1', totalAudited: 0, flagsTriggered: 0 },
+        { week: 'W2', totalAudited: 0, flagsTriggered: 0 },
+        { week: 'W3', totalAudited: 0, flagsTriggered: 0 },
+        { week: 'W4', totalAudited: 0, flagsTriggered: 0 },
       ];
+
+      applications.forEach((app) => {
+        const bucket = getWeekBucket(app.applied_at);
+        weeklyCounts[bucket].applied++;
+        if (
+          [
+            'screening_completed',
+            'assessment',
+            'interview_scheduled',
+            'interviewed',
+            'evaluation',
+            'hr_round',
+            'decided',
+            'offered',
+            'accepted',
+          ].includes(app.status)
+        ) {
+          weeklyCounts[bucket].screened++;
+        }
+        if (
+          ['interviewed', 'evaluation', 'hr_round', 'decided', 'offered', 'accepted'].includes(
+            app.status
+          )
+        ) {
+          weeklyCounts[bucket].interviewed++;
+        }
+        if (['offered', 'accepted'].includes(app.status)) {
+          weeklyCounts[bucket].offered++;
+        }
+
+        if (app.evaluations && app.evaluations.length > 0) {
+          weeklyAudits[bucket].totalAudited++;
+          if (app.evaluations.some((e) => e.bias_flag)) {
+            weeklyAudits[bucket].flagsTriggered++;
+          }
+        }
+      });
+
+      const weeklyFunnel = weeklyCounts;
+      const biasStabilityTrend = weeklyAudits.map((item) => ({
+        week: item.week,
+        totalAudited: item.totalAudited,
+        flagsTriggered: item.flagsTriggered,
+        cleanRatePercent:
+          item.totalAudited > 0
+            ? Math.round(((item.totalAudited - item.flagsTriggered) / item.totalAudited) * 100)
+            : 100,
+      }));
 
       // Dropoff Analysis
       const dropoffAnalysis = [
@@ -193,13 +250,49 @@ analyticsRouter.get(
       const format = parsed.success ? parsed.data.format : 'csv';
 
       if (format === 'csv') {
+        const jobs = await prisma.job.findMany({
+          where: { org_id: orgId },
+          select: { id: true },
+        });
+        const jobIds = jobs.map((j) => j.id);
+
+        const apps = await prisma.application.findMany({
+          where: { job_id: { in: jobIds } },
+          select: { status: true },
+        });
+
+        const totalApplied = apps.length;
+        const totalScreened = apps.filter((a) =>
+          [
+            'screening_completed',
+            'assessment',
+            'interview_scheduled',
+            'interviewed',
+            'evaluation',
+            'hr_round',
+            'decided',
+            'offered',
+            'accepted',
+          ].includes(a.status)
+        ).length;
+        const totalInterviewed = apps.filter((a) =>
+          ['interviewed', 'evaluation', 'hr_round', 'decided', 'offered', 'accepted'].includes(a.status)
+        ).length;
+        const totalOffered = apps.filter((a) => ['offered', 'accepted'].includes(a.status)).length;
+        const totalAccepted = apps.filter((a) => a.status === 'accepted').length;
+
+        const screenedRate = totalApplied > 0 ? Math.round((totalScreened / totalApplied) * 100) : 0;
+        const interviewedRate = totalScreened > 0 ? Math.round((totalInterviewed / totalScreened) * 100) : 0;
+        const offeredRate = totalInterviewed > 0 ? Math.round((totalOffered / totalInterviewed) * 100) : 0;
+        const acceptedRate = totalOffered > 0 ? Math.round((totalAccepted / totalOffered) * 100) : 0;
+
         const csvContent =
           `Stage,Total Count,Conversion Rate (%)\n` +
-          `Applied,120,100%\n` +
-          `Screened,84,70%\n` +
-          `Interviewed,42,50%\n` +
-          `Offered,14,33%\n` +
-          `Accepted,12,85%\n`;
+          `Applied,${totalApplied},100%\n` +
+          `Screened,${totalScreened},${screenedRate}%\n` +
+          `Interviewed,${totalInterviewed},${interviewedRate}%\n` +
+          `Offered,${totalOffered},${offeredRate}%\n` +
+          `Accepted,${totalAccepted},${acceptedRate}%\n`;
 
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename="analytics-report-${Date.now()}.csv"`);

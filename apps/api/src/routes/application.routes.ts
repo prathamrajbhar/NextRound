@@ -159,8 +159,6 @@ applicationRouter.get(
             select: {
               id: true,
               title: true,
-              location: true,
-              salary: true,
               status: true,
               organization: {
                 select: { id: true, name: true, logo_url: true },

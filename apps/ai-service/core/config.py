@@ -10,11 +10,10 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379"
     gemini_api_key: str = ""
     groq_api_key: str = ""
-    aws_region: str = "us-east-1"
-    s3_endpoint: str = "http://localhost:9000"
-    aws_access_key_id: str = "minioadmin"
-    aws_secret_access_key: str = "minioadmin"
-    s3_bucket: str = "nextround-storage"
+    upload_dir: str = os.getenv(
+        "UPLOAD_DIR",
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../api/uploads"))
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

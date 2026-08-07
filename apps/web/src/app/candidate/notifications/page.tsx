@@ -13,54 +13,11 @@ interface CandidateNotification {
   link: string;
 }
 
-const mockCandidateNotifications: CandidateNotification[] = [
-  {
-    id: 'notif-1',
-    text: 'Mock practice evaluation report for Google Software Engineer is ready.',
-    time: '5m ago',
-    read: false,
-    type: 'evaluation',
-    link: '/candidate/mock/history',
-  },
-  {
-    id: 'notif-2',
-    text: 'Vercel shortlisted your profile: interview scheduling requested.',
-    time: '1h ago',
-    read: false,
-    type: 'shortlist',
-    link: '/candidate/applications/app-501',
-  },
-  {
-    id: 'notif-3',
-    text: 'Stripe screening agent: Resume logic tags matched 90%.',
-    time: '2h ago',
-    read: false,
-    type: 'agent',
-    link: '/candidate/resume-builder',
-  },
-  {
-    id: 'notif-4',
-    text: 'New Frontend Engineer position posted at Microsoft matching your profile.',
-    time: '3h ago',
-    read: true,
-    type: 'shortlist',
-    link: '/candidate/jobs',
-  },
-  {
-    id: 'notif-5',
-    text: 'Evaluation feedback calibrated for Technical Logic: improved by 15%.',
-    time: '5h ago',
-    read: true,
-    type: 'evaluation',
-    link: '/candidate/profile',
-  },
-];
-
 type FilterCategory = 'all' | 'unread';
 
 export default function CandidateNotificationsPage() {
   const router = useRouter();
-  const [notifications, setNotifications] = useState<CandidateNotification[]>(mockCandidateNotifications);
+  const [notifications, setNotifications] = useState<CandidateNotification[]>([]);
   const [filter, setFilter] = useState<FilterCategory>('all');
 
   const unreadCount = notifications.filter((n) => !n.read).length;

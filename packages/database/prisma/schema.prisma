@@ -86,12 +86,14 @@ enum AgentStatus {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  password_hash String
-  role          UserRole
-  org_id        String?
-  created_at    DateTime @default(now())
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  password_hash      String
+  role               UserRole
+  org_id             String?
+  reset_token_hash   String?
+  reset_token_expiry DateTime?
+  created_at         DateTime  @default(now())
 
   organization      Organization?     @relation(fields: [org_id], references: [id])
   candidate_profile CandidateProfile?
@@ -99,6 +101,7 @@ model User {
 
   @@index([email])
   @@index([org_id])
+  @@index([reset_token_hash])
 }
 
 model Organization {

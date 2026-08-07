@@ -8,35 +8,61 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { NotificationDropdown } from '@/components/ui/NotificationDropdown';
 import Image from 'next/image';
 
+import { apiClient } from '@/lib/apiClient';
+import { useAuthContext } from '@/contexts/AuthContext';
+
+interface ApiNotification {
+  id: string;
+  title?: string;
+  message: string;
+  type?: string;
+  read: boolean;
+  created_at: string;
+}
+
 export default function CandidateLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user } = useAuthContext();
+  const [mounted, setMounted] = useState(false);
   const [avatar, setAvatar] = useState('/avatar-girl.jpg');
-  const [name, setName] = useState('Ananya Iyer');
+  const [name, setName] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+    const savedAvatar = localStorage.getItem('candidate_avatar');
+    const savedName = localStorage.getItem('candidate_name');
+    if (savedAvatar) setAvatar(savedAvatar);
+    if (savedName) setName(savedName);
+  }, []);
+
+  const displayName = mounted ? (name || (user?.email ? user.email.split('@')[0] : 'Candidate')) : 'Candidate';
 
   // Notification states
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: 'Mock practice evaluation report for Google Software Engineer is ready.', time: '5 mins ago', read: false },
-    { id: 2, text: 'Vercel shortlisted your profile: interview scheduling requested.', time: '1 hour ago', read: false },
-    { id: 3, text: 'Stripe screening agent: Resume logic tags matched 90%.', time: '2 hours ago', read: false },
-    { id: 4, text: 'New Frontend Engineer position posted at Microsoft.', time: '3 hours ago', read: true },
-    { id: 5, text: 'Evaluation feedback calibrated for Technical Logic: improved by 15%.', time: '5 hours ago', read: true }
-  ]);
+  const [notifications, setNotifications] = useState<{ id: number; rawId?: string; text: string; time: string; read: boolean }[]>([]);
 
   useEffect(() => {
-    // Load initial values from localStorage
-    const savedAvatar = localStorage.getItem('candidate_avatar');
-    const savedName = localStorage.getItem('candidate_name');
-    setTimeout(() => {
-      if (savedAvatar) setAvatar(savedAvatar);
-      if (savedName) setName(savedName);
-    }, 0);
+    let isMounted = true;
+    apiClient.get<{ notifications: ApiNotification[] }>('/notifications')
+      .then((res) => {
+        if (isMounted && res && res.notifications) {
+          const formatted = res.notifications.map((n, idx) => ({
+            id: idx + 1,
+            rawId: n.id,
+            text: n.message || n.title || 'Notification alert',
+            time: new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            read: n.read,
+          }));
+          setNotifications(formatted);
+        }
+      })
+      .catch(() => {});
 
-    // Listen for storage updates
     const handleStorageChange = () => {
       const updatedAvatar = localStorage.getItem('candidate_avatar');
       const updatedName = localStorage.getItem('candidate_name');
@@ -45,10 +71,10 @@ export default function CandidateLayout({
     };
 
     window.addEventListener('storage', handleStorageChange);
-    // Listen for custom profile update event
     window.addEventListener('profile_update', handleStorageChange);
 
     return () => {
+      isMounted = false;
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('profile_update', handleStorageChange);
     };
@@ -56,8 +82,11 @@ export default function CandidateLayout({
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications(notifications.map(n => ({ ...n, read: true })));
+    try {
+      await apiClient.post('/notifications/read-all');
+    } catch (e) {}
   };
 
   const clearAll = () => {
@@ -76,8 +105,14 @@ export default function CandidateLayout({
     return () => document.removeEventListener('click', handleOutsideClick);
   }, [showNotifications]);
 
-  const toggleRead = (id: number) => {
+  const toggleRead = async (id: number) => {
+    const targetNotif = notifications.find(n => n.id === id);
     setNotifications(notifications.map(n => n.id === id ? { ...n, read: !n.read } : n));
+    if (targetNotif?.rawId) {
+      try {
+        await apiClient.patch(`/notifications/${targetNotif.rawId}/read`);
+      } catch (e) {}
+    }
   };
 
   return (
@@ -93,7 +128,7 @@ export default function CandidateLayout({
       {/* Sidebar container */}
       <div className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
-        <CandidateSidebar avatar={avatar} name={name} />
+        <CandidateSidebar avatar={avatar} name={displayName} />
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -127,7 +162,7 @@ export default function CandidateLayout({
 
             {/* Candidate Avatar Info */}
             <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{name}</span>
+              <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{displayName}</span>
               <Image
                 src={avatar}
                 alt="Candidate Avatar"

@@ -3,6 +3,10 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'nextround_default_secret_key_change_in_production';
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || 'nextround_default_refresh_secret_key_change_in_production';
 
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || !process.env.REFRESH_TOKEN_SECRET)) {
+  console.warn('⚠️ SECURITY WARNING: JWT_SECRET or REFRESH_TOKEN_SECRET environment variables are missing. Using fallback secrets in production is unsafe.');
+}
+
 export interface JwtPayload {
   userId: string;
   email: string;

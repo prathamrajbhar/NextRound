@@ -30,14 +30,21 @@ function setAuthCookies(res: Response, payload: JwtPayload) {
   res.cookie('access_token', accessToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: 60 * 60 * 1000, // 1 hour
   });
 
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'strict',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
+  res.cookie('user_role', payload.role, {
+    httpOnly: false,
+    secure: isProduction,
+    sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
 
@@ -48,12 +55,17 @@ function clearAuthCookies(res: Response) {
   res.clearCookie('access_token', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'strict',
+    sameSite: 'lax',
   });
   res.clearCookie('refresh_token', {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'strict',
+    sameSite: 'lax',
+  });
+  res.clearCookie('user_role', {
+    httpOnly: false,
+    secure: isProduction,
+    sameSite: 'lax',
   });
 }
 
@@ -300,12 +312,11 @@ authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Reque
       const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
       const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-      // Store reset token and expiry in user settings JSON or db
-      // We can update standard setting or user fields
       await prisma.user.update({
         where: { id: user.id },
         data: {
-          // If schema has no reset fields, we can store reset info in a candidate profile or org setting, or send reset link
+          reset_token_hash: resetTokenHash,
+          reset_token_expiry: resetExpires,
         },
       });
 
@@ -335,9 +346,34 @@ authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Reque
 authRouter.post('/reset-password', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validated = ResetPasswordSchema.parse(req.body);
+    const resetTokenHash = crypto.createHash('sha256').update(validated.token).digest('hex');
 
-    // In a full implementation, lookup user by hashed reset token & verify expiry date
+    const user = await prisma.user.findFirst({
+      where: {
+        reset_token_hash: resetTokenHash,
+        reset_token_expiry: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid or expired password reset token.',
+      });
+    }
+
     const passwordHash = await bcrypt.hash(validated.password, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password_hash: passwordHash,
+        reset_token_hash: null,
+        reset_token_expiry: null,
+      },
+    });
 
     return res.json({
       success: true,

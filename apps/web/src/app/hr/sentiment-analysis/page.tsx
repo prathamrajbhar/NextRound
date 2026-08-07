@@ -30,13 +30,16 @@ export default function SentimentAnalysisPage() {
     async function fetchProfiles() {
       try {
         setLoading(true);
-        const data = await apiClient.get<CandidateSentimentProfile[]>('/hr/sentiment');
-        if (data && data.length > 0) {
+        const data = await apiClient.get<CandidateSentimentProfile[]>('/hr/sentiment').catch(() => [] as CandidateSentimentProfile[]);
+        if (Array.isArray(data) && data.length > 0) {
           setProfiles(data);
           setSelectedCandidateId(data[0].id);
+        } else {
+          setProfiles([]);
         }
       } catch (err) {
         console.error('Failed to load sentiment profiles:', err);
+        setProfiles([]);
       } finally {
         setLoading(false);
       }
@@ -103,6 +106,7 @@ export default function SentimentAnalysisPage() {
                 src={currentProfile.avatar}
                 alt={currentProfile.candidateName}
                 fill
+                sizes="40px"
                 className="object-cover"
                 unoptimized
               />

@@ -1,38 +1,17 @@
-import { ApiResponse } from '@/types';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
+import { fetchApi } from './api';
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options.headers as Record<string, string>),
-  };
+  const result = await fetchApi<T>(endpoint, options);
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
-
-  const json: ApiResponse<T> = await response.json().catch(() => ({
-    success: response.ok,
-    data: null as unknown as T,
-    error: response.statusText,
-  }));
-
-  if (!response.ok || !json.success) {
+  if (!result.success) {
     const errorMsg =
-      typeof json.error === 'string'
-        ? json.error
-        : json.error?.message || `Request failed with status ${response.status}`;
+      typeof result.error === 'string'
+        ? result.error
+        : (result.error as { message?: string })?.message || 'API request failed';
     throw new Error(errorMsg);
   }
 
-  return json.data;
+  return result.data as T;
 }
 
 export const apiClient = {

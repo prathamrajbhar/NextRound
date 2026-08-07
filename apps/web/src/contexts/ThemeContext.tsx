@@ -17,21 +17,13 @@ const ThemeContext = createContext<ThemeContextValue>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // Always start with 'dark' so SSR and the initial client render agree.
-  // The real preference from localStorage is applied in useEffect after hydration.
-  const [theme, setThemeState] = useState<Theme>('dark');
-
-  useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    const initial: Theme = saved === 'light' ? 'light' : 'dark';
-    setThemeState(initial);
-    const root = document.documentElement;
-    if (initial === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
+  const [theme, setThemeState] = useState<Theme>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('theme');
+      if (saved === 'light') return 'light';
     }
-  }, []); // run once after first paint — safe to read localStorage here
+    return 'dark';
+  });
 
   useEffect(() => {
     const root = document.documentElement;

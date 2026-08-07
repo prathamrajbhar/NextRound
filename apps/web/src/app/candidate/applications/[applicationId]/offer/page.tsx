@@ -11,30 +11,6 @@ import { OfferDocumentModal } from './components/OfferDocumentModal';
 import { ActionModals } from './components/ActionModals';
 import { CheckCircle2, XCircle } from 'lucide-react';
 
-const DEFAULT_OFFER: Offer = {
-  id: 'off-101',
-  applicationId: 'app-501',
-  candidateName: 'Candidate User',
-  candidateAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
-  jobId: 'job-101',
-  jobTitle: 'Senior Fullstack Engineer',
-  orgName: 'Swiggy Technologies',
-  status: 'sent',
-  baseSalary: '₹38,000,000',
-  bonus: '₹4,000,000 Performance Bonus',
-  equity: '₹12,000,000 ESOPs over 4 years',
-  joiningDate: 'August 15, 2026',
-  expiryDate: 'July 15, 2026',
-  benefits: [
-    'Comprehensive Health & Dental Plan for Dependents',
-    '₹150,000 Annual Learning & Conference Budget',
-    'Flexible Work Location & Home Office Setup Stipend',
-    'Unlimited Paid Time Off (PTO) Policy',
-  ],
-  negotiationHistory: [],
-  letterUrl: '/documents/offer-letter.pdf',
-};
-
 export default function CandidateOfferPage({
   params,
 }: {
@@ -42,15 +18,19 @@ export default function CandidateOfferPage({
 }) {
   const { applicationId } = use(params);
 
-  const [offer, setOffer] = useState<Offer>(DEFAULT_OFFER);
+  const [offer, setOffer] = useState<Offer | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchOffer() {
       try {
+        setLoading(true);
         const res = await apiClient.get<Offer>(`/candidate/applications/${applicationId}/offer`);
         if (res) setOffer(res);
       } catch (err) {
-        console.error('Failed to load offer:', err);
+        console.error('Failed to fetch offer details:', err);
+      } finally {
+        setLoading(false);
       }
     }
     fetchOffer();
@@ -63,24 +43,35 @@ export default function CandidateOfferPage({
 
   const handleAccept = async (signatureSvg: string) => {
     try {
-      await fetch(`/api/v1/applications/${applicationId}/offer/sign`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ signature_svg: signatureSvg }),
+      await apiClient.post(`/applications/${applicationId}/offer/sign`, {
+        signature_svg: signatureSvg,
       });
     } catch (err) {
       console.error('Failed to post digital signature to API:', err);
     }
-    setOffer((prev) => ({ ...prev, status: 'accepted' }));
+    setOffer((prev) => (prev ? { ...prev, status: 'accepted' } : null));
     setActionDone('accepted');
     setShowAcceptModal(false);
   };
 
   const handleDecline = (reason: string) => {
-    setOffer((prev) => ({ ...prev, status: 'declined' }));
+    setOffer((prev) => (prev ? { ...prev, status: 'declined' } : null));
     setActionDone('declined');
     setShowDeclineModal(false);
   };
+
+  if (loading) {
+    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading offer details...</div>;
+  }
+
+  if (!offer) {
+    return (
+      <div className="p-8 text-center space-y-4">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">No Offer Details Available</h2>
+        <p className="text-xs text-slate-500">No official offer letter has been issued for this application yet.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16 animate-in fade-in duration-200">

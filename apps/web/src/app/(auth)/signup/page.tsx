@@ -12,6 +12,8 @@ import {
   UserPlus,
   ArrowRight,
   CheckCircle2,
+  Eye,
+  EyeOff,
 } from '@/lib/lucide-google-icons';
 
 import { useToast } from '@/contexts/ToastContext';
@@ -25,6 +27,7 @@ export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -79,6 +82,7 @@ export default function SignupPage() {
                 src="/logo.png"
                 alt="NextRound Logo"
                 fill
+                sizes="40px"
                 className="object-cover scale-[1.3]"
               />
             </div>
@@ -215,13 +219,21 @@ export default function SignupPage() {
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-4 py-2.5 text-xs rounded-xl border border-white/15 bg-slate-900/40 text-white placeholder:text-slate-400 focus:outline-none focus:border-orange-400 focus:bg-slate-900/70 font-semibold transition-all"
+                    className="w-full pl-10 pr-10 py-2.5 text-xs rounded-xl border border-white/15 bg-slate-900/40 text-white placeholder:text-slate-400 focus:outline-none focus:border-orange-400 focus:bg-slate-900/70 font-semibold transition-all"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
               </div>
 

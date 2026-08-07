@@ -14,9 +14,15 @@ export default function CandidateApplications() {
     async function fetchApplications() {
       try {
         setLoading(true);
-        const data = await apiClient.get<Application[]>('/candidate/applications');
+        const data = await apiClient.get<Application[]>('/applications/my');
         if (data) {
-          setApplications(data);
+          const rawApps = data as unknown;
+          const appsList = Array.isArray(rawApps)
+            ? rawApps
+            : typeof rawApps === 'object' && rawApps !== null && 'applications' in rawApps && Array.isArray((rawApps as { applications: Application[] }).applications)
+            ? (rawApps as { applications: Application[] }).applications
+            : [];
+          setApplications(appsList);
         }
       } catch (err) {
         console.error('Failed to fetch candidate applications:', err);
@@ -27,6 +33,8 @@ export default function CandidateApplications() {
     fetchApplications();
   }, []);
 
+  const safeApps = Array.isArray(applications) ? applications : [];
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <div className="border-b border-slate-200/60 dark:border-slate-800 pb-4">
@@ -36,7 +44,7 @@ export default function CandidateApplications() {
         </p>
       </div>
 
-      {applications.length > 0 ? (
+      {safeApps.length > 0 ? (
         <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 shadow-md backdrop-blur-md glass-panel overflow-hidden">
           <table className="w-full border-collapse text-left">
             <thead>
@@ -49,7 +57,7 @@ export default function CandidateApplications() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {applications.map((app) => (
+              {safeApps.map((app) => (
                 <tr key={app.id} className="hover:bg-white/20 dark:hover:bg-slate-800/40 transition-colors">
                   <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-100">{app.jobTitle}</td>
                   <td className="px-6 py-4 text-brand-600 dark:text-orange-400 font-bold">{app.orgName}</td>
