@@ -9,6 +9,16 @@ import InterviewCheckScreen from '@/components/interview/InterviewCheckScreen';
 import InterviewActiveConsole from '@/components/interview/InterviewActiveConsole';
 import AptitudeTestConsole from '@/components/interview/AptitudeTestConsole';
 import CodingAssessmentConsole from '@/components/interview/CodingAssessmentConsole';
+import { CompanyLogo } from '@/components/ui';
+import { CheckCircle2, ArrowRight, Maximize2, Trophy, Award } from '@/lib/lucide-google-icons';
+
+interface InterRoundData {
+  completedStageName: string;
+  completedScore: number;
+  nextStageName: string;
+  nextStep: 'coding' | 'technical';
+  stageNumber: number;
+}
 
 function MockSessionContent({ params }: { params: Promise<{ sessionId: string }> }) {
   const router = useRouter();
@@ -28,6 +38,9 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
   });
   const [app, setApp] = useState<Partial<Application> | null>(null);
 
+  const [comprehensiveStep, setComprehensiveStep] = useState<'aptitude' | 'coding' | 'technical'>('aptitude');
+  const [pendingNextRound, setPendingNextRound] = useState<InterRoundData | null>(null);
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -46,11 +59,17 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     fetchData();
   }, [sessionId, applicationId]);
 
-  // Resolve target company & role (supports both real candidate application and mock practice mode)
   const targetCompany = app?.orgName || session.targetCompany || searchCompany || 'Practice Mode';
   const targetRole = app?.jobTitle || session.targetRole || searchRole || 'Software Engineer';
 
   const handleComplete = async (score?: number) => {
+    // Exit full-screen mode to restore normal candidate layout & sidebar
+    try {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    } catch {}
+
     try {
       if (sessionId && sessionId !== 'mock-session-123') {
         await apiClient.post(`/mock/sessions/${sessionId}/end`, {
@@ -100,23 +119,24 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     onComplete: () => handleComplete(),
   });
 
-  const [comprehensiveStep, setComprehensiveStep] = useState<'aptitude' | 'coding' | 'technical'>('aptitude');
-
-  // Handle Comprehensive (All-in-one) Multi-round Flow
   const activeRoundTrack = track === 'comprehensive' ? comprehensiveStep : track;
 
-  // Hardware & Safety Check Screen (Anti-cheating proctored verification before launching any round)
+  const handleLaunchNextRound = () => {
+    if (!pendingNextRound) return;
+    try {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch {}
+
+    setComprehensiveStep(pendingNextRound.nextStep);
+    setPendingNextRound(null);
+  };
+
+  // Hardware Check Screen
   if (stage === 'check') {
     return (
       <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white overflow-y-auto">
-        {track === 'comprehensive' && (
-          <div className="bg-purple-950/80 border border-purple-800/80 text-purple-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-between shadow-md m-4 mb-0">
-            <span>Full Mock Interview — Stage 1 of 3: System &amp; Safety Check</span>
-            <span className="text-[10px] bg-purple-900/90 text-purple-300 px-2.5 py-0.5 rounded-full border border-purple-700/60 uppercase">
-              Initial Check
-            </span>
-          </div>
-        )}
         <InterviewCheckScreen
           company={targetCompany}
           role={targetRole}
@@ -127,25 +147,73 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     );
   }
 
-  // Render Aptitude Test Console (used for both real candidate applications & mock practice)
+  // Inter-Round Transition Screen (Appears between rounds in multi-stage sessions)
+  if (pendingNextRound) {
+    return (
+      <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-slate-100 flex flex-col justify-center items-center p-6 animate-in fade-in duration-200 font-sans">
+        <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-center backdrop-blur-md">
+          
+          <div className="space-y-2">
+            <CompanyLogo name={targetCompany} size="lg" className="mx-auto shadow-md" />
+            <h2 className="text-xl font-black text-white font-display pt-1">{targetCompany}</h2>
+            <p className="text-xs font-semibold text-slate-400">{targetRole}</p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+            <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider block">
+              Stage {pendingNextRound.stageNumber} Completed
+            </span>
+            <h3 className="text-sm font-extrabold text-slate-200 flex items-center justify-center gap-1.5">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+              {pendingNextRound.completedStageName}
+            </h3>
+            <span className="text-xl font-black text-amber-400 block pt-1">
+              Score: {pendingNextRound.completedScore}%
+            </span>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-900/60 space-y-1 text-left">
+            <span className="text-[10px] font-extrabold text-amber-300 uppercase tracking-wider block">
+              Up Next: Stage {pendingNextRound.stageNumber + 1}
+            </span>
+            <h4 className="text-xs font-black text-amber-200">{pendingNextRound.nextStageName}</h4>
+            <p className="text-[11px] text-slate-400 font-medium pt-0.5">
+              Ready to enter full-screen proctored environment for the next round.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleLaunchNextRound}
+            className="w-full py-3.5 px-6 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer transform hover:scale-[1.01]"
+          >
+            <Maximize2 className="h-4 w-4" />
+            <span>Start Stage {pendingNextRound.stageNumber + 1}: {pendingNextRound.nextStageName}</span>
+            <ArrowRight className="h-4 w-4" />
+          </button>
+
+        </div>
+      </div>
+    );
+  }
+
+  // Aptitude Test Console
   if (activeRoundTrack === 'aptitude') {
     return (
       <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white overflow-y-auto p-4 flex flex-col space-y-2">
-        {track === 'comprehensive' && (
-          <div className="bg-brand-950/80 border border-brand-800/80 text-brand-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-between shadow-md">
-            <span>Full Mock Interview — Stage 1 of 3: Aptitude &amp; Reasoning</span>
-            <span className="text-[10px] bg-brand-900/90 text-brand-300 px-2.5 py-0.5 rounded-full border border-brand-700/60 uppercase">
-              Next: Live Coding Round
-            </span>
-          </div>
-        )}
         <div className="flex-1">
           <AptitudeTestConsole
             company={targetCompany}
             role={targetRole}
             onComplete={(score) => {
               if (track === 'comprehensive') {
-                setComprehensiveStep('coding');
+                setPendingNextRound({
+                  completedStageName: 'Aptitude & Reasoning Test',
+                  completedScore: score,
+                  nextStageName: 'Live Coding Round',
+                  nextStep: 'coding',
+                  stageNumber: 1,
+                });
               } else {
                 handleComplete(score);
               }
@@ -156,25 +224,23 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     );
   }
 
-  // Render Coding Assessment Console (used for both real candidate applications & mock practice)
+  // Coding Assessment Console
   if (activeRoundTrack === 'coding') {
     return (
       <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white overflow-y-auto p-4 flex flex-col space-y-2">
-        {track === 'comprehensive' && (
-          <div className="bg-amber-950/80 border border-amber-800/80 text-amber-200 px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-between shadow-md">
-            <span>Full Mock Interview — Stage 2 of 3: Live Coding Round</span>
-            <span className="text-[10px] bg-amber-900/90 text-amber-300 px-2.5 py-0.5 rounded-full border border-amber-700/60 uppercase">
-              Next: Technical Voice AI
-            </span>
-          </div>
-        )}
         <div className="flex-1">
           <CodingAssessmentConsole
             company={targetCompany}
             role={targetRole}
             onComplete={(score) => {
               if (track === 'comprehensive') {
-                setComprehensiveStep('technical');
+                setPendingNextRound({
+                  completedStageName: 'Live Coding Round',
+                  completedScore: score,
+                  nextStageName: 'Technical Voice AI',
+                  nextStep: 'technical',
+                  stageNumber: 2,
+                });
               } else {
                 handleComplete(score);
               }
@@ -188,14 +254,6 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
   // AI Voice Conversational Interview Console
   return (
     <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white flex flex-col justify-between overflow-hidden p-2">
-      {track === 'comprehensive' && (
-        <div className="bg-purple-950/80 border border-purple-800/80 text-purple-200 px-4 py-1.5 rounded-xl text-xs font-bold flex items-center justify-between shadow-md mb-1">
-          <span>Full Mock Interview — Stage 3 of 3: Technical Voice AI</span>
-          <span className="text-[10px] bg-purple-900/90 text-purple-300 px-2 py-0.5 rounded-full border border-purple-700/60 uppercase">
-            Final Round
-          </span>
-        </div>
-      )}
       <InterviewActiveConsole
         messages={messages}
         phase={phase}

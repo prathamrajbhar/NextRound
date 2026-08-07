@@ -1,9 +1,7 @@
 'use client';
 
-import React from 'react';
-import { Activity, VideoOff, Mic, MicOff, Video, CheckCircle2, ShieldCheck } from '@/lib/lucide-google-icons';
-import { getCompanyCultureNotes } from '@/lib/constants';
-import { CompanyLogo } from '@/components/ui';
+import React, { useEffect, useRef, useState } from 'react';
+import { VideoOff, Mic, MicOff, Video, ShieldCheck, AlertCircle } from '@/lib/lucide-google-icons';
 
 export type AssessmentTrack = 'aptitude' | 'technical' | 'coding' | 'comprehensive';
 
@@ -19,182 +17,184 @@ interface CalibrationPanelProps {
   onToggleCam: () => void;
 }
 
-const trackWeightMap: Record<AssessmentTrack, { primaryName: string; primaryVal: number; secondaryName: string; secondaryVal: number }> = {
-  aptitude: { primaryName: 'Quantitative & Logic', primaryVal: 60, secondaryName: 'Problem Solving Speed', secondaryVal: 40 },
-  technical: { primaryName: 'Technical Architecture & Stack', primaryVal: 55, secondaryName: 'Communication & System Thinking', secondaryVal: 45 },
-  coding: { primaryName: 'Code Efficiency & Logic', primaryVal: 65, secondaryName: 'Data Structures & Algorithms', secondaryVal: 35 },
-  comprehensive: { primaryName: 'Full Technical & Aptitude Assessment', primaryVal: 70, secondaryName: 'Communication & Problem Solving', secondaryVal: 30 },
-};
-
 export default function CalibrationPanel({
   company,
+  role,
   track = 'technical',
   micActive,
   camActive,
-  micLevel,
+  micLevel: propMicLevel,
   isCalibrating,
   onToggleMic,
   onToggleCam,
 }: CalibrationPanelProps) {
-  const companyCulture = getCompanyCultureNotes(company);
-  const trackWeights = trackWeightMap[track] || trackWeightMap.technical;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [hasCamPermission, setHasCamPermission] = useState<boolean | null>(null);
+  const [realMicLevel, setRealMicLevel] = useState<number>(40);
+
+  // Initialize Real HTML5 Webcam Stream
+  useEffect(() => {
+    let currentStream: MediaStream | null = null;
+
+    async function setupCamera() {
+      if (!camActive) {
+        if (stream) {
+          stream.getTracks().forEach((track) => track.stop());
+          setStream(null);
+        }
+        return;
+      }
+
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: micActive,
+        });
+
+        currentStream = mediaStream;
+        setStream(mediaStream);
+        setHasCamPermission(true);
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+        }
+
+        // Web Audio API for Real Mic Level Sensing
+        if (micActive) {
+          try {
+            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const source = audioCtx.createMediaStreamSource(mediaStream);
+            const analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 64;
+            source.connect(analyser);
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            const updateLevel = () => {
+              if (!currentStream || !currentStream.active) return;
+              analyser.getByteFrequencyData(dataArray);
+              let sum = 0;
+              for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i];
+              }
+              const average = sum / dataArray.length;
+              const normalized = Math.min(100, Math.max(10, Math.floor((average / 128) * 100)));
+              setRealMicLevel(normalized);
+              requestAnimationFrame(updateLevel);
+            };
+            updateLevel();
+          } catch (e) {
+            console.warn('Audio Context failed:', e);
+          }
+        }
+      } catch (err) {
+        console.warn('Webcam permission or device error:', err);
+        setHasCamPermission(false);
+      }
+    }
+
+    setupCamera();
+
+    return () => {
+      if (currentStream) {
+        currentStream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [camActive, micActive]);
+
+  const displayMicLevel = micActive ? (hasCamPermission ? realMicLevel : propMicLevel) : 0;
 
   return (
-    <div className="h-full rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel flex flex-col justify-between space-y-6">
-      <div className="space-y-5">
-        <div className="border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center justify-between">
-          <div>
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 font-display tracking-tight flex items-center gap-2">
-              <Activity className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
-              Hardware &amp; Calibration
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-              Review evaluation weights and test microphone and camera readiness.
-            </p>
-          </div>
-          <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-full border border-emerald-200/60 dark:border-emerald-900/60 flex items-center gap-1">
-            <ShieldCheck className="h-3 w-3" /> System Ready
-          </span>
+    <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel space-y-4">
+      
+      {/* Clean Header */}
+      <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
+        <div>
+          <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">Hardware &amp; Camera Feed</h3>
+          <p className="text-[11px] text-slate-500 font-medium">Test webcam and microphone readiness</p>
         </div>
+        <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-900 flex items-center gap-1">
+          <ShieldCheck className="h-3 w-3" /> Ready
+        </span>
+      </div>
 
-        {/* Evaluation Blueprint Card */}
-        <div className="space-y-4 relative bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 p-4 rounded-2xl">
-          {isCalibrating && (
-            <div className="absolute inset-0 bg-white/70 dark:bg-slate-900/80 backdrop-blur-sm z-10 rounded-2xl flex items-center justify-center gap-2">
-              <Activity className="h-4 w-4 text-brand-600 dark:text-orange-400 animate-spin" />
-              <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-                Updating Rubric Weights...
-              </span>
-            </div>
-          )}
-
-          <div className="flex gap-3 items-center pb-2.5 border-b border-slate-200/60 dark:border-slate-700/60">
-            <CompanyLogo name={company || 'General'} size="md" className="shadow-2xs flex-shrink-0" />
-            <div className="min-w-0 flex-1">
-              <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-                Evaluation Rubric Focus
-              </span>
-              <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 truncate font-display">
-                {company || 'General Standard'}
-                <CheckCircle2 className="h-3.5 w-3.5 text-blue-500 fill-blue-500/10 flex-shrink-0" />
-              </h4>
-            </div>
-          </div>
-
-          <p className="text-xs font-medium leading-relaxed text-slate-600 dark:text-slate-300">
-            {companyCulture.notes}
-          </p>
-
-          <div className="space-y-2.5 pt-1">
-            <div>
-              <div className="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
-                <span>{trackWeights.primaryName}</span>
-                <span className="text-brand-600 dark:text-orange-400 font-extrabold">{trackWeights.primaryVal}%</span>
-              </div>
-              <div className="w-full bg-slate-200/80 dark:bg-slate-700/80 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="bg-brand-600 dark:bg-orange-500 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${trackWeights.primaryVal}%` }}
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs font-bold text-slate-800 dark:text-slate-200 mb-1">
-                <span>{trackWeights.secondaryName}</span>
-                <span className="text-purple-600 dark:text-purple-400 font-extrabold">{trackWeights.secondaryVal}%</span>
-              </div>
-              <div className="w-full bg-slate-200/80 dark:bg-slate-700/80 rounded-full h-1.5 overflow-hidden">
-                <div
-                  className="bg-purple-600 dark:bg-purple-400 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${trackWeights.secondaryVal}%` }}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Device Console */}
-        <div className="space-y-4 bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 p-4 rounded-2xl">
-          <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700/60 pb-2">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
-              Device Controls
-            </span>
-            <span className="text-[9px] font-extrabold text-emerald-600 dark:text-emerald-400">
-              Optimal Feed
-            </span>
-          </div>
-
-          <div className="relative h-28 bg-slate-900 rounded-xl border border-slate-800 overflow-hidden flex items-center justify-center shadow-inner">
-            {camActive ? (
-              <div className="w-full h-full bg-slate-800/60 flex flex-col items-center justify-center text-slate-300 relative p-3">
-                <div className="h-8 w-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center mb-1">
-                  <Video className="h-4 w-4 text-emerald-400" />
-                </div>
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-200">
-                  Webcam Active
+      {/* Clean Live Video Frame (No Fancy Badges Overlay) */}
+      <div className="relative w-full aspect-video bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden flex flex-col items-center justify-center shadow-md">
+        {camActive ? (
+          <div className="relative w-full h-full bg-slate-950">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover transform -scale-x-100"
+            />
+            {hasCamPermission === false && (
+              <div className="absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center text-slate-300 p-4 text-center">
+                <AlertCircle className="h-8 w-8 text-amber-500 mb-1" />
+                <span className="text-xs font-bold text-slate-200">Camera Permission Required</span>
+                <span className="text-[10px] text-slate-400 max-w-xs mt-0.5">
+                  Allow camera access in your browser to enable live preview.
                 </span>
-                <span className="absolute bottom-2 left-2 text-[8px] bg-slate-950/90 text-emerald-400 px-2 py-0.5 rounded font-mono border border-emerald-900/80 shadow-sm flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  Gaze Tracking
-                </span>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-1 font-semibold text-slate-400">
-                <VideoOff className="h-5 w-5 text-slate-600" />
-                <span className="text-[9px] uppercase font-bold tracking-wider">Camera Muted</span>
               </div>
             )}
           </div>
-
-          {/* Mic Meter */}
-          <div className="space-y-1 pt-0.5">
-            <div className="flex justify-between items-center text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
-              <span>Microphone Volume</span>
-              <span className={micActive ? 'text-emerald-600 dark:text-emerald-400 font-extrabold' : 'text-slate-400'}>
-                {micActive ? 'Active' : 'Muted'}
-              </span>
-            </div>
-            <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden p-0.5 border border-slate-300/40 dark:border-slate-700">
-              <div
-                className={`h-full rounded-full transition-all duration-100 ${
-                  micActive ? 'bg-emerald-500' : 'bg-slate-400 dark:bg-slate-600'
-                }`}
-                style={{ width: `${micActive ? micLevel : 0}%` }}
-              />
-            </div>
+        ) : (
+          <div className="flex flex-col items-center gap-1.5 font-medium text-slate-400 p-6 text-center">
+            <VideoOff className="h-7 w-7 text-rose-500 mb-1" />
+            <span className="text-xs font-bold text-rose-400">Camera Off</span>
           </div>
+        )}
+      </div>
+
+      {/* Clean Audio Level Progress Bar */}
+      <div className="space-y-1 bg-white/50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800">
+        <div className="flex justify-between text-[10px] font-bold text-slate-600 dark:text-slate-400">
+          <span className="flex items-center gap-1">
+            <Mic className={`h-3 w-3 ${micActive ? 'text-emerald-500' : 'text-rose-500'}`} />
+            Microphone Volume
+          </span>
+          <span className={micActive ? 'text-emerald-500 font-mono font-bold' : 'text-rose-500 font-mono font-bold'}>
+            {micActive ? `${displayMicLevel}%` : 'Muted'}
+          </span>
+        </div>
+        <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+          <div
+            className="h-full bg-emerald-500 transition-all duration-75 rounded-full"
+            style={{ width: `${displayMicLevel}%` }}
+          />
         </div>
       </div>
 
-      {/* Toggle Controls */}
-      <div className="flex gap-2.5 pt-1">
+      {/* Direct Clean Control Buttons */}
+      <div className="grid grid-cols-2 gap-3 pt-1">
         <button
           type="button"
           onClick={onToggleMic}
-          className={`flex-1 py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
+          className={`py-2.5 px-3 rounded-xl border text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm ${
             micActive
-              ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60'
-              : 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400'
+              ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+              : 'bg-rose-500 text-white border-rose-600 hover:bg-rose-600'
           }`}
         >
-          {micActive ? <Mic className="h-3.5 w-3.5 text-emerald-500" /> : <MicOff className="h-3.5 w-3.5" />}
-          <span>{micActive ? 'Mic Active' : 'Unmute Mic'}</span>
+          {micActive ? <Mic className="h-4 w-4 text-emerald-500" /> : <MicOff className="h-4 w-4 text-white" />}
+          <span>{micActive ? 'Mute Mic' : 'Unmute Mic'}</span>
         </button>
 
         <button
           type="button"
           onClick={onToggleCam}
-          className={`flex-1 py-2.5 px-3 rounded-xl border font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all ${
+          className={`py-2.5 px-3 rounded-xl border text-xs font-extrabold transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-sm ${
             camActive
-              ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60'
-              : 'bg-rose-50 dark:bg-rose-950/60 border-rose-200 dark:border-rose-900/60 text-rose-600 dark:text-rose-400'
+              ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+              : 'bg-rose-500 text-white border-rose-600 hover:bg-rose-600'
           }`}
         >
-          {camActive ? <Video className="h-3.5 w-3.5 text-emerald-500" /> : <VideoOff className="h-3.5 w-3.5" />}
-          <span>{camActive ? 'Camera Active' : 'Enable Cam'}</span>
+          {camActive ? <Video className="h-4 w-4 text-emerald-500" /> : <VideoOff className="h-4 w-4 text-white" />}
+          <span>{camActive ? 'Turn Off Camera' : 'Turn On Camera'}</span>
         </button>
       </div>
+
     </div>
   );
 }

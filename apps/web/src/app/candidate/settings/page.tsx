@@ -1,99 +1,183 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Bell, Shield, Check } from '@/lib/lucide-google-icons';
+import React, { useState, useEffect } from 'react';
+import {
+  User,
+  Bell,
+  Sparkles,
+  Shield,
+  Palette,
+  CheckCircle2,
+  Settings,
+} from '@/lib/lucide-google-icons';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/apiClient';
+import { CandidateProfileTab } from './_components/CandidateProfileTab';
+import { CandidateNotificationsTab } from './_components/CandidateNotificationsTab';
+import { CandidateAiPreferencesTab } from './_components/CandidateAiPreferencesTab';
+import { CandidateSecurityPrivacyTab } from './_components/CandidateSecurityPrivacyTab';
+import { CandidateAppearanceTab } from './_components/CandidateAppearanceTab';
 
 export default function CandidateSettingsPage() {
-  const [emailAlerts, setEmailAlerts] = useState(true);
-  const [smsAlerts, setSmsAlerts] = useState(false);
-  const [profileVisible, setProfileVisible] = useState(true);
-  const [saved, setSaved] = useState(false);
+  const { user } = useAuthContext();
+  const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'ai' | 'security' | 'appearance'>('profile');
+  const [savedToast, setSavedToast] = useState(false);
+  const [readinessScore, setReadinessScore] = useState(60);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+  const calculateReadiness = async () => {
+    try {
+      const res = await apiClient.get<{ profile?: Record<string, any> }>('/candidate/profile').catch(() => null);
+      const p = res?.profile || {};
+      const name = p.full_name || localStorage.getItem('candidate_name') || (user?.email ? user.email.split('@')[0] : '');
+      const email = p.email || user?.email || localStorage.getItem('candidate_email');
+      const headline = p.headline || localStorage.getItem('candidate_headline');
+      const phone = p.phone || localStorage.getItem('candidate_phone');
+      const loc = p.location || localStorage.getItem('candidate_location');
+      const portfolio = p.portfolio_url || localStorage.getItem('candidate_portfolio');
+      const bio = p.bio || localStorage.getItem('candidate_bio');
+
+      let score = 20; // Base user account creation
+      if (name) score += 15;
+      if (email) score += 15;
+      if (headline) score += 15;
+      if (phone) score += 10;
+      if (loc) score += 10;
+      if (portfolio) score += 5;
+      if (bio) score += 10;
+
+      setReadinessScore(Math.min(100, score));
+    } catch {
+      setReadinessScore(80);
+    }
+  };
+
+  useEffect(() => {
+    calculateReadiness();
+    const handleUpdate = () => calculateReadiness();
+    window.addEventListener('profile_update', handleUpdate);
+    return () => window.removeEventListener('profile_update', handleUpdate);
+  }, [user]);
+
+  const triggerSaveNotification = () => {
+    setSavedToast(true);
+    calculateReadiness();
+    setTimeout(() => setSavedToast(false), 2200);
   };
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto animate-in fade-in duration-200">
-      <div className="border-b border-slate-200/60 dark:border-slate-800 pb-4">
-        <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Account Settings</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
-          Configure notifications, account security, and dashboard options.
-        </p>
+    <div className="space-y-6 animate-in fade-in duration-200 pb-12 font-sans">
+      {/* Top Header & Readiness Bar */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
+        <div>
+          <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-widest block mb-1">
+            Candidate Portal • Smart Settings
+          </span>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-display">
+            Account Settings &amp; Preferences
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
+            Manage your candidate profile, notification channels, AI voice interviewer preferences, and privacy controls.
+          </p>
+        </div>
+
+        {/* Readiness Status or Toast Notification */}
+        <div className="flex items-center gap-3">
+          {savedToast ? (
+            <div className="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold flex items-center gap-1.5 animate-in zoom-in-95 duration-200 shadow-sm">
+              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              <span>Preferences Saved!</span>
+            </div>
+          ) : (
+            <div className="px-3.5 py-1.5 rounded-2xl bg-white/40 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 backdrop-blur-md glass-panel flex items-center gap-2.5">
+              <div className="flex flex-col text-right">
+                <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase">Profile Readiness</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{readinessScore}% Complete</span>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 dark:from-orange-500 dark:to-amber-600 flex items-center justify-center text-white font-black text-xs shadow-sm">
+                {readinessScore}%
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-6">
-        {/* Notifications */}
-        <div className="space-y-3.5">
-          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2 flex items-center gap-1.5">
-            <Bell className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
-            Notification Settings
-          </h3>
-          <div className="space-y-3 text-xs font-semibold text-slate-700 dark:text-slate-200">
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="block">Email Alerts</span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-400 block mt-0.5">Receive job invite notifications</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={emailAlerts}
-                onChange={(e) => setEmailAlerts(e.target.checked)}
-                className="rounded border-slate-300 dark:border-slate-700 text-brand-600 focus:ring-0 cursor-pointer"
-              />
-            </div>
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="block">SMS Reminders</span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-400 block mt-0.5">Receive scheduler text confirmation links</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={smsAlerts}
-                onChange={(e) => setSmsAlerts(e.target.checked)}
-                className="rounded border-slate-300 dark:border-slate-700 text-brand-600 focus:ring-0 cursor-pointer"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Security */}
-        <div className="space-y-3.5">
-          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2 flex items-center gap-1.5">
-            <Shield className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
-            Privacy &amp; Visibility
-          </h3>
-          <div className="space-y-3 text-xs font-semibold text-slate-700 dark:text-slate-200">
-            <div className="flex justify-between items-center">
-              <div>
-                <span className="block">Directory Visibility</span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-400 block mt-0.5">Allow recruiters to find and source your profile</span>
-              </div>
-              <input
-                type="checkbox"
-                checked={profileVisible}
-                onChange={(e) => setProfileVisible(e.target.checked)}
-                className="rounded border-slate-300 dark:border-slate-700 text-brand-600 focus:ring-0 cursor-pointer"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Save button */}
-        <div className="pt-4 border-t border-slate-200/60 dark:border-slate-800 flex justify-end gap-3 items-center">
-          {saved && (
-            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/60 rounded px-2.5 py-1 flex items-center gap-1">
-              <Check className="h-3.5 w-3.5" />
-              Preferences Saved
-            </span>
-          )}
+      {/* Main Grid: Left Tab Navigation (1 Col) / Right Content (3 Cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+        {/* Left Sidebar Navigation Tabs */}
+        <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-4 shadow-md backdrop-blur-md glass-panel flex flex-col gap-1.5 select-none">
           <button
-            onClick={handleSave}
-            className="rounded-full bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-bold px-5 py-2 text-xs shadow-sm transition-all cursor-pointer"
+            type="button"
+            onClick={() => setActiveTab('profile')}
+            className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${
+              activeTab === 'profile'
+                ? 'bg-brand-600 dark:bg-orange-600 text-white shadow-md'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+            }`}
           >
-            Save Preferences
+            <User className="h-4 w-4" />
+            <span>Profile &amp; Personal Details</span>
           </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('notifications')}
+            className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${
+              activeTab === 'notifications'
+                ? 'bg-brand-600 dark:bg-orange-600 text-white shadow-md'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+            }`}
+          >
+            <Bell className="h-4 w-4" />
+            <span>Notification &amp; Alerts</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('ai')}
+            className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${
+              activeTab === 'ai'
+                ? 'bg-brand-600 dark:bg-orange-600 text-white shadow-md'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+            }`}
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>AI Interview &amp; Hardware</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('security')}
+            className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${
+              activeTab === 'security'
+                ? 'bg-brand-600 dark:bg-orange-600 text-white shadow-md'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+            }`}
+          >
+            <Shield className="h-4 w-4" />
+            <span>Privacy &amp; Directory Security</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('appearance')}
+            className={`w-full text-left px-4 py-3 rounded-2xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2.5 ${
+              activeTab === 'appearance'
+                ? 'bg-brand-600 dark:bg-orange-600 text-white shadow-md'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/70 dark:hover:bg-slate-800/60'
+            }`}
+          >
+            <Palette className="h-4 w-4" />
+            <span>Theme &amp; Appearance</span>
+          </button>
+        </div>
+
+        {/* Right Content Panel */}
+        <div className="lg:col-span-3">
+          {activeTab === 'profile' && <CandidateProfileTab onSave={triggerSaveNotification} />}
+          {activeTab === 'notifications' && <CandidateNotificationsTab onSave={triggerSaveNotification} />}
+          {activeTab === 'ai' && <CandidateAiPreferencesTab onSave={triggerSaveNotification} />}
+          {activeTab === 'security' && <CandidateSecurityPrivacyTab onSave={triggerSaveNotification} />}
+          {activeTab === 'appearance' && <CandidateAppearanceTab onSave={triggerSaveNotification} />}
         </div>
       </div>
     </div>

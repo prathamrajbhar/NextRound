@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { NotificationDropdown } from '@/components/ui/NotificationDropdown';
 import Image from 'next/image';
 
+import { usePathname } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
 
@@ -25,6 +26,7 @@ export default function CandidateLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const { user } = useAuthContext();
   const [mounted, setMounted] = useState(false);
   const [avatar, setAvatar] = useState('/avatar-girl.jpg');
@@ -115,6 +117,16 @@ export default function CandidateLayout({
     }
   };
 
+  const isAssessmentRoom = Boolean(
+    ((pathname.includes('/candidate/mock/') && pathname.split('/').length >= 4 && !['new', 'history'].includes(pathname.split('/')[3])) ||
+    pathname.includes('/assessment')) &&
+    !pathname.endsWith('/feedback')
+  );
+
+  if (isAssessmentRoom) {
+    return <div className="w-screen h-screen bg-slate-950 text-white overflow-hidden font-sans">{children}</div>;
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50/50 dark:bg-slate-950/60 relative transition-colors duration-300">
       {/* Backdrop overlay for mobile */}
@@ -175,7 +187,7 @@ export default function CandidateLayout({
 
           </div>
         </header>
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
+        <main key={pathname} className="flex-1 p-8 overflow-y-auto animate-in fade-in duration-200">{children}</main>
       </div>
     </div>
   );

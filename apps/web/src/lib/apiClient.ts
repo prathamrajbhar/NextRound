@@ -1,4 +1,4 @@
-import { fetchApi } from './api';
+import { fetchApi, clearApiCache } from './api';
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const result = await fetchApi<T>(endpoint, options);
@@ -23,4 +23,5 @@ export const apiClient = {
   patch: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
     request<T>(endpoint, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined, ...options }),
   delete: <T>(endpoint: string, options?: RequestInit) => request<T>(endpoint, { method: 'DELETE', ...options }),
+  clearCache: clearApiCache,
 };

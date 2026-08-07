@@ -84,6 +84,7 @@ export default function HrSidebar({ avatar = '/avatar-boy.jpg', name = 'HR User'
                   <Link
                     key={item.path}
                     href={item.path}
+                    prefetch={true}
                     className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all border-l-2 duration-200 select-none ${isActive
                       ? 'bg-orange-500/10 dark:bg-orange-500/15 text-slate-900 dark:text-slate-100 border-orange-500 dark:border-orange-400 shadow-sm font-bold'
                       : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200'

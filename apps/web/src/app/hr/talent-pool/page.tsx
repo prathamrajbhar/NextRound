@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 import { Application } from '@/types';
+import { JobsGridSkeleton } from '@/components/ui/Skeleton';
 import { Search, ChevronRight, Users, Filter, UserCheck, Brain, Loader2 } from '@/lib/lucide-google-icons';
 import Image from 'next/image';
 
@@ -62,11 +63,7 @@ export default function HrTalentPoolPage() {
   });
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-600 dark:text-orange-400" />
-      </div>
-    );
+    return <JobsGridSkeleton count={6} />;
   }
 
   return (

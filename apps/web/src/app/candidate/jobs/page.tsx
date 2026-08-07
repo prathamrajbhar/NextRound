@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { Job, Application } from '@/types';
-import { JobCard } from '@/components/ui';
+import { JobCard, JobsGridSkeleton } from '@/components/ui';
 import { Search, Filter } from '@/lib/lucide-google-icons';
 
 export default function CandidateJobsPage() {
@@ -70,6 +70,10 @@ export default function CandidateJobsPage() {
 
     return matchesSearch && matchesLocation && matchesExperience;
   });
+
+  if (loading) {
+    return <JobsGridSkeleton count={6} />;
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">

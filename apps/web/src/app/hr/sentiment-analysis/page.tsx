@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { apiClient } from '@/lib/apiClient';
 import { CandidateSentimentProfile } from '@/types';
+import { AnalyticsGridSkeleton } from '@/components/ui/Skeleton';
 import {
   Activity,
   Mic,
@@ -48,11 +49,7 @@ export default function SentimentAnalysisPage() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-600 dark:text-orange-400" />
-      </div>
-    );
+    return <AnalyticsGridSkeleton />;
   }
 
   const currentProfile = profiles.find(p => p.id === selectedCandidateId) || profiles[0];

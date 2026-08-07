@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 import { Application } from '@/types';
+import { ApplicationsListSkeleton } from '@/components/ui/Skeleton';
 import { Compass, Briefcase, ChevronRight } from '@/lib/lucide-google-icons';
 
 export default function CandidateApplications() {
@@ -34,6 +35,10 @@ export default function CandidateApplications() {
   }, []);
 
   const safeApps = Array.isArray(applications) ? applications : [];
+
+  if (loading) {
+    return <ApplicationsListSkeleton count={5} />;
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">

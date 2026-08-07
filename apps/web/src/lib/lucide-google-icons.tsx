@@ -152,6 +152,7 @@ export const MoreHorizontal = createMaterialIcon('more_horiz');
 export const Pause = createMaterialIcon('pause');
 export const Pencil = createMaterialIcon('edit');
 export const Percent = createMaterialIcon('percent');
+export const Phone = createMaterialIcon('phone');
 export const PhoneOff = createMaterialIcon('phone_disabled');
 export const PieChart = createMaterialIcon('pie_chart');
 export const Play = createMaterialIcon('play_arrow');
@@ -221,4 +222,5 @@ export const ChevronLeft = createMaterialIcon('chevron_left');
 export const Sun = createMaterialIcon('light_mode');
 export const Moon = createMaterialIcon('dark_mode');
 export const Loader2 = createMaterialIcon('progress_activity');
+export const Edit = createMaterialIcon('edit');
 

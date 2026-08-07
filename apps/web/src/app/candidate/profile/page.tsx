@@ -2,99 +2,189 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { 
-  User, 
-  FileText, 
-  Check, 
-  AlertTriangle, 
-  Plus, 
-  X, 
-  Trash2, 
-  Mail, 
-  Link as LinkIcon, 
+import {
+  User,
+  Mail,
+  Phone,
+  Globe,
   Code,
   Sparkles,
-  UploadCloud
+  CheckCircle2,
+  Check,
+  Plus,
+  X,
+  FileText,
+  UploadCloud,
+  AlertTriangle,
+  Trash2,
+  Save,
+  Zap,
 } from '@/lib/lucide-google-icons';
-
 import { useAuthContext } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/apiClient';
 
+const PRESET_SKILLS = [
+  'React',
+  'TypeScript',
+  'Next.js',
+  'Node.js',
+  'Python',
+  'PostgreSQL',
+  'Tailwind CSS',
+  'Docker',
+  'AWS',
+  'GraphQL',
+  'REST API',
+];
+
+const PRESET_ROLES = [
+  'Full Stack Developer',
+  'Frontend Engineer',
+  'Backend Engineer',
+  'DevOps Specialist',
+  'AI / ML Engineer',
+];
+
 export default function CandidateProfile() {
   const { user } = useAuthContext();
-  const [name, setName] = useState(() => user?.email ? user.email.split('@')[0] : '');
+  const [name, setName] = useState(() => (user?.email ? user.email.split('@')[0] : ''));
   const [email, setEmail] = useState(() => user?.email || '');
-  const [avatar, setAvatar] = useState('/avatar-girl.jpg');
+  const [phone, setPhone] = useState('');
+  const [location, setLocation] = useState('');
+  const [headline, setHeadline] = useState('');
+  const [avatar, setAvatar] = useState('/avatar-boy.jpg');
+  const [customAvatar, setCustomAvatar] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
+  const [portfolioUrl, setPortfolioUrl] = useState('');
+  const [targetRoles, setTargetRoles] = useState<string[]>(['Full Stack Developer']);
+  const [experienceYears, setExperienceYears] = useState('3');
+  const [expectedSalary, setExpectedSalary] = useState('$120,000 / yr');
+  const [bio, setBio] = useState('');
   const [resumeName, setResumeName] = useState('No resume uploaded');
-  const [skills, setSkills] = useState<string[]>([]);
+  const [resumeDate, setResumeDate] = useState('');
+  const [skills, setSkills] = useState<string[]>(['React', 'TypeScript', 'Node.js']);
   const [newSkill, setNewSkill] = useState('');
   
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [detailsSaved, setDetailsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [generatedResumes, setGeneratedResumes] = useState<any[]>([]);
 
   useEffect(() => {
-    async function loadProfile() {
+    const fetchProfileAndResumes = async () => {
       if (user?.email) {
         setEmail(user.email);
         setName(user.email.split('@')[0]);
       }
 
       try {
-        const res = await apiClient.get<{ profile?: Record<string, unknown> }>('/candidate/profile');
+        const res = await apiClient.get<{ profile?: Record<string, any> }>('/candidate/profile').catch(() => null);
         if (res && res.profile) {
-          const profileObj = res.profile;
-          if (typeof profileObj.full_name === 'string') setName(profileObj.full_name);
-          if (typeof profileObj.email === 'string') setEmail(profileObj.email);
-          if (typeof profileObj.linkedin_url === 'string') setLinkedinUrl(profileObj.linkedin_url);
-          if (typeof profileObj.github_url === 'string') setGithubUrl(profileObj.github_url);
-          if (Array.isArray(profileObj.skills)) setSkills(profileObj.skills as string[]);
-          if (typeof profileObj.resume_url === 'string') setResumeName(profileObj.resume_url.split('/').pop() || 'uploaded_resume.pdf');
+          const p = res.profile;
+          if (p.full_name) setName(p.full_name);
+          if (p.email) setEmail(p.email);
+          if (p.phone) setPhone(p.phone);
+          if (p.location) setLocation(p.location);
+          if (p.headline) setHeadline(p.headline);
+          if (p.linkedin_url) setLinkedinUrl(p.linkedin_url);
+          if (p.github_url) setGithubUrl(p.github_url);
+          if (p.portfolio_url) setPortfolioUrl(p.portfolio_url);
+          if (Array.isArray(p.skills) && p.skills.length > 0) setSkills(p.skills);
+          if (Array.isArray(p.target_roles) && p.target_roles.length > 0) setTargetRoles(p.target_roles);
+          if (p.experience_years) setExperienceYears(String(p.experience_years));
+          if (p.expected_salary) setExpectedSalary(p.expected_salary);
+          if (p.bio) setBio(p.bio);
+          if (p.resume_url) {
+            setResumeName(p.resume_url.split('/').pop() || 'candidate_resume.pdf');
+            setResumeDate('Uploaded recently');
+          }
+        } else {
+          // Fallback to local storage if API profile not found
+          const savedName = localStorage.getItem('candidate_name');
+          const savedEmail = localStorage.getItem('candidate_email');
+          const savedPhone = localStorage.getItem('candidate_phone');
+          const savedLoc = localStorage.getItem('candidate_location');
+          const savedHeadline = localStorage.getItem('candidate_headline');
+          const savedLinkedin = localStorage.getItem('candidate_linkedin');
+          const savedGithub = localStorage.getItem('candidate_github');
+          const savedPortfolio = localStorage.getItem('candidate_portfolio');
+          const savedBio = localStorage.getItem('candidate_bio');
+          
+          if (savedName) setName(savedName);
+          if (savedEmail) setEmail(savedEmail);
+          if (savedPhone) setPhone(savedPhone);
+          if (savedLoc) setLocation(savedLoc);
+          if (savedHeadline) setHeadline(savedHeadline);
+          if (savedLinkedin) setLinkedinUrl(savedLinkedin);
+          if (savedGithub) setGithubUrl(savedGithub);
+          if (savedPortfolio) setPortfolioUrl(savedPortfolio);
+          if (savedBio) setBio(savedBio);
         }
       } catch {
-        // Fallback to local storage if API profile not found
-        const savedName = localStorage.getItem('candidate_name');
-        const savedEmail = localStorage.getItem('candidate_email');
-        const savedAvatar = localStorage.getItem('candidate_avatar');
-        const savedLinkedin = localStorage.getItem('candidate_linkedin');
-        const savedGithub = localStorage.getItem('candidate_github');
-        
-        if (savedName) setName(savedName);
-        if (savedEmail) setEmail(savedEmail);
-        if (savedAvatar) setAvatar(savedAvatar);
-        if (savedLinkedin) setLinkedinUrl(savedLinkedin);
-        if (savedGithub) setGithubUrl(savedGithub);
+        // Keep initial state
       }
     }
 
-    loadProfile();
+    fetchProfileAndResumes();
   }, [user]);
 
+  // Compute profile readiness percentage dynamically
+  const getReadinessScore = () => {
+    let score = 20; // Account registered
+    if (name.trim()) score += 10;
+    if (email.trim()) score += 10;
+    if (phone.trim()) score += 10;
+    if (location.trim()) score += 10;
+    if (headline.trim()) score += 10;
+    if (linkedinUrl.trim() || githubUrl.trim() || portfolioUrl.trim()) score += 10;
+    if (skills.length >= 3) score += 10;
+    if (resumeName !== 'No resume uploaded') score += 10;
+    return Math.min(100, score);
+  };
+
+  const readiness = getReadinessScore();
+
   const handleSaveDetails = async () => {
+    setSaving(true);
     localStorage.setItem('candidate_name', name);
     localStorage.setItem('candidate_email', email);
-    localStorage.setItem('candidate_avatar', avatar);
+    localStorage.setItem('candidate_phone', phone);
+    localStorage.setItem('candidate_location', location);
+    localStorage.setItem('candidate_headline', headline);
     localStorage.setItem('candidate_linkedin', linkedinUrl);
     localStorage.setItem('candidate_github', githubUrl);
+    localStorage.setItem('candidate_portfolio', portfolioUrl);
+    localStorage.setItem('candidate_bio', bio);
 
     try {
       await apiClient.post('/candidate/profile', {
+        full_name: name,
+        email,
+        phone,
+        location,
+        headline,
         skills,
-        experience_years: 3,
+        target_roles: targetRoles,
+        experience_years: parseInt(experienceYears) || 3,
+        expected_salary: expectedSalary,
         linkedin_url: linkedinUrl,
         github_url: githubUrl,
-      });
+        portfolio_url: portfolioUrl,
+        bio,
+      }).catch(() => null);
     } catch {
-      // Ignore API sync errors for now
+      // Ignore API sync errors if offline
     }
     
-    // Dispatch event to update layout header
+    // Dispatch event to update layout header & settings page
     window.dispatchEvent(new Event('profile_update'));
 
+    setSaving(false);
     setDetailsSaved(true);
-    setTimeout(() => setDetailsSaved(false), 2000);
+    setTimeout(() => setDetailsSaved(false), 2200);
   };
 
   const handleCustomAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,22 +192,30 @@ export default function CandidateProfile() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAvatar(reader.result as string);
+        setCustomAvatar(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleAddSkill = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
-      setSkills([...skills, newSkill.trim()]);
-      setNewSkill('');
+  const handleAddSkill = (tagToAdd?: string) => {
+    const target = tagToAdd || newSkill;
+    if (target.trim() && !skills.includes(target.trim())) {
+      setSkills([...skills, target.trim()]);
+      if (!tagToAdd) setNewSkill('');
     }
   };
 
   const handleRemoveSkill = (tag: string) => {
     setSkills(skills.filter((s) => s !== tag));
+  };
+
+  const handleToggleRole = (role: string) => {
+    if (targetRoles.includes(role)) {
+      setTargetRoles(targetRoles.filter((r) => r !== role));
+    } else {
+      setTargetRoles([...targetRoles, role]);
+    }
   };
 
   const handleDeleteData = () => {
@@ -132,65 +230,104 @@ export default function CandidateProfile() {
     const file = e.target.files?.[0];
     if (file) {
       setResumeName(file.name);
+      setResumeDate('Uploaded just now');
     }
   };
 
+  const initials = name
+    ? name
+        .split(' ')
+        .filter(Boolean)
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
+    : 'CN';
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-300 pb-12 font-sans">
       
       {/* SaaS Page Header */}
-      <div className="border-b border-slate-200/80 dark:border-slate-800 pb-4">
-        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block mb-1">
-          Identity Center
-        </span>
-        <h1 className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">My Profile</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
-          Manage your reusable unified profile tags, social links, and credentials.
-        </p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
+        <div>
+          <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-widest block mb-1">
+            Identity Center • Verified Profile
+          </span>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-display">
+            My Candidate Profile
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
+            Manage your unified candidate profile, skill matrix, social credentials, and resume documents.
+          </p>
+        </div>
+
+        {detailsSaved ? (
+          <div className="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold flex items-center gap-1.5 animate-in zoom-in-95 duration-200 shadow-sm">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+            <span>Profile Saved!</span>
+          </div>
+        ) : (
+          <div className="px-3.5 py-1.5 rounded-2xl bg-white/40 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 backdrop-blur-md glass-panel flex items-center gap-2.5">
+            <div className="flex flex-col text-right">
+              <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase">Completeness</span>
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{readiness}% Complete</span>
+            </div>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-brand-500 to-amber-500 dark:from-orange-500 dark:to-amber-600 flex items-center justify-center text-white font-black text-xs shadow-sm">
+              {readiness}%
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Form Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        {/* Left Column: Form & Skills */}
+        {/* Left Column: Form & Skills (2 Cols) */}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* General Details */}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 sm:p-8 shadow-xl shadow-slate-200/35 dark:shadow-none backdrop-blur-md glass-panel space-y-6">
-            <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2.5 flex items-center gap-1.5">
-              <User className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
-              Candidate Details
+          {/* General Details Card */}
+          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 sm:p-7 shadow-md backdrop-blur-md glass-panel space-y-6">
+            <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
+              <User className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
+              Candidate Details &amp; Contact Info
             </h3>
             
             {/* Avatar Selector */}
-            <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-slate-100/60 dark:border-slate-800 pb-5">
-              <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shadow-sm flex-shrink-0">
-                <Image src={avatar} alt="Profile Avatar" width={64} height={64} className="h-full w-full object-cover" unoptimized />
+            <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-slate-200/60 dark:border-slate-800 pb-5">
+              <div className="relative h-20 w-20 rounded-2xl overflow-hidden bg-gradient-to-br from-brand-500 to-amber-500 dark:from-orange-500 dark:to-amber-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-brand-500/20 dark:shadow-orange-500/20 flex-shrink-0">
+                {customAvatar ? (
+                  <Image src={customAvatar} alt="Custom Avatar" width={80} height={80} className="h-full w-full object-cover" unoptimized />
+                ) : avatar ? (
+                  <Image src={avatar} alt="Profile Avatar" width={80} height={80} className="h-full w-full object-cover" unoptimized />
+                ) : (
+                  <span>{initials}</span>
+                )}
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Select Profile Avatar</label>
-                <div className="flex flex-wrap items-center gap-3">
+
+              <div className="space-y-2 text-center sm:text-left">
+                <label className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Profile Avatar Choice</label>
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
                   <button
                     type="button"
-                    onClick={() => setAvatar('/avatar-boy.jpg')}
-                    className={`h-10 w-10 rounded-full overflow-hidden border-2 cursor-pointer transition-all ${
-                      avatar === '/avatar-boy.jpg' ? 'border-emerald-500 scale-105 shadow-md shadow-emerald-50' : 'border-slate-200 dark:border-slate-700 opacity-70 hover:opacity-100'
+                    onClick={() => { setCustomAvatar(null); setAvatar('/avatar-boy.jpg'); }}
+                    className={`h-10 w-10 rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${
+                      !customAvatar && avatar === '/avatar-boy.jpg' ? 'border-brand-500 dark:border-orange-500 scale-105 shadow-md' : 'border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100'
                     }`}
                   >
                     <Image src="/avatar-boy.jpg" alt="Avatar Boy" width={40} height={40} className="h-full w-full object-cover" unoptimized />
                   </button>
                   <button
                     type="button"
-                    onClick={() => setAvatar('/avatar-girl.jpg')}
-                    className={`h-10 w-10 rounded-full overflow-hidden border-2 cursor-pointer transition-all ${
-                      avatar === '/avatar-girl.jpg' ? 'border-emerald-500 scale-105 shadow-md shadow-emerald-50' : 'border-slate-200 dark:border-slate-700 opacity-70 hover:opacity-100'
+                    onClick={() => { setCustomAvatar(null); setAvatar('/avatar-girl.jpg'); }}
+                    className={`h-10 w-10 rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${
+                      !customAvatar && avatar === '/avatar-girl.jpg' ? 'border-brand-500 dark:border-orange-500 scale-105 shadow-md' : 'border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100'
                     }`}
                   >
                     <Image src="/avatar-girl.jpg" alt="Avatar Girl" width={40} height={40} className="h-full w-full object-cover" unoptimized />
                   </button>
                   
-                  <label className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-extrabold px-3 py-2 cursor-pointer transition-all shadow-sm flex items-center gap-1.5">
-                    <Plus className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
+                  <label className="rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-2 cursor-pointer transition-all shadow-sm flex items-center gap-1.5">
+                    <UploadCloud className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                     <span>Upload Custom</span>
                     <input
                       type="file"
@@ -206,146 +343,263 @@ export default function CandidateProfile() {
             {/* Inputs Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Full Name</label>
+                <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Full Name</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
                     type="text"
+                    placeholder="Alex Morgan"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-emerald-500 transition-all font-semibold"
+                    className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
                   />
                 </div>
               </div>
               
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</label>
+                <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
                     type="email"
+                    placeholder="alex@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-emerald-500 transition-all font-semibold"
+                    className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">LinkedIn Profile URL</label>
+                <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Phone Number</label>
                 <div className="relative">
-                  <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
-                    type="url"
-                    value={linkedinUrl}
-                    onChange={(e) => setLinkedinUrl(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-emerald-500 transition-all font-semibold"
+                    type="tel"
+                    placeholder="+1 (555) 234-5678"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">GitHub Profile URL</label>
+                <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Location &amp; Timezone</label>
                 <div className="relative">
-                  <Code className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                  <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   <input
-                    type="url"
-                    value={githubUrl}
-                    onChange={(e) => setGithubUrl(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:border-emerald-500 transition-all font-semibold"
+                    type="text"
+                    placeholder="San Francisco, CA"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                    className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
                   />
                 </div>
               </div>
             </div>
 
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Professional Headline</label>
+              <input
+                type="text"
+                placeholder="Senior Full-Stack Engineer | React, Node.js &amp; Cloud Specialist"
+                value={headline}
+                onChange={(e) => setHeadline(e.target.value)}
+                className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
+              />
+            </div>
+
+            {/* Social Links */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">LinkedIn URL</label>
+                <input
+                  type="url"
+                  placeholder="https://linkedin.com/in/username"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">GitHub URL</label>
+                <div className="relative">
+                  <Code className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
+                  <input
+                    type="url"
+                    placeholder="https://github.com/username"
+                    value={githubUrl}
+                    onChange={(e) => setGithubUrl(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Portfolio Website</label>
+                <input
+                  type="url"
+                  placeholder="https://yourportfolio.dev"
+                  value={portfolioUrl}
+                  onChange={(e) => setPortfolioUrl(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
+                />
+              </div>
+            </div>
+
+            {/* Target Roles Selector */}
+            <div className="space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+              <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Target Job Roles</label>
+              <div className="flex flex-wrap gap-2">
+                {PRESET_ROLES.map((role) => {
+                  const isSelected = targetRoles.includes(role);
+                  return (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => handleToggleRole(role)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'bg-brand-600 dark:bg-orange-600 text-white shadow-sm'
+                          : 'bg-slate-100/80 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-200/60'
+                      }`}
+                    >
+                      {isSelected && <Check className="h-3 w-3" />}
+                      {role}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* About Me Bio */}
+            <div className="space-y-1.5 pt-2">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Professional Bio / Summary</label>
+                <span className="text-[10px] font-semibold text-slate-400">{bio.length} / 500 chars</span>
+              </div>
+              <textarea
+                rows={3}
+                placeholder="Passionate engineer with expertise in React, TypeScript, and microservice architectures..."
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-medium focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input resize-none"
+              />
+            </div>
+
             {/* Save details action */}
-            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 items-center">
-              {detailsSaved && (
-                <span className="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/60 rounded-full p-1.5 flex items-center justify-center animate-in scale-in duration-200 shadow-sm">
-                  <Check className="h-3.5 w-3.5" />
-                </span>
-              )}
+            <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-end">
               <button
                 type="button"
                 onClick={handleSaveDetails}
-                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold px-6 py-2.5 text-xs shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer hover:scale-[1.01]"
+                disabled={saving}
+                className="px-5 py-2.5 rounded-2xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center gap-2"
               >
-                Save
+                <Save className="h-4 w-4" />
+                {saving ? 'Saving Profile...' : 'Save Profile Details'}
               </button>
             </div>
           </div>
 
-          {/* Skills Management */}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
-            <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2.5 flex items-center gap-1.5">
-              <Sparkles className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
-              Skills &amp; Vetting Keywords
-            </h3>
-            
-            <div className="flex flex-wrap gap-1.5 mb-2">
+          {/* Skills & Vetting Keywords Card */}
+          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-slate-800 pb-3">
+              <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Sparkles className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
+                Skills &amp; AI Vetting Keywords
+              </h3>
+              <span className="text-[10px] font-extrabold text-slate-400">{skills.length} Skills Added</span>
+            </div>
+
+            {/* Current Active Skills */}
+            <div className="flex flex-wrap gap-2">
               {skills.map((s) => (
                 <span
                   key={s}
-                  className="inline-flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300 shadow-sm"
+                  className="inline-flex items-center gap-1.5 text-xs font-extrabold px-3 py-1 rounded-xl bg-brand-50 dark:bg-orange-950/60 border border-brand-200 dark:border-orange-900/60 text-brand-700 dark:text-orange-300 shadow-sm"
                 >
                   {s}
-                  <button type="button" onClick={() => handleRemoveSkill(s)} className="hover:text-emerald-950 dark:hover:text-white cursor-pointer">
+                  <button type="button" onClick={() => handleRemoveSkill(s)} className="hover:text-red-500 cursor-pointer">
                     <X className="h-3 w-3" />
                   </button>
                 </span>
               ))}
             </div>
-            
-            <form onSubmit={handleAddSkill} className="flex gap-2">
+
+            {/* Add Skill Input */}
+            <form onSubmit={(e) => { e.preventDefault(); handleAddSkill(); }} className="flex gap-2 pt-1">
               <input
                 type="text"
-                placeholder="Add new skill tag (e.g. Docker, Python)..."
+                placeholder="Add skill keyword (e.g. Docker, GraphQL, Python)..."
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
-                className="flex-grow px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/40 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-all font-semibold"
+                className="flex-grow px-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input font-semibold"
               />
               <button
                 type="submit"
-                className="rounded-xl bg-slate-900 dark:bg-slate-700 text-white font-extrabold text-xs px-4 hover:bg-slate-800 dark:hover:bg-slate-600 cursor-pointer flex items-center justify-center shadow-md"
+                className="px-4 py-2 rounded-xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold text-xs shadow-md cursor-pointer flex items-center justify-center"
               >
                 <Plus className="h-4 w-4" />
               </button>
             </form>
+
+            {/* Preset Suggestion Chips */}
+            <div className="pt-2">
+              <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block mb-2">Quick Add Suggestions</span>
+              <div className="flex flex-wrap gap-1.5">
+                {PRESET_SKILLS.filter((ps) => !skills.includes(ps)).map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    onClick={() => handleAddSkill(preset)}
+                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-100/80 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-orange-950/40 hover:text-brand-600 dark:hover:text-orange-400 transition-all cursor-pointer border border-slate-200/60 dark:border-slate-800 flex items-center gap-1"
+                  >
+                    <Plus className="h-2.5 w-2.5" />
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* GDPR Danger Zone */}
-          <div className="rounded-3xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/15 dark:bg-rose-950/20 p-6 shadow-sm glass-panel space-y-4">
-            <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400">
-              <AlertTriangle className="h-5 w-5" />
-              <h3 className="text-sm font-black">Danger Zone</h3>
+          <div className="rounded-3xl border border-rose-200/80 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/20 p-6 shadow-sm glass-panel space-y-4">
+            <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
+              <AlertTriangle className="h-4.5 w-4.5" />
+              <h3 className="text-xs font-extrabold">Data Privacy &amp; Account Purge</h3>
             </div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-semibold">
-              Under GDPR directives, you have the right to inspect and purge your profile, resumes, evaluations, and voice audio logs instantly.
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed font-semibold">
+              You have full rights to request instant deletion of your candidate profile, uploaded resumes, and AI evaluation logs.
             </p>
             {deleted ? (
-              <div className="text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 p-3 rounded-xl border border-rose-100 dark:border-rose-900/60">
-                Data deletion request logged. Processing account cleanup.
+              <div className="text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 p-3 rounded-xl border border-rose-200 dark:border-rose-900/60">
+                Purge request submitted. Account data scheduled for deletion.
               </div>
             ) : (
               <button
+                type="button"
                 onClick={handleDeleteData}
                 disabled={isDeleting}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 px-4 py-2 text-xs font-bold transition-all cursor-pointer shadow-sm"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 px-4 py-2 text-xs font-extrabold transition-all cursor-pointer shadow-sm"
               >
-                <Trash2 className="h-4 w-4" />
-                {isDeleting ? 'Processing purge request...' : 'Purge All My Account Data'}
+                <Trash2 className="h-3.5 w-3.5" />
+                {isDeleting ? 'Processing purge request...' : 'Purge All Candidate Account Data'}
               </button>
             )}
           </div>
         </div>
 
-        {/* Right Column: CV & Progress */}
+        {/* Right Column: Progress Ring & Active Resume (1 Col) */}
         <div className="space-y-6">
           
-          {/* Completeness gauge */}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel text-center">
-            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Completeness</span>
-            <div className="relative h-24 w-24 mx-auto my-4 flex items-center justify-center">
+          {/* Profile Completeness Card */}
+          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel text-center space-y-4">
+            <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Profile Completeness</span>
+            
+            {/* Circular Progress Gauge */}
+            <div className="relative h-28 w-28 mx-auto my-2 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <path
                   className="text-slate-200 dark:text-slate-800"
@@ -355,8 +609,8 @@ export default function CandidateProfile() {
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 />
                 <path
-                  className="text-emerald-500 animate-dash"
-                  strokeDasharray="90, 100"
+                  className="text-brand-500 dark:text-orange-500 transition-all duration-500"
+                  strokeDasharray={`${readiness}, 100`}
                   strokeWidth="3.5"
                   strokeLinecap="round"
                   stroke="currentColor"
@@ -364,30 +618,36 @@ export default function CandidateProfile() {
                   d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                 />
               </svg>
-              <span className="absolute text-lg font-black text-slate-800 dark:text-slate-100">90%</span>
+              <span className="absolute text-xl font-black text-slate-900 dark:text-slate-100">{readiness}%</span>
             </div>
-            <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-100 dark:border-emerald-900/60 w-fit mx-auto block mb-2">
-              Profile Calibrated
-            </span>
-            <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 block leading-relaxed">
-              Verify your skills to unlock 100% match scoring values.
-            </span>
+
+            <div className="space-y-1">
+              <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-900 inline-block">
+                {readiness >= 90 ? 'Profile Calibrated' : readiness >= 60 ? 'Profile In Progress' : 'Initial Setup'}
+              </span>
+              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 pt-1">
+                Complete your contact details and resume to reach 100% recruiter match readiness.
+              </p>
+            </div>
           </div>
 
-          {/* Active CV Box */}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
-            <h3 className="text-xs font-black text-slate-900 dark:text-slate-100 border-b border-slate-100 dark:border-slate-800 pb-2">Active Resume</h3>
+          {/* Active Resume Card */}
+          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
+            <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center justify-between">
+              <span>Active Resume PDF</span>
+              <span className="text-[10px] text-emerald-500 font-bold">PDF Format</span>
+            </h3>
             
             <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-brand-50/50 dark:bg-orange-950/40 border border-brand-100 dark:border-orange-900/60 text-brand-700 dark:text-orange-300 shadow-sm">
-              <FileText className="h-5 w-5 flex-shrink-0" />
+              <FileText className="h-6 w-6 flex-shrink-0 text-brand-600 dark:text-orange-400" />
               <div className="min-w-0 flex-grow">
-                <span className="text-xs font-extrabold truncate block leading-none">{resumeName}</span>
-                <span className="text-[9px] text-slate-400 dark:text-slate-400 font-semibold block mt-1">Uploaded 2 days ago</span>
+                <span className="text-xs font-extrabold truncate block">{resumeName}</span>
+                <span className="text-[10px] text-slate-400 dark:text-slate-400 font-semibold block mt-0.5">{resumeDate || 'PDF Resume Attached'}</span>
               </div>
             </div>
 
-            <label className="w-full text-center text-xs font-extrabold text-brand-600 dark:text-orange-400 hover:text-brand-700 dark:hover:text-orange-300 transition-colors py-2 cursor-pointer block border border-dashed border-brand-200 dark:border-orange-900/60 bg-brand-50/10 dark:bg-orange-950/20 rounded-2xl shadow-inner hover:bg-brand-50/20 dark:hover:bg-orange-950/40">
-              <UploadCloud className="h-4.5 w-4.5 mx-auto mb-1 text-brand-500 dark:text-orange-400" />
+            <label className="w-full text-center text-xs font-extrabold text-brand-600 dark:text-orange-400 hover:text-brand-700 dark:hover:text-orange-300 transition-colors py-3 cursor-pointer block border border-dashed border-brand-200 dark:border-orange-900/60 bg-brand-50/10 dark:bg-orange-950/20 rounded-2xl shadow-inner hover:bg-brand-50/20 dark:hover:bg-orange-950/40">
+              <UploadCloud className="h-5 w-5 mx-auto mb-1 text-brand-500 dark:text-orange-400" />
               <span>Replace Resume PDF</span>
               <input
                 type="file"
@@ -397,6 +657,50 @@ export default function CandidateProfile() {
               />
             </label>
           </div>
+
+          {/* Generated ATS Resumes Vault */}
+          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-slate-800 pb-3">
+              <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <Sparkles className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
+                Generated ATS Resumes Vault
+              </h3>
+              <span className="text-[10px] font-extrabold text-slate-400">{generatedResumes.length} Saved</span>
+            </div>
+
+            {generatedResumes.length === 0 ? (
+              <div className="text-center py-6 text-slate-400 space-y-1">
+                <FileText className="h-6 w-6 mx-auto text-slate-300 dark:text-slate-700" />
+                <p className="text-xs font-semibold">No AI Voice Resumes Yet</p>
+                <p className="text-[10px] text-slate-500">Generate resumes using AI Voice Studio.</p>
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                {generatedResumes.map((item: any) => (
+                  <div
+                    key={item.id}
+                    className="p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-800/40 flex items-center justify-between gap-3"
+                  >
+                    <div className="min-w-0">
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block truncate">{item.targetRole}</span>
+                      <span className="text-[10px] text-slate-400 block">{new Date(item.createdAt).toLocaleDateString()}</span>
+                    </div>
+
+                    <a
+                      href={item.resumePdfUrl || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-xl bg-brand-50 dark:bg-orange-950/80 text-brand-600 dark:text-orange-400 border border-brand-200 dark:border-orange-900 text-[10px] font-extrabold hover:bg-brand-100 transition-all flex items-center gap-1 cursor-pointer flex-shrink-0"
+                    >
+                      <Zap className="h-3 w-3" />
+                      <span>View PDF</span>
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
         </div>
 
       </div>

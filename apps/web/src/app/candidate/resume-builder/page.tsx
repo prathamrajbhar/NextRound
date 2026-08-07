@@ -234,7 +234,7 @@ export default function AIResumeBuilderPage() {
   };
 
   return (
-    <div className="w-full min-h-[calc(100vh-5rem)] flex flex-col justify-between pb-12 animate-in fade-in duration-300">
+    <div className="w-full flex-1 flex flex-col justify-between pb-2 animate-in fade-in duration-300">
       {stage === 'setup' && (
         <SetupStage
           targetRole={targetRole}
@@ -251,9 +251,6 @@ export default function AIResumeBuilderPage() {
           experienceLevel={experienceLevel}
           timeRemaining={timeRemaining}
           formatTimer={formatTimer}
-          showInsightsDrawer={showInsightsDrawer}
-          setShowInsightsDrawer={setShowInsightsDrawer}
-          extractedInsights={extractedInsights}
           aiState={aiState}
           currentTurn={currentTurn}
           videoRef={videoRef}
@@ -261,9 +258,7 @@ export default function AIResumeBuilderPage() {
           setCamActive={setCamActive}
           micActive={micActive}
           setMicActive={setMicActive}
-          isSimulatingSpeech={isSimulatingSpeech}
           candidateSpeechText={candidateSpeechText}
-          onSimulateAnswer={handleSimulateCandidateAnswer}
           onEndCall={handleEndCall}
         />
       )}

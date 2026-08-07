@@ -92,6 +92,7 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
                   <Link
                     key={item.path}
                     href={item.path}
+                    prefetch={true}
                     className={`group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all border-l-2 duration-200 select-none ${isActive
                       ? 'bg-emerald-600/10 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-600 dark:border-emerald-400 shadow-sm'
                       : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200'

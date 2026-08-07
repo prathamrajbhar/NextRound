@@ -28,7 +28,15 @@ export type { AutocompleteProps } from './Autocomplete';
 export { Tooltip } from './Tooltip';
 export type { TooltipProps } from './Tooltip';
 
-export { Skeleton, CardSkeleton, TableSkeleton } from './Skeleton';
+export {
+  Skeleton,
+  CardSkeleton,
+  TableSkeleton,
+  JobsGridSkeleton,
+  ApplicationsListSkeleton,
+  HrStatsSkeleton,
+  AnalyticsGridSkeleton,
+} from './Skeleton';
 
 export { EmptyState } from './EmptyState';
 export type { EmptyStateProps } from './EmptyState';

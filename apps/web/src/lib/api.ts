@@ -7,7 +7,64 @@ const API_BASE_URL =
 
 let isRefreshing = false;
 
+interface CacheEntry {
+  data: ApiEnvelope<any>;
+  timestamp: number;
+}
+
+const apiCache = new Map<string, CacheEntry>();
+const CACHE_TTL_MS = 20000; // 20 seconds TTL
+
+export function clearApiCache(endpointPattern?: string) {
+  if (!endpointPattern) {
+    apiCache.clear();
+    return;
+  }
+  for (const key of apiCache.keys()) {
+    if (key.includes(endpointPattern)) {
+      apiCache.delete(key);
+    }
+  }
+}
+
 export async function fetchApi<T>(
+  endpoint: string,
+  options: RequestInit = {},
+  isRetry = false
+): Promise<ApiEnvelope<T>> {
+  const method = (options.method || 'GET').toUpperCase();
+  const cacheKey = `${method}:${endpoint}`;
+
+  // Purge cache on any mutating request
+  if (method !== 'GET') {
+    clearApiCache();
+  }
+
+  // Serve GET requests instantly from cache if valid
+  if (method === 'GET' && !isRetry) {
+    const cached = apiCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      // Background revalidation
+      fetchNetworkApi<T>(endpoint, options, isRetry).then((freshData) => {
+        if (freshData.success) {
+          apiCache.set(cacheKey, { data: freshData, timestamp: Date.now() });
+        }
+      }).catch(() => {});
+
+      return cached.data as ApiEnvelope<T>;
+    }
+  }
+
+  const result = await fetchNetworkApi<T>(endpoint, options, isRetry);
+
+  if (method === 'GET' && result.success) {
+    apiCache.set(cacheKey, { data: result, timestamp: Date.now() });
+  }
+
+  return result;
+}
+
+async function fetchNetworkApi<T>(
   endpoint: string,
   options: RequestInit = {},
   isRetry = false
@@ -49,7 +106,7 @@ export async function fetchApi<T>(
             if (typeof window !== 'undefined') {
               localStorage.setItem('token', refreshData.data.accessToken);
             }
-            return fetchApi<T>(endpoint, options, true);
+            return fetchNetworkApi<T>(endpoint, options, true);
           }
         } catch (e) {
           isRefreshing = false;

@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { NotificationDropdown } from '@/components/ui/NotificationDropdown';
 import Image from 'next/image';
 
+import { usePathname } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
 
@@ -25,6 +26,7 @@ export default function HrLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
   const { user } = useAuthContext();
   const [mounted, setMounted] = useState(false);
   const [avatar, setAvatar] = useState('/avatar-boy.jpg');
@@ -175,7 +177,7 @@ export default function HrLayout({
 
           </div>
         </header>
-        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
+        <main key={pathname} className="flex-1 p-8 overflow-y-auto animate-in fade-in duration-200">{children}</main>
       </div>
     </div>
   );

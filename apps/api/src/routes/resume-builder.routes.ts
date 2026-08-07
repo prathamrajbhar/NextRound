@@ -21,6 +21,46 @@ async function getCandidateProfileId(userId: string): Promise<string> {
   return profile.id;
 }
 
+// GET /api/v1/resume-builder/history - Fetch past generated resume sessions for candidate
+resumeBuilderRouter.get(
+  '/history',
+  authenticate,
+  requireRole('candidate'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const candidateId = await getCandidateProfileId(req.user!.userId);
+      const sessions = await prisma.mockSession.findMany({
+        where: {
+          candidate_id: candidateId,
+          type: 'resume_builder',
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+        take: 20,
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          history: sessions.map(s => ({
+            id: s.id,
+            targetRole: s.target_role,
+            targetCompany: s.target_company,
+            status: s.status,
+            generatedResume: s.generated_resume,
+            resumePdfUrl: s.resume_pdf_url,
+            createdAt: s.created_at,
+            endedAt: s.ended_at,
+          })),
+        },
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
 // POST /api/v1/resume-builder/sessions - Start AI Voice Resume Builder Session
 resumeBuilderRouter.post(
   '/sessions',
