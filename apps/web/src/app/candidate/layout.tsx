@@ -5,7 +5,6 @@ import Link from 'next/link';
 import CandidateSidebar from '@/components/CandidateSidebar';
 import { Bell, Menu, X } from '@/lib/lucide-google-icons';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import { NotificationDropdown } from '@/components/ui/NotificationDropdown';
 import Image from 'next/image';
 
 import { usePathname } from 'next/navigation';
@@ -44,8 +43,7 @@ export default function CandidateLayout({
 
   const displayName = mounted ? (name || (user?.email ? user.email.split('@')[0] : 'Candidate')) : 'Candidate';
 
-  // Notification states
-  const [showNotifications, setShowNotifications] = useState(false);
+  // Notification state
   const [notifications, setNotifications] = useState<{ id: number; rawId?: string; text: string; time: string; read: boolean }[]>([]);
 
   useEffect(() => {
@@ -83,39 +81,6 @@ export default function CandidateLayout({
   }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
-
-  const markAllAsRead = async () => {
-    setNotifications(notifications.map(n => ({ ...n, read: true })));
-    try {
-      await apiClient.post('/notifications/read-all');
-    } catch (e) {}
-  };
-
-  const clearAll = () => {
-    setNotifications([]);
-  };
-
-  useEffect(() => {
-    if (!showNotifications) return;
-    const handleOutsideClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.notification-container')) {
-        setShowNotifications(false);
-      }
-    };
-    document.addEventListener('click', handleOutsideClick);
-    return () => document.removeEventListener('click', handleOutsideClick);
-  }, [showNotifications]);
-
-  const toggleRead = async (id: number) => {
-    const targetNotif = notifications.find(n => n.id === id);
-    setNotifications(notifications.map(n => n.id === id ? { ...n, read: !n.read } : n));
-    if (targetNotif?.rawId) {
-      try {
-        await apiClient.patch(`/notifications/${targetNotif.rawId}/read`);
-      } catch (e) {}
-    }
-  };
 
   const isAssessmentRoom = Boolean(
     ((pathname.includes('/candidate/mock/') && pathname.split('/').length >= 4 && !['new', 'history'].includes(pathname.split('/')[3])) ||

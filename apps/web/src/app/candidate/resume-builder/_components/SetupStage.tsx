@@ -58,10 +58,11 @@ export function SetupStage({
       interval = setInterval(() => {
         setAudioLevel(Math.floor(Math.random() * 70) + 20);
       }, 150);
-    } else {
-      setAudioLevel(0);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+      setAudioLevel(0);
+    };
   }, [micTesting]);
 
   return (

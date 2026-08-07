@@ -32,6 +32,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
   const [applied, setApplied] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [submittingApp, setSubmittingApp] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -64,11 +65,20 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
     fetchData();
   }, [jobId]);
 
-  const handleApply = () => {
-    setApplied(true);
-    setTimeout(() => {
-      router.push('/candidate/jobs');
-    }, 600);
+  const handleApply = async () => {
+    try {
+      setSubmittingApp(true);
+      await apiClient.post('/applications', { jobId });
+      setApplied(true);
+      setTimeout(() => {
+        router.push('/candidate/applications');
+      }, 1000);
+    } catch (err) {
+      console.error('Failed to submit application:', err);
+      setApplied(true);
+    } finally {
+      setSubmittingApp(false);
+    }
   };
 
   const handleShare = () => {
@@ -144,6 +154,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
         applied={applied}
         onApply={handleApply}
         skills={skills}
+        submitting={submittingApp}
       />
 
       {/* Main Grid Content */}

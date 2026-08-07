@@ -7,7 +7,6 @@ import {
   Phone,
   Globe,
   UploadCloud,
-  Sparkles,
   CheckCircle2,
   Save,
 } from '@/lib/lucide-google-icons';
@@ -35,22 +34,22 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
     async function loadProfile() {
       if (user?.email) {
         setEmail(user.email);
-        if (!fullName) setFullName(user.email.split('@')[0]);
+        setFullName((prev) => prev || (user.email ? user.email.split('@')[0] : ''));
       }
 
       try {
-        const res = await apiClient.get<{ profile?: Record<string, any> }>('/candidate/profile').catch(() => null);
+        const res = await apiClient.get<{ profile?: Record<string, unknown> }>('/candidate/profile').catch(() => null);
         if (res && res.profile) {
           const p = res.profile;
-          if (p.full_name) setFullName(p.full_name);
-          if (p.email) setEmail(p.email);
-          if (p.phone) setPhone(p.phone);
-          if (p.location) setLocation(p.location);
-          if (p.headline) setHeadline(p.headline);
-          if (p.portfolio_url) setPortfolioUrl(p.portfolio_url);
-          if (p.github_url) setGithubUrl(p.github_url);
-          if (p.linkedin_url) setLinkedinUrl(p.linkedin_url);
-          if (p.bio) setBio(p.bio);
+          if (typeof p.full_name === 'string') setFullName(p.full_name);
+          if (typeof p.email === 'string') setEmail(p.email);
+          if (typeof p.phone === 'string') setPhone(p.phone);
+          if (typeof p.location === 'string') setLocation(p.location);
+          if (typeof p.headline === 'string') setHeadline(p.headline);
+          if (typeof p.portfolio_url === 'string') setPortfolioUrl(p.portfolio_url);
+          if (typeof p.github_url === 'string') setGithubUrl(p.github_url);
+          if (typeof p.linkedin_url === 'string') setLinkedinUrl(p.linkedin_url);
+          if (typeof p.bio === 'string') setBio(p.bio);
         } else {
           // Fallback to local storage
           const savedName = localStorage.getItem('candidate_name');

@@ -8,7 +8,7 @@ const API_BASE_URL =
 let isRefreshing = false;
 
 interface CacheEntry {
-  data: ApiEnvelope<any>;
+  data: ApiEnvelope<unknown>;
   timestamp: number;
 }
 
@@ -108,7 +108,7 @@ async function fetchNetworkApi<T>(
             }
             return fetchNetworkApi<T>(endpoint, options, true);
           }
-        } catch (e) {
+        } catch {
           isRefreshing = false;
         }
       }

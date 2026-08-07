@@ -45,13 +45,7 @@ export default function AIResumeBuilderPage() {
 
   const [turnIndex, setTurnIndex] = useState(0);
   const [aiState, setAiState] = useState<'speaking' | 'listening' | 'evaluating'>('speaking');
-  const [candidateSpeechText, setCandidateSpeechText] = useState('');
-  const [extractedInsights, setExtractedInsights] = useState<
-    { type: string; label: string; value: string }[]
-  >([]);
-
-  // Live Extracted Points Drawer Toggle
-  const [showInsightsDrawer, setShowInsightsDrawer] = useState(false);
+  const [candidateSpeechText] = useState('');
 
   // Dynamic Turns State
   const [dynamicTurns] = useState<DynamicConversationTurn[]>(DEFAULT_DYNAMIC_TURNS);

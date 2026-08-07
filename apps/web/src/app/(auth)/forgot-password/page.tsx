@@ -55,6 +55,11 @@ export default function ForgotPasswordPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-3 text-xs font-semibold text-rose-700">
+                {error}
+              </div>
+            )}
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">Email address</label>
               <div className="relative">
@@ -73,9 +78,10 @@ export default function ForgotPasswordPage() {
             <div className="pt-2 flex flex-col gap-3">
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 font-semibold text-white shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:shadow-xl transition-all cursor-pointer text-sm"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 font-semibold text-white shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:shadow-xl transition-all cursor-pointer text-sm disabled:opacity-50"
               >
-                Send Reset Link
+                {loading ? 'Sending...' : 'Send Reset Link'}
                 <Send className="h-4 w-4" />
               </button>
               <Link

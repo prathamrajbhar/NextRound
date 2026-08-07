@@ -54,6 +54,10 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
 
         if (appRes.status === 'fulfilled' && appRes.value) {
           setApp(appRes.value);
+          const rawApp = appRes.value as Application & { assessments?: AssessmentResult[] };
+          if (Array.isArray(rawApp.assessments)) {
+            setAssessments(rawApp.assessments);
+          }
           if (appRes.value.jobId) {
             const jRes = await apiClient.get<Job>(`/jobs/${appRes.value.jobId}`);
             if (jRes) setJob(jRes);

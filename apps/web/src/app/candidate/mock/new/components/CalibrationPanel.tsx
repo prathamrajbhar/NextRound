@@ -6,54 +6,47 @@ import { VideoOff, Mic, MicOff, Video, ShieldCheck, AlertCircle } from '@/lib/lu
 export type AssessmentTrack = 'aptitude' | 'technical' | 'coding' | 'comprehensive';
 
 interface CalibrationPanelProps {
-  company: string;
-  role: string;
+  company?: string;
+  role?: string;
   track?: AssessmentTrack;
   micActive: boolean;
   camActive: boolean;
   micLevel: number;
-  isCalibrating: boolean;
+  isCalibrating?: boolean;
   onToggleMic: () => void;
   onToggleCam: () => void;
 }
 
 export default function CalibrationPanel({
-  company,
-  role,
-  track = 'technical',
   micActive,
   camActive,
   micLevel: propMicLevel,
-  isCalibrating,
   onToggleMic,
   onToggleCam,
 }: CalibrationPanelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [stream, setStream] = useState<MediaStream | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [hasCamPermission, setHasCamPermission] = useState<boolean | null>(null);
   const [realMicLevel, setRealMicLevel] = useState<number>(40);
 
-  // Initialize Real HTML5 Webcam Stream
+  // Request actual user webcam & audio stream if active
   useEffect(() => {
-    let currentStream: MediaStream | null = null;
-
     async function setupCamera() {
-      if (!camActive) {
-        if (stream) {
-          stream.getTracks().forEach((track) => track.stop());
-          setStream(null);
+      if (!camActive && !micActive) {
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((t) => t.stop());
+          streamRef.current = null;
         }
         return;
       }
 
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+          video: camActive,
           audio: micActive,
         });
 
-        currentStream = mediaStream;
-        setStream(mediaStream);
+        streamRef.current = mediaStream;
         setHasCamPermission(true);
 
         if (videoRef.current) {
@@ -63,7 +56,8 @@ export default function CalibrationPanel({
         // Web Audio API for Real Mic Level Sensing
         if (micActive) {
           try {
-            const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+            const audioCtx = new AudioCtxClass();
             const source = audioCtx.createMediaStreamSource(mediaStream);
             const analyser = audioCtx.createAnalyser();
             analyser.fftSize = 64;
@@ -71,7 +65,7 @@ export default function CalibrationPanel({
 
             const dataArray = new Uint8Array(analyser.frequencyBinCount);
             const updateLevel = () => {
-              if (!currentStream || !currentStream.active) return;
+              if (!streamRef.current || !streamRef.current.active) return;
               analyser.getByteFrequencyData(dataArray);
               let sum = 0;
               for (let i = 0; i < dataArray.length; i++) {
@@ -96,8 +90,9 @@ export default function CalibrationPanel({
     setupCamera();
 
     return () => {
-      if (currentStream) {
-        currentStream.getTracks().forEach((track) => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
       }
     };
   }, [camActive, micActive]);

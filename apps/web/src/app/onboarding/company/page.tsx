@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Building, Calendar, ArrowRight, Check, Plus, Trash2 } from 'lucide-react';
+import { Building, Calendar, ArrowRight, Check, Plus, Trash2, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function CompanyOnboarding() {
@@ -75,6 +75,12 @@ export default function CompanyOnboarding() {
             <span className={`h-2 w-10 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-purple-500' : 'bg-slate-200'}`}></span>
           </div>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 font-semibold">
+            {error}
+          </div>
+        )}
 
         {step === 1 ? (
           /* Step 1: Org details */
@@ -222,11 +228,21 @@ export default function CompanyOnboarding() {
               </button>
               <button
                 type="button"
+                disabled={submitting}
                 onClick={handleComplete}
-                className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-indigo-700 hover:scale-[1.01] transition-all flex items-center gap-1 cursor-pointer"
+                className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-indigo-700 hover:scale-[1.01] disabled:opacity-50 transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                Launch HR Portal
-                <Check className="h-4 w-4" />
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Setting Up...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Launch HR Portal</span>
+                    <Check className="h-4 w-4" />
+                  </>
+                )}
               </button>
             </div>
           </div>

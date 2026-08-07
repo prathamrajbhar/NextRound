@@ -7,27 +7,47 @@ import {
   Plus,
   Trash2,
   Sparkles,
-  Briefcase,
-  FileText,
-  User,
-  Check,
 } from '@/lib/lucide-google-icons';
+
+export interface GeneratedResumeData {
+  name?: string;
+  title?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  summary?: string;
+  experience?: Array<{
+    title?: string;
+    company?: string;
+    duration?: string;
+    highlights?: string[];
+  }>;
+  skills?: string[];
+}
+
+export interface ResumeItem {
+  id: string;
+  targetRole: string;
+  targetCompany: string;
+  generatedResume: GeneratedResumeData | null;
+}
 
 interface EditResumeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  resumeItem: {
-    id: string;
-    targetRole: string;
-    targetCompany: string;
-    generatedResume: any;
-  } | null;
-  onSave: (updatedItem: any) => void;
+  resumeItem: ResumeItem | null;
+  onSave: (updatedItem: ResumeItem) => void;
 }
 
-export function EditResumeModal({ isOpen, onClose, resumeItem, onSave }: EditResumeModalProps) {
-  if (!isOpen || !resumeItem) return null;
-
+function ModalContent({
+  resumeItem,
+  onClose,
+  onSave,
+}: {
+  resumeItem: ResumeItem;
+  onClose: () => void;
+  onSave: (updatedItem: ResumeItem) => void;
+}) {
   const initialData = resumeItem.generatedResume || {
     name: 'Candidate Name',
     title: resumeItem.targetRole || 'Software Engineer',
@@ -45,7 +65,9 @@ export function EditResumeModal({ isOpen, onClose, resumeItem, onSave }: EditRes
   const [summary, setSummary] = useState(initialData.summary || '');
   const [skills, setSkills] = useState<string[]>(initialData.skills || []);
   const [newSkill, setNewSkill] = useState('');
-  const [experiences, setExperiences] = useState<any[]>(initialData.experience || []);
+  const [experiences, setExperiences] = useState<NonNullable<GeneratedResumeData['experience']>>(
+    initialData.experience || []
+  );
 
   const handleAddSkill = () => {
     if (newSkill.trim() && !skills.includes(newSkill.trim())) {
@@ -55,26 +77,35 @@ export function EditResumeModal({ isOpen, onClose, resumeItem, onSave }: EditRes
   };
 
   const handleRemoveSkill = (tag: string) => {
-    setSkills(skills.filter(s => s !== tag));
+    setSkills(skills.filter((s) => s !== tag));
   };
 
   const handleAddHighlight = (expIdx: number) => {
     const updated = [...experiences];
-    if (!updated[expIdx].highlights) updated[expIdx].highlights = [];
-    updated[expIdx].highlights.push('New key achievement or technical bullet point...');
-    setExperiences(updated);
+    const exp = updated[expIdx];
+    if (exp) {
+      if (!exp.highlights) exp.highlights = [];
+      exp.highlights.push('New key achievement or technical bullet point...');
+      setExperiences(updated);
+    }
   };
 
   const handleUpdateHighlight = (expIdx: number, hIdx: number, val: string) => {
     const updated = [...experiences];
-    updated[expIdx].highlights[hIdx] = val;
-    setExperiences(updated);
+    const exp = updated[expIdx];
+    if (exp && exp.highlights) {
+      exp.highlights[hIdx] = val;
+      setExperiences(updated);
+    }
   };
 
   const handleRemoveHighlight = (expIdx: number, hIdx: number) => {
     const updated = [...experiences];
-    updated[expIdx].highlights.splice(hIdx, 1);
-    setExperiences(updated);
+    const exp = updated[expIdx];
+    if (exp && exp.highlights) {
+      exp.highlights.splice(hIdx, 1);
+      setExperiences(updated);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -125,7 +156,7 @@ export function EditResumeModal({ isOpen, onClose, resumeItem, onSave }: EditRes
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
           
           {/* Target Role & Candidate Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
               <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Target Role Title</label>
               <input
@@ -141,6 +172,15 @@ export function EditResumeModal({ isOpen, onClose, resumeItem, onSave }: EditRes
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Email Address</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500"
               />
             </div>
@@ -197,8 +237,8 @@ export function EditResumeModal({ isOpen, onClose, resumeItem, onSave }: EditRes
             {experiences.map((exp, expIdx) => (
               <div key={expIdx} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-slate-900 dark:text-slate-100">{exp.role} • {exp.company}</span>
-                  <span className="text-[10px] text-slate-400 font-semibold">{exp.period}</span>
+                  <span className="text-xs font-black text-slate-900 dark:text-slate-100">{exp.title || 'Role'} • {exp.company || 'Company'}</span>
+                  <span className="text-[10px] text-slate-400 font-semibold">{exp.duration || ''}</span>
                 </div>
 
                 <div className="space-y-2">
@@ -253,4 +293,9 @@ export function EditResumeModal({ isOpen, onClose, resumeItem, onSave }: EditRes
       </div>
     </div>
   );
+}
+
+export function EditResumeModal({ isOpen, onClose, resumeItem, onSave }: EditResumeModalProps) {
+  if (!isOpen || !resumeItem) return null;
+  return <ModalContent resumeItem={resumeItem} onClose={onClose} onSave={onSave} />;
 }

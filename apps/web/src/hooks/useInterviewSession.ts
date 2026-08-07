@@ -67,7 +67,7 @@ export function useInterviewSession({
           engagement_index: null,
           multiple_faces_detected: null,
         });
-      } catch (err) {
+      } catch {
         // Silently swallow background telemetry errors
       }
     }, 8000);
@@ -83,7 +83,7 @@ export function useInterviewSession({
       try {
         await api.post(`/interviews/${interviewId}/consent`, { consent: true });
         await api.post(`/interviews/${interviewId}/session-token`);
-      } catch (e) {
+      } catch {
         // Continue with local session fallback
       }
     }
@@ -181,7 +181,7 @@ export function useInterviewSession({
     if (interviewId) {
       try {
         await api.post(`/interviews/${interviewId}/end`, { transcript: messages });
-      } catch (e) {
+      } catch {
         // Fallback swallow
       }
     }
@@ -203,6 +203,7 @@ export function useInterviewSession({
     camActive,
     isAnalyzing,
     proctorTelemetry,
+    setProctorTelemetry,
     startSession,
     submitAnswer,
     simulateSpeaking,

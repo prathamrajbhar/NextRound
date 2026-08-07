@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/apiClient';
-import { Sparkles, BookOpen, CheckCircle2, HelpCircle, Lightbulb } from '@/lib/lucide-google-icons';
+import { Sparkles, CheckCircle2, HelpCircle, Lightbulb } from '@/lib/lucide-google-icons';
 
 interface PrepContentData {
   id?: string;
@@ -43,7 +43,7 @@ export function JobPrepSection({ jobId, companyName, roleTitle }: JobPrepSection
   const questions = prep?.questions || [
     {
       dimension: 'System Architecture',
-      question: `How would you architect a real-time event-driven system for ${companyName}'s core workload?`,
+      question: `How would you architect a real-time event-driven system for ${companyName}'s ${roleTitle} workload?`,
       rationale: 'Tests deep knowledge of event buses (Kafka/RabbitMQ), partitioning strategies, and fault tolerance.',
     },
     {

@@ -27,6 +27,10 @@ export default function MockHistoryPage() {
     }
     fetchSessions();
   }, []);
+  if (loading) {
+    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading practice history...</div>;
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <div className="border-b border-slate-100 pb-4">

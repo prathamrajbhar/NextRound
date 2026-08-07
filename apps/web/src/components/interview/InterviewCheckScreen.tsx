@@ -8,7 +8,6 @@ import {
   Maximize2,
   Wifi,
   CheckCircle2,
-  ShieldCheck,
 } from '@/lib/lucide-google-icons';
 
 interface InterviewCheckScreenProps {

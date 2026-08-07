@@ -5,6 +5,8 @@ from core.config import settings
 from core.redis_client import get_redis_client, close_redis_client
 from workers.agent_workers import worker_manager
 from routes.voice_routes import voice_router, mock_voice_router
+from routes.prep_routes import prep_router
+from routes.analytics_routes import analytics_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nextround-ai-service")
@@ -28,6 +30,8 @@ app = FastAPI(
 
 app.include_router(voice_router)
 app.include_router(mock_voice_router)
+app.include_router(prep_router)
+app.include_router(analytics_router)
 
 @app.get("/health")
 async def health_check():

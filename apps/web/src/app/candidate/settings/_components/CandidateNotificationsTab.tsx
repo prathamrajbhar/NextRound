@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Bell, Mail, Phone, Sparkles, CheckCircle2, Save } from '@/lib/lucide-google-icons';
+import { Bell, Save } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
 
 interface CandidateNotificationsTabProps {
@@ -20,7 +20,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
   useEffect(() => {
     async function loadSettings() {
       try {
-        const res = await apiClient.get<{ settings?: Record<string, any> }>('/candidate/settings').catch(() => null);
+        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings').catch(() => null);
         if (res && res.settings) {
           const s = res.settings;
           if (typeof s.emailNotifications === 'boolean') setEmailInvites(s.emailNotifications);
@@ -28,7 +28,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           if (typeof s.aiScoreReports === 'boolean') setAiScoreReports(s.aiScoreReports);
           if (typeof s.dailyDigest === 'boolean') setDailyDigest(s.dailyDigest);
           if (typeof s.statusUpdates === 'boolean') setStatusUpdates(s.statusUpdates);
-          if (s.digestFrequency) setDigestFrequency(s.digestFrequency);
+          if (typeof s.digestFrequency === 'string') setDigestFrequency(s.digestFrequency);
         } else {
           const saved = localStorage.getItem('candidate_notification_settings');
           if (saved) {
@@ -38,7 +38,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
             if (typeof parsed.aiScoreReports === 'boolean') setAiScoreReports(parsed.aiScoreReports);
             if (typeof parsed.dailyDigest === 'boolean') setDailyDigest(parsed.dailyDigest);
             if (typeof parsed.statusUpdates === 'boolean') setStatusUpdates(parsed.statusUpdates);
-            if (parsed.digestFrequency) setDigestFrequency(parsed.digestFrequency);
+            if (typeof parsed.digestFrequency === 'string') setDigestFrequency(parsed.digestFrequency);
           }
         }
       } catch {

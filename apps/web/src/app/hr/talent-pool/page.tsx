@@ -3,28 +3,40 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
-import { Application } from '@/types';
 import { JobsGridSkeleton } from '@/components/ui/Skeleton';
-import { Search, ChevronRight, Users, Filter, UserCheck, Brain, Loader2 } from '@/lib/lucide-google-icons';
-import Image from 'next/image';
+import { Search, ChevronRight, Users, Filter, Brain } from '@/lib/lucide-google-icons';
+
+
+interface TalentCandidate {
+  candidateId: string;
+  userId: string;
+  name: string;
+  email: string;
+  skills: string[];
+  targetRoles: string[];
+  resumeUrl: string | null;
+  similarityScore: number;
+  isBookmarked: boolean;
+  bookmarkId: string | null;
+  lastActive: string;
+}
 
 export default function HrTalentPoolPage() {
-  const [candidates, setCandidates] = useState<Application[]>([]);
+  const [candidates, setCandidates] = useState<TalentCandidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [minScore, setMinScore] = useState<number>(70);
   const [selectedSkill, setSelectedSkill] = useState<string>('All');
-  const [selectedStatus, setSelectedStatus] = useState<string>('All');
 
   useEffect(() => {
     async function fetchTalentPool() {
       try {
         setLoading(true);
-        const data = await apiClient.get<Application[]>('/hr/talent-pool').catch(() =>
-          apiClient.get<Application[]>('/applications')
+        const data = await apiClient.get<{ candidates: TalentCandidate[]; total: number }>(
+          `/hr/talent-pool${search ? `?query=${encodeURIComponent(search)}` : ''}`
         );
-        if (data) {
-          setCandidates(Array.isArray(data) ? data : []);
+        if (data?.candidates) {
+          setCandidates(Array.isArray(data.candidates) ? data.candidates : []);
         } else {
           setCandidates([]);
         }
@@ -36,31 +48,23 @@ export default function HrTalentPoolPage() {
       }
     }
     fetchTalentPool();
-  }, []);
+  }, [search]);
+
 
   const safeCandidates = Array.isArray(candidates) ? candidates : [];
 
-  // Derive unique skills and statuses for filter dropdowns
   const allSkills = Array.from(
-    new Set(safeCandidates.flatMap((app) => app.skills || []))
+    new Set(safeCandidates.flatMap((c) => c.skills || []))
   ).sort();
 
-  const allStatuses = Array.from(
-    new Set(safeCandidates.map((app) => app.status))
-  ).sort();
-
-  const filteredCandidates = safeCandidates.filter((app) => {
-    const nameMatch = (app.candidateName || '').toLowerCase().includes(search.toLowerCase()) ||
-      (app.candidateEmail || '').toLowerCase().includes(search.toLowerCase());
-
-    const compositeScore = app.scores?.composite || 75;
-    const scoreMatch = compositeScore >= minScore;
-
-    const skillMatch = selectedSkill === 'All' || (app.skills && app.skills.includes(selectedSkill));
-    const statusMatch = selectedStatus === 'All' || app.status === selectedStatus;
-
-    return nameMatch && scoreMatch && skillMatch && statusMatch;
+  const filteredCandidates = safeCandidates.filter((c) => {
+    const nameMatch = c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.email.toLowerCase().includes(search.toLowerCase());
+    const scoreMatch = c.similarityScore >= minScore;
+    const skillMatch = selectedSkill === 'All' || c.skills.includes(selectedSkill);
+    return nameMatch && scoreMatch && skillMatch;
   });
+
 
   if (loading) {
     return <JobsGridSkeleton count={6} />;
@@ -133,20 +137,8 @@ export default function HrTalentPoolPage() {
           </select>
         </div>
 
-        {/* Status dropdown */}
-        <div className="flex items-center gap-2">
-          <UserCheck className="h-4 w-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="w-full p-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/60 text-slate-700 dark:text-slate-200 focus:outline-none focus:border-purple-500 font-semibold cursor-pointer"
-          >
-            <option value="All" className="dark:bg-slate-900 dark:text-slate-200">All Statuses</option>
-            {allStatuses.map((st) => (
-              <option key={st} value={st} className="dark:bg-slate-900 dark:text-slate-200">{st.replace('_', ' ')}</option>
-            ))}
-          </select>
-        </div>
+
+
 
         {/* Score filter slider */}
         <div className="space-y-1.5 flex flex-col justify-center">
@@ -169,83 +161,71 @@ export default function HrTalentPoolPage() {
       {/* Candidates List grid */}
       {filteredCandidates.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredCandidates.map((app) => {
-            const composite = app.scores?.composite || 75;
-            const tech = app.scores?.technical || 70;
-            const comm = app.scores?.communication || 70;
-
-            return (
-              <div
-                key={app.id}
-                className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/50 dark:bg-slate-900/60 p-6 shadow-xl backdrop-blur-md glass-panel flex flex-col justify-between hover:scale-[1.01] hover:shadow-2xl transition-all duration-300 group"
-              >
-                <div>
-                  {/* Header info */}
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex items-center gap-3">
-                      <Image
-                        src={app.candidateAvatar}
-                        alt={app.candidateName}
-                        width={42}
-                        height={42}
-                        className="h-11 w-11 rounded-full border border-purple-100 dark:border-purple-900/60 object-cover shadow-sm"
-                        unoptimized
-                      />
-                      <div>
-                        <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-xs">{app.candidateName}</h3>
-                        <span className="text-[10px] text-slate-400 dark:text-slate-400 font-semibold mt-0.5 block">{app.candidateEmail}</span>
-                      </div>
+          {filteredCandidates.map((c) => (
+            <div
+              key={c.candidateId}
+              className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/50 dark:bg-slate-900/60 p-6 shadow-xl backdrop-blur-md glass-panel flex flex-col justify-between hover:scale-[1.01] hover:shadow-2xl transition-all duration-300 group"
+            >
+              <div>
+                {/* Header info */}
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-full border border-purple-100 dark:border-purple-900/60 bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center shadow-sm">
+                      <span className="text-white font-black text-sm">{c.name[0]?.toUpperCase() || '?'}</span>
                     </div>
-
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded border border-purple-100 dark:border-purple-900/60 uppercase">
-                        {composite}% composite
-                      </span>
-                      {app.biasReport && (
-                        <span className="inline-flex items-center gap-0.5 text-[8px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-100 dark:border-emerald-900/60 uppercase mt-0.5">
-                          Bias Passed
-                        </span>
-                      )}
+                    <div>
+                      <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-xs">{c.name}</h3>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-400 font-semibold mt-0.5 block">{c.email}</span>
                     </div>
                   </div>
 
-                  {/* Skills tags */}
-                  <div className="flex flex-wrap gap-1.5 mt-4">
-                    {app.skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="text-[9px] font-bold px-2 py-0.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300"
-                      >
-                        {skill}
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded border border-purple-100 dark:border-purple-900/60 uppercase">
+                      {c.similarityScore}% match
+                    </span>
+                    {c.isBookmarked && (
+                      <span className="inline-flex items-center gap-0.5 text-[8px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-100 dark:border-emerald-900/60 uppercase mt-0.5">
+                        Bookmarked
                       </span>
-                    ))}
+                    )}
                   </div>
-
-                  {/* Summary reasoning */}
-                  {app.reasoning && (
-                    <p className="mt-4 text-[11px] text-slate-600 dark:text-slate-300 font-semibold leading-relaxed line-clamp-2 italic">
-                      &ldquo;{app.reasoning}&rdquo;
-                    </p>
-                  )}
                 </div>
 
-                {/* Lower Action bar */}
-                <div className="mt-6 flex justify-between items-center border-t border-slate-100 dark:border-slate-800 pt-4">
-                  <div className="flex gap-4 text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase">
-                    <span>Tech: <strong className="text-slate-700 dark:text-slate-200">{tech}%</strong></span>
-                    <span>Comm: <strong className="text-slate-700 dark:text-slate-200">{comm}%</strong></span>
-                  </div>
-                  <Link
-                    href={`/hr/candidates/${app.id}`}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline transition-all group-hover:translate-x-0.5"
-                  >
-                    Inspect Profile
-                    <ChevronRight className="h-4 w-4 text-purple-400" />
-                  </Link>
+                {/* Target Roles */}
+                {c.targetRoles.length > 0 && (
+                  <p className="mt-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                    Targeting: {c.targetRoles.slice(0, 2).join(', ')}
+                  </p>
+                )}
+
+                {/* Skills tags */}
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {c.skills.slice(0, 6).map((skill) => (
+                    <span
+                      key={skill}
+                      className="text-[9px] font-bold px-2 py-0.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-slate-600 dark:text-slate-300"
+                    >
+                      {skill}
+                    </span>
+                  ))}
                 </div>
               </div>
-            );
-          })}
+
+              {/* Lower Action bar */}
+              <div className="mt-6 flex justify-between items-center border-t border-slate-100 dark:border-slate-800 pt-4">
+                <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">
+                  Last active: {new Date(c.lastActive).toLocaleDateString()}
+                </span>
+                <Link
+                  href={`/hr/candidates/${c.candidateId}`}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline transition-all group-hover:translate-x-0.5"
+                >
+                  Inspect Profile
+                  <ChevronRight className="h-4 w-4 text-purple-400" />
+                </Link>
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="text-center py-16 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/20 dark:bg-slate-900/40 glass-panel">

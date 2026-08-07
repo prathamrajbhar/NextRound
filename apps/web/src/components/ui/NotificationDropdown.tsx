@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Bell, CheckCheck, Trash2, CheckCircle2, Sparkles, Bot, ShieldCheck, Clock, Check } from '@/lib/lucide-google-icons';
+import { Bell, CheckCheck, Trash2, CheckCircle2, Sparkles, Bot, ShieldCheck, Clock, Check, X } from '@/lib/lucide-google-icons';
 
 export interface NotificationItem {
   id: number;
@@ -85,6 +85,14 @@ export function NotificationDropdown({
           >
             <Trash2 className="h-3 w-3" />
             Clear
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors ml-1 cursor-pointer"
+            title="Close notifications dropdown"
+          >
+            <X className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

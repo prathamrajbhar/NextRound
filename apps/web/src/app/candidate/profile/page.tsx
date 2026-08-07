@@ -45,6 +45,13 @@ const PRESET_ROLES = [
   'AI / ML Engineer',
 ];
 
+interface GeneratedResumeItem {
+  id: string;
+  targetRole: string;
+  resumePdfUrl: string | null;
+  createdAt: string;
+}
+
 export default function CandidateProfile() {
   const { user } = useAuthContext();
   const [name, setName] = useState(() => (user?.email ? user.email.split('@')[0] : ''));
@@ -65,13 +72,12 @@ export default function CandidateProfile() {
   const [resumeDate, setResumeDate] = useState('');
   const [skills, setSkills] = useState<string[]>(['React', 'TypeScript', 'Node.js']);
   const [newSkill, setNewSkill] = useState('');
-  
+  const [generatedResumes, setGeneratedResumes] = useState<GeneratedResumeItem[]>([]);
+
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [detailsSaved, setDetailsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
-
-  const [generatedResumes, setGeneratedResumes] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchProfileAndResumes = async () => {
@@ -81,23 +87,20 @@ export default function CandidateProfile() {
       }
 
       try {
-        const res = await apiClient.get<{ profile?: Record<string, any> }>('/candidate/profile').catch(() => null);
+        const res = await apiClient.get<{ profile?: Record<string, unknown> }>('/candidate/profile').catch(() => null);
         if (res && res.profile) {
           const p = res.profile;
-          if (p.full_name) setName(p.full_name);
-          if (p.email) setEmail(p.email);
-          if (p.phone) setPhone(p.phone);
-          if (p.location) setLocation(p.location);
-          if (p.headline) setHeadline(p.headline);
-          if (p.linkedin_url) setLinkedinUrl(p.linkedin_url);
-          if (p.github_url) setGithubUrl(p.github_url);
-          if (p.portfolio_url) setPortfolioUrl(p.portfolio_url);
-          if (Array.isArray(p.skills) && p.skills.length > 0) setSkills(p.skills);
-          if (Array.isArray(p.target_roles) && p.target_roles.length > 0) setTargetRoles(p.target_roles);
-          if (p.experience_years) setExperienceYears(String(p.experience_years));
-          if (p.expected_salary) setExpectedSalary(p.expected_salary);
-          if (p.bio) setBio(p.bio);
-          if (p.resume_url) {
+          if (typeof p.location === 'string') setLocation(p.location);
+          if (typeof p.headline === 'string') setHeadline(p.headline);
+          if (typeof p.linkedin_url === 'string') setLinkedinUrl(p.linkedin_url);
+          if (typeof p.github_url === 'string') setGithubUrl(p.github_url);
+          if (typeof p.portfolio_url === 'string') setPortfolioUrl(p.portfolio_url);
+          if (Array.isArray(p.skills) && p.skills.length > 0) setSkills(p.skills.map(String));
+          if (Array.isArray(p.target_roles) && p.target_roles.length > 0) setTargetRoles(p.target_roles.map(String));
+          if (p.experience_years !== undefined && p.experience_years !== null) setExperienceYears(String(p.experience_years));
+          if (typeof p.expected_salary === 'string') setExpectedSalary(p.expected_salary);
+          if (typeof p.bio === 'string') setBio(p.bio);
+          if (typeof p.resume_url === 'string') {
             setResumeName(p.resume_url.split('/').pop() || 'candidate_resume.pdf');
             setResumeDate('Uploaded recently');
           }
@@ -122,6 +125,11 @@ export default function CandidateProfile() {
           if (savedGithub) setGithubUrl(savedGithub);
           if (savedPortfolio) setPortfolioUrl(savedPortfolio);
           if (savedBio) setBio(savedBio);
+        }
+
+        const resumeRes = await apiClient.get<{ history: GeneratedResumeItem[] }>('/resume-builder/history').catch(() => null);
+        if (resumeRes?.history) {
+          setGeneratedResumes(resumeRes.history);
         }
       } catch {
         // Keep initial state
@@ -676,7 +684,7 @@ export default function CandidateProfile() {
               </div>
             ) : (
               <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-                {generatedResumes.map((item: any) => (
+                {generatedResumes.map((item) => (
                   <div
                     key={item.id}
                     className="p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-800/40 flex items-center justify-between gap-3"

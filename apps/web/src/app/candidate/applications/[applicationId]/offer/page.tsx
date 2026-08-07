@@ -54,7 +54,12 @@ export default function CandidateOfferPage({
     setShowAcceptModal(false);
   };
 
-  const handleDecline = (reason: string) => {
+  const handleDecline = async (reason: string) => {
+    try {
+      await apiClient.post(`/applications/${applicationId}/offer/decline`, { reason });
+    } catch (err) {
+      console.error('Failed to post decline status to API:', err);
+    }
     setOffer((prev) => (prev ? { ...prev, status: 'declined' } : null));
     setActionDone('declined');
     setShowDeclineModal(false);

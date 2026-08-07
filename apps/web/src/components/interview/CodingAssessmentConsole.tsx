@@ -8,7 +8,6 @@ import {
   Play,
   CheckCircle2,
   Clock,
-  Award,
   Send,
   Code,
   ChevronDown,
@@ -116,6 +115,7 @@ export default function CodingAssessmentConsole({
                 ]);
               }
             } catch (err) {
+              console.error('Failed checking execution status:', err);
               clearInterval(interval);
               setIsRunning(false);
             }

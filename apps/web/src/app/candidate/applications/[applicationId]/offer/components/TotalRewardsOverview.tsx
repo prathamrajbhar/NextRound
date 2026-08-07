@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Gift, Wallet, Award, TrendingUp, Sparkles, ShieldCheck, CheckCircle2, HelpCircle } from 'lucide-react';
+import { Wallet, Award, TrendingUp, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 interface TotalRewardsProps {
   baseSalary: string;

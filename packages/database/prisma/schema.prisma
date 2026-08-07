@@ -121,15 +121,22 @@ model Organization {
 }
 
 model Job {
-  id          String                    @id @default(uuid())
-  org_id      String
-  title       String
-  description String                    @db.Text
-  rubric      Json                      @default("{}")
-  thresholds  Json                      @default("{}")
-  status      JobStatus                 @default(draft)
-  embedding   Unsupported("vector(768)")?
-  created_at  DateTime                  @default(now())
+  id              String                    @id @default(uuid())
+  org_id          String
+  title           String
+  description     String                    @db.Text
+  rubric          Json                      @default("{}")
+  thresholds      Json                      @default("{}")
+  status          JobStatus                 @default(draft)
+  location        String?
+  salary          String?
+  experienceLevel String?
+  department      String?
+  skills          Json?
+  stages          Json?
+  assessmentConfig Json?
+  embedding       Unsupported("vector(768)")?
+  created_at      DateTime                  @default(now())
 
   organization  Organization  @relation(fields: [org_id], references: [id])
   applications  Application[]
@@ -254,6 +261,9 @@ model CodingSubmission {
   execution_time_ms Int?
   memory_mb         Float?
   complexity_score  Float?
+  status            String?  @default("completed")
+  complexity        String?
+  ai_feedback       String?  @db.Text
   created_at        DateTime @default(now())
 
   application Application @relation(fields: [application_id], references: [id])
@@ -262,20 +272,23 @@ model CodingSubmission {
 }
 
 model Offer {
-  id             String      @id @default(uuid())
-  application_id String      @unique
-  role_title     String
-  salary         Int
-  equity         String?
-  start_date     DateTime?
-  status         OfferStatus @default(pending)
-  signature_svg  String?     @db.Text
-  valid_until    DateTime?
-  created_at     DateTime    @default(now())
+  id                   String      @id @default(uuid())
+  application_id       String      @unique
+  role_title           String
+  salary               Int
+  equity               String?
+  start_date           DateTime?
+  status               OfferStatus @default(pending)
+  signature_svg        String?     @db.Text
+  offer_letter_content String?     @db.Text
+  magic_link_token     String?
+  valid_until          DateTime?
+  created_at           DateTime    @default(now())
 
   application Application @relation(fields: [application_id], references: [id])
 
   @@index([application_id])
+  @@index([magic_link_token])
 }
 
 model AgentLog {

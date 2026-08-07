@@ -18,7 +18,7 @@ export default function PublicFooter() {
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Platform</h4>
             <ul className="mt-4 space-y-2">
               <li>
-                <Link href="/jobs" className="text-sm text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-orange-400 transition-colors">
+                <Link href="/candidate/jobs" className="text-sm text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-orange-400 transition-colors">
                   Explore Roles
                 </Link>
               </li>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Gift, Wallet, Award, TrendingUp, Sparkles, HelpCircle } from 'lucide-react';
+import { Gift, Wallet, Award, TrendingUp, Sparkles } from 'lucide-react';
 
 interface CompensationProps {
   baseSalary: string;

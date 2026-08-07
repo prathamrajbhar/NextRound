@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ShieldAlert, AlertTriangle, Maximize2, XCircle } from '@/lib/lucide-google-icons';
+import { AlertTriangle, Maximize2, XCircle } from '@/lib/lucide-google-icons';
 
 interface ProctoringWarningModalProps {
   isOpen: boolean;

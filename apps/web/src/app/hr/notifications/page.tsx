@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, ArrowUpRight, CheckCircle2, Sparkles, Scale, Mic, Send, AlertTriangle, CheckCheck, Trash2, Check, Clock } from 'lucide-react';
+import { Bell, ArrowUpRight, Sparkles, Scale, Mic, Send, AlertTriangle, CheckCheck, Trash2, Check, Clock } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { Notification } from '@/types';
 import { CardSkeleton } from '@/components/ui/Skeleton';
@@ -43,14 +43,12 @@ export default function HrNotificationsPage() {
     fetchNotifications();
   }, []);
 
-  const safeNotifications = Array.isArray(notifications) ? notifications : [];
-
-  const unreadCount = safeNotifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const visible = useMemo(() => {
-    if (filter === 'unread') return safeNotifications.filter((n) => !n.read);
-    return safeNotifications;
-  }, [safeNotifications, filter]);
+    if (filter === 'unread') return notifications.filter((n) => !n.read);
+    return notifications;
+  }, [notifications, filter]);
 
   const markAsRead = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();

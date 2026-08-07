@@ -10,7 +10,6 @@ import {
   Pause,
   CheckCircle2,
   Save,
-  RotateCcw,
 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
 
@@ -19,7 +18,7 @@ interface CandidateAiPreferencesTabProps {
 }
 
 export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabProps) {
-  const [selectedVoice, setSelectedVoice] = useState<'Serena' | 'Alloy' | 'Echo' | 'Nova' | 'Onyx'>('Serena');
+  const [selectedVoice, setSelectedVoice] = useState('Alloy');
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState(true);
   const [autoSubmitTranscript, setAutoSubmitTranscript] = useState(true);
@@ -31,17 +30,17 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
   useEffect(() => {
     async function loadAiSettings() {
       try {
-        const res = await apiClient.get<{ settings?: Record<string, any> }>('/candidate/settings').catch(() => null);
+        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings').catch(() => null);
         if (res && res.settings) {
           const s = res.settings;
-          if (s.defaultVoice) setSelectedVoice(s.defaultVoice);
+          if (typeof s.defaultVoice === 'string') setSelectedVoice(s.defaultVoice);
           if (typeof s.liveTranscript === 'boolean') setLiveTranscript(s.liveTranscript);
           if (typeof s.autoSubmitTranscript === 'boolean') setAutoSubmitTranscript(s.autoSubmitTranscript);
         } else {
           const saved = localStorage.getItem('candidate_ai_settings');
           if (saved) {
             const parsed = JSON.parse(saved);
-            if (parsed.selectedVoice) setSelectedVoice(parsed.selectedVoice);
+            if (typeof parsed.selectedVoice === 'string') setSelectedVoice(parsed.selectedVoice);
             if (typeof parsed.liveTranscript === 'boolean') setLiveTranscript(parsed.liveTranscript);
             if (typeof parsed.autoSubmitTranscript === 'boolean') setAutoSubmitTranscript(parsed.autoSubmitTranscript);
           }
@@ -60,10 +59,11 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
       interval = setInterval(() => {
         setAudioLevel(Math.floor(Math.random() * 70) + 20);
       }, 150);
-    } else {
-      setAudioLevel(0);
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+      setAudioLevel(0);
+    };
   }, [micTesting]);
 
   const handleTestAudio = () => {
@@ -73,21 +73,22 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
 
   const handleSave = async () => {
     setSaving(true);
-    const aiData = { selectedVoice, liveTranscript, autoSubmitTranscript };
-    localStorage.setItem('candidate_ai_settings', JSON.stringify(aiData));
-
     try {
       await apiClient.patch('/candidate/settings', {
         defaultVoice: selectedVoice,
         liveTranscript,
         autoSubmitTranscript,
-      }).catch(() => null);
+      });
+      localStorage.setItem(
+        'candidate_ai_settings',
+        JSON.stringify({ selectedVoice, liveTranscript, autoSubmitTranscript })
+      );
+      onSave();
     } catch {
       // fallback
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
-    onSave();
   };
 
   return (
@@ -136,7 +137,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
               <button
                 key={voice.name}
                 type="button"
-                onClick={() => setSelectedVoice(voice.name as any)}
+                onClick={() => setSelectedVoice(voice.name)}
                 className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between h-24 ${
                   isSelected
                     ? 'border-brand-500 dark:border-orange-500 bg-brand-500/10 dark:bg-orange-500/10 ring-2 ring-brand-500/30'

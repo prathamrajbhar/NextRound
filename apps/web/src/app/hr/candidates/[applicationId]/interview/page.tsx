@@ -19,7 +19,7 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
     async function fetchReplay() {
       try {
         setLoading(true);
-        const data = await apiClient.get<Application>(`/applications/${applicationId}`);
+        const data = await apiClient.get<Application>(`/applications/${applicationId}`).catch(() => null);
         if (data) {
           let nextApp = data;
           if (typeof window !== 'undefined') {

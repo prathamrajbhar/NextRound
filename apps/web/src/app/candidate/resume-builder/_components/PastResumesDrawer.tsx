@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   X,
   FileText,
@@ -13,13 +13,14 @@ import {
   Loader2,
 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
+import { GeneratedResumeData } from '../../resumes/_components/EditResumeModal';
 
 interface ResumeHistoryItem {
   id: string;
   targetRole: string;
   targetCompany: string;
   status: string;
-  generatedResume: any;
+  generatedResume: GeneratedResumeData | null;
   resumePdfUrl: string | null;
   createdAt: string;
   endedAt: string | null;
@@ -28,7 +29,7 @@ interface ResumeHistoryItem {
 interface PastResumesDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectResume?: (resume: any) => void;
+  onSelectResume?: (resume: GeneratedResumeData) => void;
 }
 
 export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResumesDrawerProps) {
@@ -36,13 +37,7 @@ export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResum
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchHistory();
-    }
-  }, [isOpen]);
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     setLoading(true);
     try {
       const res = await apiClient.get<{ history: ResumeHistoryItem[] }>('/resume-builder/history');
@@ -54,13 +49,23 @@ export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResum
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = setTimeout(() => {
+      fetchHistory();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [isOpen, fetchHistory]);
 
   const handleCopyText = (item: ResumeHistoryItem) => {
     if (!item.generatedResume) return;
     const r = item.generatedResume;
     const fullText = `${r.name || 'Candidate Name'}\n${r.title || item.targetRole} | ${r.email || ''}\n\nSUMMARY\n${r.summary || ''}\n\nEXPERIENCE\n` +
-      (r.experience || []).map((e: any) => `${e.role} - ${e.company}\n` + (e.highlights || []).map((h: string) => `• ${h}`).join('\n')).join('\n\n');
+      ((r.experience as Array<{ role?: string; company?: string; highlights?: string[] }>) || [])
+        .map((e) => `${e.role || ''} - ${e.company || ''}\n` + (e.highlights || []).map((h: string) => `• ${h}`).join('\n'))
+        .join('\n\n');
     
     navigator.clipboard.writeText(fullText);
     setCopiedId(item.id);
@@ -160,7 +165,7 @@ export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResum
                   ) : (
                     <button
                       type="button"
-                      onClick={() => onSelectResume?.(item.generatedResume)}
+                      onClick={() => item.generatedResume && onSelectResume?.(item.generatedResume)}
                       className="py-1.5 px-3 rounded-xl bg-slate-900 dark:bg-slate-700 text-white text-[10px] font-extrabold hover:bg-slate-800 transition-all flex items-center justify-center gap-1 cursor-pointer"
                     >
                       <ExternalLink className="h-3 w-3" />

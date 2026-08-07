@@ -6,7 +6,7 @@ import { apiClient } from '@/lib/apiClient';
 import { Application } from '@/types';
 import { useInterviewSession } from '@/hooks/useInterviewSession';
 import InterviewCheckScreen from '@/components/interview/InterviewCheckScreen';
-import InterviewActiveConsole from '@/components/interview/InterviewActiveConsole';
+import UnifiedInterviewConsole from '@/components/interview/UnifiedInterviewConsole';
 
 export default function LiveInterviewRoom({ params }: { params: Promise<{ interviewId: string }> }) {
   const router = useRouter();
@@ -39,15 +39,12 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
     phase,
     messages,
     timeRemaining,
-    micActive,
     camActive,
     isAnalyzing,
     proctorTelemetry,
     startSession,
     submitAnswer,
     wrapUp,
-    toggleMic,
-    toggleCam,
   } = useInterviewSession({
     company: companyName,
     role: jobTitle,
@@ -65,7 +62,7 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
         <div className="max-w-sm w-full text-center space-y-3">
           <h1 className="text-lg font-extrabold text-white font-display">Interview Not Found</h1>
           <p className="text-xs text-slate-400 font-medium leading-relaxed">
-            We couldn't load this interview. Please go back and try again.
+            We couldn&apos;t load this interview. Please go back and try again.
           </p>
           <button
             type="button"
@@ -99,23 +96,17 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
   }
 
   return (
-    <div className="h-screen w-screen bg-slate-950 text-white flex flex-col justify-between overflow-hidden p-2">
-      <InterviewActiveConsole
-        messages={messages}
-        phase={phase}
-        timeRemaining={timeRemaining}
-        micActive={micActive}
-        camActive={camActive}
-        isAnalyzing={isAnalyzing}
-        proctorTelemetry={proctorTelemetry}
-        isDarkTheme={true}
-        onSubmitAnswer={submitAnswer}
-        onEndSession={wrapUp}
-        onToggleMic={toggleMic}
-        onToggleCam={toggleCam}
-        company={companyName}
-        role={jobTitle}
-      />
-    </div>
+    <UnifiedInterviewConsole
+      mode="ai-voice"
+      companyName={companyName}
+      jobTitle={jobTitle}
+      timeRemaining={timeRemaining}
+      messages={messages}
+      phase={phase}
+      isAnalyzing={isAnalyzing}
+      proctorTelemetry={proctorTelemetry}
+      onSubmitAnswer={submitAnswer}
+      onEndSession={wrapUp}
+    />
   );
 }

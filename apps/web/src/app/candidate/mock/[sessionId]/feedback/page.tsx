@@ -65,7 +65,6 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
   const sysScore = feedbackData?.metrics?.['System Architecture'] ?? 0;
   const strengths = feedbackData?.keyStrengths || [];
   const growthAreas = feedbackData?.areasToImprove || [];
-  const transcriptHighlights = feedbackData?.transcriptHighlights || [];
 
   if (loading) {
     return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading interview feedback...</div>;

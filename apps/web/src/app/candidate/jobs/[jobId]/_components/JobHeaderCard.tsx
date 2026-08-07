@@ -19,9 +19,10 @@ interface JobHeaderCardProps {
   applied: boolean;
   onApply: () => void;
   skills: string[];
+  submitting?: boolean;
 }
 
-export function JobHeaderCard({ job, applied, onApply, skills }: JobHeaderCardProps) {
+export function JobHeaderCard({ job, applied, onApply, skills, submitting = false }: JobHeaderCardProps) {
   return (
     <div className="relative overflow-hidden rounded-3xl border border-white/60 dark:border-slate-800 bg-gradient-to-br from-white/70 via-white/50 to-slate-50/50 dark:from-slate-900/80 dark:via-slate-900/60 dark:to-slate-950/80 p-6 md:p-8 shadow-md backdrop-blur-md glass-panel">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
@@ -72,9 +73,10 @@ export function JobHeaderCard({ job, applied, onApply, skills }: JobHeaderCardPr
           ) : (
             <button
               onClick={onApply}
-              className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 px-8 py-3 text-xs font-extrabold text-white shadow-md hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              disabled={submitting}
+              className="w-full md:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 px-8 py-3 text-xs font-extrabold text-white shadow-md hover:shadow-lg transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span>Apply to this Role</span>
+              <span>{submitting ? 'Submitting Application...' : 'Apply to this Role'}</span>
               <ArrowRight className="h-4 w-4" />
             </button>
           )}

@@ -60,7 +60,14 @@ export const JobCreateSchema = z.object({
   location: z.string().optional(),
   salary: z.string().optional(),
   experienceLevel: z.string().optional(),
+  department: z.string().optional(),
   skills: z.array(z.string()).optional(),
+  stages: z.array(z.enum(['screening', 'assessment', 'voice_screen', 'hr_round', 'panel', 'decision'])).optional(),
+  assessmentConfig: z.object({
+    mcqCount: z.number().optional(),
+    codingProblemId: z.string().optional(),
+    passingScore: z.number().optional(),
+  }).optional(),
   rubric: z.object({
     technical: z.number().min(0).max(100),
     communication: z.number().min(0).max(100),
@@ -159,7 +166,14 @@ export const JobUpdateSchema = z.object({
   location: z.string().optional(),
   salary: z.string().optional(),
   experienceLevel: z.string().optional(),
+  department: z.string().optional(),
   skills: z.array(z.string()).optional(),
+  stages: z.array(z.enum(['screening', 'assessment', 'voice_screen', 'hr_round', 'panel', 'decision'])).optional(),
+  assessmentConfig: z.object({
+    mcqCount: z.number().optional(),
+    codingProblemId: z.string().optional(),
+    passingScore: z.number().optional(),
+  }).optional(),
   rubric: z.object({
     technical: z.number().min(0).max(100),
     communication: z.number().min(0).max(100),

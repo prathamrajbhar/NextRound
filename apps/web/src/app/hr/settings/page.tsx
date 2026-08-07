@@ -49,16 +49,16 @@ export default function HrSettingsPage() {
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const orgRes = await apiClient.get<{ organization: { name: string; settings: any } }>('/organizations/me').catch(() => null);
+        const orgRes = await apiClient.get<{ organization: { name: string; settings: Record<string, unknown> } }>('/organizations/me').catch(() => null);
         if (orgRes?.organization) {
           if (orgRes.organization.name) setOrgName(orgRes.organization.name);
           const s = orgRes.organization.settings || {};
-          if (s.domain) setOrgDomain(s.domain);
-          if (s.supportEmail) setSupportEmail(s.supportEmail);
-          if (s.timezone) setTimezone(s.timezone);
-          if (s.defaultThreshold) setDefaultThreshold(s.defaultThreshold);
+          if (typeof s.domain === 'string') setOrgDomain(s.domain);
+          if (typeof s.supportEmail === 'string') setSupportEmail(s.supportEmail);
+          if (typeof s.timezone === 'string') setTimezone(s.timezone);
+          if (typeof s.defaultThreshold === 'number') setDefaultThreshold(s.defaultThreshold);
           if (typeof s.autoOfferEnabled === 'boolean') setAutoInvite(s.autoOfferEnabled);
-          if (s.defaultVoice) setDefaultVoice(s.defaultVoice);
+          if (typeof s.defaultVoice === 'string') setDefaultVoice(s.defaultVoice as 'Serena' | 'Alloy' | 'Echo' | 'Fable' | 'Nova' | 'Onyx' | 'Shimmer');
           if (typeof s.anonymizeResumes === 'boolean') setAnonymizeResumes(s.anonymizeResumes);
         }
       } catch (err) {

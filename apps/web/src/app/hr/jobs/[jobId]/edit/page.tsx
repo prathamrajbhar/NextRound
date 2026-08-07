@@ -14,7 +14,6 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
   const router = useRouter();
   const { jobId } = use(params);
 
-  const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Form states
@@ -24,6 +23,8 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
   const [salary, setSalary] = useState('$140,000 - $180,000');
   const [experienceLevel, setExperienceLevel] = useState('Senior (5+ yrs)');
   const [skills] = useState<string[]>(['React', 'TypeScript', 'Next.js', 'System Architecture']);
+
+  const [status, setStatus] = useState<'active' | 'draft' | 'closed'>('active');
 
   const [techWeight, setTechWeight] = useState(25);
   const [commWeight, setCommWeight] = useState(25);
@@ -49,18 +50,21 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
     passingScore: 80,
   });
 
+  const [submitting, setSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   useEffect(() => {
     async function fetchJob() {
       try {
         setLoading(true);
         const data = await apiClient.get<Job>(`/jobs/${jobId}`);
         if (data) {
-          setJob(data);
           setTitle(data.title || '');
           setDescription(data.description || '');
           setLocation(data.location || 'Remote (Worldwide)');
           setSalary(data.salary || '$140,000 - $180,000');
           setExperienceLevel(data.experienceLevel || 'Senior (5+ yrs)');
+          setStatus(data.status === 'published' ? 'active' : (data.status as 'active' | 'draft' | 'closed') || 'active');
           if (data.rubric) {
             setTechWeight(data.rubric.technical ?? 25);
             setCommWeight(data.rubric.communication ?? 25);
@@ -93,14 +97,18 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submitting) return;
 
-    const updatedJob = {
-      ...job,
+    setErrorMsg(null);
+    setSubmitting(true);
+
+    const payload = {
       title,
-      description,
+      description: description || 'No description provided for job listing.',
       location,
       salary,
       experienceLevel,
+      status,
       rubric: {
         technical: techWeight,
         communication: commWeight,
@@ -116,11 +124,16 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
     };
 
     try {
-      await apiClient.put(`/jobs/${jobId}`, updatedJob);
-    } catch (err) {
-      console.warn('API job update failed, redirecting:', err);
+      await apiClient.put(`/jobs/${jobId}`, payload);
+      router.push('/hr/jobs');
+    } catch (err: unknown) {
+      console.error('API job update failed:', err);
+      const errorObj = err as { response?: { data?: { error?: string } }; message?: string };
+      const msg = errorObj?.response?.data?.error || errorObj?.message || 'Failed to update job listing. Please check required fields.';
+      setErrorMsg(typeof msg === 'string' ? msg : JSON.stringify(msg));
+    } finally {
+      setSubmitting(false);
     }
-    router.push('/hr/jobs');
   };
 
   const handleWeightChange = (key: 'tech' | 'comm' | 'prob' | 'exp', val: number) => {
@@ -161,14 +174,21 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
           </Link>
           <button
             type="button"
-            disabled={!isRubricBalanced}
+            disabled={!isRubricBalanced || submitting}
             onClick={handleUpdate}
-            className="rounded-full bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold px-6 py-2.5 text-xs shadow-md transition-all cursor-pointer disabled:opacity-40 hover:scale-[1.01]"
+            className="inline-flex items-center gap-2 rounded-full bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold px-6 py-2.5 text-xs shadow-md transition-all cursor-pointer disabled:opacity-40 hover:scale-[1.01]"
           >
-            Update Job Listing
+            {submitting && <Loader2 className="h-4 w-4 animate-spin text-white" />}
+            {submitting ? 'Updating Job...' : 'Update Job Listing'}
           </button>
         </div>
       </div>
+
+      {errorMsg && (
+        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/60 text-xs font-bold text-rose-700 dark:text-rose-300">
+          ⚠️ {errorMsg}
+        </div>
+      )}
 
       {/* Balanced 50/50 2-Column Grid */}
       <form onSubmit={handleUpdate} className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -234,20 +254,37 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
                 </div>
               </div>
 
-              <div>
-                <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-                  Experience Level
-                </label>
-                <select
-                  value={experienceLevel}
-                  onChange={(e) => setExperienceLevel(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
-                >
-                  <option value="Junior (0 - 2 yrs)">Junior (0 - 2 yrs)</option>
-                  <option value="Mid Level (2 - 5 yrs)">Mid Level (2 - 5 yrs)</option>
-                  <option value="Senior (5+ yrs)">Senior (5+ yrs)</option>
-                  <option value="Lead / Staff (8+ yrs)">Lead / Staff (8+ yrs)</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
+                    Experience Level
+                  </label>
+                  <select
+                    value={experienceLevel}
+                    onChange={(e) => setExperienceLevel(e.target.value)}
+                    className="w-full p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                  >
+                    <option value="Junior (0 - 2 yrs)">Junior (0 - 2 yrs)</option>
+                    <option value="Mid Level (2 - 5 yrs)">Mid Level (2 - 5 yrs)</option>
+                    <option value="Senior (5+ yrs)">Senior (5+ yrs)</option>
+                    <option value="Lead / Staff (8+ yrs)">Lead / Staff (8+ yrs)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
+                    Job Status
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value as 'active' | 'draft' | 'closed')}
+                    className="w-full p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                  >
+                    <option value="active">Active (Published)</option>
+                    <option value="draft">Draft (Unpublished)</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                </div>
               </div>
             </div>
           </div>

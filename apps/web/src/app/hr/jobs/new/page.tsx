@@ -178,6 +178,37 @@ export default function HrCreateJob() {
     rubric.technical + rubric.communication + rubric.problemSolving + rubric.experience;
   const isRubricBalanced = totalWeight === 100;
 
+  const handleSaveDraft = async () => {
+    const payload = {
+      title: title || 'Untitled Draft Job',
+      description: jd || 'Draft job description.',
+      department,
+      rubric: {
+        technical: rubric.technical,
+        communication: rubric.communication,
+        problemSolving: rubric.problemSolving,
+        experience: rubric.experience,
+      },
+      thresholds: {
+        minScore,
+        autoOffer,
+      },
+      status: 'draft',
+      location: locationType === 'Remote' ? 'Remote' : 'Bengaluru, KA (On-site)',
+      salary: `₹${(minSalary / 100000).toFixed(1)}L - ₹${(maxSalary / 100000).toFixed(1)}L`,
+      experienceLevel,
+      stages,
+      assessmentConfig,
+    };
+
+    try {
+      await apiClient.post('/jobs', payload);
+    } catch (err) {
+      console.warn('API draft creation failed, redirecting:', err);
+    }
+    router.push('/hr/jobs');
+  };
+
   const handlePublish = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isRubricBalanced) return;
@@ -242,7 +273,7 @@ export default function HrCreateJob() {
           </Link>
           <button
             type="button"
-            onClick={() => router.push('/hr/jobs')}
+            onClick={handleSaveDraft}
             className="bg-white/60 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-white px-4 py-2 rounded-full text-xs font-bold transition-all shadow-sm cursor-pointer"
           >
             Save as Draft

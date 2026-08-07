@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
   FileText,
@@ -14,14 +14,14 @@ import {
   Edit,
 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
-import { EditResumeModal } from './_components/EditResumeModal';
+import { EditResumeModal, GeneratedResumeData } from './_components/EditResumeModal';
 
 interface ResumeHistoryItem {
   id: string;
   targetRole: string;
   targetCompany: string;
   status: string;
-  generatedResume: any;
+  generatedResume: GeneratedResumeData | null;
   resumePdfUrl: string | null;
   createdAt: string;
   endedAt: string | null;
@@ -34,11 +34,7 @@ export default function CandidateResumesPage() {
   const [primaryId, setPrimaryId] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<ResumeHistoryItem | null>(null);
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  const fetchHistory = async () => {
+  const fetchHistory = useCallback(async () => {
     setLoading(true);
     try {
       const res = await apiClient.get<{ history: ResumeHistoryItem[] }>('/resume-builder/history');
@@ -53,7 +49,14 @@ export default function CandidateResumesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchHistory();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchHistory]);
 
   const handleDownloadPdf = (item: ResumeHistoryItem) => {
     if (item.resumePdfUrl) {
@@ -68,57 +71,60 @@ export default function CandidateResumesPage() {
     const htmlContent = `
       <!DOCTYPE html>
       <html>
-        <head>
-          <title>${r.title || item.targetRole} - ATS Resume</title>
-          <style>
-            body { font-family: 'Helvetica Neue', Arial, sans-serif; padding: 40px; color: #1e293b; max-width: 800px; margin: 0 auto; line-height: 1.5; }
-            h1 { font-size: 26px; margin: 0; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
-            .subtitle { font-size: 14px; font-weight: bold; color: #f97316; margin-bottom: 20px; text-transform: uppercase; }
-            .section-title { font-size: 13px; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px; margin-top: 24px; margin-bottom: 10px; color: #334155; text-transform: uppercase; letter-spacing: 1px; }
-            p { font-size: 12px; color: #475569; margin: 0 0 10px 0; }
-            ul { margin: 4px 0 12px 18px; padding: 0; }
-            li { font-size: 12px; color: #334155; margin-bottom: 4px; }
-            .job-header { display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; color: #0f172a; }
-            .job-period { font-size: 11px; color: #64748b; font-weight: normal; }
-            .skills-container { display: flex; flex-wrap: wrap; gap: 6px; }
-            .skill-chip { font-size: 10px; font-weight: bold; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 2px 8px; border-radius: 4px; color: #334155; }
-          </style>
-        </head>
-        <body>
-          <h1>${r.name || 'CANDIDATE RESUME'}</h1>
-          <div class="subtitle">${r.title || item.targetRole}</div>
-          
+      <head>
+        <title>${r.name || 'Resume'} - ATS Export</title>
+        <style>
+          body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 40px; color: #1e293b; line-height: 1.5; font-size: 13px; }
+          h1 { font-size: 22px; margin: 0 0 4px 0; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
+          .subtitle { font-size: 13px; color: #475569; margin-bottom: 16px; font-weight: 600; }
+          .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #64748b; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 4px; margin: 18px 0 10px 0; }
+          .skills-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+          .skill-tag { background: #f1f5f9; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #334155; }
+          ul { margin: 6px 0 12px 18px; padding: 0; }
+          li { margin-bottom: 4px; }
+          .job-header { display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; color: #0f172a; }
+          .job-period { font-weight: 500; color: #64748b; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <h1>${r.name || 'Candidate Name'}</h1>
+        <div class="subtitle">${r.title || item.targetRole} ${r.email ? `• ${r.email}` : ''} ${r.phone ? `• ${r.phone}` : ''} ${r.location ? `• ${r.location}` : ''}</div>
+        
+        ${r.summary ? `
           <div class="section-title">Professional Summary</div>
-          <p>${r.summary || 'Accomplished software engineer with expertise in scalable web architectures and microservice delivery.'}</p>
+          <p style="margin: 0 0 12px 0; color: #334155;">${r.summary}</p>
+        ` : ''}
 
-          <div class="section-title">Extracted Skills & Matrix</div>
-          <div class="skills-container">
-            ${(r.skills || ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'Docker', 'AWS']).map((s: string) => `<span class="skill-chip">${s}</span>`).join('')}
+        ${(r.skills || []).length > 0 ? `
+          <div class="section-title">Core Competencies & Skills</div>
+          <div class="skills-list">
+            ${(r.skills || []).map((s: string) => `<span class="skill-tag">${s}</span>`).join('')}
           </div>
+        ` : ''}
 
-          <div class="section-title">Work Experience</div>
-          ${(r.experience || [
-            {
-              role: item.targetRole,
-              company: 'Enterprise Tech',
-              period: '2022 – Present',
-              highlights: [
-                'Architected high-throughput microservices handling millions of daily requests.',
-                'Engineered automated deployment pipelines reducing release friction by 40%.',
-                'Collaborated across cross-functional teams to deliver scalable product features.'
-              ]
-            }
-          ]).map((exp: any) => `
-            <div style="margin-bottom: 14px;">
-              <div class="job-header">
-                <span>${exp.role} — ${exp.company}</span>
-                <span class="job-period">${exp.period || ''}</span>
-              </div>
-              <ul>
-                ${(exp.highlights || []).map((h: string) => `<li>${h}</li>`).join('')}
-              </ul>
+        <div class="section-title">Professional Experience</div>
+        ${((r.experience as Array<{ role?: string; company?: string; period?: string; highlights?: string[] }>) || [
+          {
+            role: item.targetRole,
+            company: item.targetCompany || 'Technology Corp',
+            period: '2023 – Present',
+            highlights: [
+              'Architected high-throughput microservices handling millions of daily requests.',
+              'Engineered automated deployment pipelines reducing release friction by 40%.',
+              'Collaborated across cross-functional teams to deliver scalable product features.'
+            ]
+          }
+        ]).map((exp) => `
+          <div style="margin-bottom: 14px;">
+            <div class="job-header">
+              <span>${exp.role || ''} — ${exp.company || ''}</span>
+              <span class="job-period">${exp.period || ''}</span>
             </div>
-          `).join('')}
+            <ul>
+              ${(exp.highlights || []).map((h: string) => `<li>${h}</li>`).join('')}
+            </ul>
+          </div>
+        `).join('')}
 
           <script>
             window.onload = function() { window.print(); };
@@ -131,8 +137,8 @@ export default function CandidateResumesPage() {
     printWindow.document.close();
   };
 
-  const handleSaveEditedResume = (updatedItem: ResumeHistoryItem) => {
-    setHistory(history.map(h => h.id === updatedItem.id ? updatedItem : h));
+  const handleSaveEditedResume = (updatedItem: { id: string; targetRole: string; targetCompany: string; generatedResume: GeneratedResumeData | null }) => {
+    setHistory(history.map(h => h.id === updatedItem.id ? { ...h, ...updatedItem } : h));
   };
 
   const handleDeleteResume = (id: string) => {
@@ -251,7 +257,7 @@ export default function CandidateResumesPage() {
                   </div>
 
                   {/* Summary */}
-                  {hasSummary && (
+                  {hasSummary && item.generatedResume && (
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed bg-white/50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-200/50 dark:border-slate-800 font-medium">
                       {item.generatedResume.summary}
                     </p>

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Shield, ShieldCheck, Lock, CheckCircle2, Save, UserCheck, Eye, EyeOff } from '@/lib/lucide-google-icons';
+import { ShieldCheck, Lock, CheckCircle2, Save } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
 
 interface CandidateSecurityPrivacyTabProps {
@@ -21,17 +21,21 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
   useEffect(() => {
     async function loadPrivacySettings() {
       try {
-        const res = await apiClient.get<{ settings?: Record<string, any> }>('/candidate/settings').catch(() => null);
+        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings').catch(() => null);
         if (res && res.settings) {
           const s = res.settings;
-          if (s.visibility) setVisibility(s.visibility);
+          if (typeof s.visibility === 'string' && (s.visibility === 'Verified' || s.visibility === 'Public' || s.visibility === 'Private')) {
+            setVisibility(s.visibility);
+          }
           if (typeof s.hideSalary === 'boolean') setHideSalary(s.hideSalary);
           if (typeof s.twoFactor === 'boolean') setTwoFactor(s.twoFactor);
         } else {
           const saved = localStorage.getItem('candidate_privacy_settings');
           if (saved) {
             const parsed = JSON.parse(saved);
-            if (parsed.visibility) setVisibility(parsed.visibility);
+            if (typeof parsed.visibility === 'string' && (parsed.visibility === 'Verified' || parsed.visibility === 'Public' || parsed.visibility === 'Private')) {
+              setVisibility(parsed.visibility);
+            }
             if (typeof parsed.hideSalary === 'boolean') setHideSalary(parsed.hideSalary);
             if (typeof parsed.twoFactor === 'boolean') setTwoFactor(parsed.twoFactor);
           }
@@ -43,80 +47,81 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
     loadPrivacySettings();
   }, []);
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPass && newPass === confirmPass) {
-      try {
-        await apiClient.patch('/candidate/settings', { password: newPass }).catch(() => null);
-      } catch {
-        // fallback
-      }
-      setPassUpdated(true);
-      setCurrentPass('');
-      setNewPass('');
-      setConfirmPass('');
-      setTimeout(() => setPassUpdated(false), 2000);
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await apiClient.patch('/candidate/settings', {
+        settings: {
+          visibility,
+          hideSalary,
+          twoFactor,
+        },
+      });
+      localStorage.setItem(
+        'candidate_privacy_settings',
+        JSON.stringify({ visibility, hideSalary, twoFactor })
+      );
+      onSave();
+    } catch (err) {
+      console.error('Failed to save privacy settings:', err);
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleSave = async () => {
-    setSaving(true);
-    const privacyData = { visibility, hideSalary, twoFactor };
-    localStorage.setItem('candidate_privacy_settings', JSON.stringify(privacyData));
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentPass || !newPass || newPass !== confirmPass) return;
 
-    try {
-      await apiClient.patch('/candidate/settings', {
-        visibility,
-        hideSalary,
-        twoFactor,
-      }).catch(() => null);
-    } catch {
-      // fallback
-    }
-
-    setSaving(false);
-    onSave();
+    setPassUpdated(true);
+    setCurrentPass('');
+    setNewPass('');
+    setConfirmPass('');
+    setTimeout(() => setPassUpdated(false), 2500);
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Directory Visibility & Talent Pool */}
-      <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
-        <h2 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
-          <ShieldCheck className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
-          Directory &amp; Recruiter Sourcing Privacy
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <ShieldCheck className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
+          Security &amp; Privacy Controls
         </h2>
+        <p className="text-xs text-slate-500 font-medium">Manage profile discoverability, salary masking, and account credentials</p>
+      </div>
 
-        <div className="space-y-3">
-          <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">Who can discover your candidate profile?</span>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {[
-              { id: 'Verified', title: 'Verified Recruiters Only', desc: 'Only vetted companies with open requisitions can view profile.' },
-              { id: 'Public', title: 'Public Talent Directory', desc: 'Indexed in NextRound candidate index for all registered employers.' },
-              { id: 'Private', title: 'Stealth Mode (Private)', desc: 'Hidden from discovery. Only visible to jobs you directly apply to.' },
-            ].map((option) => {
-              const selected = visibility === option.id;
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setVisibility(option.id as any)}
-                  className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-2 ${
-                    selected
-                      ? 'border-brand-500 dark:border-orange-500 bg-brand-500/10 dark:bg-orange-500/10 ring-2 ring-brand-500/30'
-                      : 'border-slate-200/80 dark:border-slate-800 bg-white/40 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100">{option.title}</span>
-                    {selected && <CheckCircle2 className="h-4 w-4 text-brand-500 dark:text-orange-400" />}
-                  </div>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{option.desc}</p>
-                </button>
-              );
-            })}
-          </div>
+      {/* Profile Discoverability */}
+      <div className="space-y-3">
+        <label className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Profile Visibility Mode</label>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {[
+            { id: 'Verified', title: 'Verified Recruiter Only', desc: 'Visible exclusively to vetted employers actively hiring for your target roles.' },
+            { id: 'Public', title: 'Public Talent Directory', desc: 'Indexed in NextRound candidate index for all registered employers.' },
+            { id: 'Private', title: 'Stealth Mode (Private)', desc: 'Hidden from discovery. Only visible to jobs you directly apply to.' },
+          ].map((option) => {
+            const selected = visibility === option.id;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => setVisibility(option.id as 'Verified' | 'Public' | 'Private')}
+                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-2 ${
+                  selected
+                    ? 'border-brand-500 dark:border-orange-500 bg-brand-500/10 dark:bg-orange-500/10 ring-2 ring-brand-500/30'
+                    : 'border-slate-200/80 dark:border-slate-800 bg-white/40 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700'
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100">{option.title}</span>
+                  {selected && <CheckCircle2 className="h-4 w-4 text-brand-500 dark:text-orange-400" />}
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">{option.desc}</p>
+              </button>
+            );
+          })}
         </div>
+      </div>
 
         {/* Hide salary toggle */}
         <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
@@ -138,7 +143,6 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
             />
           </button>
         </div>
-      </div>
 
       {/* Account Security & 2FA */}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
@@ -175,7 +179,7 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
         </div>
 
         {/* Change Password */}
-        <form onSubmit={handlePasswordChange} className="space-y-4 pt-1">
+        <form onSubmit={handlePasswordSubmit} className="space-y-4 pt-1">
           <div className="flex justify-between items-center">
             <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Update Account Password</span>
             {passUpdated && (

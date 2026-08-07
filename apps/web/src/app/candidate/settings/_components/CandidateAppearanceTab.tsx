@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Palette, Sun, Moon, Sparkles, CheckCircle2, Save, Monitor } from '@/lib/lucide-google-icons';
+import { Palette, Sun, Moon, CheckCircle2, Save } from '@/lib/lucide-google-icons';
 import { useTheme } from '@/contexts/ThemeContext';
 import { apiClient } from '@/lib/apiClient';
 
@@ -18,7 +18,7 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
   useEffect(() => {
     async function loadUiSettings() {
       try {
-        const res = await apiClient.get<{ settings?: Record<string, any> }>('/candidate/settings').catch(() => null);
+        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings').catch(() => null);
         if (res && res.settings) {
           const s = res.settings;
           if (typeof s.glassmorphism === 'boolean') setGlassmorphism(s.glassmorphism);

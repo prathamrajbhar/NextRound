@@ -29,7 +29,7 @@ export interface Job {
     minScore: number;
     autoOffer: boolean;
   };
-  status: 'active' | 'draft' | 'closed';
+  status: 'active' | 'published' | 'draft' | 'closed' | 'paused' | 'deleted';
   location: string;
   department?: string;
   salary: string;
@@ -243,6 +243,8 @@ export interface InterviewRound {
 export interface AsyncVideoResponse {
   questionId: string;
   question: string;
+  promptText?: string;
+  timeLimitSeconds?: number;
   videoUrl: string;
   durationSeconds: number;
   attempts: number;
@@ -254,6 +256,7 @@ export interface AsyncScreening {
   applicationId: string;
   candidateName: string;
   jobTitle: string;
+  orgName?: string;
   status: 'invited' | 'in_progress' | 'submitted' | 'reviewed';
   invitedDate: string;
   submittedDate?: string;
@@ -492,6 +495,13 @@ export interface DynamicConversationTurn {
     label: string;
     value: string;
   }[];
+}
+
+export interface GeneratedResumeItem {
+  id: string;
+  targetRole: string;
+  createdAt: string;
+  resumePdfUrl?: string;
 }
 
 export interface ATSResumeData {

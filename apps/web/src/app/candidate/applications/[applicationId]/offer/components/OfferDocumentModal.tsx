@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { X, Download, Printer, ShieldCheck, Building2, CheckCircle2 } from 'lucide-react';
+import { X, Download, Printer, ShieldCheck, Building2 } from 'lucide-react';
 
 interface DocumentModalProps {
   isOpen: boolean;

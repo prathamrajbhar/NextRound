@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   User,
   Bell,
@@ -8,7 +8,6 @@ import {
   Shield,
   Palette,
   CheckCircle2,
-  Settings,
 } from '@/lib/lucide-google-icons';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/apiClient';
@@ -24,17 +23,17 @@ export default function CandidateSettingsPage() {
   const [savedToast, setSavedToast] = useState(false);
   const [readinessScore, setReadinessScore] = useState(60);
 
-  const calculateReadiness = async () => {
+  const calculateReadiness = useCallback(async () => {
     try {
-      const res = await apiClient.get<{ profile?: Record<string, any> }>('/candidate/profile').catch(() => null);
+      const res = await apiClient.get<{ profile?: Record<string, unknown> }>('/candidate/profile').catch(() => null);
       const p = res?.profile || {};
-      const name = p.full_name || localStorage.getItem('candidate_name') || (user?.email ? user.email.split('@')[0] : '');
-      const email = p.email || user?.email || localStorage.getItem('candidate_email');
-      const headline = p.headline || localStorage.getItem('candidate_headline');
-      const phone = p.phone || localStorage.getItem('candidate_phone');
-      const loc = p.location || localStorage.getItem('candidate_location');
-      const portfolio = p.portfolio_url || localStorage.getItem('candidate_portfolio');
-      const bio = p.bio || localStorage.getItem('candidate_bio');
+      const name = (p.full_name as string) || localStorage.getItem('candidate_name') || (user?.email ? user.email.split('@')[0] : '');
+      const email = (p.email as string) || user?.email || localStorage.getItem('candidate_email');
+      const headline = (p.headline as string) || localStorage.getItem('candidate_headline');
+      const phone = (p.phone as string) || localStorage.getItem('candidate_phone');
+      const loc = (p.location as string) || localStorage.getItem('candidate_location');
+      const portfolio = (p.portfolio_url as string) || localStorage.getItem('candidate_portfolio');
+      const bio = (p.bio as string) || localStorage.getItem('candidate_bio');
 
       let score = 20; // Base user account creation
       if (name) score += 15;
@@ -49,14 +48,19 @@ export default function CandidateSettingsPage() {
     } catch {
       setReadinessScore(80);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
-    calculateReadiness();
+    const timer = setTimeout(() => {
+      calculateReadiness();
+    }, 0);
     const handleUpdate = () => calculateReadiness();
     window.addEventListener('profile_update', handleUpdate);
-    return () => window.removeEventListener('profile_update', handleUpdate);
-  }, [user]);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('profile_update', handleUpdate);
+    };
+  }, [calculateReadiness]);
 
   const triggerSaveNotification = () => {
     setSavedToast(true);

@@ -24,6 +24,14 @@ interface HRAnalyticsData {
   biasReductionScore: number;
   funnel: { stage: string; count: number; pct: number }[];
   monthlyTrends: { month: string; applicants: number; hires: number; passRate: number }[];
+  kpis?: {
+    totalApplications?: number;
+    zeroHumanHires?: number;
+    avgTimeToHireDays?: number;
+    biasCleanRatePercent?: number;
+  };
+  dropoffAnalysis?: { stage: string; percentage: number; dropCount: number }[];
+  weeklyFunnel?: { week?: string; applied?: number; offered?: number }[];
 }
 
 const INITIAL_ANALYTICS: HRAnalyticsData = {
@@ -61,28 +69,28 @@ export default function HrAnalyticsDashboard() {
         ]);
 
         if (analyticsRes.status === 'fulfilled' && analyticsRes.value) {
-          const raw = analyticsRes.value as any;
+          const raw = analyticsRes.value;
           // Transform backend weeklyFunnel into frontend funnel format if present
           const funnel = Array.isArray(raw.funnel)
             ? raw.funnel
             : Array.isArray(raw.weeklyFunnel)
-            ? raw.weeklyFunnel.map((w: any) => ({ stage: w.week || 'Week', count: w.applied || 0, pct: 0 }))
+            ? raw.weeklyFunnel.map((w) => ({ stage: w.week || 'Week', count: w.applied || 0, pct: 0 }))
             : INITIAL_ANALYTICS.funnel;
 
           const monthlyTrends = Array.isArray(raw.monthlyTrends)
             ? raw.monthlyTrends
             : Array.isArray(raw.weeklyFunnel)
-            ? raw.weeklyFunnel.map((w: any) => ({ month: w.week || 'W1', applicants: w.applied || 0, hires: w.offered || 0, passRate: 0 }))
+            ? raw.weeklyFunnel.map((w) => ({ month: w.week || 'W1', applicants: w.applied || 0, hires: w.offered || 0, passRate: 0 }))
             : INITIAL_ANALYTICS.monthlyTrends;
 
           setAnalyticsData({
-            totalCandidatesProcessed: raw.kpis?.totalApplications ?? 0,
-            zeroHumanHires: raw.kpis?.zeroHumanHires ?? 0,
-            avgTimeToOfferDays: raw.kpis?.avgTimeToHireDays ?? 0,
-            biasReductionScore: raw.kpis?.biasCleanRatePercent ?? 0,
+            ...raw,
+            totalCandidatesProcessed: raw.kpis?.totalApplications ?? raw.totalCandidatesProcessed ?? 0,
+            zeroHumanHires: raw.kpis?.zeroHumanHires ?? raw.zeroHumanHires ?? 0,
+            avgTimeToOfferDays: raw.kpis?.avgTimeToHireDays ?? raw.avgTimeToOfferDays ?? 0,
+            biasReductionScore: raw.kpis?.biasCleanRatePercent ?? raw.biasReductionScore ?? 0,
             funnel,
             monthlyTrends,
-            ...raw,
           });
         }
         if (jobsRes.status === 'fulfilled' && jobsRes.value) {
@@ -145,6 +153,15 @@ export default function HrAnalyticsDashboard() {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12 text-slate-500 font-semibold gap-2">
+        <Loader2 className="h-5 w-5 animate-spin text-brand-500" />
+        <span>Loading analytics...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12 font-sans">
@@ -349,8 +366,8 @@ export default function HrAnalyticsDashboard() {
             </div>
 
             <div className="space-y-3.5 text-xs font-semibold">
-              {((analyticsData as any)?.dropoffAnalysis || []).length > 0 ? (
-                ((analyticsData as any)?.dropoffAnalysis || []).map((item: any, idx: number) => (
+              {(analyticsData.dropoffAnalysis || []).length > 0 ? (
+                (analyticsData.dropoffAnalysis || []).map((item, idx: number) => (
                   <div key={idx} className="p-3 rounded-2xl bg-amber-50/60 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/60 space-y-1">
                     <div className="flex justify-between items-center text-amber-800 dark:text-amber-300 font-extrabold">
                       <span>{item.stage}</span>
@@ -381,15 +398,15 @@ export default function HrAnalyticsDashboard() {
                 <div className="flex justify-between text-slate-800 dark:text-slate-200 mb-1 font-extrabold">
                   <span>Candidate Experience Rating</span>
                   <span className="text-emerald-600 dark:text-emerald-400">
-                    {(analyticsData as any)?.kpis?.totalApplications > 0
-                      ? `${(((analyticsData as any).kpis.biasCleanRatePercent / 100) * 5).toFixed(1)} / 5.0 Rating`
+                    {(analyticsData.kpis?.totalApplications ?? 0) > 0
+                      ? `${((((analyticsData.kpis?.biasCleanRatePercent ?? 0) / 100) * 5)).toFixed(1)} / 5.0 Rating`
                       : 'N/A'}
                   </span>
                 </div>
                 <div className="w-full bg-slate-200/60 dark:bg-slate-800/60 rounded-full h-2 overflow-hidden">
                   <div
                     className="bg-emerald-500 h-full rounded-full"
-                    style={{ width: (analyticsData as any)?.kpis?.totalApplications > 0 ? `${(analyticsData as any)?.kpis?.biasCleanRatePercent || 0}%` : '0%' }}
+                    style={{ width: (analyticsData.kpis?.totalApplications ?? 0) > 0 ? `${analyticsData.kpis?.biasCleanRatePercent || 0}%` : '0%' }}
                   />
                 </div>
               </div>
@@ -398,15 +415,15 @@ export default function HrAnalyticsDashboard() {
                 <div className="flex justify-between text-slate-800 dark:text-slate-200 mb-1 font-extrabold">
                   <span>AI Evaluation Accuracy</span>
                   <span className="text-indigo-600 dark:text-indigo-400">
-                    {(analyticsData as any)?.kpis?.totalApplications > 0
-                      ? `${(analyticsData as any).kpis.biasCleanRatePercent}% Accuracy`
+                    {(analyticsData.kpis?.totalApplications ?? 0) > 0
+                      ? `${analyticsData.kpis?.biasCleanRatePercent}% Accuracy`
                       : 'N/A'}
                   </span>
                 </div>
                 <div className="w-full bg-slate-200/60 dark:bg-slate-800/60 rounded-full h-2 overflow-hidden">
                   <div
                     className="bg-indigo-500 h-full rounded-full"
-                    style={{ width: (analyticsData as any)?.kpis?.totalApplications > 0 ? `${(analyticsData as any)?.kpis?.biasCleanRatePercent || 0}%` : '0%' }}
+                    style={{ width: (analyticsData.kpis?.totalApplications ?? 0) > 0 ? `${analyticsData.kpis?.biasCleanRatePercent || 0}%` : '0%' }}
                   />
                 </div>
               </div>

@@ -6,11 +6,11 @@ import { apiClient } from '@/lib/apiClient';
 import { MockSession, Application } from '@/types';
 import { useInterviewSession } from '@/hooks/useInterviewSession';
 import InterviewCheckScreen from '@/components/interview/InterviewCheckScreen';
-import InterviewActiveConsole from '@/components/interview/InterviewActiveConsole';
+import UnifiedInterviewConsole from '@/components/interview/UnifiedInterviewConsole';
 import AptitudeTestConsole from '@/components/interview/AptitudeTestConsole';
 import CodingAssessmentConsole from '@/components/interview/CodingAssessmentConsole';
 import { CompanyLogo } from '@/components/ui';
-import { CheckCircle2, ArrowRight, Maximize2, Trophy, Award } from '@/lib/lucide-google-icons';
+import { CheckCircle2, ArrowRight, Maximize2 } from '@/lib/lucide-google-icons';
 
 interface InterRoundData {
   completedStageName: string;
@@ -101,14 +101,11 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     phase,
     messages,
     timeRemaining,
-    micActive,
     camActive,
     isAnalyzing,
     startSession,
     submitAnswer,
     wrapUp,
-    toggleMic,
-    toggleCam,
   } = useInterviewSession({
     company: targetCompany,
     role: targetRole,
@@ -251,23 +248,17 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
 
   // AI Voice Conversational Interview Console
   return (
-    <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white flex flex-col justify-between overflow-hidden p-2">
-      <InterviewActiveConsole
-        messages={messages}
-        phase={phase}
-        timeRemaining={timeRemaining}
-        micActive={micActive}
-        camActive={camActive}
-        isAnalyzing={isAnalyzing}
-        isDarkTheme={true}
-        onSubmitAnswer={submitAnswer}
-        onEndSession={wrapUp}
-        onToggleMic={toggleMic}
-        onToggleCam={toggleCam}
-        company={targetCompany}
-        role={targetRole}
-      />
-    </div>
+    <UnifiedInterviewConsole
+      mode="mock-practice"
+      companyName={targetCompany}
+      jobTitle={targetRole}
+      timeRemaining={timeRemaining}
+      messages={messages}
+      phase={phase}
+      isAnalyzing={isAnalyzing}
+      onSubmitAnswer={submitAnswer}
+      onEndSession={wrapUp}
+    />
   );
 }
 

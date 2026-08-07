@@ -2,8 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileUp, Plus, X, ArrowRight, Check, Globe, Link2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { FileUp, Plus, X, ArrowRight, Check, Globe, Link2, Loader2 } from 'lucide-react';
 
 export default function CandidateOnboarding() {
   const router = useRouter();
@@ -52,12 +51,6 @@ export default function CandidateOnboarding() {
     'Team Collaboration'
   ]);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setResumeFile(e.target.files[0]);
-    }
-  };
-
   const handleComplete = async () => {
     setSubmitting(true);
     setError('');
@@ -93,7 +86,7 @@ export default function CandidateOnboarding() {
       } else {
         setError(data.error || 'Failed to complete profile onboarding');
       }
-    } catch (e) {
+    } catch {
       setSubmitting(false);
       setError('Failed to upload profile data');
     }
@@ -153,6 +146,12 @@ export default function CandidateOnboarding() {
             <span className={`h-2 w-8 rounded-full transition-all duration-300 ${step >= 3 ? 'bg-emerald-500' : 'bg-slate-200'}`}></span>
           </div>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-600 font-semibold">
+            {error}
+          </div>
+        )}
 
         {/* STEP 1: RESUME & SOCIAL LINKS */}
         {step === 1 && (
@@ -452,11 +451,21 @@ export default function CandidateOnboarding() {
               </button>
               <button
                 type="button"
+                disabled={submitting}
                 onClick={handleComplete}
-                className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-indigo-700 hover:scale-[1.01] transition-all flex items-center gap-1 cursor-pointer"
+                className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-indigo-700 hover:scale-[1.01] disabled:opacity-50 transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                Complete Onboarding
-                <Check className="h-4 w-4" />
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Complete Onboarding</span>
+                    <Check className="h-4 w-4" />
+                  </>
+                )}
               </button>
             </div>
           </div>

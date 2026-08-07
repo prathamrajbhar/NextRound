@@ -1,16 +1,18 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, CheckCircle2, Sparkles, Bot, ShieldCheck, ArrowUpRight, CheckCheck, Trash2, Check, Clock } from '@/lib/lucide-google-icons';
+import { apiClient } from '@/lib/apiClient';
+import { Bell, CheckCircle2, Sparkles, Bot, ShieldCheck, ArrowUpRight, CheckCheck, Trash2, Check, Clock, Loader2 } from '@/lib/lucide-google-icons';
 
 interface CandidateNotification {
   id: string;
-  text: string;
-  time: string;
+  message: string;
+  title?: string;
   read: boolean;
-  type: 'evaluation' | 'shortlist' | 'agent' | 'system';
-  link: string;
+  type: string;
+  created_at: string;
+  link?: string;
 }
 
 type FilterCategory = 'all' | 'unread';
@@ -19,6 +21,24 @@ export default function CandidateNotificationsPage() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<CandidateNotification[]>([]);
   const [filter, setFilter] = useState<FilterCategory>('all');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchNotifications() {
+      try {
+        setLoading(true);
+        const data = await apiClient.get<{ notifications: CandidateNotification[]; unreadCount: number }>('/notifications');
+        if (data?.notifications) {
+          setNotifications(data.notifications);
+        }
+      } catch (err) {
+        console.error('Failed to fetch notifications:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchNotifications();
+  }, []);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -27,28 +47,44 @@ export default function CandidateNotificationsPage() {
     return notifications;
   }, [notifications, filter]);
 
-  const markAsRead = (id: string, e?: React.MouseEvent) => {
+  const markAsRead = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    try {
+      await apiClient.patch(`/notifications/${id}/read`, {});
+    } catch { /* optimistic update already applied */ }
   };
 
-  const deleteNotification = (id: string, e: React.MouseEvent) => {
+  const deleteNotification = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setNotifications((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await apiClient.delete(`/notifications/${id}`);
+    } catch { /* optimistic update already applied */ }
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await apiClient.post('/notifications/read-all', {});
+    } catch { /* optimistic update already applied */ }
   };
 
-  const clearAll = () => {
+  const clearAll = async () => {
+    const prevNotifications = notifications;
     setNotifications([]);
+    try {
+      await apiClient.delete('/notifications');
+    } catch {
+      setNotifications(prevNotifications);
+    }
   };
 
   const handleRowClick = (n: CandidateNotification) => {
     if (!n.read) markAsRead(n.id);
-    router.push(n.link);
+    if (n.link) router.push(n.link);
   };
+
 
   const getTypeIcon = (type: CandidateNotification['type']) => {
     switch (type) {
@@ -62,6 +98,15 @@ export default function CandidateNotificationsPage() {
         return <ShieldCheck className="h-4 w-4 text-sky-500 shrink-0" />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12 text-slate-500 font-semibold gap-2">
+        <Loader2 className="h-5 w-5 animate-spin text-brand-500" />
+        <span>Loading notifications...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-16 animate-in fade-in duration-200">
@@ -168,7 +213,7 @@ export default function CandidateNotificationsPage() {
 
                   {/* Text Title */}
                   <p className="truncate text-xs font-semibold leading-relaxed">
-                    {n.text}
+                    {n.title || n.message}
                   </p>
                 </div>
 
@@ -176,7 +221,7 @@ export default function CandidateNotificationsPage() {
                   {/* Timestamp */}
                   <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    {n.time}
+                    {n.created_at ? new Date(n.created_at).toLocaleString() : ''}
                   </span>
 
                   {/* Action Toolbar on Hover */}

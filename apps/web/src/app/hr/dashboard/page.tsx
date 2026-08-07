@@ -17,7 +17,6 @@ import {
   ShieldAlert,
   Calendar,
   Clock,
-  Loader2
 } from '@/lib/lucide-google-icons';
 
 export default function HrDashboard() {

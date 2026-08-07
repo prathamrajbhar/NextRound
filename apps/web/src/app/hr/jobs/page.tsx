@@ -11,6 +11,7 @@ export default function HrJobsList() {
   const [search, setSearch] = useState('');
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchJobs() {
@@ -27,9 +28,42 @@ export default function HrJobsList() {
     fetchJobs();
   }, []);
 
+  const handleStatusChange = async (jobId: string, newStatus: 'active' | 'draft' | 'closed') => {
+    try {
+      setUpdatingId(jobId);
+      // Optimistic update
+      setJobs((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, status: newStatus } : j))
+      );
+
+      if (newStatus === 'active') {
+        await apiClient.post(`/jobs/${jobId}/publish`).catch(() =>
+          apiClient.patch(`/jobs/${jobId}`, { status: 'active' })
+        );
+      } else if (newStatus === 'closed') {
+        await apiClient.post(`/jobs/${jobId}/close`).catch(() =>
+          apiClient.patch(`/jobs/${jobId}`, { status: 'closed' })
+        );
+      } else {
+        await apiClient.patch(`/jobs/${jobId}`, { status: 'draft' });
+      }
+    } catch (err) {
+      console.error('Failed to update job status:', err);
+      const fresh = await apiClient.get<Job[]>('/jobs/org').catch(() => apiClient.get<Job[]>('/jobs'));
+      setJobs(Array.isArray(fresh) ? fresh : []);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === 'all' || job.status === filter;
+    const isJobActive = job.status === 'active' || job.status === 'published';
+    const matchesFilter =
+      filter === 'all' ||
+      (filter === 'active' && isJobActive) ||
+      (filter === 'draft' && job.status === 'draft') ||
+      (filter === 'closed' && job.status === 'closed');
     return matchesSearch && matchesFilter;
   });
 
@@ -101,42 +135,57 @@ export default function HrJobsList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                {filteredJobs.map((job) => (
-                  <tr key={job.id} className="hover:bg-white/20 dark:hover:bg-slate-800/40 transition-colors">
-                    <td className="px-6 py-4">
-                      <span className="font-bold text-slate-800 dark:text-slate-100 block">{job.title}</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-400 block mt-0.5">{job.location} • {job.salary}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${
-                        job.status === 'active'
-                          ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/60'
-                          : job.status === 'draft'
-                          ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-100 dark:border-amber-900/60'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                      }`}>
-                        {job.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{job.applicantsCount || 0} active</td>
-                    <td className="px-6 py-4 text-slate-400 dark:text-slate-400">{job.postedDate}</td>
-                    <td className="px-6 py-4 text-right space-x-3">
-                      <Link
-                        href={`/hr/jobs/${job.id}/edit`}
-                        className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold cursor-pointer"
-                      >
-                        Edit Scoring
-                      </Link>
-                      <Link
-                        href={`/hr/jobs/${job.id}/pipeline`}
-                        className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-orange-400 hover:underline transition-colors cursor-pointer"
-                      >
-                        View Pipeline
-                        <ChevronRight className="h-4 w-4" />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {filteredJobs.map((job) => {
+                  const currentStatus = (job.status === 'published' ? 'active' : job.status) as 'active' | 'draft' | 'closed';
+                  const isUpdating = updatingId === job.id;
+
+                  return (
+                    <tr key={job.id} className="hover:bg-white/20 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className="font-bold text-slate-800 dark:text-slate-100 block">{job.title}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-400 block mt-0.5">{job.location} • {job.salary}</span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <select
+                            disabled={isUpdating}
+                            value={currentStatus}
+                            onChange={(e) => handleStatusChange(job.id, e.target.value as 'active' | 'draft' | 'closed')}
+                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase cursor-pointer focus:outline-none transition-all ${
+                              currentStatus === 'active'
+                                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/60'
+                                : currentStatus === 'draft'
+                                ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/60'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                            }`}
+                          >
+                            <option value="active" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">Active</option>
+                            <option value="draft" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">Draft</option>
+                            <option value="closed" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">Closed</option>
+                          </select>
+                          {isUpdating && <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-600 dark:text-orange-400" />}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{job.applicantsCount || 0} active</td>
+                      <td className="px-6 py-4 text-slate-400 dark:text-slate-400">{job.postedDate}</td>
+                      <td className="px-6 py-4 text-right space-x-3">
+                        <Link
+                          href={`/hr/jobs/${job.id}/edit`}
+                          className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold cursor-pointer"
+                        >
+                          Edit Scoring
+                        </Link>
+                        <Link
+                          href={`/hr/jobs/${job.id}/pipeline`}
+                          className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-orange-400 hover:underline transition-colors cursor-pointer"
+                        >
+                          View Pipeline
+                          <ChevronRight className="h-4 w-4" />
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

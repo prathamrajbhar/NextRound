@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { Application } from '@/types';
 import { useInterviewSession } from '@/hooks/useInterviewSession';
-import InterviewActiveConsole from '@/components/interview/InterviewActiveConsole';
+import UnifiedInterviewConsole from '@/components/interview/UnifiedInterviewConsole';
 import {
   Mic,
   MicOff,
@@ -29,7 +29,6 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
   const jobTitle = app?.jobTitle || 'Candidate Interview';
 
   const {
-    stage,
     phase,
     messages,
     timeRemaining,
@@ -84,7 +83,7 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
           </div>
           <h1 className="text-lg font-extrabold text-white font-display">Application Not Found</h1>
           <p className="text-xs text-slate-400 font-medium leading-relaxed">
-            We couldn't load this application. Please go back and try again.
+            We couldn&apos;t load this application. Please go back and try again.
           </p>
           <button
             type="button"
@@ -106,7 +105,7 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     );
   }
 
-  {/* Pre-call Waiting Room View */}
+  /* Pre-call Waiting Room View */
   if (!joined) {
     return (
       <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-slate-100 flex flex-col font-sans p-6 items-center justify-center overflow-y-auto">
@@ -194,26 +193,19 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     );
   }
 
-  // Active Studio Video Call Room View (using real InterviewActiveConsole)
+  /* Active Studio Video Call Room View */
   return (
-    <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-white flex flex-col justify-between overflow-hidden p-2">
-      <InterviewActiveConsole
-        messages={messages}
-        phase={phase}
-        timeRemaining={timeRemaining}
-        micActive={micActive}
-        camActive={camActive}
-        isAnalyzing={isAnalyzing}
-        proctorTelemetry={proctorTelemetry}
-        isDarkTheme={true}
-        onSubmitAnswer={submitAnswer}
-        onEndSession={wrapUp}
-        onToggleMic={toggleMic}
-        onToggleCam={toggleCam}
-        company={companyName}
-        role={jobTitle}
-      />
-    </div>
+    <UnifiedInterviewConsole
+      mode="hr-candidate"
+      companyName={companyName}
+      jobTitle={jobTitle}
+      timeRemaining={timeRemaining}
+      messages={messages}
+      phase={phase}
+      isAnalyzing={isAnalyzing}
+      proctorTelemetry={proctorTelemetry}
+      onSubmitAnswer={submitAnswer}
+      onEndSession={wrapUp}
+    />
   );
 }
-
