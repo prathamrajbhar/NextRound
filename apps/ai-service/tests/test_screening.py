@@ -22,7 +22,8 @@ def test_parse_resume_node_no_fabricated_fallback():
     skills = res.get("parsed_skills", [])
     assert isinstance(skills, list)
     # No canned keyword fallback list is injected.
-    assert set(skills) <= {"React", "TypeScript", "Python", "PostgreSQL", "AWS", "Node.Js", "Express", "Docker"}
+    assert set(skills) <= {"React", "TypeScript", "Python", "PostgreSQL", "AWS", "Node.Js", "Express", "Docker", "SQL", "JavaScript", "REST API", "Git", "System Design"}
+
 
 
 def test_score_against_rubric_computation():

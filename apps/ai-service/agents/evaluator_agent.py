@@ -37,15 +37,14 @@ class EvaluatorState(TypedDict, total=False):
     aptitude_score: float
     coding_score: float
     interview_score: float
+    composite_score: float
     dimension_scores: Dict[str, float]
+    confidence: float
+    isolation_valid: bool
     proctor_flags: List[str]
     proctor_telemetry: Dict[str, Any]
-    bias_report: Dict[str, Any]
-    confidence: float
-    composite_score: float
-    reasoning: str
-    isolation_valid: bool
     prompt_payload_used: str
+    reasoning: str
     scoring_inputs_used: Dict[str, Any]
     error: Optional[str]
 
@@ -83,49 +82,7 @@ def aggregate_scores_node(state: EvaluatorState) -> EvaluatorState:
     return state
 
 
-# ML_BYPASS: dedicated bias classifier — upgrade to IBM AI Fairness 360 or Holistic AI when available
-def run_bias_audit_node(state: EvaluatorState) -> EvaluatorState:
-    """
-    Node 2: Run bias audit using Gemini LLM to check linguistic neutrality and demographic equity.
-    STRICT REQUIREMENT: Proctoring signals/flags MUST BE EXCLUDED from the LLM prompt.
-    """
-    dimension_scores = state.get("dimension_scores", {})
-    comp_score = state.get("composite_score", 0.0)
 
-    # Pure performance metrics ONLY (zero proctor signals)
-    audit_prompt = (
-        f"Analyze the following technical performance metrics for hiring evaluation bias and linguistic neutrality:\n"
-        f"Composite Score: {comp_score}/100\n"
-        f"Dimension Scores: {json.dumps(dimension_scores)}\n"
-        f"Evaluate if there is any anomalous variance across dimensions or unfair penalty."
-    )
-
-    state["prompt_payload_used"] = audit_prompt
-
-    bias_severity = "low"
-    anomalies = []
-
-    if genai_client:
-        try:
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=f"Respond with JSON {{'severity': 'low'|'medium'|'high', 'anomalies': []}}:\n{audit_prompt}"
-            )
-            if res and res.text:
-                import re
-                match = re.search(r"\{.*\}", res.text, re.DOTALL)
-                if match:
-                    parsed = json.loads(match.group(0))
-                    bias_severity = parsed.get("severity", "low")
-                    anomalies = parsed.get("anomalies", [])
-        except Exception as e:
-            logger.error(f"Gemini bias audit execution failed: {e}")
-
-    state["bias_report"] = {
-        "severity": bias_severity,
-        "anomalies": anomalies,
-    }
-    return state
 
 
 def validate_isolation_node(state: EvaluatorState) -> EvaluatorState:
@@ -188,25 +145,24 @@ def finalize_report_node(state: EvaluatorState) -> EvaluatorState:
 
 
 def build_evaluator_graph():
-    """Build LangGraph workflow for Evaluator & Bias Audit Agent."""
+    """Build LangGraph workflow for Evaluator Agent."""
     if not LANGGRAPH_AVAILABLE:
         return None
 
     builder = StateGraph(EvaluatorState)
     builder.add_node("aggregate_scores", aggregate_scores_node)
-    builder.add_node("run_bias_audit", run_bias_audit_node)
     builder.add_node("validate_isolation", validate_isolation_node)
     builder.add_node("compute_confidence", compute_confidence_node)
     builder.add_node("finalize_report", finalize_report_node)
 
     builder.set_entry_point("aggregate_scores")
-    builder.add_edge("aggregate_scores", "run_bias_audit")
-    builder.add_edge("run_bias_audit", "validate_isolation")
+    builder.add_edge("aggregate_scores", "validate_isolation")
     builder.add_edge("validate_isolation", "compute_confidence")
     builder.add_edge("compute_confidence", "finalize_report")
     builder.add_edge("finalize_report", END)
 
     return builder.compile()
+
 
 
 _evaluator_app = build_evaluator_graph()
@@ -247,7 +203,6 @@ async def run_evaluator_agent(
                 "composite_score": final_state.get("composite_score"),
                 "confidence": final_state.get("confidence"),
                 "dimension_scores": final_state.get("dimension_scores"),
-                "bias_report": final_state.get("bias_report"),
                 "reasoning": final_state.get("reasoning"),
                 "isolation_valid": final_state.get("isolation_valid"),
             }
@@ -259,17 +214,16 @@ async def run_evaluator_agent(
 
     # Fallback linear node execution
     s1 = aggregate_scores_node(initial_state)
-    s2 = run_bias_audit_node(s1)
-    s3 = validate_isolation_node(s2)  # Will raise ScoringIsolationError if violated
-    s4 = compute_confidence_node(s3)
-    s5 = finalize_report_node(s4)
+    s2 = validate_isolation_node(s1)  # Will raise ScoringIsolationError if violated
+    s3 = compute_confidence_node(s2)
+    s4 = finalize_report_node(s3)
 
     return {
         "application_id": application_id,
-        "composite_score": s5.get("composite_score"),
-        "confidence": s5.get("confidence"),
-        "dimension_scores": s5.get("dimension_scores"),
-        "bias_report": s5.get("bias_report"),
-        "reasoning": s5.get("reasoning"),
-        "isolation_valid": s5.get("isolation_valid"),
+        "composite_score": s4.get("composite_score"),
+        "confidence": s4.get("confidence"),
+        "dimension_scores": s4.get("dimension_scores"),
+        "reasoning": s4.get("reasoning"),
+        "isolation_valid": s4.get("isolation_valid"),
     }
+

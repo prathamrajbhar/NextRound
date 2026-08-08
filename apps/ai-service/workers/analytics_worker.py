@@ -20,9 +20,9 @@ class AnalyticsState(TypedDict, total=False):
     funnel_metrics: dict
     conversions: dict
     time_to_hire_days: int
-    bias_audit_trend: List[dict]
     executive_narrative: str
     report_pdf_url: str
+
 
 
 async def fetch_raw_data_node(state: AnalyticsState) -> AnalyticsState:
@@ -91,21 +91,15 @@ def compute_funnel_node(state: AnalyticsState) -> AnalyticsState:
     return state
 
 
-def analyze_bias_trends_node(state: AnalyticsState) -> AnalyticsState:
-    """Node 3: Analyze bias audit stability trends across evaluation runs."""
-    state["bias_audit_trend"] = []
-    return state
-
-
 def generate_narrative_node(state: AnalyticsState) -> AnalyticsState:
-    """Node 4: Synthesize executive summary narrative for HR leadership."""
+    """Node 3: Synthesize executive summary narrative for HR leadership."""
     conversions = state.get("conversions", {})
     state["executive_narrative"] = ""
     return state
 
 
 async def export_pdf_node(state: AnalyticsState) -> AnalyticsState:
-    """Node 5: Register executive report and notify internal API."""
+    """Node 4: Register executive report and notify internal API."""
     org_id = state.get("org_id")
     state["report_pdf_url"] = ""
     if not org_id:
@@ -146,7 +140,6 @@ async def process_analytics_job(job_data: dict) -> bool:
         state: AnalyticsState = {"org_id": org_id}
         state = await fetch_raw_data_node(state)
         state = compute_funnel_node(state)
-        state = analyze_bias_trends_node(state)
         state = generate_narrative_node(state)
         state = await export_pdf_node(state)
 
@@ -180,3 +173,4 @@ async def process_analytics_job(job_data: dict) -> bool:
         except Exception:
             pass
         return False
+

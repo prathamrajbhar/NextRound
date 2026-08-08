@@ -11,8 +11,8 @@ async def process_evaluator_job(job_data: dict) -> bool:
     """
     Process evaluation job.
     1. Extract application_id, stage, interview_id from job_data.
-    2. Execute Evaluator & Bias Audit LangGraph agent (asserts scoring isolation).
-    3. Patch evaluation results & bias report back to Express internal endpoint.
+    2. Execute Evaluator LangGraph agent (asserts scoring isolation).
+    3. Patch evaluation results back to Express internal endpoint.
     4. Log agent audit record.
     """
     application_id = job_data.get("applicationId")
@@ -27,7 +27,7 @@ async def process_evaluator_job(job_data: dict) -> bool:
         interview_id = job_data.get("interviewId")
         extra = job_data.get("extraData") or {}
 
-        # Run Evaluator & Bias Audit LangGraph Agent
+        # Run Evaluator LangGraph Agent
         result = await run_evaluator_agent(
             application_id=application_id,
             stage=stage,
@@ -48,9 +48,9 @@ async def process_evaluator_job(job_data: dict) -> bool:
             "composite_score": result.get("composite_score"),
             "confidence": result.get("confidence"),
             "dimension_scores": result.get("dimension_scores"),
-            "bias_report": result.get("bias_report"),
             "reasoning": result.get("reasoning"),
         }
+
 
         async with httpx.AsyncClient() as client:
             resp = await client.patch(

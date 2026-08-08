@@ -292,3 +292,50 @@ talentPoolRouter.post(
     }
   }
 );
+
+// POST /api/v1/hr/talent-pool/external-source - External Talent Sourcing via GitHub & LinkedIn scraper APIs
+talentPoolRouter.post(
+  '/external-source',
+  authenticate,
+  requireRole('hr'),
+  rejectExplicitOrgId,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const orgId = req.user!.orgId;
+      if (!orgId) {
+        return res.status(400).json({ success: false, error: 'User does not belong to an organization' });
+      }
+
+      const { github_id, linkedin_id, target_role, job_description } = req.body || {};
+      if (!github_id && !linkedin_id) {
+        return res.status(400).json({ success: false, error: 'At least one of github_id or linkedin_id must be provided.' });
+      }
+
+      const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+      const aiResp = await fetch(`${aiServiceUrl}/api/v1/ai/sourcing/profile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          github_id,
+          linkedin_id,
+          target_role,
+          job_description,
+        }),
+      });
+
+      if (!aiResp.ok) {
+        const errorText = await aiResp.text();
+        return res.status(aiResp.status).json({ success: false, error: `External sourcing failed: ${errorText}` });
+      }
+
+      const data = await aiResp.json();
+      return res.json({
+        success: true,
+        data,
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+

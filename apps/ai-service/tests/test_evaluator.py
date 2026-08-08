@@ -75,4 +75,7 @@ async def test_run_evaluator_agent_e2e():
     assert res["application_id"] == "app-e2e-123"
     assert res["composite_score"] > 85.0
     assert res["isolation_valid"] is True
-    assert "bias_report" in res
+
+
+
+

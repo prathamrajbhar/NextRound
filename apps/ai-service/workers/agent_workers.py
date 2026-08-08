@@ -23,8 +23,8 @@ AGENT_QUEUES = [
     "screening",
     "interview",
     "evaluator",
-    "bias-audit",
     "decision",
+
     "offer",
     "mock",
     "prep",

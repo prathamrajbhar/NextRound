@@ -43,19 +43,13 @@ class CodingState(TypedDict, total=False):
     feedback: str
 
 
-# ML_BYPASS: WASM sandbox — upgrade to Judge0 CE or Firecracker MicroVM when available
-def set_sandbox_limits():
-    """Set process resource limits in Linux sandbox preexec_fn (256MB memory cap)."""
-    try:
-        max_mem_bytes = 256 * 1024 * 1024  # 256MB
-        resource.setrlimit(resource.RLIMIT_AS, (max_mem_bytes, max_mem_bytes))
-    except Exception as e:
-        logger.warning(f"Failed to set memory RLIMIT_AS: {e}")
+from services.code_executor_service import execute_code_sandbox
 
 
 def execute_sandbox_node(state: CodingState) -> CodingState:
-    """Node 1: Execute candidate code in isolated Python subprocess sandbox with 10s timeout & 256MB cap."""
+    """Node 1: Execute candidate code in AST-inspected, resource-capped sandbox across all test cases."""
     code = state.get("code", "")
+    language = state.get("language", "python")
     problem_id = state.get("problem_id", "virtualized-list")
 
     logger.info(f"Executing sandbox evaluation for problem {problem_id}")
@@ -63,12 +57,14 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
     # Load problem definition from seed file
     seed_path = os.path.join(os.path.dirname(__file__), "../../api/src/data/coding-problems.json")
     test_cases = []
+    function_name = ""
     if os.path.exists(seed_path):
         try:
             with open(seed_path, "r", encoding="utf-8") as f:
                 problems = json.load(f)
                 target_p = next((p for p in problems if p["id"] == problem_id), problems[0])
                 test_cases = target_p.get("testCases", [])
+                function_name = target_p.get("entryFunction", "")
         except Exception as e:
             logger.error(f"Failed to load coding problem seed data: {e}")
 
@@ -77,60 +73,25 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
             {"input": "heights = [50, 50, 50, 50, 50], scroll_y = 100, viewport_height = 100", "expectedOutput": "[2, 3]"}
         ]
 
-    passed_count = 0
-    total_cases = len(test_cases)
-    start_time = time.time()
-
-    # Wrap code execution with dynamic test case verification script
-    harness_script = f"""
-{code}
-
-# Test runner harness
-import json
-
-test_results = []
-try:
-    # Test case execution
-    result = get_visible_range([50, 50, 50, 50, 50], 100, 100)
-    print(json.dumps({{"status": "success", "output": str(result)}}))
-except Exception as e:
-    print(json.dumps({{"status": "error", "message": str(e)}}))
-"""
-
-    try:
-        proc = subprocess.run(
-            ["python3", "-c", harness_script],
-            timeout=10,
-            capture_output=True,
-            text=True,
-            preexec_fn=set_sandbox_limits if os.name != "nt" else None
-        )
-        exec_duration = round((time.time() - start_time) * 1000, 2)
-
-        if proc.returncode == 0:
-            # Code ran without crash
-            passed_count = total_cases  # Full pass on valid execution
-        else:
-            logger.warning(f"Sandbox run exited with code {proc.returncode}: {proc.stderr}")
-            passed_count = 0
-    except subprocess.TimeoutExpired:
-        logger.error("Sandbox code execution timed out after 10 seconds")
-        exec_duration = 10000.0
-        passed_count = 0
-    except Exception as err:
-        logger.error(f"Sandbox execution error: {err}")
-        exec_duration = 0.0
-        passed_count = 0
-
-    pass_rate = round(passed_count / max(1, total_cases), 2)
+    exec_res = execute_code_sandbox(
+        code=code,
+        language=language,
+        test_cases=test_cases,
+        entry_function=function_name
+    )
 
     state["test_cases"] = test_cases
-    state["passed_cases"] = passed_count
-    state["total_cases"] = total_cases
-    state["pass_rate"] = pass_rate
-    state["execution_time_ms"] = exec_duration
-    state["memory_kb"] = 42000
+    state["passed_cases"] = exec_res.get("passed_cases", 0)
+    state["total_cases"] = exec_res.get("total_cases", len(test_cases))
+    state["pass_rate"] = exec_res.get("pass_rate", 0.0)
+    state["execution_time_ms"] = exec_res.get("execution_time_ms", 0.0)
+    state["memory_kb"] = exec_res.get("memory_kb", 42000)
+
+    if not exec_res.get("security_passed", True):
+        state["feedback"] = exec_res.get("error", "Security violation detected in submitted code.")
+
     return state
+
 
 
 def analyze_complexity_node(state: CodingState) -> CodingState:
