@@ -190,19 +190,25 @@ export default function PipelineConfigCard({
             <div className="pl-9 pr-1 pt-2 space-y-3 animate-in fade-in duration-150">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Number of Questions</span>
-                <div className="flex items-center gap-1.5 select-none border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 bg-slate-50 dark:bg-slate-800">
+                <div className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 bg-slate-50 dark:bg-slate-800">
                   <button
                     type="button"
-                    onClick={() => handleConfigChange('mcqCount', Math.max(1, assessmentConfig.mcqCount - 1))}
-                    className="h-5 w-5 rounded bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex items-center justify-center cursor-pointer font-bold text-xs"
+                    onClick={() => handleConfigChange('mcqCount', Math.max(1, (assessmentConfig.mcqCount || 1) - 1))}
+                    className="h-5 w-5 rounded bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex items-center justify-center cursor-pointer font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-600"
                   >
                     -
                   </button>
-                  <span className="w-4 text-center font-extrabold text-xs text-slate-900 dark:text-slate-100">{assessmentConfig.mcqCount}</span>
+                  <input
+                    type="number"
+                    min="1"
+                    value={assessmentConfig.mcqCount}
+                    onChange={(e) => handleConfigChange('mcqCount', Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-12 text-center font-extrabold text-xs text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                   <button
                     type="button"
-                    onClick={() => handleConfigChange('mcqCount', Math.min(10, assessmentConfig.mcqCount + 1))}
-                    className="h-5 w-5 rounded bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex items-center justify-center cursor-pointer font-bold text-xs"
+                    onClick={() => handleConfigChange('mcqCount', (assessmentConfig.mcqCount || 1) + 1)}
+                    className="h-5 w-5 rounded bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex items-center justify-center cursor-pointer font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-600"
                   >
                     +
                   </button>
@@ -227,7 +233,7 @@ export default function PipelineConfigCard({
           )}
         </div>
 
-        {/* 3. AI Voice Screen Toggle + Integrated Config */}
+        {/* 3. AI Voice Screen Toggle */}
         <div className="space-y-2 border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -249,26 +255,6 @@ export default function PipelineConfigCard({
               <div className="w-8 h-4.5 bg-slate-300 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-350 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-600 dark:peer-checked:bg-indigo-500"></div>
             </label>
           </div>
-
-          {/* Voice Screen inline details when active */}
-          {isActive('voice_screen') && (
-            <div className="pl-9 pr-1 pt-2 space-y-2 animate-in fade-in duration-150">
-              <div>
-                <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 block mb-1">
-                  AI Voice Persona
-                </label>
-                <select
-                  value={voiceProfile}
-                  onChange={(e) => setVoiceProfile(e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-bold focus:outline-none cursor-pointer"
-                >
-                  <option value="Serena (Warm/Professional)" className="dark:bg-slate-900">Serena (Warm &amp; Professional)</option>
-                  <option value="Marcus (Technical/Direct)" className="dark:bg-slate-900">Marcus (Technical &amp; Direct)</option>
-                  <option value="Charlotte (Conversational)" className="dark:bg-slate-900">Charlotte (Friendly &amp; Casual)</option>
-                </select>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* 4. Live Panel */}
