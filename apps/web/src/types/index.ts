@@ -46,6 +46,24 @@ export interface Job {
 
 export type HRRoundStatus = 'PENDING' | 'SCHEDULED' | 'PASSED' | 'FAILED';
 
+export type ApplicationStatus =
+  | 'applied'
+  | 'sourced'
+  | 'screening'
+  | 'screening_completed'
+  | 'assessment'
+  | 'interview_scheduled'
+  | 'interviewed'
+  | 'voice_screen'
+  | 'evaluation'
+  | 'hr_round'
+  | 'decided'
+  | 'offered'
+  | 'accepted'
+  | 'rejected'
+  | 'hired'
+  | 'withdrawn';
+
 export interface Application {
   id: string;
   candidateName: string;
@@ -54,11 +72,13 @@ export interface Application {
   jobId: string;
   jobTitle: string;
   orgName: string;
-  status: 'sourced' | 'screening' | 'interview_scheduled' | 'interviewed' | 'hr_round' | 'decided';
+  status: ApplicationStatus;
   stage: 'Sourced' | 'Screened' | 'Assessment' | 'Interview' | 'HR Round' | 'Panel' | 'Decision';
   hrRoundStatus?: HRRoundStatus;
   hrRoundScheduledAt?: string;
   hrRoundCompletedAt?: string;
+  interviewScheduledAt?: string;
+  screenedDate?: string;
   appliedDate: string;
   resumeUrl: string;
   skills: string[];

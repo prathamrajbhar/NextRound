@@ -9,7 +9,7 @@ import { Application } from '@/types';
 interface ApplicationHeaderBannerProps {
   app: Application;
   jobLogo?: string;
-  matchPercent: number;
+  matchPercent?: number;
 }
 
 export function ApplicationHeaderBanner({ app, jobLogo, matchPercent }: ApplicationHeaderBannerProps) {
@@ -24,9 +24,15 @@ export function ApplicationHeaderBanner({ app, jobLogo, matchPercent }: Applicat
               Application Tracking
             </span>
             <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-            <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-              <CheckCircle2 className="h-3 w-3" /> {matchPercent}% AI Qualification Score
-            </span>
+            {typeof matchPercent === 'number' && matchPercent > 0 ? (
+              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> {matchPercent}% AI Qualification Score
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                <Clock className="h-3 w-3" /> AI Screening Pending
+              </span>
+            )}
           </div>
 
           <h1 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight mt-1 font-display leading-tight">

@@ -68,14 +68,16 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
   const handleApply = async () => {
     try {
       setSubmittingApp(true);
-      await apiClient.post('/applications', { jobId });
+      const res = await apiClient.post<{ application?: { id: string }; id?: string }>('/applications', { jobId });
       setApplied(true);
-      setTimeout(() => {
+      const newId = res?.application?.id || res?.id;
+      if (newId) {
+        router.push(`/candidate/applications/${newId}`);
+      } else {
         router.push('/candidate/applications');
-      }, 1000);
+      }
     } catch (err) {
       console.error('Failed to submit application:', err);
-      setApplied(true);
     } finally {
       setSubmittingApp(false);
     }

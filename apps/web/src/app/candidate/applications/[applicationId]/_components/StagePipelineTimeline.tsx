@@ -49,7 +49,7 @@ export function StagePipelineTimeline({ stages }: StagePipelineTimelineProps) {
                 >
                   {st.name}
                 </h4>
-                {st.done && (
+                {st.done && Boolean(st.date) && (
                   <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
                     {st.date}
                   </span>

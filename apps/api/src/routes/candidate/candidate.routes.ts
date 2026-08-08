@@ -366,6 +366,14 @@ candidateRouter.get(
         return res.status(404).json({ success: false, error: 'Application not found' });
       }
 
+      if (
+        application.status !== 'decided' &&
+        application.status !== 'offered' &&
+        application.status !== 'accepted'
+      ) {
+        return res.status(404).json({ success: false, error: 'Onboarding is not active for this application stage' });
+      }
+
       const candidateName = application.candidate.user.email.split('@')[0];
       const startDate = application.offer?.start_date
         ? application.offer.start_date.toISOString().split('T')[0]
@@ -467,6 +475,10 @@ candidateRouter.get(
         return res.status(404).json({ success: false, error: 'Application not found' });
       }
 
+      if (application.status === 'applied') {
+        return res.status(404).json({ success: false, error: 'Video screening is not active for this application stage' });
+      }
+
       const candidateName = application.candidate.user.email.split('@')[0];
       const deadline = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
@@ -560,6 +572,10 @@ candidateRouter.get(
 
       if (!application || application.candidate.user_id !== req.user!.userId) {
         return res.status(404).json({ success: false, error: 'Application not found' });
+      }
+
+      if (application.status === 'applied' || application.status === 'screening') {
+        return res.status(404).json({ success: false, error: 'Take-home project is not active for this application stage' });
       }
 
       const candidateName = application.candidate.user.email.split('@')[0];

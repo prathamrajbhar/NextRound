@@ -100,64 +100,91 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
     );
   }
 
-  const nextSteps = [
-    offer && {
-      icon: Gift,
-      label: 'Review Your Offer',
-      desc: `${offer.status === 'accepted' ? 'Accepted' : 'Action needed'} — ${offer.baseSalary} base salary`,
-      href: `/candidate/applications/${app.id}/offer`,
-      tone: 'emerald' as const,
-      badge: offer.status === 'accepted' ? 'Completed' : 'Action Required',
+  const isScreenedDone = [
+    'screening_completed',
+    'assessment',
+    'interview_scheduled',
+    'interviewed',
+    'voice_screen',
+    'evaluation',
+    'hr_round',
+    'decided',
+    'offered',
+    'accepted',
+    'hired',
+  ].includes(app.status);
+
+  const isAssessmentDone =
+    [
+      'interview_scheduled',
+      'interviewed',
+      'voice_screen',
+      'evaluation',
+      'hr_round',
+      'decided',
+      'offered',
+      'accepted',
+      'hired',
+    ].includes(app.status) ||
+    assessments.some((a) => a.status === 'completed');
+
+  const isInterviewDone = [
+    'interviewed',
+    'voice_screen',
+    'evaluation',
+    'hr_round',
+    'decided',
+    'offered',
+    'accepted',
+    'hired',
+  ].includes(app.status);
+
+  const isHrRoundDone =
+    app.hrRoundStatus === 'PASSED' ||
+    ['decided', 'offered', 'accepted', 'hired'].includes(app.status);
+
+  const isDecisionDone = ['decided', 'offered', 'accepted', 'hired', 'rejected'].includes(app.status);
+
+  const stages = [
+    {
+      name: 'Applied',
+      desc: 'Application received and resume queue matching active.',
+      date: app.appliedDate,
+      done: true,
     },
-    assessments.length > 0 && {
-      icon: ClipboardCheck,
-      label: 'Aptitude Assessment',
-      desc:
-        assessments[0].status === 'completed'
-          ? `Completed — Score: ${assessments[0].overallScore || 91}%`
-          : 'Continue your timed assessment',
-      href: `/candidate/mock/session-${app.id}?applicationId=${app.id}&track=aptitude`,
-      tone: 'indigo' as const,
-      badge: assessments[0].status === 'completed' ? 'Completed' : 'Pending',
+    {
+      name: 'Screened',
+      desc: 'AI Screening Agent completed parsing and qualification matching.',
+      date: isScreenedDone ? app.appliedDate : '',
+      done: isScreenedDone,
     },
-    asyncScreening && {
-      icon: Camera,
-      label: 'Video Screening',
-      desc:
-        asyncScreening.status === 'invited'
-          ? 'Record your video responses'
-          : 'View your submitted video responses',
-      href: `/candidate/applications/${app.id}/video-screening`,
-      tone: 'purple' as const,
-      badge: asyncScreening.status === 'submitted' || asyncScreening.status === 'reviewed' ? 'Completed' : 'Invited',
+    {
+      name: 'Assessment',
+      desc: 'Completed Aptitude Test & Coding Assessment module.',
+      date: isAssessmentDone ? assessments[0]?.completedDate || app.appliedDate : '',
+      done: isAssessmentDone,
     },
-    takeHome && {
-      icon: Code,
-      label: 'Take-Home Project',
-      desc:
-        takeHome.status === 'graded'
-          ? `Graded — Score: ${takeHome.overallScore || 88}%`
-          : 'Continue your project submission',
-      href: `/candidate/applications/${app.id}/take-home`,
-      tone: 'amber' as const,
-      badge: takeHome.status === 'graded' ? 'Graded' : 'In Progress',
+    {
+      name: 'Interview',
+      desc: 'Completed voice conversational session with Interviewer Agent.',
+      date: isInterviewDone ? app.appliedDate : '',
+      done: isInterviewDone,
     },
-    onboarding && {
-      icon: UserPlus,
-      label: 'Onboarding Checklist',
-      desc: `${onboarding.progressPercent}% complete — starts ${onboarding.startDate}`,
-      href: `/candidate/applications/${app.id}/onboarding`,
-      tone: 'emerald' as const,
-      badge: `${onboarding.progressPercent}%`,
+    {
+      name: 'HR Round',
+      desc: 'Live 1:1 human video call evaluation with HR representative.',
+      date: isHrRoundDone
+        ? app.hrRoundCompletedAt || app.hrRoundScheduledAt || app.appliedDate
+        : app.hrRoundScheduledAt || '',
+      done: isHrRoundDone,
     },
-  ].filter(Boolean) as {
-    icon: typeof Gift;
-    label: string;
-    desc: string;
-    href: string;
-    tone: 'emerald' | 'indigo' | 'purple' | 'amber';
-    badge: string;
-  }[];
+    {
+      name: 'Decision',
+      desc: 'Final structured scoring compiled. Outcome determined.',
+      date: isDecisionDone ? app.appliedDate : '',
+      done: isDecisionDone,
+    },
+  ];
 
   const toneClass: Record<string, string> = {
     emerald:
@@ -177,16 +204,78 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
     amber: 'bg-amber-100 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200',
   };
 
-  const stages = [
-    { name: 'Applied', desc: 'Application received and resume queue matching active.', date: app.appliedDate, done: true },
-    { name: 'Screened', desc: 'AI Screening Agent completed parsing and qualification matching.', date: '2026-06-30', done: app.status !== 'screening' },
-    { name: 'Assessment', desc: 'Completed Aptitude Test & Coding Assessment module.', date: '2026-07-01', done: app.status !== 'screening' && app.status !== 'sourced' },
-    { name: 'Interview', desc: 'Completed voice conversational session with Interviewer Agent.', date: '2026-07-02', done: app.status === 'interviewed' || app.status === 'hr_round' || app.status === 'decided' },
-    { name: 'HR Round', desc: 'Live 1:1 human video call evaluation with HR representative.', date: app.hrRoundScheduledAt || '2026-07-24', done: app.hrRoundStatus === 'PASSED' || app.status === 'decided' },
-    { name: 'Decision', desc: 'Final structured scoring compiled. Outcome determined.', date: '2026-07-25', done: app.status === 'decided' },
-  ];
+  const nextSteps = [
+    offer && {
+      icon: Gift,
+      label: 'Review Your Offer',
+      desc: `${offer.status === 'accepted' ? 'Accepted' : 'Action needed'} — ${offer.baseSalary} base salary`,
+      href: `/candidate/applications/${app.id}/offer`,
+      tone: 'emerald' as const,
+      badge: offer.status === 'accepted' ? 'Completed' : 'Action Required',
+    },
+    (app.status === 'applied' || app.status === 'screening') && {
+      icon: Sparkles,
+      label: 'AI Resume Screening',
+      desc: 'Your application has been received. AI Screening Agent is parsing qualifications.',
+      href: `/candidate/applications/${app.id}`,
+      tone: 'indigo' as const,
+      badge: 'In Progress',
+    },
+    (app.status === 'screening_completed' || app.status === 'assessment') &&
+      assessments.length > 0 && {
+        icon: ClipboardCheck,
+        label: 'Aptitude Assessment',
+        desc:
+          assessments[0].status === 'completed'
+            ? `Completed — Score: ${assessments[0].overallScore != null ? `${assessments[0].overallScore}%` : 'Completed'}`
+            : 'Continue your timed assessment',
+        href: `/candidate/mock/session-${app.id}?applicationId=${app.id}&track=aptitude`,
+        tone: 'indigo' as const,
+        badge: assessments[0].status === 'completed' ? 'Completed' : 'Pending',
+      },
+    asyncScreening &&
+      isScreenedDone && {
+        icon: Camera,
+        label: 'Video Screening',
+        desc:
+          asyncScreening.status === 'invited'
+            ? 'Record your video responses'
+            : 'View your submitted video responses',
+        href: `/candidate/applications/${app.id}/video-screening`,
+        tone: 'purple' as const,
+        badge: asyncScreening.status === 'submitted' || asyncScreening.status === 'reviewed' ? 'Completed' : 'Invited',
+      },
+    takeHome &&
+      isScreenedDone && {
+        icon: Code,
+        label: 'Take-Home Project',
+        desc:
+          takeHome.status === 'graded'
+            ? `Graded — Score: ${takeHome.overallScore != null ? `${takeHome.overallScore}%` : 'Graded'}`
+            : 'Continue your project submission',
+        href: `/candidate/applications/${app.id}/take-home`,
+        tone: 'amber' as const,
+        badge: takeHome.status === 'graded' ? 'Graded' : 'In Progress',
+      },
+    onboarding &&
+      isDecisionDone && {
+        icon: UserPlus,
+        label: 'Onboarding Checklist',
+        desc: `${onboarding.progressPercent}% complete — starts ${onboarding.startDate}`,
+        href: `/candidate/applications/${app.id}/onboarding`,
+        tone: 'emerald' as const,
+        badge: `${onboarding.progressPercent}%`,
+      },
+  ].filter(Boolean) as {
+    icon: typeof Gift;
+    label: string;
+    desc: string;
+    href: string;
+    tone: 'emerald' | 'indigo' | 'purple' | 'amber';
+    badge: string;
+  }[];
 
-  const matchPercent = app.scores?.composite || 94;
+  const matchPercent = app.scores?.composite;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -248,7 +337,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
               </p>
 
               <div className="bg-white/80 dark:bg-slate-900/80 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/60 text-xs text-slate-700 dark:text-slate-200 italic font-medium shadow-2xs">
-                &ldquo;Candidate showcased expert layout design and responsive styling logic. Exceeds qualification requirements.&rdquo;
+                &ldquo;{app.reasoning || 'Candidate completed evaluation rounds and qualification criteria.'}&rdquo;
               </div>
 
               {offer && (
@@ -272,7 +361,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
                 Your AI Voice Interview session is confirmed for{' '}
-                <span className="text-slate-900 dark:text-slate-100 font-bold">{app.confirmedSlot || 'July 24, 2026 at 2:00 PM'}</span>.
+                <span className="text-slate-900 dark:text-slate-100 font-bold">{app.confirmedSlot || app.interviewScheduledAt || 'Scheduled'}</span>.
               </p>
               <Link
                 href={`/interview/${app.id}`}
