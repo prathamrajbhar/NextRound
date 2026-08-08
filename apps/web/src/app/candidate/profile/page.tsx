@@ -97,8 +97,9 @@ export default function CandidateProfile() {
           if (typeof p.portfolio_url === 'string') setPortfolioUrl(p.portfolio_url);
           if (Array.isArray(p.skills) && p.skills.length > 0) setSkills(p.skills.map(String));
           if (Array.isArray(p.target_roles) && p.target_roles.length > 0) setTargetRoles(p.target_roles.map(String));
-          if (p.experience_years !== undefined && p.experience_years !== null) setExperienceYears(String(p.experience_years));
+          if (p.years_of_experience !== undefined && p.years_of_experience !== null) setExperienceYears(String(p.years_of_experience));
           if (typeof p.expected_salary === 'string') setExpectedSalary(p.expected_salary);
+          else if (typeof p.expected_salary === 'number') setExpectedSalary(`$${p.expected_salary.toLocaleString()} / yr`);
           if (typeof p.bio === 'string') setBio(p.bio);
           if (typeof p.resume_url === 'string') {
             setResumeName(p.resume_url.split('/').pop() || 'candidate_resume.pdf');
@@ -169,18 +170,17 @@ export default function CandidateProfile() {
 
     try {
       await apiClient.post('/candidate/profile', {
-        full_name: name,
-        email,
+        fullName: name,
         phone,
         location,
         headline,
         skills,
-        target_roles: targetRoles,
-        experience_years: parseInt(experienceYears) || 3,
-        expected_salary: expectedSalary,
-        linkedin_url: linkedinUrl,
-        github_url: githubUrl,
-        portfolio_url: portfolioUrl,
+        targetRoles,
+        yearsOfExperience: parseInt(experienceYears) || 3,
+        expectedSalary: Number(expectedSalary.replace(/[^0-9]/g, '')) || undefined,
+        linkedinUrl: linkedinUrl || null,
+        githubUrl: githubUrl || null,
+        portfolioUrl: portfolioUrl || null,
         bio,
       }).catch(() => null);
     } catch {

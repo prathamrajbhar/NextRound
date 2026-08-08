@@ -58,7 +58,7 @@ jobRouter.post(
           description: validated.description,
           rubric: defaultRubric as any,
           thresholds: defaultThresholds as any,
-          status: 'draft',
+          status: validated.status || 'draft',
           location: validated.location || null,
           salary: validated.salary || null,
           experienceLevel: validated.experienceLevel || null,

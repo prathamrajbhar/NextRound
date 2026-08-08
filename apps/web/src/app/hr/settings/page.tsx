@@ -45,12 +45,14 @@ export default function HrSettingsPage() {
   const [autoInvite, setAutoInvite] = useState(DEFAULT_ORG_SETTINGS.autoOfferEnabled);
   const [defaultVoice, setDefaultVoice] = useState<'Serena' | 'Alloy' | 'Echo' | 'Fable' | 'Nova' | 'Onyx' | 'Shimmer'>(DEFAULT_ORG_SETTINGS.defaultVoice);
   const [anonymizeResumes, setAnonymizeResumes] = useState(DEFAULT_ORG_SETTINGS.anonymizeResumes);
+  const [orgId, setOrgId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchSettings() {
       try {
-        const orgRes = await apiClient.get<{ organization: { name: string; settings: Record<string, unknown> } }>('/organizations/me').catch(() => null);
+        const orgRes = await apiClient.get<{ organization: { id: string; name: string; settings: Record<string, unknown> } }>('/organizations/me').catch(() => null);
         if (orgRes?.organization) {
+          if (orgRes.organization.id) setOrgId(orgRes.organization.id);
           if (orgRes.organization.name) setOrgName(orgRes.organization.name);
           const s = orgRes.organization.settings || {};
           if (typeof s.domain === 'string') setOrgDomain(s.domain);
@@ -79,9 +81,9 @@ export default function HrSettingsPage() {
   const [dailyDigest, setDailyDigest] = useState(true);
 
   // Team Members state initialized dynamically with current user
-  const [team, setTeam] = useState<{ id: number; name: string; email: string; role: string; status: string }[]>(() => {
+  const [team, setTeam] = useState<{ id: string; name: string; email: string; role: string; status: string }[]>(() => {
     if (user?.email) {
-      return [{ id: 1, name: user.email.split('@')[0], email: user.email, role: 'Owner', status: 'Active' }];
+      return [{ id: user?.id || 'me', name: user.email.split('@')[0], email: user.email, role: 'Owner', status: 'Active' }];
     }
     return [];
   });
@@ -115,25 +117,115 @@ export default function HrSettingsPage() {
     setTimeout(() => setSavedSuccess(false), 2000);
   };
 
-  const handleInviteSubmit = (e: React.FormEvent) => {
+  // Load persisted org members once we know the org id
+  useEffect(() => {
+    async function loadMembers() {
+      if (!orgId) return;
+      try {
+        const res = await apiClient
+          .get<{ members: { id: string; email: string; role: string }[] }>(`/organizations/${orgId}/members`)
+          .catch(() => null);
+        if (res?.members?.length) {
+          setTeam(
+            res.members.map((m) => ({
+              id: m.id,
+              name: m.email.split('@')[0],
+              email: m.email,
+              role: m.id === user?.id ? 'Owner' : 'Admin',
+              status: 'Active',
+            }))
+          );
+        }
+      } catch {
+        // keep default team list
+      }
+    }
+    loadMembers();
+  }, [orgId, user]);
+
+  const handleGeneralSave = async () => {
+    if (orgId) {
+      try {
+        await apiClient.patch(`/organizations/${orgId}`, {
+          name: orgName,
+          settings: {
+            domain: orgDomain,
+            supportEmail,
+            timezone,
+            defaultThreshold,
+            autoOfferEnabled: autoInvite,
+            defaultVoice,
+            anonymizeResumes,
+          },
+        });
+      } catch {
+        // keep local state if API unreachable
+      }
+    }
+    triggerSaveNotification();
+  };
+
+  const handleNotificationsSave = async () => {
+    if (orgId) {
+      try {
+        await apiClient.patch(`/organizations/${orgId}`, {
+          settings: {
+            notificationPrefs: { notifyShortlist, notifyHighScore, dailyDigest },
+          },
+        });
+      } catch {
+        // keep local state if API unreachable
+      }
+    }
+    triggerSaveNotification();
+  };
+
+  const handleEmailTemplatesSave = async () => {
+    if (orgId) {
+      try {
+        await apiClient.patch(`/organizations/${orgId}`, {
+          settings: { emailTemplates: templates },
+        });
+      } catch {
+        // keep local state if API unreachable
+      }
+    }
+    triggerSaveNotification();
+  };
+
+  const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (inviteEmail.trim()) {
+    if (!inviteEmail.trim() || !orgId) return;
+    try {
+      await apiClient.post(`/organizations/${orgId}/members/invite`, {
+        email: inviteEmail.trim(),
+        role: 'hr',
+      });
       setTeam([
         ...team,
         {
-          id: Date.now(),
+          id: `pending-${Date.now()}`,
           name: inviteEmail.split('@')[0],
           email: inviteEmail.trim(),
           role: inviteRole,
-          status: 'Active',
+          status: 'Invited',
         },
       ]);
       setInviteEmail('');
-      triggerSaveNotification();
+    } catch {
+      // keep local state if API unreachable
     }
+    triggerSaveNotification();
   };
 
-  const handleRemoveMember = (id: number) => {
+  const handleRemoveMember = async (id: string) => {
+    if (orgId && !id.startsWith('pending-')) {
+      try {
+        await apiClient.delete(`/organizations/${orgId}/members/${id}`);
+      } catch {
+        // keep local state if API unreachable
+      }
+    }
     setTeam(team.filter((m) => m.id !== id));
     triggerSaveNotification();
   };
@@ -252,7 +344,7 @@ export default function HrSettingsPage() {
               setAutoInvite={setAutoInvite}
               anonymizeResumes={anonymizeResumes}
               setAnonymizeResumes={setAnonymizeResumes}
-              onSave={triggerSaveNotification}
+              onSave={handleGeneralSave}
             />
           )}
 
@@ -278,7 +370,7 @@ export default function HrSettingsPage() {
               setNotifyHighScore={setNotifyHighScore}
               dailyDigest={dailyDigest}
               setDailyDigest={setDailyDigest}
-              onSave={triggerSaveNotification}
+              onSave={handleNotificationsSave}
             />
           )}
 
@@ -300,7 +392,7 @@ export default function HrSettingsPage() {
               setActiveTemplate={setActiveTemplate}
               templates={templates}
               setTemplates={setTemplates}
-              onSave={triggerSaveNotification}
+              onSave={handleEmailTemplatesSave}
             />
           )}
         </div>

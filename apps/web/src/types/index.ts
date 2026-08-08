@@ -112,7 +112,7 @@ export interface PrepContent {
 
 export interface Notification {
   id: string;
-  type: 'pipeline' | 'decision' | 'alert' | 'interview' | 'offer';
+  type: 'pipeline' | 'decision' | 'alert' | 'interview' | 'offer' | 'shortlist' | 'system';
   text: string;
   time: string;
   link: string;

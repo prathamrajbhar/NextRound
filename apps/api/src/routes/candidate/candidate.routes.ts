@@ -5,7 +5,7 @@ import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { uploadFile } from '../../lib/s3';
-import { serializeApplicationList } from '../../lib/serializers';
+import { serializeApplicationList, serializeOffer } from '../../lib/serializers';
 
 export const candidateRouter = Router();
 
@@ -216,7 +216,7 @@ candidateRouter.get(
         where: { id: appId },
         include: {
           offer: true,
-          candidate: true,
+          candidate: { include: { user: { select: { email: true } } } },
           job: {
             include: { organization: true },
           },
@@ -233,7 +233,7 @@ candidateRouter.get(
 
       return res.json({
         success: true,
-        data: { offer: application.offer },
+        data: serializeOffer(application.offer, application),
       });
     } catch (err) {
       return next(err);

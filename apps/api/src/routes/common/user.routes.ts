@@ -7,6 +7,38 @@ import { serializeApplicationList, serializeJobList } from '../../lib/serializer
 
 export const userRouter = Router();
 
+// Flatten the user row + stored profile JSON into the camelCase/snake_case
+// shape the HR profile page expects (name, email, role, company, linkedin_url,
+// avatar, timezone, title, specialties).
+function serializeHrProfile(user: {
+  id: string;
+  email: string;
+  role: string;
+  org_id: string | null;
+  organization?: { name: string | null } | null;
+  profile?: unknown;
+}) {
+  const stored = (user.profile as Record<string, unknown>) || {};
+  const displayName = (stored.name as string) || user.email.split('@')[0];
+
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+    org_id: user.org_id,
+    name: displayName,
+    full_name: displayName,
+    avatar: stored.avatarUrl ?? null,
+    avatar_url: stored.avatarUrl ?? null,
+    timezone: stored.timezone ?? null,
+    linkedin_url: stored.linkedinUrl ?? null,
+    title: stored.title ?? null,
+    specialties: Array.isArray(stored.specialties) ? stored.specialties : [],
+    company: user.organization?.name ?? null,
+    org_name: user.organization?.name ?? null,
+  };
+}
+
 // GET /api/v1/hr/profile - Get current HR profile info
 userRouter.get(
   '/hr/profile',
@@ -16,13 +48,8 @@ userRouter.get(
     try {
       const user = await prisma.user.findUnique({
         where: { id: req.user!.userId },
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          org_id: true,
-          created_at: true,
-          organization: true,
+        include: {
+          organization: { select: { name: true, logo_url: true } },
         },
       });
 
@@ -32,7 +59,7 @@ userRouter.get(
 
       return res.json({
         success: true,
-        data: { profile: user },
+        data: { profile: serializeHrProfile(user) },
       });
     } catch (err) {
       return next(err);
@@ -49,21 +76,36 @@ userRouter.patch(
     try {
       const validated = HRProfileUpdateSchema.parse(req.body);
 
-      // Email update or general profile updates
-      const updatedUser = await prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { id: req.user!.userId },
-        select: {
-          id: true,
-          email: true,
-          role: true,
-          org_id: true,
-          created_at: true,
-        },
+      });
+
+      if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+
+      const stored = (user.profile as Record<string, unknown>) || {};
+
+      // Only update fields the client actually sent, so partial updates
+      // (e.g. just changing the avatar) never wipe other profile data.
+      const updates: Record<string, unknown> = {};
+      const bodyHas = (key: string) => Object.prototype.hasOwnProperty.call(validated, key);
+      if (bodyHas('name')) updates.name = validated.name;
+      if (bodyHas('avatarUrl')) updates.avatarUrl = validated.avatarUrl;
+      if (bodyHas('timezone')) updates.timezone = validated.timezone;
+      if (bodyHas('linkedinUrl')) updates.linkedinUrl = validated.linkedinUrl;
+      if (bodyHas('title')) updates.title = validated.title;
+      if (bodyHas('specialties')) updates.specialties = validated.specialties;
+
+      const updatedUser = await prisma.user.update({
+        where: { id: user.id },
+        data: { profile: { ...stored, ...updates } as any },
+        include: { organization: { select: { name: true, logo_url: true } } },
       });
 
       return res.json({
         success: true,
-        data: { profile: updatedUser },
+        data: { profile: serializeHrProfile(updatedUser) },
       });
     } catch (err) {
       return next(err);
@@ -182,10 +224,12 @@ userRouter.get(
   requireRole('candidate'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = await prisma.user.findUnique({
-        where: { id: req.user!.userId },
-        select: { id: true, email: true },
+      const profile = await prisma.candidateProfile.findUnique({
+        where: { user_id: req.user!.userId },
+        select: { settings: true },
       });
+
+      const stored = (profile?.settings as Record<string, unknown>) || {};
 
       return res.json({
         success: true,
@@ -194,6 +238,7 @@ userRouter.get(
             emailNotifications: true,
             privacyMode: false,
             timezone: 'UTC',
+            ...stored,
           },
         },
       });
@@ -212,10 +257,37 @@ userRouter.patch(
     try {
       const validated = CandidateSettingsSchema.parse(req.body);
 
+      // Flatten a nested `{ settings: {...} }` payload (sent by the privacy tab)
+      // into the top-level key set so every tab reads/writes the same flat blob.
+      const incoming: Record<string, unknown> = { ...validated };
+      const nested = incoming.settings;
+      if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
+        Object.assign(incoming, nested as Record<string, unknown>);
+      }
+      delete incoming.settings;
+
+      const existing = await prisma.candidateProfile.findUnique({
+        where: { user_id: req.user!.userId },
+        select: { id: true, settings: true },
+      });
+
+      // Merge with previously stored settings so saving one tab never wipes
+      // the values saved by another tab.
+      const merged = {
+        ...((existing?.settings as Record<string, unknown>) || {}),
+        ...incoming,
+      };
+
+      const profile = await prisma.candidateProfile.upsert({
+        where: { user_id: req.user!.userId },
+        create: { user_id: req.user!.userId, settings: merged as any },
+        update: { settings: merged as any },
+      });
+
       return res.json({
         success: true,
         data: {
-          settings: validated,
+          settings: profile.settings,
           message: 'Settings saved successfully',
         },
       });

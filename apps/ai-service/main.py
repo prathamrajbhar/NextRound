@@ -7,6 +7,7 @@ from workers.agent_workers import worker_manager
 from routes.voice_routes import voice_router, mock_voice_router
 from routes.prep_routes import prep_router
 from routes.analytics_routes import analytics_router
+from routes.embedding_routes import embedding_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nextround-ai-service")
@@ -32,6 +33,8 @@ app.include_router(voice_router)
 app.include_router(mock_voice_router)
 app.include_router(prep_router)
 app.include_router(analytics_router)
+app.include_router(embedding_router)
+
 
 @app.get("/health")
 async def health_check():

@@ -1,11 +1,15 @@
 import logging
 import base64
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, HTTPException, File, UploadFile, Body
+from fastapi import APIRouter, HTTPException, File, UploadFile, Body, Request
+from fastapi.responses import StreamingResponse
+import json
 from pydantic import BaseModel, Field
 from agents.interviewer_agent import run_interviewer_agent, InterviewerState
 from agents.mock_interviewer_agent import run_mock_interviewer_agent, MockInterviewerState
 from agents.resume_builder_agent import run_resume_builder_agent, ResumeBuilderState
+from services.stt_service import transcribe_audio_bytes
+from services.tts_service import generate_tts_audio_base64, stream_sentence_tts
 from core.config import settings
 
 logger = logging.getLogger("voice_routes")
@@ -32,6 +36,7 @@ class InterviewRespondRequest(BaseModel):
     candidateResume: Optional[str] = None
     jobTitle: Optional[str] = "Software Engineer"
     conversationHistory: List[Dict[str, Any]] = Field(default_factory=list)
+    voice: Optional[str] = "en-US-ChristopherNeural"
 
 
 class InterviewRespondResponse(BaseModel):
@@ -44,7 +49,7 @@ class InterviewRespondResponse(BaseModel):
 
 class TTSRequest(BaseModel):
     text: str
-    voice: Optional[str] = "en_US-male-medium"
+    voice: Optional[str] = "en-US-ChristopherNeural"
 
 
 class TTSResponse(BaseModel):
@@ -54,32 +59,40 @@ class TTSResponse(BaseModel):
 
 @voice_router.post("/transcribe", response_model=TranscribeResponse)
 async def transcribe_audio(
+    request: Request,
     file: Optional[UploadFile] = File(None),
-    payload: Optional[TranscribeRequest] = Body(None)
 ):
-    """STT Speech-to-Text endpoint using Groq Whisper API / Faster-Whisper."""
+    """STT Speech-to-Text endpoint using Groq Whisper API (whisper-large-v3-turbo)."""
     logger.info("Voice: Received audio transcription request")
 
     audio_bytes = None
-    if payload and payload.audio_base64:
-        try:
-            audio_bytes = base64.b64decode(payload.audio_base64)
-        except Exception as e:
-            logger.error(f"Voice: Failed to decode base64 audio: {e}")
-            raise HTTPException(status_code=400, detail="Invalid base64 audio payload.")
-    elif file:
-        audio_bytes = await file.read()
-        logger.info(f"Received audio file {file.filename} of size {len(audio_bytes)} bytes")
+    filename = "audio.webm"
 
-    if not audio_bytes:
+    content_type = request.headers.get("content-type", "")
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+            if isinstance(body, dict) and body.get("audio_base64"):
+                audio_bytes = base64.b64decode(body["audio_base64"])
+        except Exception as e:
+            logger.error(f"Voice: Failed to decode base64 audio payload: {e}")
+            raise HTTPException(status_code=400, detail="Invalid base64 audio payload.")
+
+    if not audio_bytes and file:
+        filename = file.filename or "audio.webm"
+        audio_bytes = await file.read()
+        logger.info(f"Received audio file {filename} of size {len(audio_bytes)} bytes")
+
+    if not audio_bytes or len(audio_bytes) == 0:
         raise HTTPException(status_code=400, detail="No audio provided.")
 
-    raise HTTPException(status_code=501, detail="Speech-to-text service not available. No mock transcripts are returned.")
+    transcript, confidence = transcribe_audio_bytes(audio_bytes, filename=filename)
+    return TranscribeResponse(transcript=transcript, confidence=confidence)
 
 
 @voice_router.post("/respond", response_model=InterviewRespondResponse)
 async def generate_interview_response(request: InterviewRespondRequest):
-    """Generate next interviewer turn using LangGraph Interviewer Agent."""
+    """Generate next interviewer turn using LangGraph Interviewer Agent & synthesize audio."""
     logger.info(f"Voice: Generating turn response for interview {request.interviewId}, stage {request.stage}")
 
     # Build InterviewerState input
@@ -99,27 +112,57 @@ async def generate_interview_response(request: InterviewRespondRequest):
 
     ai_text = output_state.get("latest_ai_response") or "Thank you for sharing that context. Could you tell me more about your technical architecture decisions?"
     next_stage = output_state.get("current_stage", request.stage)
-    is_complete = Boolean(output_state.get("is_complete", False))
+    is_complete = bool(output_state.get("is_complete", False))
     scorecard = output_state.get("final_scorecard")
+
+    # Generate synthesized neural TTS audio URL
+    audio_url = await generate_tts_audio_base64(ai_text, voice=request.voice or "en-US-ChristopherNeural")
 
     return InterviewRespondResponse(
         text=ai_text,
-        audioUrl=None,
+        audioUrl=audio_url,
         stage=next_stage,
         isComplete=is_complete,
         scorecard=scorecard,
     )
 
 
-def Boolean(val: Any) -> bool:
-    return bool(val)
-
-
 @voice_router.post("/tts", response_model=TTSResponse)
 async def generate_tts(request: TTSRequest):
-    """Text-to-Speech endpoint using Piper/Coqui TTS."""
+    """Text-to-Speech endpoint using Edge TTS neural synthesis."""
     logger.info(f"Voice: Generating TTS for text length {len(request.text)}")
-    raise HTTPException(status_code=501, detail="Text-to-speech service not available. No mock audio is returned.")
+    if not request.text or not request.text.strip():
+        raise HTTPException(status_code=400, detail="Text parameter cannot be empty.")
+
+    audio_url = await generate_tts_audio_base64(request.text, voice=request.voice or "en-US-ChristopherNeural")
+    return TTSResponse(audio_url=audio_url, audio_format="mp3")
+
+
+@voice_router.post("/voice-stream")
+async def voice_stream_response(request: InterviewRespondRequest):
+    """
+    Low-latency streaming endpoint yielding chunked sentence audio segments for sub-500ms voice interaction.
+    """
+    state: InterviewerState = {
+        "interview_id": request.interviewId,
+        "application_id": request.applicationId or request.interviewId,
+        "current_stage": request.stage,
+        "turn_number": request.turnNumber,
+        "job_title": request.jobTitle or "Software Engineer",
+        "latest_candidate_response": request.transcript,
+        "conversation_history": request.conversationHistory or [],
+        "candidate_resume": request.candidateResume or "",
+    }
+
+    output_state = run_interviewer_agent(state)
+    ai_text = output_state.get("latest_ai_response") or "Thank you. Let's continue to the next technical topic."
+
+    async def event_generator():
+        async for chunk in stream_sentence_tts(ai_text, voice=request.voice or "en-US-ChristopherNeural"):
+            yield f"data: {json.dumps(chunk)}\n\n"
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
 
 
 class MockRespondRequest(BaseModel):

@@ -9,6 +9,7 @@ import { Search, ChevronRight, Users, Filter, Brain } from '@/lib/lucide-google-
 
 interface TalentCandidate {
   candidateId: string;
+  applicationId: string | null;
   userId: string;
   name: string;
   email: string;
@@ -217,7 +218,7 @@ export default function HrTalentPoolPage() {
                   Last active: {new Date(c.lastActive).toLocaleDateString()}
                 </span>
                 <Link
-                  href={`/hr/candidates/${c.candidateId}`}
+                  href={`/hr/candidates/${c.applicationId ?? c.candidateId}`}
                   className="inline-flex items-center gap-1 text-xs font-bold text-purple-600 dark:text-purple-400 hover:underline transition-all group-hover:translate-x-0.5"
                 >
                   Inspect Profile

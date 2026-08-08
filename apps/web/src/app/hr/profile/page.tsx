@@ -47,7 +47,7 @@ export default function HrProfile() {
       }
 
       try {
-        const res = await apiClient.get<{ profile?: Record<string, unknown>; name?: string; full_name?: string; email?: string; role?: string; company?: string; org_name?: string; linkedin_url?: string }>('/hr/profile');
+        const res = await apiClient.get<{ profile?: Record<string, unknown>; name?: string; full_name?: string; email?: string; role?: string; company?: string; org_name?: string; linkedin_url?: string; avatar?: string; specialties?: string[] }>('/hr/profile');
         if (res) {
           const profileObj = res.profile || res;
           if (typeof profileObj.name === 'string') setName(profileObj.name);
@@ -57,6 +57,8 @@ export default function HrProfile() {
           if (typeof profileObj.company === 'string') setCompany(profileObj.company);
           if (typeof profileObj.org_name === 'string') setCompany(profileObj.org_name);
           if (typeof profileObj.linkedin_url === 'string') setLinkedinUrl(profileObj.linkedin_url);
+          if (typeof profileObj.avatar === 'string') setAvatar(profileObj.avatar);
+          if (Array.isArray(profileObj.specialties)) setSpecialties(profileObj.specialties);
         }
       } catch {
         const savedName = localStorage.getItem('hr_name');
@@ -78,13 +80,25 @@ export default function HrProfile() {
   }, [user]);
 
   const handleSave = async () => {
+    // Persist profile server-side, then keep localStorage as an offline fallback.
+    try {
+      await apiClient.patch('/hr/profile', {
+        name,
+        linkedinUrl: linkedinUrl || null,
+        avatarUrl: avatar,
+        specialties,
+      });
+    } catch {
+      // fall back to local-only save if the API is unreachable
+    }
+
     localStorage.setItem('hr_name', name);
     localStorage.setItem('hr_email', email);
     localStorage.setItem('hr_role', role);
     localStorage.setItem('hr_company', company);
     localStorage.setItem('hr_linkedin', linkedinUrl);
     localStorage.setItem('hr_avatar', avatar);
-    
+
     // Dispatch custom event to notify parent layout header
     window.dispatchEvent(new Event('hr_profile_update'));
 

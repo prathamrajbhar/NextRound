@@ -42,6 +42,17 @@ talentPoolRouter.get(
       });
       const bookmarkMap = new Map(bookmarks.map((b) => [b.candidate_id, b.id]));
 
+      // Map each candidate to their most recent application so the UI can
+      // link to the candidate dossier (which is keyed by application id).
+      const applications = await prisma.application.findMany({
+        select: { id: true, candidate_id: true, applied_at: true },
+        orderBy: { applied_at: 'desc' },
+      });
+      const appMap = new Map<string, string>();
+      for (const app of applications) {
+        if (!appMap.has(app.candidate_id)) appMap.set(app.candidate_id, app.id);
+      }
+
       // Fetch candidate profiles with associated user details
       const candidates = await prisma.candidateProfile.findMany({
         include: {
@@ -75,6 +86,7 @@ talentPoolRouter.get(
 
           return {
             candidateId: c.id,
+            applicationId: appMap.get(c.id) ?? null,
             userId: c.user.id,
             name: c.user.email.split('@')[0],
             email: c.user.email,

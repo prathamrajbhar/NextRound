@@ -17,22 +17,19 @@ const ThemeContext = createContext<ThemeContextValue>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('theme');
-      if (saved === 'light') return 'light';
-    }
-    return 'dark';
-  });
+  const [theme, setThemeState] = useState<Theme>('dark');
 
+  // Hydrate the persisted theme after mount. Server HTML renders with the
+  // default 'dark' and the first client render matches it, so hydration never
+  // sees mismatched attributes. The <html> class is already applied by
+  // themeInitScript in layout.tsx before hydration, so there is no flash; this
+  // effect only syncs React state to it (and toggles only happen via
+  // applyTheme, which sets the class directly).
   useEffect(() => {
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-  }, [theme]);
+    const saved = localStorage.getItem('theme');
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (saved === 'light') setThemeState('light');
+  }, []);
 
   const applyTheme = (newTheme: Theme) => {
     setThemeState(newTheme);

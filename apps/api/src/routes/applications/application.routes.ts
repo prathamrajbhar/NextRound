@@ -15,7 +15,7 @@ import { enqueueScheduling } from '../../lib/queues/scheduling.queue';
 import { enqueueAssessment } from '../../lib/queues/assessment.queue';
 import { enqueueCoding } from '../../lib/queues/coding.queue';
 import { emailService } from '../../services/email.service';
-import { serializeApplication, serializeApplicationList } from '../../lib/serializers';
+import { serializeApplication, serializeApplicationList, serializeOffer } from '../../lib/serializers';
 
 export const applicationRouter = Router();
 
@@ -820,7 +820,7 @@ applicationRouter.get(
     try {
       const token = req.params.token as string;
       const offer = await prisma.offer.findFirst({
-        where: { id: token },
+        where: { magic_link_token: token },
         include: {
           application: {
             include: {
@@ -866,8 +866,8 @@ applicationRouter.get(
         where: { id: appId },
         include: {
           offer: true,
-          candidate: true,
-          job: true,
+          candidate: { include: { user: { select: { email: true } } } },
+          job: { include: { organization: { select: { name: true, logo_url: true } } } },
         },
       });
 
@@ -885,7 +885,7 @@ applicationRouter.get(
 
       return res.json({
         success: true,
-        data: { offer: application.offer },
+        data: serializeOffer(application.offer, application),
       });
     } catch (err) {
       return next(err);
@@ -911,7 +911,7 @@ applicationRouter.post(
 
       if (!offer && magic_link_token) {
         offer = await prisma.offer.findFirst({
-          where: { id: magic_link_token },
+          where: { magic_link_token },
         });
       }
 
@@ -937,6 +937,54 @@ applicationRouter.post(
       return res.json({
         success: true,
         data: { offer: updatedOffer, status: 'accepted' },
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
+// POST /api/v1/applications/:id/offer/decline - Candidate declines offer
+applicationRouter.post(
+  '/:id/offer/decline',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const appId = req.params.id as string;
+      const { reason, magic_link_token } = req.body;
+
+      let offer = await prisma.offer.findUnique({
+        where: { application_id: appId },
+      });
+
+      if (!offer && magic_link_token) {
+        offer = await prisma.offer.findFirst({
+          where: { magic_link_token },
+        });
+      }
+
+      if (!offer) {
+        return res.status(404).json({ success: false, error: 'Offer not found for application' });
+      }
+
+      // Decline offer and update application to rejected
+      const updatedOffer = await prisma.offer.update({
+        where: { id: offer.id },
+        data: {
+          status: 'declined',
+          offer_letter_content: reason
+            ? `Declined reason: ${reason}\n${offer.offer_letter_content ?? ''}`
+            : offer.offer_letter_content,
+        },
+      });
+
+      await prisma.application.update({
+        where: { id: offer.application_id },
+        data: { status: 'rejected' },
+      });
+
+      return res.json({
+        success: true,
+        data: { offer: updatedOffer, status: 'declined' },
       });
     } catch (err) {
       return next(err);

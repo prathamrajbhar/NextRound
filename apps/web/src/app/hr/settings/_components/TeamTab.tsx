@@ -4,7 +4,7 @@ import React from 'react';
 import { Users, Plus, Trash2 } from '@/lib/lucide-google-icons';
 
 interface TeamMember {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: string;
@@ -18,7 +18,7 @@ interface TeamTabProps {
   inviteRole: 'Admin' | 'Recruiter' | 'Reviewer';
   setInviteRole: (val: 'Admin' | 'Recruiter' | 'Reviewer') => void;
   handleInviteSubmit: (e: React.FormEvent) => void;
-  handleRemoveMember: (id: number) => void;
+  handleRemoveMember: (id: string) => void;
 }
 
 export function TeamTab({

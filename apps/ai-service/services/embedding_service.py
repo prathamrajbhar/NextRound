@@ -14,10 +14,21 @@ if settings.gemini_api_key:
         logger.warning(f"Failed to initialize Google GenAI Client: {e}")
 
 
+# Try initializing FastEmbed ONNX TextEmbedding model (768-dim)
+onnx_embedding_model = None
+try:
+    from fastembed import TextEmbedding
+    # BAAI/bge-base-en-v1.5 produces 768-dimensional normalized float vectors
+    onnx_embedding_model = TextEmbedding(model_name="BAAI/bge-base-en-v1.5")
+    logger.info("Successfully initialized ONNX Vector Embedding Engine (BAAI/bge-base-en-v1.5)")
+except Exception as e:
+    logger.warning(f"Failed to initialize FastEmbed ONNX model: {e}")
+
+
 def _fallback_768_embedding(text: str) -> list[float]:
     """
     Generate a deterministic, normalized 768-dimensional embedding vector
-    for fallback scenarios when Gemini API key is missing or unreachable.
+    for fallback scenarios when ONNX model and Gemini API key are missing or unreachable.
     """
     vec = [0.0] * 768
     if not text:
@@ -37,15 +48,27 @@ def _fallback_768_embedding(text: str) -> list[float]:
     return vec
 
 
-# ML_BYPASS: self-hosted embeddings — upgrade to sentence-transformers/all-MiniLM-L6-v2 when API offline required
 def embed_text(text: str) -> list[float]:
     """
     Generate 768-dimensional vector embedding for input text using
-    Gemini text-embedding-004 model, falling back to deterministic vector if unavailable.
+    the self-hosted FastEmbed ONNX model (BAAI/bge-base-en-v1.5),
+    falling back to Gemini text-embedding-004 API or deterministic vector if unavailable.
     """
     if not text or not text.strip():
         return [0.0] * 768
 
+    # 1. Primary: Self-Hosted FastEmbed ONNX Container Engine
+    if onnx_embedding_model:
+        try:
+            embeddings = list(onnx_embedding_model.embed([text]))
+            if embeddings and len(embeddings) > 0:
+                vec = [float(x) for x in embeddings[0]]
+                if len(vec) == 768:
+                    return vec
+        except Exception as e:
+            logger.error(f"FastEmbed ONNX embedding generation failed: {e}. Trying Gemini API fallback.")
+
+    # 2. Secondary: Gemini API text-embedding-004
     if genai_client:
         try:
             response = genai_client.models.embed_content(
@@ -59,7 +82,9 @@ def embed_text(text: str) -> list[float]:
         except Exception as e:
             logger.error(f"Gemini embed_content API call failed: {e}. Falling back to deterministic vector.")
 
+    # 3. Tertiary: Deterministic 768-dim hash vector
     return _fallback_768_embedding(text)
+
 
 
 def embed_resume(resume_text: str, chunk_size: int = 500) -> list[float]:

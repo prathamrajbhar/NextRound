@@ -15,6 +15,8 @@ const typeMeta: Record<Notification['type'], { label: string; icon: React.ReactN
   interview: { label: 'Interview', icon: <Mic className="h-4 w-4 text-sky-500" /> },
   offer: { label: 'Offer', icon: <Send className="h-4 w-4 text-emerald-500" /> },
   alert: { label: 'Alert', icon: <AlertTriangle className="h-4 w-4 text-amber-500" /> },
+  shortlist: { label: 'Shortlist', icon: <Sparkles className="h-4 w-4 text-brand-500" /> },
+  system: { label: 'System', icon: <Bell className="h-4 w-4 text-slate-500" /> },
 };
 
 export default function HrNotificationsPage() {
@@ -27,9 +29,10 @@ export default function HrNotificationsPage() {
     async function fetchNotifications() {
       try {
         setLoading(true);
-        const data = await apiClient.get<Notification[]>('/notifications');
+        const data = await apiClient.get<{ notifications: Notification[] } | Notification[]>('/notifications');
         if (data) {
-          setNotifications(Array.isArray(data) ? data : []);
+          const list = Array.isArray(data) ? data : data.notifications;
+          setNotifications(Array.isArray(list) ? list : []);
         } else {
           setNotifications([]);
         }
@@ -50,22 +53,42 @@ export default function HrNotificationsPage() {
     return notifications;
   }, [notifications, filter]);
 
-  const markAsRead = (id: string, e?: React.MouseEvent) => {
+  const markAsRead = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    try {
+      await apiClient.patch(`/notifications/${id}/read`);
+    } catch (err) {
+      console.error('Failed to mark notification read:', err);
+    }
   };
 
-  const deleteNotification = (id: string, e: React.MouseEvent) => {
+  const deleteNotification = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setNotifications((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await apiClient.delete(`/notifications/${id}`);
+    } catch (err) {
+      console.error('Failed to delete notification:', err);
+    }
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    try {
+      await apiClient.post('/notifications/read-all');
+    } catch (err) {
+      console.error('Failed to mark all notifications read:', err);
+    }
   };
 
-  const clearAll = () => {
-    setNotifications([]);
+  const clearAll = async () => {
+    setNotifications((prev) => prev.filter((n) => !n.read));
+    try {
+      await apiClient.delete('/notifications');
+    } catch (err) {
+      console.error('Failed to clear notifications:', err);
+    }
   };
 
   const handleRowClick = (n: Notification) => {
@@ -160,7 +183,7 @@ export default function HrNotificationsPage() {
           {visible.length > 0 ? (
             <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
               {visible.map((n) => {
-                const meta = typeMeta[n.type];
+                const meta = typeMeta[n.type] ?? typeMeta.alert;
 
                 return (
                   <div

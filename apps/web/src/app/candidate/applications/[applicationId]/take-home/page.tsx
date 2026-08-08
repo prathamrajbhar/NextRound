@@ -54,20 +54,27 @@ export default function CandidateTakeHomeProjectPage({ params }: { params: Promi
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!repoUrl.trim()) return;
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await apiClient.post(`/candidate/applications/${applicationId}/take-home/submit`, {
+        repoUrl: repoUrl.trim(),
+        comments,
+      });
       setProject({
         ...project,
         status: 'submitted',
         submittedDate: new Date().toISOString().slice(0, 10),
-        repoUrl,
+        repoUrl: repoUrl.trim(),
       });
-    }, 1200);
+    } catch (err) {
+      console.error('Failed to submit take-home:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusPill = (status: string) => {

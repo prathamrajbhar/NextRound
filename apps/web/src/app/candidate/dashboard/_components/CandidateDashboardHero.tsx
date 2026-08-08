@@ -27,7 +27,7 @@ export function CandidateDashboardHero({ candidateName, totalAppsCount }: Candid
             Welcome back, <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">{candidateName}</span>
           </h1>
 
-          <p className="text-xs sm:text-sm font-medium text-slate-400 leading-relaxed">
+          <p className="text-xs sm:text-sm font-medium text-slate-300 dark:text-slate-400 leading-relaxed">
             Track your application pipeline, hone your responses with realistic AI mock interviews, and optimize your resume for top engineering roles.
           </p>
 

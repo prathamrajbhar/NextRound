@@ -92,6 +92,7 @@ export const JobCreateSchema = z.object({
     minScore: z.number().min(0).max(100),
     autoOffer: z.boolean(),
   }).optional(),
+  status: z.enum(['draft', 'published', 'active', 'paused', 'closed', 'deleted']).optional(),
 });
 
 export const ApplicationCreateSchema = z.object({
@@ -236,16 +237,28 @@ export const CandidateProfileUpdateSchema = z.object({
   githubUrl: z.string().url().optional().nullable(),
 });
 
-export const CandidateSettingsSchema = z.object({
-  emailNotifications: z.boolean().default(true),
-  privacyMode: z.boolean().default(false),
-  timezone: z.string().default('UTC'),
-});
+// Candidate settings are stored as a merged JSON blob (each settings tab sends a
+// different subset: notifications, privacy, theme, AI voice prefs). `.passthrough()`
+// preserves tab-specific keys so the backend can merge them all into one record.
+// No `.default()` on the known keys: each tab only sends its own subset, so
+// defaults here would clobber previously-saved values for the other tabs.
+export const CandidateSettingsSchema = z
+  .object({
+    emailNotifications: z.boolean().optional(),
+    privacyMode: z.boolean().optional(),
+    timezone: z.string().optional(),
+  })
+  .passthrough();
 
+// HR recruiter profile. avatarUrl accepts relative paths (`/avatar-*.jpg`) and
+// base64 data URLs produced by the frontend avatar uploader, not just remote URLs.
 export const HRProfileUpdateSchema = z.object({
   name: z.string().min(2).optional(),
-  avatarUrl: z.string().url().optional().nullable(),
+  avatarUrl: z.string().max(2_000_000).optional().nullable(),
   timezone: z.string().optional(),
+  linkedinUrl: z.string().max(1000).optional().nullable(),
+  title: z.string().max(200).optional().nullable(),
+  specialties: z.array(z.string()).optional(),
 });
 
 export const TalentBookmarkCreateSchema = z.object({

@@ -16,14 +16,14 @@ export function CandidateApplicationsSection({ applications }: CandidateApplicat
     return (
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-black text-slate-100 tracking-tight flex items-center gap-2">
-            <Briefcase className="h-5 w-5 text-emerald-400" />
+          <h2 className="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+            <Briefcase className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
             <span>Active Applications</span>
           </h2>
         </div>
 
         {/* Top-Grade Modern Glassmorphic Empty State Card */}
-        <div className="relative overflow-hidden rounded-3xl border border-slate-800/80 bg-slate-900/90 p-8 sm:p-10 text-center shadow-2xl backdrop-blur-xl">
+        <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-900/90 p-8 sm:p-10 text-center shadow-2xl backdrop-blur-xl">
           {/* Ambient Glowing Orbs */}
           <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
           <div className="absolute -left-12 -bottom-12 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
@@ -41,7 +41,7 @@ export function CandidateApplicationsSection({ applications }: CandidateApplicat
               No Active Applications Yet
             </h3>
 
-            <p className="text-xs sm:text-sm font-medium text-slate-400 mt-2.5 leading-relaxed max-w-md">
+            <p className="text-xs sm:text-sm font-medium text-slate-300 dark:text-slate-400 mt-2.5 leading-relaxed max-w-md">
               Start your job search today or take an AI practice session to sharpen your interview readiness and get matched with top hiring teams!
             </p>
 
@@ -119,13 +119,13 @@ export function CandidateApplicationsSection({ applications }: CandidateApplicat
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-black text-slate-100 tracking-tight flex items-center gap-2">
-          <Briefcase className="h-5 w-5 text-emerald-400" />
+        <h2 className="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+          <Briefcase className="h-5 w-5 text-emerald-500 dark:text-emerald-400" />
           <span>Active Applications</span>
         </h2>
         <Link
           href="/candidate/applications"
-          className="text-xs font-bold text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1"
+          className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 dark:hover:text-emerald-300 inline-flex items-center gap-1"
         >
           <span>View all ({safeApps.length})</span>
           <ArrowRight className="h-3.5 w-3.5" />
@@ -136,16 +136,16 @@ export function CandidateApplicationsSection({ applications }: CandidateApplicat
         {safeApps.map((app) => (
           <div
             key={app.id}
-            className="glass-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-slate-700/80 transition-all"
+            className="glass-card p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:border-slate-300 dark:hover:border-slate-700/80 transition-all"
           >
             <div className="flex items-start gap-3.5">
-              <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 font-bold shrink-0">
-                <Building2 className="h-5 w-5 text-slate-400" />
+              <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold shrink-0">
+                <Building2 className="h-5 w-5 text-slate-500 dark:text-slate-400" />
               </div>
               <div>
-                <h3 className="text-sm font-extrabold text-white">{app.jobTitle}</h3>
-                <span className="text-xs font-semibold text-slate-400 block mt-0.5">{app.orgName}</span>
-                <span className="text-[10px] text-slate-400 font-medium block mt-1">Applied on {app.appliedDate}</span>
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">{app.jobTitle}</h3>
+                <span className="text-xs font-semibold text-slate-600 dark:text-slate-400 block mt-0.5">{app.orgName}</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block mt-1">Applied on {app.appliedDate}</span>
               </div>
             </div>
 
@@ -153,10 +153,10 @@ export function CandidateApplicationsSection({ applications }: CandidateApplicat
               <span
                 className={`self-start sm:self-auto text-[10px] font-bold px-3 py-1 rounded-full border uppercase tracking-wider ${
                   app.status === 'decided'
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                     : app.status === 'interview_scheduled'
-                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/30'
-                    : 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30'
+                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30'
+                    : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30'
                 }`}
               >
                 {app.status.replace('_', ' ')}
@@ -164,7 +164,7 @@ export function CandidateApplicationsSection({ applications }: CandidateApplicat
 
               <Link
                 href={`/candidate/applications/${app.id}`}
-                className="inline-flex items-center justify-center gap-1.5 text-center text-xs font-bold text-slate-200 hover:text-white bg-slate-800/80 hover:bg-slate-800 border border-slate-700/70 px-3.5 py-1.5 rounded-lg shadow-sm transition-all"
+                className="inline-flex items-center justify-center gap-1.5 text-center text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700/70 px-3.5 py-1.5 rounded-lg shadow-xs transition-all"
               >
                 <span>View Details</span>
                 <ArrowRight className="h-3 w-3" />

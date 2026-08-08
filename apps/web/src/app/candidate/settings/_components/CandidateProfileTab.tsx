@@ -104,14 +104,13 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
 
     try {
       await apiClient.post('/candidate/profile', {
-        full_name: fullName,
-        email,
+        fullName,
         phone,
         location,
         headline,
-        portfolio_url: portfolioUrl,
-        github_url: githubUrl,
-        linkedin_url: linkedinUrl,
+        portfolioUrl: portfolioUrl || null,
+        githubUrl: githubUrl || null,
+        linkedinUrl: linkedinUrl || null,
         bio,
       }).catch(() => null);
     } catch {

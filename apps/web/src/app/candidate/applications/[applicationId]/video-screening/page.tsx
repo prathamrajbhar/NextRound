@@ -29,21 +29,37 @@ export default function CandidateVideoScreeningPage({ params }: { params: Promis
     fetchScreening();
   }, [applicationId]);
 
-  const handleSubmitScreening = (recordedResponses: Record<string, { duration: number; attempts: number }>) => {
+  const handleSubmitScreening = async (recordedResponses: Record<string, { duration: number; attempts: number }>) => {
     if (!screening) return;
     setIsCapturing(false);
+
+    const updatedResponses = screening.responses.map((resp) => {
+      const rec = recordedResponses[resp.questionId];
+      return {
+        ...resp,
+        durationSeconds: rec?.duration || resp.durationSeconds || 45,
+        attempts: rec?.attempts || 1,
+      };
+    });
+
+    try {
+      await apiClient.post(`/candidate/applications/${applicationId}/video-screening/submit`, {
+        responses: updatedResponses.map((r) => ({
+          questionId: r.questionId,
+          questionText: r.promptText || r.question,
+          durationSeconds: r.durationSeconds,
+          attempts: r.attempts,
+        })),
+      });
+    } catch (err) {
+      console.error('Failed to submit video screening:', err);
+    }
+
     setScreening({
       ...screening,
       status: 'submitted',
       submittedDate: new Date().toISOString().slice(0, 10),
-      responses: screening.responses.map((resp) => {
-        const rec = recordedResponses[resp.questionId];
-        return {
-          ...resp,
-          durationSeconds: rec?.duration || resp.durationSeconds || 45,
-          attempts: rec?.attempts || 1,
-        };
-      }),
+      responses: updatedResponses,
     });
   };
 

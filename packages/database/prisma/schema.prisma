@@ -93,6 +93,8 @@ model User {
   org_id             String?
   reset_token_hash   String?
   reset_token_expiry DateTime?
+  // HR/recruiter profile details (name, avatar, timezone, linkedin, title, specialties)
+  profile            Json      @default("{}")
   created_at         DateTime  @default(now())
 
   organization      Organization?     @relation(fields: [org_id], references: [id])
@@ -173,6 +175,8 @@ model CandidateProfile {
   proud_project      String?                    @db.Text
   work_values        Json                       @default("[]")
   availability       Json                       @default("{}")
+  // Candidate preferences (notifications, privacy, theme, AI voice, etc.)
+  settings           Json                       @default("{}")
   resume_embedding   Unsupported("vector(768)")?
   created_at         DateTime                   @default(now())
 

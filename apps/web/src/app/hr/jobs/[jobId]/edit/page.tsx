@@ -63,7 +63,17 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
           setDescription(data.description || '');
           setLocation(data.location || 'Remote (Worldwide)');
           setSalary(data.salary || '$140,000 - $180,000');
-          setExperienceLevel(data.experienceLevel || 'Senior (5+ yrs)');
+          const rawExp = data.experienceLevel || 'Senior (5+ Years)';
+          const normalizedExp = rawExp.includes('Senior')
+            ? 'Senior (5+ Years)'
+            : rawExp.includes('Lead')
+            ? 'Lead / Principal'
+            : rawExp.includes('Mid')
+            ? 'Mid-Level'
+            : rawExp.includes('Junior') || rawExp.includes('Entry')
+            ? 'Entry-Level'
+            : rawExp;
+          setExperienceLevel(normalizedExp);
           setStatus(data.status === 'published' ? 'active' : (data.status as 'active' | 'draft' | 'closed') || 'active');
           if (data.rubric) {
             setTechWeight(data.rubric.technical ?? 25);
@@ -264,10 +274,10 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
                     onChange={(e) => setExperienceLevel(e.target.value)}
                     className="w-full p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
                   >
-                    <option value="Junior (0 - 2 yrs)">Junior (0 - 2 yrs)</option>
-                    <option value="Mid Level (2 - 5 yrs)">Mid Level (2 - 5 yrs)</option>
-                    <option value="Senior (5+ yrs)">Senior (5+ yrs)</option>
-                    <option value="Lead / Staff (8+ yrs)">Lead / Staff (8+ yrs)</option>
+                    <option value="Entry-Level">Entry-Level (0-2 Yrs)</option>
+                    <option value="Mid-Level">Mid-Level (2-5 Yrs)</option>
+                    <option value="Senior (5+ Years)">Senior (5+ Years)</option>
+                    <option value="Lead / Principal">Lead / Principal (8+ Yrs)</option>
                   </select>
                 </div>
 

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 import { Job } from '@/types';
-import { Plus, Search, ChevronRight, Briefcase, Loader2 } from '@/lib/lucide-google-icons';
+import { Plus, Search, ChevronRight, Briefcase, Loader2, Trash2 } from '@/lib/lucide-google-icons';
 
 export default function HrJobsList() {
   const [filter, setFilter] = useState<'all' | 'active' | 'draft' | 'closed'>('all');
@@ -27,6 +27,19 @@ export default function HrJobsList() {
     }
     fetchJobs();
   }, []);
+
+  const handleDeleteJob = async (jobId: string) => {
+    if (!window.confirm('Are you sure you want to delete this job posting?')) return;
+    try {
+      setUpdatingId(jobId);
+      await apiClient.delete(`/jobs/${jobId}`).catch(() => apiClient.patch(`/jobs/${jobId}`, { status: 'deleted' }));
+      setJobs((prev) => prev.filter((j) => j.id !== jobId));
+    } catch (err) {
+      console.error('Failed to delete job:', err);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const handleStatusChange = async (jobId: string, newStatus: 'active' | 'draft' | 'closed') => {
     try {
@@ -182,6 +195,15 @@ export default function HrJobsList() {
                           View Pipeline
                           <ChevronRight className="h-4 w-4" />
                         </Link>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteJob(job.id)}
+                          disabled={isUpdating}
+                          title="Delete Job"
+                          className="text-xs text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 font-bold cursor-pointer inline-flex items-center gap-1 p-1 rounded-md hover:bg-rose-500/10 transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </td>
                     </tr>
                   );
