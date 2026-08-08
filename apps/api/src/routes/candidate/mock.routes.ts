@@ -184,7 +184,6 @@ mockRouter.get(
       }
 
       if (rawQuestions.length === 0) {
-        const roleName = session.target_role || session.topic || 'Software Engineer';
         rawQuestions = [
           {
             id: 'gen_q1',

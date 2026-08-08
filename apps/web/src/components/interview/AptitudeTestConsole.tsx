@@ -57,6 +57,7 @@ export default function AptitudeTestConsole({
   // 1. Initial Batch Direct Fetch
   useEffect(() => {
     async function loadInitialBatch() {
+      apiClient.clearCache('/aptitude');
       const endpoint = applicationId
         ? `/applications/${applicationId}/assessment/aptitude`
         : `/mock/sessions/${sessionId || 'practice'}/aptitude?role=${encodeURIComponent(displayRole)}&company=${encodeURIComponent(displayCompany)}&batch=1&count=4`;
@@ -73,6 +74,44 @@ export default function AptitudeTestConsole({
             difficulty: q.difficulty || 'medium',
           }));
           setFetchedQuestions(mapped);
+        } else {
+          // Direct dynamic fallback guarantee if API endpoint fails
+          const fallbackQs: AptitudeQuestion[] = [
+            {
+              id: 'fb_q1',
+              category: 'Quantitative Reasoning',
+              text: `For a ${displayRole} project, reducing system latency by 20% while increasing throughput by 25% results in what net performance change?`,
+              options: ['No change (0%)', '5% net increase', '10% net increase', '5% net decrease'],
+              difficulty: 'medium',
+            },
+            {
+              id: 'fb_q2',
+              category: 'Logical Deduction',
+              text: 'All algorithms with O(N log N) runtime scale better than O(N^2) for large datasets. Module A runs in O(N log N). Which statement must be true?',
+              options: [
+                'Module A is faster for any dataset size.',
+                'For sufficiently large inputs, Module A will outperform O(N^2) algorithms.',
+                'Module A uses O(N) memory space.',
+                'Module A is optimal for sorting.',
+              ],
+              difficulty: 'medium',
+            },
+            {
+              id: 'fb_q3',
+              category: 'Pattern Recognition',
+              text: 'What is the next number in the growth sequence: 2, 6, 12, 20, 30, ?',
+              options: ['40', '42', '44', '48'],
+              difficulty: 'easy',
+            },
+            {
+              id: 'fb_q4',
+              category: 'Problem Solving',
+              text: `When designing microservices architecture for ${displayCompany}, what is the primary benefit of decoupled service boundaries?`,
+              options: ['Independent deployment & scaling', 'Zero network latency', 'Single point of failure', 'Simplified monolith codebase'],
+              difficulty: 'hard',
+            },
+          ];
+          setFetchedQuestions(fallbackQs);
         }
       } catch (err) {
         console.error('Failed to load initial aptitude questions:', err);
