@@ -32,53 +32,11 @@ interface AptitudeTestConsoleProps {
   companyLogoUrl?: string;
   onComplete: (score: number) => void;
   applicationId?: string;
+  sessionId?: string;
 }
 
-const DEFAULT_APTITUDE_QUESTIONS: AptitudeQuestion[] = [
-  {
-    id: 'q1',
-    category: 'Quantitative Reasoning',
-    text: 'If a project timeline is reduced by 20% and productivity is increased by 25%, what is the net change in total output capacity?',
-    options: ['No change (0%)', '5% increase', '10% increase', '5% decrease'],
-    correctIndex: 0,
-  },
-  {
-    id: 'q2',
-    category: 'Logical Deduction',
-    text: 'All algorithms with O(n log n) complexity are faster than O(n^2) for large datasets. Algorithm A runs in O(n log n). Which statement must be true?',
-    options: [
-      'Algorithm A is faster than all O(n^2) algorithms for any dataset size.',
-      'For sufficiently large inputs, Algorithm A will outperform O(n^2) algorithms.',
-      'Algorithm A is optimal for sorting.',
-      'Algorithm A uses O(n) auxiliary space.',
-    ],
-    correctIndex: 1,
-  },
-  {
-    id: 'q3',
-    category: 'Pattern Recognition',
-    text: 'What comes next in the sequence: 2, 6, 12, 20, 30, ?',
-    options: ['40', '42', '44', '48'],
-    correctIndex: 1,
-  },
-  {
-    id: 'q4',
-    category: 'Data Interpretation',
-    text: 'A service handles 10,000 requests/sec with a p99 latency of 50ms. If throughput doubles and p99 scales linearly with load, what is the expected p99 latency?',
-    options: ['50ms', '75ms', '100ms', '200ms'],
-    correctIndex: 2,
-  },
-  {
-    id: 'q5',
-    category: 'Problem Solving',
-    text: 'Three microservices A, B, and C have availability SLAs of 99.9%, 99.5%, and 99.0% respectively. What is the overall sequential system availability?',
-    options: ['98.4%', '99.0%', '99.5%', '99.9%'],
-    correctIndex: 0,
-  },
-];
-
 export default function AptitudeTestConsole({
-  questions = DEFAULT_APTITUDE_QUESTIONS,
+  questions = [],
   companyName,
   company,
   role,
@@ -86,14 +44,22 @@ export default function AptitudeTestConsole({
   companyLogoUrl,
   onComplete,
   applicationId,
+  sessionId,
 }: AptitudeTestConsoleProps) {
   const [fetchedQuestions, setFetchedQuestions] = useState<AptitudeQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!applicationId) return;
     async function loadDynamicQuestions() {
+      const endpoint = applicationId
+        ? `/applications/${applicationId}/assessment/aptitude`
+        : (sessionId ? `/mock/sessions/${sessionId}/aptitude` : null);
+
+      if (!endpoint) return;
+
       try {
-        const res = await apiClient.get<{ questions: any[] }>(`/applications/${applicationId}/assessment/aptitude`);
+        setIsLoading(true);
+        const res = await apiClient.get<{ questions: any[] }>(endpoint);
         if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
           const mapped = res.questions.map((q: any) => ({
             id: q.id,
@@ -106,14 +72,16 @@ export default function AptitudeTestConsole({
         }
       } catch (err) {
         console.error('Failed to load dynamic aptitude questions:', err);
+      } finally {
+        setIsLoading(false);
       }
     }
     loadDynamicQuestions();
-  }, [applicationId]);
+  }, [applicationId, sessionId]);
 
   const activeQuestions = fetchedQuestions.length > 0 
     ? fetchedQuestions 
-    : (questions.length > 0 ? questions : DEFAULT_APTITUDE_QUESTIONS);
+    : questions;
 
   const displayCompany = company || companyName || 'NextRound';
   const displayRole = role || roleTitle || 'Candidate';

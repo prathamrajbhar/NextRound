@@ -139,6 +139,69 @@ mockRouter.get(
   }
 );
 
+// GET /api/v1/mock/sessions/:id/aptitude - Fetch dynamic LLM questions for practice mock session
+mockRouter.get(
+  '/sessions/:id/aptitude',
+  authenticate,
+  requireRole('candidate'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const candidateId = await getCandidateProfileId(req.user!.userId);
+      const session = await prisma.mockSession.findFirst({
+        where: {
+          id: req.params.id as string,
+          candidate_id: candidateId,
+        },
+      });
+
+      if (!session) {
+        return res.status(404).json({ success: false, error: 'Mock session not found' });
+      }
+
+      let rawQuestions: any[] = [];
+      try {
+        const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+        const aiResp = await fetch(`${aiServiceUrl}/api/v1/ai/assessment/generate-aptitude`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jobTitle: session.target_role || session.topic || 'Software Engineer',
+            jobDescription: `Target Company: ${session.target_company || 'Tech Enterprise'}. Difficulty: ${session.difficulty || 'medium'}`,
+            count: 5,
+          }),
+        });
+
+        if (aiResp.ok) {
+          const aiData = (await aiResp.json()) as any;
+          if (aiData.success && Array.isArray(aiData.questions) && aiData.questions.length > 0) {
+            rawQuestions = aiData.questions;
+          }
+        }
+      } catch (aiErr) {
+        console.error(`AI Service mock dynamic question generation failed for session ${session.id}:`, aiErr);
+      }
+
+      const sanitizedQuestions = rawQuestions.map((q: any) => ({
+        id: q.id,
+        category: q.category || 'Logical Reasoning',
+        question: q.question || q.text,
+        text: q.question || q.text,
+        options: q.options || [],
+        difficulty: q.difficulty || session.difficulty || 'medium',
+      }));
+
+      return res.json({
+        success: true,
+        data: {
+          questions: sanitizedQuestions,
+        },
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
 // Helper to build feedback object from real session transcript (no fabricated scores or telemetry)
 function generateDynamicFeedback(session: any, rawTranscript?: any, rawScore?: number) {
   const transcript = Array.isArray(rawTranscript) ? rawTranscript : (Array.isArray(session.transcript) ? session.transcript : []);

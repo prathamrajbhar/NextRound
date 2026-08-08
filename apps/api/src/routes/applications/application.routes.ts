@@ -571,11 +571,56 @@ applicationRouter.get(
           console.error(`AI Service dynamic question generation failed for application ${appId}:`, aiErr);
         }
 
-        // Fallback to local seed file if AI service unreachable
+        // Dynamic fallback generator if AI service unreachable
         if (rawQuestions.length === 0) {
-          rawQuestions = JSON.parse(
-            fs.readFileSync(path.join(__dirname, '../../data/aptitude-questions.json'), 'utf-8')
-          );
+          const roleName = app.job?.title || 'Software Engineer';
+          rawQuestions = [
+            {
+              id: 'gen_q1',
+              category: 'Quantitative Reasoning',
+              difficulty: 'medium',
+              question: `For a ${roleName} project, reducing workload by 20% while increasing team productivity by 25% results in what net capacity change?`,
+              options: ['No change (0%)', '5% increase', '10% increase', '5% decrease'],
+              correctIndex: 0,
+            },
+            {
+              id: 'gen_q2',
+              category: 'Logical Deduction',
+              difficulty: 'medium',
+              question: 'All algorithms with O(N log N) runtime outperform O(N^2) algorithms for sufficiently large datasets. Algorithm A runs in O(N log N). Which statement must be true?',
+              options: [
+                'Algorithm A is faster for any dataset size.',
+                'For sufficiently large inputs, Algorithm A will outperform O(N^2) algorithms.',
+                'Algorithm A uses O(N) memory space.',
+                'Algorithm A is optimal for sorting.',
+              ],
+              correctIndex: 1,
+            },
+            {
+              id: 'gen_q3',
+              category: 'Pattern Recognition',
+              difficulty: 'easy',
+              question: 'What comes next in the numerical sequence: 2, 6, 12, 20, 30, ?',
+              options: ['40', '42', '44', '48'],
+              correctIndex: 1,
+            },
+            {
+              id: 'gen_q4',
+              category: 'Data Interpretation',
+              difficulty: 'medium',
+              question: 'A service handles 10,000 requests/sec with 50ms latency. If throughput doubles and latency scales linearly with load, what is the expected latency?',
+              options: ['50ms', '75ms', '100ms', '200ms'],
+              correctIndex: 2,
+            },
+            {
+              id: 'gen_q5',
+              category: 'Problem Solving',
+              difficulty: 'hard',
+              question: 'Three microservices A, B, and C have availability SLAs of 99.9%, 99.5%, and 99.0% respectively. What is the combined sequential system availability?',
+              options: ['98.4%', '99.0%', '99.5%', '99.9%'],
+              correctIndex: 0,
+            },
+          ];
         }
 
         // Persist generated questions in DB Assessment record

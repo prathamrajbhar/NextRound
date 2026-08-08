@@ -47,20 +47,17 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
                     "category": q.get("category", "Logical Deduction"),
                 }
 
-    # Fallback to local file if stored_questions missing
+    # Dynamic fallback generator if stored_questions missing
     if not answer_key:
-        seed_file_path = os.path.join(os.path.dirname(__file__), "../../api/src/data/aptitude-questions.json")
-        if os.path.exists(seed_file_path):
-            try:
-                with open(seed_file_path, "r", encoding="utf-8") as f:
-                    questions_data = json.load(f)
-                    for q in questions_data:
-                        answer_key[q["id"]] = {
-                            "correctIndex": q.get("correctIndex", 0),
-                            "category": q.get("category", "Logical"),
-                        }
-            except Exception as e:
-                logger.error(f"Failed to load aptitude questions seed file: {e}")
+        from agents.aptitude_generator_agent import _fallback_questions
+        fallback_qs = _fallback_questions("Software Engineer", 5)
+        for q in fallback_qs:
+            q_id = str(q.get("id") or "")
+            if q_id:
+                answer_key[q_id] = {
+                    "correctIndex": q.get("correctIndex", 0),
+                    "category": q.get("category", "Logical Deduction"),
+                }
 
     categories = {"Logical": {"correct": 0, "total": 0}, "Numerical": {"correct": 0, "total": 0}, "Verbal": {"correct": 0, "total": 0}, "Spatial": {"correct": 0, "total": 0}}
 

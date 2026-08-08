@@ -200,6 +200,8 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
           <AptitudeTestConsole
             company={targetCompany}
             role={targetRole}
+            applicationId={applicationId || undefined}
+            sessionId={sessionId}
             onComplete={(score) => {
               if (track === 'comprehensive') {
                 setPendingNextRound({
