@@ -35,16 +35,23 @@ export default function JobBasicsCard({
   setMaxSalary,
 }: JobBasicsProps) {
   return (
-    <div className="rounded-3xl border border-white/60 bg-white/40 p-6 shadow-sm backdrop-blur-md glass-panel space-y-4">
-      <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
-        <Briefcase className="h-4.5 w-4.5 text-indigo-600" />
-        <h3 className="text-sm font-bold text-slate-800">Job Basics</h3>
+    <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
+      <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
+        <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+          <Briefcase className="h-5 w-5" />
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Job Basics</h3>
+        </div>
+        <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300">
+          Core Info
+        </span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Title */}
-        <div className="md:col-span-2">
-          <label className="text-xs font-bold text-slate-500 block mb-1">Position Title</label>
+        <div className="md:col-span-2 space-y-1.5">
+          <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
+            Position Title <span className="text-rose-500">*</span>
+          </label>
           <Autocomplete
             required
             options={SUGGESTED_ROLES}
@@ -57,69 +64,98 @@ export default function JobBasicsCard({
         </div>
 
         {/* Department */}
-        <div>
-          <label className="text-xs font-bold text-slate-500 block mb-1">Department</label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
+            Department
+          </label>
           <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
-            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200/80 bg-white/50 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all glass-input"
+            className="w-full px-3.5 py-2.5 text-xs font-bold rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all glass-input"
           >
-            <option value="Engineering">Engineering</option>
-            <option value="Product Management">Product Management</option>
-            <option value="Design">Design</option>
-            <option value="Sales & Marketing">Sales & Marketing</option>
-            <option value="Operations">Operations</option>
+            <option value="Engineering" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Engineering</option>
+            <option value="Product Management" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Product Management</option>
+            <option value="Design" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Design</option>
+            <option value="Sales & Marketing" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Sales & Marketing</option>
+            <option value="Operations" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Operations</option>
           </select>
         </div>
 
         {/* Location Type */}
-        <div>
-          <label className="text-xs font-bold text-slate-500 block mb-1">Location Type</label>
-          <select
-            value={locationType}
-            onChange={(e) => setLocationType(e.target.value)}
-            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200/80 bg-white/50 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all glass-input"
-          >
-            <option value="Remote">Remote</option>
-            <option value="Hybrid">Hybrid</option>
-            <option value="On-site">On-site</option>
-          </select>
+        <div className="space-y-1.5">
+          <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
+            Location Workspace
+          </label>
+          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+            {['Remote', 'Hybrid', 'On-site'].map((loc) => {
+              const active = locationType === loc;
+              return (
+                <button
+                  key={loc}
+                  type="button"
+                  onClick={() => setLocationType(loc)}
+                  className={`py-1.5 text-[11px] font-extrabold rounded-lg transition-all cursor-pointer text-center ${
+                    active
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/50 dark:hover:bg-slate-700/50'
+                  }`}
+                >
+                  {loc}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Experience Level */}
-        <div>
-          <label className="text-xs font-bold text-slate-500 block mb-1">Seniority Level</label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
+            Seniority Level
+          </label>
           <select
             value={experienceLevel}
             onChange={(e) => setExperienceLevel(e.target.value)}
-            className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200/80 bg-white/50 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all glass-input"
+            className="w-full px-3.5 py-2.5 text-xs font-bold rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all glass-input"
           >
-            <option value="Entry-Level">Entry-Level</option>
-            <option value="Mid-Level">Mid-Level</option>
-            <option value="Senior (5+ Years)">Senior (5+ Years)</option>
-            <option value="Lead / Principal">Lead / Principal</option>
+            <option value="Entry-Level" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Entry-Level</option>
+            <option value="Mid-Level" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Mid-Level</option>
+            <option value="Senior (5+ Years)" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Senior (5+ Years)</option>
+            <option value="Lead / Principal" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Lead / Principal</option>
           </select>
         </div>
 
         {/* Salary Range */}
-        <div>
-          <label className="text-xs font-bold text-slate-500 block mb-1">Annual Salary Range (USD)</label>
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center">
+            <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
+              Annual Salary Range (USD)
+            </label>
+            <span className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400">
+              ${(minSalary / 1000).toFixed(0)}k - ${(maxSalary / 1000).toFixed(0)}k
+            </span>
+          </div>
           <div className="flex items-center gap-2">
-            <input
-              type="number"
-              value={minSalary}
-              onChange={(e) => setMinSalary(Number(e.target.value))}
-              placeholder="Min"
-              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200/80 bg-white/50 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all glass-input"
-            />
-            <span className="text-xs text-slate-400 font-bold">-</span>
-            <input
-              type="number"
-              value={maxSalary}
-              onChange={(e) => setMaxSalary(Number(e.target.value))}
-              placeholder="Max"
-              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200/80 bg-white/50 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all glass-input"
-            />
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
+              <input
+                type="number"
+                value={minSalary}
+                onChange={(e) => setMinSalary(Number(e.target.value))}
+                placeholder="Min"
+                className="w-full pl-7 pr-3 py-2 text-xs font-bold rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all glass-input"
+              />
+            </div>
+            <span className="text-xs text-slate-400 font-bold dark:text-slate-500">-</span>
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
+              <input
+                type="number"
+                value={maxSalary}
+                onChange={(e) => setMaxSalary(Number(e.target.value))}
+                placeholder="Max"
+                className="w-full pl-7 pr-3 py-2 text-xs font-bold rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all glass-input"
+              />
+            </div>
           </div>
         </div>
       </div>

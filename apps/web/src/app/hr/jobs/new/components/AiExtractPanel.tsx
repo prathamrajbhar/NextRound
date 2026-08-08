@@ -52,16 +52,16 @@ export default function AiExtractPanel({
 
   if (assisting) {
     return (
-      <div className="rounded-3xl border border-indigo-200/80 bg-indigo-50/20 p-6 shadow-sm backdrop-blur-md space-y-4 animate-pulse">
-        <div className="flex items-center gap-2 text-indigo-600">
+      <div className="rounded-3xl border border-indigo-200/80 dark:border-indigo-900/80 bg-indigo-50/40 dark:bg-indigo-950/40 p-6 shadow-sm backdrop-blur-md space-y-4 animate-pulse">
+        <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
           <Cpu className="h-5 w-5 animate-spin" />
-          <h3 className="text-xs font-bold uppercase tracking-wider">AI Coprocessor Active</h3>
+          <h3 className="text-xs font-extrabold uppercase tracking-wider">AI Coprocessor Active</h3>
         </div>
         <div className="space-y-2">
-          <div className="h-2 w-full bg-indigo-100 rounded-full overflow-hidden relative">
-            <div className="absolute inset-0 bg-indigo-500 rounded-full animate-infinite animate-duration-1000" style={{ width: '40%' }} />
+          <div className="h-2 w-full bg-indigo-100 dark:bg-indigo-900/50 rounded-full overflow-hidden relative">
+            <div className="absolute inset-0 bg-indigo-500 rounded-full animate-infinite animate-duration-1000" style={{ width: '50%' }} />
           </div>
-          <p className="text-[10px] text-indigo-600 font-bold tracking-tight italic select-none">
+          <p className="text-[11px] text-indigo-700 dark:text-indigo-300 font-extrabold tracking-tight italic select-none">
             {assistStep}
           </p>
         </div>
@@ -72,44 +72,44 @@ export default function AiExtractPanel({
   if (!assisted) return null;
 
   return (
-    <div className="rounded-3xl border border-white/60 bg-white/40 p-6 shadow-sm backdrop-blur-md glass-panel space-y-6 animate-in slide-in-from-bottom-3 duration-250">
-      <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-        <div className="flex items-center gap-2 text-indigo-650">
-          <Sparkles className="h-4.5 w-4.5" />
-          <h3 className="text-xs font-bold text-slate-800">AI-Extracted Evaluation Parameters</h3>
+    <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-6 animate-in slide-in-from-bottom-3 duration-250">
+      <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
+        <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+          <Sparkles className="h-5 w-5" />
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">AI-Extracted Evaluation Parameters</h3>
         </div>
-        <span className="text-[9px] font-bold uppercase bg-indigo-50 border border-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md">
+        <span className="text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full">
           Parameters Ready
         </span>
       </div>
 
-      <div className="space-y-4 text-xs font-semibold">
+      <div className="space-y-5 text-xs font-semibold">
         {/* Technical Skills */}
-        <div className="space-y-1.5">
-          <span className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1">
-            <Award className="h-3 w-3 text-indigo-500" />
+        <div className="space-y-2">
+          <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <Award className="h-3.5 w-3.5 text-indigo-500" />
             Required Tech Skills
           </span>
-          <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-white/30 border border-slate-100 min-h-[44px] items-center">
+          <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center">
             {skills.map((item) => (
               <span
                 key={item}
-                className="bg-indigo-50 border border-indigo-100 text-indigo-700 px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 group transition-all"
+                className="bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-xl text-[11px] font-extrabold flex items-center gap-1.5 group transition-all"
               >
                 {item}
                 <button
                   type="button"
                   onClick={() => removeChip(item, setSkills)}
-                  className="opacity-60 hover:opacity-100 text-indigo-900 cursor-pointer"
+                  className="opacity-70 hover:opacity-100 text-indigo-900 dark:text-indigo-200 cursor-pointer p-0.5"
                 >
-                  <X className="h-2.5 w-2.5" />
+                  <X className="h-3 w-3" />
                 </button>
               </span>
             ))}
-            <div className="flex items-center gap-1 max-w-[120px] ml-1">
+            <div className="flex items-center gap-1 max-w-[140px] ml-1">
               <input
                 type="text"
-                placeholder="Add Tech Skill"
+                placeholder="+ Add Tech Skill"
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
                 onKeyDown={(e) => {
@@ -118,45 +118,45 @@ export default function AiExtractPanel({
                     addChip(newSkill, setNewSkill, setSkills, skills);
                   }
                 }}
-                className="w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-indigo-500 focus:outline-none text-[10px] py-0.5 font-bold transition-all"
+                className="w-full bg-transparent border-b border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-400 focus:outline-none text-slate-900 dark:text-slate-100 text-[11px] py-1 font-bold transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
               <button
                 type="button"
                 onClick={() => addChip(newSkill, setNewSkill, setSkills, skills)}
-                className="p-0.5 hover:bg-slate-100 rounded cursor-pointer"
+                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg cursor-pointer text-slate-600 dark:text-slate-300"
               >
-                <Plus className="h-3 w-3 text-slate-400" />
+                <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
         </div>
 
         {/* Soft Skills */}
-        <div className="space-y-1.5">
-          <span className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1">
-            <ShieldAlert className="h-3 w-3 text-purple-500" />
+        <div className="space-y-2">
+          <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <ShieldAlert className="h-3.5 w-3.5 text-purple-500" />
             Evaluated Soft Skills
           </span>
-          <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-white/30 border border-slate-100 min-h-[44px] items-center">
+          <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center">
             {softSkills.map((item) => (
               <span
                 key={item}
-                className="bg-purple-50 border border-purple-100 text-purple-700 px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 group transition-all"
+                className="bg-purple-50 dark:bg-purple-950/80 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-xl text-[11px] font-extrabold flex items-center gap-1.5 group transition-all"
               >
                 {item}
                 <button
                   type="button"
                   onClick={() => removeChip(item, setSoftSkills)}
-                  className="opacity-60 hover:opacity-100 text-purple-900 cursor-pointer"
+                  className="opacity-70 hover:opacity-100 text-purple-900 dark:text-purple-200 cursor-pointer p-0.5"
                 >
-                  <X className="h-2.5 w-2.5" />
+                  <X className="h-3 w-3" />
                 </button>
               </span>
             ))}
-            <div className="flex items-center gap-1 max-w-[120px] ml-1">
+            <div className="flex items-center gap-1 max-w-[140px] ml-1">
               <input
                 type="text"
-                placeholder="Add Soft Skill"
+                placeholder="+ Add Soft Skill"
                 value={newSoftSkill}
                 onChange={(e) => setNewSoftSkill(e.target.value)}
                 onKeyDown={(e) => {
@@ -165,45 +165,45 @@ export default function AiExtractPanel({
                     addChip(newSoftSkill, setNewSoftSkill, setSoftSkills, softSkills);
                   }
                 }}
-                className="w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-purple-500 focus:outline-none text-[10px] py-0.5 font-bold transition-all"
+                className="w-full bg-transparent border-b border-slate-300 dark:border-slate-700 focus:border-purple-500 dark:focus:border-purple-400 focus:outline-none text-slate-900 dark:text-slate-100 text-[11px] py-1 font-bold transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
               <button
                 type="button"
                 onClick={() => addChip(newSoftSkill, setNewSoftSkill, setSoftSkills, softSkills)}
-                className="p-0.5 hover:bg-slate-100 rounded cursor-pointer"
+                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg cursor-pointer text-slate-600 dark:text-slate-300"
               >
-                <Plus className="h-3 w-3 text-slate-400" />
+                <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
         </div>
 
         {/* Culture Keywords */}
-        <div className="space-y-1.5">
-          <span className="text-[10px] font-black text-slate-400 uppercase flex items-center gap-1">
-            <Heart className="h-3 w-3 text-rose-500" />
+        <div className="space-y-2">
+          <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <Heart className="h-3.5 w-3.5 text-rose-500" />
             Culture & Team Alignment
           </span>
-          <div className="flex flex-wrap gap-1.5 p-2 rounded-xl bg-white/30 border border-slate-100 min-h-[44px] items-center">
+          <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center">
             {cultureKeywords.map((item) => (
               <span
                 key={item}
-                className="bg-rose-50 border border-rose-100 text-rose-700 px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 group transition-all"
+                className="bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 px-2.5 py-1 rounded-xl text-[11px] font-extrabold flex items-center gap-1.5 group transition-all"
               >
                 {item}
                 <button
                   type="button"
                   onClick={() => removeChip(item, setCultureKeywords)}
-                  className="opacity-60 hover:opacity-100 text-rose-900 cursor-pointer"
+                  className="opacity-70 hover:opacity-100 text-rose-900 dark:text-rose-200 cursor-pointer p-0.5"
                 >
-                  <X className="h-2.5 w-2.5" />
+                  <X className="h-3 w-3" />
                 </button>
               </span>
             ))}
-            <div className="flex items-center gap-1 max-w-[120px] ml-1">
+            <div className="flex items-center gap-1 max-w-[140px] ml-1">
               <input
                 type="text"
-                placeholder="Add Culture Tag"
+                placeholder="+ Add Culture Tag"
                 value={newCulture}
                 onChange={(e) => setNewCulture(e.target.value)}
                 onKeyDown={(e) => {
@@ -212,14 +212,14 @@ export default function AiExtractPanel({
                     addChip(newCulture, setNewCulture, setCultureKeywords, cultureKeywords);
                   }
                 }}
-                className="w-full bg-transparent border-b border-transparent hover:border-slate-300 focus:border-rose-500 focus:outline-none text-[10px] py-0.5 font-bold transition-all"
+                className="w-full bg-transparent border-b border-slate-300 dark:border-slate-700 focus:border-rose-500 dark:focus:border-rose-400 focus:outline-none text-slate-900 dark:text-slate-100 text-[11px] py-1 font-bold transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
               <button
                 type="button"
                 onClick={() => addChip(newCulture, setNewCulture, setCultureKeywords, cultureKeywords)}
-                className="p-0.5 hover:bg-slate-100 rounded cursor-pointer"
+                className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg cursor-pointer text-slate-600 dark:text-slate-300"
               >
-                <Plus className="h-3 w-3 text-slate-400" />
+                <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>

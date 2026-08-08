@@ -53,32 +53,32 @@ export default function JobDescriptionCard({
   };
 
   return (
-    <div className="rounded-3xl border border-white/60 bg-white/40 p-6 shadow-sm backdrop-blur-md glass-panel space-y-4">
-      <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-        <div className="flex items-center gap-2">
-          <FileText className="h-4.5 w-4.5 text-indigo-600" />
-          <h3 className="text-sm font-bold text-slate-800">Job Description</h3>
+    <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
+      <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-slate-800 pb-3">
+        <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+          <FileText className="h-5 w-5" />
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Job Description</h3>
         </div>
         <button
           type="button"
           onClick={onAiAssist}
           disabled={!jd || assisting}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-650 border border-purple-200 bg-purple-50 hover:bg-purple-100/80 px-3.5 py-1.5 rounded-full transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/80 bg-purple-50 dark:bg-purple-950/70 hover:bg-purple-100 dark:hover:bg-purple-900/80 px-3.5 py-1.5 rounded-full transition-all cursor-pointer shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <Sparkles className={`h-3.5 w-3.5 ${assisting ? 'animate-spin' : ''}`} />
+          <Sparkles className={`h-4 w-4 ${assisting ? 'animate-spin text-purple-600 dark:text-purple-400' : 'text-purple-600 dark:text-purple-400'}`} />
           {assisting ? 'Parsing JD...' : 'AI Assist Extract'}
         </button>
       </div>
 
       {/* Templates Prefill */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] font-bold text-slate-400 uppercase mr-1">Templates:</span>
+        <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-1">Templates:</span>
         {TEMPLATES.map((tmpl) => (
           <button
             key={tmpl.name}
             type="button"
             onClick={() => setJd(tmpl.text)}
-            className="text-[10px] font-bold bg-white/60 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-white px-2.5 py-1 rounded-lg transition-all cursor-pointer"
+            className="text-[11px] font-extrabold bg-white/70 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-800 px-3 py-1 rounded-xl transition-all cursor-pointer shadow-xs"
           >
             {tmpl.name}
           </button>
@@ -86,41 +86,41 @@ export default function JobDescriptionCard({
       </div>
 
       {/* Formatting Toolbar */}
-      <div className="flex items-center gap-1 bg-white/30 border border-slate-200/50 p-1.5 rounded-xl">
+      <div className="flex items-center gap-1 bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 p-1.5 rounded-xl">
         <button
           type="button"
           onClick={() => applyFormat('**', '**')}
           title="Bold"
-          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-all cursor-pointer"
+          className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-700 transition-all cursor-pointer"
         >
-          <Bold className="h-3.5 w-3.5" />
+          <Bold className="h-4 w-4" />
         </button>
         <button
           type="button"
           onClick={() => applyFormat('*', '*')}
           title="Italic"
-          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-all cursor-pointer"
+          className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-700 transition-all cursor-pointer"
         >
-          <Italic className="h-3.5 w-3.5" />
+          <Italic className="h-4 w-4" />
         </button>
         <button
           type="button"
           onClick={() => applyFormat('\n- ')}
           title="Bullet List"
-          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-all cursor-pointer"
+          className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-700 transition-all cursor-pointer"
         >
-          <List className="h-3.5 w-3.5" />
+          <List className="h-4 w-4" />
         </button>
         <button
           type="button"
           onClick={() => applyFormat('\n### ')}
           title="Header"
-          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-white/60 transition-all cursor-pointer"
+          className="p-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white dark:hover:bg-slate-700 transition-all cursor-pointer"
         >
-          <Heading className="h-3.5 w-3.5" />
+          <Heading className="h-4 w-4" />
         </button>
-        <div className="h-4 w-px bg-slate-200 mx-2" />
-        <span className="text-[10px] text-slate-400 font-bold ml-auto pr-2 select-none">
+        <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-2" />
+        <span className="text-[10px] text-slate-500 dark:text-slate-400 font-extrabold ml-auto pr-2 select-none">
           {jd.length} chars
         </span>
       </div>
@@ -133,7 +133,7 @@ export default function JobDescriptionCard({
         value={jd}
         onChange={(e) => setJd(e.target.value)}
         placeholder="Paste roles, responsibilities, technical stacks, or select a template above to get started..."
-        className="w-full px-4 py-3 text-xs rounded-2xl border border-slate-200/80 bg-white/50 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all glass-input leading-relaxed"
+        className="w-full px-4 py-3.5 text-xs font-medium rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all glass-input leading-relaxed"
       />
     </div>
   );
