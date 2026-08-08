@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { User, FileText, Code, Sliders, Wallet, Handshake } from '@/lib/lucide-google-icons';
+import { User, FileText, Code, Sliders, Wallet, Handshake, Globe, Share2 } from '@/lib/lucide-google-icons';
 import { CandidateOnboardingShell, OnboardingStep } from './_components/CandidateOnboardingShell';
 import {
   useCandidateOnboarding,
@@ -18,7 +18,7 @@ import { FitCultureStep } from './_components/FitCultureStep';
 
 const STEPS: OnboardingStep[] = [
   { label: 'Personal & Contact', description: 'How to reach you', icon: User },
-  { label: 'Resume & Online Presence', description: 'Showcase your work', icon: FileText },
+  { label: 'Social Media & Online Presence', description: 'Sync GitHub & LinkedIn profiles', icon: Share2 },
   { label: 'Experience & Skills', description: 'Your background', icon: Code },
   { label: 'Work Preferences', description: 'How you like to work', icon: Sliders },
   { label: 'Compensation & Eligibility', description: 'Salary & work rights', icon: Wallet },
@@ -29,7 +29,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4
 
 export default function CandidateOnboarding() {
   const router = useRouter();
-  const { form, step, setStep, submitting, setSubmitting, error, setError, update, addTag, removeTag } =
+  const { form, step, setStep, submitting, setSubmitting, error, setError, update, addTag, removeTag, mergeParsedProfile, mergeSocialData } =
     useCandidateOnboarding();
 
   const handleNext = () => {
@@ -51,17 +51,19 @@ export default function CandidateOnboarding() {
     setError('');
     try {
       const payload = buildCandidatePayload(form);
-      const formData = new FormData();
-      formData.append('data', JSON.stringify(payload));
-      if (form.resumeFile) {
-        formData.append('resume', form.resumeFile);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const res = await fetch(`${API_BASE_URL}/candidate/profile`, {
         method: 'POST',
+        headers,
         credentials: 'include',
-        body: formData,
+        body: JSON.stringify(payload),
       });
+
       const data = await res.json();
       setSubmitting(false);
 
@@ -76,7 +78,7 @@ export default function CandidateOnboarding() {
     }
   };
 
-  const stepProps: OnboardingStepProps = { form, update, addTag, removeTag };
+  const stepProps: OnboardingStepProps = { form, update, addTag, removeTag, mergeParsedProfile, mergeSocialData };
   const isLast = step === STEPS.length - 1;
 
   return (

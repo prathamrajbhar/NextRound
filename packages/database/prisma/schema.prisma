@@ -159,6 +159,9 @@ model CandidateProfile {
   location           String?
   timezone           String?
   resume_url         String?
+  raw_resume_text    String?                    @db.Text
+  parsed_resume      Json                       @default("{}")
+  social_data        Json                       @default("{}")
   linkedin_url       String?
   github_url         String?
   portfolio_url      String?

@@ -2,23 +2,105 @@ import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { CandidateProfileSchema } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
-import { authenticate } from '../../middleware/auth';
+import { authenticate, optionalAuthenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { uploadFile } from '../../lib/s3';
 import { serializeApplicationList, serializeOffer } from '../../lib/serializers';
+import { extractTextFromBuffer, parseResumeWithGemini } from '../../services/resume-parser.service';
+import { syncCandidateSocialProfiles } from '../../services/social-sync.service';
 
 export const candidateRouter = Router();
 
 const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype === 'application/pdf' || file.mimetype.includes('document')) {
+    const ext = (file.originalname || '').toLowerCase();
+    const isAllowedExt = ext.endsWith('.pdf') || ext.endsWith('.docx') || ext.endsWith('.doc') || ext.endsWith('.txt');
+    const isAllowedMime = (file.mimetype || '').includes('pdf') || file.mimetype.includes('document') || file.mimetype.includes('text') || file.mimetype.includes('stream');
+
+    if (isAllowedExt || isAllowedMime || !file.mimetype) {
       cb(null, true);
     } else {
-      cb(new Error('Only PDF or document files are allowed'));
+      cb(null, true); // Allow file and let parser validate text content
     }
   },
 });
+
+// POST /api/v1/candidate/parse-resume - Convert resume file to text and parse using Gemini LLM
+candidateRouter.post(
+  '/parse-resume',
+  optionalAuthenticate,
+  (req: Request, res: Response, next: NextFunction) => {
+    upload.single('resume')(req, res, (err) => {
+      if (err) {
+        console.error('Multer file upload error in /parse-resume:', err);
+        return res.status(400).json({ success: false, error: typeof err === 'string' ? err : err.message || 'File upload error' });
+      }
+      next();
+    });
+  },
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ success: false, error: 'No resume file uploaded' });
+      }
+
+      console.log(`[ParseResume] Received file: ${req.file.originalname} (${req.file.mimetype}, ${req.file.size} bytes)`);
+
+      const rawText = await extractTextFromBuffer(
+        req.file.buffer,
+        req.file.mimetype,
+        req.file.originalname
+      );
+
+      console.log(`[ParseResume] Extracted text length: ${rawText?.length || 0} characters`);
+
+      if (!rawText || rawText.trim().length === 0) {
+        return res.status(400).json({ success: false, error: 'Could not extract text from the uploaded resume file' });
+      }
+
+      const parsedData = await parseResumeWithGemini(rawText);
+
+      return res.json({
+        success: true,
+        data: {
+          rawTextLength: rawText.length,
+          rawText,
+          profile: parsedData,
+        },
+      });
+    } catch (err) {
+      console.error('[ParseResume] Processing error:', err);
+      return next(err);
+    }
+  }
+);
+
+// POST /api/v1/candidate/sync-social - Scrape and sync GitHub & LinkedIn profiles
+candidateRouter.post(
+  '/sync-social',
+  optionalAuthenticate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { githubUrl, linkedinUrl } = req.body || {};
+      if (!githubUrl && !linkedinUrl) {
+        return res.status(400).json({ success: false, error: 'Provide at least a githubUrl or linkedinUrl to sync' });
+      }
+
+      console.log(`[SyncSocial] Syncing profiles for GitHub: ${githubUrl || 'N/A'}, LinkedIn: ${linkedinUrl || 'N/A'}`);
+      const socialData = await syncCandidateSocialProfiles(githubUrl, linkedinUrl);
+
+      return res.json({
+        success: true,
+        data: socialData,
+      });
+    } catch (err) {
+      console.error('[SyncSocial] Processing error:', err);
+      return next(err);
+    }
+  }
+);
+
 
 // POST /api/v1/candidate/profile - Create or update candidate profile with optional resume upload
 candidateRouter.post(
@@ -33,10 +115,25 @@ candidateRouter.post(
       }
 
       let resumeUrl: string | undefined = undefined;
+      let extractedRawText: string | undefined = undefined;
+      let extractedParsedResume: Record<string, unknown> | undefined = undefined;
 
       if (req.file) {
         const fileKey = `resumes/${req.user.userId}/${Date.now()}-${req.file.originalname}`;
         resumeUrl = await uploadFile(fileKey, req.file.buffer, req.file.mimetype);
+
+        try {
+          extractedRawText = await extractTextFromBuffer(
+            req.file.buffer,
+            req.file.mimetype,
+            req.file.originalname
+          );
+          if (extractedRawText) {
+            extractedParsedResume = (await parseResumeWithGemini(extractedRawText)) as unknown as Record<string, unknown>;
+          }
+        } catch (extractErr) {
+          console.error('Failed auto-extracting text on profile upload:', extractErr);
+        }
       }
 
       let bodyData = req.body;
@@ -80,6 +177,9 @@ candidateRouter.post(
           work_values: validated.workValues,
           availability: validated.availability,
           resume_url: resumeUrl || validated.resumeUrl,
+          raw_resume_text: validated.rawResumeText || extractedRawText,
+          parsed_resume: validated.parsedResume || extractedParsedResume || {},
+          social_data: (validated as any).socialData || {},
         },
         update: {
           ...(bodyHas('fullName') && validated.fullName !== undefined ? { full_name: validated.fullName } : {}),
@@ -104,6 +204,9 @@ candidateRouter.post(
           ...(bodyHas('workValues') ? { work_values: validated.workValues } : {}),
           ...(bodyHas('availability') ? { availability: validated.availability } : {}),
           ...(resumeUrl || (bodyHas('resumeUrl') && validated.resumeUrl) ? { resume_url: resumeUrl || validated.resumeUrl } : {}),
+          ...(extractedRawText || (bodyHas('rawResumeText') && validated.rawResumeText) ? { raw_resume_text: validated.rawResumeText || extractedRawText } : {}),
+          ...(extractedParsedResume || (bodyHas('parsedResume') && validated.parsedResume) ? { parsed_resume: validated.parsedResume || extractedParsedResume } : {}),
+          ...(bodyHas('socialData') && (validated as any).socialData ? { social_data: (validated as any).socialData } : {}),
         },
       });
 

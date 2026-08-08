@@ -3,12 +3,12 @@
 import React, { ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Check, ArrowLeft, ArrowRight, Loader2, Plus, X } from '@/lib/lucide-google-icons';
+import { Check, ArrowLeft, ArrowRight, Loader2, Plus, X, Sparkles, ShieldCheck } from '@/lib/lucide-google-icons';
 
 export const inputCls =
-  'w-full px-3.5 py-2.5 text-xs rounded-xl border border-white/15 bg-slate-900/40 text-white placeholder:text-slate-400 focus:outline-none focus:border-orange-400 focus:bg-slate-900/70 font-semibold transition-all';
-export const labelCls = 'block text-[11px] font-bold text-slate-300 mb-1.5';
-export const selectCls = `${inputCls} appearance-none [&>option]:bg-slate-900 [&>option]:text-white`;
+  'w-full px-4 py-3.5 text-sm rounded-xl border border-slate-800 bg-slate-900/90 text-white placeholder:text-slate-500 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/30 font-medium transition-all shadow-sm';
+export const labelCls = 'block text-xs font-black uppercase tracking-wider text-slate-200 mb-2';
+export const selectCls = `${inputCls} appearance-none [&>option]:bg-slate-900 [&>option]:text-white cursor-pointer`;
 
 export interface OnboardingStep {
   label: string;
@@ -48,81 +48,143 @@ export function CandidateOnboardingShell({
   onSkip,
 }: CandidateOnboardingShellProps) {
   const isLast = current === steps.length - 1;
+  const progressPercent = Math.round(((current + 1) / steps.length) * 100);
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8">
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left rail — brand + progress */}
-        <aside className="lg:col-span-4 flex flex-col gap-6">
-          <Link href="/" className="inline-flex items-center gap-2.5 group w-fit">
-            <div className="relative h-9 w-9 rounded-full overflow-hidden group-hover:scale-105 transition-transform flex-shrink-0 border border-white/40 shadow-md">
-              <Image src="/logo.png" alt="NextRound Logo" fill sizes="36px" className="object-cover scale-[1.3]" />
-            </div>
-            <span className="text-xl font-black tracking-tight text-white font-display">
-              Next<span className="text-orange-400">Round</span>
-            </span>
-          </Link>
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col lg:flex-row font-sans selection:bg-orange-500 selection:text-white">
+      {/* Left Rail — Brand, Hero Context & Vertical Timeline (38% Width) */}
+      <aside className="w-full lg:w-[38%] bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 border-r border-slate-800/80 p-6 sm:p-10 lg:p-12 flex flex-col justify-between relative overflow-hidden">
+        {/* Subtle Ambient Radial Glow */}
+        <div className="absolute -top-20 -left-20 h-72 w-72 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <ol className="space-y-0">
+        <div className="space-y-8 relative z-10">
+          {/* Header Brand Logo */}
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="relative h-10 w-10 rounded-xl overflow-hidden group-hover:scale-105 transition-transform border border-orange-500/40 shadow-md shrink-0">
+                <Image src="/logo.png" alt="NextRound Logo" fill sizes="40px" className="object-cover scale-[1.2]" />
+              </div>
+              <span className="text-2xl font-black tracking-tight text-white">
+                Next<span className="text-orange-500">Round</span>
+              </span>
+            </Link>
+
+            <span className="inline-flex items-center gap-1.5 text-xs font-extrabold px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/30 text-orange-400">
+              <Sparkles className="h-3.5 w-3.5" />
+              AI Recruiter Engine
+            </span>
+          </div>
+
+          {/* Dynamic Step Hero Text */}
+          <div className="space-y-2.5 pt-2">
+            <span className="text-xs font-black uppercase tracking-widest text-orange-400">
+              Phase 0{current + 1} of 0{steps.length}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tight leading-tight font-display">
+              {steps[current].label}
+            </h2>
+            <p className="text-sm sm:text-base text-slate-300 font-medium leading-relaxed">
+              {steps[current].description}
+            </p>
+          </div>
+
+          {/* Vertical Stepper Timeline */}
+          <ol className="space-y-4 pt-4">
             {steps.map((step, idx) => {
-              const done = idx < current;
               const active = idx === current;
+              const done = idx < current;
               const Icon = step.icon;
+
               return (
-                <li key={step.label} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={`h-9 w-9 rounded-full flex items-center justify-center border transition-all ${
-                        active
-                          ? 'bg-orange-600 border-orange-400 text-white shadow-lg shadow-orange-600/30'
-                          : done
-                            ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
-                            : 'bg-slate-900/60 border-white/10 text-slate-500'
+                <li key={step.label} className="flex items-center gap-4 group">
+                  <div
+                    className={`h-9 w-9 rounded-xl flex items-center justify-center text-xs font-extrabold transition-all duration-200 shrink-0 border ${
+                      active
+                        ? 'bg-orange-500 text-white border-orange-400 ring-4 ring-orange-500/20 shadow-lg shadow-orange-500/30'
+                        : done
+                          ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40'
+                          : 'bg-slate-900 text-slate-500 border-slate-800'
+                    }`}
+                  >
+                    {done ? <Check className="h-4.5 w-4.5" /> : <Icon className="h-4.5 w-4.5" />}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`text-sm font-bold truncate transition-colors ${
+                        active ? 'text-white font-black' : done ? 'text-slate-300' : 'text-slate-500'
                       }`}
                     >
-                      {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
-                    </div>
-                    {idx < steps.length - 1 && <div className="w-px flex-1 bg-white/10 min-h-5" />}
-                  </div>
-                  <div className={`pb-5 pt-1.5 ${active ? 'text-white' : 'text-slate-500'}`}>
-                    <p className="text-[10px] font-black uppercase tracking-widest">{step.label}</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5">{step.description}</p>
+                      {step.label}
+                    </p>
                   </div>
                 </li>
               );
             })}
           </ol>
+        </div>
 
-          <p className="text-[10px] text-slate-500 font-medium leading-relaxed mt-auto hidden lg:block">
-            Your profile powers the AI screening, matching and mock-interview agents. The more you share now, the better your matches.
-          </p>
-        </aside>
+        {/* AI Profile Readiness Footer Card */}
+        <div className="pt-8 relative z-10">
+          <div className="p-4 sm:p-5 rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-md space-y-3 shadow-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-orange-400" />
+                Profile AI Readiness
+              </span>
+              <span className="text-sm font-black text-orange-400 font-mono">{progressPercent}%</span>
+            </div>
 
-        {/* Right card */}
-        <section className="lg:col-span-8 rounded-3xl border border-white/15 bg-slate-950/40 p-6 sm:p-8 shadow-2xl shadow-slate-950/80 backdrop-blur-2xl ring-1 ring-white/10 animate-in zoom-in-95 duration-200">
-          <div className="mb-6 pb-4 border-b border-white/10">
-            <span className="text-[10px] uppercase tracking-widest text-orange-400 font-black">
-              Step {current + 1} of {steps.length}
-            </span>
-            <h1 className="text-xl font-black text-white font-display mt-1">{stepTitle}</h1>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">{stepDescription}</p>
+            <div className="w-full h-2 rounded-full bg-slate-950 overflow-hidden relative border border-slate-800">
+              <div
+                className="h-full bg-gradient-to-r from-orange-500 via-amber-500 to-orange-400 transition-all duration-300 rounded-full"
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <p className="text-xs text-slate-400 leading-normal">Your profile powers the AI screening, matching and mock-interview agents.</p>
+          </div>
+        </div>
+      </aside>
+
+      {/* Right Workspace Panel (62% Width) */}
+      <main className="w-full lg:w-[62%] bg-slate-950 p-6 sm:p-12 lg:p-14 flex flex-col justify-between min-h-screen">
+        <div className="w-full max-w-2xl mx-auto space-y-8 my-auto">
+          {/* Active Step Header */}
+          <div className="pb-6 border-b border-slate-800/80">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-black uppercase tracking-widest text-orange-400">
+                Step 0{current + 1}
+              </span>
+              <span className="text-xs font-mono font-black text-slate-400 bg-slate-900 px-3 py-1 rounded-lg border border-slate-800">
+                {current + 1} / {steps.length}
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight font-display">{stepTitle}</h1>
+            <p className="text-sm sm:text-base text-slate-400 font-medium mt-1.5 leading-relaxed">{stepDescription}</p>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 rounded-xl border border-rose-500/40 bg-rose-950/60 text-xs font-bold text-rose-300">
-              {error}
+            <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 text-sm font-bold text-rose-300 flex items-center gap-2.5 shadow-md">
+              <X className="h-4.5 w-4.5 text-rose-400 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
-          {children}
+          {/* Form Step Body */}
+          <div key={current} className="animate-in fade-in slide-in-from-right-3 duration-200">
+            {children}
+          </div>
+        </div>
 
-          <div className="flex justify-between items-center pt-6 border-t border-white/10 mt-6">
+        {/* Footer Navigation Bar */}
+        <footer className="w-full max-w-2xl mx-auto pt-8 border-t border-slate-800/80 mt-10 flex items-center justify-between">
+          <div>
             {showSkip && onSkip ? (
               <button
                 type="button"
                 onClick={onSkip}
                 disabled={submitting}
-                className="text-[11px] font-bold text-slate-400 hover:text-slate-200 cursor-pointer disabled:opacity-50"
+                className="text-xs sm:text-sm font-bold text-slate-400 hover:text-white cursor-pointer disabled:opacity-50 transition-colors"
               >
                 Skip for now
               </button>
@@ -130,31 +192,33 @@ export function CandidateOnboardingShell({
               <button
                 type="button"
                 onClick={onBack}
-                className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-300 hover:text-white cursor-pointer"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-300 hover:text-white px-5 py-3 rounded-xl bg-slate-900 border border-slate-800 hover:bg-slate-800 cursor-pointer transition-all shadow-sm"
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
+                <ArrowLeft className="h-4 w-4" />
                 Back
               </button>
             ) : (
-              <span />
+              <div />
             )}
+          </div>
 
+          <div>
             {isLast && onFinish ? (
               <button
                 type="button"
                 onClick={onFinish}
                 disabled={submitting}
-                className="inline-flex items-center gap-2 rounded-xl bg-orange-600 hover:bg-orange-700 px-5 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-orange-600/30 transition-all cursor-pointer hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+                className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-orange-500/25 transition-all cursor-pointer hover:scale-[1.02] disabled:opacity-50 border border-orange-400/40"
               >
                 {submitting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Saving profile...
+                    <Loader2 className="h-4.5 w-4.5 animate-spin" />
+                    <span>Saving Profile...</span>
                   </>
                 ) : (
                   <>
-                    {nextLabel || 'Complete Profile'}
-                    <Check className="h-4 w-4" />
+                    <span>{nextLabel || 'Complete Profile'}</span>
+                    <Check className="h-4.5 w-4.5" />
                   </>
                 )}
               </button>
@@ -163,15 +227,15 @@ export function CandidateOnboardingShell({
                 type="button"
                 onClick={onNext}
                 disabled={submitting}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 px-5 py-2.5 text-xs font-extrabold text-white shadow-lg shadow-orange-600/30 transition-all cursor-pointer hover:scale-[1.02] disabled:opacity-50"
+                className="inline-flex items-center gap-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 px-8 py-3.5 text-sm font-black text-white shadow-xl shadow-orange-500/25 transition-all cursor-pointer hover:scale-[1.02] disabled:opacity-50 border border-orange-400/40"
               >
-                {nextLabel || 'Continue'}
-                <ArrowRight className="h-3.5 w-3.5" />
+                <span>{nextLabel || 'Continue'}</span>
+                <ArrowRight className="h-4.5 w-4.5" />
               </button>
             ) : null}
           </div>
-        </section>
-      </div>
+        </footer>
+      </main>
     </div>
   );
 }
@@ -198,21 +262,21 @@ export function TagInput({ label, placeholder, hint, tags, onAdd, onRemove }: Ta
     <div>
       <label className={labelCls}>{label}</label>
       {tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-2">
+        <div className="flex flex-wrap gap-2 mb-3">
           {tags.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-200"
+              className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-300 shadow-sm"
             >
               {tag}
               <button type="button" onClick={() => onRemove(tag)} className="hover:text-white cursor-pointer" aria-label={`Remove ${tag}`}>
-                <X className="h-3 w-3" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </span>
           ))}
         </div>
       )}
-      <form onSubmit={submit} className="flex gap-2">
+      <form onSubmit={submit} className="flex gap-2.5">
         <input
           type="text"
           value={draft}
@@ -222,13 +286,13 @@ export function TagInput({ label, placeholder, hint, tags, onAdd, onRemove }: Ta
         />
         <button
           type="submit"
-          className="shrink-0 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-3.5 cursor-pointer flex items-center justify-center border border-white/15 transition-all"
+          className="shrink-0 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-sm px-5 cursor-pointer flex items-center justify-center border border-slate-700 transition-all shadow-sm"
           aria-label={`Add ${label}`}
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4.5 w-4.5" />
         </button>
       </form>
-      {hint && <p className="text-[10px] text-slate-500 mt-1.5">{hint}</p>}
+      {hint && <p className="text-xs text-slate-400 mt-1.5 leading-normal">{hint}</p>}
     </div>
   );
 }

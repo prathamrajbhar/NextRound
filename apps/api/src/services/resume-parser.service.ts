@@ -1,0 +1,362 @@
+import { GoogleGenAI } from '@google/genai';
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { PDFParse } = require('pdf-parse');
+
+export interface ParsedResumeData {
+  fullName?: string;
+  headline?: string;
+  phone?: string;
+  location?: string;
+  timezone?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
+  yearsOfExperience?: number;
+  skills: string[];
+  targetRoles: string[];
+  targetLocations?: string[];
+  workMode?: 'Remote' | 'Hybrid' | 'Onsite';
+  currentCtc?: number;
+  expectedSalary?: number;
+  noticePeriod?: string;
+  workAuthorization?: string;
+  bio?: string;
+  proudProject?: string;
+  workValues?: string[];
+}
+
+/**
+ * Normalizes letter-spaced resume headings like "P R O F E S S I O N A L  S U M M A R Y"
+ */
+function normalizeResumeText(text: string): string {
+  let cleaned = text.replace(/P\s+R\s+O\s+F\s+E\s+S\s+S\s+I\s+O\s+N\s+A\s+L\s+S\s+U\s+M\s+M\s+A\s+R\s+Y/gi, 'PROFESSIONAL SUMMARY');
+  cleaned = cleaned.replace(/E\s+X\s+P\s+E\s+R\s+I\s+E\s+N\s+C\s+E/gi, 'EXPERIENCE');
+  cleaned = cleaned.replace(/E\s+D\s+U\s+C\s+A\s+T\s+I\s+O\s+N/gi, 'EDUCATION');
+  cleaned = cleaned.replace(/P\s+R\s+O\s+J\s+E\s+C\s+T\s+S/gi, 'PROJECTS');
+  cleaned = cleaned.replace(/S\s+K\s+I\s+L\s+L\s+S/gi, 'SKILLS');
+  return cleaned;
+}
+
+/**
+ * Extracts plain text from an uploaded file buffer (PDF or plain text).
+ */
+export async function extractTextFromBuffer(
+  buffer: Buffer,
+  mimeType: string,
+  filename: string
+): Promise<string> {
+  const isPdf = mimeType.includes('pdf') || filename.toLowerCase().endsWith('.pdf');
+
+  if (isPdf) {
+    try {
+      const parser = new PDFParse({ data: buffer });
+      const data = await parser.getText();
+      if (data && typeof data.text === 'string' && data.text.trim().length > 0) {
+        return normalizeResumeText(data.text.trim());
+      }
+    } catch (err) {
+      console.error('Failed to extract text using PDFParse:', err);
+    }
+  }
+
+  // Fallback / plain text handling
+  const rawText = buffer.toString('utf-8');
+  const cleaned = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ' ').trim();
+  return normalizeResumeText(cleaned);
+}
+
+/**
+ * Parses raw resume text into structured candidate profile fields using Gemini LLM.
+ */
+export async function parseResumeWithGemini(rawText: string): Promise<ParsedResumeData> {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (apiKey && rawText.length > 20) {
+    try {
+      const ai = new GoogleGenAI({ apiKey });
+      const prompt = `You are an expert AI recruiter & technical resume analyst.
+Analyze the candidate's raw resume text and extract all profile fields into a single, comprehensive JSON object. Do not include markdown tags or explanation.
+
+JSON SCHEMAS TO EXTRACT & INFER ACCURATELY:
+- "fullName": candidate's exact full name (e.g. "Pratham Rajbhar" or "Marcus Vance")
+- "headline": candidate's primary professional title or headline (e.g. "Full Stack + AI Engineer" or "Senior Full-Stack Engineer")
+- "location": candidate's current city, state, or country (e.g. "Ahmedabad, Gujarat" or "San Francisco, CA")
+- "phone": contact phone number (e.g. "+91 9512518403" or "+1 (555) 234-5678")
+- "timezone": inferred IANA timezone string (e.g. "Asia/Kolkata", "America/New_York", "Europe/London")
+- "linkedinUrl": complete LinkedIn URL (e.g. "https://linkedin.com/in/username")
+- "githubUrl": complete GitHub URL (e.g. "https://github.com/username")
+- "portfolioUrl": personal portfolio / blog website URL
+- "yearsOfExperience": total estimated numerical years of professional engineering experience (e.g. 4 or 7)
+- "skills": comprehensive array of technical skills, languages, frameworks, databases, and tools present in the resume
+- "targetRoles": array of 2-4 target job role titles inferred directly from candidate's experience (e.g. ["Full-Stack Engineer", "AI/ML Engineer", "Backend Engineer"])
+- "targetLocations": array of target cities/regions inferred from location or resume
+- "workMode": "Remote" | "Hybrid" | "Onsite"
+- "bio": a high-impact 2-4 sentence executive professional summary describing candidate's core expertise and focus (DO NOT include candidate's address, phone, email, or name header lines in the bio text)
+- "proudProject": a structured description of their most impressive key project or system shipped (include project title, stack, candidate's role, and measurable impact)
+- "currentCtc": estimated or stated annual salary if mentioned (number in LPA or USD)
+- "expectedSalary": estimated target annual salary based on experience level
+- "noticePeriod": "Immediate" | "1-2 weeks" | "30 days" | "60+ days" | "90 days"
+- "workAuthorization": "Authorized" | "Sponsorship Required" | "Student / On Work Permit"
+
+Return ONLY valid raw JSON object.
+
+RESUME CONTENT:
+${rawText.slice(0, 12000)}`;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+
+      const responseText = response.text || '';
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        return sanitizeParsedData(parsed, rawText);
+      }
+    } catch (err) {
+      console.error('Gemini LLM resume parsing error:', err);
+    }
+  }
+
+  // Heuristic fallback if Gemini API is not configured or fails
+  return fallbackHeuristicParsing(rawText);
+}
+
+function sanitizeParsedData(data: Record<string, unknown>, rawText: string): ParsedResumeData {
+  const toString = (...vals: unknown[]): string | undefined => {
+    for (const val of vals) {
+      if (typeof val === 'string' && val.trim().length > 0) return val.trim();
+    }
+    return undefined;
+  };
+
+  const toNumber = (...vals: unknown[]): number | undefined => {
+    for (const val of vals) {
+      if (typeof val === 'number' && !isNaN(val)) return val;
+      if (typeof val === 'string' && !isNaN(Number(val.trim()))) return Number(val.trim());
+    }
+    return undefined;
+  };
+
+  const toStringArray = (...vals: unknown[]): string[] => {
+    for (const val of vals) {
+      if (Array.isArray(val)) {
+        const arr = val.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+        if (arr.length > 0) return arr;
+      }
+    }
+    return [];
+  };
+
+  const heuristic = fallbackHeuristicParsing(rawText);
+
+  const fullName = toString(data.fullName, data.full_name, data.name, data.candidateName) || heuristic.fullName;
+  const headline = toString(data.headline, data.professionalHeadline, data.title, data.currentRole, data.role) || heuristic.headline;
+  const phone = toString(data.phone, data.phone_number, data.phoneNumber, data.mobile) || heuristic.phone;
+  const location = toString(data.location, data.currentLocation, data.address, data.city) || heuristic.location;
+  const timezone = toString(data.timezone) || heuristic.timezone || 'Asia/Kolkata';
+
+  let linkedinUrl = toString(data.linkedinUrl, data.linkedin) || heuristic.linkedinUrl;
+  if (linkedinUrl && !linkedinUrl.startsWith('http')) {
+    linkedinUrl = `https://${linkedinUrl}`;
+  }
+
+  let githubUrl = toString(data.githubUrl, data.github) || heuristic.githubUrl;
+  if (githubUrl && !githubUrl.startsWith('http')) {
+    githubUrl = `https://${githubUrl}`;
+  }
+
+  let portfolioUrl = toString(data.portfolioUrl, data.portfolio, data.website) || heuristic.portfolioUrl;
+  if (portfolioUrl && !portfolioUrl.startsWith('http')) {
+    portfolioUrl = `https://${portfolioUrl}`;
+  }
+
+  const skills = Array.from(new Set([...toStringArray(data.skills), ...(heuristic.skills || [])]));
+
+  // Dynamically infer targetRoles if empty
+  let targetRoles = toStringArray(data.targetRoles, data.roles);
+  if (targetRoles.length === 0) {
+    if (headline) {
+      targetRoles.push(headline);
+    }
+    if (skills.includes('React') || skills.includes('TypeScript') || skills.includes('Node.js')) {
+      targetRoles.push('Full-Stack Engineer');
+    }
+    if (skills.includes('Python') || skills.includes('FastAPI') || skills.includes('LangChain') || skills.includes('PyTorch')) {
+      targetRoles.push('AI/ML Engineer');
+    }
+    targetRoles = Array.from(new Set(targetRoles));
+  }
+
+  const targetLocations = toStringArray(data.targetLocations);
+  const yearsOfExperience = toNumber(data.yearsOfExperience, data.experienceYears) ?? heuristic.yearsOfExperience;
+
+  const workModeStr = toString(data.workMode);
+  const workMode = ['Remote', 'Hybrid', 'Onsite'].includes(workModeStr || '')
+    ? (workModeStr as 'Remote' | 'Hybrid' | 'Onsite')
+    : 'Remote';
+
+  let bio = toString(data.bio, data.summary, data.professionalSummary) || heuristic.bio;
+  // Clean header lines from bio if Gemini returned contact headers
+  if (bio && (bio.includes('@') || bio.includes('+91') || bio.includes('http'))) {
+    bio = bio
+      .split('\n')
+      .filter((line) => !line.includes('@') && !line.includes('+') && !line.includes('http') && line.length > 15)
+      .join(' ')
+      .trim();
+  }
+
+  const proudProject = toString(data.proudProject, data.keyProject, data.featuredProject) || heuristic.proudProject;
+  const currentCtc = toNumber(data.currentCtc);
+  const expectedSalary = toNumber(data.expectedSalary);
+  const noticePeriod = toString(data.noticePeriod) || '30 days';
+  const workAuthorization = toString(data.workAuthorization) || 'Authorized';
+
+  return {
+    fullName,
+    headline,
+    phone,
+    location,
+    timezone,
+    linkedinUrl,
+    githubUrl,
+    portfolioUrl,
+    yearsOfExperience,
+    skills,
+    targetRoles,
+    targetLocations,
+    workMode,
+    bio,
+    proudProject,
+    currentCtc,
+    expectedSalary,
+    noticePeriod,
+    workAuthorization,
+  };
+}
+
+function fallbackHeuristicParsing(rawText: string): ParsedResumeData {
+  const normalized = normalizeResumeText(rawText);
+  const lines = normalized.split('\n').map((l) => l.trim()).filter(Boolean);
+
+  let fullName: string | undefined;
+  let headline: string | undefined;
+
+  for (const line of lines.slice(0, 6)) {
+    if (
+      !fullName &&
+      line.length >= 2 &&
+      line.length <= 40 &&
+      !line.includes('@') &&
+      !line.includes('http') &&
+      !/resume|curriculum|cv|summary|experience|education|skills|projects|contact/i.test(line)
+    ) {
+      fullName = line.replace(/^[^\w]+|[^\w]+$/g, '');
+      continue;
+    }
+    if (
+      fullName &&
+      !headline &&
+      line.length >= 3 &&
+      line.length <= 60 &&
+      !line.includes('@') &&
+      !line.includes('http') &&
+      !/summary|experience|education|skills|projects|contact/i.test(line)
+    ) {
+      headline = line;
+      break;
+    }
+  }
+
+  // Location match
+  const locationMatch = normalized.match(/([A-Z][a-z]+(?: [A-Z][a-z]+)*,\s*[A-Z][a-z]+(?:\s*\d{5,6})?)/);
+  const location = locationMatch ? locationMatch[1] : undefined;
+
+  // Contact links
+  const linkedinMatch = normalized.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i);
+  const githubMatch = normalized.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9_-]+/i);
+  const portfolioMatch = normalized.match(/(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9_-]+\.(?:tech|io|dev|com|me|design)/i);
+  const phoneMatch = normalized.match(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+
+  // Extract date ranges for years of experience
+  const dateYears = normalized.match(/\b(20\d{2})\b/g);
+  let yearsOfExperience: number | undefined;
+  if (dateYears && dateYears.length >= 2) {
+    const years = dateYears.map(Number).sort((a, b) => a - b);
+    const minYear = years[0];
+    const maxYear = new Date().getFullYear();
+    yearsOfExperience = Math.min(Math.max(maxYear - minYear, 1), 30);
+  }
+
+  const skills: string[] = [];
+  const commonSkills = [
+    'TypeScript', 'JavaScript', 'React', 'Next.js', 'Node.js', 'Express.js', 'FastAPI', 'Python', 'Go',
+    'Java', 'C++', 'PostgreSQL', 'MongoDB', 'Redis', 'Docker', 'Kubernetes',
+    'AWS', 'GCP', 'GraphQL', 'REST API', 'Tailwind', 'Git', 'LangChain', 'PyTorch'
+  ];
+
+  commonSkills.forEach((skill) => {
+    const escaped = skill.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+    if (new RegExp(`\\b${escaped}\\b`, 'i').test(normalized)) {
+      skills.push(skill);
+    }
+  });
+
+  const targetRoles: string[] = [];
+  if (headline) targetRoles.push(headline);
+  if (skills.includes('React') || skills.includes('Next.js')) targetRoles.push('Full-Stack Engineer');
+  if (skills.includes('Python') || skills.includes('FastAPI')) targetRoles.push('AI/ML Engineer');
+
+  // Extract bio summary paragraph
+  let bio: string | undefined;
+  const summaryIdx = normalized.search(/PROFESSIONAL SUMMARY|SUMMARY|PROFILE|ABOUT ME/i);
+  if (summaryIdx !== -1) {
+    const snippet = normalized.slice(summaryIdx, summaryIdx + 500);
+    bio = snippet
+      .replace(/PROFESSIONAL SUMMARY|SUMMARY|PROFILE|ABOUT ME/i, '')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 20 && !l.includes('@') && !l.includes('http') && !l.includes('+91'))
+      .join(' ')
+      .trim();
+  }
+  if (!bio || bio.length < 20) {
+    bio = `Full-stack & AI software engineer experienced in building real-world applications using ${skills.slice(0, 5).join(', ')}.`;
+  }
+
+  // Extract project highlight paragraph
+  let proudProject: string | undefined;
+  const projectIdx = normalized.search(/PROJECTS|FEATURED PROJECTS|KEY PROJECTS|EXPERIENCE/i);
+  if (projectIdx !== -1) {
+    const snippet = normalized.slice(projectIdx, projectIdx + 600);
+    proudProject = snippet
+      .replace(/PROJECTS|FEATURED PROJECTS|KEY PROJECTS|EXPERIENCE/i, '')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 20 && !l.includes('@') && !l.includes('http'))
+      .slice(0, 4)
+      .join(' ')
+      .trim();
+  }
+  if (!proudProject || proudProject.length < 20) {
+    proudProject = `Built full-stack web and AI application using ${skills.slice(0, 4).join(', ')} with real-time API integrations and cloud database.`;
+  }
+
+  return {
+    fullName,
+    headline,
+    location,
+    phone: phoneMatch ? phoneMatch[0] : undefined,
+    linkedinUrl: linkedinMatch ? (linkedinMatch[0].startsWith('http') ? linkedinMatch[0] : `https://${linkedinMatch[0]}`) : undefined,
+    githubUrl: githubMatch ? (githubMatch[0].startsWith('http') ? githubMatch[0] : `https://${githubMatch[0]}`) : undefined,
+    portfolioUrl: portfolioMatch ? (portfolioMatch[0].startsWith('http') ? portfolioMatch[0] : `https://${portfolioMatch[0]}`) : undefined,
+    yearsOfExperience,
+    skills,
+    targetRoles: Array.from(new Set(targetRoles)),
+    bio,
+    proudProject,
+  };
+}

@@ -43,11 +43,11 @@ export function ExperienceSkillsStep({ form, update, addTag, removeTag }: Onboar
   };
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-in fade-in duration-200">
       <div>
         <label className={labelCls}>Years of Experience</label>
         <div className="relative">
-          <Briefcase className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+          <Briefcase className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
           <input
             type="number"
             min={0}
@@ -69,16 +69,16 @@ export function ExperienceSkillsStep({ form, update, addTag, removeTag }: Onboar
           onAdd={(v) => addTag('targetRoles', v)}
           onRemove={(v) => removeTag('targetRoles', v)}
         />
-        <div className="flex flex-wrap gap-1.5 mt-2">
+        <div className="flex flex-wrap gap-2 mt-3">
           {ROLE_SUGGESTIONS.map((role) => (
             <button
               key={role}
               type="button"
               onClick={() => toggleSuggestion('targetRoles', role)}
-              className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+              className={`text-xs font-extrabold px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
                 form.targetRoles.includes(role)
-                  ? 'bg-orange-500/20 border-orange-500/50 text-orange-200'
-                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                  ? 'bg-orange-500/20 border-orange-500/50 text-orange-300 shadow-sm'
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
               }`}
             >
               {role}
@@ -96,16 +96,16 @@ export function ExperienceSkillsStep({ form, update, addTag, removeTag }: Onboar
           onAdd={(v) => addTag('skills', v)}
           onRemove={(v) => removeTag('skills', v)}
         />
-        <div className="flex flex-wrap gap-1.5 mt-2">
+        <div className="flex flex-wrap gap-2 mt-3">
           {SKILL_SUGGESTIONS.map((skill) => (
             <button
               key={skill}
               type="button"
               onClick={() => toggleSuggestion('skills', skill)}
-              className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
+              className={`text-xs font-extrabold px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
                 form.skills.includes(skill)
-                  ? 'bg-orange-500/20 border-orange-500/50 text-orange-200'
-                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                  ? 'bg-orange-500/20 border-orange-500/50 text-orange-300 shadow-sm'
+                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
               }`}
             >
               {skill}
@@ -114,9 +114,9 @@ export function ExperienceSkillsStep({ form, update, addTag, removeTag }: Onboar
         </div>
       </div>
 
-      <p className="flex items-center gap-1.5 text-[10px] text-slate-500">
-        <Code className="h-3.5 w-3.5" />
-        The AI screening agent matches these against each job&apos;s rubric to rank your applications.
+      <p className="flex items-center gap-2 text-xs text-slate-400 font-medium">
+        <Code className="h-4 w-4 text-orange-400" />
+        The AI screening agent matches these against job rubrics to rank your applications.
       </p>
     </div>
   );

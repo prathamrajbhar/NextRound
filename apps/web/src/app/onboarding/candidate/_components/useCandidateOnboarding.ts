@@ -11,8 +11,11 @@ export interface CandidateForm {
   phone: string;
   location: string;
   timezone: string;
-  // Step 2 — Resume & Online Presence
+  // Step 2 — Social Media & Online Presence
   resumeFile: File | null;
+  rawResumeText?: string;
+  parsedResume?: Record<string, unknown>;
+  socialData?: Record<string, unknown>;
   linkedinUrl: string;
   githubUrl: string;
   portfolioUrl: string;
@@ -32,6 +35,8 @@ export interface CandidateForm {
   };
   // Step 5 — Compensation & Eligibility
   expectedSalary: string;
+  expectedSalaryMin: string;
+  expectedSalaryMax: string;
   currentCtc: string;
   noticePeriod: string;
   workAuthorization: string;
@@ -48,6 +53,8 @@ export const DEFAULT_FORM: CandidateForm = {
   location: '',
   timezone: 'Asia/Kolkata',
   resumeFile: null,
+  rawResumeText: undefined,
+  parsedResume: undefined,
   linkedinUrl: '',
   githubUrl: '',
   portfolioUrl: '',
@@ -63,8 +70,10 @@ export const DEFAULT_FORM: CandidateForm = {
     afternoon: true,
     evening: false,
   },
-  expectedSalary: '',
-  currentCtc: '',
+  expectedSalary: '25',
+  expectedSalaryMin: '18',
+  expectedSalaryMax: '30',
+  currentCtc: '15',
   noticePeriod: '30 days',
   workAuthorization: 'Authorized',
   proudProject: '',
@@ -80,11 +89,38 @@ export const DEFAULT_FORM: CandidateForm = {
 
 export type TagField = 'targetRoles' | 'skills' | 'targetLocations';
 
+export interface ParsedProfilePayload {
+  fullName?: string;
+  headline?: string;
+  phone?: string;
+  location?: string;
+  timezone?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
+  yearsOfExperience?: number;
+  skills?: string[];
+  targetRoles?: string[];
+  targetLocations?: string[];
+  workMode?: WorkMode;
+  currentCtc?: number;
+  expectedSalary?: number;
+  noticePeriod?: string;
+  workAuthorization?: string;
+  bio?: string;
+  proudProject?: string;
+  rawText?: string;
+  rawTextLength?: number;
+  [key: string]: unknown;
+}
+
 export interface OnboardingStepProps {
   form: CandidateForm;
   update: <K extends keyof CandidateForm>(key: K, value: CandidateForm[K]) => void;
   addTag: (key: TagField, value: string) => void;
   removeTag: (key: TagField, value: string) => void;
+  mergeParsedProfile?: (parsed: ParsedProfilePayload, rawText?: string) => void;
+  mergeSocialData?: (social: Record<string, unknown>, extractedSkills?: string[]) => void;
 }
 
 export function useCandidateOnboarding() {
@@ -106,7 +142,42 @@ export function useCandidateOnboarding() {
   const removeTag = (key: TagField, value: string) =>
     setForm((f) => ({ ...f, [key]: f[key].filter((v) => v !== value) }));
 
-  return { form, setForm, step, setStep, submitting, setSubmitting, error, setError, update, addTag, removeTag };
+  const mergeParsedProfile = (parsed: ParsedProfilePayload, rawText?: string) => {
+    setForm((f) => ({
+      ...f,
+      rawResumeText: rawText || f.rawResumeText,
+      parsedResume: (parsed as Record<string, unknown>) || f.parsedResume,
+      fullName: parsed.fullName || f.fullName,
+      headline: parsed.headline || f.headline,
+      phone: parsed.phone || f.phone,
+      location: parsed.location || f.location,
+      timezone: parsed.timezone || f.timezone,
+      linkedinUrl: parsed.linkedinUrl || f.linkedinUrl,
+      githubUrl: parsed.githubUrl || f.githubUrl,
+      portfolioUrl: parsed.portfolioUrl || f.portfolioUrl,
+      yearsOfExperience: parsed.yearsOfExperience !== undefined ? String(parsed.yearsOfExperience) : f.yearsOfExperience,
+      skills: parsed.skills && parsed.skills.length > 0 ? Array.from(new Set([...f.skills, ...parsed.skills])) : f.skills,
+      targetRoles: parsed.targetRoles && parsed.targetRoles.length > 0 ? Array.from(new Set([...f.targetRoles, ...parsed.targetRoles])) : f.targetRoles,
+      targetLocations: parsed.targetLocations && parsed.targetLocations.length > 0 ? Array.from(new Set([...f.targetLocations, ...parsed.targetLocations])) : f.targetLocations,
+      workMode: parsed.workMode || f.workMode,
+      expectedSalary: parsed.expectedSalary !== undefined ? String(parsed.expectedSalary) : f.expectedSalary,
+      currentCtc: parsed.currentCtc !== undefined ? String(parsed.currentCtc) : f.currentCtc,
+      noticePeriod: parsed.noticePeriod || f.noticePeriod,
+      workAuthorization: parsed.workAuthorization || f.workAuthorization,
+      bio: parsed.bio || f.bio,
+      proudProject: parsed.proudProject || f.proudProject,
+    }));
+  };
+
+  const mergeSocialData = (social: Record<string, unknown>, extractedSkills?: string[]) => {
+    setForm((f) => ({
+      ...f,
+      socialData: social,
+      skills: extractedSkills && extractedSkills.length > 0 ? Array.from(new Set([...f.skills, ...extractedSkills])) : f.skills,
+    }));
+  };
+
+  return { form, setForm, step, setStep, submitting, setSubmitting, error, setError, update, addTag, removeTag, mergeParsedProfile, mergeSocialData };
 }
 
 export function buildCandidatePayload(form: CandidateForm) {
@@ -117,6 +188,9 @@ export function buildCandidatePayload(form: CandidateForm) {
     phone: form.phone.trim() || undefined,
     location: form.location.trim() || undefined,
     timezone: form.timezone || undefined,
+    rawResumeText: form.rawResumeText || undefined,
+    parsedResume: form.parsedResume || undefined,
+    socialData: form.socialData || undefined,
     linkedinUrl: form.linkedinUrl.trim() || undefined,
     githubUrl: form.githubUrl.trim() || undefined,
     portfolioUrl: form.portfolioUrl.trim() || undefined,
@@ -126,8 +200,6 @@ export function buildCandidatePayload(form: CandidateForm) {
     yearsOfExperience: toNumber(form.yearsOfExperience),
     workMode: form.workMode,
     currentCtc: toNumber(form.currentCtc),
-    targetLocations: form.targetLocations,
-    expectedSalary: toNumber(form.expectedSalary),
     noticePeriod: form.noticePeriod || undefined,
     workAuthorization: form.workAuthorization || undefined,
     proudProject: form.proudProject.trim() || undefined,

@@ -164,9 +164,9 @@ def generate_question_node(state: InterviewerState) -> InterviewerState:
             prompt = (
                 f"You are a professional AI interviewer for a {job_title} role.\n"
                 f"Current Interview Stage: {current_stage}\n"
-                f"Candidate Resume Context: {candidate_resume[:300]}\n"
+                f"Candidate Resume Context: {candidate_resume[:1500]}\n"
                 f"Recent Conversation History: {json.dumps(history[-4:])}\n\n"
-                f"Ask ONE concise, engaging spoken interview question appropriate for the {current_stage} stage. Keep it under 2 sentences."
+                f"Ask ONE concise, engaging spoken interview question appropriate for the {current_stage} stage, referencing candidate's actual experience or projects if available. Keep it under 2 sentences."
             )
             res = genai_client.models.generate_content(
                 model="gemini-2.5-flash",

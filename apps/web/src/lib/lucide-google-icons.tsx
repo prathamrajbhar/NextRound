@@ -127,6 +127,7 @@ export function LinkedinIcon({ className = 'h-3.5 w-3.5' }: { className?: string
 
 export const Github = createMaterialIcon('code');
 export const Globe = createMaterialIcon('public');
+export const GripVertical = createMaterialIcon('drag_indicator');
 export const Handshake = createMaterialIcon('handshake');
 export const HelpCircle = createMaterialIcon('help');
 export const Home = createMaterialIcon('home');
