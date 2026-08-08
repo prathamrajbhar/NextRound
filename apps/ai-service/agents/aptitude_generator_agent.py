@@ -7,15 +7,6 @@ from core.config import settings
 
 logger = logging.getLogger("aptitude_generator_agent")
 
-groq_client = None
-if settings.groq_api_key and settings.groq_api_key != "your_groq_api_key_here":
-    try:
-        from groq import Groq
-        groq_client = Groq(api_key=settings.groq_api_key)
-        logger.info(f"Initialized Groq client with model: {settings.groq_model}")
-    except Exception as e:
-        logger.warning(f"Failed to initialize Groq client in aptitude_generator_agent: {e}")
-
 genai_client = None
 if settings.gemini_api_key:
     try:
@@ -72,7 +63,7 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
 
 
 def _fallback_questions(job_title: str, count: int = 5) -> List[Dict[str, Any]]:
-    """Role-customized fallback questions if all external LLM services are unreachable."""
+    """Role-customized fallback questions if Gemini and Ollama services are unreachable."""
     role = job_title or "Software Engineer"
     questions = [
         {
@@ -160,11 +151,10 @@ async def generate_aptitude_questions(
     count: int = 5
 ) -> List[Dict[str, Any]]:
     """
-    Dynamically generate N role-customized aptitude questions using multi-provider LLM chain:
-    1. Groq (model: GROQ_MODEL in .env, default llama-3.3-70b-versatile)
-    2. Gemini (model: GEMINI_MODEL in .env, default gemini-2.5-flash)
-    3. Ollama (failover model: OLLAMA_MODEL at OLLAMA_BASE_URL in .env)
-    4. Structured role-customized fallback
+    Dynamically generate N role-customized aptitude questions using Gemini + Ollama LLM chain:
+    1. Gemini (primary model: GEMINI_MODEL in .env, default gemini-2.5-flash)
+    2. Ollama (failover model: OLLAMA_MODEL at OLLAMA_BASE_URL in .env, default llama3.2)
+    3. Dynamic role-customized fallback
     """
     prompt = f"""You are an expert recruiter and assessment engineer. Generate a set of {count} high-quality, non-standard cognitive aptitude test questions tailored for a candidate applying for the position of:
 
@@ -200,23 +190,7 @@ JSON Format required:
 ]
 """
 
-    # 1. Primary Provider: Groq
-    if groq_client:
-        try:
-            res = groq_client.chat.completions.create(
-                model=settings.groq_model,
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-            )
-            raw_text = res.choices[0].message.content or ""
-            questions = _parse_llm_json_response(raw_text, count, job_title)
-            if questions:
-                logger.info(f"Successfully generated {len(questions)} dynamic aptitude questions via Groq ({settings.groq_model}) for {job_title}.")
-                return questions
-        except Exception as groq_err:
-            logger.warning(f"Groq aptitude question generation failed for {job_title}: {groq_err}. Falling back to Gemini.")
-
-    # 2. Secondary Provider: Gemini GenAI
+    # 1. Primary Provider: Gemini GenAI
     if genai_client:
         try:
             res = genai_client.models.generate_content(
@@ -231,12 +205,13 @@ JSON Format required:
         except Exception as gemini_err:
             logger.warning(f"Gemini aptitude question generation failed for {job_title}: {gemini_err}. Trying Ollama failover.")
 
-    # 3. Tertiary Failover Provider: Ollama
+    # 2. Failover Provider: Ollama
     ollama_questions = await _generate_with_ollama(prompt, count, job_title)
     if ollama_questions:
         return ollama_questions
 
-    # 4. Final Fallback
+    # 3. Final Fallback
     logger.info(f"Using role-tailored fallback question generator for {job_title}.")
     return _fallback_questions(job_title, count)
+
 
