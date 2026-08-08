@@ -6,6 +6,13 @@ import { apiClient } from '@/lib/apiClient';
 import { Job } from '@/types';
 import { Plus, Search, ChevronRight, Briefcase, Loader2, Trash2 } from '@/lib/lucide-google-icons';
 
+function formatDate(dateStr: string) {
+  if (!dateStr) return 'Recently';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 export default function HrJobsList() {
   const [filter, setFilter] = useState<'all' | 'active' | 'draft' | 'closed'>('all');
   const [search, setSearch] = useState('');
@@ -87,7 +94,7 @@ export default function HrJobsList() {
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Job Openings</h1>
           <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
-            Manage job listings, custom evaluation rubrics, and candidate pipelines.
+            Manage job listings, candidate applications, and hiring stages.
           </p>
         </div>
         <Link
@@ -95,7 +102,7 @@ export default function HrJobsList() {
           className="inline-flex items-center gap-1.5 rounded-full bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 px-4 py-2.5 text-xs font-bold text-white shadow-md transition-all cursor-pointer"
         >
           <Plus className="h-4 w-4" />
-          Create Job Post
+          Post a Job
         </Link>
       </div>
 
@@ -179,20 +186,20 @@ export default function HrJobsList() {
                           {isUpdating && <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-600 dark:text-orange-400" />}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{job.applicantsCount || 0} active</td>
-                      <td className="px-6 py-4 text-slate-400 dark:text-slate-400">{job.postedDate}</td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400 font-bold">{job.applicantsCount || 0} candidates</td>
+                      <td className="px-6 py-4 text-slate-400 dark:text-slate-400 font-bold">{formatDate(job.postedDate)}</td>
                       <td className="px-6 py-4 text-right space-x-3">
                         <Link
                           href={`/hr/jobs/${job.id}/edit`}
                           className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 font-bold cursor-pointer"
                         >
-                          Edit Scoring
+                          Edit Job
                         </Link>
                         <Link
                           href={`/hr/jobs/${job.id}/pipeline`}
                           className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 dark:text-orange-400 hover:underline transition-colors cursor-pointer"
                         >
-                          View Pipeline
+                          View Candidates
                           <ChevronRight className="h-4 w-4" />
                         </Link>
                         <button
@@ -215,8 +222,8 @@ export default function HrJobsList() {
       ) : (
         <div className="text-center py-16 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/20 dark:bg-slate-900/40 glass-panel">
           <Briefcase className="h-10 w-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">No jobs match filters</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Add a new job opening to start sourcing.</p>
+          <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">No jobs match your search</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Post a new job opening to start receiving candidates.</p>
         </div>
       )}
     </div>
