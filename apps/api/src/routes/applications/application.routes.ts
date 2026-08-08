@@ -520,7 +520,7 @@ applicationRouter.post(
   }
 );
 
-// GET /api/v1/applications/:id/assessment/aptitude - Fetch seed aptitude test questions
+// GET /api/v1/applications/:id/assessment/aptitude - Fetch dynamic LLM aptitude test questions
 applicationRouter.get(
   '/:id/assessment/aptitude',
   authenticate,
@@ -530,29 +530,81 @@ applicationRouter.get(
       const appId = req.params.id as string;
       const app = await prisma.application.findUnique({
         where: { id: appId },
-        include: { candidate: true },
+        include: { candidate: true, job: true },
       });
 
       if (!app || app.candidate.user_id !== req.user!.userId) {
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
       }
 
-      const rawQuestions = JSON.parse(
-        fs.readFileSync(path.join(__dirname, '../../data/aptitude-questions.json'), 'utf-8')
-      );
+      // Check if dynamic assessment already exists for this application
+      let assessment = await prisma.assessment.findFirst({
+        where: { application_id: appId, test_type: 'aptitude' },
+        orderBy: { created_at: 'desc' },
+      });
 
-      // Strip correctIndex before returning to client to prevent answer leakage
+      let rawQuestions: any[] = [];
+
+      if (assessment && Array.isArray(assessment.questions) && assessment.questions.length > 0) {
+        rawQuestions = assessment.questions as any[];
+      } else {
+        // Generate dynamic questions via AI Service
+        try {
+          const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+          const aiResp = await fetch(`${aiServiceUrl}/api/v1/ai/assessment/generate-aptitude`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              jobTitle: app.job?.title || 'Software Engineer',
+              jobDescription: app.job?.description || '',
+              count: 5,
+            }),
+          });
+
+          if (aiResp.ok) {
+            const aiData = (await aiResp.json()) as any;
+            if (aiData.success && Array.isArray(aiData.questions) && aiData.questions.length > 0) {
+              rawQuestions = aiData.questions;
+            }
+          }
+        } catch (aiErr) {
+          console.error(`AI Service dynamic question generation failed for application ${appId}:`, aiErr);
+        }
+
+        // Fallback to local seed file if AI service unreachable
+        if (rawQuestions.length === 0) {
+          rawQuestions = JSON.parse(
+            fs.readFileSync(path.join(__dirname, '../../data/aptitude-questions.json'), 'utf-8')
+          );
+        }
+
+        // Persist generated questions in DB Assessment record
+        assessment = await prisma.assessment.create({
+          data: {
+            application_id: appId,
+            test_type: 'aptitude',
+            questions: rawQuestions,
+            status: 'pending',
+          },
+        });
+      }
+
+      // Strip correctIndex and explanation before returning to client to prevent answer leakage
       const sanitizedQuestions = rawQuestions.map((q: any) => ({
         id: q.id,
-        category: q.category,
-        question: q.question,
-        options: q.options,
-        difficulty: q.difficulty,
+        category: q.category || 'Logical Reasoning',
+        question: q.question || q.text,
+        text: q.question || q.text,
+        options: q.options || [],
+        difficulty: q.difficulty || 'medium',
       }));
 
       return res.json({
         success: true,
-        data: { questions: sanitizedQuestions },
+        data: {
+          assessmentId: assessment?.id,
+          questions: sanitizedQuestions,
+        },
       });
     } catch (err) {
       return next(err);
@@ -578,6 +630,15 @@ applicationRouter.post(
       if (!app || app.candidate.user_id !== req.user!.userId) {
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
       }
+
+      // Update responses in Assessment table
+      await prisma.assessment.updateMany({
+        where: { application_id: appId, test_type: 'aptitude' },
+        data: {
+          responses: answers || [],
+          status: 'in_progress',
+        },
+      }).catch(() => {});
 
       // Enqueue assessment scoring job in BullMQ
       await enqueueAssessment(appId, answers || [], { totalTimeSeconds, tabSwitchCount });

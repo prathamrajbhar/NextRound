@@ -435,6 +435,16 @@ internalRouter.patch('/applications/:id/assessment-result', async (req: Request,
       },
     });
 
+    // Update Assessment record if present
+    await prisma.assessment.updateMany({
+      where: { application_id: id, test_type: 'aptitude' },
+      data: {
+        score: typeof score === 'number' ? score : null,
+        category_breakdown: category_scores || {},
+        status: 'completed',
+      },
+    }).catch(() => {});
+
     if (passed) {
       await advanceAssessmentStage(id).catch((err) =>
         console.error(`advanceAssessmentStage failed for application ${id}:`, err)
@@ -444,6 +454,31 @@ internalRouter.patch('/applications/:id/assessment-result', async (req: Request,
     return res.json({
       success: true,
       data: { application: updatedApp, evaluation },
+    });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+// GET /applications/:id/assessment-data - Fetch stored assessment questions for scoring
+internalRouter.get('/applications/:id/assessment-data', async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = req.params.id as string;
+    const testType = (req.query.type as string) || 'aptitude';
+
+    const assessment = await prisma.assessment.findFirst({
+      where: { application_id: id, test_type: testType as any },
+      orderBy: { created_at: 'desc' },
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        assessmentId: assessment?.id || null,
+        questions: assessment?.questions || null,
+        responses: assessment?.responses || null,
+        status: assessment?.status || null,
+      },
     });
   } catch (error) {
     return next(error);

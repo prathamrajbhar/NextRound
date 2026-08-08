@@ -24,10 +24,26 @@ async def process_aptitude_job(job_data: dict) -> bool:
     logger.info(f"Processing aptitude assessment job for applicationId: {application_id}")
 
     try:
+        # Fetch stored generated questions for this session from Express
+        stored_questions = []
+        try:
+            async with httpx.AsyncClient() as client:
+                data_resp = await client.get(
+                    f"{settings.express_api_base_url}/internal/applications/{application_id}/assessment-data?type=aptitude",
+                    headers={"X-Internal-Service-Secret": settings.internal_service_secret},
+                    timeout=10.0,
+                )
+                if data_resp.status_code == 200:
+                    payload = data_resp.json()
+                    stored_questions = payload.get("data", {}).get("questions") or []
+        except Exception as err:
+            logger.warning(f"Could not fetch stored assessment questions for {application_id}: {err}")
+
         # Run Assessment LangGraph Agent
         result = await run_assessment_agent(
             application_id=application_id,
             answers=answers,
+            stored_questions=stored_questions,
             total_time_seconds=job_data.get("totalTimeSeconds", 0),
             tab_switch_count=job_data.get("tabSwitchCount", 0),
             min_score=70.0,

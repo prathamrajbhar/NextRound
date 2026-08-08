@@ -87,10 +87,36 @@ export default function AptitudeTestConsole({
   onComplete,
   applicationId,
 }: AptitudeTestConsoleProps) {
+  const [fetchedQuestions, setFetchedQuestions] = useState<AptitudeQuestion[]>([]);
+
+  useEffect(() => {
+    if (!applicationId) return;
+    async function loadDynamicQuestions() {
+      try {
+        const res = await apiClient.get<{ questions: any[] }>(`/applications/${applicationId}/assessment/aptitude`);
+        if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
+          const mapped = res.questions.map((q: any) => ({
+            id: q.id,
+            category: q.category || 'Logical Reasoning',
+            text: q.text || q.question || 'Question text unavailable.',
+            options: q.options || [],
+            difficulty: q.difficulty || 'medium',
+          }));
+          setFetchedQuestions(mapped);
+        }
+      } catch (err) {
+        console.error('Failed to load dynamic aptitude questions:', err);
+      }
+    }
+    loadDynamicQuestions();
+  }, [applicationId]);
+
+  const activeQuestions = fetchedQuestions.length > 0 
+    ? fetchedQuestions 
+    : (questions.length > 0 ? questions : DEFAULT_APTITUDE_QUESTIONS);
+
   const displayCompany = company || companyName || 'NextRound';
   const displayRole = role || roleTitle || 'Candidate';
-
-  const activeQuestions = questions.length > 0 ? questions : DEFAULT_APTITUDE_QUESTIONS;
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});

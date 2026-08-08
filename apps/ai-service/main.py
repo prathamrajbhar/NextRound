@@ -11,6 +11,7 @@ from routes.embedding_routes import embedding_router
 from routes.coding_routes import coding_router
 from routes.sourcing_routes import sourcing_router
 from routes.video_routes import video_analysis_router
+from routes.assessment_routes import assessment_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("nextround-ai-service")
@@ -40,6 +41,7 @@ app.include_router(embedding_router)
 app.include_router(coding_router)
 app.include_router(sourcing_router)
 app.include_router(video_analysis_router)
+app.include_router(assessment_router)
 
 
 

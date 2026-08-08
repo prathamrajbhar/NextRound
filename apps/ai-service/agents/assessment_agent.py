@@ -17,6 +17,7 @@ except ImportError:
 class AssessmentState(TypedDict, total=False):
     application_id: str
     answers: List[dict]
+    stored_questions: List[dict]
     total_time_seconds: int
     tab_switch_count: int
     min_score: float
@@ -29,24 +30,37 @@ class AssessmentState(TypedDict, total=False):
 
 
 def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
-    """Node 1: Compare candidate answers against seed key and calculate category breakdown."""
+    """Node 1: Compare candidate answers against session key and calculate category breakdown."""
     answers = state.get("answers", [])
+    stored_q = state.get("stored_questions", [])
     logger.info(f"Evaluating aptitude answers for application {state.get('application_id')}")
 
-    # Load correct answer keys from aptitude-questions.json
-    seed_file_path = os.path.join(os.path.dirname(__file__), "../../api/src/data/aptitude-questions.json")
     answer_key = {}
-    if os.path.exists(seed_file_path):
-        try:
-            with open(seed_file_path, "r", encoding="utf-8") as f:
-                questions_data = json.load(f)
-                for q in questions_data:
-                    answer_key[q["id"]] = {
-                        "correctIndex": q.get("correctIndex", 0),
-                        "category": q.get("category", "Logical"),
-                    }
-        except Exception as e:
-            logger.error(f"Failed to load aptitude questions seed file: {e}")
+
+    # If dynamic stored questions exist for session, use them first
+    if stored_q and isinstance(stored_q, list):
+        for q in stored_q:
+            q_id = str(q.get("id") or "")
+            if q_id:
+                answer_key[q_id] = {
+                    "correctIndex": q.get("correctIndex", 0),
+                    "category": q.get("category", "Logical Deduction"),
+                }
+
+    # Fallback to local file if stored_questions missing
+    if not answer_key:
+        seed_file_path = os.path.join(os.path.dirname(__file__), "../../api/src/data/aptitude-questions.json")
+        if os.path.exists(seed_file_path):
+            try:
+                with open(seed_file_path, "r", encoding="utf-8") as f:
+                    questions_data = json.load(f)
+                    for q in questions_data:
+                        answer_key[q["id"]] = {
+                            "correctIndex": q.get("correctIndex", 0),
+                            "category": q.get("category", "Logical"),
+                        }
+            except Exception as e:
+                logger.error(f"Failed to load aptitude questions seed file: {e}")
 
     categories = {"Logical": {"correct": 0, "total": 0}, "Numerical": {"correct": 0, "total": 0}, "Verbal": {"correct": 0, "total": 0}, "Spatial": {"correct": 0, "total": 0}}
 
@@ -126,6 +140,7 @@ _assessment_app = build_assessment_graph()
 async def run_assessment_agent(
     application_id: str,
     answers: List[dict],
+    stored_questions: List[dict] = None,
     total_time_seconds: int = 0,
     tab_switch_count: int = 0,
     min_score: float = 70.0
@@ -134,6 +149,7 @@ async def run_assessment_agent(
     initial_state: AssessmentState = {
         "application_id": application_id,
         "answers": answers,
+        "stored_questions": stored_questions or [],
         "total_time_seconds": total_time_seconds,
         "tab_switch_count": tab_switch_count,
         "min_score": min_score,
