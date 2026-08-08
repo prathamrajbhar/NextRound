@@ -55,7 +55,7 @@ async def process_coding_job(job_data: dict) -> bool:
                 json=patch_payload,
                 headers={"X-Internal-Service-Secret": settings.internal_service_secret},
             )
-            resp.raise_for_request()
+            resp.raise_for_status()
 
         # Log agent execution
         log_payload = {

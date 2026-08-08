@@ -8,6 +8,43 @@ from agents.screening_agent import run_screening_agent
 logger = logging.getLogger("screening_worker")
 
 
+def _as_list(value) -> list:
+    if isinstance(value, list):
+        return [str(x) for x in value if x is not None]
+    return []
+
+
+def build_profile_summary(candidate_info: dict) -> str:
+    """Build a factual candidate profile summary when raw resume text is unavailable.
+
+    Feeds the LLM real, structured profile data (never a file path or URL).
+    """
+    parts = []
+    full_name = candidate_info.get("full_name")
+    headline = candidate_info.get("headline")
+    location = candidate_info.get("location")
+    if full_name:
+        parts.append(f"Candidate: {full_name}")
+    if headline:
+        parts.append(f"Headline: {headline}")
+    if location:
+        parts.append(f"Location: {location}")
+    if candidate_info.get("years_of_experience") is not None:
+        parts.append(f"Years of experience: {candidate_info.get('years_of_experience')}")
+    skills = _as_list(candidate_info.get("skills"))
+    if skills:
+        parts.append(f"Skills: {', '.join(skills)}")
+    target_roles = _as_list(candidate_info.get("target_roles"))
+    if target_roles:
+        parts.append(f"Target roles: {', '.join(target_roles)}")
+    bio = candidate_info.get("bio")
+    if bio:
+        parts.append(f"Bio: {bio}")
+    if parts:
+        return "\n".join(parts)
+    return "Candidate profile available for screening."
+
+
 # ML_BYPASS: ATS ML scorer — replace with trained LambdaMART ranker on resume-outcome data
 async def process_screening_job(job_data: dict) -> bool:
     """
@@ -32,7 +69,7 @@ async def process_screening_job(job_data: dict) -> bool:
                 f"{settings.express_api_base_url}/internal/applications/{application_id}/raw",
                 headers={"X-Internal-Service-Secret": settings.internal_service_secret},
             )
-            resp.raise_for_request()
+            resp.raise_for_status()
             app_info = resp.json().get("data", {})
 
         job_info = app_info.get("job", {})
@@ -40,7 +77,10 @@ async def process_screening_job(job_data: dict) -> bool:
         candidate_id = candidate_info.get("id") or job_data.get("candidateId")
         job_id = app_info.get("job_id") or job_data.get("jobId")
 
-        resume_text = candidate_info.get("resume_url") or "Experienced Software Engineer proficient in React, TypeScript, Node.js, Express, and PostgreSQL."
+        # Prefer stored raw resume text so the LLM extracts real skills (never a file path).
+        resume_text = (candidate_info.get("raw_resume_text") or "").strip()
+        if not resume_text:
+            resume_text = build_profile_summary(candidate_info)
         job_desc = job_info.get("description", "")
         rubric = job_info.get("rubric") or {"technical": 30, "communication": 20, "problemSolving": 25, "experience": 25}
         thresholds = job_info.get("thresholds") or {}
@@ -85,7 +125,7 @@ async def process_screening_job(job_data: dict) -> bool:
                 json=patch_payload,
                 headers={"X-Internal-Service-Secret": settings.internal_service_secret},
             )
-            resp.raise_for_request()
+            resp.raise_for_status()
 
         # Log agent execution
         log_payload = {

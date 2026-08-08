@@ -8,6 +8,7 @@ from workers.screening_worker import process_screening_job
 from workers.scheduling_worker import process_scheduling_job
 from workers.aptitude_worker import process_aptitude_job
 from workers.coding_worker import process_coding_job
+from workers.video_screening_worker import process_video_screening_job
 from workers.interview_worker import process_interview_job
 from workers.evaluator_worker import process_evaluator_job
 from workers.decision_worker import process_decision_job
@@ -32,6 +33,7 @@ AGENT_QUEUES = [
     "scheduling",
     "assessment",
     "coding",
+    "video-screening",
     "analytics",
 ]
 
@@ -44,7 +46,7 @@ class AgentWorkerManager:
     async def start_workers(self):
         self.running = True
         logger.info("Initializing background AI agent queue workers...")
-        for queue_name in ["sourcing", "screening", "scheduling", "assessment", "coding", "interview", "evaluator", "decision", "mock", "prep", "resume-builder", "analytics"]:
+        for queue_name in ["sourcing", "screening", "scheduling", "assessment", "coding", "video-screening", "interview", "evaluator", "decision", "mock", "prep", "resume-builder", "analytics"]:
             task = asyncio.create_task(self.poll_queue(queue_name))
             self.tasks.append(task)
 
@@ -60,6 +62,14 @@ class AgentWorkerManager:
                 # Poll BullMQ wait list or custom job queue
                 # BullMQ queue list key: bull:<queue_name>:wait
                 job_id = await redis.rpop(f"bull:{queue_name}:wait")
+
+                if not job_id:
+                    # BullMQ stores priority jobs in a ZSET (bull:<queue>:prioritized)
+                    # instead of the wait list. Dequeue them too so priority enqueues
+                    # (evaluator, decision) are never silently stalled.
+                    prioritized = await redis.zpopmin(f"bull:{queue_name}:prioritized")
+                    if prioritized:
+                        job_id = prioritized[0][0]
 
                 if job_id:
                     # Fetch BullMQ job hash data
@@ -84,6 +94,8 @@ class AgentWorkerManager:
                             await process_aptitude_job(payload)
                         elif queue_name == "coding":
                             await process_coding_job(payload)
+                        elif queue_name == "video-screening":
+                            await process_video_screening_job(payload)
                         elif queue_name == "interview":
                             await process_interview_job(payload)
                         elif queue_name == "evaluator":

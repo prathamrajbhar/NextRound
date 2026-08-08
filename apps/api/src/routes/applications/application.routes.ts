@@ -538,7 +538,7 @@ applicationRouter.get(
       }
 
       const rawQuestions = JSON.parse(
-        fs.readFileSync(path.join(__dirname, '../data/aptitude-questions.json'), 'utf-8')
+        fs.readFileSync(path.join(__dirname, '../../data/aptitude-questions.json'), 'utf-8')
       );
 
       // Strip correctIndex before returning to client to prevent answer leakage
@@ -610,7 +610,7 @@ applicationRouter.get(
       }
 
       const rawProblems = JSON.parse(
-        fs.readFileSync(path.join(__dirname, '../data/coding-problems.json'), 'utf-8')
+        fs.readFileSync(path.join(__dirname, '../../data/coding-problems.json'), 'utf-8')
       );
 
       // Match configured job problem ID or default to first problem

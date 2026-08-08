@@ -13,7 +13,7 @@ class ExpressCallbackClient:
         async with httpx.AsyncClient() as client:
             url = f"{self.base_url.rstrip('/')}/{endpoint.lstrip('/')}"
             response = await client.post(url, json=payload, headers=self.headers)
-            response.raise_for_request()
+            response.raise_for_status()
             return response.json()
 
 callback_client = ExpressCallbackClient()

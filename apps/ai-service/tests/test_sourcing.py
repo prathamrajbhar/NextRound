@@ -28,7 +28,7 @@ async def test_fetch_github_profile_success():
     mock_resp = MagicMock()
     mock_resp.status_code = 200
     mock_resp.json.return_value = mock_payload
-    mock_resp.raise_for_request.return_value = None
+    mock_resp.raise_for_status.return_value = None
 
     with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = mock_resp
@@ -56,7 +56,7 @@ async def test_fetch_linkedin_profile_success():
     mock_resp = MagicMock()
     mock_resp.status_code = 200
     mock_resp.json.return_value = mock_payload
-    mock_resp.raise_for_request.return_value = None
+    mock_resp.raise_for_status.return_value = None
 
     with patch("httpx.AsyncClient.get", new_callable=AsyncMock) as mock_get:
         mock_get.return_value = mock_resp

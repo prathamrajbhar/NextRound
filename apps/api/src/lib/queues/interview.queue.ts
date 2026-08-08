@@ -16,6 +16,8 @@ export async function enqueueInterview(
   const payload: InterviewJobPayload = {
     interviewId,
     applicationId,
+    transcript: extraData?.transcript,
+    audioUrl: extraData?.audioUrl,
     extraData,
   };
 

@@ -29,7 +29,7 @@ async def process_jd_parser_job(job_data: dict) -> bool:
                 f"{settings.express_api_base_url}/internal/jobs/{job_id}/raw",
                 headers={"X-Internal-Service-Secret": settings.internal_service_secret},
             )
-            resp.raise_for_request()
+            resp.raise_for_status()
             job_info = resp.json().get("data", {})
 
         raw_desc = job_info.get("description") or job_data.get("description", "")
@@ -51,7 +51,7 @@ async def process_jd_parser_job(job_data: dict) -> bool:
                 json=patch_payload,
                 headers={"X-Internal-Service-Secret": settings.internal_service_secret},
             )
-            resp.raise_for_request()
+            resp.raise_for_status()
 
         # Log agent execution
         log_payload = {

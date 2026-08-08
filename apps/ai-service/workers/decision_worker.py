@@ -24,8 +24,33 @@ async def process_decision_job(job_data: dict) -> bool:
 
     try:
         evaluation_id = job_data.get("evaluationId")
-        composite_score = float(job_data.get("compositeScore", 0.0))
-        confidence = float(job_data.get("confidence", 1.0))
+        composite_score = job_data.get("compositeScore")
+        confidence = job_data.get("confidence")
+
+        # Defensive: if the decision job was enqueued without explicit scores or an
+        # evaluation id (e.g., legacy HR path), fetch the stored evaluation record
+        # from Express so the Decision Agent operates on real composite data.
+        if evaluation_id is None or composite_score is None:
+            try:
+                async with httpx.AsyncClient() as client:
+                    resp = await client.get(
+                        f"{settings.express_api_base_url}/internal/applications/{application_id}/raw",
+                        headers={"X-Internal-Service-Secret": settings.internal_service_secret},
+                    )
+                    resp.raise_for_status()
+                    data = resp.json().get("data", {})
+                    evals = data.get("evaluations") or []
+                    if evals:
+                        evaluation_id = evaluation_id or evals[0].get("id")
+                        if composite_score is None:
+                            composite_score = evals[0].get("composite_score")
+                        if confidence is None:
+                            confidence = evals[0].get("confidence")
+            except Exception as fetch_err:
+                logger.warning(f"Failed to fetch stored evaluation for decision fallback: {fetch_err}")
+
+        composite_score = float(composite_score or 0.0)
+        confidence = float(confidence or 1.0)
 
         # Run Decision LangGraph Agent
         result = await run_decision_agent(
@@ -53,7 +78,7 @@ async def process_decision_job(job_data: dict) -> bool:
                 json=patch_payload,
                 headers={"X-Internal-Service-Secret": settings.internal_service_secret},
             )
-            resp.raise_for_request()
+            resp.raise_for_status()
 
         # Log agent execution
         log_payload = {

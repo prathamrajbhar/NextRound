@@ -26,7 +26,7 @@ async def fetch_github_profile(github_id: str) -> Dict[str, Any]:
             resp = await client.get(url)
             if resp.status_code == 404:
                 return {"success": False, "error": f"GitHub user '{clean_id}' not found"}
-            resp.raise_for_request()
+            resp.raise_for_status()
             data = resp.json()
 
             profile = data.get("profile", {})
@@ -74,7 +74,7 @@ async def fetch_linkedin_profile(linkedin_id: str) -> Dict[str, Any]:
             resp = await client.get(url)
             if resp.status_code == 404:
                 return {"success": False, "error": f"LinkedIn user '{clean_id}' not found"}
-            resp.raise_for_request()
+            resp.raise_for_status()
             data = resp.json()
 
             profile = data.get("profile", {})

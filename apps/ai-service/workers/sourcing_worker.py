@@ -39,7 +39,7 @@ async def process_sourcing_job(job_data: dict) -> bool:
                 f"{settings.express_api_base_url}/internal/jobs/{job_id}/raw",
                 headers={"X-Internal-Service-Secret": settings.internal_service_secret},
             )
-            resp.raise_for_request()
+            resp.raise_for_status()
             job_info = resp.json().get("data", {})
 
         job_desc = job_info.get("description", "")

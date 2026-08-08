@@ -8,6 +8,8 @@ import { uploadFile } from '../../lib/s3';
 import { serializeApplicationList, serializeOffer } from '../../lib/serializers';
 import { extractTextFromBuffer, parseResumeWithGemini } from '../../services/resume-parser.service';
 import { syncCandidateSocialProfiles } from '../../services/social-sync.service';
+import { enqueueVideoScreening } from '../../lib/queues/video-screening.queue';
+import { advanceAssessmentStage } from '../../lib/pipeline';
 
 export const candidateRouter = Router();
 
@@ -538,10 +540,21 @@ candidateRouter.post(
         return res.status(404).json({ success: false, error: 'Application not found' });
       }
 
+      // Enqueue the AI scoring job so a real transcript + score are produced.
+      // The internal video-screening-result callback records the score and
+      // advances the assessment stage once all enabled modalities pass.
+      enqueueVideoScreening(appId, responses).catch((err) =>
+        console.error(`Failed to enqueue video screening scoring for application ${appId}:`, err)
+      );
+
       await prisma.application.update({
         where: { id: appId },
         data: { status: 'screening_completed' },
       });
+
+      await advanceAssessmentStage(appId).catch((err) =>
+        console.error(`Failed to advance assessment stage for application ${appId}:`, err)
+      );
 
       return res.json({
         success: true,
@@ -632,10 +645,16 @@ candidateRouter.post(
         return res.status(404).json({ success: false, error: 'Application not found' });
       }
 
+      // Keep the application in the assessment phase (screening_completed);
+      // advance to interview_scheduled only once all enabled modalities pass.
       await prisma.application.update({
         where: { id: appId },
-        data: { status: 'evaluation' },
+        data: { status: 'screening_completed' },
       });
+
+      await advanceAssessmentStage(appId).catch((err) =>
+        console.error(`Failed to advance assessment stage for application ${appId}:`, err)
+      );
 
       return res.json({
         success: true,

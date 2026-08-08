@@ -97,6 +97,35 @@ def parse_resume_node(state: ScreeningState) -> ScreeningState:
 
 
 
+def _score_rubric_dimensions_with_llm(resume_text: str, job_description: str) -> dict:
+    """Ask Gemini to score the resume against the job on each rubric dimension.
+
+    Returns a dict of dimension -> score (0-100) or None if Gemini is unavailable
+    or the response cannot be parsed.
+    """
+    if not genai_client or not resume_text:
+        return None
+    try:
+        import json, re
+        prompt = (
+            f"You are an unbiased ATS reviewer. Score this candidate's resume against the job on four dimensions (0-100).\n"
+            f"Job Description: {job_description[:1500]}\n\n"
+            f"Resume:\n{resume_text[:3000]}\n\n"
+            'Return JSON only: {"technical": float, "communication": float, '
+            '"problem_solving": float, "experience": float}'
+        )
+        res = genai_client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
+        if res and res.text:
+            match = re.search(r"\{.*\}", res.text, re.DOTALL)
+            if match:
+                data = json.loads(match.group(0))
+                if isinstance(data, dict):
+                    return data
+    except Exception as e:
+        logger.error(f"Gemini rubric scoring failed: {e}")
+    return None
+
+
 def score_against_rubric_node(state: ScreeningState) -> ScreeningState:
     """Node 2: Evaluate candidate against job rubric & compute vector embedding cosine similarity."""
     resume_text = state.get("resume_text", "")
@@ -109,12 +138,23 @@ def score_against_rubric_node(state: ScreeningState) -> ScreeningState:
     similarity = cosine_similarity(job_vector, resume_vector)
     semantic_score = round(similarity * 100, 2)
 
-    # Calculate rubric dimension scores from extracted skills signal
+    # Calculate rubric dimension scores from real resume signals.
+    # Prefer a genuine Gemini rubric evaluation; fall back to deterministic
+    # content-aware heuristics so screening never auto-rejects every candidate.
     skills = state.get("parsed_skills", [])
-    tech_score = min(100.0, max(0.0, len(skills) * 15.0))
-    comm_score = 0.0
-    prob_score = 0.0
-    exp_score = 0.0
+    llm_scores = _score_rubric_dimensions_with_llm(resume_text, job_description)
+    if llm_scores:
+        tech_score = round(float(llm_scores.get("technical", 0) or 0), 2)
+        comm_score = round(float(llm_scores.get("communication", 0) or 0), 2)
+        prob_score = round(float(llm_scores.get("problem_solving", 0) or 0), 2)
+        exp_score = round(float(llm_scores.get("experience", 0) or 0), 2)
+    else:
+        resume_len = len(resume_text)
+        tech_score = min(100.0, max(0.0, len(skills) * 15.0))
+        comm_score = min(100.0, 40.0 + resume_len // 40)
+        prob_terms = ["system design", "architecture", "distributed", "scalab", "algorithm", "problem solving"]
+        prob_score = min(100.0, sum(1 for t in prob_terms if t in resume_text.lower()) * 20.0)
+        exp_score = min(100.0, 50.0 + resume_len // 60)
 
     tech_w = rubric.get("technical", 30) / 100.0
     comm_w = rubric.get("communication", 20) / 100.0

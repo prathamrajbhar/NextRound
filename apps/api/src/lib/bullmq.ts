@@ -20,6 +20,7 @@ export const QUEUE_NAMES = [
   'scheduling',
   'assessment',
   'coding',
+  'video-screening',
   'analytics',
 ] as const;
 
@@ -48,4 +49,5 @@ export const resumeBuilderQueue = getQueue('resume-builder');
 export const schedulingQueue = getQueue('scheduling');
 export const assessmentQueue = getQueue('assessment');
 export const codingQueue = getQueue('coding');
+export const videoScreeningQueue = getQueue('video-screening');
 export const analyticsQueue = getQueue('analytics');

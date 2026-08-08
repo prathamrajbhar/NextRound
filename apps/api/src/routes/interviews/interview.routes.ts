@@ -138,8 +138,12 @@ interviewRouter.post('/:id/end', async (req: Request, res: Response, next: NextF
       data: { status: 'interviewed' },
     });
 
-    // Enqueue interview evaluation job
-    await enqueueInterview(interview.id, interview.application_id);
+    // Enqueue interview evaluation job with the transcript so the Interviewer
+    // Agent scores the real conversation (never an empty history).
+    await enqueueInterview(interview.id, interview.application_id, {
+      transcript,
+      audio_url,
+    });
 
     return res.json({
       success: true,
@@ -307,7 +311,7 @@ interviewRouter.post('/hr/:applicationId/result', requireRole('hr'), async (req:
     });
 
     // Save decision in evaluation
-    await prisma.evaluation.upsert({
+    const hrEvaluation = await prisma.evaluation.upsert({
       where: { application_id: applicationId },
       create: {
         application_id: applicationId,
@@ -323,10 +327,32 @@ interviewRouter.post('/hr/:applicationId/result', requireRole('hr'), async (req:
       },
     });
 
-    // If passed, trigger decision queue job
+    // If passed, trigger the Decision Agent with the Evaluator's real composite
+    // so offers/holds reflect an actual score instead of a 0/1.0 default.
     if (decision === 'pass') {
+      let compositeScore = hrEvaluation.composite_score ?? null;
+      let confidence = hrEvaluation.confidence ?? 0.95;
+      if (compositeScore === null) {
+        // Fall back to the weighted composite of the per-stage scores.
+        const parts = [
+          ['resume_score', 0.2],
+          ['aptitude_score', 0.2],
+          ['coding_score', 0.3],
+          ['interview_score', 0.3],
+        ] as const;
+        const weights = parts.map(([k, w]) => {
+          const v = hrEvaluation[k];
+          return typeof v === 'number' ? v * w : 0;
+        });
+        const totalWeight = parts.reduce((s, [, w]) => s + w, 0);
+        compositeScore = totalWeight > 0 ? weights.reduce((s, v) => s + v, 0) / totalWeight : null;
+      }
+
       await decisionQueue.add('decision_evaluate', {
         applicationId,
+        evaluationId: hrEvaluation.id,
+        compositeScore,
+        confidence,
         extraData: { hr_notes: notes },
       }, {
         attempts: 3,
