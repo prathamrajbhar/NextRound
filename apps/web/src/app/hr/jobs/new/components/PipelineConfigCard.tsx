@@ -80,25 +80,25 @@ export default function PipelineConfigCard({
         <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
           <Settings className="h-5 w-5" />
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
-            Recruitment Pipeline
+            Hiring Steps &amp; AI Settings
           </h3>
         </div>
         <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400">
-          {stages.length} Active Stages
+          {stages.length} Active Steps
         </span>
       </div>
 
       {/* Sleek Pipeline flow breadcrumbs */}
       <div className="flex flex-wrap items-center gap-1.5 py-2 select-none border-b border-slate-200/40 dark:border-slate-800/40 pb-4">
         <span className="text-[10px] font-extrabold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
-          Sourced
+          Applied
         </span>
         <ChevronRight className="h-3 w-3 text-slate-400 dark:text-slate-600" />
 
         {isActive('screening') && (
           <>
             <span className="text-[10px] font-extrabold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2.5 py-1 rounded-lg">
-              AI Screen
+              Resume Check
             </span>
             <ChevronRight className="h-3 w-3 text-slate-400 dark:text-slate-600" />
           </>
@@ -107,7 +107,7 @@ export default function PipelineConfigCard({
         {isActive('assessment') && (
           <>
             <span className="text-[10px] font-extrabold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/80 px-2.5 py-1 rounded-lg">
-              Assessment
+              Online Test
             </span>
             <ChevronRight className="h-3 w-3 text-slate-400 dark:text-slate-600" />
           </>
@@ -116,7 +116,7 @@ export default function PipelineConfigCard({
         {isActive('voice_screen') && (
           <>
             <span className="text-[10px] font-extrabold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/80 px-2.5 py-1 rounded-lg">
-              Voice Screen
+              Voice Call
             </span>
             <ChevronRight className="h-3 w-3 text-slate-400 dark:text-slate-600" />
           </>
@@ -125,14 +125,14 @@ export default function PipelineConfigCard({
         {isActive('panel') && (
           <>
             <span className="text-[10px] font-extrabold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/80 px-2.5 py-1 rounded-lg">
-              Live Panel
+              Team Interview
             </span>
             <ChevronRight className="h-3 w-3 text-slate-400 dark:text-slate-600" />
           </>
         )}
 
         <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-lg">
-          Decision
+          Hire Decision
         </span>
       </div>
 
@@ -146,8 +146,8 @@ export default function PipelineConfigCard({
                 <Eye className="h-3.5 w-3.5" />
               </span>
               <div>
-                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">AI Resume Screening</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Automatic parsing and fit ranking</span>
+                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Auto Resume Screening</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Check and rank resumes automatically</span>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -170,8 +170,8 @@ export default function PipelineConfigCard({
                 <ClipboardCheck className="h-3.5 w-3.5" />
               </span>
               <div>
-                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">MCQ &amp; Coding Assessment</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Online technical skills testing</span>
+                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Online Test</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Coding and multiple-choice questions</span>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -189,7 +189,7 @@ export default function PipelineConfigCard({
           {isActive('assessment') && (
             <div className="pl-9 pr-1 pt-2 space-y-3 animate-in fade-in duration-150">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">MCQ Questions</span>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Number of Questions</span>
                 <div className="flex items-center gap-1.5 select-none border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 bg-slate-50 dark:bg-slate-800">
                   <button
                     type="button"
@@ -211,7 +211,7 @@ export default function PipelineConfigCard({
 
               <div className="space-y-1">
                 <div className="flex justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                  <span>Passing Score Threshold</span>
+                  <span>Passing Score</span>
                   <span className="text-amber-600 dark:text-amber-400 font-extrabold">{assessmentConfig.passingScore}%</span>
                 </div>
                 <input
@@ -235,8 +235,8 @@ export default function PipelineConfigCard({
                 <AudioLines className="h-3.5 w-3.5" />
               </span>
               <div>
-                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">AI Voice Screening</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Conversational speech agent interview</span>
+                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">AI Voice Call</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Automated AI phone interview</span>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -255,16 +255,16 @@ export default function PipelineConfigCard({
             <div className="pl-9 pr-1 pt-2 space-y-2 animate-in fade-in duration-150">
               <div>
                 <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 block mb-1">
-                  Interviewer Persona Voice
+                  AI Voice Persona
                 </label>
                 <select
                   value={voiceProfile}
                   onChange={(e) => setVoiceProfile(e.target.value)}
                   className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 font-bold focus:outline-none cursor-pointer"
                 >
-                  <option value="Serena (Warm/Professional)" className="dark:bg-slate-900">Serena (Warm/Professional)</option>
-                  <option value="Marcus (Technical/Direct)" className="dark:bg-slate-900">Marcus (Technical/Direct)</option>
-                  <option value="Charlotte (Conversational)" className="dark:bg-slate-900">Charlotte (Conversational)</option>
+                  <option value="Serena (Warm/Professional)" className="dark:bg-slate-900">Serena (Warm &amp; Professional)</option>
+                  <option value="Marcus (Technical/Direct)" className="dark:bg-slate-900">Marcus (Technical &amp; Direct)</option>
+                  <option value="Charlotte (Conversational)" className="dark:bg-slate-900">Charlotte (Friendly &amp; Casual)</option>
                 </select>
               </div>
             </div>
@@ -279,8 +279,8 @@ export default function PipelineConfigCard({
                 <Video className="h-3.5 w-3.5" />
               </span>
               <div>
-                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Live Panel / Interview</span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Human recruiter final round</span>
+                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Team Interview</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">Final round with hiring team</span>
               </div>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -301,9 +301,9 @@ export default function PipelineConfigCard({
         <div className="flex justify-between items-center">
           <div>
             <span className="block text-xs font-extrabold text-slate-900 dark:text-slate-100">
-              Autonomous AI Sourcing
+              AI Candidate Sourcing
             </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Auto-match candidate profiles</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-medium">Find matching candidates automatically</span>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -318,7 +318,7 @@ export default function PipelineConfigCard({
 
         <div className="space-y-1 pt-1">
           <div className="flex justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
-            <span>Min Shortlist Score Threshold</span>
+            <span>Minimum Shortlist Score</span>
             <span className="font-extrabold text-indigo-600 dark:text-indigo-400">{minScore}%</span>
           </div>
           <input

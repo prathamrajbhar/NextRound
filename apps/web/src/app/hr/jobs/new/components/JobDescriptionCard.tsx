@@ -66,13 +66,13 @@ export default function JobDescriptionCard({
           className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/80 bg-purple-50 dark:bg-purple-950/70 hover:bg-purple-100 dark:hover:bg-purple-900/80 px-3.5 py-1.5 rounded-full transition-all cursor-pointer shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Sparkles className={`h-4 w-4 ${assisting ? 'animate-spin text-purple-600 dark:text-purple-400' : 'text-purple-600 dark:text-purple-400'}`} />
-          {assisting ? 'Parsing JD...' : 'AI Assist Extract'}
+          {assisting ? 'AI is reading JD...' : 'AI Auto-Fill'}
         </button>
       </div>
 
       {/* Templates Prefill */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-1">Templates:</span>
+        <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-1">Sample Templates:</span>
         {TEMPLATES.map((tmpl) => (
           <button
             key={tmpl.name}
@@ -132,7 +132,7 @@ export default function JobDescriptionCard({
         rows={10}
         value={jd}
         onChange={(e) => setJd(e.target.value)}
-        placeholder="Paste roles, responsibilities, technical stacks, or select a template above to get started..."
+        placeholder="Paste role responsibilities, required skills, and expectations here or choose a sample template above..."
         className="w-full px-4 py-3.5 text-xs font-medium rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-white/70 dark:bg-slate-800/80 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all glass-input leading-relaxed"
       />
     </div>

@@ -37,7 +37,7 @@ export default function RubricWeightingCard({
       <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
         <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400">
           <Sliders className="h-5 w-5" />
-          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Rubric Weighting</h3>
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Candidate Scoring Weights</h3>
         </div>
         
         {/* Auto Balance Switch */}
@@ -95,7 +95,7 @@ export default function RubricWeightingCard({
           {isBalanced ? (
             <>
               <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-600 dark:text-emerald-400" />
-              <span>Rubric Balanced (Exactly 100%)</span>
+              <span>Weights Balanced (Total: 100%)</span>
             </>
           ) : (
             <>
@@ -174,12 +174,12 @@ export default function RubricWeightingCard({
           />
         </div>
 
-        {/* Experience Depth */}
+        {/* Work Experience */}
         <div className="space-y-1">
           <div className="flex justify-between items-center text-[11px]">
             <span className="flex items-center gap-1.5 font-extrabold text-slate-800 dark:text-slate-200">
               <span className="h-2 w-2 rounded-full bg-amber-500 block" />
-              Experience Depth
+              Work Experience
             </span>
             <span className="font-extrabold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-900">{experience}%</span>
           </div>

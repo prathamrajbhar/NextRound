@@ -262,13 +262,13 @@ export default function HrCreateJob() {
               Jobs
             </Link>
             <ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-600" />
-            <span className="text-slate-700 dark:text-slate-200 font-black">New Opening</span>
+            <span className="text-slate-700 dark:text-slate-200 font-black">New Job</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-display">
-            Post a Job Opening
+            Post a New Job
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium mt-1">
-            Configure agent frameworks, screening scorecards, and start autonomous sourcing.
+            Fill in the job details, AI test requirements, and hiring steps to start finding candidates.
           </p>
         </div>
 
@@ -298,7 +298,7 @@ export default function HrCreateJob() {
             className="inline-flex items-center gap-2 rounded-2xl bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 text-white font-extrabold px-5 py-2 text-xs shadow-md transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Send className="h-3.5 w-3.5" />
-            Publish Job Post
+            Publish Job
           </button>
         </div>
       </div>

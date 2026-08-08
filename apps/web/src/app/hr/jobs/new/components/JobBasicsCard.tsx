@@ -39,25 +39,22 @@ export default function JobBasicsCard({
       <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
         <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
           <Briefcase className="h-5 w-5" />
-          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Job Basics</h3>
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Job Details</h3>
         </div>
-        <span className="text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300">
-          Core Info
-        </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Title */}
         <div className="md:col-span-2 space-y-1.5">
           <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
-            Position Title <span className="text-rose-500">*</span>
+            Job Title <span className="text-rose-500">*</span>
           </label>
           <Autocomplete
             required
             options={SUGGESTED_ROLES}
             value={title}
             onChange={(val) => setTitle(val)}
-            placeholder="e.g. Senior Fullstack Engineer (React & Go)"
+            placeholder="e.g. Senior Fullstack Engineer"
             icon={<Briefcase className="h-4 w-4" />}
             className="text-xs font-semibold"
           />
@@ -84,7 +81,7 @@ export default function JobBasicsCard({
         {/* Location Type */}
         <div className="space-y-1.5">
           <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
-            Location Workspace
+            Work Location
           </label>
           <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
             {['Remote', 'Hybrid', 'On-site'].map((loc) => {
@@ -110,7 +107,7 @@ export default function JobBasicsCard({
         {/* Experience Level */}
         <div className="space-y-1.5">
           <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
-            Seniority Level
+            Experience Level
           </label>
           <select
             value={experienceLevel}
@@ -128,10 +125,10 @@ export default function JobBasicsCard({
         <div className="space-y-1.5">
           <div className="flex justify-between items-center">
             <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
-              Annual Salary Range (USD)
+              Salary Range (USD)
             </label>
             <span className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400">
-              ${(minSalary / 1000).toFixed(0)}k - ${(maxSalary / 1000).toFixed(0)}k
+              ${(minSalary / 1000).toFixed(0)}k - ${(maxSalary / 1000).toFixed(0)}k / year
             </span>
           </div>
           <div className="flex items-center gap-2">

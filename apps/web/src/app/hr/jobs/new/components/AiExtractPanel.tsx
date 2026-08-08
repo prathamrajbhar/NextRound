@@ -55,7 +55,7 @@ export default function AiExtractPanel({
       <div className="rounded-3xl border border-indigo-200/80 dark:border-indigo-900/80 bg-indigo-50/40 dark:bg-indigo-950/40 p-6 shadow-sm backdrop-blur-md space-y-4 animate-pulse">
         <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
           <Cpu className="h-5 w-5 animate-spin" />
-          <h3 className="text-xs font-extrabold uppercase tracking-wider">AI Coprocessor Active</h3>
+          <h3 className="text-xs font-extrabold tracking-wider">AI is reading your job description...</h3>
         </div>
         <div className="space-y-2">
           <div className="h-2 w-full bg-indigo-100 dark:bg-indigo-900/50 rounded-full overflow-hidden relative">
@@ -76,19 +76,16 @@ export default function AiExtractPanel({
       <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
         <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
           <Sparkles className="h-5 w-5" />
-          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">AI-Extracted Evaluation Parameters</h3>
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">AI Extracted Requirements</h3>
         </div>
-        <span className="text-[10px] font-extrabold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-900 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-full">
-          Parameters Ready
-        </span>
       </div>
 
       <div className="space-y-5 text-xs font-semibold">
         {/* Technical Skills */}
         <div className="space-y-2">
-          <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 tracking-wider flex items-center gap-1.5">
             <Award className="h-3.5 w-3.5 text-indigo-500" />
-            Required Tech Skills
+            Technical Skills
           </span>
           <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center">
             {skills.map((item) => (
@@ -109,7 +106,7 @@ export default function AiExtractPanel({
             <div className="flex items-center gap-1 max-w-[140px] ml-1">
               <input
                 type="text"
-                placeholder="+ Add Tech Skill"
+                placeholder="+ Add Skill"
                 value={newSkill}
                 onChange={(e) => setNewSkill(e.target.value)}
                 onKeyDown={(e) => {
@@ -133,9 +130,9 @@ export default function AiExtractPanel({
 
         {/* Soft Skills */}
         <div className="space-y-2">
-          <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 tracking-wider flex items-center gap-1.5">
             <ShieldAlert className="h-3.5 w-3.5 text-purple-500" />
-            Evaluated Soft Skills
+            Soft Skills
           </span>
           <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center">
             {softSkills.map((item) => (
@@ -180,9 +177,9 @@ export default function AiExtractPanel({
 
         {/* Culture Keywords */}
         <div className="space-y-2">
-          <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 tracking-wider flex items-center gap-1.5">
             <Heart className="h-3.5 w-3.5 text-rose-500" />
-            Culture & Team Alignment
+            Culture &amp; Values
           </span>
           <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center">
             {cultureKeywords.map((item) => (
