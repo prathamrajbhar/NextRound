@@ -46,23 +46,27 @@ export default function AptitudeTestConsole({
   applicationId,
   sessionId,
 }: AptitudeTestConsoleProps) {
-  const [fetchedQuestions, setFetchedQuestions] = useState<AptitudeQuestion[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const displayCompany = company || companyName || 'NextRound';
+  const displayRole = role || roleTitle || 'Candidate';
 
+  const [fetchedQuestions, setFetchedQuestions] = useState<AptitudeQuestion[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPrefetching, setIsPrefetching] = useState(false);
+  const [batchCount, setBatchCount] = useState(1);
+
+  // 1. Initial Batch Direct Fetch
   useEffect(() => {
-    async function loadDynamicQuestions() {
+    async function loadInitialBatch() {
       const endpoint = applicationId
         ? `/applications/${applicationId}/assessment/aptitude`
-        : (sessionId ? `/mock/sessions/${sessionId}/aptitude` : null);
-
-      if (!endpoint) return;
+        : `/mock/sessions/${sessionId || 'practice'}/aptitude?role=${encodeURIComponent(displayRole)}&company=${encodeURIComponent(displayCompany)}&batch=1&count=4`;
 
       try {
         setIsLoading(true);
         const res = await apiClient.get<{ questions: any[] }>(endpoint).catch(() => null);
         if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
-          const mapped = res.questions.map((q: any) => ({
-            id: q.id,
+          const mapped = res.questions.map((q: any, idx: number) => ({
+            id: q.id || `q_b1_${idx}`,
             category: q.category || 'Logical Reasoning',
             text: q.text || q.question || 'Question text unavailable.',
             options: q.options || [],
@@ -71,22 +75,60 @@ export default function AptitudeTestConsole({
           setFetchedQuestions(mapped);
         }
       } catch (err) {
-        console.error('Failed to load dynamic aptitude questions:', err);
+        console.error('Failed to load initial aptitude questions:', err);
       } finally {
         setIsLoading(false);
       }
     }
-    loadDynamicQuestions();
-  }, [applicationId, sessionId]);
+    loadInitialBatch();
+  }, [applicationId, sessionId, displayRole, displayCompany]);
+
+  // 2. Smart Background Batch Prefetching
+  const prefetchNextBatch = useCallback(async () => {
+    if (isPrefetching || isLoading) return;
+
+    const nextBatchNum = batchCount + 1;
+    const prefetchEndpoint = applicationId
+      ? `/applications/${applicationId}/assessment/aptitude?batch=${nextBatchNum}&count=4`
+      : `/mock/sessions/${sessionId || 'practice'}/aptitude?role=${encodeURIComponent(displayRole)}&company=${encodeURIComponent(displayCompany)}&batch=${nextBatchNum}&count=4`;
+
+    try {
+      setIsPrefetching(true);
+      const res = await apiClient.get<{ questions: any[] }>(prefetchEndpoint).catch(() => null);
+      if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
+        const newMapped = res.questions.map((q: any, idx: number) => ({
+          id: `${q.id || 'q'}_b${nextBatchNum}_${idx}`,
+          category: q.category || 'Logical Reasoning',
+          text: q.text || q.question || 'Question text unavailable.',
+          options: q.options || [],
+          difficulty: q.difficulty || 'medium',
+        }));
+        setFetchedQuestions((prev) => {
+          const existingIds = new Set(prev.map((item) => item.id));
+          const uniqueNew = newMapped.filter((item: AptitudeQuestion) => !existingIds.has(item.id));
+          return [...prev, ...uniqueNew];
+        });
+        setBatchCount(nextBatchNum);
+      }
+    } catch (err) {
+      console.error(`Failed to prefetch aptitude batch ${nextBatchNum}:`, err);
+    } finally {
+      setIsPrefetching(false);
+    }
+  }, [isPrefetching, isLoading, batchCount, applicationId, sessionId, displayRole, displayCompany]);
+
+  // Trigger prefetch when candidate is 2 questions away from the end of current buffer
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (fetchedQuestions.length > 0 && currentIndex >= fetchedQuestions.length - 2 && !isPrefetching) {
+      prefetchNextBatch();
+    }
+  }, [currentIndex, fetchedQuestions.length, isPrefetching, prefetchNextBatch]);
 
   const activeQuestions = fetchedQuestions.length > 0 
     ? fetchedQuestions 
     : questions;
-
-  const displayCompany = company || companyName || 'NextRound';
-  const displayRole = role || roleTitle || 'Candidate';
-
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [timeLeft, setTimeLeft] = useState(900); // 15 min total
   const [questionTimeLeft, setQuestionTimeLeft] = useState(60); // 60s per question
@@ -285,31 +327,22 @@ export default function AptitudeTestConsole({
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] p-8 text-center animate-in fade-in duration-300 font-sans">
         <div className="p-8 rounded-3xl border border-slate-800 bg-slate-900 text-slate-200 shadow-2xl max-w-md w-full space-y-4">
-          <div className="h-16 w-16 mx-auto rounded-full flex items-center justify-center border border-slate-700 bg-slate-950 text-slate-300">
-            <Brain className="h-8 w-8 text-amber-400" />
+          <div className="h-16 w-16 mx-auto rounded-full flex items-center justify-center border border-amber-500/40 bg-amber-500/10 text-amber-400">
+            <Brain className="h-8 w-8 animate-pulse text-amber-400" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-black font-display">Generating Assessment Questions</h2>
+            <h2 className="text-xl font-black font-display text-white">Initializing Assessment</h2>
             <p className="text-xs text-slate-400 font-semibold">
-              The AI assessment engine is provisioning dynamic LLM questions for {displayRole}.
+              Connecting to AI service to load questions for {displayRole}...
             </p>
           </div>
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => window.location.reload()}
-              className="flex-1 py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
-            >
-              Generate LLM Questions
-            </button>
-            <button
-              type="button"
-              onClick={() => onComplete(0)}
-              className="py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
-            >
-              Skip
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="w-full py-3.5 px-6 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+          >
+            Retry Connection
+          </button>
         </div>
       </div>
     );

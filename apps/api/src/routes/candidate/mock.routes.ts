@@ -154,9 +154,11 @@ mockRouter.get(
         },
       });
 
-      if (!session) {
-        return res.status(404).json({ success: false, error: 'Mock session not found' });
-      }
+      const roleName = session?.target_role || session?.topic || (req.query.role as string) || (req.query.topic as string) || 'Software Engineer';
+      const companyName = session?.target_company || (req.query.company as string) || 'Tech Enterprise';
+      const diffLevel = session?.difficulty || (req.query.difficulty as string) || 'medium';
+      const requestedCount = parseInt(req.query.count as string, 10) || 4;
+      const batchNum = parseInt(req.query.batch as string, 10) || 1;
 
       let rawQuestions: any[] = [];
       try {
@@ -165,9 +167,9 @@ mockRouter.get(
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            jobTitle: session.target_role || session.topic || 'Software Engineer',
-            jobDescription: `Target Company: ${session.target_company || 'Tech Enterprise'}. Difficulty: ${session.difficulty || 'medium'}`,
-            count: 5,
+            jobTitle: roleName,
+            jobDescription: `Target Company: ${companyName}. Difficulty: ${diffLevel}. Batch Number: ${batchNum}`,
+            count: requestedCount,
           }),
         });
 
@@ -178,7 +180,7 @@ mockRouter.get(
           }
         }
       } catch (aiErr) {
-        console.error(`AI Service mock dynamic question generation failed for session ${session.id}:`, aiErr);
+        console.error(`AI Service mock dynamic question generation failed:`, aiErr);
       }
 
       if (rawQuestions.length === 0) {
