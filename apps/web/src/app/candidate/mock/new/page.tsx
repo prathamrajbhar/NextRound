@@ -18,22 +18,33 @@ import {
   Target,
   CheckCircle2,
 } from '@/lib/lucide-google-icons';
-import { SUGGESTED_COMPANIES, SUGGESTED_ROLES } from '@/lib/constants';
 import CalibrationPanel, { AssessmentTrack } from './components/CalibrationPanel';
-import { Autocomplete, CompanyLogo } from '@/components/ui';
+import { CompanyLogo, SearchableSelect } from '@/components/ui';
+import type { SearchableSelectOption } from '@/components/ui';
 import { apiClient } from '@/lib/apiClient';
+import { deriveJobOptions, normalizeJobs } from '@/lib/jobOptions';
+import type { Job } from '@/types';
 
 function MockInterviewSetupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [company, setCompany] = useState(searchParams.get('company') || 'Google');
-  const [role, setRole] = useState(searchParams.get('role') || 'Software Engineer');
+  const initialCompany = searchParams.get('company');
+  const initialRole = searchParams.get('role');
+  const [company, setCompany] = useState(initialCompany || '');
+  const [role, setRole] = useState(initialRole || '');
   const initialTrack = (searchParams.get('track') as AssessmentTrack) || 'comprehensive';
   const [track, setTrack] = useState<AssessmentTrack>(initialTrack);
   const [difficulty, setDifficulty] = useState<'junior' | 'mid' | 'senior'>('mid');
   const [loading, setLoading] = useState(false);
   const [isCalibrating, setIsCalibrating] = useState(false);
+
+  // Posted-job picker state (sourced live from GET /jobs)
+  const [orgId, setOrgId] = useState<string | null>(null);
+  const [companyOptions, setCompanyOptions] = useState<SearchableSelectOption[]>([]);
+  const [rolesByOrgId, setRolesByOrgId] = useState<Record<string, string[]>>({});
+  const [postedLoading, setPostedLoading] = useState(true);
+  const [postedError, setPostedError] = useState<string | null>(null);
 
   // Hardware states
   const [micActive, setMicActive] = useState(true);
@@ -58,9 +69,61 @@ function MockInterviewSetupForm() {
     return () => clearTimeout(t);
   }, [isCalibrating]);
 
+  // Load real posted companies/positions; reconcile any URL deep-link with posted values.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const jobs = normalizeJobs(await apiClient.get<Job[]>('/jobs'));
+        if (cancelled) return;
+        const { companies, rolesByOrgId: roles } = deriveJobOptions(jobs);
+        setCompanyOptions(companies);
+        setRolesByOrgId(roles);
+        if (companies.length === 0) {
+          setOrgId(null);
+          setCompany('');
+          setRole('');
+          return;
+        }
+        const matchedCompany =
+          companies.find((c) => c.label.toLowerCase() === (initialCompany || '').toLowerCase()) ||
+          companies[0];
+        const orgRoles = roles[matchedCompany.value] || [];
+        const matchedRole =
+          orgRoles.find((r) => r.toLowerCase() === (initialRole || '').toLowerCase()) ||
+          orgRoles[0] ||
+          '';
+        setOrgId(matchedCompany.value);
+        setCompany(matchedCompany.label);
+        setRole(matchedRole);
+      } catch {
+        if (!cancelled) setPostedError('Could not load posted roles.');
+      } finally {
+        if (!cancelled) setPostedLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialCompany, initialRole]);
+
+  const handleCompanySelect = (opt: SearchableSelectOption) => {
+    setCompany(opt.label);
+    setOrgId(opt.value);
+    setRole((rolesByOrgId[opt.value] || [])[0] || '');
+    setIsCalibrating(true);
+  };
+  const handleRoleSelect = (opt: SearchableSelectOption) => setRole(opt.label);
+
+  const roleOptions: SearchableSelectOption[] = orgId
+    ? (rolesByOrgId[orgId] || []).map((r) => ({ value: r, label: r }))
+    : [];
+  const selectedCompany = companyOptions.find((c) => c.value === orgId) || null;
+  const selectedRole = roleOptions.find((r) => r.value === role) || null;
+
   const handleStart = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!consent) return;
+    if (!consent || !orgId || !role) return;
     setLoading(true);
     try {
       const res = await apiClient.post<{ sessionId: string }>('/mock/sessions', {
@@ -177,17 +240,26 @@ function MockInterviewSetupForm() {
                       Target Enterprise
                     </label>
                     <div className="flex items-center gap-2">
-                      <CompanyLogo name={company} size="md" className="shadow-xs flex-shrink-0" />
+                      {postedLoading || !company ? (
+                        <span className="h-12 w-12 flex-shrink-0 rounded-2xl bg-slate-200/70 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 animate-pulse" />
+                      ) : (
+                        <CompanyLogo
+                          name={company}
+                          logoUrl={selectedCompany?.logoUrl}
+                          size="md"
+                          className="shadow-xs flex-shrink-0"
+                        />
+                      )}
                       <div className="flex-1 min-w-0">
-                        <Autocomplete
-                          required
-                          options={SUGGESTED_COMPANIES}
-                          value={company}
-                          onChange={(val) => {
-                            setCompany(val);
-                            setIsCalibrating(true);
-                          }}
-                          placeholder="e.g. Google, Swiggy..."
+                        <SearchableSelect
+                          options={companyOptions}
+                          selected={selectedCompany}
+                          onSelect={handleCompanySelect}
+                          loading={postedLoading}
+                          emptyMessage="No companies have posted roles yet"
+                          placeholder="Search companies with open roles..."
+                          icon={<Building2 className="h-4 w-4" />}
+                          error={postedError || undefined}
                           className="text-xs font-semibold"
                         />
                       </div>
@@ -198,12 +270,15 @@ function MockInterviewSetupForm() {
                     <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                       Target Position Title
                     </label>
-                    <Autocomplete
-                      required
-                      options={SUGGESTED_ROLES}
-                      value={role}
-                      onChange={(val) => setRole(val)}
-                      placeholder="e.g. Software Engineer..."
+                    <SearchableSelect
+                      options={roleOptions}
+                      selected={selectedRole}
+                      onSelect={handleRoleSelect}
+                      loading={postedLoading}
+                      disabled={!orgId}
+                      emptyMessage="Pick a company to see its open roles"
+                      placeholder="Roles posted by this company..."
+                      icon={<Target className="h-4 w-4" />}
                       className="text-xs font-semibold"
                     />
                   </div>
@@ -325,7 +400,7 @@ function MockInterviewSetupForm() {
 
               <button
                 type="submit"
-                disabled={loading || !consent}
+                disabled={loading || !consent || !orgId || !role}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold py-3.5 px-8 text-xs transition-all shadow-lg hover:shadow-xl disabled:opacity-50 cursor-pointer transform hover:scale-[1.01] active:scale-[0.99]"
               >
                 <Mic className="h-4.5 w-4.5" />

@@ -25,6 +25,9 @@ export type { SelectProps, SelectOption } from './Select';
 export { Autocomplete } from './Autocomplete';
 export type { AutocompleteProps } from './Autocomplete';
 
+export { SearchableSelect } from './SearchableSelect';
+export type { SearchableSelectProps, SearchableSelectOption } from './SearchableSelect';
+
 export { Tooltip } from './Tooltip';
 export type { TooltipProps } from './Tooltip';
 
