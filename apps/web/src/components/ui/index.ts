@@ -60,3 +60,5 @@ export { CompanyLogo } from './CompanyLogo';
 export { JobCard } from './JobCard';
 export type { JobCardProps } from './JobCard';
 
+export { FormattedMarkdown } from './FormattedMarkdown';
+

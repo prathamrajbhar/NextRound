@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { Job, Application } from '@/types';
-import { CompanyLogo } from '@/components/ui';
+import { CompanyLogo, FormattedMarkdown } from '@/components/ui';
 import {
   MapPin,
   DollarSign,
@@ -108,6 +108,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
   }
 
   const skills: string[] = [];
+  const hasDetailedMarkdown = job.description && (job.description.includes('##') || job.description.includes('*'));
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -155,7 +156,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
         job={job}
         applied={applied}
         onApply={handleApply}
-        skills={skills}
+        skills={job.skills || []}
         submitting={submittingApp}
       />
 
@@ -175,32 +176,32 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
               </span>
             </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal text-justify sm:text-left">
-              {job.description}
-            </p>
+            <FormattedMarkdown content={job.description} />
 
-            <div className="pt-2">
-              <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-200 uppercase tracking-wider mb-3">
-                Core Responsibilities
-              </h3>
-              <div className="space-y-2.5">
-                {[
-                  'Design, deploy, and benchmark core features and architectural specifications.',
-                  'Write production-grade, maintainable code with strict TypeScript compilers and unit coverage.',
-                  'Collaborate with UI/UX designers to build high-performance, accessible dashboard layouts.',
-                  'Integrate robust error boundaries, structured monitoring, and telemetry middleware.',
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-3">
-                    <div className="h-5 w-5 rounded-full bg-brand-50 dark:bg-orange-950/60 border border-brand-200 dark:border-orange-900/60 flex items-center justify-center text-brand-600 dark:text-orange-400 flex-shrink-0 mt-0.5">
-                      <Check className="h-3 w-3" />
+            {!hasDetailedMarkdown && (
+              <div className="pt-2">
+                <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-200 uppercase tracking-wider mb-3">
+                  Core Responsibilities
+                </h3>
+                <div className="space-y-2.5">
+                  {[
+                    'Design, deploy, and benchmark core features and architectural specifications.',
+                    'Write production-grade, maintainable code with strict TypeScript compilers and unit coverage.',
+                    'Collaborate with UI/UX designers to build high-performance, accessible dashboard layouts.',
+                    'Integrate robust error boundaries, structured monitoring, and telemetry middleware.',
+                  ].map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-3">
+                      <div className="h-5 w-5 rounded-full bg-brand-50 dark:bg-orange-950/60 border border-brand-200 dark:border-orange-900/60 flex items-center justify-center text-brand-600 dark:text-orange-400 flex-shrink-0 mt-0.5">
+                        <Check className="h-3 w-3" />
+                      </div>
+                      <span className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                        {item}
+                      </span>
                     </div>
-                    <span className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-                      {item}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Rubric: What We Look For Section */}

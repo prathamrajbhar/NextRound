@@ -36,6 +36,7 @@ export interface Job {
   experienceLevel: string;
   postedDate: string;
   applicantsCount: number;
+  skills?: string[];
   stages?: ('screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision')[];
   assessmentConfig?: {
     mcqCount: number;
