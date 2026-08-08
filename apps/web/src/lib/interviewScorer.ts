@@ -18,7 +18,8 @@ export function evaluateInterview({
 }): ScoreResults {
   const answeredCount = transcriptData.filter((t) => t.answer.trim().length > 0).length;
   const totalTopics = topics.length || 1;
-  const baseScore = Math.min(100, Math.round((answeredCount / totalTopics) * 85 + 15));
+  const baseScore = answeredCount === 0 ? 0 : Math.min(100, Math.round((answeredCount / totalTopics) * 85 + 15));
+
 
   return {
     score: baseScore,
