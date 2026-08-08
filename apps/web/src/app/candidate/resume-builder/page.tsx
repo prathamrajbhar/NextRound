@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { ATSResumeData, DynamicConversationTurn } from '@/types';
+import { useLocalMediaStream } from '@/hooks/useLocalMediaStream';
 import { SetupStage } from './_components/SetupStage';
 import { InterviewStage } from './_components/InterviewStage';
 import { ResumeStage } from './_components/ResumeStage';
@@ -60,28 +61,14 @@ export default function AIResumeBuilderPage() {
 
   const currentTurn = dynamicTurns[turnIndex] && { aiMessage: dynamicTurns[turnIndex].aiMessage, simulatedUserAnswer: dynamicTurns[turnIndex].simulatedUserAnswer };
 
-  // Webcam activation effect during interview stage
-  useEffect(() => {
-    if (stage !== 'interview' || !camActive) return;
-
-    let localStream: MediaStream | null = null;
-    navigator.mediaDevices?.getUserMedia({ video: true, audio: false })
-      .then((stream) => {
-        localStream = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-      })
-      .catch(() => {
-        // Fallback to avatar if webcam is not available
-      });
-
-    return () => {
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [stage, camActive]);
+  // Local webcam feed during interview stage (video-only); released when the stage leaves
+  // 'interview' or the component unmounts (unmount cleanup + pagehide handler).
+  useLocalMediaStream({
+    videoRef,
+    camActive,
+    micActive: false,
+    enabled: stage === 'interview',
+  });
 
   // Timer countdown
   useEffect(() => {

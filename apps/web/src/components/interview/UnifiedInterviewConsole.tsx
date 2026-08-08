@@ -28,6 +28,7 @@ import {
   Save,
 } from '@/lib/lucide-google-icons';
 import { Message, InterviewPhase } from '@/hooks/useInterviewSession';
+import { useLocalMediaStream } from '@/hooks/useLocalMediaStream';
 import { CompanyLogo } from '@/components/ui';
 
 export type InterviewConsoleMode =
@@ -89,8 +90,6 @@ export function UnifiedInterviewConsole({
   // Device & Stream States
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
-  const [hasCamPermission, setHasCamPermission] = useState<boolean | null>(null);
-  const [micLevel, setMicLevel] = useState<number>(45);
 
   // UI Drawer & Text Chat Fallback
   const [textInput, setTextInput] = useState('');
@@ -110,71 +109,13 @@ export function UnifiedInterviewConsole({
   const [recordedList, setRecordedList] = useState<Record<string, { duration: number; attempts: number }>>({});
   const [attempts, setAttempts] = useState(1);
 
-  // WebCam Stream Setup
-  useEffect(() => {
-    let currentStream: MediaStream | null = null;
-
-    async function setupWebcam() {
-      if (!camActive && !micActive) {
-        if (currentStream) {
-          currentStream.getTracks().forEach((track) => track.stop());
-        }
-        return;
-      }
-
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: camActive ? { width: { ideal: 1280 }, height: { ideal: 720 } } : false,
-          audio: micActive,
-        });
-
-        currentStream = stream;
-        setHasCamPermission(true);
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-
-        // Web Audio API volume level detection
-        if (micActive) {
-          try {
-            const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-            if (AudioCtxClass) {
-              const audioCtx = new AudioCtxClass();
-              const source = audioCtx.createMediaStreamSource(stream);
-              const analyser = audioCtx.createAnalyser();
-              analyser.fftSize = 64;
-              source.connect(analyser);
-
-              const dataArray = new Uint8Array(analyser.frequencyBinCount);
-              const updateLevel = () => {
-                if (!currentStream || !currentStream.active) return;
-                analyser.getByteFrequencyData(dataArray);
-                let sum = 0;
-                for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
-                const avg = sum / dataArray.length;
-                setMicLevel(Math.min(100, Math.max(15, Math.floor((avg / 128) * 100))));
-                requestAnimationFrame(updateLevel);
-              };
-              updateLevel();
-            }
-          } catch {
-            // Audio context fallback
-          }
-        }
-      } catch {
-        setHasCamPermission(false);
-      }
-    }
-
-    setupWebcam();
-
-    return () => {
-      if (currentStream) {
-        currentStream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [camActive, micActive]);
+  // Local webcam/mic stream lifecycle — owns the getUserMedia stream and stops all tracks
+  // on unmount, pagehide, and when the session ends (via handleEndSession).
+  const { stopLocalStream, hasCamPermission, micLevel } = useLocalMediaStream({
+    videoRef,
+    camActive,
+    micActive,
+  });
 
   // Video Screening Recording Timer
   useEffect(() => {
@@ -259,6 +200,12 @@ export function UnifiedInterviewConsole({
         document.exitFullscreen().catch(() => {});
       }
     }
+  };
+
+  // Release the camera/mic the moment the session ends, before async API calls + navigation.
+  const handleEndSession = () => {
+    stopLocalStream();
+    onEndSession();
   };
 
   const handleScreeningRecordToggle = () => {
@@ -656,7 +603,7 @@ export function UnifiedInterviewConsole({
               </button>
               <button
                 type="button"
-                onClick={onEndSession}
+                onClick={handleEndSession}
                 className="flex-1 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-md cursor-pointer"
               >
                 End Call

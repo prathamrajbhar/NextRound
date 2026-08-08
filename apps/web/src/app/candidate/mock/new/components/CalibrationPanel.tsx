@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { VideoOff, Mic, MicOff, Video, ShieldCheck, AlertCircle } from '@/lib/lucide-google-icons';
+import { useLocalMediaStream } from '@/hooks/useLocalMediaStream';
 
 export type AssessmentTrack = 'aptitude' | 'technical' | 'coding' | 'comprehensive';
 
@@ -25,77 +26,13 @@ export default function CalibrationPanel({
   onToggleCam,
 }: CalibrationPanelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const [hasCamPermission, setHasCamPermission] = useState<boolean | null>(null);
-  const [realMicLevel, setRealMicLevel] = useState<number>(40);
 
-  // Request actual user webcam & audio stream if active
-  useEffect(() => {
-    async function setupCamera() {
-      if (!camActive && !micActive) {
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach((t) => t.stop());
-          streamRef.current = null;
-        }
-        return;
-      }
-
-      try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: camActive,
-          audio: micActive,
-        });
-
-        streamRef.current = mediaStream;
-        setHasCamPermission(true);
-
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-        }
-
-        // Web Audio API for Real Mic Level Sensing
-        if (micActive) {
-          try {
-            const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-            const audioCtx = new AudioCtxClass();
-            const source = audioCtx.createMediaStreamSource(mediaStream);
-            const analyser = audioCtx.createAnalyser();
-            analyser.fftSize = 64;
-            source.connect(analyser);
-
-            const dataArray = new Uint8Array(analyser.frequencyBinCount);
-            const updateLevel = () => {
-              if (!streamRef.current || !streamRef.current.active) return;
-              analyser.getByteFrequencyData(dataArray);
-              let sum = 0;
-              for (let i = 0; i < dataArray.length; i++) {
-                sum += dataArray[i];
-              }
-              const average = sum / dataArray.length;
-              const normalized = Math.min(100, Math.max(10, Math.floor((average / 128) * 100)));
-              setRealMicLevel(normalized);
-              requestAnimationFrame(updateLevel);
-            };
-            updateLevel();
-          } catch (e) {
-            console.warn('Audio Context failed:', e);
-          }
-        }
-      } catch (err) {
-        console.warn('Webcam permission or device error:', err);
-        setHasCamPermission(false);
-      }
-    }
-
-    setupCamera();
-
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
-    };
-  }, [camActive, micActive]);
+  // Request actual user webcam & audio stream if active; owns cleanup (unmount/pagehide)
+  const { hasCamPermission, micLevel: realMicLevel } = useLocalMediaStream({
+    videoRef,
+    camActive,
+    micActive,
+  });
 
   const displayMicLevel = micActive ? (hasCamPermission ? realMicLevel : propMicLevel) : 0;
 
