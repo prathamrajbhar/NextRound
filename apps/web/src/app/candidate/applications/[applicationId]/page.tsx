@@ -27,6 +27,7 @@ import {
 import { ApplicationHeaderBanner } from './_components/ApplicationHeaderBanner';
 import { StagePipelineTimeline } from './_components/StagePipelineTimeline';
 import { CandidateScorecard } from './_components/CandidateScorecard';
+import { StageDetailModal } from './_components/StageDetailModal';
 
 export default function CandidateApplicationDetailPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
@@ -39,6 +40,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
   const [asyncScreening, setAsyncScreening] = useState<AsyncScreening | null>(null);
   const [takeHome, setTakeHome] = useState<TakeHomeProject | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingRecord | null>(null);
+  const [selectedStageModal, setSelectedStageModal] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -309,7 +311,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
         {/* Left Column (2 Cols): Stage Pipeline & AI Scorecard */}
         <div className="lg:col-span-2 space-y-8">
           {/* Stage Pipeline Timeline Card */}
-          <StagePipelineTimeline stages={stages} />
+          <StagePipelineTimeline stages={stages} onSelectStage={(idx) => setSelectedStageModal(idx)} />
 
           {/* AI Scorecard Breakdown (if scores exist) */}
           {app.scores && <CandidateScorecard scores={app.scores} />}
@@ -451,6 +453,19 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
           </div>
         </div>
       </div>
+
+      {selectedStageModal !== null && (
+        <StageDetailModal
+          isOpen={selectedStageModal !== null}
+          onClose={() => setSelectedStageModal(null)}
+          stageIndex={selectedStageModal}
+          app={app}
+          assessments={assessments}
+          asyncScreening={asyncScreening}
+          takeHome={takeHome}
+          offer={offer}
+        />
+      )}
     </div>
   );
 }
