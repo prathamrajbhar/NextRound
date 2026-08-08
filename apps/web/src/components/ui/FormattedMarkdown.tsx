@@ -43,7 +43,7 @@ export function FormattedMarkdown({ content, className = '' }: FormattedMarkdown
         );
       } else if (matchedStr.startsWith('*') && matchedStr.endsWith('*')) {
         parts.push(
-          <em key={match.index} className="italic text-slate-800 dark:text-slate-200 font-medium">
+          <em key={match.index} className="italic text-slate-800 dark:text-slate-200 font-semibold">
             {matchedStr.slice(1, -1)}
           </em>
         );
@@ -59,7 +59,7 @@ export function FormattedMarkdown({ content, className = '' }: FormattedMarkdown
   };
 
   return (
-    <div className={`space-y-5 text-xs leading-relaxed text-slate-700 dark:text-slate-300 ${className}`}>
+    <div className={`space-y-6 text-sm sm:text-[15px] leading-relaxed sm:leading-loose text-slate-700 dark:text-slate-300 ${className}`}>
       {rawBlocks.map((block, bIdx) => {
         const trimmed = block.trim();
         if (!trimmed) return null;
@@ -82,10 +82,10 @@ export function FormattedMarkdown({ content, className = '' }: FormattedMarkdown
           }
 
           return (
-            <div key={bIdx} className="space-y-3 pt-2">
-              <div className="flex items-center gap-2 border-b border-slate-200/80 dark:border-slate-800 pb-2">
-                <span className="h-2 w-2 rounded-full bg-indigo-500 flex-shrink-0" />
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-display">
+            <div key={bIdx} className="space-y-3.5 pt-3">
+              <div className="flex items-center gap-2.5 border-b border-slate-200/80 dark:border-slate-800 pb-2.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 shadow-sm flex-shrink-0" />
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight font-display">
                   {parseInline(rawHeading)}
                 </h3>
               </div>
@@ -133,7 +133,7 @@ function BulletListBlock({
   const lines = text.split('\n').map((l) => l.trim()).filter(Boolean);
 
   return (
-    <div className="space-y-2 py-1">
+    <div className="space-y-2.5 py-1">
       {lines.map((line, lIdx) => {
         const isBullet = line.startsWith('*') || line.startsWith('-');
         const cleanLine = isBullet ? line.replace(/^(\*|-)\s*/, '') : line;
@@ -143,10 +143,10 @@ function BulletListBlock({
         if (isBullet) {
           return (
             <div key={lIdx} className="flex items-start gap-3 pl-1">
-              <div className="h-4 w-4 rounded-full bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5">
-                <Check className="h-2.5 w-2.5" />
+              <div className="h-5 w-5 rounded-lg bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200/80 dark:border-indigo-800/80 flex items-center justify-center text-indigo-600 dark:text-indigo-400 flex-shrink-0 mt-0.5 shadow-xs">
+                <Check className="h-3 w-3" />
               </div>
-              <span className="text-xs font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
+              <span className="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-200 leading-relaxed">
                 {parseInline(cleanLine)}
               </span>
             </div>
