@@ -10,6 +10,10 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379"
     gemini_api_key: str = ""
     groq_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
+    groq_model: str = "llama-3.3-70b-versatile"
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.2"
     upload_dir: str = os.getenv(
         "UPLOAD_DIR",
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../../api/uploads"))

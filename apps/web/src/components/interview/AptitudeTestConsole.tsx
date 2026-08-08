@@ -263,26 +263,53 @@ export default function AptitudeTestConsole({
 
   const answeredCount = Object.keys(answers).length;
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[500px] p-8 text-center animate-in fade-in duration-300 font-sans">
+        <div className="p-8 rounded-3xl border border-slate-800 bg-slate-900 text-slate-200 shadow-2xl max-w-md w-full space-y-4">
+          <div className="h-16 w-16 mx-auto rounded-full flex items-center justify-center border border-amber-500/40 bg-amber-500/10 text-amber-400 animate-pulse">
+            <Brain className="h-8 w-8 animate-spin" />
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-black font-display text-white">Generating LLM Assessment</h2>
+            <p className="text-xs text-slate-400 font-semibold">
+              Preparing dynamic, role-tailored aptitude questions using LLM engine for {displayRole}...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentQ) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] p-8 text-center animate-in fade-in duration-300 font-sans">
         <div className="p-8 rounded-3xl border border-slate-800 bg-slate-900 text-slate-200 shadow-2xl max-w-md w-full space-y-4">
           <div className="h-16 w-16 mx-auto rounded-full flex items-center justify-center border border-slate-700 bg-slate-950 text-slate-300">
-            <Brain className="h-8 w-8" />
+            <Brain className="h-8 w-8 text-amber-400" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-black font-display">Aptitude Assessment Not Configured</h2>
+            <h2 className="text-xl font-black font-display">Generating Assessment Questions</h2>
             <p className="text-xs text-slate-400 font-semibold">
-              No aptitude questions are available yet. The assessment will be provisioned when configured for this application.
+              The AI assessment engine is provisioning dynamic LLM questions for {displayRole}.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => onComplete(0)}
-            className="w-full py-3.5 px-6 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
-          >
-            Continue
-          </button>
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="flex-1 py-3 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+            >
+              Generate LLM Questions
+            </button>
+            <button
+              type="button"
+              onClick={() => onComplete(0)}
+              className="py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-extrabold text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+            >
+              Skip
+            </button>
+          </div>
         </div>
       </div>
     );

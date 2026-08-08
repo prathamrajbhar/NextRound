@@ -221,18 +221,17 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       tone: 'indigo' as const,
       badge: 'In Progress',
     },
-    (app.status === 'screening_completed' || app.status === 'assessment') &&
-      assessments.length > 0 && {
-        icon: ClipboardCheck,
-        label: 'Aptitude Assessment',
-        desc:
-          assessments[0].status === 'completed'
-            ? `Completed — Score: ${assessments[0].overallScore != null ? `${assessments[0].overallScore}%` : 'Completed'}`
-            : 'Continue your timed assessment',
-        href: `/candidate/mock/session-${app.id}?applicationId=${app.id}&track=aptitude`,
-        tone: 'indigo' as const,
-        badge: assessments[0].status === 'completed' ? 'Completed' : 'Pending',
-      },
+    (app.status === 'screening_completed' || app.status === 'assessment') && {
+      icon: ClipboardCheck,
+      label: 'Aptitude Assessment',
+      desc:
+        assessments[0]?.status === 'completed'
+          ? `Completed — Score: ${assessments[0].overallScore != null ? `${assessments[0].overallScore}%` : 'Completed'}`
+          : 'Continue your timed assessment',
+      href: `/candidate/mock/session-${app.id}?applicationId=${app.id}&track=aptitude`,
+      tone: 'indigo' as const,
+      badge: assessments[0]?.status === 'completed' ? 'Completed' : 'Pending',
+    },
     asyncScreening &&
       isScreenedDone && {
         icon: Camera,

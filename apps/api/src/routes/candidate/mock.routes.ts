@@ -181,6 +181,57 @@ mockRouter.get(
         console.error(`AI Service mock dynamic question generation failed for session ${session.id}:`, aiErr);
       }
 
+      if (rawQuestions.length === 0) {
+        const roleName = session.target_role || session.topic || 'Software Engineer';
+        rawQuestions = [
+          {
+            id: 'gen_q1',
+            category: 'Quantitative Reasoning',
+            difficulty: session.difficulty || 'medium',
+            question: `For a ${roleName} role, reducing latency by 20% while scaling system capacity by 25% results in what net performance shift?`,
+            options: ['No change (0%)', '5% net increase', '10% net increase', '5% net decrease'],
+            correctIndex: 0,
+          },
+          {
+            id: 'gen_q2',
+            category: 'Logical Deduction',
+            difficulty: session.difficulty || 'medium',
+            question: 'All systems with distributed cache invalidation run faster than un-cached systems for high read ratios. System A implements distributed caching. Which statement must be true?',
+            options: [
+              'System A is faster for all read/write ratios.',
+              'For high read ratios, System A will outperform un-cached systems.',
+              'System A requires zero database storage.',
+              'System A is strictly fault-tolerant.',
+            ],
+            correctIndex: 1,
+          },
+          {
+            id: 'gen_q3',
+            category: 'Pattern Recognition',
+            difficulty: session.difficulty || 'easy',
+            question: 'What is the next value in the scaling sequence: 2, 6, 12, 20, 30, ?',
+            options: ['40', '42', '44', '48'],
+            correctIndex: 1,
+          },
+          {
+            id: 'gen_q4',
+            category: 'Data Interpretation',
+            difficulty: session.difficulty || 'medium',
+            question: 'An API processes 10,000 requests/sec with 50ms latency. If throughput doubles and latency scales linearly with load, what is the expected latency?',
+            options: ['50ms', '75ms', '100ms', '200ms'],
+            correctIndex: 2,
+          },
+          {
+            id: 'gen_q5',
+            category: 'Problem Solving',
+            difficulty: session.difficulty || 'hard',
+            question: 'Three microservices A, B, and C have individual SLAs of 99.9%, 99.5%, and 99.0%. What is the combined sequential availability?',
+            options: ['98.4%', '99.0%', '99.5%', '99.9%'],
+            correctIndex: 0,
+          },
+        ];
+      }
+
       const sanitizedQuestions = rawQuestions.map((q: any) => ({
         id: q.id,
         category: q.category || 'Logical Reasoning',
