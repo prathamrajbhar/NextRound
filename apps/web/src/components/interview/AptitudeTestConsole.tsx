@@ -59,7 +59,7 @@ export default function AptitudeTestConsole({
 
       try {
         setIsLoading(true);
-        const res = await apiClient.get<{ questions: any[] }>(endpoint);
+        const res = await apiClient.get<{ questions: any[] }>(endpoint).catch(() => null);
         if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
           const mapped = res.questions.map((q: any) => ({
             id: q.id,
