@@ -8,20 +8,8 @@ from services.llm_service import generate_text, extract_json_array
 
 logger = logging.getLogger("aptitude_generator_agent")
 
-# Canonical aptitude question bank — single source of truth shared with the
-# Express API and the web fallback. See packages/shared/data/aptitude-questions.json.
-_FALLBACK_PATH = os.path.join(settings.shared_data_dir, "aptitude-questions.json")
 
 
-def _load_canonical_questions() -> List[Dict[str, Any]]:
-    """Load the canonical aptitude question bank from packages/shared/data."""
-    if not os.path.exists(_FALLBACK_PATH):
-        raise RuntimeError(
-            f"Canonical aptitude question bank not found at {_FALLBACK_PATH}. "
-            "Expected packages/shared/data/aptitude-questions.json to exist."
-        )
-    with open(_FALLBACK_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
 
 
 
@@ -66,21 +54,7 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
 
 
 def _fallback_questions(job_title: str, count: int = 5) -> List[Dict[str, Any]]:
-    """Fallback question generator pulling from canonical bank with role interpolation."""
-    role = job_title.strip() if job_title and job_title.strip() else "Software Engineer"
-    canonical = _load_canonical_questions()
-    selected = canonical[:min(count, len(canonical))]
-
-    out = []
-    for q in selected:
-        item = dict(q)
-        stem = str(item.get("question") or "").replace("{role}", role)
-        item["question"] = stem
-        item["text"] = stem
-        item["source"] = "fallback"
-        out.append(item)
-    return out
-
+    raise RuntimeError("Fallback questions are disabled in this project.")
 
 
 async def _generate_with_ollama(prompt: str, count: int, job_title: str) -> List[Dict[str, Any]]:
@@ -117,9 +91,7 @@ async def generate_aptitude_questions(
     Dynamically generate N role-customized aptitude questions using Gemini + Ollama LLM chain:
     1. Gemini (primary model: GEMINI_MODEL in .env, default gemini-2.5-flash)
     2. Ollama (failover model: OLLAMA_MODEL at OLLAMA_BASE_URL in .env, default llama3.2)
-    3. Dynamic role-customized fallback (development/testing ONLY)
     """
-    is_production = os.environ.get("NODE_ENV", "development") == "production"
     prompt = f"""You are an expert recruiter and assessment engineer. Generate a set of {count} high-quality, non-standard cognitive aptitude test questions tailored for a candidate applying for the position of:
 
 Job Title: {job_title}
@@ -168,15 +140,10 @@ JSON Format required:
     if ollama_questions:
         return ollama_questions
 
-    # 3. Final Fallback — disabled in production to enforce AI-only generation
-    if is_production:
-        raise RuntimeError(
-            f"AI aptitude question generation failed for '{job_title}' in production. "
-            "Static fallback is disabled in production environments."
-        )
-
-    logger.info(f"Using role-tailored fallback question generator for {job_title} (development/testing only).")
-    return _fallback_questions(job_title, count)
+    raise RuntimeError(
+        f"AI aptitude question generation failed for '{job_title}'. "
+        "Dynamic generation failed and no fallback is enabled."
+    )
 
 
 async def generate_aptitude_chunk(
@@ -193,8 +160,6 @@ async def generate_aptitude_chunk(
     Passes previously generated question stems to prevent repetition across chunks.
     Supports category-targeted generation per chunk.
     """
-    is_production = os.environ.get("NODE_ENV", "development") == "production"
-
     categories = [
         "Quantitative Reasoning",
         "Logical Deduction",
@@ -266,31 +231,10 @@ Return ONLY raw JSON array:
             q["source"] = "ai-chunk-ollama"
         return ollama_questions
 
-    # 3. Final Fallback — disabled in production
-    if is_production:
-        raise RuntimeError(
-            f"AI aptitude chunk generation failed for chunk {chunk_index} of '{job_title}' in production. "
-            "Static fallback is disabled in production environments."
-        )
-
-    logger.info(f"Using fallback for chunk {chunk_index} (development/testing only).")
-    canonical = _load_canonical_questions()
-    start = (chunk_index * chunk_size) % len(canonical)
-    selected = canonical[start:start + chunk_size]
-    if len(selected) < chunk_size:
-        selected += canonical[:chunk_size - len(selected)]
-
-    role = job_title.strip() or "Software Engineer"
-    result = []
-    for idx, q in enumerate(selected):
-        item = dict(q)
-        stem = str(item.get("question") or "").replace("{role}", role)
-        item["id"] = f"dev_{item.get('id', f'q{idx}')}_{chunk_index}_{idx}"
-        item["question"] = stem
-        item["text"] = stem
-        item["source"] = "development-fallback"
-        result.append(item)
-    return result
+    raise RuntimeError(
+        f"AI aptitude chunk generation failed for chunk {chunk_index} of '{job_title}'. "
+        "Dynamic generation failed and no fallback is enabled."
+    )
 
 
 

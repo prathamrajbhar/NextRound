@@ -14,6 +14,11 @@ def test_evaluate_answers_node_calculates_scores():
             {"questionId": "q2", "selectedOptionIndex": 1, "category": "Logical"},
             {"questionId": "q3", "selectedOptionIndex": 2, "category": "Numerical"},
         ],
+        "stored_questions": [
+            {"id": "q1", "correctIndex": 0, "category": "Logical"},
+            {"id": "q2", "correctIndex": 1, "category": "Logical"},
+            {"id": "q3", "correctIndex": 2, "category": "Numerical"},
+        ],
         "total_time_seconds": 120,
         "tab_switch_count": 1,
         "min_score": 60.0,
@@ -50,6 +55,10 @@ async def test_run_assessment_pipeline_end_to_end():
         total_time_seconds=90,
         tab_switch_count=0,
         min_score=50.0,
+        stored_questions=[
+            {"id": "q1", "correctIndex": 0, "category": "Logical"},
+            {"id": "q2", "correctIndex": 1, "category": "Verbal"},
+        ],
     )
 
     assert "score" in result

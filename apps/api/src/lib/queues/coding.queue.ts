@@ -6,6 +6,8 @@ export interface CodingJobPayload {
   code: string;
   language: string;
   submissionId: string;
+  testCases?: any[];
+  entryPoint?: string;
 }
 
 export async function enqueueCoding(
@@ -13,7 +15,9 @@ export async function enqueueCoding(
   problemId: string,
   code: string,
   language: string,
-  submissionId: string
+  submissionId: string,
+  testCases?: any[],
+  entryPoint?: string
 ) {
   const payload: CodingJobPayload = {
     applicationId,
@@ -21,6 +25,8 @@ export async function enqueueCoding(
     code,
     language,
     submissionId,
+    testCases,
+    entryPoint,
   };
 
   const job = await codingQueue.add('evaluate_coding', payload, DEFAULT_JOB_OPTIONS);

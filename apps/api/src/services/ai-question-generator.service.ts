@@ -1,6 +1,8 @@
 import { GoogleGenAI } from '@google/genai';
 import { AptitudeChunkSchema, AptitudeQuestionInput } from '@nextround/shared';
-import aptitudeFallbackQuestions from '@nextround/shared/data/aptitude-questions.json';
+
+
+
 
 export interface GeneratedQuestion {
   id: string;
@@ -126,16 +128,11 @@ Return ONLY raw JSON array:
       }
     } catch (err) {
       console.error(`[AI Chunk Generation Error] Chunk ${chunkIndex}:`, err);
+      throw err;
     }
   }
 
-  // Production Safety: Never use static fallback files in production mode!
-  if (isProduction) {
-    throw new Error(`AI aptitude chunk generation failed for chunk ${chunkIndex} in production. Static fallback is disabled in production.`);
-  }
-
-  // Development / Testing fallback ONLY
-  return generateDevelopmentFallbackChunk(chunkIndex, chunkSize, role, diff, targetCategory);
+  throw new Error(`AI aptitude chunk generation failed for chunk ${chunkIndex} because Gemini API key is not configured.`);
 }
 
 /**
@@ -184,36 +181,6 @@ export async function generateAiAptitudeQuestions(
   }
 
   return accumulated.slice(0, targetCount);
-}
-
-function generateDevelopmentFallbackChunk(
-  chunkIndex: number,
-  chunkSize: number,
-  role: string,
-  difficulty: string,
-  category: string
-): AptitudeQuestionInput[] {
-  const startIndex = (chunkIndex * chunkSize) % aptitudeFallbackQuestions.length;
-  const selected = (aptitudeFallbackQuestions as any[]).slice(startIndex, startIndex + chunkSize);
-
-  if (selected.length < chunkSize) {
-    selected.push(...(aptitudeFallbackQuestions as any[]).slice(0, chunkSize - selected.length));
-  }
-
-  return selected.map((q: any, idx: number) => {
-    const stem = String(q.question || q.text || '').replace('{role}', role);
-    return {
-      id: `dev_${q.id}_c${chunkIndex}_q${idx}`,
-      category: category || String(q.category || 'General Aptitude'),
-      difficulty: (difficulty as any) || 'medium',
-      question: stem,
-      text: stem,
-      options: Array.isArray(q.options) ? q.options.map(String) : [],
-      correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : 0,
-      explanation: q.explanation ? String(q.explanation) : undefined,
-      source: 'development-fallback',
-    };
-  });
 }
 
 function extractFirstJsonArray(text: string): any {

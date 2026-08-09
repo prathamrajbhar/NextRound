@@ -4,9 +4,6 @@ import {
   ApplicationStatusOverrideSchema,
   ApplicationScheduleSchema,
 } from '@nextround/shared';
-// Canonical shared data banks — single source of truth (packages/shared/data).
-import aptitudeFallbackQuestions from '@nextround/shared/data/aptitude-questions.json';
-import codingProblems from '@nextround/shared/data/coding-problems.json';
 import { prisma } from '../../lib/prisma';
 import { authenticate, optionalAuthenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';

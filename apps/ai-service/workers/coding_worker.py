@@ -34,6 +34,8 @@ async def process_coding_job(job_data: dict) -> bool:
             code=code,
             language=job_data.get("language", "python"),
             submission_id=submission_id,
+            test_cases=job_data.get("testCases"),
+            entry_function=job_data.get("entryPoint", "solution"),
         )
 
         # Patch coding evaluation result back to Express internal endpoint

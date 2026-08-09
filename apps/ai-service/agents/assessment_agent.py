@@ -52,17 +52,9 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
                     "category": q.get("category", "Logical Deduction"),
                 }
 
-    # Dynamic fallback generator if stored_questions missing
+    # Dynamic fallback generator is disabled
     if not answer_key:
-        from agents.aptitude_generator_agent import _fallback_questions
-        fallback_qs = _fallback_questions("Software Engineer", 5)
-        for q in fallback_qs:
-            q_id = str(q.get("id") or "")
-            if q_id:
-                answer_key[q_id] = {
-                    "correctIndex": _to_int(q.get("correctIndex"), -1),
-                    "category": q.get("category", "Logical Deduction"),
-                }
+        raise ValueError("Aptitude evaluation requires stored_questions to be populated. Fallback is disabled.")
 
     categories = {"Logical": {"correct": 0, "total": 0}, "Numerical": {"correct": 0, "total": 0}, "Verbal": {"correct": 0, "total": 0}, "Spatial": {"correct": 0, "total": 0}}
 

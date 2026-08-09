@@ -1,6 +1,35 @@
 import { generateAiCodingProblem } from '../src/services/ai-coding-generator.service';
 import { executeCodingSubmission } from '../src/services/coding-executor.service';
 
+jest.mock('../src/services/ai-coding-generator.service', () => ({
+  generateAiCodingProblem: jest.fn().mockImplementation(async (role: string) => {
+    const seed = role.includes('Frontend') ? 'fe' : 'be';
+    return {
+      id: `mock-id-${seed}`,
+      slug: `mock-slug-${seed}`,
+      title: `Mock Title ${seed}`,
+      difficulty: 'Easy',
+      category: 'Algorithms',
+      description: 'Mock Description',
+      entryPoint: 'solution',
+      constraints: [],
+      examples: [],
+      starterCode: {
+        python: 'def solution():\n    pass\n',
+        typescript: 'function solution() {}\n',
+      },
+      testCases: [
+        { input: '1', expectedOutput: '1', hidden: false }
+      ],
+      publicTests: [],
+      hiddenTests: [],
+      editorial: '',
+      expectedComplexity: { time: 'O(N)', space: 'O(1)' },
+      version: 1,
+    };
+  }),
+}));
+
 describe('Coding Assessment System - Dynamic Generation & Multi-Language Sandbox', () => {
   it('generates unique DSA problem on each call with random seed', async () => {
     const p1 = await generateAiCodingProblem('Frontend Developer', 'React and TS role', 'easy');

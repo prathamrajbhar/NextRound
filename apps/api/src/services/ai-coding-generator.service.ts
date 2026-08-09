@@ -1,7 +1,9 @@
 import { GoogleGenAI } from '@google/genai';
 import crypto from 'crypto';
 import { prisma } from '@nextround/database';
-import codingProblems from '@nextround/shared/data/coding-problems.json';
+
+
+
 
 export interface TestCaseData {
   name: string;
@@ -166,48 +168,11 @@ Return ONLY valid JSON matching this exact structure:
       }
     } catch (err) {
       console.error('[AI Coding Problem Generation Error]:', err);
+      throw err;
     }
   }
 
-  if (process.env.NODE_ENV === 'production') {
-    throw new Error('AI coding problem generation failed in production. Static fallback is disabled in production.');
-  }
-
-  // Fallback to static curated problem bank for development/testing ONLY
-  const fallbackList: any[] = codingProblems as any[];
-  const idx = Math.floor(Math.random() * fallbackList.length);
-  const selected = fallbackList[idx] || fallbackList[0];
-
-  const slug = `${selected.id}-${nonce.slice(-4)}`;
-  const publicTests = selected.testCases ? selected.testCases.filter((tc: any) => !tc.hidden) : [];
-  const hiddenTests = selected.testCases ? selected.testCases.filter((tc: any) => tc.hidden) : [];
-
-  const starterCode = {
-    python: selected.starterCode?.python || 'def solution():\n    pass\n',
-    javascript: selected.starterCode?.javascript || 'function solution() {}\n',
-    typescript: selected.starterCode?.typescript || selected.starterCode?.javascript || 'function solution(): void {}\n',
-    java: selected.starterCode?.java || 'class Solution { public static void solution() {} }\n',
-    cpp: selected.starterCode?.cpp || 'class Solution { public: void solution() {} };\n',
-  };
-
-  return {
-    id: selected.id,
-    slug,
-    title: selected.title,
-    difficulty: selected.difficulty || 'Medium',
-    category: selected.category || 'Algorithms',
-    description: selected.description,
-    entryPoint: selected.entryPoint || 'solution',
-    constraints: selected.constraints || [],
-    examples: selected.examples || [],
-    starterCode,
-    testCases: selected.testCases || [],
-    publicTests,
-    hiddenTests,
-    editorial: selected.editorial || '',
-    expectedComplexity: selected.expectedComplexity || { time: 'O(N)', space: 'O(1)' },
-    version: 1,
-  };
+  throw new Error('AI coding problem generation failed because Gemini API key is not configured.');
 }
 
 function extractFirstValidJson(text: string): any {

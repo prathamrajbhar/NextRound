@@ -51,30 +51,21 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
 
     logger.info(f"Executing sandbox evaluation for problem {problem_id}")
 
-    # Load problem definition from the canonical shared bank. Failing honestly
-    # here (rather than substituting a hardcoded/fabricated test case) surfaces
-    # a missing/broken problem bank loudly instead of silently mis-scoring.
-    if not os.path.exists(_CODING_PROBLEMS_PATH):
-        raise RuntimeError(
-            f"Canonical coding problem bank not found at {_CODING_PROBLEMS_PATH}. "
-            "Expected packages/shared/data/coding-problems.json to exist."
-        )
-    test_cases = []
-    function_name = ""
-    try:
-        with open(_CODING_PROBLEMS_PATH, "r", encoding="utf-8") as f:
-            problems = json.load(f)
-    except Exception as e:
-        raise RuntimeError(f"Failed to load canonical coding problem bank from {_CODING_PROBLEMS_PATH}: {e}")
+def execute_sandbox_node(state: CodingState) -> CodingState:
+    """Node 1: Execute candidate code in AST-inspected, resource-capped sandbox across all test cases."""
+    code = state.get("code", "")
+    language = state.get("language", "python")
+    problem_id = state.get("problem_id", "virtualized-list")
 
-    if not problems:
-        raise RuntimeError(f"Coding problem bank at {_CODING_PROBLEMS_PATH} is empty.")
-    target_p = next((p for p in problems if p["id"] == problem_id), problems[0])
-    test_cases = target_p.get("testCases", [])
-    function_name = target_p.get("entryFunction", "")
+    logger.info(f"Executing sandbox evaluation for problem {problem_id}")
+
+    test_cases = state.get("test_cases")
+    function_name = state.get("entry_function", "solution")
+
     if not test_cases:
         raise RuntimeError(
-            f"Problem '{target_p.get('id')}' in the coding problem bank defines no testCases."
+            f"No test cases provided for problem evaluation '{problem_id}'. "
+            "Static fallback is disabled."
         )
 
     exec_res = execute_code_sandbox(
@@ -173,7 +164,9 @@ async def run_coding_agent(
     problem_id: str,
     code: str,
     language: str = "python",
-    submission_id: str = ""
+    submission_id: str = "",
+    test_cases: List[dict] = None,
+    entry_function: str = ""
 ) -> Dict[str, Any]:
     """Execute Coding Agent pipeline."""
     initial_state: CodingState = {
@@ -182,6 +175,8 @@ async def run_coding_agent(
         "code": code,
         "language": language,
         "submission_id": submission_id,
+        "test_cases": test_cases,
+        "entry_function": entry_function,
     }
 
     if _coding_app:

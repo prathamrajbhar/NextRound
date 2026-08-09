@@ -7,9 +7,7 @@ import { enqueueMockEvaluation } from '../../lib/queues/mock.queue';
 import { serializeMockSession, serializeMockSessionList } from '../../lib/serializers';
 import { generateAiAptitudeQuestions, generateAptitudeChunk } from '../../services/ai-question-generator.service';
 import { generateAiCodingProblem } from '../../services/ai-coding-generator.service';
-// Canonical shared aptitude bank — single source of truth (packages/shared/data).
-import aptitudeFallbackQuestions from '@nextround/shared/data/aptitude-questions.json';
-import codingProblems from '@nextround/shared/data/coding-problems.json';
+
 
 
 export const mockRouter = Router();
