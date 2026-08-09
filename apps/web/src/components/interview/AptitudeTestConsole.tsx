@@ -88,12 +88,7 @@ export default function AptitudeTestConsole({
             correctIndex: q.correctIndex,
           }));
           setFetchedQuestions(mapped);
-        } else {
-          // Direct dynamic fallback guarantee if API endpoint fails. Sourced from
-          // the canonical shared bank (packages/shared/data/aptitude-questions.json).
-          // correctIndex/explanation are deliberately omitted: the real assessment
-          // strips the answer key server-side, so a client-side fallback must not
-          // embed it either.
+        } else if (!applicationId) {
           const fallbackQs: AptitudeQuestion[] = aptitudeFallbackQuestions.map((q) => ({
             id: q.id,
             category: q.category,
@@ -112,14 +107,12 @@ export default function AptitudeTestConsole({
     loadInitialBatch();
   }, [applicationId, sessionId, displayRole, displayCompany]);
 
-  // 2. Smart Background Batch Prefetching
+  // 2. Smart Background Batch Prefetching (Only for mock practice, never for job assessments)
   const prefetchNextBatch = useCallback(async () => {
-    if (isPrefetching || isLoading) return;
+    if (isPrefetching || isLoading || applicationId) return;
 
     const nextBatchNum = batchCount + 1;
-    const prefetchEndpoint = applicationId
-      ? `/applications/${applicationId}/assessment/aptitude?batch=${nextBatchNum}&count=4`
-      : `/mock/sessions/${sessionId || 'practice'}/aptitude?role=${encodeURIComponent(displayRole)}&company=${encodeURIComponent(displayCompany)}&batch=${nextBatchNum}&count=4`;
+    const prefetchEndpoint = `/mock/sessions/${sessionId || 'practice'}/aptitude?role=${encodeURIComponent(displayRole)}&company=${encodeURIComponent(displayCompany)}&batch=${nextBatchNum}&count=4`;
 
     try {
       setIsPrefetching(true);
@@ -145,19 +138,19 @@ export default function AptitudeTestConsole({
     } finally {
       setIsPrefetching(false);
     }
-  }, [isPrefetching, isLoading, batchCount, applicationId, sessionId, displayRole, displayCompany]);
+  }, [isPrefetching, isLoading, applicationId, batchCount, sessionId, displayRole, displayCompany]);
 
   // Trigger prefetch when candidate is 2 questions away from the end of current buffer
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    if (fetchedQuestions.length > 0 && currentIndex >= fetchedQuestions.length - 2 && !isPrefetching) {
+    if (!applicationId && fetchedQuestions.length > 0 && currentIndex >= fetchedQuestions.length - 2 && !isPrefetching) {
       const timer = setTimeout(() => {
         prefetchNextBatch();
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [currentIndex, fetchedQuestions.length, isPrefetching, prefetchNextBatch]);
+  }, [applicationId, currentIndex, fetchedQuestions.length, isPrefetching, prefetchNextBatch]);
 
   const activeQuestions = fetchedQuestions.length > 0 
     ? fetchedQuestions 

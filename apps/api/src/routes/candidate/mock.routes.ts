@@ -5,6 +5,7 @@ import { requireRole } from '../../middleware/rbac';
 import { MockSessionCreateSchema } from '@nextround/shared';
 import { enqueueMockEvaluation } from '../../lib/queues/mock.queue';
 import { serializeMockSession, serializeMockSessionList } from '../../lib/serializers';
+import { generateAiAptitudeQuestions } from '../../services/ai-question-generator.service';
 // Canonical shared aptitude bank — single source of truth (packages/shared/data).
 import aptitudeFallbackQuestions from '@nextround/shared/data/aptitude-questions.json';
 
@@ -186,17 +187,11 @@ mockRouter.get(
       }
 
       if (rawQuestions.length === 0) {
-        // Sourced from the canonical shared bank (packages/shared/data/
-        // aptitude-questions.json). The selected difficulty level overrides the
-        // canonical difficulty on the flexible questions, matching the previous
-        // role-customized mock behavior.
-        rawQuestions = aptitudeFallbackQuestions.map((q) => ({
-          ...q,
-          question: q.question.replace('{role}', roleName),
-          text: q.text.replace('{role}', roleName),
-          difficulty:
-            q.id === 'apt_q1' || q.id === 'apt_q2' || q.id === 'apt_q4' ? diffLevel : q.difficulty,
-        }));
+        rawQuestions = await generateAiAptitudeQuestions(
+          roleName,
+          `Target Company: ${companyName}. Difficulty: ${diffLevel}. Batch Number: ${batchNum}`,
+          requestedCount
+        );
       }
 
       // Practice/mock sessions are self-assessed by the candidate, so the

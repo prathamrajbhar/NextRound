@@ -18,6 +18,7 @@ import { enqueueCoding } from '../../lib/queues/coding.queue';
 import { emailService } from '../../services/email.service';
 import { serializeApplication, serializeApplicationList, serializeOffer } from '../../lib/serializers';
 import { evaluateApplicationScreening } from '../../services/screening-evaluator.service';
+import { generateAiAptitudeQuestions } from '../../services/ai-question-generator.service';
 
 export const applicationRouter = Router();
 
@@ -616,7 +617,12 @@ applicationRouter.get(
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
       }
 
-      // Check if dynamic assessment already exists for this application
+      // Determine exact number of questions set by the employer
+      const assessmentConfig = (app.job?.assessmentConfig as any) || {};
+      const thresholds = (app.job?.thresholds as any) || {};
+      const qCount = Math.max(1, Math.min(20, Number(assessmentConfig.mcqCount || thresholds.qCount) || 5));
+
+      // Check if assessment already exists with the employer's set qCount
       let assessment = await prisma.assessment.findFirst({
         where: { application_id: appId, test_type: 'aptitude' },
         orderBy: { created_at: 'desc' },
@@ -624,10 +630,10 @@ applicationRouter.get(
 
       let rawQuestions: any[] = [];
 
-      if (assessment && Array.isArray(assessment.questions) && assessment.questions.length > 0) {
+      if (assessment && Array.isArray(assessment.questions) && assessment.questions.length === qCount) {
         rawQuestions = assessment.questions as any[];
       } else {
-        // Generate dynamic questions via AI Service
+        // Generate REAL AI questions tailored to the job for exact qCount set by employer
         try {
           const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
           const aiResp = await fetch(`${aiServiceUrl}/api/v1/ai/assessment/generate-aptitude`, {
@@ -636,7 +642,7 @@ applicationRouter.get(
             body: JSON.stringify({
               jobTitle: app.job?.title || 'Software Engineer',
               jobDescription: app.job?.description || '',
-              count: 5,
+              count: qCount,
             }),
           });
 
@@ -650,31 +656,35 @@ applicationRouter.get(
           console.error(`AI Service dynamic question generation failed for application ${appId}:`, aiErr);
         }
 
-        // Dynamic fallback generator if AI service unreachable. Sourced from the
-        // canonical shared bank (packages/shared/data/aptitude-questions.json).
+        // Direct Node.js Gemini AI Generator Fallback
         if (rawQuestions.length === 0) {
-          const roleName = app.job?.title || 'Software Engineer';
-          rawQuestions = aptitudeFallbackQuestions.map((q) => ({
-            ...q,
-            question: q.question.replace('{role}', roleName),
-            text: q.text.replace('{role}', roleName),
-            source: 'fallback' as const,
-          }));
+          rawQuestions = await generateAiAptitudeQuestions(
+            app.job?.title || 'Software Engineer',
+            app.job?.description || '',
+            qCount
+          );
         }
 
         // Persist generated questions in DB Assessment record
-        assessment = await prisma.assessment.create({
-          data: {
-            application_id: appId,
-            test_type: 'aptitude',
-            questions: rawQuestions,
-            status: 'pending',
-          },
-        });
+        if (assessment) {
+          assessment = await prisma.assessment.update({
+            where: { id: assessment.id },
+            data: { questions: rawQuestions, status: 'pending' },
+          });
+        } else {
+          assessment = await prisma.assessment.create({
+            data: {
+              application_id: appId,
+              test_type: 'aptitude',
+              questions: rawQuestions,
+              status: 'pending',
+            },
+          });
+        }
       }
 
       // Strip correctIndex and explanation before returning to client to prevent answer leakage
-      const sanitizedQuestions = rawQuestions.map((q: any) => ({
+      const sanitizedQuestions = rawQuestions.slice(0, qCount).map((q: any) => ({
         id: q.id,
         category: q.category || 'Logical Reasoning',
         question: q.question || q.text,
