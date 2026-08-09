@@ -215,13 +215,7 @@ export default function CodingAssessmentConsole({
             <XCircle className="w-6 h-6 text-rose-600 dark:text-rose-400" />
           </div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Generation Failed</h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-lg text-sm font-semibold transition-all shadow-xs"
-          >
-            Retry Generation
-          </button>
+          <p className="text-sm text-slate-600 dark:text-slate-400">{error}</p>
         </div>
       </div>
     );
