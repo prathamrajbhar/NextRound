@@ -14,36 +14,60 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
 
   const handleRegenerateField = async (field: 'proudProject' | 'bio') => {
     if (reparsing) return;
-    if (!form.resumeFile) {
-      alert('Please upload a resume in Step 1 or 2 to auto-regenerate AI fields from your profile resources.');
-      return;
-    }
 
     setReparsing(field);
     try {
-      const formData = new FormData();
-      formData.append('resume', form.resumeFile);
-
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const headers: Record<string, string> = {};
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      const res = await fetch(`${API_BASE_URL}/candidate/parse-resume`, {
+      const payload = {
+        field,
+        rawResumeText: form.rawResumeText,
+        socialData: form.socialData,
+        linkedinUrl: form.linkedinUrl,
+        githubUrl: form.githubUrl,
+        portfolioUrl: form.portfolioUrl,
+        skills: form.skills,
+        targetRoles: form.targetRoles,
+        yearsOfExperience: form.yearsOfExperience,
+        currentValue: form[field],
+      };
+
+      const res = await fetch(`${API_BASE_URL}/candidate/regenerate-field`, {
         method: 'POST',
         headers,
         credentials: 'include',
-        body: formData,
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
-      if (json.success && json.data?.profile) {
-        if (field === 'proudProject' && json.data.profile.proudProject) {
-          update('proudProject', json.data.profile.proudProject);
-        } else if (field === 'bio' && json.data.profile.bio) {
-          update('bio', json.data.profile.bio);
-        }
-        if (mergeParsedProfile) {
-          mergeParsedProfile(json.data.profile, json.data.rawText);
+      if (json.success && json.data?.text) {
+        update(field, json.data.text);
+      } else if (form.resumeFile) {
+        // Fallback to parse-resume file upload if regenerate-field endpoint failed
+        const formData = new FormData();
+        formData.append('resume', form.resumeFile);
+        const fallbackHeaders: Record<string, string> = {};
+        if (token) fallbackHeaders['Authorization'] = `Bearer ${token}`;
+
+        const parseRes = await fetch(`${API_BASE_URL}/candidate/parse-resume`, {
+          method: 'POST',
+          headers: fallbackHeaders,
+          credentials: 'include',
+          body: formData,
+        });
+
+        const parseJson = await parseRes.json();
+        if (parseJson.success && parseJson.data?.profile) {
+          if (field === 'proudProject' && parseJson.data.profile.proudProject) {
+            update('proudProject', parseJson.data.profile.proudProject);
+          } else if (field === 'bio' && parseJson.data.profile.bio) {
+            update('bio', parseJson.data.profile.bio);
+          }
+          if (mergeParsedProfile) {
+            mergeParsedProfile(parseJson.data.profile, parseJson.data.rawText);
+          }
         }
       }
     } catch (err) {

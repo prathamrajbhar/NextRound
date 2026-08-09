@@ -38,6 +38,90 @@ function normalizeResumeText(text: string): string {
   return cleaned;
 }
 
+export interface FieldRegenerationPayload {
+  field: 'proudProject' | 'bio' | 'headline';
+  rawResumeText?: string;
+  socialData?: Record<string, unknown>;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
+  skills?: string[];
+  targetRoles?: string[];
+  yearsOfExperience?: string | number;
+  currentValue?: string;
+}
+
+/**
+ * Synthesizes a single candidate profile field (e.g. proudProject, bio, headline) using ALL available candidate resources.
+ */
+export async function generateFieldWithGemini(payload: FieldRegenerationPayload): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  const { field, rawResumeText, socialData, linkedinUrl, githubUrl, portfolioUrl, skills, targetRoles, yearsOfExperience, currentValue } = payload;
+
+  const contextParts: string[] = [];
+
+  if (rawResumeText && rawResumeText.trim()) {
+    contextParts.push(`RESUME TEXT:\n${rawResumeText.trim().slice(0, 8000)}`);
+  }
+  if (socialData && Object.keys(socialData).length > 0) {
+    contextParts.push(`GITHUB & LINKEDIN SYNCHRONIZED PROFILES & REPOSITORIES:\n${JSON.stringify(socialData, null, 2).slice(0, 4000)}`);
+  }
+  if (skills && skills.length > 0) {
+    contextParts.push(`TECHNICAL SKILLS: ${skills.join(', ')}`);
+  }
+  if (targetRoles && targetRoles.length > 0) {
+    contextParts.push(`TARGET ROLES: ${targetRoles.join(', ')}`);
+  }
+  if (yearsOfExperience) {
+    contextParts.push(`YEARS OF EXPERIENCE: ${yearsOfExperience}`);
+  }
+  if (linkedinUrl || githubUrl || portfolioUrl) {
+    contextParts.push(`ONLINE PROFILES: LinkedIn: ${linkedinUrl || 'N/A'}, GitHub: ${githubUrl || 'N/A'}, Portfolio: ${portfolioUrl || 'N/A'}`);
+  }
+  if (currentValue && currentValue.trim()) {
+    contextParts.push(`CURRENT DRAFT: ${currentValue.trim()}`);
+  }
+
+  const combinedContext = contextParts.join('\n\n');
+
+  if (!apiKey || combinedContext.trim().length === 0) {
+    return currentValue || '';
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+
+    let fieldInstruction = '';
+    if (field === 'proudProject') {
+      fieldInstruction = `Synthesize a structured, high-impact description of the candidate's most technically impressive project shipped. Combine insights from their resume text, GitHub repositories/stars, LinkedIn projects, and technical skills. Detail the project title/goal, stack used, architectural contributions, and measurable impact. Write in clear, professional English without preamble or quotation marks.`;
+    } else if (field === 'bio') {
+      fieldInstruction = `Craft a compelling, executive 2-4 sentence summary/bio for the candidate. Synthesize their experience level, technical stack (from GitHub/resume), engineering focus, major accomplishments, and career aspirations. Do NOT include emails, phone numbers, or addresses. Write directly without preamble or quotation marks.`;
+    } else {
+      fieldInstruction = `Generate a punchy, modern technical headline (e.g., "Full-Stack & AI Systems Engineer | React, Node.js & PyTorch") combining their top technologies from GitHub, resume, and skills. Write directly without preamble or quotation marks.`;
+    }
+
+    const prompt = `You are an elite AI technical recruiter & executive resume strategist.
+Using ALL the candidate's provided resources (Resume text, GitHub projects/repos, LinkedIn profile data, technical skills), fulfill the following request:
+
+FIELD REQUEST: ${fieldInstruction}
+
+CANDIDATE RESOURCE CONTEXT:
+${combinedContext}
+
+Return ONLY the generated text string for the field without markdown formatting, quotes, or conversational filler.`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
+
+    return (response.text || '').trim().replace(/^["']|["']$/g, '');
+  } catch (err) {
+    console.error('Gemini field regeneration error:', err);
+    return currentValue || '';
+  }
+}
+
 /**
  * Extracts plain text from an uploaded file buffer (PDF or plain text).
  */

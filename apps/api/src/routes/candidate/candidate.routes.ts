@@ -6,7 +6,7 @@ import { authenticate, optionalAuthenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { uploadFile } from '../../lib/s3';
 import { serializeApplicationList, serializeOffer } from '../../lib/serializers';
-import { extractTextFromBuffer, parseResumeWithGemini } from '../../services/resume-parser.service';
+import { extractTextFromBuffer, parseResumeWithGemini, generateFieldWithGemini } from '../../services/resume-parser.service';
 import { syncCandidateSocialProfiles } from '../../services/social-sync.service';
 import { enqueueVideoScreening } from '../../lib/queues/video-screening.queue';
 import { advanceAssessmentStage } from '../../lib/pipeline';
@@ -75,6 +75,47 @@ candidateRouter.post(
       });
     } catch (err) {
       console.error('[ParseResume] Processing error:', err);
+      return next(err);
+    }
+  }
+);
+
+// POST /api/v1/candidate/regenerate-field - Regenerate a specific profile field using ALL candidate resources (resume, social data, github, linkedin, skills)
+candidateRouter.post(
+  '/regenerate-field',
+  optionalAuthenticate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { field, rawResumeText, socialData, linkedinUrl, githubUrl, portfolioUrl, skills, targetRoles, yearsOfExperience, currentValue } = req.body || {};
+
+      if (!field || !['proudProject', 'bio', 'headline'].includes(field)) {
+        return res.status(400).json({ success: false, error: 'Valid field ("proudProject", "bio", "headline") is required' });
+      }
+
+      console.log(`[RegenerateField] Regenerating field "${field}" using candidate resource context...`);
+
+      const text = await generateFieldWithGemini({
+        field,
+        rawResumeText,
+        socialData,
+        linkedinUrl,
+        githubUrl,
+        portfolioUrl,
+        skills,
+        targetRoles,
+        yearsOfExperience,
+        currentValue,
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          field,
+          text,
+        },
+      });
+    } catch (err) {
+      console.error('[RegenerateField] Processing error:', err);
       return next(err);
     }
   }
