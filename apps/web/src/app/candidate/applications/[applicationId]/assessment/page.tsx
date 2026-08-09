@@ -1,19 +1,34 @@
 'use client';
 
-import { use, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { use, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { UnifiedAssessmentSession } from '@/components/interview/UnifiedAssessmentSession';
 
-export default function CandidateAssessmentPageRedirect({ params }: { params: Promise<{ applicationId: string }> }) {
+function CandidateAssessmentContent({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace(`/candidate/mock/session-${applicationId}?applicationId=${applicationId}&track=aptitude`);
-  }, [applicationId, router]);
+  const searchParams = useSearchParams();
+  // Default actual job assessment track to aptitude (which transitions to other rounds as required)
+  const track = searchParams.get('track') || 'aptitude';
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-xs font-bold font-sans">
-      Redirecting to unified assessment console...
-    </div>
+    <UnifiedAssessmentSession
+      sessionId={`session-${applicationId}`}
+      applicationId={applicationId}
+      track={track}
+    />
+  );
+}
+
+export default function CandidateAssessmentPage({ params }: { params: Promise<{ applicationId: string }> }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-center text-xs font-semibold text-slate-450 p-8">
+          Loading assessment console...
+        </div>
+      }
+    >
+      <CandidateAssessmentContent params={params} />
+    </Suspense>
   );
 }

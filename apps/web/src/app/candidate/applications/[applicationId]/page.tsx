@@ -8,8 +8,6 @@ import {
   Job,
   Offer,
   AssessmentResult,
-  AsyncScreening,
-  TakeHomeProject,
   OnboardingRecord,
 } from '@/types';
 import {
@@ -18,8 +16,6 @@ import {
   Video,
   Gift,
   ClipboardCheck,
-  Camera,
-  Code,
   UserPlus,
   Sparkles,
   ArrowRight,
@@ -41,8 +37,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
   const [job, setJob] = useState<Job | null>(null);
   const [offer, setOffer] = useState<Offer | null>(null);
   const [assessments, setAssessments] = useState<AssessmentResult[]>([]);
-  const [asyncScreening, setAsyncScreening] = useState<AsyncScreening | null>(null);
-  const [takeHome, setTakeHome] = useState<TakeHomeProject | null>(null);
   const [onboarding, setOnboarding] = useState<OnboardingRecord | null>(null);
 
   const [showScreeningModal, setShowScreeningModal] = useState(false);
@@ -70,11 +64,9 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
     async function fetchData() {
       try {
         setLoading(true);
-        const [appRes, offerRes, asyncRes, takeHomeRes, onboardingRes] = await Promise.allSettled([
+        const [appRes, offerRes, onboardingRes] = await Promise.allSettled([
           apiClient.get<Application>(`/applications/${applicationId}`),
           apiClient.get<Offer>(`/candidate/applications/${applicationId}/offer`),
-          apiClient.get<AsyncScreening>(`/candidate/applications/${applicationId}/video-screening`),
-          apiClient.get<TakeHomeProject>(`/candidate/applications/${applicationId}/take-home`),
           apiClient.get<OnboardingRecord>(`/candidate/applications/${applicationId}/onboarding`),
         ]);
 
@@ -91,12 +83,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
         }
         if (offerRes.status === 'fulfilled' && offerRes.value) {
           setOffer(offerRes.value);
-        }
-        if (asyncRes.status === 'fulfilled' && asyncRes.value) {
-          setAsyncScreening(asyncRes.value);
-        }
-        if (takeHomeRes.status === 'fulfilled' && takeHomeRes.value) {
-          setTakeHome(takeHomeRes.value);
         }
         if (onboardingRes.status === 'fulfilled' && onboardingRes.value) {
           setOnboarding(onboardingRes.value);
@@ -252,38 +238,12 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
         assessments[0]?.status === 'completed'
           ? `Completed — Score: ${assessments[0].overallScore != null ? `${assessments[0].overallScore}%` : 'Completed'}`
           : 'Continue your timed assessment',
-      href: `/candidate/mock/session-${app.id}?applicationId=${app.id}&track=aptitude`,
+      href: `/candidate/applications/${app.id}/assessment`,
       tone: 'indigo' as const,
       badge: assessments[0]?.status === 'completed' ? 'Completed' : 'Pending',
     },
 
-    // 3. Video Screening (only after assessment is done + video screening invited)
-    asyncScreening && isAssessmentDone && {
-      icon: Camera,
-      label: 'Video Screening',
-      desc:
-        asyncScreening.status === 'invited'
-          ? 'Record your video responses'
-          : 'View your submitted video responses',
-      href: `/candidate/applications/${app.id}/video-screening`,
-      tone: 'purple' as const,
-      badge: asyncScreening.status === 'submitted' || asyncScreening.status === 'reviewed' ? 'Completed' : 'Invited',
-    },
-
-    // 4. Take-Home Project (only after screening done + take-home assigned)
-    takeHome && isAssessmentDone && {
-      icon: Code,
-      label: 'Take-Home Project',
-      desc:
-        takeHome.status === 'graded'
-          ? `Graded — Score: ${takeHome.overallScore != null ? `${takeHome.overallScore}%` : 'Graded'}`
-          : 'Continue your project submission',
-      href: `/candidate/applications/${app.id}/take-home`,
-      tone: 'amber' as const,
-      badge: takeHome.status === 'graded' ? 'Graded' : 'In Progress',
-    },
-
-    // 5. Offer (only after decision)
+    // 3. Offer (only after decision)
     offer && isDecisionDone && {
       icon: Gift,
       label: 'Review Your Offer',
@@ -293,7 +253,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       badge: offer.status === 'accepted' ? 'Completed' : 'Action Required',
     },
 
-    // 6. Onboarding (only after decision + onboarding assigned)
+    // 4. Onboarding (only after decision + onboarding assigned)
     onboarding && isDecisionDone && {
       icon: UserPlus,
       label: 'Onboarding Checklist',
