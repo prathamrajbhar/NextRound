@@ -12,9 +12,10 @@ interface Stage {
 
 interface StagePipelineTimelineProps {
   stages: Stage[];
+  onStageClick?: (stageName: string) => void;
 }
 
-export function StagePipelineTimeline({ stages }: StagePipelineTimelineProps) {
+export function StagePipelineTimeline({ stages, onStageClick }: StagePipelineTimelineProps) {
   return (
     <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 p-6 md:p-8 shadow-sm backdrop-blur-md glass-panel space-y-6">
       <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-4">
@@ -29,7 +30,13 @@ export function StagePipelineTimeline({ stages }: StagePipelineTimelineProps) {
 
       <div className="space-y-8 relative before:absolute before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200/80 dark:before:bg-slate-800">
         {stages.map((st, idx) => (
-          <div key={idx} className="flex items-start gap-4 relative z-10">
+          <div
+            key={idx}
+            onClick={() => onStageClick?.(st.name)}
+            className={`flex items-start gap-4 relative z-10 transition-all p-2 -mx-2 rounded-2xl ${
+              onStageClick ? 'cursor-pointer hover:bg-slate-100/50 dark:hover:bg-slate-800/40' : ''
+            }`}
+          >
             <div
               className={`h-8 w-8 rounded-full border-2 flex items-center justify-center font-extrabold text-xs shadow-2xs transition-all flex-shrink-0 ${
                 st.done

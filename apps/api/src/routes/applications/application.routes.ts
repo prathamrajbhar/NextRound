@@ -17,6 +17,7 @@ import { enqueueAssessment } from '../../lib/queues/assessment.queue';
 import { enqueueCoding } from '../../lib/queues/coding.queue';
 import { emailService } from '../../services/email.service';
 import { serializeApplication, serializeApplicationList, serializeOffer } from '../../lib/serializers';
+import { evaluateApplicationScreening } from '../../services/screening-evaluator.service';
 
 export const applicationRouter = Router();
 
@@ -322,6 +323,50 @@ applicationRouter.get(
       return res.json({
         success: true,
         data: serializeApplication(application, { scheduledSlots }),
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
+// POST /api/v1/applications/:id/run-screening - Run or re-run AI screening evaluation
+applicationRouter.post(
+  '/:id/run-screening',
+  authenticate,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (checkOrgParamPollution(req, res)) return;
+      const appId = req.params.id as string;
+
+      const application = await prisma.application.findUnique({
+        where: { id: appId },
+        include: { job: true, candidate: true },
+      });
+
+      if (!application) {
+        return res.status(404).json({ success: false, error: 'Application not found' });
+      }
+
+      // Authorization check
+      if (req.user!.role === 'hr') {
+        if (application.job.org_id !== req.user!.orgId!) {
+          return res.status(403).json({ success: false, error: 'Forbidden: Access denied to application' });
+        }
+      } else if (req.user!.role === 'candidate') {
+        if (application.candidate.user_id !== req.user!.userId) {
+          return res.status(403).json({ success: false, error: 'Forbidden: Access denied to application' });
+        }
+      }
+
+      const { application: updatedApp, evaluation } = await evaluateApplicationScreening(appId);
+
+      return res.json({
+        success: true,
+        data: {
+          application: serializeApplication(updatedApp),
+          evaluation,
+        },
       });
     } catch (err) {
       return next(err);
