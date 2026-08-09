@@ -65,60 +65,45 @@ export default function HrCreateJob() {
   const handleAiAssist = async () => {
     if (!jd) return;
     setAssisting(true);
-    setAssistStep('Initializing AI JD Parser agent...');
+    setAssistStep('Analyzing job description with Gemini AI...');
 
     try {
-      // 1. Create a draft job first
-      const draftRes = await apiClient.post<{ job: { id: string } }>('/jobs', {
-        title: title || 'Draft Position',
+      const res = await apiClient.post<{
+        skills?: string[];
+        softSkills?: string[];
+        cultureKeywords?: string[];
+        rubric?: { technical?: number; communication?: number; problemSolving?: number; experience?: number };
+        enhancedDescription?: string;
+      }>('/jobs/extract-requirements', {
         description: jd,
-        department,
-        status: 'draft',
+        title,
       });
 
-      const jobId = draftRes?.job?.id;
-      if (jobId) {
-        setAssistStep('AI LangGraph Agent computing rubric & parsing requirements...');
-        await apiClient.post(`/jobs/${jobId}/ai-assist`);
-
-        // Poll for AI result completion (up to 5 polls)
-        let polls = 0;
-        while (polls < 5) {
-          await new Promise((res) => setTimeout(res, 2000));
-          polls++;
-          const updatedJob = await apiClient.get<{ description?: string; rubric?: { technical?: number; communication?: number; problemSolving?: number; experience?: number } }>(`/jobs/${jobId}`);
-          if (updatedJob && updatedJob.rubric) {
-            if (updatedJob.description) setJd(updatedJob.description);
-            if (updatedJob.rubric) {
-              setRubric({
-                technical: updatedJob.rubric.technical ?? 30,
-                communication: updatedJob.rubric.communication ?? 20,
-                problemSolving: updatedJob.rubric.problemSolving ?? 25,
-                experience: updatedJob.rubric.experience ?? 25,
-              });
-            }
-            break;
-          }
+      if (res) {
+        if (Array.isArray(res.skills) && res.skills.length > 0) {
+          setSkills(res.skills);
+        }
+        if (Array.isArray(res.softSkills) && res.softSkills.length > 0) {
+          setSoftSkills(res.softSkills);
+        }
+        if (Array.isArray(res.cultureKeywords) && res.cultureKeywords.length > 0) {
+          setCultureKeywords(res.cultureKeywords);
+        }
+        if (res.rubric) {
+          setRubric({
+            technical: res.rubric.technical ?? 30,
+            communication: res.rubric.communication ?? 20,
+            problemSolving: res.rubric.problemSolving ?? 25,
+            experience: res.rubric.experience ?? 25,
+          });
+        }
+        if (res.enhancedDescription) {
+          setJd(res.enhancedDescription);
         }
       }
     } catch (err) {
-      console.warn('API AI assist call failed, utilizing client-side fallback:', err);
+      console.error('API AI requirement extraction failed:', err);
     } finally {
-      // Populate extract tags for UI representation
-      const text = jd.toLowerCase();
-      if (text.includes('product manager') || text.includes('pm')) {
-        setSkills(['Product Strategy', 'Roadmapping', 'Agile/Scrum', 'User Analytics', 'A/B Testing']);
-        setSoftSkills(['Collaboration', 'Stakeholder Management', 'Public Speaking']);
-        setCultureKeywords(['Customer Obsessed', 'Metrics-Driven', 'Fast Execution']);
-      } else if (text.includes('designer') || text.includes('ux') || text.includes('ui')) {
-        setSkills(['Figma', 'Prototyping', 'Design Systems', 'User Research', 'Typography']);
-        setSoftSkills(['Empathy', 'Creative Problem Solving', 'Constructive Feedback']);
-        setCultureKeywords(['Design Excellence', 'User Centricity', 'Detail Oriented']);
-      } else {
-        setSkills(['React', 'TypeScript', 'Next.js', 'System Architecture', 'Performance optimization']);
-        setSoftSkills(['System design thinking', 'Technical leadership', 'Cross-functional collaboration']);
-        setCultureKeywords(['Innovation focus', 'High performance', 'Continuous learning']);
-      }
       setAssisted(true);
       setAssisting(false);
     }

@@ -49,15 +49,11 @@ candidateRouter.post(
         return res.status(400).json({ success: false, error: 'No resume file uploaded' });
       }
 
-      console.log(`[ParseResume] Received file: ${req.file.originalname} (${req.file.mimetype}, ${req.file.size} bytes)`);
-
       const rawText = await extractTextFromBuffer(
         req.file.buffer,
         req.file.mimetype,
         req.file.originalname
       );
-
-      console.log(`[ParseResume] Extracted text length: ${rawText?.length || 0} characters`);
 
       if (!rawText || rawText.trim().length === 0) {
         return res.status(400).json({ success: false, error: 'Could not extract text from the uploaded resume file' });
@@ -91,8 +87,6 @@ candidateRouter.post(
       if (!field || !['proudProject', 'bio', 'headline'].includes(field)) {
         return res.status(400).json({ success: false, error: 'Valid field ("proudProject", "bio", "headline") is required' });
       }
-
-      console.log(`[RegenerateField] Regenerating field "${field}" using candidate resource context...`);
 
       const text = await generateFieldWithGemini({
         field,
@@ -132,7 +126,6 @@ candidateRouter.post(
         return res.status(400).json({ success: false, error: 'Provide at least a githubUrl or linkedinUrl to sync' });
       }
 
-      console.log(`[SyncSocial] Syncing profiles for GitHub: ${githubUrl || 'N/A'}, LinkedIn: ${linkedinUrl || 'N/A'}`);
       const socialData = await syncCandidateSocialProfiles(githubUrl, linkedinUrl);
 
       // A real LinkedIn sync now runs against the user-approved bytemap scraper.

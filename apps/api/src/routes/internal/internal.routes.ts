@@ -34,7 +34,7 @@ internalRouter.use(requireInternalSecret);
 internalRouter.patch('/jobs/:id/ai-assist-result', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string;
-    const { description, rubric, thresholds, status } = req.body;
+    const { description, rubric, thresholds, status, skills } = req.body;
 
     const existingJob = await prisma.job.findUnique({ where: { id } });
     if (!existingJob) {
@@ -48,6 +48,7 @@ internalRouter.patch('/jobs/:id/ai-assist-result', async (req: Request, res: Res
         ...(rubric ? { rubric } : {}),
         ...(thresholds ? { thresholds } : {}),
         ...(status ? { status } : {}),
+        ...(skills ? { skills } : {}),
       },
     });
 

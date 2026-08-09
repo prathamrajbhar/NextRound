@@ -10,6 +10,7 @@ import {
   serializeJobList,
   serializeApplicationList,
 } from '../../lib/serializers';
+import { extractRequirementsFromJd } from '../../services/jd-extractor.service';
 
 export const jobRouter = Router();
 
@@ -462,7 +463,31 @@ jobRouter.delete(
   }
 );
 
-// POST /api/v1/jobs/:id/ai-assist - Enqueue JD parsing / AI assist job
+// POST /api/v1/jobs/extract-requirements - Real-time AI extraction of skills, soft skills, culture, and rubric
+jobRouter.post(
+  '/extract-requirements',
+  authenticate,
+  requireRole('hr'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (checkOrgParamPollution(req, res)) return;
+      const { description, title } = req.body;
+      if (!description || typeof description !== 'string') {
+        return res.status(400).json({ success: false, error: 'Job description is required' });
+      }
+
+      const extracted = await extractRequirementsFromJd(description, title);
+      return res.json({
+        success: true,
+        data: extracted,
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
+// POST /api/v1/jobs/:id/ai-assist - Enqueue JD parsing & run real-time AI assist
 jobRouter.post(
   '/:id/ai-assist',
   authenticate,
@@ -485,15 +510,36 @@ jobRouter.post(
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied to job' });
       }
 
-      await enqueueSourcing(existingJob.id, 'ai-jd-assist', {
-        orgId: existingJob.org_id,
-        description: existingJob.description,
-        timestamp: new Date().toISOString(),
+      const extracted = await extractRequirementsFromJd(existingJob.description, existingJob.title);
+
+      // Save real extracted requirements directly to the job record
+      const updatedJob = await prisma.job.update({
+        where: { id: jobId },
+        data: {
+          skills: extracted.skills as any,
+          rubric: extracted.rubric as any,
+          ...(extracted.enhancedDescription ? { description: extracted.enhancedDescription } : {}),
+        },
       });
+
+      // Best effort background worker enqueue
+      try {
+        await enqueueSourcing(existingJob.id, 'ai-jd-assist', {
+          orgId: existingJob.org_id,
+          description: existingJob.description,
+          timestamp: new Date().toISOString(),
+        });
+      } catch (err) {
+        console.warn('Could not enqueue sourcing worker:', err);
+      }
 
       return res.json({
         success: true,
-        data: { message: 'AI assistance task queued successfully' },
+        data: {
+          job: updatedJob,
+          extracted,
+          message: 'AI assistance executed and requirements extracted successfully',
+        },
       });
     } catch (err) {
       return next(err);

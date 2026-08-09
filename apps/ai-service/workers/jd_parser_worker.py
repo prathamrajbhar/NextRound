@@ -41,6 +41,7 @@ async def process_jd_parser_job(job_data: dict) -> bool:
                 "description": result.get("description"),
                 "rubric": result.get("rubric"),
                 "thresholds": result.get("thresholds"),
+                "skills": result.get("skills"),
             },
         )
         return result

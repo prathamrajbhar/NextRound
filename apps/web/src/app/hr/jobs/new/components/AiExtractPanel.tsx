@@ -88,6 +88,11 @@ export default function AiExtractPanel({
             Technical Skills
           </span>
           <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center">
+            {skills.length === 0 && (
+              <span className="text-[11px] text-slate-400 dark:text-slate-500 italic pl-1">
+                No technical skills parsed. Add skills manually below.
+              </span>
+            )}
             {skills.map((item) => (
               <span
                 key={item}

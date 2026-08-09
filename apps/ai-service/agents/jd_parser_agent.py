@@ -141,7 +141,7 @@ _jd_parser_app = build_jd_parser_graph()
 async def run_jd_parser_agent(job_id: str, raw_description: str) -> Dict[str, Any]:
     """
     Execute JD Parser Agent pipeline on a job description prompt.
-    Returns dict containing generated description, rubric, and thresholds.
+    Returns dict containing generated description, rubric, thresholds, and extracted skills.
     """
     initial_state: JDParserState = {
         "job_id": job_id,
@@ -155,6 +155,7 @@ async def run_jd_parser_agent(job_id: str, raw_description: str) -> Dict[str, An
                 "description": final_state.get("generated_description"),
                 "rubric": final_state.get("rubric"),
                 "thresholds": final_state.get("thresholds"),
+                "skills": final_state.get("extracted_skills", []),
             }
         except Exception as e:
             logger.error(f"LangGraph execution error in JD Parser Agent: {e}")
@@ -169,4 +170,5 @@ async def run_jd_parser_agent(job_id: str, raw_description: str) -> Dict[str, An
         "description": s4.get("generated_description"),
         "rubric": s4.get("rubric"),
         "thresholds": s4.get("thresholds"),
+        "skills": s4.get("extracted_skills", []),
     }
