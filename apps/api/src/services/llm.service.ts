@@ -20,8 +20,8 @@ export async function generateText(prompt: string): Promise<string> {
           return text;
         }
         throw new Error('Gemini returned empty text');
-      } catch (err) {
-        console.error('[Central LLM Service] Gemini call failed:', err);
+      } catch (err: any) {
+        console.warn('[Central LLM Service] Gemini call failed:', err?.message || err);
         throw err;
       }
     })());
@@ -59,8 +59,8 @@ export async function generateText(prompt: string): Promise<string> {
         throw new Error('Ollama returned empty response');
       }
       return text;
-    } catch (err) {
-      console.error('[Central LLM Service] Ollama call failed:', err);
+    } catch (err: any) {
+      console.warn('[Central LLM Service] Ollama call failed:', err?.message || err);
       throw err;
     }
   })());
