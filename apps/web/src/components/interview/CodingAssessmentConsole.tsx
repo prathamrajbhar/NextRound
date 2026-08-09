@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CompanyLogo } from '@/components/ui';
 import { apiClient } from '@/lib/apiClient';
 import {
@@ -50,7 +50,7 @@ export interface CodingProblem {
   expectedComplexity: { time: string; space: string };
 }
 
-export const DEFAULT_DSA_PROBLEM: CodingProblem = {
+export const INITIAL_PROBLEM: CodingProblem = {
   id: 'virtualized-list',
   title: 'Virtualized List Rendering & Memory Optimization',
   difficulty: 'Medium',
@@ -115,7 +115,7 @@ vector<int> getVisibleRange(const vector<int>& heights, int scrollY, int viewpor
     },
   ],
   editorial:
-    'We accumulate item heights until reaching scroll_y for startIndex, and continue accumulating until reaching (scroll_y + viewport_height) for endIndex.',
+    'Accumulate heights sequentially to locate start and end viewport intersections.',
   expectedComplexity: { time: 'O(N)', space: 'O(1)' },
 };
 
@@ -126,9 +126,9 @@ export default function CodingAssessmentConsole({
   sessionId,
   onComplete,
 }: CodingConsoleProps) {
-  const [activeProblem, setActiveProblem] = useState<CodingProblem>(DEFAULT_DSA_PROBLEM);
+  const [activeProblem, setActiveProblem] = useState<CodingProblem>(INITIAL_PROBLEM);
   const [language, setLanguage] = useState<'python' | 'javascript' | 'typescript' | 'java' | 'cpp'>('python');
-  const [code, setCode] = useState<string>(DEFAULT_DSA_PROBLEM.starterCode.python);
+  const [code, setCode] = useState<string>(INITIAL_PROBLEM.starterCode.python);
 
   const [activeLeftTab, setActiveLeftTab] = useState<'description' | 'editorial' | 'submissions'>('description');
   const [activeBottomTab, setActiveBottomTab] = useState<'testcases' | 'results' | 'console'>('testcases');
@@ -141,61 +141,51 @@ export default function CodingAssessmentConsole({
   >([]);
   const [complexityFeedback, setComplexityFeedback] = useState<string | null>(null);
   const [finalPassRate, setFinalPassRate] = useState<number>(0);
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Load problem dynamically from Backend AI Coding Generator API
   useEffect(() => {
-    return () => {
-      if (pollIntervalRef.current) {
-        clearInterval(pollIntervalRef.current);
-        pollIntervalRef.current = null;
-      }
-    };
-  }, []);
-
-  // Load backend problem
-  useEffect(() => {
-    async function loadProblemFromApi() {
-      const endpoint = applicationId
-        ? `/applications/${applicationId}/assessment/coding`
-        : `/mock/sessions/${sessionId || 'practice'}/coding`;
-
+    async function fetchCodingProblem() {
       try {
+        const endpoint = applicationId
+          ? `/applications/${applicationId}/assessment/coding`
+          : `/coding/problem?role=${encodeURIComponent(role || 'Software Engineer')}&company=${encodeURIComponent(company || 'Tech Enterprise')}`;
+
         const res = await apiClient.get<{ problem: any }>(endpoint).catch(() => null);
         if (res?.problem) {
-          const apiP = res.problem;
-          const mappedP: CodingProblem = {
-            id: apiP.id || DEFAULT_DSA_PROBLEM.id,
-            title: apiP.title || DEFAULT_DSA_PROBLEM.title,
-            difficulty: apiP.difficulty || DEFAULT_DSA_PROBLEM.difficulty,
-            category: apiP.category || DEFAULT_DSA_PROBLEM.category,
-            description: apiP.description || DEFAULT_DSA_PROBLEM.description,
-            constraints: apiP.constraints || DEFAULT_DSA_PROBLEM.constraints,
-            examples: apiP.examples || DEFAULT_DSA_PROBLEM.examples,
+          const p = res.problem;
+          const loaded: CodingProblem = {
+            id: p.id || INITIAL_PROBLEM.id,
+            title: p.title || INITIAL_PROBLEM.title,
+            difficulty: p.difficulty || INITIAL_PROBLEM.difficulty,
+            category: p.category || INITIAL_PROBLEM.category,
+            description: p.description || INITIAL_PROBLEM.description,
+            constraints: p.constraints || INITIAL_PROBLEM.constraints,
+            examples: p.examples || INITIAL_PROBLEM.examples,
             starterCode: {
-              python: apiP.starterCode?.python || DEFAULT_DSA_PROBLEM.starterCode.python,
-              javascript: apiP.starterCode?.javascript || DEFAULT_DSA_PROBLEM.starterCode.javascript,
-              typescript: apiP.starterCode?.typescript || DEFAULT_DSA_PROBLEM.starterCode.typescript,
-              java: apiP.starterCode?.java || DEFAULT_DSA_PROBLEM.starterCode.java,
-              cpp: apiP.starterCode?.cpp || DEFAULT_DSA_PROBLEM.starterCode.cpp,
+              python: p.starterCode?.python || INITIAL_PROBLEM.starterCode.python,
+              javascript: p.starterCode?.javascript || INITIAL_PROBLEM.starterCode.javascript,
+              typescript: p.starterCode?.typescript || INITIAL_PROBLEM.starterCode.typescript,
+              java: p.starterCode?.java || INITIAL_PROBLEM.starterCode.java,
+              cpp: p.starterCode?.cpp || INITIAL_PROBLEM.starterCode.cpp,
             },
-            testCases: (apiP.testCases || DEFAULT_DSA_PROBLEM.testCases).map((tc: any, i: number) => ({
+            testCases: (p.testCases || INITIAL_PROBLEM.testCases).map((tc: any, i: number) => ({
               name: tc.name || `Case ${i + 1}`,
               input: tc.input || '',
-              expected: tc.expectedOutput || tc.expected || 'Passed',
-              hidden: tc.hidden || false,
+              expected: tc.expected || tc.expectedOutput || '',
+              hidden: Boolean(tc.hidden),
             })),
-            editorial: apiP.editorial || DEFAULT_DSA_PROBLEM.editorial,
-            expectedComplexity: apiP.expectedComplexity || DEFAULT_DSA_PROBLEM.expectedComplexity,
+            editorial: p.editorial || INITIAL_PROBLEM.editorial,
+            expectedComplexity: p.expectedComplexity || INITIAL_PROBLEM.expectedComplexity,
           };
-          setActiveProblem(mappedP);
-          setCode(mappedP.starterCode.python);
+          setActiveProblem(loaded);
+          setCode(loaded.starterCode.python);
         }
       } catch (err) {
-        console.warn('Backend problem fetch warning:', err);
+        console.warn('Failed to load dynamic LLM coding problem, using starter template:', err);
       }
     }
-    loadProblemFromApi();
-  }, [applicationId, sessionId]);
+    fetchCodingProblem();
+  }, [applicationId, sessionId, role, company]);
 
   const handleLanguageChange = (newLang: 'python' | 'javascript' | 'typescript' | 'java' | 'cpp') => {
     setLanguage(newLang);
@@ -204,180 +194,76 @@ export default function CodingAssessmentConsole({
     }
   };
 
-  // Safe Code Evaluation Engine
-  const evaluateCandidateCode = (userCode: string, lang: string, publicOnly: boolean = true) => {
-    const cleanCode = userCode.trim();
-    const isUnimplemented =
-      !cleanCode ||
-      cleanCode.includes('pass\n') ||
-      cleanCode.endsWith('pass') ||
-      (cleanCode.includes('return [];') && !cleanCode.includes('for') && !cleanCode.includes('while')) ||
-      (cleanCode.includes('return new int[]{}') && !cleanCode.includes('for')) ||
-      (cleanCode.includes('return {};') && !cleanCode.includes('for')) ||
-      cleanCode.includes('// TODO') ||
-      cleanCode.includes('# TODO');
-
-    const casesToRun = publicOnly
-      ? activeProblem.testCases.filter((tc) => !tc.hidden)
-      : activeProblem.testCases;
-
-    let passedCount = 0;
-
-    const evaluated = casesToRun.map((tc, idx) => {
-      let actualOutput = 'None';
-      let status: 'passed' | 'failed' = 'failed';
-
-      if (isUnimplemented) {
-        actualOutput = 'None (Unimplemented Stub)';
-        status = 'failed';
-      } else {
-        try {
-          if (lang === 'javascript' || lang === 'typescript') {
-            const runner = new Function(`
-              ${userCode}
-              if (typeof getVisibleRange === 'function') {
-                if (${idx} === 0) return getVisibleRange([50, 50, 50, 50, 50], 100, 100);
-                return getVisibleRange([30, 40, 50, 60, 70], 0, 80);
-              }
-              if (typeof twoSum === 'function') return twoSum([2, 7, 11, 15], 9);
-              if (typeof lengthOfLongestSubstring === 'function') return lengthOfLongestSubstring("abcabcbb");
-              return null;
-            `);
-            const res = runner();
-            actualOutput = JSON.stringify(res);
-          } else if (lang === 'python') {
-            // Transpile & execute Python logic in JS sandbox
-            let js = userCode
-              .replace(/from\s+[a-zA-Z0-9_.]+\s+import\s+.*$/gm, '')
-              .replace(/import\s+.*$/gm, '')
-              .replace(/:\s*list(\[[^\]]*\])?/g, '')
-              .replace(/:\s*int/g, '')
-              .replace(/:\s*str/g, '')
-              .replace(/:\s*bool/g, '')
-              .replace(/->\s*[a-zA-Z0-9_\[\]\s]+/g, '')
-              .replace(/def\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\):/g, 'function $1($2) {')
-              .replace(/#.*$/gm, '')
-              .replace(/len\(([^)]+)\)/g, '$1.length')
-              .replace(/for\s+([a-zA-Z0-9_]+)\s+in\s+range\(([^)]+)\):/g, 'for (let $1 = 0; $1 < $2; $1++) {')
-              .replace(/\[0\]\s*\*\s*\(([^)]+)\)/g, 'Array($1).fill(0)')
-              .replace(/\[0\]\s*\*\s*([a-zA-Z0-9_]+)/g, 'Array($1).fill(0)');
-
-            const helpers = `
-              function bisect_left(arr, x) {
-                let l = 0, r = arr.length;
-                while (l < r) {
-                  let m = Math.floor((l + r) / 2);
-                  if (arr[m] < x) l = m + 1; else r = m;
-                }
-                return l;
-              }
-              function bisect_right(arr, x) {
-                let l = 0, r = arr.length;
-                while (l < r) {
-                  let m = Math.floor((l + r) / 2);
-                  if (arr[m] <= x) l = m + 1; else r = m;
-                }
-                return l;
-              }
-            `;
-
-            const runner = new Function('args', `
-              ${helpers}
-              ${js}
-              if (typeof get_visible_range === 'function') return get_visible_range(...args);
-              if (typeof two_sum === 'function') return two_sum(...args);
-              return null;
-            `);
-
-            const testArgs = idx === 0 ? [[50, 50, 50, 50, 50], 100, 100] : [[30, 40, 50, 60, 70], 0, 80];
-            const res = runner(testArgs);
-            actualOutput = JSON.stringify(res);
-          } else {
-            // C++ / Java static execution check
-            actualOutput = userCode.includes('return') ? tc.expected : 'Execution Error';
-          }
-
-          const normActual = String(actualOutput).trim().replace(/\s+/g, '');
-          const normExpected = String(tc.expected).trim().replace(/\s+/g, '');
-
-          if (normActual === normExpected) {
-            status = 'passed';
-            passedCount++;
-          } else {
-            status = 'failed';
-          }
-        } catch (err: any) {
-          actualOutput = `Error: ${err?.message || 'Syntax/Logic Error'}`;
-          status = 'failed';
-        }
-      }
-
-      return {
-        name: tc.name || `Case ${idx + 1}`,
-        input: tc.input,
-        expected: tc.expected,
-        actual: actualOutput,
-        status,
-        time: `${Math.floor(Math.random() * 10) + 3}ms`,
-      };
-    });
-
-    const passRate = casesToRun.length > 0 ? Math.round((passedCount / casesToRun.length) * 100) : 0;
-    return { evaluated, passRate, isUnimplemented };
-  };
-
+  // Production Backend Sandbox Code Execution
   const handleRunCode = async () => {
     setIsRunning(true);
     setActiveBottomTab('results');
-    const langLabel = language === 'python' ? 'Python 3.13' : language === 'javascript' ? 'Node.js 20' : language.toUpperCase();
-
     setOutputLogs([
-      `[Compiler] Initializing ${langLabel} Execution Sandbox...`,
-      `[Sandbox] Resource limits: 256MB RAM, 3.0s CPU timeout.`,
-      `[Test Suite] Running public test cases...`,
+      `[Server Sandbox] Dispatching code execution to backend container...`,
+      `[Server Sandbox] Language: ${language.toUpperCase()}`,
     ]);
 
-    setTimeout(() => {
-      const { evaluated, isUnimplemented } = evaluateCandidateCode(code, language, true);
-      setTestResults(evaluated);
-      setOutputLogs((prev) => [
-        ...prev,
-        isUnimplemented
-          ? `[Execution Error] Method contains un-implemented pass / TODO stubs.`
-          : `[Sandbox] Public test cases evaluated cleanly.`,
-      ]);
+    try {
+      const publicCases = activeProblem.testCases.filter((tc) => !tc.hidden);
+      const res = await apiClient.post<{
+        results: { name: string; input: string; expected: string; actual: string; status: 'passed' | 'failed'; time: string }[];
+        passRate: number;
+        logs: string[];
+      }>('/coding/execute', {
+        code,
+        language,
+        testCases: publicCases,
+      });
+
+      if (res) {
+        setTestResults(res.results || []);
+        setOutputLogs(res.logs || ['[Server Sandbox] Execution completed.']);
+      }
+    } catch (err: any) {
+      console.error('Backend execution endpoint error:', err);
+      setOutputLogs((prev) => [...prev, `[Server Error] ${err?.message || 'Failed connecting to execution server.'}`]);
+    } finally {
       setIsRunning(false);
-    }, 1000);
+    }
   };
 
+  // Submit Solution & Compute Final Score
   const handleSubmitSolution = async () => {
     setIsRunning(true);
     setActiveBottomTab('results');
 
-    if (applicationId) {
-      try {
+    try {
+      if (applicationId) {
         await apiClient.post(`/applications/${applicationId}/assessment/coding`, {
           problemId: activeProblem.id,
           code,
           language,
         }).catch(() => null);
-      } catch (err) {
-        console.warn('API submission error:', err);
       }
-    }
 
-    setTimeout(() => {
-      const { evaluated, passRate, isUnimplemented } = evaluateCandidateCode(code, language, false);
-      setTestResults(evaluated);
-      setFinalPassRate(passRate);
-      setComplexityFeedback(
-        !isUnimplemented && passRate > 0
-          ? `Time: ${activeProblem.expectedComplexity.time} | Space: ${activeProblem.expectedComplexity.space}`
-          : 'O(1) - Unimplemented Method Stub'
-      );
+      const res = await apiClient.post<{
+        results: { name: string; input: string; expected: string; actual: string; status: 'passed' | 'failed'; time: string }[];
+        passRate: number;
+        logs: string[];
+        complexity: string;
+      }>('/coding/execute', {
+        code,
+        language,
+        testCases: activeProblem.testCases,
+      });
+
+      if (res) {
+        setTestResults(res.results || []);
+        setFinalPassRate(res.passRate || 0);
+        setComplexityFeedback(res.complexity || `Time: ${activeProblem.expectedComplexity.time}`);
+        setOutputLogs(res.logs || []);
+        setSubmitted(true);
+      }
+    } catch (err: any) {
+      console.error('Backend submit endpoint error:', err);
+    } finally {
       setIsRunning(false);
-      setSubmitted(true);
-    }, 1200);
+    }
   };
 
   const lineCount = code.split('\n').length;

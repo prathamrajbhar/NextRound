@@ -15,6 +15,7 @@ import { organizationRouter } from './organization/organization.routes';
 import { internalRouter } from './internal/internal.routes';
 import { notificationRouter } from './common/notification.routes';
 import { userRouter } from './common/user.routes';
+import { codingRouter } from './coding/coding.routes';
 
 export const apiRouter = Router();
 
@@ -23,7 +24,9 @@ apiRouter.use('/auth', authRouter);
 apiRouter.use('/organizations', organizationRouter);
 apiRouter.use('/jobs', jobRouter);
 apiRouter.use('/applications', applicationRouter);
+apiRouter.use('/coding', codingRouter);
 apiRouter.use('/candidate', candidateRouter);
+
 apiRouter.use('/hr/analytics', analyticsRouter);
 apiRouter.use('/hr/sentiment', sentimentRouter);
 apiRouter.use('/hr/talent-pool', talentPoolRouter);
