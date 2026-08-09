@@ -17,6 +17,8 @@ import {
   Compass,
   BookOpen,
   BarChart3,
+  Sparkles,
+  AlertTriangle,
 } from '@/lib/lucide-google-icons';
 import { ProctoringWarningModal } from './ProctoringWarningModal';
 
@@ -166,7 +168,7 @@ export default function AptitudeTestConsole({
     loadInitialBatch();
   }, [applicationId, sessionId, displayRole, displayCompany]);
 
-  // 2. Smart Background Batch Prefetching (Only for mock practice, never for job assessments)
+  // 2. Background Batch Prefetching
   const prefetchNextBatch = useCallback(async () => {
     if (isPrefetching || isLoading || applicationId) return;
 
@@ -225,7 +227,6 @@ export default function AptitudeTestConsole({
       }
     });
 
-    // Also include any fallback category if present
     activeQuestions.forEach((q, idx) => {
       if (!map.has(q.category)) {
         const firstIdx = activeQuestions.findIndex((item) => item.category === q.category);
@@ -293,7 +294,7 @@ export default function AptitudeTestConsole({
     setIsSubmitting(false);
   }, [answers, applicationId, activeQuestions, strikeCount, timeLeft]);
 
-  // Anti-Cheat: Fullscreen & Tab Blur Guard
+  // Anti-Cheat proctoring listeners
   useEffect(() => {
     if (submitted || !isStarted) return;
 
@@ -316,7 +317,7 @@ export default function AptitudeTestConsole({
     };
   }, [submitted, isStarted]);
 
-  // Reset timer on question change
+  // Reset per-question timer on navigation
   useEffect(() => {
     if (!isStarted) return;
     const timer = setTimeout(() => {
@@ -326,7 +327,7 @@ export default function AptitudeTestConsole({
     return () => clearTimeout(timer);
   }, [currentIndex, isStarted]);
 
-  // 60-Second Per-Question Countdown Timer
+  // 60-Second Per-Question Timer
   useEffect(() => {
     if (submitted || showWarningModal || !isStarted) return;
 
@@ -349,7 +350,7 @@ export default function AptitudeTestConsole({
     return () => clearInterval(interval);
   }, [submitted, showWarningModal, isStarted, currentIndex, activeQuestions.length, handleSubmit]);
 
-  // Overall Test Countdown Timer
+  // Overall Countdown Timer
   useEffect(() => {
     if (submitted || showWarningModal || !isStarted) return;
 
@@ -401,49 +402,58 @@ export default function AptitudeTestConsole({
     return `${m}:${s < 10 ? '0' : ''}${s}`;
   };
 
+  // SUBMITTED STATE
   if (submitted) {
     const isEliminated = strikeCount >= 3;
     const computedScore = finalScore ?? 0;
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-8 text-center animate-in fade-in duration-300 font-sans">
+      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center animate-in fade-in duration-300 font-sans">
         <div
           className={`p-8 rounded-3xl border shadow-2xl max-w-md w-full space-y-6 ${
-            isEliminated ? 'bg-rose-950/80 border-rose-800 text-rose-100' : 'bg-slate-900 border-slate-800 text-slate-100'
+            isEliminated
+              ? 'bg-rose-50 dark:bg-rose-950/80 border-rose-200 dark:border-rose-800 text-rose-900 dark:text-rose-100'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100'
           }`}
         >
           <div
-            className={`h-20 w-20 mx-auto rounded-full flex items-center justify-center border ${
-              isEliminated ? 'bg-rose-900/40 border-rose-700 text-rose-400' : 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+            className={`h-20 w-20 mx-auto rounded-2xl flex items-center justify-center border shadow-md ${
+              isEliminated
+                ? 'bg-rose-100 dark:bg-rose-900/40 border-rose-300 dark:border-rose-700 text-rose-600 dark:text-rose-400'
+                : 'bg-brand-50 dark:bg-brand-950/50 border-brand-200 dark:border-brand-800 text-brand-600 dark:text-brand-400'
             }`}
           >
             <Award className="h-10 w-10" />
           </div>
 
           <div className="space-y-2">
-            <h2 className="text-2xl font-black font-display">
+            <h2 className="text-2xl font-black font-display tracking-tight">
               {isEliminated ? 'Candidate Disqualified' : 'Assessment Completed'}
             </h2>
-            <p className="text-xs text-slate-400 font-semibold">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               {isEliminated ? 'Exceeded 3 proctoring full-screen violations.' : `Target Enterprise: ${displayCompany} • ${displayRole}`}
             </p>
           </div>
 
           {!isEliminated ? (
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
-              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Aptitude Score</span>
-              <span className="text-3xl font-black text-amber-400">{computedScore}%</span>
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1">
+              <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                Aptitude Score
+              </span>
+              <span className="text-3xl font-black text-brand-600 dark:text-orange-400">{computedScore}%</span>
             </div>
           ) : (
-            <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-800/80 space-y-1">
-              <span className="text-[10px] font-extrabold text-rose-300 uppercase tracking-wider block">Elimination Status</span>
-              <span className="text-lg font-black text-rose-400">0% • Fullscreen Violation</span>
+            <div className="p-4 rounded-2xl bg-rose-100/60 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 space-y-1">
+              <span className="text-[10px] font-extrabold text-rose-700 dark:text-rose-300 uppercase tracking-wider block">
+                Elimination Status
+              </span>
+              <span className="text-lg font-black text-rose-600 dark:text-rose-400">0% • Fullscreen Violation</span>
             </div>
           )}
 
           <button
             type="button"
             onClick={() => onComplete(isEliminated ? 0 : computedScore)}
-            className="w-full py-3.5 px-6 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+            className="w-full py-3.5 px-6 rounded-xl bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white dark:text-slate-950 font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer"
           >
             Continue to Next Stage
           </button>
@@ -452,16 +462,17 @@ export default function AptitudeTestConsole({
     );
   }
 
+  // LOADING STATE
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-8 text-center animate-in fade-in duration-300 font-sans">
-        <div className="p-8 rounded-3xl border border-slate-800 bg-slate-900 text-slate-200 shadow-2xl max-w-md w-full space-y-4">
-          <div className="h-16 w-16 mx-auto rounded-full flex items-center justify-center border border-amber-500/40 bg-amber-500/10 text-amber-400 animate-pulse">
+      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center animate-in fade-in duration-300 font-sans">
+        <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-xl max-w-md w-full space-y-4">
+          <div className="h-16 w-16 mx-auto rounded-2xl flex items-center justify-center border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 shadow-sm">
             <Brain className="h-8 w-8 animate-spin" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-black font-display text-white">Loading Category Sections</h2>
-            <p className="text-xs text-slate-400 font-semibold">
+            <h2 className="text-xl font-black font-display text-slate-900 dark:text-white">Loading Assessment Questions</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               Preparing category-divided questions (Quantitative, Logical, Verbal, Data Interpretation) for {displayRole}...
             </p>
           </div>
@@ -470,20 +481,19 @@ export default function AptitudeTestConsole({
     );
   }
 
-  // START SCREEN: 4 Clean Category Cards with direct Start buttons
+  // START SCREEN: 4 Clean Category Cards
   if (!isStarted) {
     return (
-      <div className="w-full h-full flex flex-col justify-center items-center p-4 sm:p-6 bg-slate-950 text-slate-100 font-sans relative overflow-y-auto">
-        <div className="max-w-3xl w-full p-6 sm:p-8 rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-md shadow-2xl space-y-6 text-center">
+      <div className="w-full h-full flex flex-col justify-center items-center p-4 sm:p-8 bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans relative overflow-y-auto">
+        <div className="max-w-3xl w-full p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-xl space-y-6 text-center">
           <div className="space-y-2">
             <CompanyLogo name={displayCompany} logoUrl={companyLogoUrl} size="lg" className="mx-auto shadow-md" />
-            <h1 className="text-xl sm:text-2xl font-black font-display text-white">{displayCompany}</h1>
-            <p className="text-xs font-extrabold text-amber-400 uppercase tracking-wider">
+            <h1 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-white">{displayCompany}</h1>
+            <p className="text-xs font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-wider">
               {displayRole} • Aptitude Assessment
             </p>
           </div>
 
-          {/* 4 Category Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left pt-2">
             {STANDARD_CATEGORIES.map((cat) => {
               const sec = categorySections.find((s) => s.category === cat);
@@ -494,15 +504,15 @@ export default function AptitudeTestConsole({
               return (
                 <div
                   key={cat}
-                  className="p-5 rounded-2xl border border-slate-800 bg-slate-950/80 hover:border-amber-500/40 transition-all shadow-lg flex flex-col justify-between space-y-4"
+                  className="p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 bg-white dark:bg-slate-950/80 hover:border-brand-400 dark:hover:border-brand-500 transition-all shadow-sm hover:shadow-md flex flex-col justify-between space-y-4"
                 >
                   <div className="flex items-start gap-3.5">
-                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex-shrink-0">
+                    <div className="p-3 rounded-xl bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 text-brand-600 dark:text-brand-400 flex-shrink-0">
                       <IconComp className="h-6 w-6" />
                     </div>
                     <div className="space-y-1">
-                      <h3 className="text-sm font-extrabold text-slate-100">{cat}</h3>
-                      <span className="text-xs font-semibold text-slate-400 block">
+                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">{cat}</h3>
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">
                         {qCount > 0 ? `${qCount} Questions` : 'Included'}
                       </span>
                     </div>
@@ -514,9 +524,9 @@ export default function AptitudeTestConsole({
                       setCurrentIndex(startIndex);
                       handleStartTest();
                     }}
-                    className="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 transform hover:scale-[1.01]"
+                    className="w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white dark:text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm hover:shadow transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
-                    <Play className="h-3.5 w-3.5 fill-slate-950" />
+                    <Play className="h-3.5 w-3.5 fill-current" />
                     <span>Start {cat}</span>
                     <ChevronRight className="h-4 w-4" />
                   </button>
@@ -531,21 +541,21 @@ export default function AptitudeTestConsole({
 
   if (!currentQ) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-8 text-center animate-in fade-in duration-300 font-sans">
-        <div className="p-8 rounded-3xl border border-slate-800 bg-slate-900 text-slate-200 shadow-2xl max-w-md w-full space-y-4">
-          <div className="h-16 w-16 mx-auto rounded-full flex items-center justify-center border border-amber-500/40 bg-amber-500/10 text-amber-400">
-            <Brain className="h-8 w-8 animate-pulse text-amber-400" />
+      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center animate-in fade-in duration-300 font-sans">
+        <div className="p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-xl max-w-md w-full space-y-4">
+          <div className="h-16 w-16 mx-auto rounded-2xl flex items-center justify-center border border-brand-200 dark:border-brand-800 bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400">
+            <Brain className="h-8 w-8 animate-pulse" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-black font-display text-white">Initializing Category Questions</h2>
-            <p className="text-xs text-slate-400 font-semibold">
+            <h2 className="text-xl font-black font-display text-slate-900 dark:text-white">Initializing Category Questions</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               Connecting to AI service to load category questions for {displayRole}...
             </p>
           </div>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="w-full py-3.5 px-6 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition-all cursor-pointer"
+            className="w-full py-3.5 px-6 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer"
           >
             Retry Connection
           </button>
@@ -557,50 +567,50 @@ export default function AptitudeTestConsole({
   const answeredCount = Object.keys(answers).length;
 
   return (
-    <div className="w-full h-full flex flex-col justify-between p-4 sm:p-6 bg-slate-950 text-slate-100 font-sans relative overflow-hidden">
+    <div className="w-full h-full flex flex-col justify-between p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans relative overflow-hidden transition-colors duration-300">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
+      <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 pb-4 flex-shrink-0">
         <div className="flex items-center gap-3">
-          <CompanyLogo name={displayCompany} logoUrl={companyLogoUrl} size="md" className="shadow-xs flex-shrink-0" />
+          <CompanyLogo name={displayCompany} logoUrl={companyLogoUrl} size="md" className="shadow-xs flex-shrink-0 border border-slate-200 dark:border-slate-800" />
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-black font-display text-slate-100">{displayCompany}</h2>
-              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase">
+              <h2 className="text-sm sm:text-base font-black font-display text-slate-900 dark:text-slate-100">{displayCompany}</h2>
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-700 dark:text-orange-400 border border-brand-200 dark:border-brand-800 uppercase tracking-wider">
                 Aptitude Assessment
               </span>
             </div>
-            <span className="text-xs text-slate-400 font-medium block">{displayRole}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">{displayRole}</span>
           </div>
         </div>
 
         {/* Timers & Proctoring Badges */}
         <div className="flex items-center gap-3">
           {/* 60s Question Timer Bar */}
-          <div className="px-3.5 py-1.5 rounded-2xl bg-amber-950/60 border border-amber-500/40 flex items-center gap-2 shadow-sm">
-            <Timer className="h-4 w-4 text-amber-400 animate-pulse" />
+          <div className="px-3.5 py-1.5 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-500/40 flex items-center gap-2 shadow-xs">
+            <Timer className="h-4 w-4 text-amber-600 dark:text-amber-400 animate-pulse" />
             <div className="flex flex-col text-left">
-              <span className="text-[9px] font-extrabold text-amber-300 uppercase">Question Time</span>
-              <span className="text-xs font-black font-mono text-amber-400">{questionTimeLeft}s Remaining</span>
+              <span className="text-[9px] font-extrabold text-amber-700 dark:text-amber-300 uppercase tracking-wider">Question Time</span>
+              <span className="text-xs font-black font-mono text-amber-800 dark:text-amber-400">{questionTimeLeft}s Remaining</span>
             </div>
           </div>
 
           {/* Overall Test Clock */}
-          <div className="px-3.5 py-1.5 rounded-2xl bg-slate-900 border border-slate-800 flex items-center gap-2 shadow-sm">
-            <Clock className="h-4 w-4 text-brand-400" />
+          <div className="px-3.5 py-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-2 shadow-xs">
+            <Clock className="h-4 w-4 text-brand-600 dark:text-brand-400" />
             <div className="flex flex-col text-left">
-              <span className="text-[9px] font-extrabold text-slate-400 uppercase">Total Time</span>
-              <span className="text-xs font-black font-mono text-slate-200">{formatTime(timeLeft)}</span>
+              <span className="text-[9px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Time</span>
+              <span className="text-xs font-black font-mono text-slate-800 dark:text-slate-200">{formatTime(timeLeft)}</span>
             </div>
           </div>
 
-          <span className="text-xs font-bold text-slate-400 hidden sm:inline-block">
+          <span className="text-xs font-extrabold text-slate-600 dark:text-slate-400 hidden sm:inline-block">
             Question {currentIndex + 1} of {activeQuestions.length}
           </span>
         </div>
       </div>
 
-      {/* Clean Category Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto py-2.5 border-b border-slate-800/60 no-scrollbar">
+      {/* Category Navigation Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto py-2.5 border-b border-slate-200/60 dark:border-slate-800/60 no-scrollbar flex-shrink-0">
         {categorySections.map((sec) => {
           const isActive = currentQ.category === sec.category;
           const IconComp = CATEGORY_ICONS[sec.category] || Brain;
@@ -611,8 +621,8 @@ export default function AptitudeTestConsole({
               onClick={() => setCurrentIndex(sec.startIndex)}
               className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${
                 isActive
-                  ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/30 font-black'
-                  : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800/80'
+                  ? 'bg-brand-600 dark:bg-brand-500 text-white dark:text-slate-950 shadow-md ring-2 ring-brand-500/30 font-black'
+                  : 'bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200/80 dark:border-slate-800/80'
               }`}
             >
               <IconComp className="h-3.5 w-3.5" />
@@ -623,25 +633,25 @@ export default function AptitudeTestConsole({
       </div>
 
       {/* Main 2-Column Content Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 my-4 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 my-4 items-start overflow-hidden">
         {/* Left 2-Cols: Active Question Console */}
-        <div className="lg:col-span-2 space-y-4 p-6 rounded-3xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl flex flex-col justify-between min-h-[420px]">
+        <div className="lg:col-span-2 space-y-4 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/70 backdrop-blur-md shadow-lg flex flex-col justify-between h-full overflow-y-auto">
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
-              <span className="text-xs font-extrabold text-amber-400 uppercase tracking-wider font-mono">
+            <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/60 pb-3">
+              <span className="text-xs font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-wider font-mono">
                 QUESTION {currentIndex + 1} OF {activeQuestions.length}
               </span>
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-orange-400 border border-brand-200 dark:border-brand-800">
                 {currentQ.category}
               </span>
             </div>
 
-            <h3 className="text-base sm:text-lg font-bold text-slate-100 leading-relaxed font-display">
+            <h3 className="text-base sm:text-xl font-bold text-slate-900 dark:text-slate-100 leading-relaxed font-display">
               {currentQ.text}
             </h3>
 
             {/* Answer Options */}
-            <div className="space-y-2.5 pt-2">
+            <div className="space-y-3 pt-2">
               {currentQ.options.map((opt, idx) => {
                 const isSelected = answers[currentQ.id] === idx;
                 return (
@@ -649,23 +659,23 @@ export default function AptitudeTestConsole({
                     key={idx}
                     type="button"
                     onClick={() => handleSelectOption(idx)}
-                    className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3 ${
+                    className={`w-full p-4 rounded-2xl border text-left transition-all cursor-pointer flex items-center gap-3.5 ${
                       isSelected
-                        ? 'border-amber-500 bg-amber-500/10 text-slate-100 ring-2 ring-amber-500/30'
-                        : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-slate-700 hover:bg-slate-800/60'
+                        ? 'border-brand-500 bg-brand-500/10 text-brand-950 dark:text-slate-100 ring-2 ring-brand-500/30 font-bold'
+                        : 'border-slate-200/90 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/60 dark:hover:bg-slate-800/60'
                     }`}
                   >
                     <div
-                      className={`h-6 w-6 rounded-xl border flex items-center justify-center font-extrabold text-xs ${
+                      className={`h-7 w-7 rounded-xl border flex items-center justify-center font-extrabold text-xs transition-colors ${
                         isSelected
-                          ? 'border-amber-500 bg-amber-500 text-slate-950'
-                          : 'border-slate-700 bg-slate-800 text-slate-400'
+                          ? 'border-brand-500 bg-brand-600 dark:bg-brand-500 text-white dark:text-slate-950'
+                          : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       {String.fromCharCode(65 + idx)}
                     </div>
-                    <span className="text-xs font-semibold flex-1">{opt}</span>
-                    {isSelected && <CheckCircle2 className="h-4 w-4 text-amber-400" />}
+                    <span className="text-xs font-semibold flex-1 leading-relaxed">{opt}</span>
+                    {isSelected && <CheckCircle2 className="h-5 w-5 text-brand-600 dark:text-brand-400 flex-shrink-0" />}
                   </button>
                 );
               })}
@@ -673,12 +683,12 @@ export default function AptitudeTestConsole({
           </div>
 
           {/* Question Navigation Controls */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-800/80">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200/80 dark:border-slate-800/80 mt-auto">
             <button
               type="button"
               disabled={currentIndex === 0}
               onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-              className="px-4 py-2 rounded-xl border border-slate-800 text-xs font-extrabold text-slate-400 hover:text-slate-200 disabled:opacity-30 cursor-pointer flex items-center gap-1"
+              className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-extrabold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 disabled:opacity-30 cursor-pointer flex items-center gap-1 shadow-xs"
             >
               <ChevronLeft className="h-4 w-4" /> Previous
             </button>
@@ -687,7 +697,7 @@ export default function AptitudeTestConsole({
               type="button"
               disabled={currentIndex === activeQuestions.length - 1}
               onClick={() => setCurrentIndex((prev) => Math.min(activeQuestions.length - 1, prev + 1))}
-              className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-md transition-all cursor-pointer flex items-center gap-1"
+              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white dark:text-slate-950 font-black text-xs shadow-md transition-all cursor-pointer flex items-center gap-1"
             >
               <span>Next Question</span> <ChevronRight className="h-4 w-4" />
             </button>
@@ -695,9 +705,9 @@ export default function AptitudeTestConsole({
         </div>
 
         {/* Right Col: Clean Question Navigator */}
-        <div className="space-y-4 p-6 rounded-3xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl flex flex-col justify-between min-h-[420px]">
+        <div className="space-y-4 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/70 backdrop-blur-md shadow-lg flex flex-col justify-between h-full overflow-y-auto">
           <div className="space-y-4">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+            <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Question Navigator
             </h4>
 
@@ -712,10 +722,10 @@ export default function AptitudeTestConsole({
                     onClick={() => setCurrentIndex(idx)}
                     className={`h-10 rounded-xl border font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center ${
                       isCurrent
-                        ? 'border-amber-500 bg-amber-500 text-slate-950 font-black ring-2 ring-amber-500/30'
+                        ? 'border-brand-500 bg-brand-600 dark:bg-brand-500 text-white dark:text-slate-950 font-black shadow-md ring-2 ring-brand-500/30'
                         : isAnswered
-                        ? 'border-emerald-700 bg-emerald-950/60 text-emerald-300'
-                        : 'border-slate-800 bg-slate-950 text-slate-500 hover:border-slate-700'
+                        ? 'border-emerald-300 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                        : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-500 hover:border-slate-300 dark:hover:border-slate-700'
                     }`}
                   >
                     {idx + 1}
@@ -724,16 +734,16 @@ export default function AptitudeTestConsole({
               })}
             </div>
 
-            <div className="pt-3 border-t border-slate-800 space-y-1.5 text-xs font-semibold">
-              <div className="flex justify-between text-slate-400">
+            <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 space-y-2 text-xs font-semibold">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Answered:</span>
-                <span className="text-emerald-400 font-extrabold">
+                <span className="text-emerald-600 dark:text-emerald-400 font-extrabold">
                   {answeredCount} / {activeQuestions.length}
                 </span>
               </div>
-              <div className="flex justify-between text-slate-400">
+              <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Remaining:</span>
-                <span className="text-amber-400 font-extrabold">{activeQuestions.length - answeredCount}</span>
+                <span className="text-brand-600 dark:text-orange-400 font-extrabold">{activeQuestions.length - answeredCount}</span>
               </div>
             </div>
           </div>
@@ -742,7 +752,7 @@ export default function AptitudeTestConsole({
             type="button"
             disabled={isSubmitting}
             onClick={handleSubmit}
-            className="w-full py-3.5 px-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer transform hover:scale-[1.01]"
+            className="w-full py-3.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white dark:text-slate-950 font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer mt-auto"
           >
             <Send className="h-4 w-4" />
             <span>Submit &amp; Finish Test</span>

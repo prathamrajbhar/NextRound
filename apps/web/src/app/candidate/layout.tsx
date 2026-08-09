@@ -89,7 +89,7 @@ export default function CandidateLayout({
   );
 
   if (isAssessmentRoom) {
-    return <div className="w-screen h-screen bg-slate-950 text-white overflow-hidden font-sans">{children}</div>;
+    return <div className="w-screen h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-hidden font-sans">{children}</div>;
   }
 
   return (
