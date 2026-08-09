@@ -80,6 +80,13 @@ jest.mock('@nextround/database', () => ({
       create: jest.fn(),
       update: jest.fn(),
     },
+    codingProblem: {
+      findUnique: jest.fn(),
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      upsert: jest.fn(),
+    },
     talentBookmark: {
       findMany: jest.fn(),
       findFirst: jest.fn(),
