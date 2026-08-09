@@ -21,61 +21,73 @@ export interface CodingProblemData {
   expectedComplexity: { time: string; space: string };
 }
 
+/**
+ * Generates a dynamic, non-repeating DSA coding problem using Gemini LLM.
+ * Guarantees a fresh problem per call by passing a dynamic nonce seed.
+ */
 export async function generateAiCodingProblem(
   jobTitle: string = 'Software Engineer',
   jobDescription: string = '',
   difficulty: string = 'medium'
 ): Promise<CodingProblemData> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const nonce = `${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
 
   if (apiKey) {
     try {
       const ai = new GoogleGenAI({ apiKey });
-      const prompt = `You are a principal technical interviewer at Google. Generate a top-tier Data Structures & Algorithms (DSA) coding problem for:
+      const prompt = `You are a principal technical interviewer at Google. Generate a BRAND NEW, UNIQUE, and DISTINCT Data Structures & Algorithms (DSA) coding problem for:
 JOB TITLE: ${jobTitle}
 JOB DESCRIPTION: ${jobDescription.slice(0, 1000)}
 TARGET DIFFICULTY: ${difficulty}
+NONCE SEED: ${nonce}
+
+CRITICAL INSTRUCTIONS:
+- Do NOT generate generic duplicate questions (such as standard Two Sum or basic LRU Cache).
+- Create a novel algorithmic problem tailored for high-signal technical evaluation.
+- All 5 starterCode languages MUST use the exact same function name and parameter order!
 
 Requirements for JSON output:
-- "id": kebab-case unique identifier (e.g. "lru-cache", "sliding-window-max")
-- "title": Clear concise problem title
+- "id": kebab-case unique identifier (e.g. "task-dependency-scheduler-${nonce.slice(-4)}")
+- "title": Clear, professional problem title
 - "difficulty": "Easy", "Medium", or "Hard"
-- "category": e.g. "Data Structures & Hashing", "Arrays & Two Pointers", "Trees & Graphs"
-- "description": Problem description in markdown
-- "constraints": string array of input constraints
-- "examples": array of objects { "input": string, "output": string, "explanation": string }
-- "starterCode": object with empty method stubs ONLY (with TODO comments, NO solution code filled in!):
-    - "python": e.g. "def solution(...):\\n    # TODO\\n    pass\\n"
-    - "javascript": e.g. "function solution(...) {\\n  // TODO\\n}\\n"
-    - "typescript": e.g. "function solution(...): any {\\n  // TODO\\n}\\n"
-    - "java": e.g. "class Solution {\\n    public static any solution(...) {\\n        // TODO\\n    }\\n}\\n"
-    - "cpp": e.g. "class Solution {\\npublic:\\n    any solution(...) {\\n        // TODO\\n    }\\n};\\n"
-- "testCases": array of 3 test objects { "name": string, "input": string, "expected": string, "hidden": boolean }
-- "editorial": 2-sentence optimal algorithm explanation
+- "category": e.g. "Arrays & Hashing", "Sliding Window", "Dynamic Programming", "Graphs & Trees", "Stack & Queue"
+- "description": Complete problem statement in markdown format explaining the task, inputs, and expected return value.
+- "constraints": array of input constraint strings (e.g. ["1 <= nums.length <= 10^5"])
+- "examples": array of 2 example objects { "input": string, "output": string, "explanation": string }
+- "starterCode": object containing method stubs ONLY (with TODO comments, NO solution logic filled in!):
+    - "python": e.g. "def solution(nums: list[int], k: int) -> int:\n    # TODO: Implement solution\n    pass\n"
+    - "javascript": e.g. "function solution(nums, k) {\n  // TODO: Implement solution\n}\n"
+    - "typescript": e.g. "function solution(nums: number[], k: number): number {\n  // TODO: Implement solution\n  return 0;\n}\n"
+    - "java": e.g. "class Solution {\n    public static int solution(int[] nums, int k) {\n        // TODO\n        return 0;\n    }\n}\n"
+    - "cpp": e.g. "#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int solution(vector<int>& nums, int k) {\n        // TODO\n        return 0;\n    }\n};\n"
+- "testCases": array of 3-4 test objects { "name": string, "input": string, "expected": string, "hidden": boolean }
+    Note: "input" must assign arguments clearly (e.g. "nums = [1, 2, 3], k = 2") and "expected" must match returned output format.
+- "editorial": 2-sentence explanation of optimal solution algorithm.
 - "expectedComplexity": object { "time": "O(N)", "space": "O(1)" }
 
 Return ONLY valid JSON matching this exact structure:
 {
-  "id": "two-sum-dsa",
-  "title": "Two Sum Target Pair",
-  "difficulty": "Easy",
+  "id": "unique-problem-id",
+  "title": "Problem Title",
+  "difficulty": "Medium",
   "category": "Arrays & Hashing",
-  "description": "Given an array of integers nums and an integer target...",
-  "constraints": ["2 <= nums.length <= 10^4"],
-  "examples": [{ "input": "nums = [2, 7, 11, 15], target = 9", "output": "[0, 1]", "explanation": "2+7=9" }],
+  "description": "Problem markdown...",
+  "constraints": ["1 <= N <= 10^4"],
+  "examples": [{ "input": "nums = [1, 2, 3], k = 2", "output": "5", "explanation": "Sample run." }],
   "starterCode": {
-    "python": "def two_sum(nums: list[int], target: int) -> list[int]:\\n    # TODO: Implement solution\\n    pass\\n",
-    "javascript": "function twoSum(nums, target) {\\n  // TODO: Implement solution\\n}\\n",
-    "typescript": "function twoSum(nums: number[], target: number): number[] {\\n  // TODO: Implement solution\\n  return [];\\n}\\n",
-    "java": "class Solution {\\n    public int[] twoSum(int[] nums, int target) {\\n        // TODO\\n        return new int[]{};\\n    }\\n}\\n",
-    "cpp": "#include <vector>\\nusing namespace std;\\n\\nclass Solution {\\npublic:\\n    vector<int> twoSum(vector<int>& nums, int target) {\\n        // TODO\\n        return {};\\n    }\\n};\\n"
+    "python": "def solution(nums: list[int], k: int) -> int:\n    pass\n",
+    "javascript": "function solution(nums, k) {}\n",
+    "typescript": "function solution(nums: number[], k: number): number { return 0; }\n",
+    "java": "class Solution { public static int solution(int[] nums, int k) { return 0; } }\n",
+    "cpp": "class Solution { public: int solution(vector<int>& nums, int k) { return 0; } };\n"
   },
   "testCases": [
-    { "name": "Case 1", "input": "nums = [2, 7, 11, 15], target = 9", "expected": "[0, 1]", "hidden": false },
-    { "name": "Case 2", "input": "nums = [3, 2, 4], target = 6", "expected": "[1, 2]", "hidden": false }
+    { "name": "Case 1", "input": "nums = [1, 2, 3], k = 2", "expected": "5", "hidden": false },
+    { "name": "Case 2", "input": "nums = [4, 5], k = 1", "expected": "9", "hidden": false }
   ],
-  "editorial": "Use a hash map to store complements in single pass.",
-  "expectedComplexity": { "time": "O(N)", "space": "O(N)" }
+  "editorial": "Optimal algorithm explanation.",
+  "expectedComplexity": { "time": "O(N)", "space": "O(1)" }
 }`;
 
       const response = await ai.models.generateContent({
@@ -89,7 +101,7 @@ Return ONLY valid JSON matching this exact structure:
         const parsed = JSON.parse(jsonMatch[0]);
         if (parsed && parsed.title && parsed.starterCode) {
           return {
-            id: String(parsed.id || 'ai-dsa-problem'),
+            id: String(parsed.id || `ai-dsa-${nonce}`),
             title: String(parsed.title),
             difficulty: (parsed.difficulty === 'Easy' || parsed.difficulty === 'Hard') ? parsed.difficulty : 'Medium',
             category: String(parsed.category || 'Algorithms'),
@@ -124,60 +136,103 @@ Return ONLY valid JSON matching this exact structure:
     }
   }
 
-  // Fallback to canonical coding problem catalog
-  const rawList = codingProblems as any[];
-  const targetProb = rawList.find((p) => p.id === 'virtualized-list') || rawList[0];
+  // Fallback to procedurally randomized dynamic coding problem
+  return generateProceduralCodingProblem(jobTitle, difficulty);
+}
+
+/**
+ * Generates a procedurally dynamic coding problem with randomized parameters.
+ * Guarantees a non-static, varied question even when Gemini API is unreachable.
+ */
+function generateProceduralCodingProblem(jobTitle: string, difficulty: string): CodingProblemData {
+  const seed = Math.floor(Math.random() * 1000);
+  const problemTemplates = [
+    {
+      type: 'max_sub_array_sum',
+      title: 'Maximum Contiguous Subarray Sum',
+      category: 'Arrays & Dynamic Programming',
+      funcName: 'maxSubArray',
+      desc: 'Given an integer array `nums`, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.',
+      pythonStarter: 'def maxSubArray(nums: list[int]) -> int:\n    # TODO: Implement solution\n    pass\n',
+      jsStarter: 'function maxSubArray(nums) {\n  // TODO: Implement solution\n}\n',
+      tsStarter: 'function maxSubArray(nums: number[]): number {\n  // TODO: Implement solution\n  return 0;\n}\n',
+      javaStarter: 'class Solution {\n    public static int maxSubArray(int[] nums) {\n        // TODO: Implement solution\n        return 0;\n    }\n}\n',
+      cppStarter: '#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    int maxSubArray(vector<int>& nums) {\n        // TODO: Implement solution\n        return 0;\n    }\n};\n',
+      cases: [
+        { name: 'Case 1', input: `nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]`, expected: '6', hidden: false },
+        { name: 'Case 2', input: `nums = [1, 2, 3, 4]`, expected: '10', hidden: false },
+        { name: 'Case 3', input: `nums = [5, -2, 3, 1]`, expected: '7', hidden: true },
+      ],
+      editorial: 'Use Kadane Algorithm: track current max sum and global max sum in a single linear pass.',
+      time: 'O(N)',
+      space: 'O(1)',
+    },
+    {
+      type: 'character_frequency_threshold',
+      title: 'K-Frequency Dominant Character Count',
+      category: 'Strings & Hashing',
+      funcName: 'countDominantChars',
+      desc: 'Given a string `s` and an integer `k`, return the count of distinct characters that appear at least `k` times in the string.',
+      pythonStarter: 'def countDominantChars(s: str, k: int) -> int:\n    # TODO: Implement solution\n    pass\n',
+      jsStarter: 'function countDominantChars(s, k) {\n  // TODO: Implement solution\n}\n',
+      tsStarter: 'function countDominantChars(s: string, k: number): number {\n  // TODO: Implement solution\n  return 0;\n}\n',
+      javaStarter: 'class Solution {\n    public static int countDominantChars(String s, int k) {\n        // TODO\n        return 0;\n    }\n}\n',
+      cppStarter: '#include <string>\nusing namespace std;\n\nclass Solution {\npublic:\n    int countDominantChars(string s, int k) {\n        // TODO\n        return 0;\n    }\n};\n',
+      cases: [
+        { name: 'Case 1', input: `s = "nextroundcoding", k = 2`, expected: '4', hidden: false },
+        { name: 'Case 2', input: `s = "aaaaabbb", k = 3`, expected: '2', hidden: false },
+        { name: 'Case 3', input: `s = "abcdef", k = 2`, expected: '0', hidden: true },
+      ],
+      editorial: 'Construct a frequency map of characters and filter counts that are >= k.',
+      time: 'O(N)',
+      space: 'O(U) where U is unique characters',
+    },
+    {
+      type: 'sliding_window_max',
+      title: 'Sliding Window Maximum Target',
+      category: 'Sliding Window & Deque',
+      funcName: 'maxSlidingWindow',
+      desc: 'Given an array of integers `nums` and a sliding window size `k`, return the array of maximum values in each sliding window as it moves from left to right.',
+      pythonStarter: 'def maxSlidingWindow(nums: list[int], k: int) -> list[int]:\n    # TODO: Implement solution\n    pass\n',
+      jsStarter: 'function maxSlidingWindow(nums, k) {\n  // TODO: Implement solution\n}\n',
+      tsStarter: 'function maxSlidingWindow(nums: number[], k: number): number[] {\n  // TODO: Implement solution\n  return [];\n}\n',
+      javaStarter: 'class Solution {\n    public static int[] maxSlidingWindow(int[] nums, int k) {\n        // TODO\n        return new int[]{};\n    }\n}\n',
+      cppStarter: '#include <vector>\nusing namespace std;\n\nclass Solution {\npublic:\n    vector<int> maxSlidingWindow(vector<int>& nums, int k) {\n        // TODO\n        return {};\n    }\n};\n',
+      cases: [
+        { name: 'Case 1', input: `nums = [1, 3, -1, -3, 5, 3, 6, 7], k = 3`, expected: '[3, 3, 5, 5, 6, 7]', hidden: false },
+        { name: 'Case 2', input: `nums = [4, 2, 12, 3], k = 2`, expected: '[4, 12, 12]', hidden: false },
+      ],
+      editorial: 'Use a monotonic deque to maintain indices of maximum elements in O(N) time.',
+      time: 'O(N)',
+      space: 'O(K)',
+    },
+  ];
+
+  const t = problemTemplates[seed % problemTemplates.length];
+  const problemId = `proc-${t.type}-${seed}`;
 
   return {
-    id: targetProb.id || 'virtualized-list',
-    title: targetProb.title || 'Virtualized List Rendering & Memory Optimization',
-    difficulty: targetProb.difficulty || 'Medium',
-    category: targetProb.category || 'Data Structures & Performance',
-    description: targetProb.description || 'Given heights and scroll position Y, calculate visible index range.',
-    constraints: ['1 <= heights.length <= 10^5'],
+    id: problemId,
+    title: `${t.title} (${jobTitle})`,
+    difficulty: difficulty === 'easy' ? 'Easy' : difficulty === 'hard' ? 'Hard' : 'Medium',
+    category: t.category,
+    description: `### ${t.title}\n\n${t.desc}\n\n*Targeted Role Context: ${jobTitle}*`,
+    constraints: ['1 <= input.length <= 10^5'],
     examples: [
       {
-        input: 'heights = [50, 50, 50, 50, 50], scroll_y = 100, viewport_height = 100',
-        output: '[2, 3]',
+        input: t.cases[0].input,
+        output: t.cases[0].expected,
       },
     ],
     starterCode: {
-      python: `def get_visible_range(heights: list[int], scroll_y: int, viewport_height: int) -> list[int]:
-    # TODO: Calculate and return [startIndex, endIndex]
-    pass
-`,
-      javascript: `function getVisibleRange(heights, scrollY, viewportHeight) {
-  // TODO: Calculate and return [startIndex, endIndex]
-}
-`,
-      typescript: `function getVisibleRange(heights: number[], scrollY: number, viewportHeight: number): number[] {
-  // TODO: Calculate and return [startIndex, endIndex]
-  return [];
-}
-`,
-      java: `class Solution {
-    public static int[] getVisibleRange(int[] heights, int scrollY, int viewportHeight) {
-        // TODO: Calculate and return [startIndex, endIndex]
-        return new int[]{};
-    }
-}
-`,
-      cpp: `#include <vector>
-using namespace std;
-
-vector<int> getVisibleRange(const vector<int>& heights, int scrollY, int viewportHeight) {
-    // TODO: Calculate and return [startIndex, endIndex]
-    return {};
-}
-`,
+      python: t.pythonStarter,
+      javascript: t.jsStarter,
+      typescript: t.tsStarter,
+      java: t.javaStarter,
+      cpp: t.cppStarter,
     },
-    testCases: (targetProb.testCases || []).map((tc: any, i: number) => ({
-      name: `Case ${i + 1}`,
-      input: tc.input || '',
-      expected: tc.expectedOutput || tc.expected || '[2, 3]',
-      hidden: Boolean(tc.hidden),
-    })),
-    editorial: 'Accumulate heights sequentially to locate view bounds.',
-    expectedComplexity: { time: 'O(N)', space: 'O(1)' },
+    testCases: t.cases,
+    editorial: t.editorial,
+    expectedComplexity: { time: t.time, space: t.space },
   };
 }

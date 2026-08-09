@@ -6,6 +6,7 @@ import { MockSessionCreateSchema } from '@nextround/shared';
 import { enqueueMockEvaluation } from '../../lib/queues/mock.queue';
 import { serializeMockSession, serializeMockSessionList } from '../../lib/serializers';
 import { generateAiAptitudeQuestions } from '../../services/ai-question-generator.service';
+import { generateAiCodingProblem } from '../../services/ai-coding-generator.service';
 // Canonical shared aptitude bank — single source of truth (packages/shared/data).
 import aptitudeFallbackQuestions from '@nextround/shared/data/aptitude-questions.json';
 import codingProblems from '@nextround/shared/data/coding-problems.json';
@@ -210,15 +211,8 @@ mockRouter.get(
         },
       });
 
-      const roleName = (session?.target_role || (req.query.role as string) || '').toLowerCase();
-      const rawProblems = codingProblems as any[];
-
-      let problem = rawProblems[0];
-      if (roleName.includes('system') || roleName.includes('backend') || roleName.includes('ai')) {
-        problem = rawProblems.find((p) => p.id === 'lru-cache') || rawProblems[0];
-      } else if (roleName.includes('infra') || roleName.includes('security')) {
-        problem = rawProblems.find((p) => p.id === 'rate-limiter') || rawProblems[0];
-      }
+      const roleName = session?.target_role || (req.query.role as string) || 'Software Engineer';
+      const problem = await generateAiCodingProblem(roleName, 'Mock practice coding assessment session', 'medium');
 
       const sanitizedProblem = {
         ...problem,

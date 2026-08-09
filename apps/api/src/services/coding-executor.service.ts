@@ -28,6 +28,21 @@ export interface ExecutionSummary {
   complexity: string;
 }
 
+/**
+ * Strip TypeScript type annotations to convert TS code into valid executable JavaScript.
+ */
+function stripTypeScriptAnnotations(code: string): string {
+  return code
+    // Strip variable type annotations: const x: Type = val -> const x = val
+    .replace(/((?:const|let|var)\s+[a-zA-Z0-9_]+)\s*:\s*[a-zA-Z0-9_<>\[\]\s,|&{}]+(?=\s*=)/g, '$1')
+    // Strip function parameter types: (a: type, b: type) -> (a, b)
+    .replace(/([a-zA-Z0-9_]+)\s*:\s*[a-zA-Z0-9_<>\[\]\s,|&{}]+(?=[,\)])/g, '$1')
+    // Strip function return type annotations: ): returnType { -> ) {
+    .replace(/\)\s*:\s*[a-zA-Z0-9_<>\[\]\s,|&{}]+(?=\s*\{)/g, ')')
+    // Strip "as type" type assertions: expr as type -> expr
+    .replace(/\s+as\s+[a-zA-Z0-9_<>\[\]]+/g, '');
+}
+
 export function executeCodingSubmission(
   code: string,
   language: string,
@@ -92,10 +107,10 @@ export function executeCodingSubmission(
     const elapsedNs = process.hrtime.bigint() - startNs;
     const elapsedMs = (Number(elapsedNs) / 1_000_000).toFixed(2);
 
-    const normActual = String(actualOutput).trim().replace(/\s+/g, '');
-    const normExpected = String(tc.expected).trim().replace(/\s+/g, '');
+    const normActual = String(actualOutput).trim().replace(/\s+/g, '').replace(/\"/g, '');
+    const normExpected = String(tc.expected).trim().replace(/\s+/g, '').replace(/\"/g, '');
 
-    if (normActual === normExpected) {
+    if (normActual === normExpected || String(actualOutput).trim() === String(tc.expected).trim()) {
       passed = true;
       passedCount++;
     } else {
@@ -148,15 +163,20 @@ try:
     scope = {}
     exec("""${formattedInput.replace(/"/g, '\\"')}""", scope)
     
-    if '${fnName}' not in globals():
+    if '${fnName}' not in globals() and '${fnName}' not in scope:
+        funcs = [obj for name, obj in globals().items() if callable(obj) and not name.startswith("_")]
+        fn = funcs[-1] if funcs else None
+    else:
+        fn = globals().get('${fnName}') or scope.get('${fnName}')
+
+    if not fn:
         print(json.dumps("Error: Function ${fnName} not defined"))
         sys.exit(0)
 
-    fn = globals()['${fnName}']
     sig = inspect.signature(fn)
     args = [scope[p] for p in sig.parameters.keys() if p in scope]
     
-    res = fn(*args)
+    res = fn(*args) if args else fn(**scope) if scope else fn()
     print(json.dumps(res))
 except Exception as e:
     print(json.dumps(f"PythonError: {type(e).__name__}: {str(e)}"))
@@ -185,7 +205,8 @@ except Exception as e:
 // Node.js VM Execution (JavaScript & TypeScript)
 // -------------------------------------------------------------------
 function executeNodeVm(userCode: string, testInput: string): string {
-  const fnMatch = userCode.match(/(?:function\s+|const\s+|let\s+|var\s+)([a-zA-Z0-9_]+)/);
+  const cleanCode = stripTypeScriptAnnotations(userCode);
+  const fnMatch = cleanCode.match(/(?:function\s+|const\s+|let\s+|var\s+)([a-zA-Z0-9_]+)/);
   const fnName = fnMatch ? fnMatch[1] : 'solution';
 
   const formattedInput = testInput.replace(/,\s*([a-zA-Z0-9_]+)\s*=/g, '; let $1 =');
@@ -195,13 +216,15 @@ function executeNodeVm(userCode: string, testInput: string): string {
     const context = vm.createContext(sandbox);
 
     const runnerScript = `
-      ${userCode}
+      ${cleanCode}
       let ${formattedInput};
       const fn = typeof ${fnName} === 'function' ? ${fnName} : null;
       if (!fn) throw new Error("Function ${fnName} not found");
       const paramNames = fn.toString().match(/\\(([^)]*)\\)/)?.[1]?.split(',').map(s => s.trim().split(/\\s+|=/)[0]).filter(Boolean) || [];
-      const args = paramNames.map(p => eval(p));
-      const res = fn(...args);
+      const args = paramNames.map(p => {
+        try { return eval(p); } catch { return undefined; }
+      }).filter(a => a !== undefined);
+      const res = args.length > 0 ? fn(...args) : fn();
       JSON.stringify(res);
     `;
 
@@ -214,7 +237,7 @@ function executeNodeVm(userCode: string, testInput: string): string {
 }
 
 // -------------------------------------------------------------------
-// C++ 20 Native Subprocess Compilation & Execution
+// C++ Native Compilation & Execution Test Runner
 // -------------------------------------------------------------------
 function executeCppNative(userCode: string, testInput: string): string {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nextround-cpp-'));
@@ -244,7 +267,7 @@ int main() {
     }
 
     const runProc = spawnSync(binPath, [], { timeout: 2000, encoding: 'utf-8' });
-    return runProc.status === 0 ? 'Passed' : 'Execution failed';
+    return runProc.status === 0 ? runProc.stdout.trim() || 'Passed' : 'Execution failed';
   } catch (err: any) {
     return `CppError: ${err?.message || 'Execution failed'}`;
   } finally {
@@ -255,7 +278,7 @@ int main() {
 }
 
 // -------------------------------------------------------------------
-// Java 21 Native Compilation & Execution
+// Java Native Compilation & Execution Test Runner
 // -------------------------------------------------------------------
 function executeJavaNative(userCode: string, testInput: string): string {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nextround-java-'));

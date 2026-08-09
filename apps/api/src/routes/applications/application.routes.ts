@@ -19,6 +19,8 @@ import { emailService } from '../../services/email.service';
 import { serializeApplication, serializeApplicationList, serializeOffer } from '../../lib/serializers';
 import { evaluateApplicationScreening } from '../../services/screening-evaluator.service';
 import { generateAiAptitudeQuestions } from '../../services/ai-question-generator.service';
+import { generateAiCodingProblem } from '../../services/ai-coding-generator.service';
+import { executeCodingSubmission } from '../../services/coding-executor.service';
 
 export const applicationRouter = Router();
 
@@ -765,17 +767,17 @@ applicationRouter.get(
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
       }
 
-      const rawProblems = codingProblems;
+      const jobTitle = app.job?.title || 'Software Engineer';
+      const jobDescription = app.job?.description || '';
+      const jobConfig = (app.job?.thresholds as any) || {};
+      const difficulty = jobConfig.difficulty || 'medium';
 
-      // Match configured job problem ID or default to first problem
-      const jobConfig = (app.job.thresholds as any) || {};
-      const targetProblemId = jobConfig.codingProblemId || 'virtualized-list';
-      const problem = rawProblems.find((p: any) => p.id === targetProblemId) || rawProblems[0];
+      const problem = await generateAiCodingProblem(jobTitle, jobDescription, difficulty);
 
       // Strip hidden test cases before sending to candidate
       const sanitizedProblem = {
         ...problem,
-        testCases: problem.testCases.filter((tc: any) => !tc.hidden),
+        testCases: (problem.testCases || []).filter((tc: any) => !tc.hidden),
       };
 
       return res.json({
@@ -800,33 +802,65 @@ applicationRouter.post(
 
       const app = await prisma.application.findUnique({
         where: { id: appId },
-        include: { candidate: true },
+        include: { candidate: true, job: true },
       });
 
       if (!app || app.candidate.user_id !== req.user!.userId) {
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
       }
 
-      // Create CodingSubmission record in DB (status explicitly 'running' — the
-      // schema default is 'completed', which would mark a fresh submission as
-      // passed with a 0% pass rate before the sandbox even runs).
+      const jobTitle = app.job?.title || 'Software Engineer';
+      const jobConfig = (app.job?.thresholds as any) || {};
+      const currentProblem = await generateAiCodingProblem(jobTitle, app.job?.description || '', jobConfig.difficulty || 'medium');
+      const testCasesToRun = currentProblem.testCases || [];
+
+      const execSummary = executeCodingSubmission(code || '', language || 'python', testCasesToRun);
+
       const submission = await prisma.codingSubmission.create({
         data: {
           application_id: appId,
           code: code || '',
           language: language || 'python',
-          status: 'running',
-          test_results: { status: 'running', complexity: 'Pending', ai_feedback: 'Executing test cases in Python sandbox...' },
-          pass_rate: 0.0,
+          status: execSummary.allPassed ? 'passed' : 'failed',
+          test_results: JSON.parse(JSON.stringify({
+            status: execSummary.allPassed ? 'passed' : 'failed',
+            passRate: execSummary.passRate,
+            results: execSummary.results,
+            logs: execSummary.logs,
+            complexity: execSummary.complexity,
+            ai_feedback: execSummary.allPassed ? 'All test cases passed cleanly!' : `${execSummary.passRate}% pass rate achieved.`,
+          })),
+          pass_rate: execSummary.passRate / 100.0,
         },
       });
 
-      // Enqueue sandbox execution job in BullMQ
-      await enqueueCoding(appId, problemId || 'virtualized-list', code || '', language || 'python', submission.id);
+      // Update application evaluation score
+      await prisma.evaluation.upsert({
+        where: { application_id: appId },
+        create: {
+          application_id: appId,
+          stage: 'assessment',
+          coding_score: execSummary.passRate,
+          composite_score: execSummary.passRate,
+          decision: execSummary.passRate >= 70 ? 'hire' : 'reject',
+          reasoning: `Candidate achieved ${execSummary.passRate}% pass rate on coding assessment.`,
+        },
+        update: {
+          coding_score: execSummary.passRate,
+        },
+      }).catch(() => null);
+
+      // Enqueue job in BullMQ as backup
+      await enqueueCoding(appId, problemId || currentProblem.id, code || '', language || 'python', submission.id).catch(() => null);
 
       return res.json({
         success: true,
-        data: { submissionId: submission.id, status: 'running' },
+        data: {
+          submissionId: submission.id,
+          status: submission.status,
+          passRate: execSummary.passRate,
+          results: execSummary.results,
+        },
       });
     } catch (err) {
       return next(err);
