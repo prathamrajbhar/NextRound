@@ -24,7 +24,7 @@ export function CandidateDashboardHero({ candidateName, totalAppsCount }: Candid
           </div>
 
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
-            Welcome back, <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent">{candidateName}</span>
+            Welcome back, <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent font-bold">{candidateName}</span>
           </h1>
 
           <p className="text-xs sm:text-sm font-medium text-slate-300 dark:text-slate-400 leading-relaxed">

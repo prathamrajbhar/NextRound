@@ -110,7 +110,7 @@ export function CandidateStatsCards({
           ) : (
             <Link
               href="/candidate/mock/new"
-              className="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-amber-500/15 dark:bg-purple-600/30 border border-amber-500/30 dark:border-purple-500/40 text-amber-700 dark:text-purple-300 hover:bg-amber-500/25 dark:hover:bg-purple-600/50 text-[11px] font-bold transition-all"
+              className="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-purple-500/10 dark:bg-purple-600/30 border border-purple-500/20 dark:border-purple-500/40 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 dark:hover:bg-purple-600/50 text-[11px] font-bold transition-all"
             >
               <Plus className="h-3 w-3" />
               <span>Take 1st Mock Session</span>

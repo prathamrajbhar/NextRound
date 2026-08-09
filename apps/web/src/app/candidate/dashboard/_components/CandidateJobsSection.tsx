@@ -22,23 +22,23 @@ export function CandidateJobsSection({ jobs }: CandidateJobsSectionProps) {
           <span>Recommended For You</span>
         </h2>
 
-        <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 bg-slate-900/90 dark:bg-slate-900/60 p-6 text-center shadow-lg space-y-4">
-          <div className="h-12 w-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mx-auto">
+        <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 p-6 text-center shadow-lg space-y-4 transition-colors">
+          <div className="h-12 w-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mx-auto">
             <Compass className="h-6 w-6" />
           </div>
 
           <div>
-            <h3 className="text-sm font-extrabold text-white">No Matching Jobs Yet</h3>
-            <p className="text-xs text-slate-300 dark:text-slate-400 font-medium mt-1 leading-relaxed">
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">No Matching Jobs Yet</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-1 leading-relaxed">
               We&apos;re updating role matches based on your profile skills. Check out the job board for all openings.
             </p>
           </div>
 
           <Link
             href="/candidate/jobs"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition-all cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all cursor-pointer"
           >
-            <Search className="h-3.5 w-3.5 text-indigo-400" />
+            <Search className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
             <span>Browse Job Catalog</span>
           </Link>
         </div>
