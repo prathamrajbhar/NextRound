@@ -25,43 +25,18 @@ except Exception as e:
     logger.warning(f"Failed to initialize FastEmbed ONNX model: {e}")
 
 
-def _fallback_768_embedding(text: str) -> list[float]:
-    """
-    Generate a deterministic, normalized 768-dimensional embedding vector
-    for fallback scenarios when ONNX model and Gemini API key are missing or unreachable.
-    """
-    vec = [0.0] * 768
-    if not text:
-        return vec
-
-    # Hash tokens into 768 buckets
-    words = text.lower().split()
-    for idx, word in enumerate(words):
-        for char_idx, char in enumerate(word):
-            bucket = (ord(char) * 31 + idx * 7 + char_idx * 13) % 768
-            vec[bucket] += math.sin(ord(char) + idx)
-
-    # Normalize vector to unit length
-    norm = math.sqrt(sum(x * x for x in vec))
-    if norm > 0:
-        vec = [x / norm for x in vec]
-    return vec
-
-
 def embed_text_with_source(text: str) -> tuple[list[float], str]:
     """
     Generate 768-dimensional vector embedding for input text and report which
     engine produced it. Returns (embedding, source) where source is one of:
       'onnx'          - self-hosted FastEmbed BAAI/bge-base-en-v1.5
       'gemini'        - Google Gemini text-embedding-004 API
-      'hash-fallback' - deterministic 768-dim hash vector (NOT semantic)
       'empty'         - empty/whitespace input -> zero vector (NOT semantic)
-
-    Callers that need a trustworthy semantic match MUST reject 'hash-fallback'
-    and 'empty' sources instead of treating the vector as a real semantic signal.
     """
     if not text or not text.strip():
         return [0.0] * 768, "empty"
+
+    errors = []
 
     # 1. Primary: Self-Hosted FastEmbed ONNX Container Engine
     if onnx_embedding_model:
@@ -72,7 +47,8 @@ def embed_text_with_source(text: str) -> tuple[list[float], str]:
                 if len(vec) == 768:
                     return vec, "onnx"
         except Exception as e:
-            logger.error(f"FastEmbed ONNX embedding generation failed: {e}. Trying Gemini API fallback.")
+            logger.error(f"FastEmbed ONNX embedding generation failed: {e}")
+            errors.append(e)
 
     # 2. Secondary: Gemini API text-embedding-004
     if genai_client:
@@ -86,23 +62,23 @@ def embed_text_with_source(text: str) -> tuple[list[float], str]:
                 if len(embedding) == 768:
                     return list(embedding), "gemini"
         except Exception as e:
-            logger.error(f"Gemini embed_content API call failed: {e}. Falling back to deterministic vector.")
+            logger.error(f"Gemini embed_content API call failed: {e}")
+            errors.append(e)
 
-    # 3. Tertiary: Deterministic 768-dim hash vector (labeled, never semantic)
-    return _fallback_768_embedding(text), "hash-fallback"
+    if errors:
+        raise RuntimeError(f"Embedding generation failed: {errors}")
+    raise RuntimeError("Embedding generation failed: No embedding model or API client configured.")
 
 
 def embed_text(text: str) -> list[float]:
     """
     Generate 768-dimensional vector embedding for input text using
     the self-hosted FastEmbed ONNX model (BAAI/bge-base-en-v1.5),
-    falling back to Gemini text-embedding-004 API or deterministic vector if unavailable.
-
-    Backward-compatible wrapper; use embed_text_with_source when the caller needs
-    to know whether the result is a real semantic embedding or a hash fallback.
+    falling back to Gemini text-embedding-004 API or failing if unavailable.
     """
     vec, _ = embed_text_with_source(text)
     return vec
+
 
 
 
@@ -147,7 +123,7 @@ def embed_resume_with_source(resume_text: str, chunk_size: int = 500) -> tuple[l
         avg_vec = [x / norm for x in avg_vec]
 
     # Report the most reliable source observed across chunks
-    source = "onnx" if "onnx" in sources else ("gemini" if "gemini" in sources else "hash-fallback")
+    source = "onnx" if "onnx" in sources else "gemini"
     return avg_vec, source
 
 
