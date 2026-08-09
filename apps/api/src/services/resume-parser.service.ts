@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { generateText } from './llm.service';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PDFParse } = require('pdf-parse');
@@ -55,7 +55,6 @@ export interface FieldRegenerationPayload {
  * Synthesizes a single candidate profile field (e.g. proudProject, bio, headline) using ALL available candidate resources.
  */
 export async function generateFieldWithGemini(payload: FieldRegenerationPayload): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
   const { field, rawResumeText, socialData, linkedinUrl, githubUrl, portfolioUrl, skills, targetRoles, yearsOfExperience, currentValue } = payload;
 
   const contextParts: string[] = [];
@@ -84,13 +83,11 @@ export async function generateFieldWithGemini(payload: FieldRegenerationPayload)
 
   const combinedContext = contextParts.join('\n\n');
 
-  if (!apiKey || combinedContext.trim().length === 0) {
+  if (combinedContext.trim().length === 0) {
     return currentValue || '';
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
-
     let fieldInstruction = '';
     if (field === 'proudProject') {
       fieldInstruction = `Synthesize a structured, high-impact description of the candidate's most technically impressive project shipped. Combine insights from their resume text, GitHub repositories/stars, LinkedIn projects, and technical skills. Detail the project title/goal, stack used, architectural contributions, and measurable impact. Write in clear, professional English without preamble or quotation marks.`;
@@ -110,14 +107,10 @@ ${combinedContext}
 
 Return ONLY the generated text string for the field without markdown formatting, quotes, or conversational filler.`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
-
-    return (response.text || '').trim().replace(/^["']|["']$/g, '');
+    const responseText = await generateText(prompt);
+    return responseText.trim().replace(/^["']|["']$/g, '');
   } catch (err) {
-    console.error('Gemini field regeneration error:', err);
+    console.error('Field regeneration error:', err);
     return currentValue || '';
   }
 }
@@ -154,11 +147,8 @@ export async function extractTextFromBuffer(
  * Parses raw resume text into structured candidate profile fields using Gemini LLM.
  */
 export async function parseResumeWithGemini(rawText: string): Promise<ParsedResumeData> {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (apiKey && rawText.length > 20) {
+  if (rawText.length > 20) {
     try {
-      const ai = new GoogleGenAI({ apiKey });
       const prompt = `You are an executive AI recruiter & professional technical resume strategist.
 Analyze the candidate's uploaded raw resume text. DO NOT simply copy-paste raw text snippets ("take and put"). Instead, synthesize, elevate, and craft polished, recruiter-ready profile fields based strictly on the uploaded resume content.
 
@@ -195,12 +185,7 @@ Return ONLY a valid raw JSON object without markdown formatting.
 RESUME CONTENT:
 ${rawText.slice(0, 12000)}`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
-
-      const responseText = response.text || '';
+      const responseText = await generateText(prompt);
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
       if (jsonMatch) {
@@ -208,7 +193,7 @@ ${rawText.slice(0, 12000)}`;
         return sanitizeParsedData(parsed, rawText);
       }
     } catch (err) {
-      console.error('Gemini LLM resume parsing error:', err);
+      console.error('LLM resume parsing error:', err);
     }
   }
 

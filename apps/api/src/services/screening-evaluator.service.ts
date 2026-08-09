@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { generateText } from './llm.service';
 import { prisma } from '../lib/prisma';
 import { ensureInterviewAndSchedule } from '../lib/pipeline';
 
@@ -49,12 +49,9 @@ export async function evaluateApplicationScreening(
   const minScore = typeof thresholds.minScore === 'number' ? thresholds.minScore : 70;
 
   let result: ScreeningEvaluationResult | null = null;
-  const apiKey = process.env.GEMINI_API_KEY;
 
-  if (apiKey) {
-    try {
-      const ai = new GoogleGenAI({ apiKey });
-      const prompt = `You are an elite AI technical screening agent evaluating a job application.
+  try {
+    const prompt = `You are an elite AI technical screening agent evaluating a job application.
 
 JOB DETAILS:
 Title: ${jobTitle}
@@ -86,34 +83,28 @@ Return ONLY a JSON object matching:
   "reasoning": string
 }`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
-
-      const text = response.text || '';
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        const score = Math.max(0, Math.min(100, Number(parsed.resumeScore) || 75));
-        const semantic = Math.max(0, Math.min(100, Number(parsed.semanticMatchScore) || score));
-        result = {
-          status: score >= minScore ? 'screening_completed' : 'rejected',
-          resumeScore: score,
-          compositeScore: score,
-          semanticMatchScore: semantic,
-          gapAnalysis: {
-            matchingSkills: Array.isArray(parsed.gapAnalysis?.matchingSkills) ? parsed.gapAnalysis.matchingSkills : candidateSkills.slice(0, 4),
-            missingSkills: Array.isArray(parsed.gapAnalysis?.missingSkills) ? parsed.gapAnalysis.missingSkills : [],
-            experienceMatch: parsed.gapAnalysis?.experienceMatch || `${candidateExp} years experience evaluated`,
-            keyStrengths: Array.isArray(parsed.gapAnalysis?.keyStrengths) ? parsed.gapAnalysis.keyStrengths : ['Relevant technical stack', 'Profile alignment'],
-          },
-          reasoning: parsed.reasoning || `Candidate scored ${score}% in automated AI resume qualification screening.`,
-        };
-      }
-    } catch (err) {
-      console.error('Gemini AI application screening evaluation error:', err);
+    const text = await generateText(prompt);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0]);
+      const score = Math.max(0, Math.min(100, Number(parsed.resumeScore) || 75));
+      const semantic = Math.max(0, Math.min(100, Number(parsed.semanticMatchScore) || score));
+      result = {
+        status: score >= minScore ? 'screening_completed' : 'rejected',
+        resumeScore: score,
+        compositeScore: score,
+        semanticMatchScore: semantic,
+        gapAnalysis: {
+          matchingSkills: Array.isArray(parsed.gapAnalysis?.matchingSkills) ? parsed.gapAnalysis.matchingSkills : candidateSkills.slice(0, 4),
+          missingSkills: Array.isArray(parsed.gapAnalysis?.missingSkills) ? parsed.gapAnalysis.missingSkills : [],
+          experienceMatch: parsed.gapAnalysis?.experienceMatch || `${candidateExp} years experience evaluated`,
+          keyStrengths: Array.isArray(parsed.gapAnalysis?.keyStrengths) ? parsed.gapAnalysis.keyStrengths : ['Relevant technical stack', 'Profile alignment'],
+        },
+        reasoning: parsed.reasoning || `Candidate scored ${score}% in automated AI resume qualification screening.`,
+      };
     }
+  } catch (err) {
+    console.error('AI application screening evaluation error:', err);
   }
 
   // Context-aware Heuristic Fallback if Gemini unavailable or failed

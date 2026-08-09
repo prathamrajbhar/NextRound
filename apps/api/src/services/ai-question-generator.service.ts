@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { generateText } from './llm.service';
 import { AptitudeChunkSchema, AptitudeQuestionInput } from '@nextround/shared';
 
 
@@ -40,19 +40,16 @@ const CATEGORIES = [
  */
 export async function generateAptitudeChunk(options: AptitudeChunkOptions): Promise<AptitudeQuestionInput[]> {
   const isProduction = process.env.NODE_ENV === 'production';
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   const chunkSize = Math.max(1, Math.min(10, options.chunkSize || 3));
   const chunkIndex = Math.max(0, options.chunkIndex || 0);
   const diff = ['easy', 'medium', 'hard'].includes(String(options.difficulty).toLowerCase()) ? String(options.difficulty).toLowerCase() : 'medium';
   const role = options.jobTitle || 'Software Engineer';
   const targetCategory = options.category || CATEGORIES[chunkIndex % CATEGORIES.length];
 
-  if (apiKey) {
-    try {
-      const ai = new GoogleGenAI({ apiKey });
-      const previousStems = (options.previousQuestions || []).slice(-15).join('\n- ');
+  try {
+    const previousStems = (options.previousQuestions || []).slice(-15).join('\n- ');
 
-      const prompt = `You are a principal assessment architect generating a PROGRESSIVE CHUNK of aptitude questions.
+    const prompt = `You are a principal assessment architect generating a PROGRESSIVE CHUNK of aptitude questions.
 
 <JOB_TITLE>${role}</JOB_TITLE>
 <JOB_DESCRIPTION>${(options.jobDescription || '').slice(0, 1000)}</JOB_DESCRIPTION>
@@ -91,48 +88,42 @@ Return ONLY raw JSON array:
   }
 ]`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
+    const responseText = await generateText(prompt);
+    const cleanJson = extractFirstJsonArray(responseText);
+
+    if (cleanJson && Array.isArray(cleanJson) && cleanJson.length > 0) {
+      const mapped = cleanJson.slice(0, chunkSize).map((q: any, idx: number) => {
+        const opts = Array.isArray(q.options) && q.options.length >= 2
+          ? q.options.map(String).slice(0, 4)
+          : ['Option A', 'Option B', 'Option C', 'Option D'];
+        while (opts.length < 4) {
+          opts.push(`Option ${String.fromCharCode(65 + opts.length)}`);
+        }
+        const stem = String(q.question || q.text || `Question ${idx + 1}`);
+
+        return {
+          id: String(q.id || `chunk_${chunkIndex}_q${idx + 1}`),
+          category: String(q.category || targetCategory),
+          difficulty: diff as any,
+          question: stem,
+          text: stem,
+          options: opts,
+          correctIndex: typeof q.correctIndex === 'number' && q.correctIndex >= 0 && q.correctIndex <= 3 ? q.correctIndex : 0,
+          explanation: q.explanation ? String(q.explanation) : undefined,
+          source: 'ai-chunk-generator',
+        };
       });
 
-      const responseText = response.text || '';
-      const cleanJson = extractFirstJsonArray(responseText);
-
-      if (cleanJson && Array.isArray(cleanJson) && cleanJson.length > 0) {
-        const mapped = cleanJson.slice(0, chunkSize).map((q: any, idx: number) => {
-          const opts = Array.isArray(q.options) && q.options.length >= 2
-            ? q.options.map(String).slice(0, 4)
-            : ['Option A', 'Option B', 'Option C', 'Option D'];
-          while (opts.length < 4) {
-            opts.push(`Option ${String.fromCharCode(65 + opts.length)}`);
-          }
-          const stem = String(q.question || q.text || `Question ${idx + 1}`);
-
-          return {
-            id: String(q.id || `chunk_${chunkIndex}_q${idx + 1}`),
-            category: String(q.category || targetCategory),
-            difficulty: diff as any,
-            question: stem,
-            text: stem,
-            options: opts,
-            correctIndex: typeof q.correctIndex === 'number' && q.correctIndex >= 0 && q.correctIndex <= 3 ? q.correctIndex : 0,
-            explanation: q.explanation ? String(q.explanation) : undefined,
-            source: 'ai-chunk-generator',
-          };
-        });
-
-        // Strict Zod schema validation before saving or returning
-        const validated = AptitudeChunkSchema.parse(mapped);
-        return validated;
-      }
-    } catch (err) {
-      console.error(`[AI Chunk Generation Error] Chunk ${chunkIndex}:`, err);
-      throw err;
+      // Strict Zod schema validation before saving or returning
+      const validated = AptitudeChunkSchema.parse(mapped);
+      return validated;
     }
+  } catch (err) {
+    console.error(`[AI Chunk Generation Error] Chunk ${chunkIndex}:`, err);
+    throw err;
   }
 
-  throw new Error(`AI aptitude chunk generation failed for chunk ${chunkIndex} because Gemini API key is not configured.`);
+  throw new Error(`AI aptitude chunk generation failed for chunk ${chunkIndex} (both Gemini and Ollama failed).`);
 }
 
 /**

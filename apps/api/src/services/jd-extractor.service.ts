@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { generateText } from './llm.service';
 
 export interface ExtractedRequirements {
   skills: string[];
@@ -21,11 +21,8 @@ export async function extractRequirementsFromJd(
   description: string,
   title?: string
 ): Promise<ExtractedRequirements> {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (apiKey && description.trim().length > 15) {
+  if (description.trim().length > 15) {
     try {
-      const ai = new GoogleGenAI({ apiKey });
       const prompt = `You are an expert AI recruiter and technical talent architect.
 Analyze the following job title and job description text. Extract real, precise requirements directly present or implied in the text.
 
@@ -54,12 +51,7 @@ Return ONLY a valid JSON object matching this schema:
   "enhancedDescription": string
 }`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
-      });
-
-      const text = response.text || '';
+      const text = await generateText(prompt);
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
@@ -89,7 +81,7 @@ Return ONLY a valid JSON object matching this schema:
         };
       }
     } catch (err) {
-      console.error('Gemini JD requirement extraction error:', err);
+      console.error('JD requirement extraction error:', err);
     }
   }
 

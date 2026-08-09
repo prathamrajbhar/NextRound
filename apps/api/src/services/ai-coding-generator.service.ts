@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { generateText } from './llm.service';
 import crypto from 'crypto';
 import { prisma } from '@nextround/database';
 
@@ -45,7 +45,6 @@ export async function generateAiCodingProblem(
   jobDescription: string = '',
   difficulty: string = 'medium'
 ): Promise<CodingProblemData> {
-  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   const nonce = `${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
 
   // Sanitize & delimit untrusted prompt parameters to protect against prompt injection
@@ -53,10 +52,8 @@ export async function generateAiCodingProblem(
   const safeJobDescription = String(jobDescription || '').slice(0, 1000);
   const safeDifficulty = ['easy', 'medium', 'hard'].includes(difficulty.toLowerCase()) ? difficulty.toLowerCase() : 'medium';
 
-  if (apiKey) {
-    try {
-      const ai = new GoogleGenAI({ apiKey });
-      const prompt = `You are a principal technical interviewer. Generate a BRAND NEW, UNIQUE Data Structures & Algorithms (DSA) coding problem.
+  try {
+    const prompt = `You are a principal technical interviewer. Generate a BRAND NEW, UNIQUE Data Structures & Algorithms (DSA) coding problem.
 
 <TARGET_JOB_TITLE>
 ${safeJobTitle}
@@ -106,73 +103,67 @@ Return ONLY valid JSON matching this exact structure:
   "expectedComplexity": { "time": "O(N)", "space": "O(1)" }
 }`;
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: prompt,
+    const responseText = await generateText(prompt);
+    const cleanJson = extractFirstValidJson(responseText);
+
+    if (cleanJson && cleanJson.title && Array.isArray(cleanJson.testCases)) {
+      const publicTests = cleanJson.testCases.filter((tc: any) => !tc.hidden);
+      const hiddenTests = cleanJson.testCases.filter((tc: any) => tc.hidden);
+
+      const checksum = crypto.createHash('sha256').update(JSON.stringify(cleanJson)).digest('hex');
+      const slug = cleanJson.id || `problem-${nonce.slice(-6)}`;
+
+      // Persist problem to database
+      const savedProblem = await prisma.codingProblem.upsert({
+        where: { slug },
+        update: {
+          title: cleanJson.title,
+          description: cleanJson.description,
+          difficulty: cleanJson.difficulty || 'medium',
+          entry_point: cleanJson.entryPoint || 'solution',
+          public_tests: publicTests as any,
+          hidden_tests: hiddenTests as any,
+          seed: nonce,
+          checksum,
+        },
+        create: {
+          slug,
+          title: cleanJson.title,
+          description: cleanJson.description,
+          difficulty: cleanJson.difficulty || 'medium',
+          entry_point: cleanJson.entryPoint || 'solution',
+          public_tests: publicTests as any,
+          hidden_tests: hiddenTests as any,
+          seed: nonce,
+          checksum,
+        },
       });
 
-      const responseText = response.text || '';
-      const cleanJson = extractFirstValidJson(responseText);
-
-      if (cleanJson && cleanJson.title && Array.isArray(cleanJson.testCases)) {
-        const publicTests = cleanJson.testCases.filter((tc: any) => !tc.hidden);
-        const hiddenTests = cleanJson.testCases.filter((tc: any) => tc.hidden);
-
-        const checksum = crypto.createHash('sha256').update(JSON.stringify(cleanJson)).digest('hex');
-        const slug = cleanJson.id || `problem-${nonce.slice(-6)}`;
-
-        // Persist problem to database
-        const savedProblem = await prisma.codingProblem.upsert({
-          where: { slug },
-          update: {
-            title: cleanJson.title,
-            description: cleanJson.description,
-            difficulty: cleanJson.difficulty || 'medium',
-            entry_point: cleanJson.entryPoint || 'solution',
-            public_tests: publicTests as any,
-            hidden_tests: hiddenTests as any,
-            seed: nonce,
-            checksum,
-          },
-          create: {
-            slug,
-            title: cleanJson.title,
-            description: cleanJson.description,
-            difficulty: cleanJson.difficulty || 'medium',
-            entry_point: cleanJson.entryPoint || 'solution',
-            public_tests: publicTests as any,
-            hidden_tests: hiddenTests as any,
-            seed: nonce,
-            checksum,
-          },
-        });
-
-        return {
-          id: savedProblem.id,
-          slug: savedProblem.slug,
-          title: cleanJson.title,
-          difficulty: (cleanJson.difficulty as any) || 'Medium',
-          category: cleanJson.category || 'Algorithms',
-          description: cleanJson.description,
-          entryPoint: cleanJson.entry_point || 'solution',
-          constraints: cleanJson.constraints || [],
-          examples: cleanJson.examples || [],
-          starterCode: cleanJson.starterCode,
-          testCases: cleanJson.testCases,
-          publicTests,
-          hiddenTests,
-          editorial: cleanJson.editorial || '',
-          expectedComplexity: cleanJson.expectedComplexity || { time: 'O(N)', space: 'O(1)' },
-          version: savedProblem.version,
-        };
-      }
-    } catch (err) {
-      console.error('[AI Coding Problem Generation Error]:', err);
-      throw err;
+      return {
+        id: savedProblem.id,
+        slug: savedProblem.slug,
+        title: cleanJson.title,
+        difficulty: (cleanJson.difficulty as any) || 'Medium',
+        category: cleanJson.category || 'Algorithms',
+        description: cleanJson.description,
+        entryPoint: cleanJson.entry_point || 'solution',
+        constraints: cleanJson.constraints || [],
+        examples: cleanJson.examples || [],
+        starterCode: cleanJson.starterCode,
+        testCases: cleanJson.testCases,
+        publicTests,
+        hiddenTests,
+        editorial: cleanJson.editorial || '',
+        expectedComplexity: cleanJson.expectedComplexity || { time: 'O(N)', space: 'O(1)' },
+        version: savedProblem.version,
+      };
     }
+  } catch (err) {
+    console.error('[AI Coding Problem Generation Error]:', err);
+    throw err;
   }
 
-  throw new Error('AI coding problem generation failed because Gemini API key is not configured.');
+  throw new Error('AI coding problem generation failed (both Gemini and Ollama failed).');
 }
 
 function extractFirstValidJson(text: string): any {

@@ -40,22 +40,53 @@ def get_client() -> Optional[Any]:
     return _client
 
 
+def _generate_text_ollama(prompt: str) -> Optional[str]:
+    """Generate text using Ollama's configured instance as a fallback."""
+    if not settings.ollama_base_url or not prompt:
+        return None
+    try:
+        import httpx
+        url = f"{settings.ollama_base_url.rstrip('/')}/api/generate"
+        payload = {
+            "model": settings.ollama_model,
+            "prompt": prompt,
+            "stream": False,
+            "options": {
+                "temperature": 0.2
+            }
+        }
+        logger.info(f"Attempting Ollama generation using model {settings.ollama_model} at {url}...")
+        response = httpx.post(url, json=payload, timeout=60.0)
+        response.raise_for_status()
+        data = response.json()
+        text = data.get("response")
+        return text.strip() if text else None
+    except Exception as e:
+        logger.error(f"Ollama generate_content failed: {e}")
+        return None
+
+
 def generate_text(prompt: str) -> Optional[str]:
     """Generate a text completion from the configured model.
 
-    Returns the trimmed response text, or None when the client is unavailable,
-    the call fails, or the response is empty. Never raises.
+    First tries Gemini. If Gemini is not configured or fails, immediately
+    switches to Ollama without retries or static fallback logic.
     """
+    if not prompt:
+        return None
+
     client = get_client()
-    if not client or not prompt:
-        return None
-    try:
-        response = client.models.generate_content(model=settings.gemini_model, contents=prompt)
-        text = getattr(response, "text", None)
-        return text.strip() if text else None
-    except Exception as e:
-        logger.error(f"Gemini generate_content failed: {e}")
-        return None
+    if client:
+        try:
+            response = client.models.generate_content(model=settings.gemini_model, contents=prompt)
+            text = getattr(response, "text", None)
+            if text and text.strip():
+                return text.strip()
+        except Exception as e:
+            logger.error(f"Gemini generate_content failed: {e}")
+
+    # Fallback directly to Ollama
+    return _generate_text_ollama(prompt)
 
 
 def extract_json_object(text: str) -> Optional[dict]:
