@@ -163,40 +163,14 @@ mockRouter.get(
       const requestedCount = parseInt(req.query.count as string, 10) || 4;
       const batchNum = parseInt(req.query.batch as string, 10) || 1;
 
-      let rawQuestions: any[] = [];
-      try {
-        const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
-        const aiResp = await fetch(`${aiServiceUrl}/api/v1/ai/assessment/generate-aptitude`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jobTitle: roleName,
-            jobDescription: `Target Company: ${companyName}. Difficulty: ${diffLevel}. Batch Number: ${batchNum}`,
-            count: requestedCount,
-          }),
-        });
+      // Generate aptitude questions using Gemini directly
+      const rawQuestions = await generateAiAptitudeQuestions(
+        roleName,
+        `Target Company: ${companyName}. Difficulty: ${diffLevel}. Batch: ${batchNum}`,
+        requestedCount
+      );
 
-        if (aiResp.ok) {
-          const aiData = (await aiResp.json()) as any;
-          if (aiData.success && Array.isArray(aiData.questions) && aiData.questions.length > 0) {
-            rawQuestions = aiData.questions;
-          }
-        }
-      } catch (aiErr) {
-        console.error(`AI Service mock dynamic question generation failed:`, aiErr);
-      }
-
-      if (rawQuestions.length === 0) {
-        rawQuestions = await generateAiAptitudeQuestions(
-          roleName,
-          `Target Company: ${companyName}. Difficulty: ${diffLevel}. Batch Number: ${batchNum}`,
-          requestedCount
-        );
-      }
-
-      // Practice/mock sessions are self-assessed by the candidate, so the
-      // correctIndex is included (the real assessment endpoint strips it to
-      // prevent answer leakage).
+      // Practice/mock sessions include correctIndex (no anti-cheat needed for practice)
       const sanitizedQuestions = rawQuestions.map((q: any) => ({
         id: q.id,
         category: q.category || 'Logical Reasoning',

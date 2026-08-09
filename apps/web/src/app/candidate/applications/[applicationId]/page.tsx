@@ -230,15 +230,10 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
     amber: 'bg-amber-100 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200',
   };
 
-  const nextSteps = [
-    offer && {
-      icon: Gift,
-      label: 'Review Your Offer',
-      desc: `${offer.status === 'accepted' ? 'Accepted' : 'Action needed'} — ${offer.baseSalary} base salary`,
-      href: `/candidate/applications/${app.id}/offer`,
-      tone: 'emerald' as const,
-      badge: offer.status === 'accepted' ? 'Completed' : 'Action Required',
-    },
+  // Sequential pipeline gate — only show the EARLIEST pending/active step.
+  // Each step is only included if its prerequisite stage is complete.
+  const allNextSteps = [
+    // 1. AI Screening (only if still in applied/screening)
     (app.status === 'applied' || app.status === 'screening') && {
       icon: Sparkles,
       label: 'AI Resume Screening',
@@ -248,6 +243,8 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       tone: 'indigo' as const,
       badge: 'In Progress',
     },
+
+    // 2. Aptitude Assessment (only after screening_completed or in assessment stage)
     (app.status === 'screening_completed' || app.status === 'assessment') && {
       icon: ClipboardCheck,
       label: 'Aptitude Assessment',
@@ -259,39 +256,52 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       tone: 'indigo' as const,
       badge: assessments[0]?.status === 'completed' ? 'Completed' : 'Pending',
     },
-    asyncScreening &&
-      isScreenedDone && {
-        icon: Camera,
-        label: 'Video Screening',
-        desc:
-          asyncScreening.status === 'invited'
-            ? 'Record your video responses'
-            : 'View your submitted video responses',
-        href: `/candidate/applications/${app.id}/video-screening`,
-        tone: 'purple' as const,
-        badge: asyncScreening.status === 'submitted' || asyncScreening.status === 'reviewed' ? 'Completed' : 'Invited',
-      },
-    takeHome &&
-      isScreenedDone && {
-        icon: Code,
-        label: 'Take-Home Project',
-        desc:
-          takeHome.status === 'graded'
-            ? `Graded — Score: ${takeHome.overallScore != null ? `${takeHome.overallScore}%` : 'Graded'}`
-            : 'Continue your project submission',
-        href: `/candidate/applications/${app.id}/take-home`,
-        tone: 'amber' as const,
-        badge: takeHome.status === 'graded' ? 'Graded' : 'In Progress',
-      },
-    onboarding &&
-      isDecisionDone && {
-        icon: UserPlus,
-        label: 'Onboarding Checklist',
-        desc: `${onboarding.progressPercent}% complete — starts ${onboarding.startDate}`,
-        href: `/candidate/applications/${app.id}/onboarding`,
-        tone: 'emerald' as const,
-        badge: `${onboarding.progressPercent}%`,
-      },
+
+    // 3. Video Screening (only after assessment is done + video screening invited)
+    asyncScreening && isAssessmentDone && {
+      icon: Camera,
+      label: 'Video Screening',
+      desc:
+        asyncScreening.status === 'invited'
+          ? 'Record your video responses'
+          : 'View your submitted video responses',
+      href: `/candidate/applications/${app.id}/video-screening`,
+      tone: 'purple' as const,
+      badge: asyncScreening.status === 'submitted' || asyncScreening.status === 'reviewed' ? 'Completed' : 'Invited',
+    },
+
+    // 4. Take-Home Project (only after screening done + take-home assigned)
+    takeHome && isAssessmentDone && {
+      icon: Code,
+      label: 'Take-Home Project',
+      desc:
+        takeHome.status === 'graded'
+          ? `Graded — Score: ${takeHome.overallScore != null ? `${takeHome.overallScore}%` : 'Graded'}`
+          : 'Continue your project submission',
+      href: `/candidate/applications/${app.id}/take-home`,
+      tone: 'amber' as const,
+      badge: takeHome.status === 'graded' ? 'Graded' : 'In Progress',
+    },
+
+    // 5. Offer (only after decision)
+    offer && isDecisionDone && {
+      icon: Gift,
+      label: 'Review Your Offer',
+      desc: `${offer.status === 'accepted' ? 'Accepted' : 'Action needed'} — ${offer.baseSalary} base salary`,
+      href: `/candidate/applications/${app.id}/offer`,
+      tone: 'emerald' as const,
+      badge: offer.status === 'accepted' ? 'Completed' : 'Action Required',
+    },
+
+    // 6. Onboarding (only after decision + onboarding assigned)
+    onboarding && isDecisionDone && {
+      icon: UserPlus,
+      label: 'Onboarding Checklist',
+      desc: `${onboarding.progressPercent}% complete — starts ${onboarding.startDate}`,
+      href: `/candidate/applications/${app.id}/onboarding`,
+      tone: 'emerald' as const,
+      badge: `${onboarding.progressPercent}%`,
+    },
   ].filter(Boolean) as {
     icon: typeof Gift;
     label: string;
@@ -301,6 +311,12 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
     tone: 'emerald' | 'indigo' | 'purple' | 'amber';
     badge: string;
   }[];
+
+  // Show only the FIRST active (non-completed) step in the Next Steps panel.
+  // Once a step is marked completed, the next one becomes active.
+  const completedBadges = ['Completed', 'Graded'];
+  const firstIncomplete = allNextSteps.find((s) => !completedBadges.includes(s.badge));
+  const nextSteps = firstIncomplete ? [firstIncomplete] : allNextSteps.slice(-1);
 
   const matchPercent = app.scores?.composite;
 

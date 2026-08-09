@@ -633,37 +633,12 @@ applicationRouter.get(
       if (assessment && Array.isArray(assessment.questions) && assessment.questions.length === qCount) {
         rawQuestions = assessment.questions as any[];
       } else {
-        // Generate REAL AI questions tailored to the job for exact qCount set by employer
-        try {
-          const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
-          const aiResp = await fetch(`${aiServiceUrl}/api/v1/ai/assessment/generate-aptitude`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              jobTitle: app.job?.title || 'Software Engineer',
-              jobDescription: app.job?.description || '',
-              count: qCount,
-            }),
-          });
-
-          if (aiResp.ok) {
-            const aiData = (await aiResp.json()) as any;
-            if (aiData.success && Array.isArray(aiData.questions) && aiData.questions.length > 0) {
-              rawQuestions = aiData.questions;
-            }
-          }
-        } catch (aiErr) {
-          console.error(`AI Service dynamic question generation failed for application ${appId}:`, aiErr);
-        }
-
-        // Direct Node.js Gemini AI Generator Fallback
-        if (rawQuestions.length === 0) {
-          rawQuestions = await generateAiAptitudeQuestions(
-            app.job?.title || 'Software Engineer',
-            app.job?.description || '',
-            qCount
-          );
-        }
+        // Generate AI questions tailored to the job using Gemini directly
+        rawQuestions = await generateAiAptitudeQuestions(
+          app.job?.title || 'Software Engineer',
+          app.job?.description || '',
+          qCount
+        );
 
         // Persist generated questions in DB Assessment record
         if (assessment) {
@@ -683,7 +658,7 @@ applicationRouter.get(
         }
       }
 
-      // Strip correctIndex and explanation before returning to client to prevent answer leakage
+      // Strip correctIndex before returning to client to prevent answer leakage
       const sanitizedQuestions = rawQuestions.slice(0, qCount).map((q: any) => ({
         id: q.id,
         category: q.category || 'Logical Reasoning',

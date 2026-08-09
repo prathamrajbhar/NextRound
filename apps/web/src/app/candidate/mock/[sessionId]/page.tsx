@@ -44,7 +44,10 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
   useEffect(() => {
     async function fetchData() {
       try {
-        if (sessionId && sessionId !== 'new' && sessionId !== 'practice') {
+        // Skip DB lookup for real-job aptitude sessions (sessionId = "session-{applicationId}")
+        // These have no MockSession record — the applicationId param carries all needed data.
+        const isJobAptitudeSession = sessionId.startsWith('session-');
+        if (!isJobAptitudeSession && sessionId !== 'new' && sessionId !== 'practice') {
           const res = await apiClient.get<{ session: MockSession }>(`/mock/sessions/${sessionId}`).catch(() => null);
           if (res?.session) setSession(res.session);
         }

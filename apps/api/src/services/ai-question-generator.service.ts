@@ -12,7 +12,8 @@ export interface GeneratedQuestion {
 }
 
 /**
- * Generates N dynamic, role-tailored AI aptitude questions using Gemini LLM.
+ * Generates N dynamic aptitude questions using Gemini LLM.
+ * Categories: Quantitative Aptitude, Logical Reasoning, Verbal Ability, Data Interpretation.
  * Strictly respects the exact question count set by the employer (up to 100).
  */
 export async function generateAiAptitudeQuestions(
@@ -26,28 +27,31 @@ export async function generateAiAptitudeQuestions(
   if (apiKey) {
     try {
       const ai = new GoogleGenAI({ apiKey });
-      const prompt = `You are a senior technical assessment architect and talent evaluator.
-Generate EXACTLY ${targetCount} unique, high-quality multiple choice aptitude and reasoning questions specifically tailored for a candidate applying for:
+      const prompt = `You are a senior assessment architect generating aptitude questions for a recruitment test.
+Generate EXACTLY ${targetCount} unique, high-quality multiple choice aptitude questions for a candidate applying for:
 
 JOB TITLE: ${jobTitle || 'Software Engineer'}
-JOB DESCRIPTION & CONTEXT: ${(jobDescription || '').slice(0, 3000)}
+JOB CONTEXT: ${(jobDescription || '').slice(0, 2000)}
 
-DIRECTIVES:
-1. Output EXACTLY ${targetCount} questions.
-2. DO NOT use generic template placeholders or hardcoded static examples. Tailor each question to real technical scenarios, quantitative calculations, data analysis, and system logic for ${jobTitle}.
-3. Each question MUST contain:
-   - "id": "gen_q1", "gen_q2", etc.
-   - "category": string (e.g. "Logical Deduction", "Quantitative Reasoning", "System Architecture", "Data Interpretation")
-   - "question": clear, challenging, role-tailored question stem
-   - "options": array of EXACTLY 4 distinct choices
-   - "correctIndex": integer (0, 1, 2, or 3) pointing to the correct choice in options
-   - "difficulty": "easy", "medium", or "hard"
+CATEGORY DISTRIBUTION — distribute questions evenly across these 4 categories:
+1. "Quantitative Aptitude" — arithmetic, percentages, ratios, profit & loss, time-speed-distance, work-rate problems
+2. "Logical Reasoning" — series completion, syllogisms, blood relations, coding-decoding, direction sense, arrangements
+3. "Verbal Ability" — synonyms, antonyms, sentence completion, reading comprehension, grammar, vocabulary
+4. "Data Interpretation" — bar chart analysis, pie chart percentages, table data reading, line graph trends
+
+REQUIREMENTS per question:
+- "id": "gen_q1", "gen_q2", etc.
+- "category": exactly one of the 4 category names above (verbatim)
+- "question": clear, unambiguous question stem
+- "options": array of EXACTLY 4 distinct choices
+- "correctIndex": integer (0, 1, 2, or 3)
+- "difficulty": "easy", "medium", or "hard"
 
 Return ONLY a valid raw JSON array of ${targetCount} objects:
 [
   {
     "id": "gen_q1",
-    "category": "Quantitative Reasoning",
+    "category": "Quantitative Aptitude",
     "difficulty": "medium",
     "question": "Question text here...",
     "options": ["Choice A", "Choice B", "Choice C", "Choice D"],
@@ -65,6 +69,7 @@ Return ONLY a valid raw JSON array of ${targetCount} objects:
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          const validCategories = ['Quantitative Aptitude', 'Logical Reasoning', 'Verbal Ability', 'Data Interpretation'];
           return parsed.slice(0, targetCount).map((q: any, idx: number) => {
             const opts = Array.isArray(q.options) && q.options.length >= 2
               ? q.options.map(String).slice(0, 4)
@@ -72,10 +77,13 @@ Return ONLY a valid raw JSON array of ${targetCount} objects:
             while (opts.length < 4) {
               opts.push(`Option ${String.fromCharCode(65 + opts.length)}`);
             }
-            const stem = String(q.question || q.text || `${jobTitle} scenario question ${idx + 1}`);
+            const stem = String(q.question || q.text || `Aptitude question ${idx + 1}`);
+            const category = validCategories.includes(q.category)
+              ? q.category
+              : validCategories[idx % validCategories.length];
             return {
               id: String(q.id || `gen_q${idx + 1}`),
-              category: String(q.category || 'Technical Reasoning'),
+              category,
               question: stem,
               text: stem,
               options: opts,
@@ -91,77 +99,95 @@ Return ONLY a valid raw JSON array of ${targetCount} objects:
     }
   }
 
-  // Purely dynamic procedural AI generator (no static hardcoded fallback text)
-  return generateProceduralAiQuestions(jobTitle, targetCount);
+  return generateProceduralAptitudeQuestions(targetCount);
 }
 
 /**
- * Procedural AI question generator creating unique dynamic scenarios for any N up to 100.
+ * Procedural fallback — generates standard aptitude questions across 4 categories.
+ * Used when Gemini API key is absent or the API call fails.
  */
-function generateProceduralAiQuestions(jobTitle: string, count: number): GeneratedQuestion[] {
-  const role = jobTitle || 'Software Engineer';
-
-  const categories = [
-    'System Throughput & Scalability',
-    'Algorithmic Complexity',
-    'Data Pipeline Efficiency',
-    'Concurrency & Memory Optimization',
-    'Reliability & SLA Calculation',
-    'Network & API Latency',
-    'Resource Allocation',
-  ];
-
+function generateProceduralAptitudeQuestions(count: number): GeneratedQuestion[] {
+  const categories = ['Quantitative Aptitude', 'Logical Reasoning', 'Verbal Ability', 'Data Interpretation'];
   const questions: GeneratedQuestion[] = [];
 
   for (let i = 0; i < count; i++) {
-    const seed = (i + 1) * 7;
-    const reqs = 5000 + (seed * 850) % 25000;
-    const latency = 20 + (seed * 5) % 80;
-    const loadInc = 25 + (seed * 15) % 75;
-    const expectedLatency = Math.round(latency * (1 + loadInc / 100));
-
-    const category = categories[i % categories.length];
+    const categoryIndex = i % 4;
+    const category = categories[categoryIndex];
+    const seed = i + 1;
     let questionText = '';
     let options: string[] = [];
     let correctIdx = 0;
 
-    if (i % 4 === 0) {
-      questionText = `An active ${role} service handles ${reqs.toLocaleString()} req/sec with an average latency of ${latency}ms. If incoming throughput increases by ${loadInc}% and latency scales linearly, what is the new expected latency?`;
-      options = [`${latency}ms`, `${Math.round(latency * 1.15)}ms`, `${expectedLatency}ms`, `${latency * 2}ms`];
-      correctIdx = 2;
-    } else if (i % 4 === 1) {
-      const memoryBase = 120 + (seed * 10) % 300;
-      const rate = 10 + (seed * 2) % 20;
-      const users = 5000 + (seed * 1000) % 30000;
-      const expectedMem = memoryBase + Math.round((users / 1000) * rate);
-      questionText = `In a stress test for ${role} microservices, memory usage grows by ${rate}MB per 1,000 active users. Starting from a base footprint of ${memoryBase}MB, what is the memory footprint at ${users.toLocaleString()} users?`;
-      options = [`${expectedMem - 100}MB`, `${expectedMem - 50}MB`, `${expectedMem}MB`, `${expectedMem + 100}MB`];
-      correctIdx = 2;
-    } else if (i % 4 === 2) {
-      const slaA = (99.5 + (i % 5) * 0.1).toFixed(1);
-      const slaB = (99.0 + (i % 4) * 0.2).toFixed(1);
-      const combined = ((parseFloat(slaA) / 100) * (parseFloat(slaB) / 100) * 100).toFixed(2);
-      questionText = `Two critical ${role} services have availability SLAs of ${slaA}% and ${slaB}%. What is the combined sequential availability of the combined service pipeline?`;
-      options = [`${combined}%`, `${slaA}%`, `${slaB}%`, `99.9%`];
-      correctIdx = 0;
-    } else {
-      const items = 500 + seed * 20;
-      const mins = 15 + (i % 6) * 5;
-      const rate = (items / mins).toFixed(1);
-      questionText = `A background data processing task for ${role} processes ${items} jobs in ${mins} minutes. What is the average throughput in jobs per minute?`;
-      options = [`${(Number(rate) * 0.75).toFixed(1)} jobs/min`, `${rate} jobs/min`, `${(Number(rate) * 1.25).toFixed(1)} jobs/min`, `${(Number(rate) * 1.5).toFixed(1)} jobs/min`];
+    if (categoryIndex === 0) {
+      // Quantitative Aptitude
+      const cost = 10 + (seed * 7) % 40;
+      const qty = 5 + (seed * 3) % 20;
+      const pct = 10 + (seed * 5) % 40;
+      const sp = Math.round(cost * (1 + pct / 100));
+      const total = sp * qty;
+      questionText = `A merchant buys ${qty} items at Rs.${cost} each and sells at a ${pct}% profit. What is the total selling price?`;
+      options = [
+        `Rs.${total - qty * 5}`,
+        `Rs.${total}`,
+        `Rs.${total + qty * 5}`,
+        `Rs.${cost * qty}`,
+      ];
       correctIdx = 1;
+    } else if (categoryIndex === 1) {
+      // Logical Reasoning
+      const start = 2 + (seed % 5);
+      const diff = 3 + (seed % 4);
+      const seq = [start, start + diff, start + diff * 2, start + diff * 3];
+      const next = start + diff * 4;
+      questionText = `Find the next number in the series: ${seq.join(', ')}, ?`;
+      options = [
+        String(next - diff),
+        String(next + diff),
+        String(next),
+        String(next * 2),
+      ];
+      correctIdx = 2;
+    } else if (categoryIndex === 2) {
+      // Verbal Ability
+      const wordSets = [
+        { q: 'Choose the word most similar in meaning to "ELOQUENT":', opts: ['Silent', 'Articulate', 'Confused', 'Reckless'], ans: 1 },
+        { q: 'Choose the antonym of "ABUNDANT":', opts: ['Scarce', 'Plentiful', 'Rich', 'Generous'], ans: 0 },
+        { q: 'Select the correctly spelled word:', opts: ['Accomodate', 'Accommodate', 'Acommodate', 'Accommadate'], ans: 1 },
+        { q: 'Complete the sentence: "She was so tired she could ___ keep her eyes open."', opts: ['barely', 'nearly', 'mostly', 'largely'], ans: 0 },
+        { q: 'Choose the synonym of "METICULOUS":', opts: ['Careless', 'Precise', 'Hasty', 'Vague'], ans: 1 },
+        { q: 'Choose the antonym of "BENEVOLENT":', opts: ['Kind', 'Generous', 'Malevolent', 'Charitable'], ans: 2 },
+        { q: 'Choose the word most similar to "VERBOSE":', opts: ['Brief', 'Wordy', 'Clear', 'Concise'], ans: 1 },
+      ];
+      const ws = wordSets[i % wordSets.length];
+      questionText = ws.q;
+      options = ws.opts;
+      correctIdx = ws.ans;
+    } else {
+      // Data Interpretation
+      const salesA = 120 + (seed * 30) % 200;
+      const salesB = 80 + (seed * 20) % 150;
+      const salesC = 50 + (seed * 15) % 100;
+      const total = salesA + salesB + salesC;
+      const pctA = Math.round((salesA / total) * 100);
+      questionText = `In Q${(seed % 4) + 1}, Company A sold ${salesA} units, B sold ${salesB} units, C sold ${salesC} units. What percentage of total sales did Company A contribute?`;
+      options = [
+        `${pctA - 10}%`,
+        `${pctA - 5}%`,
+        `${pctA}%`,
+        `${pctA + 8}%`,
+      ];
+      correctIdx = 2;
     }
 
     questions.push({
-      id: `ai_gen_${i + 1}`,
+      id: `apt_gen_${i + 1}`,
       category,
       question: questionText,
       text: questionText,
       options,
       correctIndex: correctIdx,
       difficulty: i % 3 === 0 ? 'easy' : i % 3 === 1 ? 'medium' : 'hard',
-      source: 'procedural-ai',
+      source: 'procedural',
     });
   }
 
