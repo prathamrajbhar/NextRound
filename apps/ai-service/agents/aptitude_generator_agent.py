@@ -117,8 +117,9 @@ async def generate_aptitude_questions(
     Dynamically generate N role-customized aptitude questions using Gemini + Ollama LLM chain:
     1. Gemini (primary model: GEMINI_MODEL in .env, default gemini-2.5-flash)
     2. Ollama (failover model: OLLAMA_MODEL at OLLAMA_BASE_URL in .env, default llama3.2)
-    3. Dynamic role-customized fallback
+    3. Dynamic role-customized fallback (development/testing ONLY)
     """
+    is_production = os.environ.get("NODE_ENV", "development") == "production"
     prompt = f"""You are an expert recruiter and assessment engineer. Generate a set of {count} high-quality, non-standard cognitive aptitude test questions tailored for a candidate applying for the position of:
 
 Job Title: {job_title}
@@ -167,8 +168,129 @@ JSON Format required:
     if ollama_questions:
         return ollama_questions
 
-    # 3. Final Fallback
-    logger.info(f"Using role-tailored fallback question generator for {job_title}.")
+    # 3. Final Fallback — disabled in production to enforce AI-only generation
+    if is_production:
+        raise RuntimeError(
+            f"AI aptitude question generation failed for '{job_title}' in production. "
+            "Static fallback is disabled in production environments."
+        )
+
+    logger.info(f"Using role-tailored fallback question generator for {job_title} (development/testing only).")
     return _fallback_questions(job_title, count)
+
+
+async def generate_aptitude_chunk(
+    job_title: str = "Software Engineer",
+    job_description: str = "",
+    difficulty: str = "medium",
+    chunk_index: int = 0,
+    chunk_size: int = 3,
+    previous_questions: List[str] = None,
+    category: str = None,
+) -> List[Dict[str, Any]]:
+    """
+    Generates a single progressive chunk (section) of aptitude questions.
+    Passes previously generated question stems to prevent repetition across chunks.
+    Supports category-targeted generation per chunk.
+    """
+    is_production = os.environ.get("NODE_ENV", "development") == "production"
+
+    categories = [
+        "Quantitative Reasoning",
+        "Logical Deduction",
+        "Verbal & Communication Ability",
+        "Pattern Recognition & Data Interpretation",
+    ]
+    target_category = category or categories[chunk_index % len(categories)]
+    prev_stems = "\n- ".join((previous_questions or [])[-15:])
+
+    prompt = f"""You are a principal assessment architect generating a PROGRESSIVE CHUNK of aptitude questions.
+
+<JOB_TITLE>{job_title}</JOB_TITLE>
+<JOB_DESCRIPTION>{(job_description or "").strip()[:800]}</JOB_DESCRIPTION>
+<DIFFICULTY>{difficulty}</DIFFICULTY>
+<CHUNK_INDEX>{chunk_index}</CHUNK_INDEX>
+<TARGET_CATEGORY>{target_category}</TARGET_CATEGORY>
+<CHUNK_SIZE>{chunk_size}</CHUNK_SIZE>
+
+<PREVIOUSLY_GENERATED_QUESTIONS>
+{"- " + prev_stems if prev_stems else "None"}
+</PREVIOUSLY_GENERATED_QUESTIONS>
+
+CRITICAL INSTRUCTIONS:
+- Generate EXACTLY {chunk_size} NEW, DISTINCT multiple choice questions for category "{target_category}".
+- Do NOT repeat any question stem or concept listed in PREVIOUSLY_GENERATED_QUESTIONS.
+- Return ONLY valid raw JSON array of {chunk_size} objects.
+
+Each object must have:
+- "id": "chunk_{chunk_index}_q1", "chunk_{chunk_index}_q2", etc.
+- "category": "{target_category}"
+- "difficulty": "{difficulty}"
+- "question": clear, unambiguous question stem
+- "options": list of exactly 4 distinct choice strings
+- "correctIndex": integer (0, 1, 2, or 3)
+- "explanation": 1-sentence step-by-step explanation
+
+Return ONLY raw JSON array:
+[
+  {{
+    "id": "chunk_{chunk_index}_q1",
+    "category": "{target_category}",
+    "difficulty": "{difficulty}",
+    "question": "Question stem text...",
+    "options": ["A", "B", "C", "D"],
+    "correctIndex": 0,
+    "explanation": "Explanation..."
+  }}
+]"""
+
+    # 1. Primary Provider: Gemini GenAI
+    gemini_text = generate_text(prompt)
+    if gemini_text:
+        questions = _parse_llm_json_response(gemini_text, chunk_size, job_title)
+        if questions:
+            # Stamp chunk-specific metadata
+            for idx, q in enumerate(questions):
+                if not q["id"].startswith(f"chunk_{chunk_index}_"):
+                    q["id"] = f"chunk_{chunk_index}_q{idx + 1}"
+                q["source"] = "ai-chunk"
+            logger.info(f"Generated chunk {chunk_index} ({len(questions)} questions) via Gemini for {job_title}.")
+            return questions
+    logger.warning(f"Gemini chunk {chunk_index} generation failed for {job_title}. Trying Ollama.")
+
+    # 2. Failover Provider: Ollama
+    ollama_questions = await _generate_with_ollama(prompt, chunk_size, job_title)
+    if ollama_questions:
+        for idx, q in enumerate(ollama_questions):
+            q["id"] = f"chunk_{chunk_index}_q{idx + 1}"
+            q["source"] = "ai-chunk-ollama"
+        return ollama_questions
+
+    # 3. Final Fallback — disabled in production
+    if is_production:
+        raise RuntimeError(
+            f"AI aptitude chunk generation failed for chunk {chunk_index} of '{job_title}' in production. "
+            "Static fallback is disabled in production environments."
+        )
+
+    logger.info(f"Using fallback for chunk {chunk_index} (development/testing only).")
+    canonical = _load_canonical_questions()
+    start = (chunk_index * chunk_size) % len(canonical)
+    selected = canonical[start:start + chunk_size]
+    if len(selected) < chunk_size:
+        selected += canonical[:chunk_size - len(selected)]
+
+    role = job_title.strip() or "Software Engineer"
+    result = []
+    for idx, q in enumerate(selected):
+        item = dict(q)
+        stem = str(item.get("question") or "").replace("{role}", role)
+        item["id"] = f"dev_{item.get('id', f'q{idx}')}_{chunk_index}_{idx}"
+        item["question"] = stem
+        item["text"] = stem
+        item["source"] = "development-fallback"
+        result.append(item)
+    return result
+
 
 

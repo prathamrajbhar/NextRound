@@ -165,11 +165,15 @@ Return ONLY valid JSON matching this exact structure:
         };
       }
     } catch (err) {
-      // Fall through to deterministic fallback problem bank
+      console.error('[AI Coding Problem Generation Error]:', err);
     }
   }
 
-  // Fallback to static curated problem bank
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('AI coding problem generation failed in production. Static fallback is disabled in production.');
+  }
+
+  // Fallback to static curated problem bank for development/testing ONLY
   const fallbackList: any[] = codingProblems as any[];
   const idx = Math.floor(Math.random() * fallbackList.length);
   const selected = fallbackList[idx] || fallbackList[0];

@@ -18,7 +18,7 @@ import { enqueueCoding } from '../../lib/queues/coding.queue';
 import { emailService } from '../../services/email.service';
 import { serializeApplication, serializeApplicationList, serializeOffer } from '../../lib/serializers';
 import { evaluateApplicationScreening } from '../../services/screening-evaluator.service';
-import { generateAiAptitudeQuestions } from '../../services/ai-question-generator.service';
+import { generateAiAptitudeQuestions, generateAptitudeChunk } from '../../services/ai-question-generator.service';
 import { generateAiCodingProblem } from '../../services/ai-coding-generator.service';
 import { executeCodingSubmission } from '../../services/coding-executor.service';
 
@@ -595,6 +595,191 @@ applicationRouter.post(
       return res.json({
         success: true,
         data: { application: updatedApp, message: 'Application withdrawn successfully' },
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
+// GET /api/v1/applications/:id/assessment/aptitude/chunk - Fetch progressive AI aptitude chunk
+applicationRouter.get(
+  '/:id/assessment/aptitude/chunk',
+  authenticate,
+  requireRole('candidate'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const appId = req.params.id as string;
+      const app = await prisma.application.findUnique({
+        where: { id: appId },
+        include: { candidate: true, job: true },
+      });
+
+      if (!app || app.candidate.user_id !== req.user!.userId) {
+        return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
+      }
+
+      const chunkIndex = Math.max(0, parseInt(req.query.chunkIndex as string, 10) || 0);
+      const chunkSize = Math.max(1, Math.min(10, parseInt(req.query.chunkSize as string, 10) || 3));
+
+      let assessment = await prisma.assessment.findFirst({
+        where: { application_id: appId, test_type: 'aptitude' },
+        orderBy: { created_at: 'desc' },
+      });
+
+      let existingQuestions: any[] = Array.isArray(assessment?.questions) ? (assessment!.questions as any[]) : [];
+      const startIndex = chunkIndex * chunkSize;
+      const targetCount = startIndex + chunkSize;
+
+      if (existingQuestions.length >= targetCount) {
+        const chunkQuestions = existingQuestions.slice(startIndex, targetCount).map((q: any) => ({
+          id: q.id,
+          category: q.category || 'Logical Reasoning',
+          question: q.question || q.text,
+          text: q.question || q.text,
+          options: q.options || [],
+          difficulty: q.difficulty || 'medium',
+        }));
+
+        return res.json({
+          success: true,
+          data: {
+            assessmentId: assessment?.id,
+            chunkIndex,
+            chunkSize,
+            questions: chunkQuestions,
+            hasMore: true,
+          },
+        });
+      }
+
+      const previousStems = existingQuestions.map((q: any) => q.question || q.text || '');
+      const thresholds = (app.job?.thresholds as any) || {};
+
+      const newChunk = await generateAptitudeChunk({
+        jobTitle: app.job?.title || 'Software Engineer',
+        jobDescription: app.job?.description || '',
+        difficulty: thresholds.difficulty || 'medium',
+        chunkIndex,
+        chunkSize,
+        previousQuestions: previousStems,
+      });
+
+      const updatedQuestions = [...existingQuestions, ...newChunk];
+
+      if (assessment) {
+        assessment = await prisma.assessment.update({
+          where: { id: assessment.id },
+          data: { questions: updatedQuestions, status: 'in_progress' },
+        });
+      } else {
+        assessment = await prisma.assessment.create({
+          data: {
+            application_id: appId,
+            test_type: 'aptitude',
+            questions: updatedQuestions,
+            status: 'in_progress',
+          },
+        });
+      }
+
+      const sanitizedChunk = newChunk.map((q: any) => ({
+        id: q.id,
+        category: q.category || 'Logical Reasoning',
+        question: q.question || q.text,
+        text: q.question || q.text,
+        options: q.options || [],
+        difficulty: q.difficulty || 'medium',
+      }));
+
+      return res.json({
+        success: true,
+        data: {
+          assessmentId: assessment.id,
+          chunkIndex,
+          chunkSize,
+          questions: sanitizedChunk,
+          hasMore: true,
+        },
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
+// POST /api/v1/applications/:id/assessment/aptitude/chunk - Submit current chunk & fetch next chunk
+applicationRouter.post(
+  '/:id/assessment/aptitude/chunk',
+  authenticate,
+  requireRole('candidate'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const appId = req.params.id as string;
+      const { chunkIndex = 0, chunkSize = 3, answers = [] } = req.body;
+
+      const app = await prisma.application.findUnique({
+        where: { id: appId },
+        include: { candidate: true, job: true },
+      });
+
+      if (!app || app.candidate.user_id !== req.user!.userId) {
+        return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
+      }
+
+      let assessment = await prisma.assessment.findFirst({
+        where: { application_id: appId, test_type: 'aptitude' },
+        orderBy: { created_at: 'desc' },
+      });
+
+      if (assessment) {
+        const existingResponses = Array.isArray(assessment.responses) ? (assessment.responses as any[]) : [];
+        const mergedResponses = [...existingResponses, ...(Array.isArray(answers) ? answers : [])];
+        await prisma.assessment.update({
+          where: { id: assessment.id },
+          data: { responses: mergedResponses, status: 'in_progress' },
+        });
+      }
+
+      const nextChunkIndex = Number(chunkIndex) + 1;
+      const existingQuestions: any[] = Array.isArray(assessment?.questions) ? (assessment!.questions as any[]) : [];
+      const previousStems = existingQuestions.map((q: any) => q.question || q.text || '');
+      const thresholds = (app.job?.thresholds as any) || {};
+
+      const nextChunk = await generateAptitudeChunk({
+        jobTitle: app.job?.title || 'Software Engineer',
+        jobDescription: app.job?.description || '',
+        difficulty: thresholds.difficulty || 'medium',
+        chunkIndex: nextChunkIndex,
+        chunkSize: Number(chunkSize),
+        previousQuestions: previousStems,
+      });
+
+      const updatedQuestions = [...existingQuestions, ...nextChunk];
+      if (assessment) {
+        await prisma.assessment.update({
+          where: { id: assessment.id },
+          data: { questions: updatedQuestions },
+        });
+      }
+
+      const sanitizedNextChunk = nextChunk.map((q: any) => ({
+        id: q.id,
+        category: q.category || 'Logical Reasoning',
+        question: q.question || q.text,
+        text: q.question || q.text,
+        options: q.options || [],
+        difficulty: q.difficulty || 'medium',
+      }));
+
+      return res.json({
+        success: true,
+        data: {
+          currentChunkSubmitted: chunkIndex,
+          nextChunkIndex,
+          questions: sanitizedNextChunk,
+          hasMore: true,
+        },
       });
     } catch (err) {
       return next(err);

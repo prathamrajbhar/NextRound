@@ -281,11 +281,30 @@ export const AnalyticsExportQuerySchema = z.object({
   format: z.enum(['csv', 'pdf']).default('csv'),
   period: z.enum(['7d', '30d', '90d', 'all']).default('30d'),
 });
-
 export const TalentPoolSearchSchema = z.object({
   query: z.string().optional(),
   skills: z.union([z.string(), z.array(z.string())]).optional(),
   minMatchScore: z.number().min(0).max(100).optional(),
+});
+
+export const AptitudeQuestionSchema = z.object({
+  id: z.string().min(1),
+  category: z.string().min(1),
+  difficulty: z.enum(['easy', 'medium', 'hard']).default('medium'),
+  question: z.string().min(5),
+  text: z.string().optional(),
+  options: z.array(z.string()).length(4),
+  correctIndex: z.number().int().min(0).max(3),
+  explanation: z.string().optional(),
+  source: z.string().optional(),
+});
+
+export const AptitudeChunkSchema = z.array(AptitudeQuestionSchema);
+
+export const AptitudeChunkRequestSchema = z.object({
+  chunkIndex: z.number().int().min(0).default(0),
+  chunkSize: z.number().int().min(1).max(10).default(3),
+  category: z.string().optional(),
 });
 
 export const TestCaseSchema = z.object({
@@ -366,4 +385,8 @@ export type HRProfileUpdateInput = z.infer<typeof HRProfileUpdateSchema>;
 export type CodingProblemInput = z.infer<typeof CodingProblemSchema>;
 export type CodingExecutionRequestInput = z.infer<typeof CodingExecutionRequestSchema>;
 export type EnvConfigInput = z.infer<typeof EnvConfigSchema>;
+export type AptitudeQuestionInput = z.infer<typeof AptitudeQuestionSchema>;
+export type AptitudeChunkInput = z.infer<typeof AptitudeChunkSchema>;
+export type AptitudeChunkRequestInput = z.infer<typeof AptitudeChunkRequestSchema>;
+
 

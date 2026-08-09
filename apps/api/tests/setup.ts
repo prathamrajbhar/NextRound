@@ -52,6 +52,7 @@ jest.mock('@nextround/database', () => ({
       findFirst: jest.fn(),
       findMany: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
       updateMany: jest.fn(),
     },
     interview: {

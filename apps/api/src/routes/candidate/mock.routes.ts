@@ -5,7 +5,7 @@ import { requireRole } from '../../middleware/rbac';
 import { MockSessionCreateSchema } from '@nextround/shared';
 import { enqueueMockEvaluation } from '../../lib/queues/mock.queue';
 import { serializeMockSession, serializeMockSessionList } from '../../lib/serializers';
-import { generateAiAptitudeQuestions } from '../../services/ai-question-generator.service';
+import { generateAiAptitudeQuestions, generateAptitudeChunk } from '../../services/ai-question-generator.service';
 import { generateAiCodingProblem } from '../../services/ai-coding-generator.service';
 // Canonical shared aptitude bank — single source of truth (packages/shared/data).
 import aptitudeFallbackQuestions from '@nextround/shared/data/aptitude-questions.json';
@@ -138,6 +138,60 @@ mockRouter.get(
       return res.json({
         success: true,
         data: { session: serializeMockSession(session) },
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
+// GET /api/v1/mock/sessions/:id/aptitude/chunk - Fetch progressive AI questions chunk for practice session
+mockRouter.get(
+  '/sessions/:id/aptitude/chunk',
+  authenticate,
+  requireRole('candidate'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const candidateId = await getCandidateProfileId(req.user!.userId);
+      const session = await prisma.mockSession.findFirst({
+        where: {
+          id: req.params.id as string,
+          candidate_id: candidateId,
+        },
+      });
+
+      const roleName = session?.target_role || session?.topic || (req.query.role as string) || (req.query.topic as string) || 'Software Engineer';
+      const companyName = session?.target_company || (req.query.company as string) || 'Tech Enterprise';
+      const diffLevel = session?.difficulty || (req.query.difficulty as string) || 'medium';
+      const chunkIndex = Math.max(0, parseInt(req.query.chunkIndex as string, 10) || 0);
+      const chunkSize = Math.max(1, Math.min(10, parseInt(req.query.chunkSize as string, 10) || 3));
+
+      const rawChunk = await generateAptitudeChunk({
+        jobTitle: roleName,
+        jobDescription: `Target Company: ${companyName}. Difficulty: ${diffLevel}`,
+        difficulty: diffLevel,
+        chunkIndex,
+        chunkSize,
+      });
+
+      const sanitizedQuestions = rawChunk.map((q: any) => ({
+        id: q.id,
+        category: q.category || 'Logical Reasoning',
+        question: q.question || q.text,
+        text: q.question || q.text,
+        options: q.options || [],
+        difficulty: q.difficulty || diffLevel,
+        correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : undefined,
+      }));
+
+      return res.json({
+        success: true,
+        data: {
+          chunkIndex,
+          chunkSize,
+          questions: sanitizedQuestions,
+          hasMore: true,
+        },
       });
     } catch (err) {
       return next(err);
