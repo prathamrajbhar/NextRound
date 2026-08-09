@@ -14,8 +14,6 @@ import {
   Timer,
 } from '@/lib/lucide-google-icons';
 import { ProctoringWarningModal } from './ProctoringWarningModal';
-// Canonical shared aptitude bank — single source of truth (packages/shared/data).
-import aptitudeFallbackQuestions from '@nextround/shared/data/aptitude-questions.json';
 
 export interface AptitudeQuestion {
   id: string;
@@ -88,15 +86,6 @@ export default function AptitudeTestConsole({
             correctIndex: q.correctIndex,
           }));
           setFetchedQuestions(mapped);
-        } else if (!applicationId) {
-          const fallbackQs: AptitudeQuestion[] = aptitudeFallbackQuestions.map((q) => ({
-            id: q.id,
-            category: q.category,
-            text: (q.text || q.question).replace('{role}', displayRole),
-            options: q.options,
-            difficulty: q.difficulty,
-          }));
-          setFetchedQuestions(fallbackQs);
         }
       } catch (err) {
         console.error('Failed to load initial aptitude questions:', err);

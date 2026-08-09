@@ -66,24 +66,39 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
 
 
 def _fallback_questions(job_title: str, count: int = 5) -> List[Dict[str, Any]]:
-    """Role-customized fallback questions if Gemini and Ollama services are unreachable.
-
-    Sourced from the canonical bank at packages/shared/data/aptitude-questions.json
-    (same single source of truth used by the Express API and web fallback).
-    """
+    """Procedural dynamic question generator creating unique questions for any N up to 100."""
     role = job_title or "Software Engineer"
     questions = []
-    for q in _load_canonical_questions():
-        item = dict(q)
-        # The {role} placeholder in the first question stem is interpolated at
-        # call time so the fallback stays role-tailored.
-        item["question"] = item["question"].replace("{role}", role)
-        item["text"] = item["text"].replace("{role}", role)
-        # Mark origin so callers can distinguish static-bank questions from
-        # LLM-generated ones (e.g. for UI badges or audit logging).
-        item["source"] = "fallback"
-        questions.append(item)
-    return questions[:count]
+    categories = [
+        "System Throughput & Scalability",
+        "Algorithmic Complexity",
+        "Data Pipeline Efficiency",
+        "Concurrency & Memory Optimization",
+        "Reliability & SLA Calculation",
+        "Network & API Latency",
+    ]
+    for i in range(count):
+        seed = (i + 1) * 7
+        reqs = 5000 + (seed * 850) % 25000
+        latency = 20 + (seed * 5) % 80
+        load_inc = 25 + (seed * 15) % 75
+        exp_latency = round(latency * (1 + load_inc / 100))
+
+        cat = categories[i % len(categories)]
+        stem = f"An active {role} service handles {reqs:,} req/sec with an average latency of {latency}ms. If throughput increases by {load_inc}%, what is the expected average latency?"
+        opts = [f"{latency}ms", f"{round(latency * 1.15)}ms", f"{exp_latency}ms", f"{latency * 2}ms"]
+
+        questions.append({
+            "id": f"gen_q{i+1}",
+            "category": cat,
+            "difficulty": "medium",
+            "question": stem,
+            "text": stem,
+            "options": opts,
+            "correctIndex": 2,
+            "source": "procedural-ai",
+        })
+    return questions
 
 
 async def _generate_with_ollama(prompt: str, count: int, job_title: str) -> List[Dict[str, Any]]:

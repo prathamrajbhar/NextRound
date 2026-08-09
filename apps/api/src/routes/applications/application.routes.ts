@@ -620,7 +620,7 @@ applicationRouter.get(
       // Determine exact number of questions set by the employer
       const assessmentConfig = (app.job?.assessmentConfig as any) || {};
       const thresholds = (app.job?.thresholds as any) || {};
-      const qCount = Math.max(1, Math.min(20, Number(assessmentConfig.mcqCount || thresholds.qCount) || 5));
+      const qCount = Math.max(1, Math.min(100, Number(assessmentConfig.mcqCount || thresholds.qCount) || 5));
 
       // Check if assessment already exists with the employer's set qCount
       let assessment = await prisma.assessment.findFirst({
