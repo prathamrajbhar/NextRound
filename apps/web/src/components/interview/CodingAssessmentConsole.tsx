@@ -30,6 +30,8 @@ interface CodingConsoleProps {
   onComplete: (score: number) => void;
 }
 
+export type SupportedLanguage = 'python' | 'javascript' | 'typescript' | 'java' | 'cpp';
+
 export interface CodingProblem {
   id: string;
   title: string;
