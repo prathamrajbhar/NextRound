@@ -91,7 +91,7 @@ export function CandidateStatsCards({
             </div>
           ) : (
             <div>
-              <span className="text-sm font-extrabold text-amber-600 dark:text-amber-400">No mock taken</span>
+              <span className="text-sm font-extrabold text-purple-600 dark:text-purple-300">No mock taken</span>
               <span className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">
                 Latest Mock Score
               </span>

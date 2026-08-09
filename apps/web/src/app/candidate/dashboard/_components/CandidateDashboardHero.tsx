@@ -17,14 +17,17 @@ export function CandidateDashboardHero({ candidateName, totalAppsCount }: Candid
       <div className="absolute -left-16 -bottom-16 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
 
       <div className="relative flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-        <div className="space-y-3 max-w-2xl">
+        <div className="space-y-3 max-w-3xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
             <Sparkles className="h-3.5 w-3.5 animate-pulse" />
             <span>AI Candidate Workspace</span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight">
-            Welcome back, <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent font-bold">{candidateName}</span>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight leading-tight flex flex-wrap items-center gap-x-2">
+            <span>Welcome back,</span>
+            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-cyan-400 bg-clip-text text-transparent font-bold">
+              {candidateName}
+            </span>
           </h1>
 
           <p className="text-xs sm:text-sm font-medium text-slate-300 dark:text-slate-400 leading-relaxed">
