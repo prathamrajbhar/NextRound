@@ -8,6 +8,8 @@ import { serializeMockSession, serializeMockSessionList } from '../../lib/serial
 import { generateAiAptitudeQuestions } from '../../services/ai-question-generator.service';
 // Canonical shared aptitude bank — single source of truth (packages/shared/data).
 import aptitudeFallbackQuestions from '@nextround/shared/data/aptitude-questions.json';
+import codingProblems from '@nextround/shared/data/coding-problems.json';
+
 
 export const mockRouter = Router();
 
@@ -192,6 +194,47 @@ mockRouter.get(
     }
   }
 );
+
+// GET /api/v1/mock/sessions/:id/coding - Fetch coding problem for mock session
+mockRouter.get(
+  '/sessions/:id/coding',
+  authenticate,
+  requireRole('candidate'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const candidateId = await getCandidateProfileId(req.user!.userId);
+      const session = await prisma.mockSession.findFirst({
+        where: {
+          id: req.params.id as string,
+          candidate_id: candidateId,
+        },
+      });
+
+      const roleName = (session?.target_role || (req.query.role as string) || '').toLowerCase();
+      const rawProblems = codingProblems as any[];
+
+      let problem = rawProblems[0];
+      if (roleName.includes('system') || roleName.includes('backend') || roleName.includes('ai')) {
+        problem = rawProblems.find((p) => p.id === 'lru-cache') || rawProblems[0];
+      } else if (roleName.includes('infra') || roleName.includes('security')) {
+        problem = rawProblems.find((p) => p.id === 'rate-limiter') || rawProblems[0];
+      }
+
+      const sanitizedProblem = {
+        ...problem,
+        testCases: (problem.testCases || []).filter((tc: any) => !tc.hidden),
+      };
+
+      return res.json({
+        success: true,
+        data: { problem: sanitizedProblem },
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
 
 // Helper to build feedback object from real session transcript (no fabricated scores or telemetry)
 function generateDynamicFeedback(session: any, rawTranscript?: any, rawScore?: number) {
