@@ -993,10 +993,33 @@ applicationRouter.post(
 
       const jobTitle = app.job?.title || 'Software Engineer';
       const jobConfig = (app.job?.thresholds as any) || {};
-      const currentProblem = await generateAiCodingProblem(jobTitle, app.job?.description || '', jobConfig.difficulty || 'medium');
-      const testCasesToRun = currentProblem.testCases || [];
 
-      const execSummary = executeCodingSubmission(code || '', language || 'python', testCasesToRun);
+      let testCasesToRun: any[] = [];
+      let entryPoint = 'solution';
+
+      if (problemId) {
+        const dbProblem = await prisma.codingProblem.findFirst({
+          where: { slug: problemId },
+        });
+        if (dbProblem) {
+          const publicTests = (dbProblem.public_tests as any[]) || [];
+          const hiddenTests = (dbProblem.hidden_tests as any[]) || [];
+          testCasesToRun = [...publicTests, ...hiddenTests];
+          entryPoint = dbProblem.entry_point || 'solution';
+        }
+      }
+
+      if (testCasesToRun.length === 0) {
+        const currentProblem = await generateAiCodingProblem(
+          jobTitle,
+          app.job?.description || '',
+          jobConfig.difficulty || 'medium'
+        );
+        testCasesToRun = currentProblem.testCases || [];
+        entryPoint = currentProblem.entryPoint || 'solution';
+      }
+
+      const execSummary = executeCodingSubmission(code || '', language || 'python', testCasesToRun, entryPoint);
 
       const submission = await prisma.codingSubmission.create({
         data: {

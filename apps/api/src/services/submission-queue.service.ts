@@ -103,10 +103,7 @@ export async function processSubmissionJob(submissionId: string) {
   }
 
   if (testCases.length === 0) {
-    testCases = [
-      { name: 'Default Case 1', args: [[50, 50, 50, 50, 50], 100, 100], expected: [2, 4] },
-      { name: 'Default Case 2', args: [[30, 40, 50, 60, 70], 0, 80], expected: [0, 2] },
-    ];
+    throw new Error('No test cases found/configured for this coding problem.');
   }
 
   // Execute in isolated sandbox
