@@ -23,6 +23,14 @@ export const authRouter = Router();
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Fail fast in production when the public app URL is unset — password reset and
+// verification links would otherwise point at the local dev origin.
+if (isProduction && !process.env.NEXT_PUBLIC_APP_URL) {
+  throw new Error(
+    'Refusing to start in production: NEXT_PUBLIC_APP_URL is required for generating password reset and verification links. Set it in the environment.'
+  );
+}
+
 function setAuthCookies(res: Response, payload: JwtPayload) {
   const accessToken = signAccessToken(payload);
   const refreshToken = signRefreshToken(payload);

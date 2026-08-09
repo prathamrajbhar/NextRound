@@ -7,12 +7,24 @@ import { apiClient } from '@/lib/apiClient';
 import { Application } from '@/types';
 import { Calendar, Clock, ChevronRight, Check } from 'lucide-react';
 
+// Render a scheduler slot (a real ISO UTC datetime from the API) as a readable
+// UTC string. If a value is somehow not parseable, show the raw value rather
+// than fabricating a time.
+function formatSlot(slot: string): string {
+  const date = new Date(slot);
+  if (Number.isNaN(date.getTime())) return slot;
+  return date.toUTCString();
+}
+
 export default function CandidateSchedulePage({ params }: { params: Promise<{ applicationId: string }> }) {
   const router = useRouter();
   const { applicationId } = use(params);
 
   const [app, setApp] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedSlot, setSelectedSlot] = useState<string | undefined>(undefined);
+  const [confirmed, setConfirmed] = useState(false);
+  const [confirmError, setConfirmError] = useState('');
 
   useEffect(() => {
     async function fetchApp() {
@@ -29,14 +41,11 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
     fetchApp();
   }, [applicationId]);
 
-  const slots = app?.scheduledSlots && app.scheduledSlots.length > 0 ? app.scheduledSlots : [
-    'Tomorrow at 10:00 AM',
-    'Tomorrow at 02:00 PM',
-    'Day after tomorrow at 11:30 AM'
-  ];
-
-  const [selectedSlot, setSelectedSlot] = useState(slots[0]);
-  const [confirmed, setConfirmed] = useState(false);
+  // Real slots come from the scheduler AgentLog via the application payload.
+  // When none exist we show an honest empty state — never a fabricated
+  // 'Tomorrow at 10:00 AM' fallback.
+  const slots = app?.scheduledSlots && app.scheduledSlots.length > 0 ? app.scheduledSlots : [];
+  const effectiveSelected = selectedSlot ?? slots[0];
 
   if (loading) {
     return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading schedule options...</div>;
@@ -55,17 +64,28 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
   }
 
   const handleConfirm = async () => {
+    if (!effectiveSelected) return;
+    const scheduledDate = new Date(effectiveSelected);
+    if (Number.isNaN(scheduledDate.getTime())) {
+      setConfirmError('This slot is not a valid date. Please pick another option.');
+      return;
+    }
     try {
       await apiClient.post(`/applications/${app.id}/schedule`, {
-        scheduledAt: new Date(selectedSlot).toISOString(),
+        scheduledAt: scheduledDate.toISOString(),
       });
+      setConfirmError('');
+      setConfirmed(true);
+      setTimeout(() => {
+        router.push(`/candidate/applications/${app.id}`);
+      }, 1500);
     } catch (err) {
       console.warn('API slot confirmation warning:', err);
+      // Honest failure: no fabricated "Slot Confirmed!" when the backend did
+      // not persist the slot.
+      setConfirmed(false);
+      setConfirmError('We could not confirm this slot right now. Please try again.');
     }
-    setConfirmed(true);
-    setTimeout(() => {
-      router.push(`/candidate/applications/${app.id}`);
-    }, 1500);
   };
 
   return (
@@ -87,7 +107,7 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
             </div>
             <h1 className="text-xl font-extrabold text-slate-900">Slot Confirmed!</h1>
             <p className="text-xs text-slate-500 font-semibold max-w-xs mx-auto">
-              Your voice interview is scheduled for <span className="text-slate-800 font-bold">{selectedSlot}</span>. The Scheduler Agent has dispatched calendar invites.
+              Your voice interview is scheduled for <span className="text-slate-800 font-bold">{formatSlot(effectiveSelected)}</span>.
             </p>
           </div>
         ) : (
@@ -102,41 +122,55 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
               </p>
             </div>
 
-            {/* Time slot cards */}
-            <div className="space-y-2 max-w-sm mx-auto">
-              {slots.map((slot) => {
-                const isSelected = selectedSlot === slot;
-                return (
-                  <button
-                    key={slot}
-                    onClick={() => setSelectedSlot(slot)}
-                    className={`w-full flex items-center justify-between p-4 rounded-2xl border text-left transition-all cursor-pointer ${isSelected
-                        ? 'border-indigo-500 bg-indigo-50/50 text-indigo-700 shadow-sm'
-                        : 'border-slate-200 bg-white/40 hover:bg-slate-100'
-                      }`}
-                  >
-                    <div className="flex items-center gap-3 font-semibold text-xs text-slate-700">
-                      <Clock className="h-4 w-4 text-slate-400" />
-                      <span>{slot}</span>
-                    </div>
-                    {isSelected && (
-                      <span className="h-4.5 w-4.5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">
-                        ✓
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            {slots.length > 0 ? (
+              <>
+                {/* Time slot cards */}
+                <div className="space-y-2 max-w-sm mx-auto">
+                  {slots.map((slot) => {
+                    const isSelected = effectiveSelected === slot;
+                    return (
+                      <button
+                        key={slot}
+                        onClick={() => setSelectedSlot(slot)}
+                        className={`w-full flex items-center justify-between p-4 rounded-2xl border text-left transition-all cursor-pointer ${isSelected
+                            ? 'border-indigo-500 bg-indigo-50/50 text-indigo-700 shadow-sm'
+                            : 'border-slate-200 bg-white/40 hover:bg-slate-100'
+                          }`}
+                      >
+                        <div className="flex items-center gap-3 font-semibold text-xs text-slate-700">
+                          <Clock className="h-4 w-4 text-slate-400" />
+                          <span>{formatSlot(slot)}</span>
+                        </div>
+                        {isSelected && (
+                          <span className="h-4.5 w-4.5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px]">
+                            ✓
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
 
-            <div className="pt-4 border-t border-slate-100 max-w-sm mx-auto">
-              <button
-                onClick={handleConfirm}
-                className="w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 text-xs shadow-md transition-all cursor-pointer"
-              >
-                Confirm Booking Slot
-              </button>
-            </div>
+                {confirmError && (
+                  <p className="text-xs font-semibold text-rose-500 max-w-sm mx-auto">{confirmError}</p>
+                )}
+
+                <div className="pt-4 border-t border-slate-100 max-w-sm mx-auto">
+                  <button
+                    onClick={handleConfirm}
+                    className="w-full rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 text-xs shadow-md transition-all cursor-pointer"
+                  >
+                    Confirm Booking Slot
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="space-y-2 max-w-sm mx-auto">
+                <p className="text-xs text-slate-500 font-semibold py-4">
+                  No interview slots have been scheduled yet. Please check back later.
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>

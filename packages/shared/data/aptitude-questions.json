@@ -1,0 +1,57 @@
+[
+  {
+    "id": "apt_q1",
+    "category": "Quantitative Reasoning",
+    "difficulty": "medium",
+    "question": "For a {role} project, reducing workload by 20% while increasing team productivity by 25% results in what net capacity change?",
+    "text": "For a {role} project, reducing workload by 20% while increasing team productivity by 25% results in what net capacity change?",
+    "options": ["No change (0%)", "5% net increase", "10% net increase", "5% net decrease"],
+    "correctIndex": 0,
+    "explanation": "The 20% workload reduction and 25% productivity increase are treated as offsetting in this scenario, yielding a net capacity change of 0%."
+  },
+  {
+    "id": "apt_q2",
+    "category": "Logical Deduction",
+    "difficulty": "medium",
+    "question": "All algorithms with O(N log N) runtime outperform O(N^2) algorithms for sufficiently large datasets. Algorithm A runs in O(N log N). Which statement must be true?",
+    "text": "All algorithms with O(N log N) runtime outperform O(N^2) algorithms for sufficiently large datasets. Algorithm A runs in O(N log N). Which statement must be true?",
+    "options": [
+      "Algorithm A is faster for any dataset size.",
+      "For sufficiently large inputs, Algorithm A will outperform O(N^2) algorithms.",
+      "Algorithm A uses O(N) memory space.",
+      "Algorithm A is optimal for sorting."
+    ],
+    "correctIndex": 1,
+    "explanation": "Only the asymptotic statement follows from the premise. O(N log N) beats O(N^2) for sufficiently large inputs, but the other options make unsupported claims about universal speed, memory, and optimality."
+  },
+  {
+    "id": "apt_q3",
+    "category": "Pattern Recognition",
+    "difficulty": "easy",
+    "question": "What comes next in the numerical sequence: 2, 6, 12, 20, 30, ?",
+    "text": "What comes next in the numerical sequence: 2, 6, 12, 20, 30, ?",
+    "options": ["40", "42", "44", "48"],
+    "correctIndex": 1,
+    "explanation": "Differences grow by 2 each step: +4, +6, +8, +10, so the next difference is +12; 30 + 12 = 42."
+  },
+  {
+    "id": "apt_q4",
+    "category": "Data Interpretation",
+    "difficulty": "medium",
+    "question": "A service handles 10,000 requests/sec with 50ms latency. If throughput doubles and latency scales linearly with load, what is the expected latency?",
+    "text": "A service handles 10,000 requests/sec with 50ms latency. If throughput doubles and latency scales linearly with load, what is the expected latency?",
+    "options": ["50ms", "75ms", "100ms", "200ms"],
+    "correctIndex": 2,
+    "explanation": "Latency scales linearly with load, so doubling throughput doubles latency: 50ms x 2 = 100ms."
+  },
+  {
+    "id": "apt_q5",
+    "category": "Problem Solving",
+    "difficulty": "hard",
+    "question": "Three microservices A, B, and C have availability SLAs of 99.9%, 99.5%, and 99.0% respectively. What is the combined sequential system availability?",
+    "text": "Three microservices A, B, and C have availability SLAs of 99.9%, 99.5%, and 99.0% respectively. What is the combined sequential system availability?",
+    "options": ["98.4%", "99.0%", "99.5%", "99.9%"],
+    "correctIndex": 0,
+    "explanation": "Sequential availability is the product of the individual SLAs: 0.999 x 0.995 x 0.990 = 0.9841, which rounds to 98.4%."
+  }
+]

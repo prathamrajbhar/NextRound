@@ -1,7 +1,7 @@
 import json
 import logging
 from services.llm_service import generate_text, extract_json_object
-from workers.worker_base import post_internal
+from workers.worker_base import post_internal, fetch_internal
 
 logger = logging.getLogger("prep_content_worker")
 
@@ -16,20 +16,61 @@ DEFAULT_RUBRIC_DIMENSIONS = [
 async def process_prep_job(job_data: dict) -> bool:
     """
     Process Company Prep Content Generation job:
-    1. Extract companyName, roleArchetype, jobId, orgId, rubricDimensions.
+    1. Resolve the job + org from the real Job record (internal/jobs/:id/raw).
     2. Generate questions (targeting 20+ total across dimensions), culture notes, and skill checklist via Gemini API.
     3. Call back Express internal endpoint /internal/prep/generate.
     """
-    # The API's prep-generate payload carries jobTitle/jobDescription; fall back
-    # to roleArchetype when the older "prep" queue shape is used.
-    company_name = job_data.get("companyName", "Tech Corp")
-    role_archetype = job_data.get("roleArchetype") or job_data.get("jobTitle", "Software Engineer")
-    job_id = job_data.get("jobId")
-    org_id = job_data.get("orgId")
+    # The Express prep route enqueues the job context under extraData
+    # ({ orgId, jobTitle, jobDescription }); jobId is top-level. Read both so a
+    # legacy flat payload keeps working without a migration.
+    extra = job_data.get("extraData") or {}
+    job_id = job_data.get("jobId") or extra.get("jobId")
+    if not job_id:
+        logger.error("Missing jobId in prep content job payload.")
+        return False
 
-    logger.info(f"Processing prep content generation for {company_name} - {role_archetype}")
+    org_id = extra.get("orgId") or job_data.get("orgId")
+    payload_title = (
+        extra.get("jobTitle")
+        or job_data.get("jobTitle")
+        or extra.get("roleArchetype")
+        or job_data.get("roleArchetype")
+        or ""
+    ).strip()
+    payload_company = (extra.get("companyName") or job_data.get("companyName") or "").strip()
+    description = extra.get("jobDescription") or job_data.get("jobDescription") or ""
 
-    dimensions = job_data.get("rubricDimensions") or DEFAULT_RUBRIC_DIMENSIONS
+    logger.info(f"Processing prep content generation for job {job_id}")
+
+    # Resolve the REAL job title + organization name from the job record. The
+    # worker never defaults to fabricated placeholders ("Tech Corp" /
+    # "Software Engineer"): when the job is missing or has no org name, the job
+    # is skipped with an honest error instead of generating made-up content.
+    # Values explicitly supplied in the payload (legacy flat prep queue) are
+    # used only as a fallback — they are real caller inputs, never defaults.
+    job_title = payload_title
+    company_name = payload_company
+    try:
+        job_info = await fetch_internal(f"internal/jobs/{job_id}/raw")
+        if job_info:
+            organization = job_info.get("organization") or {}
+            if isinstance(organization, dict):
+                company_name = (organization.get("name") or "").strip() or company_name
+            job_title = (job_info.get("title") or "").strip() or job_title
+            description = description or job_info.get("description") or ""
+            org_id = org_id or job_info.get("org_id")
+    except Exception as e:
+        logger.warning(f"Failed to fetch job {job_id} for prep content generation: {e}")
+
+    if not company_name or not job_title:
+        logger.error(
+            f"Cannot generate prep content for job {job_id}: "
+            "organization name or job title unavailable. No fabricated fallback is generated."
+        )
+        return False
+
+    role_archetype = job_title
+    dimensions = extra.get("rubricDimensions") or job_data.get("rubricDimensions") or DEFAULT_RUBRIC_DIMENSIONS
 
     prompt = (
         f"Generate a comprehensive company interview prep guide for {role_archetype} at {company_name}.\n"

@@ -1,10 +1,16 @@
 import json
 import logging
 import os
-from typing import Dict, Any, TypedDict, List
+from typing import Dict, Any, TypedDict, List, Optional
+from core.config import settings
 from services.llm_service import generate_text, extract_json_object
 
 logger = logging.getLogger("coding_agent")
+
+# Canonical coding problem bank — single source of truth shared with the
+# Express API. Lives at packages/shared/data/coding-problems.json (see
+# core/config.py for the path resolution mechanism).
+_CODING_PROBLEMS_PATH = os.path.join(settings.shared_data_dir, "coding-problems.json")
 
 try:
     from langgraph.graph import StateGraph, END
@@ -25,8 +31,11 @@ class CodingState(TypedDict, total=False):
     total_cases: int
     pass_rate: float
     execution_time_ms: float
-    memory_kb: int
-    complexity: str
+    memory_kb: Optional[int]
+    complexity: Optional[str]
+    # "llm" when complexity was determined by Gemini, "heuristic" when the
+    # static keyword-scan fallback was used, None when code was empty.
+    complexity_source: Optional[str]
     passed: bool
     feedback: str
 
@@ -42,24 +51,31 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
 
     logger.info(f"Executing sandbox evaluation for problem {problem_id}")
 
-    # Load problem definition from seed file
-    seed_path = os.path.join(os.path.dirname(__file__), "../../api/src/data/coding-problems.json")
+    # Load problem definition from the canonical shared bank. Failing honestly
+    # here (rather than substituting a hardcoded/fabricated test case) surfaces
+    # a missing/broken problem bank loudly instead of silently mis-scoring.
+    if not os.path.exists(_CODING_PROBLEMS_PATH):
+        raise RuntimeError(
+            f"Canonical coding problem bank not found at {_CODING_PROBLEMS_PATH}. "
+            "Expected packages/shared/data/coding-problems.json to exist."
+        )
     test_cases = []
     function_name = ""
-    if os.path.exists(seed_path):
-        try:
-            with open(seed_path, "r", encoding="utf-8") as f:
-                problems = json.load(f)
-                target_p = next((p for p in problems if p["id"] == problem_id), problems[0])
-                test_cases = target_p.get("testCases", [])
-                function_name = target_p.get("entryFunction", "")
-        except Exception as e:
-            logger.error(f"Failed to load coding problem seed data: {e}")
+    try:
+        with open(_CODING_PROBLEMS_PATH, "r", encoding="utf-8") as f:
+            problems = json.load(f)
+    except Exception as e:
+        raise RuntimeError(f"Failed to load canonical coding problem bank from {_CODING_PROBLEMS_PATH}: {e}")
 
+    if not problems:
+        raise RuntimeError(f"Coding problem bank at {_CODING_PROBLEMS_PATH} is empty.")
+    target_p = next((p for p in problems if p["id"] == problem_id), problems[0])
+    test_cases = target_p.get("testCases", [])
+    function_name = target_p.get("entryFunction", "")
     if not test_cases:
-        test_cases = [
-            {"input": "heights = [50, 50, 50, 50, 50], scroll_y = 100, viewport_height = 100", "expectedOutput": "[2, 3]"}
-        ]
+        raise RuntimeError(
+            f"Problem '{target_p.get('id')}' in the coding problem bank defines no testCases."
+        )
 
     exec_res = execute_code_sandbox(
         code=code,
@@ -73,7 +89,9 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
     state["total_cases"] = exec_res.get("total_cases", len(test_cases))
     state["pass_rate"] = exec_res.get("pass_rate", 0.0)
     state["execution_time_ms"] = exec_res.get("execution_time_ms", 0.0)
-    state["memory_kb"] = exec_res.get("memory_kb", 42000)
+    # Real peak memory reported by the sandbox child (None when not measurable,
+    # e.g. a timeout or process-level error). Never substitute a fabricated KB.
+    state["memory_kb"] = exec_res.get("memory_kb")
 
     if not exec_res.get("security_passed", True):
         state["feedback"] = exec_res.get("error", "Security violation detected in submitted code.")
@@ -87,7 +105,8 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
     code = state.get("code", "")
     pass_rate = state.get("pass_rate", 0.0)
 
-    complexity = "O(N)"
+    complexity = None
+    complexity_source: Optional[str] = None
     feedback = ""
 
     if code:
@@ -98,26 +117,35 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
         )
         parsed = extract_json_object(generate_text(prompt))
         if parsed:
-            complexity = parsed.get("time_complexity", "O(N)")
+            complexity = parsed.get("time_complexity")
             feedback = parsed.get("summary", "")
+            if complexity:
+                complexity_source = "llm"
 
-    if not feedback:
+    # Static heuristic fallback when the LLM returned nothing usable.
+    # Values are explicitly labelled "estimated (heuristic)" so callers can
+    # distinguish them from exact LLM analysis rather than treating them as
+    # authoritative measurements.
+    if complexity is None and code:
+        complexity_source = "heuristic"
         if "for " in code and "while " in code:
-            complexity = "O(N^2)"
-            feedback = "Nested iteration detected. Time complexity is O(N^2). Consider linear scan O(N)."
+            complexity = "O(N^2) estimated (heuristic)"
+            feedback = "Nested iteration detected. Estimated O(N^2) — heuristic only. Consider linear scan O(N)."
         elif "for " in code:
-            complexity = "O(N)"
-            feedback = "Optimal single-pass linear time complexity O(N)."
+            complexity = "O(N) estimated (heuristic)"
+            feedback = "Single-pass iteration detected. Estimated O(N) — heuristic only."
         else:
-            complexity = "O(1)"
-            feedback = "Constant time execution O(1)."
+            complexity = "O(1) estimated (heuristic)"
+            feedback = "No iteration detected. Estimated O(1) — heuristic only."
 
     passed = pass_rate >= 0.8
     score = round(pass_rate * 100.0, 1)
 
     state["complexity"] = complexity
+    state["complexity_source"] = complexity_source
     state["passed"] = passed
-    state["feedback"] = f"Passed {state.get('passed_cases')}/{state.get('total_cases')} test cases ({score}%). Complexity: {complexity}. {feedback}"
+    complexity_label = complexity if complexity is not None else "not available"
+    state["feedback"] = f"Passed {state.get('passed_cases')}/{state.get('total_cases')} test cases ({score}%). Complexity: {complexity_label}. {feedback}"
     return state
 
 
@@ -165,10 +193,15 @@ async def run_coding_agent(
                 "passed_cases": final_state.get("passed_cases", 0),
                 "total_cases": final_state.get("total_cases", 0),
                 "execution_time_ms": final_state.get("execution_time_ms", 0.0),
-                "memory_kb": final_state.get("memory_kb", 0),
-                "complexity_analysis": {
-                    "time_complexity": final_state.get("complexity", "O(N)"),
-                },
+                "memory_kb": final_state.get("memory_kb"),
+                "complexity_analysis": (
+                    {
+                        "time_complexity": final_state["complexity"],
+                        "source": final_state.get("complexity_source"),
+                    }
+                    if final_state.get("complexity")
+                    else None
+                ),
                 "passed": final_state.get("passed", False),
                 "feedback": final_state.get("feedback", ""),
             }
@@ -184,10 +217,15 @@ async def run_coding_agent(
         "passed_cases": s2.get("passed_cases", 0),
         "total_cases": s2.get("total_cases", 0),
         "execution_time_ms": s2.get("execution_time_ms", 0.0),
-        "memory_kb": s2.get("memory_kb", 0),
-        "complexity_analysis": {
-            "time_complexity": s2.get("complexity", "O(N)"),
-        },
+        "memory_kb": s2.get("memory_kb"),
+        "complexity_analysis": (
+            {
+                "time_complexity": s2["complexity"],
+                "source": s2.get("complexity_source"),
+            }
+            if s2.get("complexity")
+            else None
+        ),
         "passed": s2.get("passed", False),
         "feedback": s2.get("feedback", ""),
     }

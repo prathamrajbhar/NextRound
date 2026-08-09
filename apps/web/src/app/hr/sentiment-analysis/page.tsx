@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { CandidateSentimentProfile } from '@/types';
-import { FAKE_SENTIMENT_PROFILES } from './_data';
 import {
   Activity,
   Mic,
@@ -21,11 +20,12 @@ import {
 } from '@/lib/lucide-google-icons';
 
 export default function SentimentAnalysisPage() {
-  // Demo data — replaced the /hr/sentiment API call (backend returns 501 until
-  // the audio ML pipeline ships) with fake profiles so the page is fully usable.
-  const [profiles] = useState<CandidateSentimentProfile[]>(FAKE_SENTIMENT_PROFILES);
+  // The /hr/sentiment backend reports the feature as unavailable until the
+  // audio-prosody ML pipeline ships, so no candidate profiles are loaded here.
+  // An honest empty state is rendered instead of fabricated demo profiles.
+  const [profiles] = useState<CandidateSentimentProfile[]>([]);
   const [loading] = useState(false);
-  const [selectedCandidateId, setSelectedCandidateId] = useState<string>(FAKE_SENTIMENT_PROFILES[0]?.id ?? '');
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string>('');
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
 
   if (loading) {
@@ -41,7 +41,7 @@ export default function SentimentAnalysisPage() {
   if (!currentProfile) {
     return (
       <div className="text-center py-16 text-xs text-slate-400">
-        No sentiment profiles available.
+        Sentiment analysis is not available yet. The audio-prosody ML pipeline is still being built, so no candidate sentiment data exists.
       </div>
     );
   }

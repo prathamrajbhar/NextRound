@@ -2,7 +2,13 @@
 Unit tests for Embedding Service (Gemini text-embedding-004 & 768-dim Fallback)
 """
 import pytest
-from services.embedding_service import embed_text, embed_resume, cosine_similarity, _fallback_768_embedding
+from services.embedding_service import (
+    embed_text,
+    embed_text_with_source,
+    embed_resume,
+    cosine_similarity,
+    _fallback_768_embedding,
+)
 
 
 def test_embed_text_dimensions():
@@ -18,6 +24,30 @@ def test_embed_text_empty():
     vec = embed_text("")
     assert len(vec) == 768
     assert all(val == 0.0 for val in vec)
+
+
+def test_embed_text_with_source_reports_known_source():
+    """Verify embed_text_with_source returns (vec, source) with a known engine label."""
+    vec, source = embed_text_with_source("Senior Backend Engineer PostgreSQL")
+    assert len(vec) == 768
+    assert source in ("onnx", "gemini", "hash-fallback")
+
+
+def test_embed_text_with_source_empty():
+    """Verify empty input reports the 'empty' source (never a real semantic signal)."""
+    vec, source = embed_text_with_source("")
+    assert source == "empty"
+    assert all(val == 0.0 for val in vec)
+
+
+def test_embed_text_with_source_hash_fallback_labeled():
+    """Verify the deterministic hash vector is labeled as a non-semantic fallback."""
+    vec, source = embed_text_with_source("Machine Learning Engineer PyTorch")
+    assert len(vec) == 768
+    if source == "hash-fallback":
+        import math
+        norm = math.sqrt(sum(x * x for x in vec))
+        assert norm == pytest.approx(1.0, abs=1e-3)
 
 
 def test_fallback_768_embedding_normalized():
@@ -76,6 +106,13 @@ def test_embedding_generate_endpoint():
     assert data["data"]["dimension"] == 768
     assert len(data["data"]["embedding"]) == 768
     assert "latency_ms" in data["data"]
+    # model must report the exact engine, and "Fallback-768 hash" must be
+    # distinguishable so callers can refuse hash-fallback vectors.
+    assert data["data"]["model"] in (
+        "BAAI/bge-base-en-v1.5 (ONNX)",
+        "Gemini text-embedding-004",
+        "Fallback-768 hash",
+    )
 
 
 def test_embedding_similarity_endpoint():

@@ -1,11 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import path from 'path';
-import fs from 'fs';
 import {
   ApplicationCreateSchema,
   ApplicationStatusOverrideSchema,
   ApplicationScheduleSchema,
 } from '@nextround/shared';
+// Canonical shared data banks — single source of truth (packages/shared/data).
+import aptitudeFallbackQuestions from '@nextround/shared/data/aptitude-questions.json';
+import codingProblems from '@nextround/shared/data/coding-problems.json';
 import { prisma } from '../../lib/prisma';
 import { authenticate, optionalAuthenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
@@ -294,9 +295,33 @@ applicationRouter.get(
         }
       }
 
+      // Expose the Scheduler Agent's real slot proposals on the application
+      // payload. Slots are persisted as a scheduler_agent AgentLog keyed by
+      // interview id (internal POST /interviews/:id/schedule-slots). When no
+      // slots have been generated the field is omitted so the client renders an
+      // honest empty state instead of fabricated 'Tomorrow at 10:00 AM' times.
+      let scheduledSlots: string[] = [];
+      if (application.interview) {
+        const slotLog = await prisma.agentLog.findFirst({
+          where: {
+            agent_name: 'scheduler_agent',
+            action: 'slots_generated',
+            input: { path: ['interviewId'], equals: application.interview.id },
+          },
+          orderBy: { created_at: 'desc' },
+        });
+        const output =
+          slotLog?.output && typeof slotLog.output === 'object'
+            ? (slotLog.output as Record<string, unknown>)
+            : undefined;
+        if (output && Array.isArray(output.slots)) {
+          scheduledSlots = output.slots.filter((s): s is string => typeof s === 'string');
+        }
+      }
+
       return res.json({
         success: true,
-        data: serializeApplication(application),
+        data: serializeApplication(application, { scheduledSlots }),
       });
     } catch (err) {
       return next(err);
@@ -580,56 +605,16 @@ applicationRouter.get(
           console.error(`AI Service dynamic question generation failed for application ${appId}:`, aiErr);
         }
 
-        // Dynamic fallback generator if AI service unreachable
+        // Dynamic fallback generator if AI service unreachable. Sourced from the
+        // canonical shared bank (packages/shared/data/aptitude-questions.json).
         if (rawQuestions.length === 0) {
           const roleName = app.job?.title || 'Software Engineer';
-          rawQuestions = [
-            {
-              id: 'gen_q1',
-              category: 'Quantitative Reasoning',
-              difficulty: 'medium',
-              question: `For a ${roleName} project, reducing workload by 20% while increasing team productivity by 25% results in what net capacity change?`,
-              options: ['No change (0%)', '5% increase', '10% increase', '5% decrease'],
-              correctIndex: 0,
-            },
-            {
-              id: 'gen_q2',
-              category: 'Logical Deduction',
-              difficulty: 'medium',
-              question: 'All algorithms with O(N log N) runtime outperform O(N^2) algorithms for sufficiently large datasets. Algorithm A runs in O(N log N). Which statement must be true?',
-              options: [
-                'Algorithm A is faster for any dataset size.',
-                'For sufficiently large inputs, Algorithm A will outperform O(N^2) algorithms.',
-                'Algorithm A uses O(N) memory space.',
-                'Algorithm A is optimal for sorting.',
-              ],
-              correctIndex: 1,
-            },
-            {
-              id: 'gen_q3',
-              category: 'Pattern Recognition',
-              difficulty: 'easy',
-              question: 'What comes next in the numerical sequence: 2, 6, 12, 20, 30, ?',
-              options: ['40', '42', '44', '48'],
-              correctIndex: 1,
-            },
-            {
-              id: 'gen_q4',
-              category: 'Data Interpretation',
-              difficulty: 'medium',
-              question: 'A service handles 10,000 requests/sec with 50ms latency. If throughput doubles and latency scales linearly with load, what is the expected latency?',
-              options: ['50ms', '75ms', '100ms', '200ms'],
-              correctIndex: 2,
-            },
-            {
-              id: 'gen_q5',
-              category: 'Problem Solving',
-              difficulty: 'hard',
-              question: 'Three microservices A, B, and C have availability SLAs of 99.9%, 99.5%, and 99.0% respectively. What is the combined sequential system availability?',
-              options: ['98.4%', '99.0%', '99.5%', '99.9%'],
-              correctIndex: 0,
-            },
-          ];
+          rawQuestions = aptitudeFallbackQuestions.map((q) => ({
+            ...q,
+            question: q.question.replace('{role}', roleName),
+            text: q.text.replace('{role}', roleName),
+            source: 'fallback' as const,
+          }));
         }
 
         // Persist generated questions in DB Assessment record
@@ -750,9 +735,7 @@ applicationRouter.get(
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
       }
 
-      const rawProblems = JSON.parse(
-        fs.readFileSync(path.join(__dirname, '../../data/coding-problems.json'), 'utf-8')
-      );
+      const rawProblems = codingProblems;
 
       // Match configured job problem ID or default to first problem
       const jobConfig = (app.job.thresholds as any) || {};

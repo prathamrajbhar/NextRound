@@ -9,7 +9,7 @@
 - **Frontend**: Next.js 16.2.11 (App Router), React 19.2.8, TypeScript 6.0, Tailwind CSS 4.3.3, Lucide React 1.23, WebRTC, MediaPipe (client-side CV)
 - **Backend API**: Express.js 5.2.1, TypeScript 6.0, Zod 4.4.3, Prisma ORM 7.9.0, PostgreSQL 16 + pgvector, Custom JWT
 - **AI Service**: Python 3.13, FastAPI 0.139.2, Uvicorn 0.50, LangGraph, Gemini API (`google-genai` SDK v2.10), Groq API v1.5 (Whisper-large-v3 STT), Piper/Coqui TTS
-- **Infra & Queues**: Turborepo 2.10, BullMQ 5.80.9 + Redis 8, Nodemailer 8, S3/MinIO
+- **Infra & Queues**: Turborepo 2.10, BullMQ 5.80.9 + Redis 8, Nodemailer 8, Native File Storage
 
 ## Commands
 - `npm run dev` — Start web, api, and ai-service concurrently

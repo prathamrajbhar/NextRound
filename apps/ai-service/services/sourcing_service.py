@@ -2,7 +2,7 @@ import asyncio
 import logging
 import httpx
 from typing import Dict, Any, Optional, List
-from services.embedding_service import embed_text, cosine_similarity
+from services.embedding_service import embed_text_with_source, cosine_similarity
 
 logger = logging.getLogger("sourcing_service")
 
@@ -152,15 +152,19 @@ async def aggregate_external_profile(
 
     # Generate 768-dim vector embedding for unified profile
     profile_text = f"Candidate: {name}. Headline: {headline}. Skills: {', '.join(all_skills)}. Bio: {bio_summary}"
-    profile_vector = embed_text(profile_text)
+    profile_vector, profile_source = embed_text_with_source(profile_text)
 
-    # Compute similarity score against job description / target role
-    similarity_score = 85.0
+    # Compute similarity score against job description / target role. Report the
+    # REAL cosine similarity as a 0-100 percent — no fabricated 85 baseline and no
+    # artificial floor. If no job/target text is provided, or either vector came
+    # from the hash fallback (not semantic), the score is None.
+    similarity_score = None
     if job_description or target_role:
         target_text = f"{target_role}. {job_description}".strip()
-        job_vector = embed_text(target_text)
-        cosine_sim = cosine_similarity(profile_vector, job_vector)
-        similarity_score = round(max(50.0, min(99.0, cosine_sim * 100.0)), 1)
+        job_vector, job_source = embed_text_with_source(target_text)
+        if profile_source in ("onnx", "gemini") and job_source in ("onnx", "gemini"):
+            cosine_sim = cosine_similarity(profile_vector, job_vector)
+            similarity_score = round(max(0.0, min(100.0, cosine_sim * 100.0)), 1)
 
     return {
         "success": len(sources) > 0,

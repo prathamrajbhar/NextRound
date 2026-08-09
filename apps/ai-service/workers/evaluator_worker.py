@@ -26,15 +26,17 @@ async def process_evaluator_job(job_data: dict) -> bool:
     extra = job_data.get("extraData") or {}
 
     async def run() -> dict:
-        # Run Evaluator LangGraph Agent
+        # Run Evaluator LangGraph Agent. Stage scores absent from the job payload
+        # are passed as None (never fabricated defaults); the agent reweights the
+        # composite over the stages that actually produced a score.
         result = await run_evaluator_agent(
             application_id=application_id,
             stage=stage,
             interview_id=interview_id,
-            screening_score=extra.get("screening_score", 85.0),
-            aptitude_score=extra.get("aptitude_score", 88.0),
-            coding_score=extra.get("coding_score", 92.0),
-            interview_score=extra.get("interview_score", 90.0),
+            screening_score=extra.get("screening_score"),
+            aptitude_score=extra.get("aptitude_score"),
+            coding_score=extra.get("coding_score"),
+            interview_score=extra.get("interview_score"),
             proctor_flags=extra.get("proctor_flags", []),
             proctor_telemetry=extra.get("proctor_telemetry", {}),
         )

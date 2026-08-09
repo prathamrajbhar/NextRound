@@ -3,11 +3,24 @@ import logging
 from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from services.embedding_service import embed_text, embed_resume, cosine_similarity, onnx_embedding_model
+from services.embedding_service import (
+    embed_text_with_source,
+    embed_resume_with_source,
+    cosine_similarity,
+)
 
 logger = logging.getLogger("embedding_routes")
 
 embedding_router = APIRouter(prefix="/api/v1/embeddings", tags=["embeddings"])
+
+# Exact engine label per source so callers can detect hash fallbacks and never
+# treat them as a real semantic embedding.
+SOURCE_MODEL_LABELS = {
+    "onnx": "BAAI/bge-base-en-v1.5 (ONNX)",
+    "gemini": "Gemini text-embedding-004",
+    "hash-fallback": "Fallback-768 hash",
+    "empty": "Fallback-768 hash",
+}
 
 
 class EmbeddingRequest(BaseModel):
@@ -30,12 +43,12 @@ async def generate_embedding(req: EmbeddingRequest):
 
     start_time = time.perf_counter()
     if req.type == "resume":
-        vec = embed_resume(req.text)
+        vec, source = embed_resume_with_source(req.text)
     else:
-        vec = embed_text(req.text)
+        vec, source = embed_text_with_source(req.text)
     elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
-    model_name = "BAAI/bge-base-en-v1.5 (ONNX)" if onnx_embedding_model else "Gemini/Fallback-768"
+    model_name = SOURCE_MODEL_LABELS.get(source, "Fallback-768 hash")
 
     return {
         "success": True,
@@ -54,16 +67,23 @@ async def compute_similarity(req: SimilarityRequest):
     Compute cosine similarity score (0.0 to 1.0) between two text strings using 768-dim embeddings.
     """
     start_time = time.perf_counter()
-    vec_a = embed_text(req.text_a)
-    vec_b = embed_text(req.text_b)
+    vec_a, src_a = embed_text_with_source(req.text_a)
+    vec_b, src_b = embed_text_with_source(req.text_b)
     score = cosine_similarity(vec_a, vec_b)
     elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
+    # The score is only semantically meaningful if neither side is a fallback.
+    sources = {src_a, src_b}
+    source = "hash-fallback" if ("hash-fallback" in sources or "empty" in sources) else (
+        "onnx" if "onnx" in sources else "gemini"
+    )
+    model_name = SOURCE_MODEL_LABELS.get(source, "Fallback-768 hash")
 
     return {
         "success": True,
         "data": {
             "similarity_score": round(score, 4),
-            "model": "BAAI/bge-base-en-v1.5 (ONNX)" if onnx_embedding_model else "Gemini/Fallback-768",
+            "model": model_name,
             "latency_ms": elapsed_ms,
         },
     }

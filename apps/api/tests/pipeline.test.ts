@@ -132,6 +132,54 @@ describe('ensureInterviewAndSchedule', () => {
     );
   });
 
+  it('passes the real orgId and org availability hours to the scheduler', async () => {
+    mockFindUnique.mockResolvedValue(
+      baseApp({
+        candidate: { user: { email: 'cand@example.com' } },
+        job: baseJob({
+          title: 'Platform Engineer',
+          org_id: 'org-1',
+          organization: {
+            settings: { availabilityHours: { weekday: { morning: true } } },
+          },
+        }),
+      })
+    );
+    mockInterviewCreate.mockResolvedValue({ id: 'intv-10' });
+
+    await ensureInterviewAndSchedule('app-1');
+
+    expect(mockEnqueueScheduling).toHaveBeenCalledWith(
+      'app-1',
+      expect.objectContaining({
+        orgId: 'org-1',
+        availabilityHours: { weekday: { morning: true } },
+        action: 'generate_slots',
+      })
+    );
+  });
+
+  it('passes no availability hours when the org has no availability config', async () => {
+    mockFindUnique.mockResolvedValue(
+      baseApp({
+        candidate: { user: { email: 'cand@example.com' } },
+        job: baseJob({ title: 'Platform Engineer', org_id: 'org-1' }),
+      })
+    );
+    mockInterviewCreate.mockResolvedValue({ id: 'intv-11' });
+
+    await ensureInterviewAndSchedule('app-1');
+
+    expect(mockEnqueueScheduling).toHaveBeenCalledWith(
+      'app-1',
+      expect.objectContaining({
+        orgId: 'org-1',
+        availabilityHours: undefined,
+        action: 'generate_slots',
+      })
+    );
+  });
+
   it('reuses the existing interview and returns its id (idempotent)', async () => {
     mockFindUnique.mockResolvedValue(baseApp({ interview: { id: 'intv-existing' } }));
     const result = await ensureInterviewAndSchedule('app-1');

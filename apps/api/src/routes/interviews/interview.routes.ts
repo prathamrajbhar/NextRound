@@ -5,6 +5,31 @@ import { requireRole } from '../../middleware/rbac';
 import { enqueueInterview } from '../../lib/queues/interview.queue';
 import { decisionQueue, DEFAULT_JOB_OPTIONS } from '../../lib/bullmq';
 
+// ICE servers for the WebRTC session are env-configurable. The dev default is
+// the public Google STUN list; no TURN credentials are invented. A production
+// deployment supplies its own ICE_SERVERS JSON (array of { urls, username?,
+// credential? }), otherwise only the configured/default STUN servers are used.
+function loadIceServers(): { urls: string; username?: string; credential?: string }[] {
+  const raw = process.env.ICE_SERVERS;
+  if (raw && raw.trim()) {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        return parsed.filter(
+          (s): s is { urls: string; username?: string; credential?: string } =>
+            typeof s === 'object' && s !== null && typeof (s as { urls?: unknown }).urls === 'string'
+        );
+      }
+    } catch (err) {
+      console.error('Failed to parse ICE_SERVERS env var; using STUN defaults:', err);
+    }
+  }
+  return [
+    { urls: 'stun:stun.l.google.com:19302' },
+    { urls: 'stun:stun1.l.google.com:19302' },
+  ];
+}
+
 export const interviewRouter = Router();
 
 // All routes require authentication
@@ -67,7 +92,11 @@ interviewRouter.post('/:id/session-token', async (req: Request, res: Response, n
         application: {
           include: {
             candidate: true,
-            job: true,
+            job: {
+              include: {
+                organization: true,
+              },
+            },
           },
         },
       },
@@ -77,12 +106,7 @@ interviewRouter.post('/:id/session-token', async (req: Request, res: Response, n
       return res.status(404).json({ success: false, error: 'Interview session not found' });
     }
 
-    const iceServers = [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' },
-    ];
-
-    const sessionToken = `session_token_${interview.id}_${Date.now()}`;
+    const iceServers = loadIceServers();
 
     // Update interview status to in_progress if currently scheduled
     if (interview.status === 'scheduled') {
@@ -97,11 +121,13 @@ interviewRouter.post('/:id/session-token', async (req: Request, res: Response, n
       data: {
         interviewId: interview.id,
         applicationId: interview.application_id,
-        sessionToken,
+        // No real session credential exists here (nothing consumes one), so the
+        // field is null rather than a fabricated token, and there is no expiry.
+        sessionToken: null,
+        expiresInSeconds: null,
         iceServers,
         jobTitle: interview.application.job.title,
-        company: 'NextRound / HireOS',
-        expiresInSeconds: 3600,
+        company: interview.application.job.organization?.name ?? null,
       },
     });
   } catch (error) {
@@ -169,13 +195,15 @@ interviewRouter.patch('/:id/proctoring', async (req: Request, res: Response, nex
     }
 
     const existingFlags = Array.isArray(interview.proctor_flags) ? (interview.proctor_flags as any[]) : [];
+    // Absent CV signals are stored as null (unknown), never rewritten to
+    // compliant values — an unmeasured signal must not become a clean audit flag.
     const newFlag = {
       timestamp: new Date().toISOString(),
-      face_count: typeof face_count === 'number' ? face_count : 1,
-      gaze_centered: typeof gaze_centered === 'boolean' ? gaze_centered : true,
-      engagement_index: typeof engagement_index === 'number' ? engagement_index : 90,
-      multiple_faces_detected: Boolean(multiple_faces_detected),
-      tab_switch_count: typeof tab_switch_count === 'number' ? tab_switch_count : 0,
+      face_count: typeof face_count === 'number' ? face_count : null,
+      gaze_centered: typeof gaze_centered === 'boolean' ? gaze_centered : null,
+      engagement_index: typeof engagement_index === 'number' ? engagement_index : null,
+      multiple_faces_detected: typeof multiple_faces_detected === 'boolean' ? multiple_faces_detected : null,
+      tab_switch_count: typeof tab_switch_count === 'number' ? tab_switch_count : null,
     };
 
     const updatedFlags = [...existingFlags, newFlag];

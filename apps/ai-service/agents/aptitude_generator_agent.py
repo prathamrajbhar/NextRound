@@ -1,10 +1,28 @@
+import json
 import logging
+import os
 import httpx
 from typing import List, Dict, Any
 from core.config import settings
 from services.llm_service import generate_text, extract_json_array
 
 logger = logging.getLogger("aptitude_generator_agent")
+
+# Canonical aptitude question bank — single source of truth shared with the
+# Express API and the web fallback. See packages/shared/data/aptitude-questions.json.
+_FALLBACK_PATH = os.path.join(settings.shared_data_dir, "aptitude-questions.json")
+
+
+def _load_canonical_questions() -> List[Dict[str, Any]]:
+    """Load the canonical aptitude question bank from packages/shared/data."""
+    if not os.path.exists(_FALLBACK_PATH):
+        raise RuntimeError(
+            f"Canonical aptitude question bank not found at {_FALLBACK_PATH}. "
+            "Expected packages/shared/data/aptitude-questions.json to exist."
+        )
+    with open(_FALLBACK_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
+
 
 
 def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[Dict[str, Any]]:
@@ -36,6 +54,9 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
                 "text": stem,
                 "options": opts,
                 "correctIndex": correct_idx,
+                # Mark LLM-generated questions so callers can distinguish them
+                # from static-bank fallback questions.
+                "source": "ai-generated",
             })
         
         return validated[:count]
@@ -45,60 +66,23 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
 
 
 def _fallback_questions(job_title: str, count: int = 5) -> List[Dict[str, Any]]:
-    """Role-customized fallback questions if Gemini and Ollama services are unreachable."""
+    """Role-customized fallback questions if Gemini and Ollama services are unreachable.
+
+    Sourced from the canonical bank at packages/shared/data/aptitude-questions.json
+    (same single source of truth used by the Express API and web fallback).
+    """
     role = job_title or "Software Engineer"
-    questions = [
-        {
-            "id": "apt_q1",
-            "category": "Quantitative Reasoning",
-            "difficulty": "medium",
-            "question": f"For a {role} project, reducing execution overhead by 20% while increasing team throughput by 25% results in what net capacity change?",
-            "text": f"For a {role} project, reducing execution overhead by 20% while increasing team throughput by 25% results in what net capacity change?",
-            "options": ["No change (0%)", "5% net increase", "10% net increase", "5% net decrease"],
-            "correctIndex": 0,
-        },
-        {
-            "id": "apt_q2",
-            "category": "Logical Deduction",
-            "difficulty": "medium",
-            "question": "All sub-routines with O(N log N) runtime scale better than O(N^2) algorithms for large datasets. Module A operates in O(N log N). Which statement must be true?",
-            "text": "All sub-routines with O(N log N) runtime scale better than O(N^2) algorithms for large datasets. Module A operates in O(N log N). Which statement must be true?",
-            "options": [
-                "Module A is faster for any input size.",
-                "For sufficiently large inputs, Module A will outperform O(N^2) algorithms.",
-                "Module A consumes O(N) memory.",
-                "Module A is optimal for sorting."
-            ],
-            "correctIndex": 1,
-        },
-        {
-            "id": "apt_q3",
-            "category": "Pattern Recognition",
-            "difficulty": "easy",
-            "question": "What is the next value in the scaling sequence: 2, 6, 12, 20, 30, ?",
-            "text": "What is the next value in the scaling sequence: 2, 6, 12, 20, 30, ?",
-            "options": ["40", "42", "44", "48"],
-            "correctIndex": 1,
-        },
-        {
-            "id": "apt_q4",
-            "category": "Data Interpretation",
-            "difficulty": "medium",
-            "question": "A cluster handles 10,000 throughput operations/sec with 50ms average response time. If throughput doubles and latency scales linearly with load, what is the expected latency?",
-            "text": "A cluster handles 10,000 throughput operations/sec with 50ms average response time. If throughput doubles and latency scales linearly with load, what is the expected latency?",
-            "options": ["50ms", "75ms", "100ms", "200ms"],
-            "correctIndex": 2,
-        },
-        {
-            "id": "apt_q5",
-            "category": "Problem Solving",
-            "difficulty": "hard",
-            "question": "Three dependent microservices A, B, and C have individual SLAs of 99.9%, 99.5%, and 99.0%. What is the sequential end-to-end system availability?",
-            "text": "Three dependent microservices A, B, and C have individual SLAs of 99.9%, 99.5%, and 99.0%. What is the sequential end-to-end system availability?",
-            "options": ["98.4%", "99.0%", "99.5%", "99.9%"],
-            "correctIndex": 0,
-        },
-    ]
+    questions = []
+    for q in _load_canonical_questions():
+        item = dict(q)
+        # The {role} placeholder in the first question stem is interpolated at
+        # call time so the fallback stays role-tailored.
+        item["question"] = item["question"].replace("{role}", role)
+        item["text"] = item["text"].replace("{role}", role)
+        # Mark origin so callers can distinguish static-bank questions from
+        # LLM-generated ones (e.g. for UI badges or audit logging).
+        item["source"] = "fallback"
+        questions.append(item)
     return questions[:count]
 
 

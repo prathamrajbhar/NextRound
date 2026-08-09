@@ -81,7 +81,7 @@ NextRound is a **two-sided AI talent marketplace**:
 | **STT / TTS Audio** | Groq API v1.5 (Whisper-large-v3 STT), Piper / Coqui TTS, WebRTC real-time audio |
 | **Client-Side CV** | MediaPipe (browser-side face detection, gaze tracking, posture/engagement flags) |
 | **Task Queue & Cache** | BullMQ 5.80.10 + Redis 8 (async queue channels for all agent pipelines) |
-| **Storage & Email** | AWS S3 / MinIO (audio recordings, resume PDFs), Nodemailer 8 (SMTP email automation) |
+| **Storage & Email** | Dedicated Storage Service (audio recordings, resume PDFs), Nodemailer 8 (SMTP email automation) |
 | **Monorepo** | Turborepo 2.10 managing `apps/web`, `apps/api`, `apps/ai-service`, `packages/*` |
 
 > Stack is locked. Do not substitute any dependency without an explicit team decision.

@@ -10,7 +10,7 @@ async def process_scheduling_job(job_data: dict) -> bool:
     """
     Process interview time slot negotiation job.
     1. Extract application & candidate metadata.
-    2. Execute Scheduler Agent.
+    2. Execute Scheduler Agent (slots are driven by org availability when set).
     3. Post available slots back to Express internal endpoint.
     4. Log agent audit record.
     """
@@ -22,29 +22,43 @@ async def process_scheduling_job(job_data: dict) -> bool:
     logger.info(f"Processing scheduling job for applicationId: {application_id}")
 
     candidate_email = job_data.get("candidateEmail", "")
-    job_title = job_data.get("jobTitle", "Software Engineer")
+    job_title = job_data.get("jobTitle", "")
     interview_id = job_data.get("interviewId", "")
     action = job_data.get("action", "generate_slots")
+    org_id = job_data.get("orgId", "")
+    availability_hours = job_data.get("availabilityHours") or None
 
     async def run() -> dict:
-        # Run Scheduler Agent
+        # Run Scheduler Agent. When the candidate has no real email the agent
+        # returns status "email_unavailable" with an empty formatted_email — no
+        # fabricated recipient is ever drafted.
         result = await run_scheduler_agent(
             application_id=application_id,
             interview_id=interview_id,
             candidate_email=candidate_email,
             job_title=job_title,
             action=action,
+            org_id=org_id,
+            availability_hours=availability_hours,
         )
 
-        # Post generated slots back to Express internal endpoint
-        target_interview_id = interview_id or f"intv_{application_id[:8]}"
-        await callback_client.post(
-            f"internal/interviews/{target_interview_id}/schedule-slots",
-            json={
-                "slots": result.get("available_slots", []),
-                "formatted_email": result.get("formatted_email", ""),
-            },
-        )
+        # Post generated slots back to Express internal endpoint. Without a real
+        # interview id there is nowhere honest to post them (a fabricated id would
+        # 404), so the slots are captured in the agent audit record only.
+        if interview_id:
+            await callback_client.post(
+                f"internal/interviews/{interview_id}/schedule-slots",
+                json={
+                    "slots": result.get("available_slots", []),
+                    "formatted_email": result.get("formatted_email", ""),
+                },
+            )
+        else:
+            logger.warning(
+                f"No interviewId in scheduling payload for application {application_id}; "
+                "slots recorded in agent audit log only."
+            )
+
         return result
 
     return await run_agent_job(

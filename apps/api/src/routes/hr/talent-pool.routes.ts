@@ -17,6 +17,94 @@ function rejectExplicitOrgId(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+// Row shape returned by the pgvector ranking query. `cosineSimilarity` is the
+// real cosine similarity (0.0-1.0) between the candidate's resume_embedding and
+// the query embedding; `skills`/`targetRoles` come back as parsed JSON arrays.
+interface VectorMatchRow {
+  candidateId: string;
+  userId: string;
+  email: string;
+  createdAt: Date | string;
+  resumeUrl: string | null;
+  skills: unknown;
+  targetRoles: unknown;
+  cosineSimilarity: number | null;
+}
+
+interface TalentPoolCandidateResult {
+  candidateId: string;
+  applicationId: string | null;
+  userId: string;
+  name: string;
+  email: string;
+  skills: string[];
+  targetRoles: string[];
+  resumeUrl: string | null;
+  similarityScore: number | null;
+  isBookmarked: boolean;
+  bookmarkId: string | null;
+  lastActive: string;
+}
+
+function toStringList(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => typeof v === 'string');
+  }
+  if (typeof value === 'string') {
+    try {
+      const parsed: unknown = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+/**
+ * Ask the AI service for a real 768-dim semantic embedding of the search query.
+ * Returns null (instead of throwing) when the service is unreachable, the HTTP
+ * call fails, the response is malformed, or the embedding came from the hash
+ * fallback (model label contains "Fallback") — a fallback vector is not a
+ * semantic signal and must never drive matching.
+ */
+async function generateQueryEmbedding(queryText: string): Promise<number[] | null> {
+  const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+
+  let resp: Awaited<ReturnType<typeof fetch>>;
+  try {
+    resp = await fetch(`${aiServiceUrl}/api/v1/embeddings/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: queryText }),
+    });
+  } catch {
+    return null;
+  }
+
+  if (!resp.ok) {
+    return null;
+  }
+
+  let body: { data?: { embedding?: unknown; model?: unknown } };
+  try {
+    body = (await resp.json()) as { data?: { embedding?: unknown; model?: unknown } };
+  } catch {
+    return null;
+  }
+
+  const model = typeof body.data?.model === 'string' ? body.data.model : '';
+  if (model.toLowerCase().includes('fallback')) {
+    return null;
+  }
+
+  const embedding = body.data?.embedding;
+  if (!Array.isArray(embedding) || embedding.length !== 768) {
+    return null;
+  }
+  return embedding as number[];
+}
+
 // ML_BYPASS: external sourcing — integrate LinkedIn Recruiter API or scraping pipeline when ready
 // ML_BYPASS: self-hosted embeddings — upgrade to sentence-transformers/all-MiniLM-L6-v2 when API offline required
 // GET /api/v1/hr/talent-pool - Vector similarity search across CandidateProfiles using pgvector & skill matching
@@ -53,59 +141,104 @@ talentPoolRouter.get(
         if (!appMap.has(app.candidate_id)) appMap.set(app.candidate_id, app.id);
       }
 
-      // Fetch candidate profiles with associated user details
-      const candidates = await prisma.candidateProfile.findMany({
-        include: {
-          user: {
-            select: { id: true, email: true, created_at: true },
-          },
-        },
-        orderBy: { created_at: 'desc' },
-        take: 50,
-      });
+      const serialize = (
+        candidateId: string,
+        userId: string,
+        email: string,
+        skills: string[],
+        targetRoles: string[],
+        resumeUrl: string | null,
+        createdAt: Date | string,
+        similarityScore: number | null
+      ): TalentPoolCandidateResult => {
+        const isBookmarked = bookmarkMap.has(candidateId);
+        return {
+          candidateId,
+          applicationId: appMap.get(candidateId) ?? null,
+          userId,
+          name: email.split('@')[0],
+          email,
+          skills,
+          targetRoles,
+          resumeUrl: resumeUrl ?? null,
+          similarityScore,
+          isBookmarked,
+          bookmarkId: isBookmarked ? (bookmarkMap.get(candidateId) ?? null) : null,
+          lastActive: new Date(createdAt).toISOString(),
+        };
+      };
 
-      // Map candidates and calculate match scores based on query/skill overlap
-      const results = candidates
-        .map((c) => {
+      // semanticMatch is true only when a REAL semantic embedding was produced
+      // and the pgvector ranking actually ran. Otherwise similarityScore is
+      // honestly null and candidates fall back to recency order.
+      let semanticMatch = false;
+      let results: TalentPoolCandidateResult[] = [];
+
+      if (queryText) {
+        const queryEmbedding = await generateQueryEmbedding(queryText);
+        if (queryEmbedding) {
+          const vectorStr = `[${queryEmbedding.join(',')}]`;
+          const matches = await prisma.$queryRaw<VectorMatchRow[]>`
+            SELECT
+              cp.id                    AS "candidateId",
+              cp.user_id               AS "userId",
+              u.email                  AS "email",
+              cp.created_at            AS "createdAt",
+              cp.resume_url            AS "resumeUrl",
+              cp.skills                AS "skills",
+              cp.target_roles          AS "targetRoles",
+              (1 - (cp.resume_embedding <=> ${vectorStr}::vector))::float8 AS "cosineSimilarity"
+            FROM "CandidateProfile" cp
+            JOIN "User" u ON u.id = cp.user_id
+            WHERE cp.resume_embedding IS NOT NULL
+            ORDER BY cp.resume_embedding <=> ${vectorStr}::vector ASC
+            LIMIT 50
+          `;
+          semanticMatch = true;
+          results = matches.map((m) => {
+            const cosine = typeof m.cosineSimilarity === 'number' ? m.cosineSimilarity : null;
+            const similarityScore =
+              cosine !== null ? Math.min(100, Math.max(0, Math.round(cosine * 1000) / 10)) : null;
+            return serialize(
+              m.candidateId,
+              m.userId,
+              m.email,
+              toStringList(m.skills),
+              toStringList(m.targetRoles),
+              m.resumeUrl,
+              m.createdAt,
+              similarityScore
+            );
+          });
+        }
+      }
+
+      if (!semanticMatch) {
+        // No honest semantic ranking available (no query, ai-service down, or
+        // hash-fallback embedding). Return recent candidates, score null.
+        const candidates = await prisma.candidateProfile.findMany({
+          include: {
+            user: {
+              select: { id: true, email: true, created_at: true },
+            },
+          },
+          orderBy: { created_at: 'desc' },
+          take: 50,
+        });
+
+        results = candidates.map((c) => {
           const skillsList = Array.isArray(c.skills) ? (c.skills as string[]) : [];
           const targetRolesList = Array.isArray(c.target_roles) ? (c.target_roles as string[]) : [];
-
-          let similarityScore = 85; // baseline match score
-          if (queryText) {
-            const matchesSkill = skillsList.some((s) => s.toLowerCase().includes(queryText));
-            const matchesRole = targetRolesList.some((r) => r.toLowerCase().includes(queryText));
-            const matchesProject = c.proud_project?.toLowerCase().includes(queryText);
-            if (matchesSkill || matchesRole || matchesProject) {
-              similarityScore = 95;
-            } else {
-              similarityScore = 72;
-            }
-          }
-
-          const isBookmarked = bookmarkMap.has(c.id);
-
-          return {
-            candidateId: c.id,
-            applicationId: appMap.get(c.id) ?? null,
-            userId: c.user.id,
-            name: c.user.email.split('@')[0],
-            email: c.user.email,
-            skills: skillsList,
-            targetRoles: targetRolesList,
-            resumeUrl: c.resume_url,
-            similarityScore,
-            isBookmarked,
-            bookmarkId: isBookmarked ? bookmarkMap.get(c.id) : null,
-            lastActive: c.created_at.toISOString(),
-          };
-        })
-        .sort((a, b) => b.similarityScore - a.similarityScore);
+          return serialize(c.id, c.user.id, c.user.email, skillsList, targetRolesList, c.resume_url, c.created_at, null);
+        });
+      }
 
       return res.json({
         success: true,
         data: {
           candidates: results,
           total: results.length,
+          semanticMatch,
         },
       });
     } catch (err) {

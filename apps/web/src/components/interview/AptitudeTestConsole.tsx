@@ -14,6 +14,8 @@ import {
   Timer,
 } from '@/lib/lucide-google-icons';
 import { ProctoringWarningModal } from './ProctoringWarningModal';
+// Canonical shared aptitude bank — single source of truth (packages/shared/data).
+import aptitudeFallbackQuestions from '@nextround/shared/data/aptitude-questions.json';
 
 export interface AptitudeQuestion {
   id: string;
@@ -87,42 +89,18 @@ export default function AptitudeTestConsole({
           }));
           setFetchedQuestions(mapped);
         } else {
-          // Direct dynamic fallback guarantee if API endpoint fails
-          const fallbackQs: AptitudeQuestion[] = [
-            {
-              id: 'fb_q1',
-              category: 'Quantitative Reasoning',
-              text: `For a ${displayRole} project, reducing system latency by 20% while increasing throughput by 25% results in what net performance change?`,
-              options: ['No change (0%)', '5% net increase', '10% net increase', '5% net decrease'],
-              difficulty: 'medium',
-            },
-            {
-              id: 'fb_q2',
-              category: 'Logical Deduction',
-              text: 'All algorithms with O(N log N) runtime scale better than O(N^2) for large datasets. Module A runs in O(N log N). Which statement must be true?',
-              options: [
-                'Module A is faster for any dataset size.',
-                'For sufficiently large inputs, Module A will outperform O(N^2) algorithms.',
-                'Module A uses O(N) memory space.',
-                'Module A is optimal for sorting.',
-              ],
-              difficulty: 'medium',
-            },
-            {
-              id: 'fb_q3',
-              category: 'Pattern Recognition',
-              text: 'What is the next number in the growth sequence: 2, 6, 12, 20, 30, ?',
-              options: ['40', '42', '44', '48'],
-              difficulty: 'easy',
-            },
-            {
-              id: 'fb_q4',
-              category: 'Problem Solving',
-              text: `When designing microservices architecture for ${displayCompany}, what is the primary benefit of decoupled service boundaries?`,
-              options: ['Independent deployment & scaling', 'Zero network latency', 'Single point of failure', 'Simplified monolith codebase'],
-              difficulty: 'hard',
-            },
-          ];
+          // Direct dynamic fallback guarantee if API endpoint fails. Sourced from
+          // the canonical shared bank (packages/shared/data/aptitude-questions.json).
+          // correctIndex/explanation are deliberately omitted: the real assessment
+          // strips the answer key server-side, so a client-side fallback must not
+          // embed it either.
+          const fallbackQs: AptitudeQuestion[] = aptitudeFallbackQuestions.map((q) => ({
+            id: q.id,
+            category: q.category,
+            text: (q.text || q.question).replace('{role}', displayRole),
+            options: q.options,
+            difficulty: q.difficulty,
+          }));
           setFetchedQuestions(fallbackQs);
         }
       } catch (err) {

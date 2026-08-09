@@ -41,8 +41,8 @@ class EmailService {
         });
         console.log(`[EmailService] Email successfully sent to ${options.to}: ${options.subject}`);
       } else {
-        console.warn(`[EmailService] SMTP not configured; email to ${options.to} logged in mock mode (subject: ${options.subject}).`);
-        return true;
+        console.error(`[EmailService] SMTP not configured; email to ${options.to} was NOT delivered (subject: ${options.subject}).`);
+        return false;
       }
       return true;
 
@@ -50,6 +50,30 @@ class EmailService {
       console.error('[EmailService] Failed to send email:', error);
       return false;
     }
+  }
+
+  public async sendMemberInvite(
+    toEmail: string,
+    organizationId: string,
+    invitedByEmail?: string
+  ): Promise<boolean> {
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const inviteUrl = `${appUrl}/hr/dashboard?org=${organizationId}`;
+    const subject = 'You have been invited to an organization on NextRound / HireOS';
+    const html = `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 12px;">
+        <h2 style="color: #0f172a; margin-top: 0;">Organization Invitation</h2>
+        <p>Hi there,</p>
+        <p>You have been invited to join an organization on the NextRound / HireOS platform${invitedByEmail ? ` by <strong>${invitedByEmail}</strong>` : ''}.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${inviteUrl}" style="background-color: #4f46e5; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 9999px; font-weight: bold; display: inline-block;">Sign in to NextRound</a>
+        </div>
+        <p style="font-size: 12px; color: #94a3b8; margin-top: 30px;">
+          NextRound / HireOS • Team Management
+        </p>
+      </div>
+    `;
+    return this.sendEmail({ to: toEmail, subject, html });
   }
 
   public async sendApplicationReceived(

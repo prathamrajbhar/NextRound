@@ -6,8 +6,10 @@ run in sequence by ``run_analytics_agent``.
 """
 
 import logging
+from datetime import datetime, timezone
 from typing import TypedDict
 from core.http_client import callback_client
+from services.pdf_generator import generate_analytics_pdf
 
 logger = logging.getLogger("analytics_agent")
 
@@ -88,7 +90,32 @@ def compute_funnel_node(state: AnalyticsState) -> AnalyticsState:
         "offerAcceptanceRate": round((accepted / offered * 100) if offered else 0),
     }
 
-    state["time_to_hire_days"] = None
+    # Time to hire: mean days from applied_at to the offer's created_at across
+    # offered/accepted applications that carry a real terminal timestamp. Left
+    # None (honest) when no terminal timestamp exists — no fabricated figure.
+    hire_deltas_days = []
+    for job in jobs:
+        for app in job.get("applications", []):
+            st = app.get("status", "")
+            offer = app.get("offer")
+            if st not in _OFFERED_STATUSES or not isinstance(offer, dict):
+                continue
+            applied_at = app.get("applied_at")
+            offered_at = offer.get("created_at")
+            if not applied_at or not offered_at:
+                continue
+            try:
+                applied_dt = datetime.fromisoformat(str(applied_at).replace("Z", "+00:00"))
+                offered_dt = datetime.fromisoformat(str(offered_at).replace("Z", "+00:00"))
+            except (ValueError, TypeError):
+                continue
+            delta_days = (offered_dt - applied_dt).total_seconds() / 86400.0
+            if delta_days >= 0:
+                hire_deltas_days.append(delta_days)
+
+    state["time_to_hire_days"] = (
+        int(round(sum(hire_deltas_days) / len(hire_deltas_days))) if hire_deltas_days else None
+    )
     return state
 
 
@@ -117,20 +144,39 @@ def generate_narrative_node(state: AnalyticsState) -> AnalyticsState:
 
 
 async def export_pdf_node(state: AnalyticsState) -> AnalyticsState:
-    """Node 4: Register executive report and notify internal API."""
+    """Node 4: Generate a real executive analytics PDF and register it internally."""
     org_id = state.get("org_id")
-    state["report_pdf_url"] = ""
     if not org_id:
+        state["report_pdf_url"] = ""
         return state
+
+    metrics = dict(state.get("funnel_metrics", {}))
+    metrics["time_to_hire_days"] = state.get("time_to_hire_days")
+
+    report_url = ""
+    pdf_generated = False
+    try:
+        report_url = generate_analytics_pdf(
+            metrics=metrics,
+            conversions=state.get("conversions", {}),
+            narrative=state.get("executive_narrative", ""),
+            org_id=org_id,
+        )
+        pdf_generated = True
+    except Exception as e:
+        logger.error(f"Analytics PDF generation failed: {e}")
+
+    state["report_pdf_url"] = report_url
 
     try:
         await callback_client.post(
             "internal/analytics/reports",
             json={
                 "org_id": org_id,
-                "report_url": state["report_pdf_url"],
+                "report_url": report_url,
                 "summary": state.get("executive_narrative"),
-                "generated_at": "now",
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "pdf_generated": pdf_generated,
             },
         )
     except Exception as e:

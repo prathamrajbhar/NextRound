@@ -1,6 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
 from services.code_executor_service import validate_ast_security, execute_code_sandbox
+from routes.coding_routes import CodeExecutionResponse
+
+
+def _assert_no_fabricated_telemetry(res: dict):
+    """memory_kb must be a measured int or None — never the old 42000 constant."""
+    assert res["memory_kb"] is None or isinstance(res["memory_kb"], int)
+    assert res["memory_kb"] != 42000
 
 
 def test_ast_security_blocks_forbidden_imports():
@@ -53,6 +60,7 @@ def get_visible_range(heights, scroll_y, viewport_height):
     assert res["total_cases"] == 1
     assert res["passed_cases"] == 1
     assert res["pass_rate"] == 1.0
+    _assert_no_fabricated_telemetry(res)
 
 
 def test_execute_code_sandbox_security_rejection():
@@ -62,6 +70,59 @@ def test_execute_code_sandbox_security_rejection():
     assert res["security_passed"] is False
     assert res["pass_rate"] == 0.0
     assert "socket" in res["error"]
+    assert res["memory_kb"] is None
+
+
+def test_empty_code_returns_none_memory():
+    """Empty code never reports a fabricated peak-memory figure."""
+    res = execute_code_sandbox("", "python", test_cases=[{"input": "x = 1", "expectedOutput": "1"}])
+    assert res["memory_kb"] is None
+    assert res["error"] == "Code payload cannot be empty"
+
+
+def test_no_test_cases_returns_none_memory():
+    """No test cases is an honest failure with memory_kb=None (no hardcoded KB)."""
+    res = execute_code_sandbox("def solution():\n    return 1", "python", test_cases=None)
+    assert res["memory_kb"] is None
+    assert "No test cases" in res["error"]
+
+
+# --- Response-model serialization (memory_kb / complexity_analysis) --------
+
+
+def test_code_execution_response_serializes_none_telemetry():
+    model = CodeExecutionResponse(
+        success=True,
+        score=80.0,
+        pass_rate=0.8,
+        passed_cases=4,
+        total_cases=5,
+        execution_time_ms=12.5,
+        memory_kb=None,
+        complexity_analysis=None,
+        passed=True,
+        feedback="Passed 4/5 test cases.",
+    )
+    data = model.model_dump()
+    assert data["memory_kb"] is None
+    assert data["complexity_analysis"] is None
+
+
+def test_code_execution_response_accepts_int_memory_and_dict_complexity():
+    model = CodeExecutionResponse(
+        success=True,
+        score=100.0,
+        pass_rate=1.0,
+        passed_cases=1,
+        total_cases=1,
+        execution_time_ms=1.0,
+        memory_kb=12345,
+        complexity_analysis={"time_complexity": "O(N)"},
+        passed=True,
+        feedback="ok",
+    )
+    assert model.memory_kb == 12345
+    assert model.complexity_analysis == {"time_complexity": "O(N)"}
 
 
 def test_coding_execute_endpoint():
@@ -90,3 +151,7 @@ def get_visible_range(heights, scroll_y, viewport_height):
     assert data["pass_rate"] == 1.0
     assert data["security_passed"] is True
     assert "execution_time_ms" in data
+    # Direct sandbox path: real memory (int or None) and no canned complexity.
+    assert data["memory_kb"] is None or isinstance(data["memory_kb"], int)
+    assert data["memory_kb"] != 42000
+    assert data["complexity_analysis"] is None

@@ -13,7 +13,7 @@ User ─────────────────────────
   │                                    │
   ├─ CandidateProfile                  ├─ Job ─────────── Application ─── Interview
   │    └─ MockSession                  │                       │          └─ (proctor_flags)
-  │    └─ (resume_url → S3)            └─ AgentLog             ├─ Evaluation
+  │    └─ (resume_url → Storage)       └─ AgentLog             ├─ Evaluation
   │                                                            ├─ Assessment
   │                                                            ├─ CodingSubmission
   │                                                            └─ Offer
@@ -163,7 +163,7 @@ model Job {
 model CandidateProfile {
   id                 String                       @id @default(uuid())
   user_id            String                       @unique
-  resume_url         String?                      // S3 URL to uploaded PDF/DOCX
+  resume_url         String?                      // Storage URL to uploaded PDF/DOCX
   linkedin_url       String?
   github_url         String?
   skills             Json                         @default("[]") // string[]
@@ -232,7 +232,7 @@ model Interview {
   application_id    String          @unique
   scheduled_at      DateTime?
   transcript        Json?           // { turns: [{ speaker, text, timestamp_ms }] }
-  audio_url         String?         // S3 URL
+  audio_url         String?         // Storage URL
   proctor_flags     Json?           // periodic CV telemetry snapshots
   engagement_signal Json?           // aggregate engagement metrics
   video_consent     Boolean         @default(false)

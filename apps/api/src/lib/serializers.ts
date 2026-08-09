@@ -266,7 +266,7 @@ function serializeTranscript(interview: InterviewLike | undefined): Rec[] | unde
   return out.length > 0 ? out : undefined;
 }
 
-export function serializeApplication(app: Rec): Rec {
+export function serializeApplication(app: Rec, options?: { scheduledSlots?: string[] }): Rec {
   const candidate = isObject(app.candidate) ? app.candidate : undefined;
   const job = isObject(app.job) ? app.job : undefined;
   const evalFirst = firstEvaluation(app.evaluations);
@@ -308,6 +308,8 @@ export function serializeApplication(app: Rec): Rec {
     audioUrl: interview?.audio_url || undefined,
     proctorFlags: serializeInterview(interview)?.proctorFlags,
     engagementSignal: serializeInterview(interview)?.engagementSignal,
+    scheduledSlots:
+      options?.scheduledSlots && options.scheduledSlots.length > 0 ? options.scheduledSlots : undefined,
   };
 }
 

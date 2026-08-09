@@ -1,3 +1,5 @@
+import https from 'https';
+
 export interface SyncedSocialData {
   github?: {
     username: string;
@@ -25,9 +27,170 @@ export interface SyncedSocialData {
     username: string;
     profileUrl: string;
     status: string;
+    synced?: boolean;
+    reason?: string;
+    name?: string;
+    headline?: string;
+    location?: string;
+    about?: string;
+    avatarUrl?: string;
+    skills?: string[];
+    experiences?: unknown[];
+    education?: unknown[];
   };
   extractedSkills: string[];
   syncedAt: string;
+}
+
+// The bytemap scraper is slow (observed latency can exceed 30s), so the timeout
+// must comfortably exceed the worst observed latency or every real sync aborts.
+// Env-driven so deployments can tune it without a code change.
+const LINKEDIN_SCRAPER_TIMEOUT_MS =
+  parseInt(process.env.LINKEDIN_SCRAPER_TIMEOUT_MS || '90000', 10) || 90000;
+
+// Certificate error codes Node's default TLS verification raises when a scraper
+// host presents a certificate it does not trust.
+const TLS_VERIFY_ERROR_CODES = new Set([
+  'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
+  'DEPTH_ZERO_SELF_SIGNED_CERT',
+  'SELF_SIGNED_CERT_IN_CHAIN',
+  'CERT_HAS_EXPIRED',
+  'UNABLE_TO_GET_ISSUER_CERT_LOCALLY',
+  'ERR_TLS_CERT_ALTNAME_INVALID',
+  'CERT_SIGNATURE_FAILURE',
+]);
+
+function isTlsVerificationError(err: unknown): boolean {
+  const cause = (err as { cause?: unknown })?.cause as { code?: string } | undefined;
+  return Boolean(cause?.code && TLS_VERIFY_ERROR_CODES.has(cause.code));
+}
+
+function httpsRequestText(
+  url: string,
+  options: https.RequestOptions
+): Promise<{ status: number; body: string }> {
+  return new Promise((resolve, reject) => {
+    const req = https.request(url, options, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk: Buffer) => chunks.push(chunk));
+      res.on('end', () =>
+        resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString('utf8') })
+      );
+    });
+    req.on('error', reject);
+    req.setTimeout(LINKEDIN_SCRAPER_TIMEOUT_MS, () =>
+      req.destroy(new Error(`LinkedIn scraper request timed out after ${LINKEDIN_SCRAPER_TIMEOUT_MS}ms`))
+    );
+    req.end();
+  });
+}
+
+async function fetchLinkedInProfileRaw(username: string): Promise<{ status: number; body: string }> {
+  const base = process.env.LINKEDIN_SCRAPER_BASE_URL || 'https://social_scraper.bytemap.in';
+  const url = `${base}/linkedin/${encodeURIComponent(username)}`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), LINKEDIN_SCRAPER_TIMEOUT_MS);
+
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    return { status: res.status, body: await res.text() };
+  } catch (err) {
+    // Try plain fetch first. Only when Node's default TLS verification rejects
+    // this host do we mirror the ai-service Python LinkedIn client (httpx
+    // verify=False) and retry with verification disabled — parity for the same
+    // user-approved scraper endpoint.
+    if (!isTlsVerificationError(err)) throw err;
+    return httpsRequestText(url, { rejectUnauthorized: false });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function syncLinkedInProfile(linkedinUrl: string): Promise<NonNullable<SyncedSocialData['linkedin']>> {
+  const profileUrl = linkedinUrl.trim().startsWith('http') ? linkedinUrl.trim() : `https://${linkedinUrl.trim()}`;
+  const match = linkedinUrl.match(/linkedin\.com\/in\/([a-zA-Z0-9_-]+)/i);
+  const username = match ? match[1] : null;
+
+  if (!username) {
+    return {
+      username: 'profile',
+      profileUrl,
+      status: 'not_synced',
+      synced: false,
+      reason: 'Could not extract a LinkedIn username from the provided URL.',
+    };
+  }
+
+  try {
+    const { status, body } = await fetchLinkedInProfileRaw(username);
+
+    if (status === 404) {
+      return {
+        username,
+        profileUrl,
+        status: 'not_found',
+        synced: false,
+        reason: `LinkedIn profile '${username}' was not found by the scraper.`,
+      };
+    }
+    if (status >= 400) {
+      return {
+        username,
+        profileUrl,
+        status: 'not_synced',
+        synced: false,
+        reason: `LinkedIn scraper returned HTTP ${status}.`,
+      };
+    }
+
+    let data: { profile?: Record<string, unknown> } | null = null;
+    try {
+      data = JSON.parse(body) as { profile?: Record<string, unknown> };
+    } catch {
+      return {
+        username,
+        profileUrl,
+        status: 'not_synced',
+        synced: false,
+        reason: 'LinkedIn scraper returned a malformed response that could not be parsed.',
+      };
+    }
+
+    const profile = data?.profile || {};
+    const skills = Array.isArray(profile.skills)
+      ? (profile.skills as unknown[]).filter((s): s is string => typeof s === 'string' && s.trim().length > 0)
+      : [];
+
+    return {
+      username,
+      profileUrl,
+      status: 'synced',
+      synced: true,
+      name: typeof profile.name === 'string' && profile.name.trim() ? profile.name : undefined,
+      headline: typeof profile.headline === 'string' && profile.headline.trim() ? profile.headline : undefined,
+      location: typeof profile.location === 'string' && profile.location.trim() ? profile.location : undefined,
+      about: typeof profile.about === 'string' && profile.about.trim() ? profile.about : undefined,
+      avatarUrl:
+        typeof profile.profile_pic === 'string' && profile.profile_pic.trim() ? profile.profile_pic : undefined,
+      skills,
+      experiences: Array.isArray(profile.experiences) ? profile.experiences : [],
+      education: Array.isArray(profile.education) ? profile.education : [],
+    };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'unexpected error';
+    const timedOut =
+      (err instanceof Error && err.name === 'AbortError') || /timed out/i.test(message);
+    return {
+      username,
+      profileUrl,
+      status: 'not_synced',
+      synced: false,
+      reason: timedOut
+        ? `LinkedIn sync failed: request timed out after ${LINKEDIN_SCRAPER_TIMEOUT_MS}ms`
+        : `LinkedIn sync failed: ${message}`,
+    };
+  }
 }
 
 export async function syncCandidateSocialProfiles(
@@ -120,15 +283,15 @@ export async function syncCandidateSocialProfiles(
     }
   }
 
-  // 2. Sync LinkedIn Metadata if URL provided
+  // 2. LinkedIn sync via the user-approved bytemap scraper
+  // (https://social_scraper.bytemap.in) — the same endpoint the ai-service
+  // sourcing agent already fetches. Real profile data is returned on success;
+  // on failure an honest not_found/not_synced state (with the real reason) is
+  // reported instead of claiming success — no fabricated profile data is ever
+  // returned.
   if (linkedinUrl && linkedinUrl.trim()) {
-    const match = linkedinUrl.match(/linkedin\.com\/in\/([a-zA-Z0-9_-]+)/i);
-    const username = match ? match[1] : 'profile';
-    result.linkedin = {
-      username,
-      profileUrl: linkedinUrl.trim().startsWith('http') ? linkedinUrl.trim() : `https://${linkedinUrl.trim()}`,
-      status: 'Synced',
-    };
+    result.linkedin = await syncLinkedInProfile(linkedinUrl.trim());
+    result.linkedin.skills?.forEach((skill) => extractedSkillsSet.add(skill));
   }
 
   result.extractedSkills = Array.from(extractedSkillsSet);

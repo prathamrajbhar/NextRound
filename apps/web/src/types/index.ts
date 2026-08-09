@@ -349,8 +349,9 @@ export interface OnboardingRecord {
   jobTitle: string;
   orgName: string;
   startDate: string;
-  buddyName: string;
-  managerName: string;
+  // Null when no buddy/manager has been assigned yet (honest "not assigned").
+  buddyName: string | null;
+  managerName: string | null;
   progressPercent: number;
   tasks: OnboardingTask[];
 }
@@ -383,7 +384,7 @@ export interface SimilarCandidate {
   applicationId: string;
   name: string;
   avatar: string;
-  similarityScore: number;
+  similarityScore: number | null;
   outcome: 'hired_success' | 'hired_underperformed' | 'rejected' | 'in_progress';
   sharedTraits: string[];
   jobTitle: string;

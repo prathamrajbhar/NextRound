@@ -16,7 +16,7 @@ interface TalentCandidate {
   skills: string[];
   targetRoles: string[];
   resumeUrl: string | null;
-  similarityScore: number;
+  similarityScore: number | null;
   isBookmarked: boolean;
   bookmarkId: string | null;
   lastActive: string;
@@ -61,7 +61,9 @@ export default function HrTalentPoolPage() {
   const filteredCandidates = safeCandidates.filter((c) => {
     const nameMatch = c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.email.toLowerCase().includes(search.toLowerCase());
-    const scoreMatch = c.similarityScore >= minScore;
+    // Candidates with a null score were never semantically ranked; do not drop
+    // them on the min-score slider (null is "not scored", not a score of 0).
+    const scoreMatch = c.similarityScore === null || c.similarityScore >= minScore;
     const skillMatch = selectedSkill === 'All' || c.skills.includes(selectedSkill);
     return nameMatch && scoreMatch && skillMatch;
   });
@@ -182,7 +184,7 @@ export default function HrTalentPoolPage() {
 
                   <div className="flex flex-col items-end gap-1">
                     <span className="inline-flex items-center gap-0.5 text-[9px] font-black text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 px-2 py-0.5 rounded border border-purple-100 dark:border-purple-900/60 uppercase">
-                      {c.similarityScore}% match
+                      {c.similarityScore !== null ? `${c.similarityScore}% match` : 'Not scored'}
                     </span>
                     {c.isBookmarked && (
                       <span className="inline-flex items-center gap-0.5 text-[8px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-950/60 px-1.5 py-0.2 rounded border border-emerald-100 dark:border-emerald-900/60 uppercase mt-0.5">

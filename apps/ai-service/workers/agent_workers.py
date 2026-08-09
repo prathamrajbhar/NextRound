@@ -48,9 +48,10 @@ SOURCING_ACTIONS: Dict[str, JobHandler] = {
     "ai-jd-assist": process_jd_parser_job,
     "sourcing_index": process_sourcing_job,
     # The Express prep route enqueues prep generation here with action
-    # "prep-generate" (not on the "prep" queue). NOTE: that payload carries
-    # jobTitle/jobDescription instead of companyName/roleArchetype, so generated
-    # content is generic until the two sides are aligned.
+    # "prep-generate" (not on the "prep" queue). The worker reads the job
+    # context from the payload's extraData and resolves the real job title +
+    # organization from the internal job endpoint, so content is never generic
+    # or fabricated.
     "prep-generate": process_prep_job,
 }
 

@@ -31,7 +31,7 @@ NextRound/
 - **Frontend**: Next.js 16.2 (App Router), React 19, TypeScript 6.0, Tailwind CSS 4.3, Lucide React, WebRTC, MediaPipe (Client-side Computer Vision).
 - **Backend API**: Express.js 5.2, TypeScript 6.0, Zod 4.4, Prisma ORM 7.9, PostgreSQL 16 with `pgvector`, Custom JWT, BullMQ 5.80.
 - **AI Engine**: Python 3.13 / 3.12, FastAPI 0.139, LangGraph, Gemini API (`google-genai` SDK v2.10), Groq API v1.5 (Whisper-large-v3 STT), Piper/Coqui TTS.
-- **Infrastructure & Queues**: Turborepo 2.10, Redis 8, S3 / MinIO Object Storage, Nodemailer.
+- **Infrastructure & Queues**: Turborepo 2.10, Redis 8, Native File Storage, Nodemailer.
 
 ---
 

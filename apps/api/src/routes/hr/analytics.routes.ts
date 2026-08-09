@@ -3,6 +3,7 @@ import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { AnalyticsExportQuerySchema } from '@nextround/shared';
+import { enqueueAnalyticsReport } from '../../lib/queues/analytics.queue';
 
 export const analyticsRouter = Router();
 
@@ -299,14 +300,35 @@ analyticsRouter.get(
         return res.send(csvContent);
       }
 
-      // PDF format: returns summary response / download URL metadata
-      return res.json({
+      // PDF format: return the latest report the Analytics Agent actually
+      // generated for this org, or queue a real generation job and report an
+      // honest 202. Never hand back a self-referencing fake download URL.
+      const latestReport = await prisma.agentLog.findFirst({
+        where: { org_id: orgId, action: 'report_generated' },
+        orderBy: { created_at: 'desc' },
+      });
+      const output = latestReport?.output && typeof latestReport.output === 'object'
+        ? (latestReport.output as { report_url?: unknown })
+        : undefined;
+      const reportUrl = output?.report_url;
+
+      if (latestReport && typeof reportUrl === 'string' && reportUrl.trim().length > 0) {
+        return res.json({
+          success: true,
+          data: {
+            reportUrl,
+            format: 'pdf',
+            generatedAt: latestReport.created_at.toISOString(),
+          },
+        });
+      }
+
+      await enqueueAnalyticsReport({ orgId, type: 'manual_export', format: 'pdf' });
+      return res.status(202).json({
         success: true,
         data: {
-          reportUrl: `/api/v1/hr/analytics/export?format=pdf&download=true`,
-          format: 'pdf',
-          generatedAt: new Date().toISOString(),
-          message: 'PDF Executive Analytics Report ready for download',
+          status: 'generating',
+          message: 'Analytics PDF generation queued; it will be available shortly.',
         },
       });
     } catch (err) {

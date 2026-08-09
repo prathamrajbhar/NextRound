@@ -113,7 +113,7 @@ The Interviewer Agent replaces static question scripts with a fully adaptive dia
 
 **Trigger:** Candidate joins interview at scheduled time
 
-**Queue:** `interview-queue` (post-interview processing: transcript assembly, audio S3 upload)
+**Queue:** `interview-queue` (post-interview processing: transcript assembly, audio storage upload)
 
 **Internal callback:** `PATCH /api/v1/internal/interviews/:id/complete`
 
@@ -157,7 +157,7 @@ The Interviewer Agent replaces static question scripts with a fully adaptive dia
 - Asynchronous video prompt responses — candidates record video answers to 2–4 prompt questions on their own schedule.
 - Camera preview, recording controls, and auto-transcription of recorded responses.
 - MediaPipe proctoring HUD active during recording.
-- Recorded video is uploaded to S3. Auto-transcription is used for downstream evaluation.
+- Recorded video is uploaded to storage service. Auto-transcription is used for downstream evaluation.
 
 **Queue:** `assessment-queue` (video transcript scoring)
 
@@ -241,7 +241,7 @@ The Interviewer Agent replaces static question scripts with a fully adaptive dia
 
 **Internal callback:** `POST /api/v1/internal/analytics/:orgId/weekly-report`
 
-**DB records modified:** Aggregated metric rows, PDF stored in S3, `AgentLog`
+**DB records modified:** Aggregated metric rows, PDF stored in storage service, `AgentLog`
 
 ---
 

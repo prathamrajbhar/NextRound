@@ -223,7 +223,7 @@ Secured endpoints callable exclusively by the Python AI service via `X-Internal-
 | PATCH | `/internal/applications/:id/sourcing-result` | Write sourced candidate pool ranking. |
 | PATCH | `/internal/applications/:id/screening-result` | Write resume score, gap analysis, semantic match score. |
 | POST | `/internal/interviews/:id/schedule-slots` | Save 3 proposed interview slot options from Scheduler Agent. |
-| PATCH | `/internal/interviews/:id/complete` | Save final transcript, audio S3 URL, proctor flags, engagement telemetry. |
+| PATCH | `/internal/interviews/:id/complete` | Save final transcript, audio storage URL, proctor flags, engagement telemetry. |
 | PATCH | `/internal/applications/:id/assessment-result` | Save aptitude category score breakdown. |
 | PATCH | `/internal/applications/:id/coding-result` | Save code pass rate, execution timing, memory, complexity score. |
 | PATCH | `/internal/applications/:id/video-screening-result` | Save video transcript and screening score. |

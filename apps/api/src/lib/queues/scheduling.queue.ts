@@ -5,6 +5,8 @@ export interface SchedulingJobPayload {
   interviewId?: string;
   candidateEmail?: string;
   jobTitle?: string;
+  orgId?: string;
+  availabilityHours?: Record<string, unknown>;
   action?: 'generate_slots' | 'confirm_slot' | 'reschedule';
   requestedSlot?: string;
 }

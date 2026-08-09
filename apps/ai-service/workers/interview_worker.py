@@ -28,14 +28,24 @@ async def process_interview_job(job_data: dict) -> bool:
     async def run() -> dict:
         raw_transcript = job_data.get("transcript") or []
 
+        # Completion scoring must run on the real transcript only. An empty (or
+        # malformed) transcript is skipped explicitly — no synthetic closing turn
+        # is injected and no fabricated score is emitted. The application stays
+        # in its current state for human review.
+        if not isinstance(raw_transcript, list) or len(raw_transcript) == 0:
+            logger.warning(
+                f"Interview {target_interview_id} has no transcript turns; "
+                "skipping completion scoring (needs human review)."
+            )
+            raise AgentJobSkip
+
         # Run Interviewer Agent in completion mode to finalize scores
         initial_state: InterviewerState = {
             "interview_id": target_interview_id,
             "application_id": application_id or target_interview_id,
-            "conversation_history": raw_transcript if isinstance(raw_transcript, list) else [],
+            "conversation_history": raw_transcript,
             "current_stage": "closing",
-            "turn_number": len(raw_transcript) if isinstance(raw_transcript, list) else 8,
-            "latest_candidate_response": "Thank you for the interview.",
+            "turn_number": len(raw_transcript),
         }
 
         output_state = run_interviewer_agent(initial_state)
@@ -62,13 +72,22 @@ async def process_interview_job(job_data: dict) -> bool:
             json=patch_payload,
         )
 
-        # Execute Sentiment + Stress Analyser on voice interview transcript
+        # Execute Sentiment + Stress Analyser on voice interview transcript. The
+        # audio-prosody ML pipeline is not built yet, so the service reports an
+        # "unavailable" state — skip persisting a report rather than storing
+        # fabricated metrics on the interview record.
         try:
             sentiment_report = analyze_interview_sentiment(target_interview_id, raw_transcript)
-            await callback_client.patch(
-                f"internal/interviews/{target_interview_id}/sentiment",
-                json={"sentiment_report": sentiment_report},
-            )
+            if not sentiment_report or sentiment_report.get("status") == "unavailable":
+                logger.info(
+                    f"Sentiment analysis unavailable for interview {target_interview_id}; "
+                    "skipping sentiment report persistence."
+                )
+            else:
+                await callback_client.patch(
+                    f"internal/interviews/{target_interview_id}/sentiment",
+                    json={"sentiment_report": sentiment_report},
+                )
         except Exception as sentiment_err:
             logger.warning(f"Failed to post sentiment report for interview {target_interview_id}: {sentiment_err}")
 

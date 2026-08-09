@@ -1,9 +1,13 @@
 import { Topic } from './interviewTopics';
 
+export type InterviewScoreStatus = 'pending_evaluation' | 'pending_review' | 'completed';
+
 export interface ScoreResults {
-  score: number;
+  status: InterviewScoreStatus;
+  isPending: boolean;
+  score: number | null;
   feedback: string;
-  rubric: { technical: number; communication: number; cultureFit: number };
+  rubric: { technical: number | null; communication: number | null; cultureFit: number | null };
   transcript: { question: string; answer: string; feedback: string }[];
 }
 
@@ -16,23 +20,26 @@ export function evaluateInterview({
   topics: Topic[];
   transcriptData: { question: string; answer: string; feedback: string }[];
 }): ScoreResults {
+  // Honest pending state: no real evaluator scorecard is available to this
+  // function. Scores are produced server-side by the Interviewer/Evaluator agent
+  // (see apps/api/src/routes/interviews/interview.routes.ts POST /:id/end, which
+  // enqueues the evaluation job) and must NOT be fabricated on the client.
   const answeredCount = transcriptData.filter((t) => t.answer.trim().length > 0).length;
-  const totalTopics = topics.length || 1;
-  const baseScore = answeredCount === 0 ? 0 : Math.min(100, Math.round((answeredCount / totalTopics) * 85 + 15));
-
 
   return {
-    score: baseScore,
-    feedback: `Interview evaluation completed for ${role} position across ${answeredCount} responses.`,
+    status: 'pending_evaluation',
+    isPending: true,
+    score: null,
+    feedback: `Your responses have been recorded and sent for AI evaluation. ${answeredCount} of ${topics.length} topic(s) answered for the ${role} role.`,
     rubric: {
-      technical: baseScore,
-      communication: baseScore,
-      cultureFit: baseScore,
+      technical: null,
+      communication: null,
+      cultureFit: null,
     },
     transcript: transcriptData.map((item) => ({
       question: item.question,
       answer: item.answer,
-      feedback: 'Response logged for review.',
+      feedback: '',
     })),
   };
 }

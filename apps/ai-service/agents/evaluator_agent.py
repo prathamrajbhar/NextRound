@@ -17,24 +17,43 @@ class ScoringIsolationError(Exception):
     pass
 
 
-def _as_float(value, default: float) -> float:
-    """Coerce a score to float, tolerating string/None inputs from job payloads."""
+def _as_optional_float(value):
+    """Coerce a score to float; None for missing/non-numeric stage scores.
+
+    A missing stage score must never be rewritten to a fabricated default — it
+    stays None so the composite is only computed over real signals.
+    """
+    if value is None:
+        return None
     try:
         return float(value)
     except (TypeError, ValueError):
-        return default
+        return None
+
+
+def _weighted_score(pairs):
+    """Weighted mean over present (value, weight) pairs; None when none present.
+
+    Renormalizes the weights to the stages that actually produced a score so a
+    partially-measured candidate is not scored against fabricated stages.
+    """
+    present = [(v, w) for v, w in pairs if v is not None]
+    total = sum(w for _, w in present)
+    if not present or total <= 0:
+        return None
+    return round(sum(v * w for v, w in present) / total, 2)
 
 
 class EvaluatorState(TypedDict, total=False):
     application_id: str
     interview_id: Optional[str]
     stage: str
-    screening_score: float
-    aptitude_score: float
-    coding_score: float
-    interview_score: float
-    composite_score: float
-    dimension_scores: Dict[str, float]
+    screening_score: Optional[float]
+    aptitude_score: Optional[float]
+    coding_score: Optional[float]
+    interview_score: Optional[float]
+    composite_score: Optional[float]
+    dimension_scores: Dict[str, Optional[float]]
     confidence: float
     isolation_valid: bool
     proctor_flags: List[str]
@@ -46,21 +65,26 @@ class EvaluatorState(TypedDict, total=False):
 
 
 def aggregate_scores_node(state: EvaluatorState) -> EvaluatorState:
-    """Node 1: Aggregate multi-stage evaluation scores into a weighted composite score."""
-    scr = _as_float(state.get("screening_score"), 80.0)
-    apt = _as_float(state.get("aptitude_score"), 85.0)
-    cod = _as_float(state.get("coding_score"), 90.0)
-    inv = _as_float(state.get("interview_score"), 88.0)
+    """Node 1: Aggregate multi-stage evaluation scores into a weighted composite score.
+
+    Missing stage scores are never fabricated. The composite and each dimension
+    are renormalized over only the stages that actually produced a score; if no
+    stage has a real score the composite is None (downstream decision logic must
+    route that to HR review, never to an auto-reject).
+    """
+    scr = _as_optional_float(state.get("screening_score"))
+    apt = _as_optional_float(state.get("aptitude_score"))
+    cod = _as_optional_float(state.get("coding_score"))
+    inv = _as_optional_float(state.get("interview_score"))
 
     # Standard stage weighting: 20% Screening, 20% Aptitude, 30% Coding, 30% Voice Interview
-    composite = (scr * 0.20) + (apt * 0.20) + (cod * 0.30) + (inv * 0.30)
-    composite_score = round(composite, 2)
+    composite_score = _weighted_score([(scr, 0.20), (apt, 0.20), (cod, 0.30), (inv, 0.30)])
 
     dimension_scores = {
-        "technical_competency": round((cod * 0.6) + (inv * 0.4), 2),
-        "problem_solving": round((apt * 0.5) + (cod * 0.5), 2),
-        "communication": round((inv * 0.8) + (scr * 0.2), 2),
-        "foundational_readiness": round((scr * 0.5) + (apt * 0.5), 2),
+        "technical_competency": _weighted_score([(cod, 0.6), (inv, 0.4)]),
+        "problem_solving": _weighted_score([(apt, 0.5), (cod, 0.5)]),
+        "communication": _weighted_score([(inv, 0.8), (scr, 0.2)]),
+        "foundational_readiness": _weighted_score([(scr, 0.5), (apt, 0.5)]),
     }
 
     # Record exact inputs used for scoring for isolation auditing
@@ -109,7 +133,11 @@ def validate_isolation_node(state: EvaluatorState) -> EvaluatorState:
 
 def compute_confidence_node(state: EvaluatorState) -> EvaluatorState:
     """Node 4: Calculate evaluation confidence rating (0.0 to 1.0) based on score variance & data completeness."""
-    dim_scores = list(state.get("dimension_scores", {}).values())
+    # Dimension scores that were never measured are None and must not participate.
+    dim_scores = [
+        x for x in state.get("dimension_scores", {}).values()
+        if isinstance(x, (int, float))
+    ]
 
     if dim_scores:
         avg = sum(dim_scores) / len(dim_scores)
@@ -126,9 +154,11 @@ def compute_confidence_node(state: EvaluatorState) -> EvaluatorState:
     else:
         confidence = 0.50
 
+    score_label = state.get("composite_score")
+    score_label = score_label if score_label is not None else "N/A"
     state["confidence"] = round(confidence, 2)
     state["reasoning"] = (
-        f"Evaluation completed with composite score of {state.get('composite_score')}/100 "
+        f"Evaluation completed with composite score of {score_label}/100 "
         f"and confidence rating of {confidence}."
     )
     return state
@@ -168,10 +198,10 @@ async def run_evaluator_agent(
     application_id: str,
     stage: str = "final_evaluation",
     interview_id: Optional[str] = None,
-    screening_score: float = 80.0,
-    aptitude_score: float = 85.0,
-    coding_score: float = 90.0,
-    interview_score: float = 88.0,
+    screening_score: Optional[float] = None,
+    aptitude_score: Optional[float] = None,
+    coding_score: Optional[float] = None,
+    interview_score: Optional[float] = None,
     proctor_flags: Optional[List[str]] = None,
     proctor_telemetry: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:

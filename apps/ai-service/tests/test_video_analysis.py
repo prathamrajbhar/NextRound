@@ -42,6 +42,36 @@ def test_analyze_frame_expression_off_center_gaze():
     assert res["primary_emotion"] == "hesitant"
 
 
+def test_analyze_frame_expression_no_landmarks_is_honest_no_signal():
+    """An image without real landmark telemetry must NOT fabricate values."""
+    res = analyze_frame_expression(image_base64="data:image/jpeg;base64,AAAA")
+    assert res["success"] is True
+    assert res["signal_available"] is False
+    assert res["primary_emotion"] is None
+    assert res["emotions_distribution"] is None
+    assert res["gaze"]["eye_contact"] is None
+    assert res["gaze"]["direction"] == "no_signal"
+    assert res["gaze"]["head_pose"] is None
+    assert res["engagement_score"] is None
+    assert res["soft_skills_confidence"] is None
+
+
+def test_analyze_video_session_image_only_frames_do_not_fabricate():
+    """Frames that carry only an image (no landmarks) are excluded from metrics."""
+    session_res = analyze_video_session(
+        [{"image_base64": "data:image/jpeg;base64,AAAA"}, {"image_base64": "data:image/jpeg;base64,BBBB"}]
+    )
+    assert session_res["success"] is True
+    assert session_res["total_frames_analyzed"] == 2
+    summary = session_res["session_summary"]
+    assert summary["eye_contact_percentage"] is None
+    assert summary["average_engagement_score"] is None
+    assert summary["soft_skills_confidence_index"] is None
+    assert summary["focus_stability_score"] is None
+    assert summary["primary_dominant_emotion"] is None
+    assert summary["emotion_distribution_percentages"] is None
+
+
 def test_analyze_video_session():
     """Verify multi-frame session aggregation and timeline analytics generation."""
     frames = [

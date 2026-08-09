@@ -18,6 +18,15 @@ class Settings(BaseSettings):
         "UPLOAD_DIR",
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../../api/uploads"))
     )
+    # Canonical shared data (aptitude + coding problem banks) lives in the
+    # workspace package `packages/shared/data`. We resolve it relative to this
+    # file (apps/ai-service/core -> ../../../packages/shared/data) so it works
+    # from any cwd (uvicorn, pytest, workers). Override with SHARED_DATA_DIR if
+    # the workspace layout ever changes (e.g. packaged containers).
+    shared_data_dir: str = os.getenv(
+        "SHARED_DATA_DIR",
+        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../packages/shared/data"))
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

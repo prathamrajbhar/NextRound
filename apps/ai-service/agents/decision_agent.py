@@ -16,27 +16,38 @@ except ImportError:
 class DecisionState(TypedDict, total=False):
     application_id: str
     evaluation_id: Optional[str]
-    composite_score: float
-    confidence: float
+    composite_score: Optional[float]
+    confidence: Optional[float]
     decision: str  # 'hire' | 'reject' | 'hold_for_review'
     auto_offer: bool
     offer_letter_content: str
     rejection_email_content: str
     hold_notice_content: str
     reasoning: str
+    # Job offer terms carried from the job payload that reaches the agent.
+    # These are used verbatim in the draft offer letter and never invented.
+    job_title: Optional[str]
+    salary: Optional[str]
+    equity: Optional[str]
 
 
 def threshold_match_node(state: DecisionState) -> DecisionState:
     """Node 1: Compare composite score and confidence rating against target decision thresholds."""
-    score = state.get("composite_score", 0.0)
-    conf = state.get("confidence", 1.0)
+    score = state.get("composite_score")
+    conf = state.get("confidence")
+    if conf is None:
+        conf = 1.0
 
     # Decision Threshold Contract:
     # Score >= 80.0 AND Confidence >= 0.70 -> HIRE (Auto Offer)
     # Score < 65.0 AND Confidence >= 0.70 -> REJECT (Constructive Rejection)
     # Confidence < 0.70 OR Score 65..79 -> HOLD (HR Manual Review Queue)
+    # No composite score -> HOLD (an unknown score must never become an auto-reject)
 
-    if conf < 0.70:
+    if score is None:
+        decision = "hold_for_review"
+        reasoning = "No composite score was produced for this application. Routed to HR Hold Queue for manual review."
+    elif conf < 0.70:
         decision = "hold_for_review"
         reasoning = f"Confidence rating ({conf}) is below 0.70 threshold. Application routed to HR Hold Queue."
     elif score >= 80.0:
@@ -56,27 +67,37 @@ def threshold_match_node(state: DecisionState) -> DecisionState:
 
 
 def draft_offer_node(state: DecisionState) -> DecisionState:
-    """Node 2: Draft personalized offer letter document when decision is HIRE."""
+    """Node 2: Draft personalized offer letter from the job payload when decision is HIRE.
+
+    Job title, salary, and equity come from the job payload that reaches the
+    agent. When a term is absent it is carried as pending ("To be confirmed")
+    rather than inventing a value.
+    """
     if state.get("decision") != "hire":
         return state
 
-    app_id = state.get("application_id")
     score = state.get("composite_score")
+    job_title = state.get("job_title") or "the position"
+    salary = state.get("salary")
+    equity = state.get("equity")
+
+    salary_line = f"Base Salary: {salary} / year" if salary else "Base Salary: To be confirmed"
+    equity_line = f"Equity: {equity}" if equity else "Equity: To be confirmed"
 
     content = (
         f"OFFER OF EMPLOYMENT\n\n"
         f"We are pleased to offer you a position at NextRound / HireOS partner organization.\n"
         f"Based on your outstanding overall candidate evaluation score of {score}/100 across our autonomous screening, "
         f"aptitude, coding, and voice interview assessments, we believe you will be an invaluable addition to our engineering team.\n\n"
-        f"Position: Software Engineer\n"
-        f"Base Salary: $150,000 / year\n"
-        f"Equity: 0.15% ESOPs\n"
+        f"Position: {job_title}\n"
+        f"{salary_line}\n"
+        f"{equity_line}\n"
         f"Validity: 14 Days from issuance\n\n"
         f"Please review the formal details and sign digitally to confirm your acceptance."
     )
 
     offer_text = generate_text(
-        f"Draft a formal, welcoming job offer letter body for a Software Engineer who scored {score}/100 in technical assessments."
+        f"Draft a formal, welcoming job offer letter body for a {job_title} who scored {score}/100 in technical assessments."
     )
     if offer_text:
         content = offer_text
@@ -118,9 +139,11 @@ def draft_hold_notice_node(state: DecisionState) -> DecisionState:
     score = state.get("composite_score")
     conf = state.get("confidence")
 
+    score_label = score if score is not None else "N/A"
+    conf_label = conf if conf is not None else "N/A"
     content = (
         f"APPLICATION FLAGGED FOR HR REVIEW\n"
-        f"Composite Score: {score}/100 | Evaluation Confidence: {conf}\n"
+        f"Composite Score: {score_label}/100 | Evaluation Confidence: {conf_label}\n"
         f"This application requires human HR review and manual override to finalize the hiring decision."
     )
 
@@ -182,17 +205,27 @@ _decision_app = build_decision_graph()
 async def run_decision_agent(
     application_id: str,
     evaluation_id: Optional[str] = None,
-    composite_score: float = 0.0,
+    composite_score: Optional[float] = None,
     confidence: float = 1.0,
+    job_title: Optional[str] = None,
+    salary: Optional[str] = None,
+    equity: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Execute Decision Agent workflow to produce threshold-gated decision and draft assets.
+
+    ``job_title``/``salary``/``equity`` are the job terms used to draft the offer
+    letter; they must come from the job payload, never from constants. Absent
+    terms are carried as pending rather than invented.
     """
     initial_state: DecisionState = {
         "application_id": application_id,
         "evaluation_id": evaluation_id,
         "composite_score": composite_score,
         "confidence": confidence,
+        "job_title": job_title,
+        "salary": salary,
+        "equity": equity,
     }
 
     if _decision_app:

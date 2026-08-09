@@ -71,7 +71,8 @@ async def test_fetch_linkedin_profile_success():
 async def test_aggregate_external_profile():
     """Verify profile aggregation and 768-dim vector embedding generation."""
     with patch("services.sourcing_service.fetch_github_profile", new_callable=AsyncMock) as mock_gh, \
-         patch("services.sourcing_service.fetch_linkedin_profile", new_callable=AsyncMock) as mock_li:
+         patch("services.sourcing_service.fetch_linkedin_profile", new_callable=AsyncMock) as mock_li, \
+         patch("services.sourcing_service.embed_text_with_source", return_value=([0.1] * 768, "onnx")) as mock_embed:
 
         mock_gh.return_value = {
             "success": True,
@@ -95,7 +96,64 @@ async def test_aggregate_external_profile():
         assert c["embedding_dimensions"] == 768
         assert "C" in c["extracted_skills"]
         assert "Systems Architecture" in c["extracted_skills"]
-        assert c["similarity_score"] > 50.0
+        # Both embeddings came from a real engine, so a real score is reported
+        # (profile + job vectors embedded = 2 calls).
+        assert mock_embed.call_count == 2
+        assert c["similarity_score"] is not None
+        assert 0.0 <= c["similarity_score"] <= 100.0
+
+
+@pytest.mark.asyncio
+async def test_aggregate_external_profile_reports_real_cosine():
+    """Verify similarity_score is the REAL cosine percent — the 50 floor is gone."""
+    orth_a = [1.0] + [0.0] * 767
+    orth_b = [0.0] * 767 + [1.0]
+    with patch("services.sourcing_service.fetch_github_profile", new_callable=AsyncMock) as mock_gh, \
+         patch("services.sourcing_service.fetch_linkedin_profile", new_callable=AsyncMock) as mock_li, \
+         patch(
+             "services.sourcing_service.embed_text_with_source",
+             side_effect=[(orth_a, "onnx"), (orth_b, "onnx")],
+         ):
+
+        mock_gh.return_value = {"success": True, "name": "Linus Torvalds", "bio": "Linux Kernel", "extracted_skills": ["C"]}
+        mock_li.return_value = {"success": True, "name": "Linus Torvalds", "headline": "Linux Creator", "extracted_skills": ["Systems Architecture"]}
+
+        agg = await aggregate_external_profile("torvalds", "torvalds", target_role="Systems Engineer")
+        # Orthogonal vectors -> cosine 0.0, no artificial floor inflated it.
+        assert agg["candidate"]["similarity_score"] == 0.0
+
+
+@pytest.mark.asyncio
+async def test_aggregate_external_profile_hash_fallback_is_none():
+    """Verify similarity_score is None when embeddings come from the hash fallback."""
+    with patch("services.sourcing_service.fetch_github_profile", new_callable=AsyncMock) as mock_gh, \
+         patch("services.sourcing_service.fetch_linkedin_profile", new_callable=AsyncMock) as mock_li, \
+         patch(
+             "services.sourcing_service.embed_text_with_source",
+             return_value=([0.0] * 768, "hash-fallback"),
+         ):
+
+        mock_gh.return_value = {"success": True, "name": "Linus Torvalds", "bio": "Linux Kernel", "extracted_skills": ["C"]}
+        mock_li.return_value = {"success": True, "name": "Linus Torvalds", "headline": "Linux Creator", "extracted_skills": ["Systems Architecture"]}
+
+        agg = await aggregate_external_profile("torvalds", "torvalds", target_role="Systems Engineer")
+        assert agg["candidate"]["similarity_score"] is None
+
+
+@pytest.mark.asyncio
+async def test_aggregate_external_profile_no_job_text_similarity_none():
+    """Verify similarity_score is None (no 85 baseline) when no job/target text is given."""
+    with patch("services.sourcing_service.fetch_github_profile", new_callable=AsyncMock) as mock_gh, \
+         patch("services.sourcing_service.fetch_linkedin_profile", new_callable=AsyncMock) as mock_li, \
+         patch("services.sourcing_service.embed_text_with_source", return_value=([0.1] * 768, "onnx")) as mock_embed:
+
+        mock_gh.return_value = {"success": True, "name": "Linus Torvalds", "bio": "Linux Kernel", "extracted_skills": ["C"]}
+        mock_li.return_value = {"success": True, "name": "Linus Torvalds", "headline": "Linux Creator", "extracted_skills": ["Systems Architecture"]}
+
+        agg = await aggregate_external_profile("torvalds", "torvalds")
+        assert agg["candidate"]["similarity_score"] is None
+        # Only the profile vector is embedded; no job vector is produced.
+        assert mock_embed.call_count == 1
 
 
 def test_sourcing_endpoints():

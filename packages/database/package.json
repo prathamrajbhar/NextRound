@@ -8,6 +8,8 @@
     "build": "tsc --build",
     "clean": "rm -rf dist",
     "generate": "prisma generate",
+    "lint": "tsc --noEmit",
+    "test": "echo 'No tests in database package'",
     "migrate": "prisma migrate dev",
     "seed": "prisma db seed"
   },

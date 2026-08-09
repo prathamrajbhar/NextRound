@@ -1,9 +1,34 @@
 import logging
+from typing import Optional
 from core.http_client import callback_client
 from agents.decision_agent import run_decision_agent
 from workers.worker_base import fetch_internal, run_agent_job
 
 logger = logging.getLogger("decision_worker")
+
+
+def _coerce_optional_float(value):
+    """Coerce a number/string to float; None stays None.
+
+    A missing composite is never rewritten to 0.0 — coercing an unknown score to
+    zero would silently turn it into an auto-reject downstream.
+    """
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _extract_equity(job: dict) -> Optional[str]:
+    """Read equity from the job's thresholds JSON, mirroring the API deriveEquity helper."""
+    thresholds = job.get("thresholds")
+    if isinstance(thresholds, dict):
+        equity = thresholds.get("equity")
+        if isinstance(equity, str) and equity:
+            return equity
+    return None
 
 
 async def process_decision_job(job_data: dict) -> bool:
@@ -26,23 +51,32 @@ async def process_decision_job(job_data: dict) -> bool:
         composite_score = job_data.get("compositeScore")
         confidence = job_data.get("confidence")
 
-        # Defensive: if the decision job was enqueued without explicit scores or an
-        # evaluation id (e.g., legacy HR path), fetch the stored evaluation record
-        # from Express so the Decision Agent operates on real composite data.
-        if evaluation_id is None or composite_score is None:
-            try:
-                data = await fetch_internal(f"internal/applications/{application_id}/raw")
-                evals = data.get("evaluations") or []
-                if evals:
-                    evaluation_id = evaluation_id or evals[0].get("id")
-                    if composite_score is None:
-                        composite_score = evals[0].get("composite_score")
-                    if confidence is None:
-                        confidence = evals[0].get("confidence")
-            except Exception as fetch_err:
-                logger.warning(f"Failed to fetch stored evaluation for decision fallback: {fetch_err}")
+        # Fetch the stored application (with its Job) so the Decision Agent drafts
+        # the offer letter from real job terms (title, salary, equity) — never
+        # constants. Also serves as a defensive fallback for missing scores.
+        job_terms = {}
+        try:
+            data = await fetch_internal(f"internal/applications/{application_id}/raw")
+            job = data.get("job") or {}
+            job_terms = {
+                "job_title": job.get("title"),
+                "salary": job.get("salary"),
+                "equity": _extract_equity(job),
+            }
+            evals = data.get("evaluations") or []
+            if evals:
+                evaluation_id = evaluation_id or evals[0].get("id")
+                if composite_score is None:
+                    composite_score = evals[0].get("composite_score")
+                if confidence is None:
+                    confidence = evals[0].get("confidence")
+        except Exception as fetch_err:
+            logger.warning(f"Failed to fetch stored application for decision context: {fetch_err}")
 
-        composite_score = float(composite_score or 0.0)
+        # A missing composite must never be coerced to 0.0 (which would route to
+        # an auto-reject). It stays None and the Decision Agent sends it to the
+        # HR Hold Queue for manual review instead.
+        composite_score = _coerce_optional_float(composite_score)
         confidence = float(confidence or 1.0)
 
         # Run Decision LangGraph Agent
@@ -51,6 +85,9 @@ async def process_decision_job(job_data: dict) -> bool:
             evaluation_id=evaluation_id,
             composite_score=composite_score,
             confidence=confidence,
+            job_title=job_terms.get("job_title"),
+            salary=job_terms.get("salary"),
+            equity=job_terms.get("equity"),
         )
 
         eval_id = evaluation_id or f"eval_{application_id}"

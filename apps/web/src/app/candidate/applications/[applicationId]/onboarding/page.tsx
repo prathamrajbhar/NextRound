@@ -168,7 +168,7 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
             <div className="space-y-3 text-xs font-semibold text-slate-700">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100">
-                  {onboard.managerName.split(' ').map(n => n[0]).join('')}
+                  {onboard.managerName?.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div>
                   <span className="block font-bold text-slate-800">{onboard.managerName}</span>
@@ -177,7 +177,7 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
               </div>
               <div className="flex items-center gap-3 pt-2">
                 <div className="h-8 w-8 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold border border-emerald-100">
-                  {onboard.buddyName.split(' ').map(n => n[0]).join('')}
+                  {onboard.buddyName?.split(' ').map(n => n[0]).join('')}
                 </div>
                 <div>
                   <span className="block font-bold text-slate-800">{onboard.buddyName}</span>

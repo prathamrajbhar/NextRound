@@ -21,6 +21,7 @@ import { CandidateHeader } from './components/CandidateHeader';
 import { AssessmentScorecard } from './components/AssessmentScorecard';
 
 interface VoiceData {
+  status?: 'pending_evaluation' | 'pending_review' | 'completed';
   score?: number;
   rubric?: { technical?: number; communication?: number; cultureFit?: number };
   feedback?: string;
@@ -75,15 +76,19 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
           let mergedReasoning = appData.reasoning || '';
 
           if (voiceInterviewData) {
-            const vScore = voiceInterviewData.score ?? 0;
-            mergedScores = {
-              composite: vScore,
-              technical: voiceInterviewData.rubric?.technical ?? 0,
-              communication: voiceInterviewData.rubric?.communication ?? 0,
-              problemSolving: 0,
-              experience: 0,
-              confidence: 0,
-            };
+            // Only override the server-authoritative scores with a real,
+            // completed client scorecard. A pending review has no score, so it
+            // must not clobber the server scores from the evaluator agent.
+            if (voiceInterviewData.status === 'completed' && typeof voiceInterviewData.score === 'number') {
+              mergedScores = {
+                composite: voiceInterviewData.score,
+                technical: voiceInterviewData.rubric?.technical ?? 0,
+                communication: voiceInterviewData.rubric?.communication ?? 0,
+                problemSolving: 0,
+                experience: 0,
+                confidence: 0,
+              };
+            }
             mergedReasoning = voiceInterviewData.feedback || mergedReasoning;
           }
 

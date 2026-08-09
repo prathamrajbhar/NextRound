@@ -1,4 +1,3 @@
-import base64
 import logging
 import math
 from typing import Dict, Any, List, Optional
@@ -22,31 +21,32 @@ def analyze_frame_expression(
             "error": "Either image_base64 or landmark_data must be provided"
         }
 
-    # Extract landmark coordinates or fallback to baseline feature extraction
-    yaw = 0.0
-    pitch = 0.0
-    roll = 0.0
-    smile_ratio = 0.2
-    eye_openness = 0.8
+    # Without real landmark telemetry there is no signal to analyze. An image
+    # payload alone cannot truthfully yield gaze/emotion/engagement values, so
+    # the result is an honest "no_signal" (never a byte-hash heuristic).
+    if not landmark_data:
+        return {
+            "success": True,
+            "signal_available": False,
+            "primary_emotion": None,
+            "emotions_distribution": None,
+            "gaze": {
+                "eye_contact": None,
+                "direction": "no_signal",
+                "head_pose": None,
+            },
+            "engagement_score": None,
+            "soft_skills_confidence": None,
+        }
 
-    if landmark_data:
-        yaw = float(landmark_data.get("yaw", 0.0))
-        pitch = float(landmark_data.get("pitch", 0.0))
-        roll = float(landmark_data.get("roll", 0.0))
-        smile_ratio = float(landmark_data.get("smile_ratio", 0.2))
-        eye_openness = float(landmark_data.get("eye_openness", 0.8))
-    elif image_base64:
-        # Heuristic analysis based on payload size & image feature hash
-        clean_b64 = image_base64.split(",")[-1]
-        try:
-            raw_bytes = base64.b64decode(clean_b64[:200] + "==")
-            seed_val = sum(raw_bytes) % 100
-            yaw = ((seed_val % 20) - 10) * 1.0
-            pitch = ((seed_val % 10) - 5) * 1.0
-            smile_ratio = 0.15 + (seed_val % 40) / 100.0
-            eye_openness = 0.6 + (seed_val % 30) / 100.0
-        except Exception:
-            pass
+    # Real landmark telemetry analysis path. Missing individual landmark keys
+    # still default to baseline values — the caller supplied landmarks, so the
+    # analysis legitimately runs.
+    yaw = float(landmark_data.get("yaw", 0.0))
+    pitch = float(landmark_data.get("pitch", 0.0))
+    roll = float(landmark_data.get("roll", 0.0))
+    smile_ratio = float(landmark_data.get("smile_ratio", 0.2))
+    eye_openness = float(landmark_data.get("eye_openness", 0.8))
 
     # Gaze direction determination
     abs_yaw = abs(yaw)
@@ -123,33 +123,59 @@ def analyze_video_session(frames: List[Dict[str, Any]]) -> Dict[str, Any]:
     total_confidence = 0.0
     emotion_counts: Dict[str, int] = {e: 0 for e in EMOTIONS}
     off_screen_flags = 0
+    no_signal_frames = 0
 
-    for idx, f in enumerate(frames):
+    for f in frames:
         img_b64 = f.get("image_base64", "")
-        landmarks = f.get("landmark_data") or {
-            "yaw": f.get("yaw", 0.0),
-            "pitch": f.get("pitch", 0.0),
-            "roll": f.get("roll", 0.0),
-            "smile_ratio": f.get("smile_ratio", 0.2),
-            "eye_openness": f.get("eye_openness", 0.8),
-        }
+        # Landmarks are only trusted when the frame actually carries them.
+        # A frame that only ships an image must not be coerced into fake
+        # baseline landmarks — it yields an honest "no_signal" result.
+        landmarks = f.get("landmark_data")
+        if not landmarks:
+            present = {
+                key: f[key]
+                for key in ("yaw", "pitch", "roll", "smile_ratio", "eye_openness")
+                if f.get(key) is not None
+            }
+            landmarks = present or None
 
         analysis = analyze_frame_expression(img_b64, landmarks)
-        if analysis.get("success"):
-            frame_results.append(analysis)
-            p_emotion = analysis.get("primary_emotion", "neutral")
-            emotion_counts[p_emotion] = emotion_counts.get(p_emotion, 0) + 1
+        if not analysis.get("success"):
+            continue
+        frame_results.append(analysis)
+        if analysis.get("signal_available") is False:
+            no_signal_frames += 1
+            continue
+        p_emotion = analysis.get("primary_emotion", "neutral")
+        emotion_counts[p_emotion] = emotion_counts.get(p_emotion, 0) + 1
 
-            if analysis.get("gaze", {}).get("eye_contact"):
-                eye_contact_count += 1
-            else:
-                if abs(analysis.get("gaze", {}).get("head_pose", {}).get("yaw", 0.0)) > 20.0:
-                    off_screen_flags += 1
+        if analysis.get("gaze", {}).get("eye_contact"):
+            eye_contact_count += 1
+        else:
+            if abs(analysis.get("gaze", {}).get("head_pose", {}).get("yaw", 0.0)) > 20.0:
+                off_screen_flags += 1
 
-            total_engagement += analysis.get("engagement_score", 0.0)
-            total_confidence += analysis.get("soft_skills_confidence", 0.0)
+        total_engagement += analysis.get("engagement_score", 0.0)
+        total_confidence += analysis.get("soft_skills_confidence", 0.0)
 
-    num_valid = max(1, len(frame_results))
+    # Aggregated metrics are computed only from frames with a real signal.
+    num_valid = len(frame_results) - no_signal_frames
+    if num_valid <= 0:
+        return {
+            "success": True,
+            "total_frames_analyzed": total_frames,
+            "session_summary": {
+                "eye_contact_percentage": None,
+                "average_engagement_score": None,
+                "soft_skills_confidence_index": None,
+                "focus_stability_score": None,
+                "off_screen_gaze_events": off_screen_flags,
+                "primary_dominant_emotion": None,
+                "emotion_distribution_percentages": None,
+            },
+            "timeline_samples": [],
+        }
+
     eye_contact_percentage = round((eye_contact_count / num_valid) * 100.0, 1)
     avg_engagement = round(total_engagement / num_valid, 1)
     avg_confidence = round(total_confidence / num_valid, 1)

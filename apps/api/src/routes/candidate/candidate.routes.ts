@@ -94,6 +94,21 @@ candidateRouter.post(
       console.log(`[SyncSocial] Syncing profiles for GitHub: ${githubUrl || 'N/A'}, LinkedIn: ${linkedinUrl || 'N/A'}`);
       const socialData = await syncCandidateSocialProfiles(githubUrl, linkedinUrl);
 
+      // A real LinkedIn sync now runs against the user-approved bytemap scraper.
+      // When it genuinely fails (profile not found, scraper/network error), report
+      // the honest reason with a 4xx/5xx instead of claiming success. An upstream
+      // timeout is an upstream error (504), not a client-side problem.
+      const linkedinFailed = Boolean(linkedinUrl) && socialData.linkedin?.synced === false;
+      if (linkedinFailed) {
+        const reason = socialData.linkedin?.reason || 'LinkedIn sync failed.';
+        const timedOut = /timed out/i.test(reason);
+        const statusCode = socialData.linkedin?.status === 'not_found' ? 404 : timedOut ? 504 : 422;
+        return res.status(statusCode).json({
+          success: false,
+          error: reason,
+        });
+      }
+
       return res.json({
         success: true,
         data: socialData,
@@ -434,6 +449,9 @@ candidateRouter.get(
       const completedCount = defaultTasks.filter((t) => t.status === 'completed').length;
       const progressPercent = Math.round((completedCount / defaultTasks.length) * 100);
 
+      // No real buddy/manager assignment exists on the Job, Offer, or org
+      // settings, so these are null (honest "not assigned") rather than
+      // fabricated people.
       const onboardingRecord = {
         id: `onboard-${application.id}`,
         applicationId: application.id,
@@ -442,8 +460,8 @@ candidateRouter.get(
         jobTitle: application.job.title,
         orgName: application.job.organization.name,
         startDate,
-        buddyName: 'Alex Rivera (Staff Engineer)',
-        managerName: 'Sarah Chen (VP of Engineering)',
+        buddyName: null,
+        managerName: null,
         progressPercent,
         tasks: defaultTasks,
       };
@@ -601,7 +619,9 @@ candidateRouter.get(
         id: `project-${application.id}`,
         applicationId: application.id,
         candidateName,
-        title: `Full-Stack Technical Assessment: ${application.job.title}`,
+        // Neutral title: the assignment is a generic template, so it must not
+        // claim to be a "Full-Stack" assessment for a role that may not be one.
+        title: `Technical Assessment: ${application.job.title}`,
         description: `Build a production-ready reactive dashboard showcasing state management, clean component modularity, strict error handling, and unit test coverage.`,
         status: 'assigned' as const,
         assignedDate,

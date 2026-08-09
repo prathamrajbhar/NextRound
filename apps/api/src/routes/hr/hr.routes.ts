@@ -5,6 +5,7 @@ import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { requireOrgScope } from '../../middleware/orgScope';
 import { serializeApplicationList } from '../../lib/serializers';
+import { deriveSalary, deriveEquity } from '../../lib/offer-terms';
 import { emailService } from '../../services/email.service';
 
 export const hrRouter = Router();
@@ -375,6 +376,19 @@ hrRouter.patch(
       const appId = evaluation.application_id;
       const nextStatus = decision === 'hire' ? 'offered' : 'rejected';
 
+      // Derive offer terms from the Job BEFORE mutating state so a job with no
+      // salary never leaves an 'offered' application without an honest offer.
+      const job = evaluation.application.job;
+      const offerSalary = decision === 'hire' ? deriveSalary(job.salary) : null;
+      const offerEquity = decision === 'hire' ? deriveEquity(job) : null;
+
+      if (decision === 'hire' && offerSalary === null) {
+        return res.status(422).json({
+          success: false,
+          error: `Cannot generate an offer for "${job.title}": the job has no salary configured. Add a salary to the job before hiring.`,
+        });
+      }
+
       await prisma.application.update({
         where: { id: appId },
         data: { status: nextStatus },
@@ -388,19 +402,19 @@ hrRouter.patch(
           where: { application_id: appId },
           create: {
             application_id: appId,
-            role_title: evaluation.application.job.title,
-            salary: 150000,
-            equity: '0.15% ESOPs',
+            role_title: job.title,
+            salary: offerSalary as number,
+            equity: offerEquity,
             magic_link_token: magicToken,
-            offer_letter_content: `Official Job Offer for ${evaluation.application.job.title} (Approved by HR Override)`,
+            offer_letter_content: `Official Job Offer for ${job.title} (Approved by HR Override)`,
             status: 'pending',
             valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
           },
           update: {
-            role_title: evaluation.application.job.title,
-            salary: 150000,
-            equity: '0.15% ESOPs',
-            offer_letter_content: `Official Job Offer for ${evaluation.application.job.title} (Approved by HR Override)`,
+            role_title: job.title,
+            salary: offerSalary as number,
+            equity: offerEquity,
+            offer_letter_content: `Official Job Offer for ${job.title} (Approved by HR Override)`,
             status: 'pending',
             valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
           },
@@ -413,8 +427,8 @@ hrRouter.patch(
           await emailService.sendOfferEmail(
             evaluation.application.candidate.user.email,
             candidateName,
-            evaluation.application.job.title,
-            { salary: 150000, equity: '0.15% ESOPs', magicLinkToken: magicToken }
+            job.title,
+            { salary: offerSalary as number, equity: offerEquity ?? undefined, magicLinkToken: magicToken }
           );
         }
 

@@ -48,14 +48,20 @@ def _fallback_768_embedding(text: str) -> list[float]:
     return vec
 
 
-def embed_text(text: str) -> list[float]:
+def embed_text_with_source(text: str) -> tuple[list[float], str]:
     """
-    Generate 768-dimensional vector embedding for input text using
-    the self-hosted FastEmbed ONNX model (BAAI/bge-base-en-v1.5),
-    falling back to Gemini text-embedding-004 API or deterministic vector if unavailable.
+    Generate 768-dimensional vector embedding for input text and report which
+    engine produced it. Returns (embedding, source) where source is one of:
+      'onnx'          - self-hosted FastEmbed BAAI/bge-base-en-v1.5
+      'gemini'        - Google Gemini text-embedding-004 API
+      'hash-fallback' - deterministic 768-dim hash vector (NOT semantic)
+      'empty'         - empty/whitespace input -> zero vector (NOT semantic)
+
+    Callers that need a trustworthy semantic match MUST reject 'hash-fallback'
+    and 'empty' sources instead of treating the vector as a real semantic signal.
     """
     if not text or not text.strip():
-        return [0.0] * 768
+        return [0.0] * 768, "empty"
 
     # 1. Primary: Self-Hosted FastEmbed ONNX Container Engine
     if onnx_embedding_model:
@@ -64,7 +70,7 @@ def embed_text(text: str) -> list[float]:
             if embeddings and len(embeddings) > 0:
                 vec = [float(x) for x in embeddings[0]]
                 if len(vec) == 768:
-                    return vec
+                    return vec, "onnx"
         except Exception as e:
             logger.error(f"FastEmbed ONNX embedding generation failed: {e}. Trying Gemini API fallback.")
 
@@ -78,35 +84,53 @@ def embed_text(text: str) -> list[float]:
             if response and hasattr(response, 'embedding') and response.embedding:
                 embedding = response.embedding.values
                 if len(embedding) == 768:
-                    return list(embedding)
+                    return list(embedding), "gemini"
         except Exception as e:
             logger.error(f"Gemini embed_content API call failed: {e}. Falling back to deterministic vector.")
 
-    # 3. Tertiary: Deterministic 768-dim hash vector
-    return _fallback_768_embedding(text)
+    # 3. Tertiary: Deterministic 768-dim hash vector (labeled, never semantic)
+    return _fallback_768_embedding(text), "hash-fallback"
+
+
+def embed_text(text: str) -> list[float]:
+    """
+    Generate 768-dimensional vector embedding for input text using
+    the self-hosted FastEmbed ONNX model (BAAI/bge-base-en-v1.5),
+    falling back to Gemini text-embedding-004 API or deterministic vector if unavailable.
+
+    Backward-compatible wrapper; use embed_text_with_source when the caller needs
+    to know whether the result is a real semantic embedding or a hash fallback.
+    """
+    vec, _ = embed_text_with_source(text)
+    return vec
 
 
 
-def embed_resume(resume_text: str, chunk_size: int = 500) -> list[float]:
+def embed_resume_with_source(resume_text: str, chunk_size: int = 500) -> tuple[list[float], str]:
     """
     Chunk resume text into ~500 word segments, embed each segment,
     and average pool into a single 768-dimensional float vector.
+    Returns (embedding, source) where source reports the most reliable engine
+    observed across chunks ('onnx' > 'gemini' > 'hash-fallback').
     """
     if not resume_text or not resume_text.strip():
-        return [0.0] * 768
+        return [0.0] * 768, "empty"
 
     words = resume_text.split()
     if len(words) <= chunk_size:
-        return embed_text(resume_text)
+        return embed_text_with_source(resume_text)
 
-    chunks = []
-    for i in range(0, len(words), chunk_size):
-        chunk = " ".join(words[i:i + chunk_size])
-        chunks.append(chunk)
+    chunks = [" ".join(words[i:i + chunk_size]) for i in range(0, len(words), chunk_size)]
 
-    chunk_embeddings = [embed_text(chunk) for chunk in chunks if chunk.strip()]
+    chunk_embeddings = []
+    sources = []
+    for chunk in chunks:
+        if chunk.strip():
+            chunk_vec, chunk_source = embed_text_with_source(chunk)
+            chunk_embeddings.append(chunk_vec)
+            sources.append(chunk_source)
     if not chunk_embeddings:
-        return [0.0] * 768
+        return [0.0] * 768, "empty"
 
     # Average pooling across all chunks
     avg_vec = [0.0] * 768
@@ -122,7 +146,18 @@ def embed_resume(resume_text: str, chunk_size: int = 500) -> list[float]:
     if norm > 0:
         avg_vec = [x / norm for x in avg_vec]
 
-    return avg_vec
+    # Report the most reliable source observed across chunks
+    source = "onnx" if "onnx" in sources else ("gemini" if "gemini" in sources else "hash-fallback")
+    return avg_vec, source
+
+
+def embed_resume(resume_text: str, chunk_size: int = 500) -> list[float]:
+    """
+    Chunk resume text into ~500 word segments, embed each segment,
+    and average pool into a single 768-dimensional float vector.
+    """
+    vec, _ = embed_resume_with_source(resume_text, chunk_size)
+    return vec
 
 
 def cosine_similarity(a: list[float], b: list[float]) -> float:

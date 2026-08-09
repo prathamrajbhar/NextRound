@@ -15,4 +15,15 @@ describe('apps/web/src/lib/interviewTopics.ts', () => {
     expect(topics[0].topic).toContain('Software Engineer System Architecture');
     expect(topics[0].question).toContain('the organization');
   });
+
+  it('marks every topic as sourced from the template, never from the AI interviewer agent', () => {
+    const topics = getTopicsForRoleAndCompany('Frontend Engineer', 'ByteMap');
+    expect(topics.length).toBe(3);
+    for (const topic of topics) {
+      expect(topic.source).toBe('template');
+      expect(topic.followUp).toBeTruthy();
+      expect(Array.isArray(topic.keywords)).toBe(true);
+      expect(topic.keywords.length).toBeGreaterThan(0);
+    }
+  });
 });

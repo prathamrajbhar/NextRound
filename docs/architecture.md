@@ -241,7 +241,7 @@ All endpoints under `/api/v1/internal/*` reject any request that does not includ
 | `scheduling-queue` | Slot generation, email outreach, calendar booking, reminders | Medium |
 | `assessment-queue` | Aptitude test category scoring and weighted score computation | High |
 | `coding-queue` | Isolated code execution, unit test runner, complexity analysis | High |
-| `interview-queue` | Post-interview transcript assembly, audio upload to S3 | High |
+| `interview-queue` | Post-interview transcript assembly, audio file persistence | High |
 | `evaluation-queue` | Composite score aggregation, LLM-as-judge bias audit | Critical |
 | `decision-queue` | Threshold matching, offer/rejection drafting, email delivery | Critical |
 | `analytics-queue` | Weekly funnel metric aggregation, PDF report generation | Low |
@@ -266,7 +266,7 @@ All queues use exponential backoff retry: 3 attempts before the job is marked as
 |---|---|
 | **PostgreSQL 16** | Relational data: users, organizations, jobs, applications, evaluations, interviews, assessments, offers |
 | **pgvector extension** | 768-dimensional cosine similarity search on resume and job rubric embeddings (HNSW index) |
-| **AWS S3 / MinIO** | Encrypted object storage for uploaded resume PDFs, recorded interview audio files, generated PDF reports |
+| **Storage Service** | Encrypted object storage for uploaded resume PDFs, recorded interview audio files, generated PDF reports |
 | **Redis 8** | BullMQ job queue state, retry tracking, and job result caching |
 
 ---
@@ -278,4 +278,4 @@ All queues use exponential backoff retry: 3 attempts before the job is marked as
 | **Voice latency > 3 seconds** | Frontend automatically transitions to chat-style text-only interview mode (same LangGraph agent, text input/output only) |
 | **LLM confidence < 0.70** | Evaluation decision is automatically tagged `hold_for_review`; HR receives an alert to manually approve or override |
 | **Queue job fails max retries** | Job is dead-lettered; an `AgentLog` entry is created with `status: "failed"`; HR admin receives a notification |
-| **S3 upload failure** | Audio file upload retried 3x; on failure, transcript-only evaluation proceeds without audio replay |
+| **Storage upload failure** | Audio file upload retried 3x; on failure, transcript-only evaluation proceeds without audio replay |

@@ -719,7 +719,7 @@ function buildJobStages(): string[] {
 }
 
 function buildAssessmentConfig(): unknown {
-  // Mirrors the edit page's assessmentConfig shape; codingProblemId references apps/api/src/data/coding-problems.json
+  // Mirrors the edit page's assessmentConfig shape; codingProblemId references packages/shared/data/coding-problems.json
   return {
     mcqCount: randInt(5, 10),
     codingProblemId: pick(['virtualized-list', 'rate-limiter', 'lru-cache', 'two-sum', 'valid-parentheses']),

@@ -165,7 +165,7 @@ Each agent defines a typed `AgentState` TypedDict passed between nodes. Nodes ar
 ```
 
 **Node Details:**
-- `load_resume_and_job` — Fetches `CandidateProfile.resume_url` from S3, downloads PDF/DOCX.
+- `load_resume_and_job` — Fetches `CandidateProfile.resume_url` from storage service, downloads PDF/DOCX.
 - `parse_resume_text` — Extracts structured text (skills, work history, education, projects) using PDF parser.
 - `generate_resume_embedding` — Generates 768-dim embedding using Gemini embedding model.
 - `cosine_similarity_match` — Runs pgvector query: `1 - (resume_embedding <=> job_rubric_embedding)` → `semantic_match_score`.
@@ -301,7 +301,7 @@ The Interviewer Agent runs as a long-lived FastAPI WebSocket handler during the 
 [finalize_transcript]
     │
     ▼
-[upload_audio_to_s3]
+[upload_audio_to_storage]
     │
     ▼
 [enqueue_evaluation]
@@ -326,7 +326,7 @@ class InterviewState(TypedDict):
 
 **Post-Interview Queue Job (interview-queue):**
 - Assembles final `transcript` JSON
-- Uploads audio recording to S3
+- Uploads audio recording to storage service
 - Returns `audio_url`
 
 **Internal Callback:** `PATCH /api/v1/internal/interviews/:id/complete`
@@ -335,7 +335,7 @@ class InterviewState(TypedDict):
 ```json
 {
   "transcript": { "turns": [...], "duration_ms": 1800000 },
-  "audio_url": "s3://nextround-audio/interview_abc123.mp3",
+  "audio_url": "storage://nextround-audio/interview_abc123.mp3",
   "proctor_flags": [...],
   "engagement_signal": { "average_engagement": 84, "gaze_consistency": 0.91 }
 }
@@ -570,7 +570,7 @@ class InterviewState(TypedDict):
 [generate_pdf_report]
 
     │  - Charts, tables, executive summary
-    │  - Upload to S3
+    │  - Upload to storage service
     ▼
 [callback_result]
 ```
@@ -664,7 +664,7 @@ Same Dynamic Conversational Loop as Interviewer Agent, but with a resume-extract
 [generate_pdf]            ← PDF generation (reportlab or weasyprint)
     │
     ▼
-[upload_to_s3]
+[upload_to_storage]
     │
     ▼
 [callback_result]
@@ -673,7 +673,7 @@ Same Dynamic Conversational Loop as Interviewer Agent, but with a resume-extract
 **Post-Session Queue Job:**
 - Generates formatted ATS resume from extracted data
 - Computes ATS compliance score (keyword density, formatting, section completeness)
-- Renders PDF and uploads to S3
+- Renders PDF and uploads to storage service
 - Returns `resume_url` and `ats_score`
 
 **Internal Callback:** `POST /api/v1/internal/candidates/me/voice-resume/complete`
@@ -682,7 +682,7 @@ Same Dynamic Conversational Loop as Interviewer Agent, but with a resume-extract
 ```json
 {
   "candidate_id": "uuid",
-  "resume_url": "s3://nextround-resumes/candidate_uuid_ats_resume.pdf",
+  "resume_url": "storage://nextround-resumes/candidate_uuid_ats_resume.pdf",
   "ats_score": 96,
   "extracted_data": {
     "skills": ["TypeScript", "Node.js", "Redis"],

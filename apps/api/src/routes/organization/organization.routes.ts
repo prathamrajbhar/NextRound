@@ -9,6 +9,7 @@ import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { requireOrgScope } from '../../middleware/orgScope';
+import { emailService } from '../../services/email.service';
 
 export const organizationRouter = Router();
 
@@ -338,12 +339,29 @@ organizationRouter.post(
         return res.status(400).json({ success: false, error: 'User belongs to another organization' });
       }
 
-      // Create pending invited user or return invitation confirmation
+      // Create pending invited user or return invitation confirmation. There is no
+      // BullMQ mail queue in this repo (see QUEUE_NAMES in lib/bullmq.ts), so the
+      // invitation is sent directly through the email service. Only report success
+      // when the transporter actually accepted it — never claim "queued" without
+      // delivering the email.
+      const invited = await emailService.sendMemberInvite(
+        validated.email,
+        id,
+        req.user?.email
+      );
+
+      if (!invited) {
+        return res.status(502).json({
+          success: false,
+          error: `Invitation email could not be sent to ${validated.email}. The email service is not configured (check SMTP_* env vars).`,
+        });
+      }
+
       return res.status(201).json({
         success: true,
         data: {
           invitedEmail: validated.email,
-          message: `Invitation email queued for ${validated.email}`,
+          message: `Invitation email sent to ${validated.email}`,
         },
       });
     } catch (err) {

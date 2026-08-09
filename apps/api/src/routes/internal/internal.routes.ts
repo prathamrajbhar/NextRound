@@ -5,6 +5,7 @@ import { requireInternalSecret } from '../../middleware/internalSecret';
 import { emailService } from '../../services/email.service';
 import { enqueueEvaluation } from '../../lib/queues/evaluation.queue';
 import { ensureInterviewAndSchedule, advanceAssessmentStage } from '../../lib/pipeline';
+import { deriveSalary, deriveEquity } from '../../lib/offer-terms';
 import crypto from 'crypto';
 
 // Statuses that are already past the assessment phase. A late/retried modality
@@ -21,31 +22,8 @@ const PAST_ASSESSMENT: string[] = [
   'withdrawn',
 ];
 
-// Derive offer terms from Job config so offers reflect the actual posting.
-// salary is a display string ("$120k - $150k", "₹25L", "$150,000", "₹1.3L - ₹1.8L")
-// — take the top-of-band as an annual figure. A suffix attached to each figure
-// sets the multiplier: K = 1e3, L/lakh = 1e5, Cr/cr = 1e7. Decimals (₹1.8L) are
-// handled per-match so the lakh multiplier is never skipped. equity may live on
-// thresholds.
-function deriveSalary(jobSalary: string | null | undefined): number {
-  if (!jobSalary) return 150000;
-  const matches = jobSalary.match(/[\d,]+(?:\.\d+)?\s*(?:k|cr|l|lakh|lpa)?/gi);
-  if (!matches || matches.length === 0) return 150000;
-  const values = matches.map((m) => {
-    const num = parseFloat(m.replace(/,/g, ''));
-    const suffix = m.replace(/[\d.,\s]/g, '').toLowerCase();
-    if (suffix.startsWith('cr')) return num * 10000000;
-    if (suffix === 'l' || suffix.startsWith('lakh') || suffix === 'lpa') return num * 100000;
-    if (suffix === 'k') return num * 1000;
-    return num;
-  });
-  return Math.round(Math.max(...values));
-}
-
-function deriveEquity(job: { thresholds?: unknown }): string {
-  const thr = job.thresholds && typeof job.thresholds === 'object' ? (job.thresholds as Record<string, unknown>) : {};
-  return typeof thr.equity === 'string' && thr.equity ? thr.equity : '0.15% ESOPs';
-}
+// Offer terms (salary/equity) are derived from the Job record via
+// lib/offer-terms so offers never fall back to hardcoded amounts.
 
 export const internalRouter = Router();
 
@@ -277,7 +255,12 @@ internalRouter.get('/agent-logs', async (req: Request, res: Response, next: Next
 internalRouter.get('/jobs/:id/raw', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string;
-    const job = await prisma.job.findUnique({ where: { id } });
+    // Include the real organization name so Python workers (prep-content) can
+    // resolve the actual org instead of falling back to a fabricated name.
+    const job = await prisma.job.findUnique({
+      where: { id },
+      include: { organization: { select: { name: true } } },
+    });
     if (!job) {
       return res.status(404).json({ success: false, error: 'Job not found' });
     }
@@ -547,7 +530,7 @@ internalRouter.patch('/applications/:id/coding-result', async (req: Request, res
         data: {
           status: passed ? 'passed' : 'failed',
           pass_rate: typeof pass_rate === 'number' ? pass_rate : (passed ? 1.0 : 0.0),
-          complexity: complexity_analysis?.time_complexity || 'O(N)',
+          complexity: complexity_analysis?.time_complexity || 'unknown',
           ai_feedback: feedback || 'Coding evaluation completed',
         },
       }).catch((err) => console.warn('Could not update coding submission:', err));
@@ -574,7 +557,7 @@ internalRouter.patch('/applications/:id/coding-result', async (req: Request, res
         application_id: id,
         stage: 'coding',
         coding_score: typeof score === 'number' ? score : null,
-        reasoning: feedback || `Coding evaluation completed. Complexity: ${complexity_analysis?.time_complexity || 'O(N)'}`,
+        reasoning: feedback || `Coding evaluation completed. Complexity: ${complexity_analysis?.time_complexity || 'unknown'}`,
         decision: passed ? 'hire' : 'reject',
         bias_flag: false,
         bias_report: { pass_rate, complexity_analysis, execution_time_ms, memory_kb },
@@ -582,7 +565,7 @@ internalRouter.patch('/applications/:id/coding-result', async (req: Request, res
       update: {
         stage: 'coding',
         coding_score: typeof score === 'number' ? score : undefined,
-        reasoning: feedback || `Coding evaluation completed. Complexity: ${complexity_analysis?.time_complexity || 'O(N)'}`,
+        reasoning: feedback || `Coding evaluation completed. Complexity: ${complexity_analysis?.time_complexity || 'unknown'}`,
         decision: passed ? 'hire' : 'reject',
         bias_report: { pass_rate, complexity_analysis, execution_time_ms, memory_kb },
       },
@@ -719,7 +702,10 @@ internalRouter.patch('/interviews/:id/result', async (req: Request, res: Respons
       },
     });
 
-    const scoreNum = typeof interview_score === 'number' ? interview_score : (typeof scores?.composite === 'number' ? scores.composite : 85);
+    // No interview score is ever fabricated: when the evaluator callback omits
+    // it (and there is no real composite), the score is null and the candidate
+    // is neither advanced to HR nor rejected on a made-up number.
+    const scoreNum = typeof interview_score === 'number' ? interview_score : (typeof scores?.composite === 'number' ? scores.composite : null);
 
     const evaluation = await prisma.evaluation.upsert({
       where: { application_id: interview.application_id },
@@ -728,8 +714,8 @@ internalRouter.patch('/interviews/:id/result', async (req: Request, res: Respons
         stage: 'interview',
         interview_score: scoreNum,
         composite_score: scoreNum,
-        reasoning: reasoning || feedback || `Voice interview evaluation completed. Score: ${scoreNum}%`,
-        decision: scoreNum >= 70 ? 'hire' : 'reject',
+        reasoning: reasoning || feedback || (scoreNum != null ? `Voice interview evaluation completed. Score: ${scoreNum}%` : 'Voice interview evaluation completed.'),
+        decision: scoreNum != null ? (scoreNum >= 70 ? 'hire' : 'reject') : null,
         bias_flag: false,
         bias_report: { scores, feedback },
       },
@@ -737,33 +723,37 @@ internalRouter.patch('/interviews/:id/result', async (req: Request, res: Respons
         stage: 'interview',
         interview_score: scoreNum,
         composite_score: scoreNum,
-        reasoning: reasoning || feedback || `Voice interview evaluation completed. Score: ${scoreNum}%`,
-        decision: scoreNum >= 70 ? 'hire' : 'reject',
+        reasoning: reasoning || feedback || (scoreNum != null ? `Voice interview evaluation completed. Score: ${scoreNum}%` : 'Voice interview evaluation completed.'),
+        decision: scoreNum != null ? (scoreNum >= 70 ? 'hire' : 'reject') : null,
         bias_report: { scores, feedback },
       },
     });
 
-    // Advance application status to hr_round if passed, or rejected if failed
-    await prisma.application.update({
-      where: { id: interview.application_id },
-      data: {
-        status: scoreNum >= 70 ? 'hr_round' : 'rejected',
-        hr_round_status: scoreNum >= 70 ? 'pending' : undefined,
-      },
-    });
+    // Advance application status to hr_round if passed, or rejected if failed.
+    // Without a real score we leave the status untouched (no fabricated move).
+    if (scoreNum != null) {
+      await prisma.application.update({
+        where: { id: interview.application_id },
+        data: {
+          status: scoreNum >= 70 ? 'hr_round' : 'rejected',
+          hr_round_status: scoreNum >= 70 ? 'pending' : undefined,
+        },
+      });
+    }
 
     // After a passed interview, run the Evaluator Agent so a real composite +
     // confidence are computed before the HR round. The decision fires only
     // after the human HR round passes (interviews/hr/:applicationId/result).
-    if (scoreNum >= 70) {
+    // Missing stage scores are passed as null — never fabricated defaults.
+    if (scoreNum != null && scoreNum >= 70) {
       await enqueueEvaluation(
         interview.application_id,
         'final_evaluation',
         {
           interviewId: id,
-          screening_score: typeof evaluation.resume_score === 'number' ? evaluation.resume_score : 80,
-          aptitude_score: typeof evaluation.aptitude_score === 'number' ? evaluation.aptitude_score : 85,
-          coding_score: typeof evaluation.coding_score === 'number' ? evaluation.coding_score : 90,
+          screening_score: typeof evaluation.resume_score === 'number' ? evaluation.resume_score : null,
+          aptitude_score: typeof evaluation.aptitude_score === 'number' ? evaluation.aptitude_score : null,
+          coding_score: typeof evaluation.coding_score === 'number' ? evaluation.coding_score : null,
           interview_score: scoreNum,
           proctor_flags: req.body.proctor_flags || [],
           proctor_telemetry: req.body.proctor_telemetry || {},
@@ -927,6 +917,16 @@ internalRouter.patch('/evaluations/:id/decision', async (req: Request, res: Resp
       const magicToken = crypto.randomUUID();
       const salary = deriveSalary(app.job.salary);
       const equity = deriveEquity(app.job);
+
+      // Never emit a made-up offer: if the Job genuinely has no salary, refuse to
+      // create the offer instead of inventing a number.
+      if (salary === null) {
+        return res.status(422).json({
+          success: false,
+          error: `Cannot generate an offer for "${app.job.title}": the job has no salary configured. Add a salary to the job before generating an offer.`,
+        });
+      }
+
       const offer = await prisma.offer.upsert({
         where: { application_id: app.id },
         create: {
@@ -959,7 +959,7 @@ internalRouter.patch('/evaluations/:id/decision', async (req: Request, res: Resp
         const candidateName = app.candidate.user.email.split('@')[0];
         await emailService.sendOfferEmail(app.candidate.user.email, candidateName, app.job.title, {
           salary,
-          equity,
+          equity: equity ?? undefined,
           magicLinkToken: magicToken,
         });
       }
@@ -1012,6 +1012,32 @@ internalRouter.post('/offers', async (req: Request, res: Response, next: NextFun
       return res.status(400).json({ success: false, error: 'application_id is required' });
     }
 
+    // Offer terms are derived from the real Job record (mirroring the
+    // decision-hire path) — never fabricated fallbacks. Explicit body values are
+    // honored as real caller inputs; otherwise the Job posting is the truth.
+    const app = await prisma.application.findUnique({
+      where: { id: application_id },
+      include: { job: true },
+    });
+
+    if (!app) {
+      return res.status(404).json({ success: false, error: 'Application not found' });
+    }
+
+    const derivedSalary = typeof salary === 'number' ? salary : deriveSalary(app.job.salary);
+
+    // Never emit a made-up offer: if the Job genuinely has no salary, refuse to
+    // create the offer instead of inventing a number.
+    if (derivedSalary === null) {
+      return res.status(422).json({
+        success: false,
+        error: `Cannot generate an offer for "${app.job.title}": the job has no salary configured. Add a salary to the job before generating an offer.`,
+      });
+    }
+
+    const derivedRoleTitle = (role_title && role_title.trim()) || app.job.title;
+    const derivedEquity = equity || deriveEquity(app.job);
+
     // Idempotent offer creation: application_id is unique, so re-posting updates the
     // existing offer (keeping its magic link token) instead of crashing on a constraint.
     const magicToken = crypto.randomUUID();
@@ -1019,21 +1045,21 @@ internalRouter.post('/offers', async (req: Request, res: Response, next: NextFun
       where: { application_id },
       create: {
         application_id,
-        role_title: role_title || 'Software Engineer',
-        salary: typeof salary === 'number' ? salary : 120000,
-        equity: equity || null,
+        role_title: derivedRoleTitle,
+        salary: derivedSalary,
+        equity: derivedEquity,
         start_date: start_date ? new Date(start_date) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        offer_letter_content: offer_letter_content || 'Formal Offer Document',
+        offer_letter_content: offer_letter_content || `Official Offer for ${app.job.title}`,
         magic_link_token: magicToken,
         status: 'pending',
         valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       },
       update: {
-        role_title: role_title || 'Software Engineer',
-        salary: typeof salary === 'number' ? salary : 120000,
-        equity: equity || null,
+        role_title: derivedRoleTitle,
+        salary: derivedSalary,
+        equity: derivedEquity,
         start_date: start_date ? new Date(start_date) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        offer_letter_content: offer_letter_content || 'Formal Offer Document',
+        offer_letter_content: offer_letter_content || `Official Offer for ${app.job.title}`,
         status: 'pending',
         valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       },
@@ -1141,10 +1167,18 @@ internalRouter.post('/prep/generate', async (req: Request, res: Response, next: 
         },
       });
     } else {
+      // Never fabricate prep content: without a real company name and role
+      // archetype there is nothing honest to create, so the request is refused.
+      if (!companyName || !roleArchetype) {
+        return res.status(400).json({
+          success: false,
+          error: 'companyName and roleArchetype are required to generate prep content',
+        });
+      }
       prepContent = await prisma.prepContent.create({
         data: {
-          company_name: companyName || 'General Tech',
-          role_archetype: roleArchetype || 'Software Engineer',
+          company_name: companyName,
+          role_archetype: roleArchetype,
           questions: questions || [],
           culture_notes: cultureNotes || '',
           skill_checklist: skillChecklist || [],
@@ -1177,7 +1211,11 @@ internalRouter.get('/analytics/raw', async (req: Request, res: Response, next: N
         applications: {
           include: {
             evaluations: true,
-            interviews: true,
+            // Prisma relation is `interview Interview?` (singular), not `interviews`.
+            interview: true,
+            // Offer created_at is the terminal timestamp the Analytics Agent
+            // uses to compute a REAL mean time-to-hire for offered/accepted apps.
+            offer: true,
           },
         },
       },

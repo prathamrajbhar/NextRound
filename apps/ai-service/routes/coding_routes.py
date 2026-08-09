@@ -30,8 +30,8 @@ class CodeExecutionResponse(BaseModel):
     passed_cases: int
     total_cases: int
     execution_time_ms: float
-    memory_kb: int
-    complexity_analysis: Dict[str, Any]
+    memory_kb: Optional[int] = None
+    complexity_analysis: Optional[Dict[str, Any]] = None
     passed: bool
     feedback: str
     security_passed: bool = True
@@ -63,6 +63,8 @@ async def execute_coding_submission(request: CodeExecutionRequest):
             language=language,
             test_cases=request.testCases
         )
+        # Direct sandbox path: no complexity analysis is performed here, so it
+        # is reported as None (absent) rather than a canned "O(N)".
         return CodeExecutionResponse(
             success=sandbox_res.get("success", False),
             score=round(sandbox_res.get("pass_rate", 0.0) * 100.0, 1),
@@ -70,8 +72,8 @@ async def execute_coding_submission(request: CodeExecutionRequest):
             passed_cases=sandbox_res.get("passed_cases", 0),
             total_cases=sandbox_res.get("total_cases", 0),
             execution_time_ms=sandbox_res.get("execution_time_ms", 0.0),
-            memory_kb=sandbox_res.get("memory_kb", 42000),
-            complexity_analysis={"time_complexity": "O(N)"},
+            memory_kb=sandbox_res.get("memory_kb"),
+            complexity_analysis=None,
             passed=sandbox_res.get("pass_rate", 0.0) >= 0.8,
             feedback=sandbox_res.get("error") or f"Passed {sandbox_res.get('passed_cases')}/{sandbox_res.get('total_cases')} test cases.",
             security_passed=sandbox_res.get("security_passed", True),
@@ -94,8 +96,8 @@ async def execute_coding_submission(request: CodeExecutionRequest):
         passed_cases=output.get("passed_cases", 0),
         total_cases=output.get("total_cases", 0),
         execution_time_ms=output.get("execution_time_ms", 0.0),
-        memory_kb=output.get("memory_kb", 42000),
-        complexity_analysis=output.get("complexity_analysis", {"time_complexity": "O(N)"}),
+        memory_kb=output.get("memory_kb"),
+        complexity_analysis=output.get("complexity_analysis"),
         passed=output.get("passed", False),
         feedback=output.get("feedback", ""),
         security_passed=True,

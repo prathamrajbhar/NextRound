@@ -44,7 +44,11 @@ export async function ensureInterviewAndSchedule(
   const app = await prisma.application.findUnique({
     where: { id: applicationId },
     include: {
-      job: true,
+      job: {
+        include: {
+          organization: { select: { id: true, settings: true } },
+        },
+      },
       interview: true,
       candidate: { include: { user: true } },
     },
@@ -62,10 +66,25 @@ export async function ensureInterviewAndSchedule(
   }
 
   const candidateEmail = app.candidate?.user?.email ?? '';
+
+  // Pass the org's real availability-hours config (written by the company
+  // onboarding "Scheduling & Automation" step) so the Scheduler Agent drives
+  // slot times from it. Both the camelCase key the UI writes and the
+  // snake_case variant from the specs are honored. When absent the agent uses
+  // honest default business-hours slots (never hardcoded strings).
+  const orgSettings = isObject(app.job.organization?.settings) ? app.job.organization.settings : {};
+  const availabilityHours = isObject(orgSettings.availabilityHours)
+    ? (orgSettings.availabilityHours as Record<string, unknown>)
+    : isObject(orgSettings.availability_hours)
+    ? (orgSettings.availability_hours as Record<string, unknown>)
+    : undefined;
+
   await enqueueScheduling(applicationId, {
     interviewId: interview.id,
     candidateEmail,
     jobTitle: app.job.title,
+    orgId: app.job.org_id ?? undefined,
+    availabilityHours,
     action: 'generate_slots',
   }).catch((err) => {
     console.error(`Failed to enqueue scheduling for application ${applicationId}:`, err);

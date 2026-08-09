@@ -29,14 +29,20 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
                 const parsed = JSON.parse(local);
                 nextApp = {
                   ...data,
-                  scores: parsed.rubric ? {
-                    composite: parsed.score,
-                    technical: parsed.rubric.technical,
-                    communication: parsed.rubric.communication,
-                    problemSolving: Math.floor(parsed.score * 0.95),
-                    experience: Math.floor(parsed.score * 0.92),
-                    confidence: Math.floor(parsed.score * 0.98),
-                  } : data.scores,
+                  // Only merge a client scorecard that actually carries a real
+                  // completed score. A pending review (score: null) must not
+                  // overwrite the server-authoritative scores with 0s/NaN.
+                  scores:
+                    parsed.status === 'completed' && typeof parsed.score === 'number'
+                      ? {
+                          composite: parsed.score,
+                          technical: parsed.rubric.technical,
+                          communication: parsed.rubric.communication,
+                          problemSolving: Math.floor(parsed.score * 0.95),
+                          experience: Math.floor(parsed.score * 0.92),
+                          confidence: Math.floor(parsed.score * 0.98),
+                        }
+                      : data.scores,
                   transcript: parsed.transcript || data.transcript,
                 };
               } catch {}

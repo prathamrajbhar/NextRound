@@ -5,6 +5,8 @@ import { requireRole } from '../../middleware/rbac';
 import { MockSessionCreateSchema } from '@nextround/shared';
 import { enqueueMockEvaluation } from '../../lib/queues/mock.queue';
 import { serializeMockSession, serializeMockSessionList } from '../../lib/serializers';
+// Canonical shared aptitude bank — single source of truth (packages/shared/data).
+import aptitudeFallbackQuestions from '@nextround/shared/data/aptitude-questions.json';
 
 export const mockRouter = Router();
 
@@ -184,53 +186,17 @@ mockRouter.get(
       }
 
       if (rawQuestions.length === 0) {
-        rawQuestions = [
-          {
-            id: 'gen_q1',
-            category: 'Quantitative Reasoning',
-            difficulty: diffLevel,
-            question: `For a ${roleName} role, reducing latency by 20% while scaling system capacity by 25% results in what net performance shift?`,
-            options: ['No change (0%)', '5% net increase', '10% net increase', '5% net decrease'],
-            correctIndex: 0,
-          },
-          {
-            id: 'gen_q2',
-            category: 'Logical Deduction',
-            difficulty: diffLevel,
-            question: 'All systems with distributed cache invalidation run faster than un-cached systems for high read ratios. System A implements distributed caching. Which statement must be true?',
-            options: [
-              'System A is faster for all read/write ratios.',
-              'For high read ratios, System A will outperform un-cached systems.',
-              'System A requires zero database storage.',
-              'System A is strictly fault-tolerant.',
-            ],
-            correctIndex: 1,
-          },
-          {
-            id: 'gen_q3',
-            category: 'Pattern Recognition',
-            difficulty: 'easy',
-            question: 'What is the next value in the scaling sequence: 2, 6, 12, 20, 30, ?',
-            options: ['40', '42', '44', '48'],
-            correctIndex: 1,
-          },
-          {
-            id: 'gen_q4',
-            category: 'Data Interpretation',
-            difficulty: diffLevel,
-            question: 'An API processes 10,000 requests/sec with 50ms latency. If throughput doubles and latency scales linearly with load, what is the expected latency?',
-            options: ['50ms', '75ms', '100ms', '200ms'],
-            correctIndex: 2,
-          },
-          {
-            id: 'gen_q5',
-            category: 'Problem Solving',
-            difficulty: 'hard',
-            question: 'Three microservices A, B, and C have individual SLAs of 99.9%, 99.5%, and 99.0%. What is the combined sequential availability?',
-            options: ['98.4%', '99.0%', '99.5%', '99.9%'],
-            correctIndex: 0,
-          },
-        ];
+        // Sourced from the canonical shared bank (packages/shared/data/
+        // aptitude-questions.json). The selected difficulty level overrides the
+        // canonical difficulty on the flexible questions, matching the previous
+        // role-customized mock behavior.
+        rawQuestions = aptitudeFallbackQuestions.map((q) => ({
+          ...q,
+          question: q.question.replace('{role}', roleName),
+          text: q.text.replace('{role}', roleName),
+          difficulty:
+            q.id === 'apt_q1' || q.id === 'apt_q2' || q.id === 'apt_q4' ? diffLevel : q.difficulty,
+        }));
       }
 
       // Practice/mock sessions are self-assessed by the candidate, so the
