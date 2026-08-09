@@ -44,12 +44,12 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
   useEffect(() => {
     async function fetchData() {
       try {
-        if (sessionId) {
-          const res = await apiClient.get<{ session: MockSession }>(`/mock/sessions/${sessionId}`);
+        if (sessionId && sessionId !== 'new' && sessionId !== 'practice') {
+          const res = await apiClient.get<{ session: MockSession }>(`/mock/sessions/${sessionId}`).catch(() => null);
           if (res?.session) setSession(res.session);
         }
         if (applicationId) {
-          const resApp = await apiClient.get<Application>(`/applications/${applicationId}`);
+          const resApp = await apiClient.get<Application>(`/applications/${applicationId}`).catch(() => null);
           if (resApp) setApp(resApp);
         }
       } catch (err) {
@@ -71,7 +71,7 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     } catch {}
 
     try {
-      if (sessionId) {
+      if (sessionId && sessionId !== 'new' && sessionId !== 'practice') {
         await apiClient.post(`/mock/sessions/${sessionId}/end`, {
           score,
           transcript: messages.map((m) => ({
@@ -79,7 +79,7 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
             text: m.content,
             timestamp: m.timestamp,
           })),
-        });
+        }).catch(() => null);
       }
     } catch (err) {
       console.error('Error ending mock session:', err);
