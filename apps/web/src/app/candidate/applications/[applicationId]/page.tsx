@@ -52,9 +52,9 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       if (res && res.application) {
         setApp(res.application);
       }
-    } catch (err: any) {
-      console.error('Failed to run AI screening:', err);
-      setScreeningError(err?.message || 'Failed to complete AI screening evaluation.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to complete AI screening evaluation.';
+      setScreeningError(message);
     } finally {
       setRunningScreening(false);
     }

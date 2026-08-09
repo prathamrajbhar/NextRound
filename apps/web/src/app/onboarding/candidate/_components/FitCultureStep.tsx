@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Trophy, ScrollText, ChevronUp, ChevronDown, GripVertical, RefreshCw, Loader2 } from '@/lib/lucide-google-icons';
+import { Trophy, ScrollText, ChevronUp, ChevronDown, GripVertical, RefreshCw } from '@/lib/lucide-google-icons';
 import { OnboardingStepProps } from './useCandidateOnboarding';
 import { inputCls, labelCls } from './CandidateOnboardingShell';
 

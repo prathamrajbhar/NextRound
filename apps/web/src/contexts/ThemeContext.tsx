@@ -30,9 +30,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeConfig, setThemeConfigState] = useState<ThemeConfig>(DEFAULT_THEME_CONFIG);
 
   useEffect(() => {
-    const savedMode = localStorage.getItem('theme') as Mode | null;
+    const savedMode = typeof window !== 'undefined' ? (localStorage.getItem('theme') as Mode | null) : null;
+    const initialMode = (savedMode === 'light' || savedMode === 'dark') ? savedMode : 'dark';
+    
+    const root = document.documentElement;
+    if (initialMode === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    applyThemeToElement(root, DEFAULT_THEME_CONFIG, initialMode);
+
     if (savedMode === 'light' || savedMode === 'dark') {
-      setThemeState(savedMode);
+      requestAnimationFrame(() => {
+        setThemeState(savedMode);
+      });
     }
   }, []);
 

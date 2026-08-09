@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CompanyLogo } from '@/components/ui';
 import { apiClient } from '@/lib/apiClient';
 import {
@@ -150,32 +150,33 @@ export default function CodingAssessmentConsole({
           ? `/applications/${applicationId}/assessment/coding`
           : `/coding/problem?role=${encodeURIComponent(role || 'Software Engineer')}&company=${encodeURIComponent(company || 'Tech Enterprise')}`;
 
-        const res = await apiClient.get<{ problem: any }>(endpoint).catch(() => null);
+        const res = await apiClient.get<{ problem: Record<string, unknown> }>(endpoint).catch(() => null);
         if (res?.problem) {
-          const p = res.problem;
+          const p = res.problem as Record<string, unknown>;
+          const rawTestCases = Array.isArray(p.testCases) ? p.testCases : INITIAL_PROBLEM.testCases;
           const loaded: CodingProblem = {
-            id: p.id || INITIAL_PROBLEM.id,
-            title: p.title || INITIAL_PROBLEM.title,
-            difficulty: p.difficulty || INITIAL_PROBLEM.difficulty,
-            category: p.category || INITIAL_PROBLEM.category,
-            description: p.description || INITIAL_PROBLEM.description,
-            constraints: p.constraints || INITIAL_PROBLEM.constraints,
-            examples: p.examples || INITIAL_PROBLEM.examples,
+            id: typeof p.id === 'string' ? p.id : INITIAL_PROBLEM.id,
+            title: typeof p.title === 'string' ? p.title : INITIAL_PROBLEM.title,
+            difficulty: (typeof p.difficulty === 'string' ? p.difficulty : INITIAL_PROBLEM.difficulty) as CodingProblem['difficulty'],
+            category: typeof p.category === 'string' ? p.category : INITIAL_PROBLEM.category,
+            description: typeof p.description === 'string' ? p.description : INITIAL_PROBLEM.description,
+            constraints: Array.isArray(p.constraints) ? (p.constraints as string[]) : INITIAL_PROBLEM.constraints,
+            examples: Array.isArray(p.examples) ? (p.examples as CodingProblem['examples']) : INITIAL_PROBLEM.examples,
             starterCode: {
-              python: p.starterCode?.python || INITIAL_PROBLEM.starterCode.python,
-              javascript: p.starterCode?.javascript || INITIAL_PROBLEM.starterCode.javascript,
-              typescript: p.starterCode?.typescript || INITIAL_PROBLEM.starterCode.typescript,
-              java: p.starterCode?.java || INITIAL_PROBLEM.starterCode.java,
-              cpp: p.starterCode?.cpp || INITIAL_PROBLEM.starterCode.cpp,
+              python: (p.starterCode as Record<string, string>)?.python || INITIAL_PROBLEM.starterCode.python,
+              javascript: (p.starterCode as Record<string, string>)?.javascript || INITIAL_PROBLEM.starterCode.javascript,
+              typescript: (p.starterCode as Record<string, string>)?.typescript || INITIAL_PROBLEM.starterCode.typescript,
+              java: (p.starterCode as Record<string, string>)?.java || INITIAL_PROBLEM.starterCode.java,
+              cpp: (p.starterCode as Record<string, string>)?.cpp || INITIAL_PROBLEM.starterCode.cpp,
             },
-            testCases: (p.testCases || INITIAL_PROBLEM.testCases).map((tc: any, i: number) => ({
-              name: tc.name || `Case ${i + 1}`,
-              input: tc.input || '',
-              expected: tc.expected || tc.expectedOutput || '',
+            testCases: rawTestCases.map((tc: Record<string, unknown>, i: number) => ({
+              name: typeof tc.name === 'string' ? tc.name : `Case ${i + 1}`,
+              input: typeof tc.input === 'string' ? tc.input : '',
+              expected: typeof tc.expected === 'string' ? tc.expected : typeof tc.expectedOutput === 'string' ? tc.expectedOutput : '',
               hidden: Boolean(tc.hidden),
             })),
-            editorial: p.editorial || INITIAL_PROBLEM.editorial,
-            expectedComplexity: p.expectedComplexity || INITIAL_PROBLEM.expectedComplexity,
+            editorial: typeof p.editorial === 'string' ? p.editorial : INITIAL_PROBLEM.editorial,
+            expectedComplexity: (p.expectedComplexity as CodingProblem['expectedComplexity']) || INITIAL_PROBLEM.expectedComplexity,
           };
           setActiveProblem(loaded);
           setCode(loaded.starterCode.python);
@@ -219,9 +220,9 @@ export default function CodingAssessmentConsole({
         setTestResults(res.results || []);
         setOutputLogs(res.logs || ['[Server Sandbox] Execution completed.']);
       }
-    } catch (err: any) {
-      console.error('Backend execution endpoint error:', err);
-      setOutputLogs((prev) => [...prev, `[Server Error] ${err?.message || 'Failed connecting to execution server.'}`]);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed connecting to execution server.';
+      setOutputLogs((prev) => [...prev, `[Server Error] ${msg}`]);
     } finally {
       setIsRunning(false);
     }
@@ -259,8 +260,9 @@ export default function CodingAssessmentConsole({
         setOutputLogs(res.logs || []);
         setSubmitted(true);
       }
-    } catch (err: any) {
-      console.error('Backend submit endpoint error:', err);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Submission error';
+      setOutputLogs((prev) => [...prev, `[Submit Error] ${msg}`]);
     } finally {
       setIsRunning(false);
     }
@@ -308,7 +310,7 @@ export default function CodingAssessmentConsole({
           <div className="relative">
             <select
               value={language}
-              onChange={(e) => handleLanguageChange(e.target.value as any)}
+              onChange={(e) => handleLanguageChange(e.target.value as SupportedLanguage)}
               className="bg-slate-100 dark:bg-[#1e1e1e] border border-slate-300 dark:border-slate-700 text-xs text-slate-800 dark:text-slate-200 font-semibold rounded-lg px-2.5 py-1.5 focus:outline-none cursor-pointer appearance-none pr-7"
             >
               <option value="python">Python 3</option>

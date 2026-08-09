@@ -17,7 +17,6 @@ import {
   Compass,
   BookOpen,
   BarChart3,
-  ShieldCheck,
   Check,
 } from '@/lib/lucide-google-icons';
 import { ProctoringWarningModal } from './ProctoringWarningModal';
@@ -63,7 +62,7 @@ export const STANDARD_CATEGORIES = [
 export function normalizeCategory(rawCat?: string, index: number = 0): string {
   if (!rawCat) return STANDARD_CATEGORIES[index % 4];
   const cat = rawCat.trim();
-  if (STANDARD_CATEGORIES.includes(cat as any)) return cat;
+  if ((STANDARD_CATEGORIES as readonly string[]).includes(cat)) return cat;
 
   const lower = cat.toLowerCase();
   if (
@@ -215,8 +214,8 @@ export default function AptitudeTestConsole({
     }));
 
     return mapped.sort((a, b) => {
-      const idxA = STANDARD_CATEGORIES.indexOf(a.category as any);
-      const idxB = STANDARD_CATEGORIES.indexOf(b.category as any);
+      const idxA = (STANDARD_CATEGORIES as readonly string[]).indexOf(a.category);
+      const idxB = (STANDARD_CATEGORIES as readonly string[]).indexOf(b.category);
       return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
     });
   }, [fetchedQuestions, questions]);
