@@ -8,6 +8,25 @@ import { inputCls, labelCls } from './CandidateOnboardingShell';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api/v1';
 
+interface GitHubRepo {
+  name: string;
+  url: string;
+  stars: number;
+  description?: string;
+}
+
+interface GitHubProfileData {
+  avatarUrl?: string;
+  username?: string;
+  name?: string;
+  profileUrl?: string;
+  publicRepos?: number;
+  totalStars?: number;
+  bio?: string;
+  topLanguages?: string[];
+  repositories?: GitHubRepo[];
+}
+
 export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingStepProps) {
   const [syncingGithub, setSyncingGithub] = useState(false);
   const [syncingLinkedin, setSyncingLinkedin] = useState(false);
@@ -94,7 +113,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
           mergeSocialData(json.data, json.data.extractedSkills);
         }
         setLinkedinSynced(true);
-        setSyncStatus('LinkedIn profile metadata linked!');
+        setSyncStatus('LinkedIn profile verified & linked.');
       } else {
         setSyncError(typeof json.error === 'string' ? json.error : 'Could not sync LinkedIn profile.');
       }
@@ -105,9 +124,9 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
     }
   };
 
-  const handleVerifyPortfolio = async () => {
+  const handleSyncPortfolio = async () => {
     if (!form.portfolioUrl.trim()) {
-      setSyncError('Please enter a Portfolio URL to verify.');
+      setSyncError('Please enter a Portfolio / Website URL first.');
       return;
     }
 
@@ -122,7 +141,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
     }, 400);
   };
 
-  const ghData = (form.socialData as any)?.github;
+  const ghData = (form.socialData as { github?: GitHubProfileData } | undefined)?.github;
 
   return (
     <div className="space-y-5 animate-in fade-in duration-150">
@@ -135,138 +154,138 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
       )}
 
       {syncError && (
-        <div className="flex items-center gap-2.5 text-xs font-semibold text-rose-300 bg-rose-500/10 py-2.5 px-4 rounded-xl border border-rose-500/30 shadow-sm">
+        <div className="flex items-center gap-2.5 text-xs font-bold text-rose-400 bg-rose-500/10 py-2.5 px-4 rounded-xl border border-rose-500/30 shadow-sm">
           <AlertCircle className="h-4.5 w-4.5 text-rose-400 shrink-0" />
           <span>{syncError}</span>
         </div>
       )}
 
-      {/* GitHub, LinkedIn & Portfolio Fields with Individual Buttons */}
-      <div className="space-y-4">
-        {/* 1. LinkedIn Field + Individual Button */}
-        <div>
-          <label className={labelCls}>LinkedIn Profile URL</label>
-          <div className="relative flex items-center gap-3">
-            <div className="relative flex-1">
-              <LinkedinIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
-              <input
-                type="url"
-                value={form.linkedinUrl}
-                onChange={(e) => {
-                  update('linkedinUrl', e.target.value);
-                  setLinkedinSynced(false);
-                }}
-                placeholder="https://linkedin.com/in/username"
-                className={`${inputCls} pl-10`}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleSyncLinkedin}
-              disabled={syncingLinkedin || !form.linkedinUrl.trim()}
-              className="flex items-center gap-2 text-xs font-black text-sky-300 bg-sky-500/15 hover:bg-sky-500/25 disabled:opacity-40 px-4 py-3 rounded-xl border border-sky-500/40 transition-all shrink-0 cursor-pointer shadow-sm"
-            >
-              {syncingLinkedin ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Syncing...</span>
-                </>
-              ) : linkedinSynced ? (
-                <>
-                  <Check className="h-4 w-4 text-emerald-400" />
-                  <span>Synced</span>
-                </>
-              ) : (
-                <>
-                  <LinkedinIcon className="h-4 w-4 text-sky-400" />
-                  <span>Sync LinkedIn</span>
-                </>
-              )}
-            </button>
-          </div>
+      {/* GitHub Sync */}
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-3.5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <label className={labelCls} htmlFor="github-url">
+            <GithubIcon className="h-4 w-4 text-orange-400 inline mr-1.5" />
+            GitHub Profile
+          </label>
+          {ghData && (
+            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+              <Check className="h-3.5 w-3.5" /> Synced
+            </span>
+          )}
         </div>
-
-        {/* 2. GitHub Field + Individual Button */}
-        <div>
-          <label className={labelCls}>GitHub Profile URL</label>
-          <div className="relative flex items-center gap-3">
-            <div className="relative flex-1">
-              <GithubIcon className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
-              <input
-                type="url"
-                value={form.githubUrl}
-                onChange={(e) => update('githubUrl', e.target.value)}
-                placeholder="https://github.com/username"
-                className={`${inputCls} pl-10`}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleSyncGithub}
-              disabled={syncingGithub || !form.githubUrl.trim()}
-              className="flex items-center gap-2 text-xs font-black text-orange-300 bg-orange-500/15 hover:bg-orange-500/25 disabled:opacity-40 px-4 py-3 rounded-xl border border-orange-500/40 transition-all shrink-0 cursor-pointer shadow-sm"
-            >
-              {syncingGithub ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
-                  <span>Syncing...</span>
-                </>
-              ) : ghData ? (
-                <>
-                  <Check className="h-4 w-4 text-emerald-400" />
-                  <span>Synced</span>
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="h-4 w-4 text-orange-400" />
-                  <span>Sync GitHub</span>
-                </>
-              )}
-            </button>
-          </div>
+        <div className="flex gap-2">
+          <input
+            id="github-url"
+            type="url"
+            value={form.githubUrl}
+            onChange={(e) => update('githubUrl', e.target.value)}
+            placeholder="https://github.com/username"
+            className={inputCls}
+          />
+          <button
+            type="button"
+            onClick={handleSyncGithub}
+            disabled={syncingGithub || !form.githubUrl.trim()}
+            className="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md shrink-0 cursor-pointer disabled:cursor-not-allowed"
+          >
+            {syncingGithub ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Fetching...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="h-3.5 w-3.5" />
+                {ghData ? 'Re-sync' : 'Sync Profile'}
+              </>
+            )}
+          </button>
         </div>
+      </div>
 
-        {/* 3. Portfolio Field + Individual Button */}
-        <div>
-          <label className={labelCls}>Portfolio Website</label>
-          <div className="relative flex items-center gap-3">
-            <div className="relative flex-1">
-              <Link className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
-              <input
-                type="url"
-                value={form.portfolioUrl}
-                onChange={(e) => {
-                  update('portfolioUrl', e.target.value);
-                  setPortfolioSynced(false);
-                }}
-                placeholder="https://yourportfolio.com"
-                className={`${inputCls} pl-10`}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={handleVerifyPortfolio}
-              disabled={syncingPortfolio || !form.portfolioUrl.trim()}
-              className="flex items-center gap-2 text-xs font-black text-emerald-300 bg-emerald-500/15 hover:bg-emerald-500/25 disabled:opacity-40 px-4 py-3 rounded-xl border border-emerald-500/40 transition-all shrink-0 cursor-pointer shadow-sm"
-            >
-              {syncingPortfolio ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-emerald-400" />
-                  <span>Verifying...</span>
-                </>
-              ) : portfolioSynced ? (
-                <>
-                  <Check className="h-4 w-4 text-emerald-400" />
-                  <span>Verified</span>
-                </>
-              ) : (
-                <>
-                  <Link className="h-4 w-4 text-emerald-400" />
-                  <span>Verify Site</span>
-                </>
-              )}
-            </button>
-          </div>
+      {/* LinkedIn Link */}
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-3.5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <label className={labelCls} htmlFor="linkedin-url">
+            <LinkedinIcon className="h-4 w-4 text-blue-400 inline mr-1.5" />
+            LinkedIn Profile
+          </label>
+          {linkedinSynced && (
+            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+              <Check className="h-3.5 w-3.5" /> Verified
+            </span>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <input
+            id="linkedin-url"
+            type="url"
+            value={form.linkedinUrl}
+            onChange={(e) => update('linkedinUrl', e.target.value)}
+            placeholder="https://linkedin.com/in/username"
+            className={inputCls}
+          />
+          <button
+            type="button"
+            onClick={handleSyncLinkedin}
+            disabled={syncingLinkedin || !form.linkedinUrl.trim()}
+            className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md shrink-0 cursor-pointer disabled:cursor-not-allowed"
+          >
+            {syncingLinkedin ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Verifying...
+              </>
+            ) : (
+              <>
+                <Link className="h-3.5 w-3.5" />
+                {linkedinSynced ? 'Re-verify' : 'Verify Link'}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Portfolio / Personal Website */}
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-3.5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <label className={labelCls} htmlFor="portfolio-url">
+            <ExternalLink className="h-4 w-4 text-purple-400 inline mr-1.5" />
+            Portfolio / Personal Website
+          </label>
+          {portfolioSynced && (
+            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+              <Check className="h-3.5 w-3.5" /> Verified
+            </span>
+          )}
+        </div>
+        <div className="flex gap-2">
+          <input
+            id="portfolio-url"
+            type="url"
+            value={form.portfolioUrl}
+            onChange={(e) => update('portfolioUrl', e.target.value)}
+            placeholder="https://yourname.dev"
+            className={inputCls}
+          />
+          <button
+            type="button"
+            onClick={handleSyncPortfolio}
+            disabled={syncingPortfolio || !form.portfolioUrl.trim()}
+            className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md shrink-0 cursor-pointer disabled:cursor-not-allowed"
+          >
+            {syncingPortfolio ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Checking...
+              </>
+            ) : (
+              <>
+                <Link className="h-3.5 w-3.5" />
+                {portfolioSynced ? 'Re-verify' : 'Verify URL'}
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -276,7 +295,6 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
             <div className="flex items-center gap-3">
               {ghData.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img src={ghData.avatarUrl} alt={ghData.username} className="h-9 w-9 rounded-full border border-orange-500/40" />
               ) : (
                 <div className="h-9 w-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-400">
@@ -300,7 +318,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
             </span>
           </div>
 
-          {ghData.bio && <p className="text-xs text-slate-300 italic bg-slate-950/40 p-3 rounded-xl border border-slate-800/80">"{ghData.bio}"</p>}
+          {ghData.bio && <p className="text-xs text-slate-300 italic bg-slate-950/40 p-3 rounded-xl border border-slate-800/80">&quot;{ghData.bio}&quot;</p>}
 
           {ghData.topLanguages && ghData.topLanguages.length > 0 && (
             <div>
@@ -320,7 +338,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
             <div>
               <span className="text-xs font-extrabold text-slate-400 uppercase tracking-wider block mb-2">Synced Repositories</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {ghData.repositories.slice(0, 4).map((repo: any) => (
+                {ghData.repositories.slice(0, 4).map((repo: GitHubRepo) => (
                   <a
                     key={repo.name}
                     href={repo.url}

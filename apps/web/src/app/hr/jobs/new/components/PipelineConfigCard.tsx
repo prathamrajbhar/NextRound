@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Settings, HelpCircle, AudioLines, Code, ClipboardCheck, Video, ChevronRight, Eye } from 'lucide-react';
+import { Settings, AudioLines, ClipboardCheck, Video, ChevronRight, Eye } from 'lucide-react';
 
 interface PipelineConfigCardProps {
   minScore: number;
@@ -28,14 +28,8 @@ interface PipelineConfigCardProps {
 export default function PipelineConfigCard({
   minScore,
   setMinScore,
-  autoOffer,
-  setAutoOffer,
-  qCount,
-  setQCount,
   enableSourcing,
   setEnableSourcing,
-  voiceProfile,
-  setVoiceProfile,
   stages,
   setStages,
   assessmentConfig,

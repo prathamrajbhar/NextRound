@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
-import { Sparkles, CheckCircle2, HelpCircle, Lightbulb, ArrowRight, Bot } from '@/lib/lucide-google-icons';
+import { Sparkles, CheckCircle2, HelpCircle, Lightbulb } from '@/lib/lucide-google-icons';
 
 interface PrepQuestion {
   category?: string;
@@ -34,7 +33,7 @@ interface JobPrepSectionProps {
   roleTitle: string;
 }
 
-export function JobPrepSection({ jobId, companyName, roleTitle }: JobPrepSectionProps) {
+export function JobPrepSection({ jobId, companyName }: JobPrepSectionProps) {
   const [prep, setPrep] = useState<PrepContentData | null>(null);
   const [loading, setLoading] = useState(true);
 

@@ -107,7 +107,6 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
     );
   }
 
-  const skills: string[] = [];
   const hasDetailedMarkdown = job.description && (job.description.includes('##') || job.description.includes('*'));
 
   return (

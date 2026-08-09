@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { User, FileText, Code, Sliders, Wallet, Handshake, Globe, Share2 } from '@/lib/lucide-google-icons';
+import { User, Code, Sliders, Wallet, Handshake, Share2 } from '@/lib/lucide-google-icons';
 import { CandidateOnboardingShell, OnboardingStep } from './_components/CandidateOnboardingShell';
 import {
   useCandidateOnboarding,

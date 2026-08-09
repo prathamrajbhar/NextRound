@@ -243,14 +243,6 @@ export default function HrCreateJob() {
     router.push('/hr/jobs');
   };
 
-  // Steps definition for wizard
-  const STEPS = [
-    { id: 1, name: 'Job Basics', description: 'Position title, department & salary' },
-    { id: 2, name: 'Description & AI', description: 'Job description & extracted tags' },
-    { id: 3, name: 'Evaluation Rubric', description: 'Scorecard weighting & auto-balance' },
-    { id: 4, name: 'Pipeline & Sourcing', description: 'Stage sequence & AI agents' },
-  ];
-
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in duration-200">
       {/* Top Header & Global Actions */}

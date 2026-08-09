@@ -20,6 +20,17 @@ export interface AptitudeQuestion {
   category: string;
   text: string;
   options: string[];
+  difficulty?: string;
+  correctIndex?: number;
+}
+
+interface RawApiQuestion {
+  id?: string;
+  category?: string;
+  text?: string;
+  question?: string;
+  options?: string[];
+  difficulty?: string;
   correctIndex?: number;
 }
 
@@ -64,9 +75,9 @@ export default function AptitudeTestConsole({
 
       try {
         setIsLoading(true);
-        const res = await apiClient.get<{ questions: any[] }>(endpoint).catch(() => null);
+        const res = await apiClient.get<{ questions: RawApiQuestion[] }>(endpoint).catch(() => null);
         if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
-          const mapped = res.questions.map((q: any, idx: number) => ({
+          const mapped = res.questions.map((q: RawApiQuestion, idx: number) => ({
             id: q.id || `q_b1_${idx}`,
             category: q.category || 'Logical Reasoning',
             text: q.text || q.question || 'Question text unavailable.',
@@ -133,9 +144,9 @@ export default function AptitudeTestConsole({
 
     try {
       setIsPrefetching(true);
-      const res = await apiClient.get<{ questions: any[] }>(prefetchEndpoint).catch(() => null);
+      const res = await apiClient.get<{ questions: RawApiQuestion[] }>(prefetchEndpoint).catch(() => null);
       if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
-        const newMapped = res.questions.map((q: any, idx: number) => ({
+        const newMapped = res.questions.map((q: RawApiQuestion, idx: number) => ({
           id: `${q.id || 'q'}_b${nextBatchNum}_${idx}`,
           category: q.category || 'Logical Reasoning',
           text: q.text || q.question || 'Question text unavailable.',
@@ -161,7 +172,10 @@ export default function AptitudeTestConsole({
 
   useEffect(() => {
     if (fetchedQuestions.length > 0 && currentIndex >= fetchedQuestions.length - 2 && !isPrefetching) {
-      prefetchNextBatch();
+      const timer = setTimeout(() => {
+        prefetchNextBatch();
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [currentIndex, fetchedQuestions.length, isPrefetching, prefetchNextBatch]);
 
