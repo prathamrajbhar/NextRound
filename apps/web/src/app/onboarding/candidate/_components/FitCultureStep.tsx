@@ -1,13 +1,57 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Trophy, ScrollText, ChevronUp, ChevronDown, GripVertical } from '@/lib/lucide-google-icons';
+import { Trophy, ScrollText, ChevronUp, ChevronDown, GripVertical, RefreshCw, Loader2 } from '@/lib/lucide-google-icons';
 import { OnboardingStepProps } from './useCandidateOnboarding';
 import { inputCls, labelCls } from './CandidateOnboardingShell';
 
-export function FitCultureStep({ form, update }: OnboardingStepProps) {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api/v1';
+
+export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingStepProps) {
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const [reparsing, setReparsing] = useState<string | null>(null);
+
+  const handleRegenerateField = async (field: 'proudProject' | 'bio') => {
+    if (reparsing) return;
+    if (!form.resumeFile) {
+      alert('Please upload a resume in Step 1 or 2 to auto-regenerate AI fields from your profile resources.');
+      return;
+    }
+
+    setReparsing(field);
+    try {
+      const formData = new FormData();
+      formData.append('resume', form.resumeFile);
+
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const res = await fetch(`${API_BASE_URL}/candidate/parse-resume`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (json.success && json.data?.profile) {
+        if (field === 'proudProject' && json.data.profile.proudProject) {
+          update('proudProject', json.data.profile.proudProject);
+        } else if (field === 'bio' && json.data.profile.bio) {
+          update('bio', json.data.profile.bio);
+        }
+        if (mergeParsedProfile) {
+          mergeParsedProfile(json.data.profile, json.data.rawText);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to regenerate AI field:', err);
+    } finally {
+      setReparsing(null);
+    }
+  };
 
   const moveValue = (idx: number, dir: -1 | 1) => {
     const target = idx + dir;
@@ -56,7 +100,19 @@ export function FitCultureStep({ form, update }: OnboardingStepProps) {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <div>
-        <label className={labelCls}>Describe a Project You&apos;re Proud Of</label>
+        <div className="flex justify-between items-center mb-1.5">
+          <label className={labelCls}>Describe a Project You&apos;re Proud Of</label>
+          <button
+            type="button"
+            onClick={() => handleRegenerateField('proudProject')}
+            disabled={reparsing === 'proudProject'}
+            className="flex items-center gap-1.5 text-xs font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-2.5 py-1 rounded-lg border border-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
+            title="Re-synthesize project description using AI"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${reparsing === 'proudProject' ? 'animate-spin' : ''}`} />
+            <span>{reparsing === 'proudProject' ? 'Regenerating...' : 'Regenerate AI'}</span>
+          </button>
+        </div>
         <div className="relative">
           <Trophy className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
           <textarea
@@ -73,7 +129,19 @@ export function FitCultureStep({ form, update }: OnboardingStepProps) {
       <div>
         <div className="flex justify-between items-center mb-1.5">
           <label className={labelCls}>About Me / Summary</label>
-          <span className="text-xs font-mono font-bold text-slate-400">{form.bio.length} / 1000</span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => handleRegenerateField('bio')}
+              disabled={reparsing === 'bio'}
+              className="flex items-center gap-1.5 text-xs font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-2.5 py-1 rounded-lg border border-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
+              title="Re-synthesize bio summary using AI"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${reparsing === 'bio' ? 'animate-spin' : ''}`} />
+              <span>{reparsing === 'bio' ? 'Regenerating...' : 'Regenerate AI'}</span>
+            </button>
+            <span className="text-xs font-mono font-bold text-slate-400">{form.bio.length} / 1000</span>
+          </div>
         </div>
         <div className="relative">
           <ScrollText className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />

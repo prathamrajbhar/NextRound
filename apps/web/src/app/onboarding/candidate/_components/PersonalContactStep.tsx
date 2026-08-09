@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { User, Mail, Phone, MapPin, Compass, Lightbulb, FileUp, Check, Loader2, Sparkles } from '@/lib/lucide-google-icons';
+import { User, Mail, Phone, MapPin, Compass, Lightbulb, FileUp, Check, Loader2, Sparkles, RefreshCw } from '@/lib/lucide-google-icons';
 import { OnboardingStepProps } from './useCandidateOnboarding';
 import { inputCls, labelCls, selectCls } from './CandidateOnboardingShell';
 
@@ -25,6 +25,46 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
   const [parsing, setParsing] = useState(false);
   const [parseStatus, setParseStatus] = useState<string | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
+
+  const triggerReParse = async () => {
+    if (!form.resumeFile || parsing) return;
+    setParsing(true);
+    setParseStatus(null);
+    setParseError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('resume', form.resumeFile);
+
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const headers: Record<string, string> = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(`${API_BASE_URL}/candidate/parse-resume`, {
+        method: 'POST',
+        headers,
+        credentials: 'include',
+        body: formData,
+      });
+
+      const json = await res.json();
+
+      if (json.success && json.data?.profile) {
+        if (mergeParsedProfile) {
+          mergeParsedProfile(json.data.profile, json.data.rawText);
+        }
+        setParseStatus('Profile fields re-synthesized & updated with AI!');
+      } else {
+        setParseError(typeof json.error === 'string' ? json.error : 'Could not re-parse resume.');
+      }
+    } catch {
+      setParseError('Failed to re-parse resume text.');
+    } finally {
+      setParsing(false);
+    }
+  };
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
@@ -101,8 +141,18 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
             )}
             <button
               type="button"
+              onClick={triggerReParse}
+              disabled={parsing}
+              className="flex items-center gap-1 text-xs font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-2.5 py-1.5 rounded-xl border border-orange-500/30 transition-all cursor-pointer disabled:opacity-50"
+              title="Re-generate profile fields from resume with AI"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${parsing ? 'animate-spin' : ''}`} />
+              <span>Regenerate</span>
+            </button>
+            <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="text-xs font-bold text-orange-400 hover:text-orange-300 underline cursor-pointer"
+              className="text-xs font-bold text-slate-400 hover:text-slate-200 underline cursor-pointer"
             >
               Change
             </button>
