@@ -470,7 +470,7 @@ export default function AptitudeTestConsole({
     );
   }
 
-  // START SCREEN: 4 Category Boxes, each with its own direct Start Section button
+  // START SCREEN: 4 Clean Category Cards with direct Start buttons
   if (!isStarted) {
     return (
       <div className="w-full h-full flex flex-col justify-center items-center p-4 sm:p-6 bg-slate-950 text-slate-100 font-sans relative overflow-y-auto">
@@ -479,13 +479,13 @@ export default function AptitudeTestConsole({
             <CompanyLogo name={displayCompany} logoUrl={companyLogoUrl} size="lg" className="mx-auto shadow-md" />
             <h1 className="text-xl sm:text-2xl font-black font-display text-white">{displayCompany}</h1>
             <p className="text-xs font-extrabold text-amber-400 uppercase tracking-wider">
-              {displayRole} • Aptitude &amp; Reasoning Assessment
+              {displayRole} • Aptitude Assessment
             </p>
           </div>
 
-          {/* 4 Category Section Boxes with individual Start Button on each */}
+          {/* 4 Category Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left pt-2">
-            {STANDARD_CATEGORIES.map((cat, idx) => {
+            {STANDARD_CATEGORIES.map((cat) => {
               const sec = categorySections.find((s) => s.category === cat);
               const qCount = sec ? sec.questions.length : 0;
               const startIndex = sec ? sec.startIndex : 0;
@@ -501,9 +501,6 @@ export default function AptitudeTestConsole({
                       <IconComp className="h-6 w-6" />
                     </div>
                     <div className="space-y-1">
-                      <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider block">
-                        SECTION {idx + 1}
-                      </span>
                       <h3 className="text-sm font-extrabold text-slate-100">{cat}</h3>
                       <span className="text-xs font-semibold text-slate-400 block">
                         {qCount > 0 ? `${qCount} Questions` : 'Included'}
@@ -520,7 +517,7 @@ export default function AptitudeTestConsole({
                     className="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 transform hover:scale-[1.01]"
                   >
                     <Play className="h-3.5 w-3.5 fill-slate-950" />
-                    <span>Start Section {idx + 1}</span>
+                    <span>Start {cat}</span>
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -569,7 +566,7 @@ export default function AptitudeTestConsole({
             <div className="flex items-center gap-2">
               <h2 className="text-sm sm:text-base font-black font-display text-slate-100">{displayCompany}</h2>
               <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase">
-                Aptitude &amp; Reasoning Test
+                Aptitude Assessment
               </span>
             </div>
             <span className="text-xs text-slate-400 font-medium block">{displayRole}</span>
@@ -602,9 +599,9 @@ export default function AptitudeTestConsole({
         </div>
       </div>
 
-      {/* Category Section Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto py-2 border-b border-slate-800/60 no-scrollbar">
-        {categorySections.map((sec, idx) => {
+      {/* Clean Category Navigation Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto py-2.5 border-b border-slate-800/60 no-scrollbar">
+        {categorySections.map((sec) => {
           const isActive = currentQ.category === sec.category;
           const IconComp = CATEGORY_ICONS[sec.category] || Brain;
           return (
@@ -612,23 +609,14 @@ export default function AptitudeTestConsole({
               key={sec.category}
               type="button"
               onClick={() => setCurrentIndex(sec.startIndex)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${
+              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${
                 isActive
-                  ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/30'
-                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+                  ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/30 font-black'
+                  : 'bg-slate-900/80 text-slate-400 hover:text-slate-200 border border-slate-800/80'
               }`}
             >
               <IconComp className="h-3.5 w-3.5" />
-              <span>
-                Section {idx + 1}: {sec.category}
-              </span>
-              <span
-                className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
-                  isActive ? 'bg-slate-950 text-amber-400' : 'bg-slate-800 text-slate-300'
-                }`}
-              >
-                {sec.questions.length} Qs
-              </span>
+              <span>{sec.category}</span>
             </button>
           );
         })}
@@ -643,8 +631,8 @@ export default function AptitudeTestConsole({
               <span className="text-xs font-extrabold text-amber-400 uppercase tracking-wider font-mono">
                 QUESTION {currentIndex + 1} OF {activeQuestions.length}
               </span>
-              <span className="text-xs font-black uppercase px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                Category: {currentQ.category}
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                {currentQ.category}
               </span>
             </div>
 
@@ -706,48 +694,37 @@ export default function AptitudeTestConsole({
           </div>
         </div>
 
-        {/* Right Col: Question Navigator Grouped by Category */}
+        {/* Right Col: Clean Question Navigator */}
         <div className="space-y-4 p-6 rounded-3xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl flex flex-col justify-between min-h-[420px]">
-          <div className="space-y-4 overflow-y-auto max-h-[380px] pr-1">
+          <div className="space-y-4">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-              Question Navigator (By Section)
+              Question Navigator
             </h4>
 
-            {categorySections.map((sec, secIdx) => (
-              <div key={sec.category} className="space-y-2 border-b border-slate-800/60 pb-3 last:border-0">
-                <div className="flex items-center justify-between text-[11px] font-extrabold text-amber-400">
-                  <span>
-                    Sec {secIdx + 1}: {sec.category}
-                  </span>
-                  <span className="text-[10px] text-slate-500">{sec.questions.length} Qs</span>
-                </div>
-                <div className="grid grid-cols-5 gap-2">
-                  {sec.questions.map((q) => {
-                    const globalIdx = activeQuestions.findIndex((item) => item.id === q.id);
-                    const isCurrent = globalIdx === currentIndex;
-                    const isAnswered = answers[q.id] !== undefined;
-                    return (
-                      <button
-                        key={q.id}
-                        type="button"
-                        onClick={() => setCurrentIndex(globalIdx)}
-                        className={`h-9 rounded-xl border font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center ${
-                          isCurrent
-                            ? 'border-amber-500 bg-amber-500 text-slate-950 font-black ring-2 ring-amber-500/30'
-                            : isAnswered
-                            ? 'border-emerald-700 bg-emerald-950/60 text-emerald-300'
-                            : 'border-slate-800 bg-slate-950 text-slate-500 hover:border-slate-700'
-                        }`}
-                      >
-                        {globalIdx + 1}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+            <div className="grid grid-cols-5 gap-2">
+              {activeQuestions.map((q, idx) => {
+                const isCurrent = idx === currentIndex;
+                const isAnswered = answers[q.id] !== undefined;
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`h-10 rounded-xl border font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center ${
+                      isCurrent
+                        ? 'border-amber-500 bg-amber-500 text-slate-950 font-black ring-2 ring-amber-500/30'
+                        : isAnswered
+                        ? 'border-emerald-700 bg-emerald-950/60 text-emerald-300'
+                        : 'border-slate-800 bg-slate-950 text-slate-500 hover:border-slate-700'
+                    }`}
+                  >
+                    {idx + 1}
+                  </button>
+                );
+              })}
+            </div>
 
-            <div className="pt-2 border-t border-slate-800 space-y-1.5 text-xs font-semibold">
+            <div className="pt-3 border-t border-slate-800 space-y-1.5 text-xs font-semibold">
               <div className="flex justify-between text-slate-400">
                 <span>Answered:</span>
                 <span className="text-emerald-400 font-extrabold">
