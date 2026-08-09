@@ -52,75 +52,6 @@ export interface CodingProblem {
   expectedComplexity: { time: string; space: string };
 }
 
-export const INITIAL_PROBLEM: CodingProblem = {
-  id: 'virtualized-list',
-  title: 'Virtualized List Rendering & Memory Optimization',
-  difficulty: 'Medium',
-  category: 'Data Structures & Performance',
-  description:
-    'Given an array of N item heights and a viewport height V, calculate the index range `[startIndex, endIndex]` of items that must be rendered in the DOM to fill the viewport starting from scroll position Y.',
-  constraints: [
-    '1 <= heights.length <= 10^5',
-    '1 <= heights[i] <= 500',
-    '0 <= scroll_y <= 10^6',
-    '100 <= viewport_height <= 2000',
-  ],
-  examples: [
-    {
-      input: 'heights = [50, 50, 50, 50, 50], scroll_y = 100, viewport_height = 100',
-      output: '[2, 3]',
-      explanation: 'Item 0 (0-50) and Item 1 (50-100) are scrolled past. Items 2 and 3 span y=100 to y=200.',
-    },
-  ],
-  starterCode: {
-    python: `def get_visible_range(heights: list[int], scroll_y: int, viewport_height: int) -> list[int]:
-    # TODO: Calculate and return [startIndex, endIndex]
-    pass
-`,
-    javascript: `function getVisibleRange(heights, scrollY, viewportHeight) {
-  // TODO: Calculate and return [startIndex, endIndex]
-}
-`,
-    typescript: `function getVisibleRange(heights: number[], scrollY: number, viewportHeight: number): number[] {
-  // TODO: Calculate and return [startIndex, endIndex]
-  return [];
-}
-`,
-    java: `class Solution {
-    public static int[] getVisibleRange(int[] heights, int scrollY, int viewportHeight) {
-        // TODO: Calculate and return [startIndex, endIndex]
-        return new int[]{};
-    }
-}
-`,
-    cpp: `#include <vector>
-using namespace std;
-
-vector<int> getVisibleRange(const vector<int>& heights, int scrollY, int viewportHeight) {
-    // TODO: Calculate and return [startIndex, endIndex]
-    return {};
-}
-`,
-  },
-  testCases: [
-    {
-      name: 'Standard Scroll Position',
-      input: 'heights = [50, 50, 50, 50, 50], scroll_y = 100, viewport_height = 100',
-      expected: '[2, 3]',
-      hidden: false,
-    },
-    {
-      name: 'Top Scroll Position',
-      input: 'heights = [30, 40, 50, 60, 70], scroll_y = 0, viewport_height = 80',
-      expected: '[0, 2]',
-      hidden: false,
-    },
-  ],
-  editorial:
-    'Accumulate heights sequentially to locate start and end viewport intersections.',
-  expectedComplexity: { time: 'O(N)', space: 'O(1)' },
-};
-
 export default function CodingAssessmentConsole({
   company = '',
   role = '',
@@ -128,9 +59,10 @@ export default function CodingAssessmentConsole({
   sessionId,
   onComplete,
 }: CodingConsoleProps) {
-  const [activeProblem, setActiveProblem] = useState<CodingProblem>(INITIAL_PROBLEM);
+  const [activeProblem, setActiveProblem] = useState<CodingProblem | null>(null);
   const [language, setLanguage] = useState<'python' | 'javascript' | 'typescript' | 'java' | 'cpp'>('python');
-  const [code, setCode] = useState<string>(INITIAL_PROBLEM.starterCode.python);
+  const [code, setCode] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
   const [activeLeftTab, setActiveLeftTab] = useState<'description' | 'editorial' | 'submissions'>('description');
   const [activeBottomTab, setActiveBottomTab] = useState<'testcases' | 'results' | 'console'>('testcases');
@@ -152,24 +84,24 @@ export default function CodingAssessmentConsole({
           ? `/applications/${applicationId}/assessment/coding`
           : `/coding/problem?role=${encodeURIComponent(role || 'Software Engineer')}&company=${encodeURIComponent(company || 'Tech Enterprise')}`;
 
-        const res = await apiClient.get<{ problem: Record<string, unknown> }>(endpoint).catch(() => null);
+        const res = await apiClient.get<{ problem: Record<string, unknown> }>(endpoint);
         if (res?.problem) {
           const p = res.problem as Record<string, unknown>;
-          const rawTestCases = Array.isArray(p.testCases) ? p.testCases : INITIAL_PROBLEM.testCases;
+          const rawTestCases = Array.isArray(p.testCases) ? p.testCases : [];
           const loaded: CodingProblem = {
-            id: typeof p.id === 'string' ? p.id : INITIAL_PROBLEM.id,
-            title: typeof p.title === 'string' ? p.title : INITIAL_PROBLEM.title,
-            difficulty: (typeof p.difficulty === 'string' ? p.difficulty : INITIAL_PROBLEM.difficulty) as CodingProblem['difficulty'],
-            category: typeof p.category === 'string' ? p.category : INITIAL_PROBLEM.category,
-            description: typeof p.description === 'string' ? p.description : INITIAL_PROBLEM.description,
-            constraints: Array.isArray(p.constraints) ? (p.constraints as string[]) : INITIAL_PROBLEM.constraints,
-            examples: Array.isArray(p.examples) ? (p.examples as CodingProblem['examples']) : INITIAL_PROBLEM.examples,
+            id: typeof p.id === 'string' ? p.id : 'dynamic-problem',
+            title: typeof p.title === 'string' ? p.title : 'Coding Problem',
+            difficulty: (typeof p.difficulty === 'string' ? p.difficulty : 'Medium') as CodingProblem['difficulty'],
+            category: typeof p.category === 'string' ? p.category : 'Algorithms',
+            description: typeof p.description === 'string' ? p.description : '',
+            constraints: Array.isArray(p.constraints) ? (p.constraints as string[]) : [],
+            examples: Array.isArray(p.examples) ? (p.examples as CodingProblem['examples']) : [],
             starterCode: {
-              python: (p.starterCode as Record<string, string>)?.python || INITIAL_PROBLEM.starterCode.python,
-              javascript: (p.starterCode as Record<string, string>)?.javascript || INITIAL_PROBLEM.starterCode.javascript,
-              typescript: (p.starterCode as Record<string, string>)?.typescript || INITIAL_PROBLEM.starterCode.typescript,
-              java: (p.starterCode as Record<string, string>)?.java || INITIAL_PROBLEM.starterCode.java,
-              cpp: (p.starterCode as Record<string, string>)?.cpp || INITIAL_PROBLEM.starterCode.cpp,
+              python: (p.starterCode as Record<string, string>)?.python || '',
+              javascript: (p.starterCode as Record<string, string>)?.javascript || '',
+              typescript: (p.starterCode as Record<string, string>)?.typescript || '',
+              java: (p.starterCode as Record<string, string>)?.java || '',
+              cpp: (p.starterCode as Record<string, string>)?.cpp || '',
             },
             testCases: rawTestCases.map((tc: Record<string, unknown>, i: number) => ({
               name: typeof tc.name === 'string' ? tc.name : `Case ${i + 1}`,
@@ -177,14 +109,17 @@ export default function CodingAssessmentConsole({
               expected: typeof tc.expected === 'string' ? tc.expected : typeof tc.expectedOutput === 'string' ? tc.expectedOutput : '',
               hidden: Boolean(tc.hidden),
             })),
-            editorial: typeof p.editorial === 'string' ? p.editorial : INITIAL_PROBLEM.editorial,
-            expectedComplexity: (p.expectedComplexity as CodingProblem['expectedComplexity']) || INITIAL_PROBLEM.expectedComplexity,
+            editorial: typeof p.editorial === 'string' ? p.editorial : '',
+            expectedComplexity: (p.expectedComplexity as CodingProblem['expectedComplexity']) || { time: 'O(N)', space: 'O(1)' },
           };
           setActiveProblem(loaded);
           setCode(loaded.starterCode.python);
+        } else {
+          throw new Error('Problem payload is empty.');
         }
       } catch (err) {
-        console.warn('Failed to load dynamic LLM coding problem, using starter template:', err);
+        console.error('Failed to load dynamic LLM coding problem:', err);
+        setError(err instanceof Error ? err.message : 'Failed to generate coding problem. Please refresh and try again.');
       }
     }
     fetchCodingProblem();
@@ -192,13 +127,14 @@ export default function CodingAssessmentConsole({
 
   const handleLanguageChange = (newLang: 'python' | 'javascript' | 'typescript' | 'java' | 'cpp') => {
     setLanguage(newLang);
-    if (activeProblem.starterCode[newLang]) {
+    if (activeProblem?.starterCode[newLang]) {
       setCode(activeProblem.starterCode[newLang]);
     }
   };
 
   // Production Backend Sandbox Code Execution
   const handleRunCode = async () => {
+    if (!activeProblem) return;
     setIsRunning(true);
     setActiveBottomTab('results');
     setOutputLogs([
@@ -232,6 +168,7 @@ export default function CodingAssessmentConsole({
 
   // Submit Solution & Compute Final Score
   const handleSubmitSolution = async () => {
+    if (!activeProblem) return;
     setIsRunning(true);
     setActiveBottomTab('results');
 
@@ -269,6 +206,39 @@ export default function CodingAssessmentConsole({
       setIsRunning(false);
     }
   };
+
+  if (error) {
+    return (
+      <div className="w-full h-screen bg-slate-50 dark:bg-[#0a0a0a] flex flex-col items-center justify-center font-sans">
+        <div className="max-w-md p-6 bg-white dark:bg-[#141414] rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg text-center">
+          <div className="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center mx-auto mb-4">
+            <XCircle className="w-6 h-6 text-rose-600 dark:text-rose-400" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Generation Failed</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-lg text-sm font-semibold transition-all shadow-xs"
+          >
+            Retry Generation
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeProblem) {
+    return (
+      <div className="w-full h-screen bg-slate-50 dark:bg-[#0a0a0a] flex flex-col items-center justify-center font-sans">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-indigo-600 dark:border-t-indigo-500 animate-spin" />
+          <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 animate-pulse">
+            Generating live coding problem via Gemini AI...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const lineCount = code.split('\n').length;
   const lineNumbers = Array.from({ length: Math.max(lineCount, 16) }, (_, i) => i + 1);

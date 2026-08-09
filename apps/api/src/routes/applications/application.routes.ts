@@ -891,7 +891,7 @@ applicationRouter.post(
           responses: answers || [],
           status: 'in_progress',
         },
-      }).catch(() => {});
+      }).catch(() => { });
 
       // Score the submission server-side against the persisted questions (which
       // carry correctIndex) so the client gets a real result immediately instead
@@ -949,12 +949,33 @@ applicationRouter.get(
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
       }
 
-      const jobTitle = app.job?.title || 'Software Engineer';
-      const jobDescription = app.job?.description || '';
-      const jobConfig = (app.job?.thresholds as any) || {};
-      const difficulty = jobConfig.difficulty || 'medium';
+      // Check if there is an existing coding assessment for this application
+      let assessment = await prisma.assessment.findFirst({
+        where: { application_id: appId, test_type: 'coding' },
+      });
 
-      const problem = await generateAiCodingProblem(jobTitle, jobDescription, difficulty);
+      let problem: any;
+
+      if (assessment) {
+        problem = assessment.questions;
+      } else {
+        const jobTitle = app.job?.title || 'Software Engineer';
+        const jobDescription = app.job?.description || '';
+        const jobConfig = (app.job?.thresholds as any) || {};
+        const difficulty = jobConfig.difficulty || 'medium';
+
+        problem = await generateAiCodingProblem(jobTitle, jobDescription, difficulty);
+
+        // Persist the generated problem into the Assessment table
+        assessment = await prisma.assessment.create({
+          data: {
+            application_id: appId,
+            test_type: 'coding',
+            questions: problem as any,
+            status: 'in_progress',
+          },
+        });
+      }
 
       // Strip hidden test cases before sending to candidate
       const sanitizedProblem = {
@@ -980,7 +1001,7 @@ applicationRouter.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const appId = req.params.id as string;
-      const { problemId, code, language } = req.body;
+      const { code, language } = req.body;
 
       const app = await prisma.application.findUnique({
         where: { id: appId },
@@ -991,39 +1012,27 @@ applicationRouter.post(
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
       }
 
-      const jobTitle = app.job?.title || 'Software Engineer';
-      const jobConfig = (app.job?.thresholds as any) || {};
+      // Retrieve the persisted coding problem from the Assessment table
+      const assessment = await prisma.assessment.findFirst({
+        where: { application_id: appId, test_type: 'coding' },
+      });
 
-      let testCasesToRun: any[] = [];
-      let entryPoint = 'solution';
-
-      if (problemId) {
-        const dbProblem = await prisma.codingProblem.findFirst({
-          where: { slug: problemId },
+      if (!assessment) {
+        return res.status(404).json({
+          success: false,
+          error: 'Coding assessment not found. Please retrieve the problem first.',
         });
-        if (dbProblem) {
-          const publicTests = (dbProblem.public_tests as any[]) || [];
-          const hiddenTests = (dbProblem.hidden_tests as any[]) || [];
-          testCasesToRun = [...publicTests, ...hiddenTests];
-          entryPoint = dbProblem.entry_point || 'solution';
-        }
       }
 
-      if (testCasesToRun.length === 0) {
-        const currentProblem = await generateAiCodingProblem(
-          jobTitle,
-          app.job?.description || '',
-          jobConfig.difficulty || 'medium'
-        );
-        testCasesToRun = currentProblem.testCases || [];
-        entryPoint = currentProblem.entryPoint || 'solution';
-      }
+      const currentProblem = assessment.questions as any;
+      const testCasesToRun = currentProblem.testCases || [];
 
-      const execSummary = executeCodingSubmission(code || '', language || 'python', testCasesToRun, entryPoint);
+      const execSummary = executeCodingSubmission(code || '', language || 'python', testCasesToRun);
 
       const submission = await prisma.codingSubmission.create({
         data: {
           application_id: appId,
+          problem_id: currentProblem.id || null,
           code: code || '',
           language: language || 'python',
           status: execSummary.allPassed ? 'passed' : 'failed',
@@ -1037,6 +1046,15 @@ applicationRouter.post(
           pass_rate: execSummary.passRate,
           pass_rate_percent: execSummary.passRate,
           pass_rate_ratio: execSummary.passRateRatio,
+        },
+      });
+
+      // Update assessment status to completed
+      await prisma.assessment.update({
+        where: { id: assessment.id },
+        data: {
+          status: 'completed',
+          score: execSummary.passRate,
         },
       });
 
