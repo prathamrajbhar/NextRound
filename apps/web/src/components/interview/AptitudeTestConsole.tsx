@@ -470,11 +470,11 @@ export default function AptitudeTestConsole({
     );
   }
 
-  // START SCREEN: Category-wise breakdown before candidate starts the assessment
+  // START SCREEN: 4 Category Boxes, each with its own direct Start Section button
   if (!isStarted) {
     return (
       <div className="w-full h-full flex flex-col justify-center items-center p-4 sm:p-6 bg-slate-950 text-slate-100 font-sans relative overflow-y-auto">
-        <div className="max-w-2xl w-full p-6 sm:p-8 rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-md shadow-2xl space-y-6 text-center">
+        <div className="max-w-3xl w-full p-6 sm:p-8 rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-md shadow-2xl space-y-6 text-center">
           <div className="space-y-2">
             <CompanyLogo name={displayCompany} logoUrl={companyLogoUrl} size="lg" className="mx-auto shadow-md" />
             <h1 className="text-xl sm:text-2xl font-black font-display text-white">{displayCompany}</h1>
@@ -483,53 +483,49 @@ export default function AptitudeTestConsole({
             </p>
           </div>
 
-          <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/30 text-left space-y-2">
-            <div className="flex items-center gap-2 text-amber-300 font-extrabold text-xs">
-              <Brain className="h-4 w-4" />
-              <span>Category-Wise Section Breakdown ({activeQuestions.length} Total Questions)</span>
-            </div>
-            <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
-              This assessment is structured into 4 distinct categories. Questions are organized section by section.
-            </p>
-          </div>
-
-          {/* 4 Category Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+          {/* 4 Category Section Boxes with individual Start Button on each */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left pt-2">
             {STANDARD_CATEGORIES.map((cat, idx) => {
               const sec = categorySections.find((s) => s.category === cat);
               const qCount = sec ? sec.questions.length : 0;
+              const startIndex = sec ? sec.startIndex : 0;
               const IconComp = CATEGORY_ICONS[cat] || Brain;
+
               return (
                 <div
                   key={cat}
-                  className="p-4 rounded-2xl border border-slate-800 bg-slate-950/80 space-y-1.5 flex items-start gap-3"
+                  className="p-5 rounded-2xl border border-slate-800 bg-slate-950/80 hover:border-amber-500/40 transition-all shadow-lg flex flex-col justify-between space-y-4"
                 >
-                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex-shrink-0">
-                    <IconComp className="h-5 w-5" />
+                  <div className="flex items-start gap-3.5">
+                    <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex-shrink-0">
+                      <IconComp className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider block">
+                        SECTION {idx + 1}
+                      </span>
+                      <h3 className="text-sm font-extrabold text-slate-100">{cat}</h3>
+                      <span className="text-xs font-semibold text-slate-400 block">
+                        {qCount > 0 ? `${qCount} Questions` : 'Included'}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
-                      Section {idx + 1}
-                    </span>
-                    <h4 className="text-xs font-extrabold text-slate-100">{cat}</h4>
-                    <span className="text-[10px] font-bold text-amber-400 block pt-0.5">
-                      {qCount > 0 ? `${qCount} Questions` : 'Included'}
-                    </span>
-                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCurrentIndex(startIndex);
+                      handleStartTest();
+                    }}
+                    className="w-full py-2.5 px-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 transform hover:scale-[1.01]"
+                  >
+                    <Play className="h-3.5 w-3.5 fill-slate-950" />
+                    <span>Start Section {idx + 1}</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
                 </div>
               );
             })}
-          </div>
-
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={handleStartTest}
-              className="w-full py-4 px-6 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2.5 transform hover:scale-[1.01]"
-            >
-              <Play className="h-4 w-4 fill-slate-950" />
-              <span>Start Assessment (Section 1: Quantitative Aptitude)</span>
-            </button>
           </div>
         </div>
       </div>
