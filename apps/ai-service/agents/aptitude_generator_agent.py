@@ -53,44 +53,14 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
         return []
 
 
-def _fallback_questions(job_title: str, count: int = 5) -> List[Dict[str, Any]]:
-    raise RuntimeError("Fallback questions are disabled in this project.")
-
-
-async def _generate_with_ollama(prompt: str, count: int, job_title: str) -> List[Dict[str, Any]]:
-    """Failover generator using local Ollama instance (OLLAMA_BASE_URL & OLLAMA_MODEL)."""
-    ollama_url = f"{settings.ollama_base_url.rstrip('/')}/api/generate"
-    try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.post(
-                ollama_url,
-                json={
-                    "model": settings.ollama_model,
-                    "prompt": prompt,
-                    "stream": False,
-                }
-            )
-            if resp.status_code == 200:
-                data = resp.json()
-                raw_response = data.get("response", "")
-                questions = _parse_llm_json_response(raw_response, count, job_title)
-                if questions:
-                    logger.info(f"Successfully generated {len(questions)} aptitude questions using Ollama ({settings.ollama_model}).")
-                    return questions
-    except Exception as err:
-        logger.warning(f"Ollama failover question generation unavailable at {ollama_url}: {err}")
-    return []
-
-
 async def generate_aptitude_questions(
     job_title: str = "Software Engineer",
     job_description: str = "",
     count: int = 5
 ) -> List[Dict[str, Any]]:
     """
-    Dynamically generate N role-customized aptitude questions using Gemini + Ollama LLM chain:
+    Dynamically generate N role-customized aptitude questions using Gemini:
     1. Gemini (primary model: GEMINI_MODEL in .env, default gemini-2.5-flash)
-    2. Ollama (failover model: OLLAMA_MODEL at OLLAMA_BASE_URL in .env, default llama3.2)
     """
     prompt = f"""You are an expert recruiter and assessment engineer. Generate a set of {count} high-quality, non-standard cognitive aptitude test questions tailored for a candidate applying for the position of:
 
@@ -133,16 +103,9 @@ JSON Format required:
         if questions:
             logger.info(f"Successfully generated {len(questions)} dynamic aptitude questions via Gemini ({settings.gemini_model}) for {job_title}.")
             return questions
-    logger.warning(f"Gemini aptitude question generation failed for {job_title}. Trying Ollama failover.")
-
-    # 2. Failover Provider: Ollama
-    ollama_questions = await _generate_with_ollama(prompt, count, job_title)
-    if ollama_questions:
-        return ollama_questions
 
     raise RuntimeError(
-        f"AI aptitude question generation failed for '{job_title}'. "
-        "Dynamic generation failed and no fallback is enabled."
+        f"AI aptitude question generation failed via Gemini for '{job_title}'."
     )
 
 
@@ -221,19 +184,8 @@ Return ONLY raw JSON array:
                 q["source"] = "ai-chunk"
             logger.info(f"Generated chunk {chunk_index} ({len(questions)} questions) via Gemini for {job_title}.")
             return questions
-    logger.warning(f"Gemini chunk {chunk_index} generation failed for {job_title}. Trying Ollama.")
-
-    # 2. Failover Provider: Ollama
-    ollama_questions = await _generate_with_ollama(prompt, chunk_size, job_title)
-    if ollama_questions:
-        for idx, q in enumerate(ollama_questions):
-            q["id"] = f"chunk_{chunk_index}_q{idx + 1}"
-            q["source"] = "ai-chunk-ollama"
-        return ollama_questions
-
     raise RuntimeError(
-        f"AI aptitude chunk generation failed for chunk {chunk_index} of '{job_title}'. "
-        "Dynamic generation failed and no fallback is enabled."
+        f"AI aptitude chunk generation failed via Gemini for chunk {chunk_index} of '{job_title}'."
     )
 
 
