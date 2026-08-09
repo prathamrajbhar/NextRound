@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { CompanyLogo } from '@/components/ui';
 import { apiClient } from '@/lib/apiClient';
 import {
@@ -12,6 +12,11 @@ import {
   Award,
   Send,
   Timer,
+  Play,
+  Cpu,
+  Compass,
+  BookOpen,
+  BarChart3,
 } from '@/lib/lucide-google-icons';
 import { ProctoringWarningModal } from './ProctoringWarningModal';
 
@@ -46,6 +51,70 @@ interface AptitudeTestConsoleProps {
   sessionId?: string;
 }
 
+export const STANDARD_CATEGORIES = [
+  'Quantitative Aptitude',
+  'Logical Reasoning',
+  'Verbal Ability',
+  'Data Interpretation',
+] as const;
+
+export function normalizeCategory(rawCat?: string, index: number = 0): string {
+  if (!rawCat) return STANDARD_CATEGORIES[index % 4];
+  const cat = rawCat.trim();
+  if (STANDARD_CATEGORIES.includes(cat as any)) return cat;
+
+  const lower = cat.toLowerCase();
+  if (
+    lower.includes('quant') ||
+    lower.includes('math') ||
+    lower.includes('arithmetic') ||
+    lower.includes('throughput') ||
+    lower.includes('latency') ||
+    lower.includes('rate') ||
+    lower.includes('system')
+  ) {
+    return 'Quantitative Aptitude';
+  }
+  if (
+    lower.includes('logic') ||
+    lower.includes('reason') ||
+    lower.includes('deduction') ||
+    lower.includes('algo') ||
+    lower.includes('complexity')
+  ) {
+    return 'Logical Reasoning';
+  }
+  if (
+    lower.includes('verbal') ||
+    lower.includes('english') ||
+    lower.includes('language') ||
+    lower.includes('grammar') ||
+    lower.includes('vocab') ||
+    lower.includes('text')
+  ) {
+    return 'Verbal Ability';
+  }
+  if (
+    lower.includes('data') ||
+    lower.includes('chart') ||
+    lower.includes('graph') ||
+    lower.includes('stat') ||
+    lower.includes('table') ||
+    lower.includes('interpretation') ||
+    lower.includes('pipeline')
+  ) {
+    return 'Data Interpretation';
+  }
+  return STANDARD_CATEGORIES[index % 4];
+}
+
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
+  'Quantitative Aptitude': Cpu,
+  'Logical Reasoning': Compass,
+  'Verbal Ability': BookOpen,
+  'Data Interpretation': BarChart3,
+};
+
 export default function AptitudeTestConsole({
   questions = [],
   companyName,
@@ -64,6 +133,7 @@ export default function AptitudeTestConsole({
   const [isLoading, setIsLoading] = useState(true);
   const [isPrefetching, setIsPrefetching] = useState(false);
   const [batchCount, setBatchCount] = useState(1);
+  const [isStarted, setIsStarted] = useState(false);
 
   // 1. Initial Batch Direct Fetch
   useEffect(() => {
@@ -79,7 +149,7 @@ export default function AptitudeTestConsole({
         if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
           const mapped = res.questions.map((q: RawApiQuestion, idx: number) => ({
             id: q.id || `q_b1_${idx}`,
-            category: q.category || 'Logical Reasoning',
+            category: normalizeCategory(q.category, idx),
             text: q.text || q.question || 'Question text unavailable.',
             options: q.options || [],
             difficulty: q.difficulty || 'medium',
@@ -109,7 +179,7 @@ export default function AptitudeTestConsole({
       if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
         const newMapped = res.questions.map((q: RawApiQuestion, idx: number) => ({
           id: `${q.id || 'q'}_b${nextBatchNum}_${idx}`,
-          category: q.category || 'Logical Reasoning',
+          category: normalizeCategory(q.category, idx),
           text: q.text || q.question || 'Question text unavailable.',
           options: q.options || [],
           difficulty: q.difficulty || 'medium',
@@ -129,26 +199,58 @@ export default function AptitudeTestConsole({
     }
   }, [isPrefetching, isLoading, applicationId, batchCount, sessionId, displayRole, displayCompany]);
 
-  // Trigger prefetch when candidate is 2 questions away from the end of current buffer
+  // Normalize & sort active questions sequentially by category
+  const activeQuestions = useMemo(() => {
+    const list = fetchedQuestions.length > 0 ? fetchedQuestions : questions;
+    const mapped = list.map((q, idx) => ({
+      ...q,
+      category: normalizeCategory(q.category, idx),
+    }));
+
+    return mapped.sort((a, b) => {
+      const idxA = STANDARD_CATEGORIES.indexOf(a.category as any);
+      const idxB = STANDARD_CATEGORIES.indexOf(b.category as any);
+      return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+    });
+  }, [fetchedQuestions, questions]);
+
+  // Group questions into Category Sections
+  const categorySections = useMemo(() => {
+    const map = new Map<string, { category: string; startIndex: number; questions: AptitudeQuestion[] }>();
+    STANDARD_CATEGORIES.forEach((cat) => {
+      const catQs = activeQuestions.filter((q) => q.category === cat);
+      if (catQs.length > 0) {
+        const firstIndex = activeQuestions.findIndex((q) => q.category === cat);
+        map.set(cat, { category: cat, startIndex: firstIndex, questions: catQs });
+      }
+    });
+
+    // Also include any fallback category if present
+    activeQuestions.forEach((q, idx) => {
+      if (!map.has(q.category)) {
+        const firstIdx = activeQuestions.findIndex((item) => item.category === q.category);
+        const catQs = activeQuestions.filter((item) => item.category === q.category);
+        map.set(q.category, { category: q.category, startIndex: firstIdx, questions: catQs });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [activeQuestions]);
+
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    if (!applicationId && fetchedQuestions.length > 0 && currentIndex >= fetchedQuestions.length - 2 && !isPrefetching) {
+    if (!applicationId && activeQuestions.length > 0 && currentIndex >= activeQuestions.length - 2 && !isPrefetching) {
       const timer = setTimeout(() => {
         prefetchNextBatch();
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [applicationId, currentIndex, fetchedQuestions.length, isPrefetching, prefetchNextBatch]);
+  }, [applicationId, currentIndex, activeQuestions.length, isPrefetching, prefetchNextBatch]);
 
-  const activeQuestions = fetchedQuestions.length > 0 
-    ? fetchedQuestions 
-    : questions;
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [timeLeft, setTimeLeft] = useState(900); // 15 min total
   const [questionTimeLeft, setQuestionTimeLeft] = useState(60); // 60s per question
-  // Refs mirroring timer values so interval callbacks can read/transition them
-  // without side effects inside a state updater or an effect body.
   const timeLeftRef = useRef(900);
   const questionTimeLeftRef = useRef(60);
   const [submitted, setSubmitted] = useState(false);
@@ -178,9 +280,6 @@ export default function AptitudeTestConsole({
           totalTimeSeconds: 900 - timeLeft,
           tabSwitchCount: strikeCount,
         });
-        // For the real assessment the API strips correctIndex (anti-cheat), so the
-        // client cannot score locally — use the server-computed score instead of a
-        // fabricated 0%.
         if (res && typeof res.score === 'number') {
           percentage = Math.max(0, Math.min(100, Math.round(res.score)));
         }
@@ -196,7 +295,7 @@ export default function AptitudeTestConsole({
 
   // Anti-Cheat: Fullscreen & Tab Blur Guard
   useEffect(() => {
-    if (submitted) return;
+    if (submitted || !isStarted) return;
 
     const handleProctoringViolation = () => {
       if (document.hidden || !document.fullscreenElement) {
@@ -215,22 +314,21 @@ export default function AptitudeTestConsole({
       document.removeEventListener('fullscreenchange', handleProctoringViolation);
       document.removeEventListener('visibilitychange', handleProctoringViolation);
     };
-  }, [submitted]);
+  }, [submitted, isStarted]);
 
   // Reset timer on question change
   useEffect(() => {
+    if (!isStarted) return;
     const timer = setTimeout(() => {
       questionTimeLeftRef.current = 60;
       setQuestionTimeLeft(60);
     }, 0);
     return () => clearTimeout(timer);
-  }, [currentIndex]);
+  }, [currentIndex, isStarted]);
 
-  // 60-Second Per-Question Countdown Timer. Decrements the ref + mirror state
-  // inside the interval callback (never inside a state updater or effect body),
-  // then advances or submits on expiry.
+  // 60-Second Per-Question Countdown Timer
   useEffect(() => {
-    if (submitted || showWarningModal) return;
+    if (submitted || showWarningModal || !isStarted) return;
 
     const interval = setInterval(() => {
       if (questionTimeLeftRef.current <= 0) return;
@@ -249,11 +347,11 @@ export default function AptitudeTestConsole({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [submitted, showWarningModal, currentIndex, activeQuestions.length, handleSubmit]);
+  }, [submitted, showWarningModal, isStarted, currentIndex, activeQuestions.length, handleSubmit]);
 
-  // Overall Test Countdown Timer. Auto-submits when the 15-minute cap expires.
+  // Overall Test Countdown Timer
   useEffect(() => {
-    if (submitted || showWarningModal) return;
+    if (submitted || showWarningModal || !isStarted) return;
 
     const interval = setInterval(() => {
       if (timeLeftRef.current <= 0) return;
@@ -266,7 +364,7 @@ export default function AptitudeTestConsole({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [submitted, showWarningModal, handleSubmit]);
+  }, [submitted, showWarningModal, isStarted, handleSubmit]);
 
   const currentQ = activeQuestions[currentIndex];
 
@@ -288,6 +386,15 @@ export default function AptitudeTestConsole({
     onComplete(0);
   };
 
+  const handleStartTest = () => {
+    try {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    } catch {}
+    setIsStarted(true);
+  };
+
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60);
     const s = secs % 60;
@@ -299,12 +406,16 @@ export default function AptitudeTestConsole({
     const computedScore = finalScore ?? 0;
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] p-8 text-center animate-in fade-in duration-300 font-sans">
-        <div className={`p-8 rounded-3xl border shadow-2xl max-w-md w-full space-y-6 ${
-          isEliminated ? 'bg-rose-950/80 border-rose-800 text-rose-100' : 'bg-slate-900 border-slate-800 text-slate-100'
-        }`}>
-          <div className={`h-20 w-20 mx-auto rounded-full flex items-center justify-center border ${
-            isEliminated ? 'bg-rose-900/40 border-rose-700 text-rose-400' : 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-          }`}>
+        <div
+          className={`p-8 rounded-3xl border shadow-2xl max-w-md w-full space-y-6 ${
+            isEliminated ? 'bg-rose-950/80 border-rose-800 text-rose-100' : 'bg-slate-900 border-slate-800 text-slate-100'
+          }`}
+        >
+          <div
+            className={`h-20 w-20 mx-auto rounded-full flex items-center justify-center border ${
+              isEliminated ? 'bg-rose-900/40 border-rose-700 text-rose-400' : 'bg-amber-500/20 border-amber-500/40 text-amber-400'
+            }`}
+          >
             <Award className="h-10 w-10" />
           </div>
 
@@ -341,8 +452,6 @@ export default function AptitudeTestConsole({
     );
   }
 
-  const answeredCount = Object.keys(answers).length;
-
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] p-8 text-center animate-in fade-in duration-300 font-sans">
@@ -351,10 +460,76 @@ export default function AptitudeTestConsole({
             <Brain className="h-8 w-8 animate-spin" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-black font-display text-white">Generating LLM Assessment</h2>
+            <h2 className="text-xl font-black font-display text-white">Loading Category Sections</h2>
             <p className="text-xs text-slate-400 font-semibold">
-              Preparing dynamic, role-tailored aptitude questions using LLM engine for {displayRole}...
+              Preparing category-divided questions (Quantitative, Logical, Verbal, Data Interpretation) for {displayRole}...
             </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // START SCREEN: Category-wise breakdown before candidate starts the assessment
+  if (!isStarted) {
+    return (
+      <div className="w-full h-full flex flex-col justify-center items-center p-4 sm:p-6 bg-slate-950 text-slate-100 font-sans relative overflow-y-auto">
+        <div className="max-w-2xl w-full p-6 sm:p-8 rounded-3xl border border-slate-800 bg-slate-900/90 backdrop-blur-md shadow-2xl space-y-6 text-center">
+          <div className="space-y-2">
+            <CompanyLogo name={displayCompany} logoUrl={companyLogoUrl} size="lg" className="mx-auto shadow-md" />
+            <h1 className="text-xl sm:text-2xl font-black font-display text-white">{displayCompany}</h1>
+            <p className="text-xs font-extrabold text-amber-400 uppercase tracking-wider">
+              {displayRole} • Aptitude &amp; Reasoning Assessment
+            </p>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-500/30 text-left space-y-2">
+            <div className="flex items-center gap-2 text-amber-300 font-extrabold text-xs">
+              <Brain className="h-4 w-4" />
+              <span>Category-Wise Section Breakdown ({activeQuestions.length} Total Questions)</span>
+            </div>
+            <p className="text-[11px] text-slate-300 leading-relaxed font-medium">
+              This assessment is structured into 4 distinct categories. Questions are organized section by section.
+            </p>
+          </div>
+
+          {/* 4 Category Cards Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+            {STANDARD_CATEGORIES.map((cat, idx) => {
+              const sec = categorySections.find((s) => s.category === cat);
+              const qCount = sec ? sec.questions.length : 0;
+              const IconComp = CATEGORY_ICONS[cat] || Brain;
+              return (
+                <div
+                  key={cat}
+                  className="p-4 rounded-2xl border border-slate-800 bg-slate-950/80 space-y-1.5 flex items-start gap-3"
+                >
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex-shrink-0">
+                    <IconComp className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
+                      Section {idx + 1}
+                    </span>
+                    <h4 className="text-xs font-extrabold text-slate-100">{cat}</h4>
+                    <span className="text-[10px] font-bold text-amber-400 block pt-0.5">
+                      {qCount > 0 ? `${qCount} Questions` : 'Included'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={handleStartTest}
+              className="w-full py-4 px-6 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2.5 transform hover:scale-[1.01]"
+            >
+              <Play className="h-4 w-4 fill-slate-950" />
+              <span>Start Assessment (Section 1: Quantitative Aptitude)</span>
+            </button>
           </div>
         </div>
       </div>
@@ -369,9 +544,9 @@ export default function AptitudeTestConsole({
             <Brain className="h-8 w-8 animate-pulse text-amber-400" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-black font-display text-white">Initializing Assessment</h2>
+            <h2 className="text-xl font-black font-display text-white">Initializing Category Questions</h2>
             <p className="text-xs text-slate-400 font-semibold">
-              Connecting to AI service to load questions for {displayRole}...
+              Connecting to AI service to load category questions for {displayRole}...
             </p>
           </div>
           <button
@@ -386,9 +561,10 @@ export default function AptitudeTestConsole({
     );
   }
 
+  const answeredCount = Object.keys(answers).length;
+
   return (
     <div className="w-full h-full flex flex-col justify-between p-4 sm:p-6 bg-slate-950 text-slate-100 font-sans relative overflow-hidden">
-
       {/* Top Header Bar */}
       <div className="flex items-center justify-between border-b border-slate-800/80 pb-4">
         <div className="flex items-center gap-3">
@@ -406,7 +582,6 @@ export default function AptitudeTestConsole({
 
         {/* Timers & Proctoring Badges */}
         <div className="flex items-center gap-3">
-
           {/* 60s Question Timer Bar */}
           <div className="px-3.5 py-1.5 rounded-2xl bg-amber-950/60 border border-amber-500/40 flex items-center gap-2 shadow-sm">
             <Timer className="h-4 w-4 text-amber-400 animate-pulse" />
@@ -431,19 +606,49 @@ export default function AptitudeTestConsole({
         </div>
       </div>
 
+      {/* Category Section Navigation Tabs */}
+      <div className="flex items-center gap-2 overflow-x-auto py-2 border-b border-slate-800/60 no-scrollbar">
+        {categorySections.map((sec, idx) => {
+          const isActive = currentQ.category === sec.category;
+          const IconComp = CATEGORY_ICONS[sec.category] || Brain;
+          return (
+            <button
+              key={sec.category}
+              type="button"
+              onClick={() => setCurrentIndex(sec.startIndex)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${
+                isActive
+                  ? 'bg-amber-500 text-slate-950 shadow-md ring-2 ring-amber-500/30'
+                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+            >
+              <IconComp className="h-3.5 w-3.5" />
+              <span>
+                Section {idx + 1}: {sec.category}
+              </span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
+                  isActive ? 'bg-slate-950 text-amber-400' : 'bg-slate-800 text-slate-300'
+                }`}
+              >
+                {sec.questions.length} Qs
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {/* Main 2-Column Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 my-4 items-start">
-
         {/* Left 2-Cols: Active Question Console */}
         <div className="lg:col-span-2 space-y-4 p-6 rounded-3xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl flex flex-col justify-between min-h-[420px]">
-
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800/60 pb-3">
               <span className="text-xs font-extrabold text-amber-400 uppercase tracking-wider font-mono">
-                QUESTION {currentIndex + 1}
+                QUESTION {currentIndex + 1} OF {activeQuestions.length}
               </span>
-              <span className="text-[10px] text-slate-400 font-bold uppercase">
-                Single Choice • {currentQ.category}
+              <span className="text-xs font-black uppercase px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                Category: {currentQ.category}
               </span>
             </div>
 
@@ -466,9 +671,13 @@ export default function AptitudeTestConsole({
                         : 'border-slate-800 bg-slate-900/80 text-slate-300 hover:border-slate-700 hover:bg-slate-800/60'
                     }`}
                   >
-                    <div className={`h-6 w-6 rounded-xl border flex items-center justify-center font-extrabold text-xs ${
-                      isSelected ? 'border-amber-500 bg-amber-500 text-slate-950' : 'border-slate-700 bg-slate-800 text-slate-400'
-                    }`}>
+                    <div
+                      className={`h-6 w-6 rounded-xl border flex items-center justify-center font-extrabold text-xs ${
+                        isSelected
+                          ? 'border-amber-500 bg-amber-500 text-slate-950'
+                          : 'border-slate-700 bg-slate-800 text-slate-400'
+                      }`}
+                    >
                       {String.fromCharCode(65 + idx)}
                     </div>
                     <span className="text-xs font-semibold flex-1">{opt}</span>
@@ -499,47 +708,55 @@ export default function AptitudeTestConsole({
               <span>Next Question</span> <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-
         </div>
 
-        {/* Right Col: Question Navigator & Submit Box */}
+        {/* Right Col: Question Navigator Grouped by Category */}
         <div className="space-y-4 p-6 rounded-3xl border border-slate-800 bg-slate-900/60 backdrop-blur-md shadow-xl flex flex-col justify-between min-h-[420px]">
-
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto max-h-[380px] pr-1">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-              Question Navigator
+              Question Navigator (By Section)
             </h4>
-            <p className="text-[10px] text-slate-500 font-semibold">
-              Click any number to jump directly to the question.
-            </p>
 
-            <div className="grid grid-cols-5 gap-2">
-              {activeQuestions.map((q, idx) => {
-                const isCurrent = idx === currentIndex;
-                const isAnswered = answers[q.id] !== undefined;
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setCurrentIndex(idx)}
-                    className={`h-10 rounded-xl border font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center ${
-                      isCurrent
-                        ? 'border-amber-500 bg-amber-500 text-slate-950 font-black ring-2 ring-amber-500/30'
-                        : isAnswered
-                        ? 'border-emerald-700 bg-emerald-950/60 text-emerald-300'
-                        : 'border-slate-800 bg-slate-950 text-slate-500 hover:border-slate-700'
-                    }`}
-                  >
-                    {idx + 1}
-                  </button>
-                );
-              })}
-            </div>
+            {categorySections.map((sec, secIdx) => (
+              <div key={sec.category} className="space-y-2 border-b border-slate-800/60 pb-3 last:border-0">
+                <div className="flex items-center justify-between text-[11px] font-extrabold text-amber-400">
+                  <span>
+                    Sec {secIdx + 1}: {sec.category}
+                  </span>
+                  <span className="text-[10px] text-slate-500">{sec.questions.length} Qs</span>
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {sec.questions.map((q) => {
+                    const globalIdx = activeQuestions.findIndex((item) => item.id === q.id);
+                    const isCurrent = globalIdx === currentIndex;
+                    const isAnswered = answers[q.id] !== undefined;
+                    return (
+                      <button
+                        key={q.id}
+                        type="button"
+                        onClick={() => setCurrentIndex(globalIdx)}
+                        className={`h-9 rounded-xl border font-extrabold text-xs transition-all cursor-pointer flex items-center justify-center ${
+                          isCurrent
+                            ? 'border-amber-500 bg-amber-500 text-slate-950 font-black ring-2 ring-amber-500/30'
+                            : isAnswered
+                            ? 'border-emerald-700 bg-emerald-950/60 text-emerald-300'
+                            : 'border-slate-800 bg-slate-950 text-slate-500 hover:border-slate-700'
+                        }`}
+                      >
+                        {globalIdx + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
 
-            <div className="pt-4 border-t border-slate-800 space-y-1.5 text-xs font-semibold">
+            <div className="pt-2 border-t border-slate-800 space-y-1.5 text-xs font-semibold">
               <div className="flex justify-between text-slate-400">
                 <span>Answered:</span>
-                <span className="text-emerald-400 font-extrabold">{answeredCount} / {activeQuestions.length}</span>
+                <span className="text-emerald-400 font-extrabold">
+                  {answeredCount} / {activeQuestions.length}
+                </span>
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Remaining:</span>
@@ -557,9 +774,7 @@ export default function AptitudeTestConsole({
             <Send className="h-4 w-4" />
             <span>Submit &amp; Finish Test</span>
           </button>
-
         </div>
-
       </div>
 
       {/* Fullscreen Proctoring Violation Warning Modal */}
@@ -570,7 +785,6 @@ export default function AptitudeTestConsole({
         onResumeFullscreen={handleResumeFullscreen}
         onEliminate={handleEliminateCandidate}
       />
-
     </div>
   );
 }
