@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { Building, Target, Calendar, Users } from '@/lib/lucide-google-icons';
-import { api } from '@/lib/api';
+import { apiClient } from '@/lib/apiClient';
 import { CompanyOnboardingShell, CompanyStep } from './_components/CompanyOnboardingShell';
 import {
   useCompanyOnboarding,
@@ -46,22 +46,23 @@ export default function CompanyOnboarding() {
     setError('');
 
     const payload = buildOrganizationPayload(form);
-    const res = await api.post<{ organization: { id: string } }>('/organizations', payload);
-    setSubmitting(false);
+    try {
+      const { organization } = await apiClient.post<{ organization: { id: string } }>('/organizations', payload);
+      const orgId = organization?.id;
 
-    if (res.success) {
-      const orgId = res.data?.organization?.id;
       if (orgId && form.invites.length > 0) {
         // Best-effort invites — never block launch on invite delivery.
         await Promise.all(
           form.invites.map((email) =>
-            api.post(`/organizations/${orgId}/members/invite`, { email }).catch(() => null)
+            apiClient.post(`/organizations/${orgId}/members/invite`, { email }).catch(() => null)
           )
         );
       }
       router.push('/hr/dashboard');
-    } else {
-      setError(typeof res.error === 'string' ? res.error : res.error?.message || 'Failed to setup organization');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to setup organization');
+    } finally {
+      setSubmitting(false);
     }
   };
 

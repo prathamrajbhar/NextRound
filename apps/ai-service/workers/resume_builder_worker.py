@@ -1,43 +1,21 @@
-import logging
 import json
-import re
+import logging
 from typing import Dict, Any
-from core.config import settings
-from core.http_client import callback_client
+from services.llm_service import generate_text, extract_json_object
 from services.pdf_generator import generate_resume_pdf
+from workers.worker_base import post_internal
 
 logger = logging.getLogger("resume_builder_worker")
 
-genai_client = None
-if settings.gemini_api_key:
-    try:
-        from google import genai
-        genai_client = genai.Client(api_key=settings.gemini_api_key)
-    except Exception as e:
-        logger.warning(f"Failed to initialize GenAI client in resume_builder_worker: {e}")
 
+def _template_resume(target_role: str, target_company: str) -> Dict[str, Any]:
+    """Placeholder resume used only when no transcript / LLM is available.
 
-# ML_BYPASS: ATS ML scorer — replace with trained LambdaMART ranker on resume-outcome data
-async def process_resume_builder_job(job_data: dict) -> bool:
+    NOTE: this is scaffolded placeholder data (not derived from the candidate).
+    It preserves the historical fallback so a session always produces a PDF;
+    revisit if placeholder content is no longer acceptable for this feature.
     """
-    Process AI Voice Resume Builder job:
-    1. Parse Q&A transcript.
-    2. Quantify bullet points with impact metrics using Gemini API.
-    3. Generate ATS-optimized PDF via pdf_generator.
-    4. Call back Express internal endpoint /internal/resume-builder/:sessionId/result.
-    """
-    session_id = job_data.get("sessionId")
-    if not session_id:
-        logger.error("Missing sessionId in resume builder job payload.")
-        return False
-
-    logger.info(f"Processing resume builder job for session {session_id}")
-
-    transcript = job_data.get("transcript") or []
-    target_role = job_data.get("targetRole", "Software Engineer")
-    target_company = job_data.get("targetCompany", "Target Enterprise")
-
-    generated_resume: Dict[str, Any] = {
+    return {
         "contact": {
             "name": "Candidate",
             "email": "candidate@example.com",
@@ -77,52 +55,55 @@ async def process_resume_builder_job(job_data: dict) -> bool:
         ],
     }
 
-    if genai_client and transcript:
-        try:
-            prompt = (
-                f"Extract and generate an ATS-optimized resume JSON from this voice interview transcript.\n"
-                f"Target Role: {target_role} at {target_company}\n"
-                f"Transcript: {json.dumps(transcript)}\n\n"
-                f"Crucial Requirement: Quantify every work history bullet point with metrics (percentages, dollar amounts, time saved, team size, scale).\n"
-                f"Return JSON format:\n"
-                f"{{\n"
-                f"  \"contact\": {{\"name\": str, \"email\": str, \"phone\": str, \"location\": str}},\n"
-                f"  \"summary\": str,\n"
-                f"  \"work_history\": [{{\"title\": str, \"company\": str, \"dates\": str, \"bullets\": [str]}}],\n"
-                f"  \"skills\": [str],\n"
-                f"  \"projects\": [{{\"name\": str, \"description\": str}}],\n"
-                f"  \"education\": [{{\"degree\": str, \"institution\": str}}]\n"
-                f"}}"
-            )
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            if res and res.text:
-                match = re.search(r"\{.*\}", res.text, re.DOTALL)
-                if match:
-                    generated_resume = json.loads(match.group(0))
-        except Exception as e:
-            logger.warning(f"GenAI resume worker structuring warning: {e}")
+
+# ML_BYPASS: ATS ML scorer — replace with trained LambdaMART ranker on resume-outcome data
+async def process_resume_builder_job(job_data: dict) -> bool:
+    """
+    Process AI Voice Resume Builder job:
+    1. Parse Q&A transcript.
+    2. Quantify bullet points with impact metrics using Gemini API.
+    3. Generate ATS-optimized PDF via pdf_generator.
+    4. Call back Express internal endpoint /internal/resume-builder/:sessionId/result.
+    """
+    session_id = job_data.get("sessionId")
+    if not session_id:
+        logger.error("Missing sessionId in resume builder job payload.")
+        return False
+
+    logger.info(f"Processing resume builder job for session {session_id}")
+
+    transcript = job_data.get("transcript") or []
+    target_role = job_data.get("targetRole", "Software Engineer")
+    target_company = job_data.get("targetCompany", "Target Enterprise")
+
+    generated_resume = _template_resume(target_role, target_company)
+
+    if transcript:
+        prompt = (
+            f"Extract and generate an ATS-optimized resume JSON from this voice interview transcript.\n"
+            f"Target Role: {target_role} at {target_company}\n"
+            f"Transcript: {json.dumps(transcript)}\n\n"
+            f"Crucial Requirement: Quantify every work history bullet point with metrics (percentages, dollar amounts, time saved, team size, scale).\n"
+            f"Return JSON format:\n"
+            f"{{\n"
+            f"  \"contact\": {{\"name\": str, \"email\": str, \"phone\": str, \"location\": str}},\n"
+            f"  \"summary\": str,\n"
+            f"  \"work_history\": [{{\"title\": str, \"company\": str, \"dates\": str, \"bullets\": [str]}}],\n"
+            f"  \"skills\": [str],\n"
+            f"  \"projects\": [{{\"name\": str, \"description\": str}}],\n"
+            f"  \"education\": [{{\"degree\": str, \"institution\": str}}]\n"
+            f"}}"
+        )
+        parsed = extract_json_object(generate_text(prompt))
+        if parsed:
+            generated_resume = parsed
 
     # Render PDF
     pdf_url = generate_resume_pdf(generated_resume)
 
-    try:
-        response = await callback_client.patch(
-            f"/internal/resume-builder/{session_id}/result",
-            json={
-                "generatedResume": generated_resume,
-                "resumePdfUrl": pdf_url,
-                "status": "completed",
-            }
-        )
-        if response.status_code in (200, 201):
-            logger.info(f"Successfully posted generated resume for session {session_id}")
-            return True
-        else:
-            logger.error(f"Failed to post resume result for session {session_id}: status {response.status_code}")
-            return False
-    except Exception as e:
-        logger.error(f"Callback error in resume_builder_worker for session {session_id}: {e}")
-        return False
+    return await post_internal(
+        "PATCH",
+        f"/internal/resume-builder/{session_id}/result",
+        {"generatedResume": generated_resume, "resumePdfUrl": pdf_url, "status": "completed"},
+        context=f"resume result for session {session_id}",
+    )

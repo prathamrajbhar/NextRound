@@ -1,8 +1,7 @@
 import logging
-import httpx
-from core.config import settings
 from core.http_client import callback_client
 from agents.coding_agent import run_coding_agent
+from workers.worker_base import run_agent_job
 
 logger = logging.getLogger("coding_worker")
 
@@ -27,7 +26,7 @@ async def process_coding_job(job_data: dict) -> bool:
 
     logger.info(f"Processing coding evaluation job for applicationId: {application_id}, problem: {problem_id}")
 
-    try:
+    async def run() -> dict:
         # Run Coding Agent
         result = await run_coding_agent(
             application_id=application_id,
@@ -38,49 +37,29 @@ async def process_coding_job(job_data: dict) -> bool:
         )
 
         # Patch coding evaluation result back to Express internal endpoint
-        patch_payload = {
-            "submissionId": submission_id,
-            "score": result.get("score"),
-            "pass_rate": result.get("pass_rate"),
-            "complexity_analysis": result.get("complexity_analysis"),
-            "passed": result.get("passed"),
-            "feedback": result.get("feedback"),
-            "execution_time_ms": result.get("execution_time_ms"),
-            "memory_kb": result.get("memory_kb"),
-        }
+        await callback_client.patch(
+            f"internal/applications/{application_id}/coding-result",
+            json={
+                "submissionId": submission_id,
+                "score": result.get("score"),
+                "pass_rate": result.get("pass_rate"),
+                "complexity_analysis": result.get("complexity_analysis"),
+                "passed": result.get("passed"),
+                "feedback": result.get("feedback"),
+                "execution_time_ms": result.get("execution_time_ms"),
+                "memory_kb": result.get("memory_kb"),
+            },
+        )
+        return result
 
-        async with httpx.AsyncClient() as client:
-            resp = await client.patch(
-                f"{settings.express_api_base_url}/internal/applications/{application_id}/coding-result",
-                json=patch_payload,
-                headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-            )
-            resp.raise_for_status()
-
-        # Log agent execution
-        log_payload = {
-            "job_id": None,
-            "agent_name": "coding_agent",
-            "action": "coding_evaluation",
-            "input": {"application_id": application_id, "problem_id": problem_id, "submission_id": submission_id},
-            "output": result,
-            "status": "completed",
-        }
-        await callback_client.post_callback("internal/agent-logs", log_payload)
-
-        logger.info(f"Successfully completed coding job for applicationId: {application_id}")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to process coding job for applicationId {application_id}: {e}")
-        try:
-            log_payload = {
-                "agent_name": "coding_agent",
-                "action": "coding_evaluation",
-                "status": "failed",
-                "error": str(e),
-            }
-            await callback_client.post_callback("internal/agent-logs", log_payload)
-        except Exception:
-            pass
-        return False
+    return await run_agent_job(
+        agent_name="coding_agent",
+        action="coding_evaluation",
+        job_input={
+            "application_id": application_id,
+            "problem_id": problem_id,
+            "submission_id": submission_id,
+        },
+        work=run,
+        log_extra={"job_id": None},
+    )

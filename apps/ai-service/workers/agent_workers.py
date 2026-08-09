@@ -1,6 +1,8 @@
 import asyncio
 import json
 import logging
+from typing import Awaitable, Callable, Dict, Optional
+
 from core.redis_client import get_redis_client
 from workers.jd_parser_worker import process_jd_parser_job
 from workers.sourcing_worker import process_sourcing_job
@@ -19,23 +21,51 @@ from workers.analytics_worker import process_analytics_job
 
 logger = logging.getLogger("ai_service_workers")
 
-AGENT_QUEUES = [
-    "sourcing",
-    "screening",
-    "interview",
-    "evaluator",
-    "decision",
+# A job handler receives the raw BullMQ payload and returns True/False.
+JobHandler = Callable[[dict], Awaitable[bool]]
 
-    "offer",
-    "mock",
-    "prep",
-    "resume-builder",
-    "scheduling",
-    "assessment",
-    "coding",
-    "video-screening",
-    "analytics",
-]
+# Queue name -> job handler (listed in hiring-pipeline order). Every queue in
+# AGENT_QUEUES must be present here (except "sourcing", which multiplexes several
+# actions; see SOURCING_ACTIONS).
+QUEUE_HANDLERS: Dict[str, JobHandler] = {
+    "screening": process_screening_job,
+    "interview": process_interview_job,
+    "evaluator": process_evaluator_job,
+    "decision": process_decision_job,
+    "scheduling": process_scheduling_job,
+    "assessment": process_aptitude_job,
+    "coding": process_coding_job,
+    "video-screening": process_video_screening_job,
+    "mock": process_mock_job,
+    "prep": process_prep_job,
+    "resume-builder": process_resume_builder_job,
+    "analytics": process_analytics_job,
+}
+
+# The sourcing queue carries three different job types distinguished by the
+# payload's "action" field.
+SOURCING_ACTIONS: Dict[str, JobHandler] = {
+    "ai-jd-assist": process_jd_parser_job,
+    "sourcing_index": process_sourcing_job,
+    # The Express prep route enqueues prep generation here with action
+    # "prep-generate" (not on the "prep" queue). NOTE: that payload carries
+    # jobTitle/jobDescription instead of companyName/roleArchetype, so generated
+    # content is generic until the two sides are aligned.
+    "prep-generate": process_prep_job,
+}
+
+# Queues the worker manager polls. The Express API defines two additional queues
+# without an AI worker — "offer" (offer letters are drafted by the decision
+# agent) and "bias-audit" (bias auditing runs inside the evaluator/decision
+# agents) — so they are intentionally excluded here.
+AGENT_QUEUES = list(QUEUE_HANDLERS) + ["sourcing"]
+
+
+def _dispatch(queue_name: str, payload: dict) -> Optional[JobHandler]:
+    """Resolve the handler for a dequeued job, or None if none is registered."""
+    if queue_name == "sourcing":
+        return SOURCING_ACTIONS.get(payload.get("action"), process_sourcing_job)
+    return QUEUE_HANDLERS.get(queue_name)
 
 
 class AgentWorkerManager:
@@ -46,7 +76,7 @@ class AgentWorkerManager:
     async def start_workers(self):
         self.running = True
         logger.info("Initializing background AI agent queue workers...")
-        for queue_name in ["sourcing", "screening", "scheduling", "assessment", "coding", "video-screening", "interview", "evaluator", "decision", "mock", "prep", "resume-builder", "analytics"]:
+        for queue_name in AGENT_QUEUES:
             task = asyncio.create_task(self.poll_queue(queue_name))
             self.tasks.append(task)
 
@@ -80,36 +110,11 @@ class AgentWorkerManager:
                         payload = json.loads(job_data_raw)
                         logger.info(f"Dequeued job {job_id} from {queue_name} with action: {payload.get('action')}")
 
-                        if queue_name == "sourcing":
-                            action = payload.get("action")
-                            if action == "ai-jd-assist":
-                                await process_jd_parser_job(payload)
-                            else:
-                                await process_sourcing_job(payload)
-                        elif queue_name == "screening":
-                            await process_screening_job(payload)
-                        elif queue_name == "scheduling":
-                            await process_scheduling_job(payload)
-                        elif queue_name == "assessment":
-                            await process_aptitude_job(payload)
-                        elif queue_name == "coding":
-                            await process_coding_job(payload)
-                        elif queue_name == "video-screening":
-                            await process_video_screening_job(payload)
-                        elif queue_name == "interview":
-                            await process_interview_job(payload)
-                        elif queue_name == "evaluator":
-                            await process_evaluator_job(payload)
-                        elif queue_name == "decision":
-                            await process_decision_job(payload)
-                        elif queue_name == "mock":
-                            await process_mock_job(payload)
-                        elif queue_name == "resume-builder":
-                            await process_resume_builder_job(payload)
-                        elif queue_name == "prep":
-                            await process_prep_job(payload)
-                        elif queue_name == "analytics":
-                            await process_analytics_job(payload)
+                        handler = _dispatch(queue_name, payload)
+                        if handler is None:
+                            logger.warning(f"No handler registered for queue '{queue_name}'; skipping job {job_id}.")
+                        else:
+                            await handler(payload)
                 else:
                     await asyncio.sleep(2)
 

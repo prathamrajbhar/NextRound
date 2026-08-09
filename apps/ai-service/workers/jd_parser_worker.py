@@ -1,8 +1,7 @@
 import logging
-import httpx
-from core.config import settings
 from core.http_client import callback_client
 from agents.jd_parser_agent import run_jd_parser_agent
+from workers.worker_base import fetch_internal, run_agent_job
 
 logger = logging.getLogger("jd_parser_worker")
 
@@ -22,64 +21,34 @@ async def process_jd_parser_job(job_data: dict) -> bool:
 
     logger.info(f"Processing JD Parser job for jobId: {job_id}")
 
-    try:
-        # Fetch job raw details
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                f"{settings.express_api_base_url}/internal/jobs/{job_id}/raw",
-                headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-            )
-            resp.raise_for_status()
-            job_info = resp.json().get("data", {})
+    # org_id and the input description are only known after fetching the job.
+    log_extra: dict = {"job_id": job_id}
+    job_input: dict = {}
 
+    async def run() -> dict:
+        job_info = await fetch_internal(f"internal/jobs/{job_id}/raw")
         raw_desc = job_info.get("description") or job_data.get("description", "")
-        org_id = job_info.get("org_id") or job_data.get("orgId")
+        log_extra["org_id"] = job_info.get("org_id") or job_data.get("orgId")
+        job_input["raw_description"] = raw_desc[:200]
 
         # Execute JD Parser LangGraph Agent
         result = await run_jd_parser_agent(job_id=job_id, raw_description=raw_desc)
 
         # Patch AI assist result back to Express
-        patch_payload = {
-            "description": result.get("description"),
-            "rubric": result.get("rubric"),
-            "thresholds": result.get("thresholds"),
-        }
+        await callback_client.patch(
+            f"internal/jobs/{job_id}/ai-assist-result",
+            json={
+                "description": result.get("description"),
+                "rubric": result.get("rubric"),
+                "thresholds": result.get("thresholds"),
+            },
+        )
+        return result
 
-        async with httpx.AsyncClient() as client:
-            resp = await client.patch(
-                f"{settings.express_api_base_url}/internal/jobs/{job_id}/ai-assist-result",
-                json=patch_payload,
-                headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-            )
-            resp.raise_for_status()
-
-        # Log agent execution
-        log_payload = {
-            "job_id": job_id,
-            "org_id": org_id,
-            "agent_name": "jd_parser_agent",
-            "action": "ai_jd_assist",
-            "input": {"raw_description": raw_desc[:200]},
-            "output": result,
-            "status": "completed",
-        }
-        await callback_client.post_callback("internal/agent-logs", log_payload)
-
-        logger.info(f"Successfully completed JD Parser job for jobId: {job_id}")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to process JD Parser job for jobId {job_id}: {e}")
-        # Log failure
-        try:
-            log_payload = {
-                "job_id": job_id,
-                "agent_name": "jd_parser_agent",
-                "action": "ai_jd_assist",
-                "status": "failed",
-                "error": str(e),
-            }
-            await callback_client.post_callback("internal/agent-logs", log_payload)
-        except Exception:
-            pass
-        return False
+    return await run_agent_job(
+        agent_name="jd_parser_agent",
+        action="ai_jd_assist",
+        job_input=job_input,
+        work=run,
+        log_extra=log_extra,
+    )

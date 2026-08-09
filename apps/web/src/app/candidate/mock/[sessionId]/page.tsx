@@ -73,6 +73,7 @@ function MockSessionContent({ params }: { params: Promise<{ sessionId: string }>
     try {
       if (sessionId) {
         await apiClient.post(`/mock/sessions/${sessionId}/end`, {
+          score,
           transcript: messages.map((m) => ({
             role: m.role === 'candidate' ? 'candidate' : 'interviewer',
             text: m.content,

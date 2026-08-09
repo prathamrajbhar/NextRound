@@ -9,6 +9,10 @@ logger = logging.getLogger("coding_routes")
 
 coding_router = APIRouter(prefix="/api/v1/ai/coding", tags=["coding-sandbox"])
 
+# The execution sandbox runs Python only — accept Python variants and normalize
+# so non-Python submissions are rejected instead of silently run as Python.
+SUPPORTED_LANGUAGES = {"python", "py", "python3"}
+
 
 class CodeExecutionRequest(BaseModel):
     applicationId: Optional[str] = "app-sandbox-eval"
@@ -42,13 +46,21 @@ async def execute_coding_submission(request: CodeExecutionRequest):
     if not request.code or not request.code.strip():
         raise HTTPException(status_code=400, detail="Code string cannot be empty")
 
+    language = (request.language or "python").lower()
+    if language not in SUPPORTED_LANGUAGES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Language '{language}' is not supported. The evaluation sandbox currently supports Python only.",
+        )
+    language = "python"
+
     logger.info(f"Coding Sandbox: Executing submission for problem {request.problemId}")
 
     # If custom test cases are passed, run direct sandbox evaluation
     if request.testCases:
         sandbox_res = execute_code_sandbox(
             code=request.code,
-            language=request.language or "python",
+            language=language,
             test_cases=request.testCases
         )
         return CodeExecutionResponse(
@@ -71,7 +83,7 @@ async def execute_coding_submission(request: CodeExecutionRequest):
         application_id=request.applicationId or "app-sandbox-eval",
         problem_id=request.problemId or "virtualized-list",
         code=request.code,
-        language=request.language or "python",
+        language=language,
         submission_id=request.submissionId or ""
     )
 

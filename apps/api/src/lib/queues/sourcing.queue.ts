@@ -1,4 +1,4 @@
-import { sourcingQueue } from '../bullmq';
+import { sourcingQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface SourcingJobPayload {
   jobId: string;
@@ -17,14 +17,7 @@ export async function enqueueSourcing(
     extraData,
   };
 
-  const job = await sourcingQueue.add(action, payload, {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
-    },
-    removeOnComplete: true,
-  });
+  const job = await sourcingQueue.add(action, payload, DEFAULT_JOB_OPTIONS);
 
   return job;
 }

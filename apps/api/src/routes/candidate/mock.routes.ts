@@ -4,7 +4,7 @@ import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { MockSessionCreateSchema } from '@nextround/shared';
 import { enqueueMockEvaluation } from '../../lib/queues/mock.queue';
-import { serializeMockSessionList } from '../../lib/serializers';
+import { serializeMockSession, serializeMockSessionList } from '../../lib/serializers';
 
 export const mockRouter = Router();
 
@@ -131,7 +131,7 @@ mockRouter.get(
 
       return res.json({
         success: true,
-        data: { session },
+        data: { session: serializeMockSession(session) },
       });
     } catch (err) {
       return next(err);
@@ -233,6 +233,9 @@ mockRouter.get(
         ];
       }
 
+      // Practice/mock sessions are self-assessed by the candidate, so the
+      // correctIndex is included (the real assessment endpoint strips it to
+      // prevent answer leakage).
       const sanitizedQuestions = rawQuestions.map((q: any) => ({
         id: q.id,
         category: q.category || 'Logical Reasoning',
@@ -240,6 +243,7 @@ mockRouter.get(
         text: q.question || q.text,
         options: q.options || [],
         difficulty: q.difficulty || diffLevel,
+        correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : undefined,
       }));
 
       return res.json({

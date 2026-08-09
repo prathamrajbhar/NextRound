@@ -1,10 +1,11 @@
 import logging
-import httpx
-from core.config import settings
 from core.http_client import callback_client
 from agents.assessment_agent import run_assessment_agent
+from workers.worker_base import run_agent_job
 
 logger = logging.getLogger("aptitude_worker")
+
+DEFAULT_MIN_SCORE = 70.0  # pass threshold; overridden by job config when present
 
 
 async def process_aptitude_job(job_data: dict) -> bool:
@@ -23,19 +24,21 @@ async def process_aptitude_job(job_data: dict) -> bool:
 
     logger.info(f"Processing aptitude assessment job for applicationId: {application_id}")
 
-    try:
-        # Fetch stored generated questions for this session from Express
+    async def run() -> dict:
+        # Fetch stored generated questions and pass threshold for this session from Express
         stored_questions = []
+        min_score = DEFAULT_MIN_SCORE
         try:
-            async with httpx.AsyncClient() as client:
-                data_resp = await client.get(
-                    f"{settings.express_api_base_url}/internal/applications/{application_id}/assessment-data?type=aptitude",
-                    headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-                    timeout=10.0,
-                )
-                if data_resp.status_code == 200:
-                    payload = data_resp.json()
-                    stored_questions = payload.get("data", {}).get("questions") or []
+            response = await callback_client.get(
+                f"internal/applications/{application_id}/assessment-data",
+                params={"type": "aptitude"},
+                timeout=10.0,
+            )
+            data = response.json().get("data", {})
+            stored_questions = data.get("questions") or []
+            threshold = data.get("minScore")
+            if isinstance(threshold, (int, float)):
+                min_score = float(threshold)
         except Exception as err:
             logger.warning(f"Could not fetch stored assessment questions for {application_id}: {err}")
 
@@ -46,51 +49,27 @@ async def process_aptitude_job(job_data: dict) -> bool:
             stored_questions=stored_questions,
             total_time_seconds=job_data.get("totalTimeSeconds", 0),
             tab_switch_count=job_data.get("tabSwitchCount", 0),
-            min_score=70.0,
+            min_score=min_score,
         )
 
         # Patch assessment result back to Express internal endpoint
-        patch_payload = {
-            "score": result.get("score"),
-            "category_scores": result.get("category_scores"),
-            "total_questions": result.get("total_questions"),
-            "correct_answers": result.get("correct_answers"),
-            "passed": result.get("passed"),
-            "feedback": result.get("feedback"),
-        }
+        await callback_client.patch(
+            f"internal/applications/{application_id}/assessment-result",
+            json={
+                "score": result.get("score"),
+                "category_scores": result.get("category_scores"),
+                "total_questions": result.get("total_questions"),
+                "correct_answers": result.get("correct_answers"),
+                "passed": result.get("passed"),
+                "feedback": result.get("feedback"),
+            },
+        )
+        return result
 
-        async with httpx.AsyncClient() as client:
-            resp = await client.patch(
-                f"{settings.express_api_base_url}/internal/applications/{application_id}/assessment-result",
-                json=patch_payload,
-                headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-            )
-            resp.raise_for_status()
-
-        # Log agent execution
-        log_payload = {
-            "job_id": None,
-            "agent_name": "assessment_agent",
-            "action": "aptitude_scoring",
-            "input": {"application_id": application_id, "answer_count": len(answers)},
-            "output": result,
-            "status": "completed",
-        }
-        await callback_client.post_callback("internal/agent-logs", log_payload)
-
-        logger.info(f"Successfully completed aptitude assessment job for applicationId: {application_id}")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to process aptitude job for applicationId {application_id}: {e}")
-        try:
-            log_payload = {
-                "agent_name": "assessment_agent",
-                "action": "aptitude_scoring",
-                "status": "failed",
-                "error": str(e),
-            }
-            await callback_client.post_callback("internal/agent-logs", log_payload)
-        except Exception:
-            pass
-        return False
+    return await run_agent_job(
+        agent_name="assessment_agent",
+        action="aptitude_scoring",
+        job_input={"application_id": application_id, "answer_count": len(answers)},
+        work=run,
+        log_extra={"job_id": None},
+    )

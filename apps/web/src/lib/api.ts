@@ -5,7 +5,7 @@ const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   'http://localhost:4000/api/v1';
 
-let isRefreshing = false;
+let refreshPromise: Promise<boolean> | null = null;
 
 interface CacheEntry {
   data: ApiEnvelope<unknown>;
@@ -35,9 +35,11 @@ export async function fetchApi<T>(
   const method = (options.method || 'GET').toUpperCase();
   const cacheKey = `${method}:${endpoint}`;
 
-  // Purge cache on any mutating request
+  // Invalidate cached GETs for the mutated resource only. A blanket clear would
+  // defeat the cache under frequent mutations (e.g. the 8s proctoring heartbeat).
   if (method !== 'GET') {
-    clearApiCache();
+    const resource = endpoint.replace(/^\//, '').split('/')[0];
+    if (resource) clearApiCache(resource);
   }
 
   // Serve GET requests instantly from cache if valid
@@ -62,6 +64,28 @@ export async function fetchApi<T>(
   }
 
   return result;
+}
+
+async function refreshAccessToken(): Promise<boolean> {
+  try {
+    const refreshRes = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const refreshData = refreshRes.headers.get('content-type')?.includes('application/json')
+      ? await refreshRes.json()
+      : {};
+    if (refreshData.success && refreshData.data?.accessToken) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('token', refreshData.data.accessToken);
+      }
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
 }
 
 async function fetchNetworkApi<T>(
@@ -89,28 +113,16 @@ async function fetchNetworkApi<T>(
     });
 
     if (res.status === 401 && !isRetry && !endpoint.includes('/auth/refresh') && !endpoint.includes('/auth/login')) {
-      if (!isRefreshing) {
-        isRefreshing = true;
-        try {
-          const refreshRes = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/auth/refresh`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-          });
-          const refreshData = refreshRes.headers.get('content-type')?.includes('application/json')
-            ? await refreshRes.json()
-            : {};
-          isRefreshing = false;
-
-          if (refreshData.success && refreshData.data?.accessToken) {
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('token', refreshData.data.accessToken);
-            }
-            return fetchNetworkApi<T>(endpoint, options, true);
-          }
-        } catch {
-          isRefreshing = false;
-        }
+      // Queue concurrent 401s onto a single in-flight refresh so they retry with
+      // the fresh token instead of failing through while isRefreshing was true.
+      if (!refreshPromise) {
+        refreshPromise = refreshAccessToken().finally(() => {
+          refreshPromise = null;
+        });
+      }
+      const refreshed = await refreshPromise;
+      if (refreshed) {
+        return fetchNetworkApi<T>(endpoint, options, true);
       }
     }
 
@@ -118,7 +130,9 @@ async function fetchNetworkApi<T>(
 
     if (contentType.includes('application/json')) {
       const data: ApiEnvelope<T> = await res.json();
-      if (!res.ok && data.success !== false) {
+      // A non-2xx response is always a failure, even if the body happens to carry
+      // a success:true envelope. Preserve the server's error message when present.
+      if (!res.ok) {
         return {
           success: false,
           error: typeof data.error === 'string' ? data.error : (data.error as { message?: string })?.message || `HTTP ${res.status}: ${res.statusText}`,
@@ -138,16 +152,3 @@ async function fetchNetworkApi<T>(
     };
   }
 }
-
-export const api = {
-  get: <T>(endpoint: string, options?: RequestInit) =>
-    fetchApi<T>(endpoint, { ...options, method: 'GET' }),
-  post: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
-    fetchApi<T>(endpoint, { ...options, method: 'POST', body: JSON.stringify(body) }),
-  put: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
-    fetchApi<T>(endpoint, { ...options, method: 'PUT', body: JSON.stringify(body) }),
-  patch: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
-    fetchApi<T>(endpoint, { ...options, method: 'PATCH', body: JSON.stringify(body) }),
-  delete: <T>(endpoint: string, options?: RequestInit) =>
-    fetchApi<T>(endpoint, { ...options, method: 'DELETE' }),
-};

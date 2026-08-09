@@ -1,8 +1,8 @@
 import logging
 from typing import Dict, Any, TypedDict, List
 from pydantic import BaseModel, Field
-from core.config import settings
 from services.embedding_service import embed_text, embed_resume, cosine_similarity
+from services.llm_service import generate_text, extract_json_array, extract_json_object
 
 logger = logging.getLogger("screening_agent")
 
@@ -12,15 +12,6 @@ try:
 except ImportError:
     LANGGRAPH_AVAILABLE = False
     logger.warning("LangGraph not installed. Screening Agent will use linear node execution.")
-
-# GenAI client
-genai_client = None
-if settings.gemini_api_key:
-    try:
-        from google import genai
-        genai_client = genai.Client(api_key=settings.gemini_api_key)
-    except Exception as e:
-        logger.warning(f"Failed to initialize GenAI client in screening_agent: {e}")
 
 
 class GapAnalysis(BaseModel):
@@ -69,20 +60,9 @@ def parse_resume_node(state: ScreeningState) -> ScreeningState:
     logger.info(f"Parsing resume for application {state.get('application_id')}")
 
     skills = []
-    if genai_client and resume_text:
-        try:
-            prompt = f"Extract all technical skills and key competencies from this resume as a JSON list of strings:\n\n{resume_text}"
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            if res and res.text:
-                import json, re
-                match = re.search(r"\[.*\]", res.text, re.DOTALL)
-                if match:
-                    skills = json.loads(match.group(0))
-        except Exception as e:
-            logger.error(f"Gemini resume parsing failed: {e}")
+    if resume_text:
+        prompt = f"Extract all technical skills and key competencies from this resume as a JSON list of strings:\n\n{resume_text}"
+        skills = extract_json_array(generate_text(prompt)) or []
 
     if not skills and resume_text:
         # Keyword-based fallback skill extraction
@@ -91,6 +71,10 @@ def parse_resume_node(state: ScreeningState) -> ScreeningState:
 
     if not skills:
         skills = ["TypeScript", "React", "Node.js", "SQL", "Problem Solving"]
+
+    # Coerce every extracted skill to a non-empty string so downstream nodes
+    # (gap analysis, feedback generation) can safely lowercase/join them.
+    skills = [str(s).strip() for s in skills if s is not None and str(s).strip()]
 
     state["parsed_skills"] = skills
     return state
@@ -103,27 +87,16 @@ def _score_rubric_dimensions_with_llm(resume_text: str, job_description: str) ->
     Returns a dict of dimension -> score (0-100) or None if Gemini is unavailable
     or the response cannot be parsed.
     """
-    if not genai_client or not resume_text:
+    if not resume_text:
         return None
-    try:
-        import json, re
-        prompt = (
-            f"You are an unbiased ATS reviewer. Score this candidate's resume against the job on four dimensions (0-100).\n"
-            f"Job Description: {job_description[:1500]}\n\n"
-            f"Resume:\n{resume_text[:3000]}\n\n"
-            'Return JSON only: {"technical": float, "communication": float, '
-            '"problem_solving": float, "experience": float}'
-        )
-        res = genai_client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
-        if res and res.text:
-            match = re.search(r"\{.*\}", res.text, re.DOTALL)
-            if match:
-                data = json.loads(match.group(0))
-                if isinstance(data, dict):
-                    return data
-    except Exception as e:
-        logger.error(f"Gemini rubric scoring failed: {e}")
-    return None
+    prompt = (
+        f"You are an unbiased ATS reviewer. Score this candidate's resume against the job on four dimensions (0-100).\n"
+        f"Job Description: {job_description[:1500]}\n\n"
+        f"Resume:\n{resume_text[:3000]}\n\n"
+        'Return JSON only: {"technical": float, "communication": float, '
+        '"problem_solving": float, "experience": float}'
+    )
+    return extract_json_object(generate_text(prompt))
 
 
 def score_against_rubric_node(state: ScreeningState) -> ScreeningState:
@@ -222,23 +195,16 @@ def generate_feedback_node(state: ScreeningState) -> ScreeningState:
         missing = gaps.get("missing_skills", [])
         strengths = gaps.get("strengths", [])
 
-        if genai_client:
-            try:
-                prompt = (
-                    f"Write constructive, encouraging 3-paragraph rejection email feedback for a software engineering applicant:\n"
-                    f"Strengths: {', '.join(strengths)}\n"
-                    f"Missing Skills: {', '.join(missing)}\n"
-                    f"Keep the tone supportive and professional."
-                )
-                res = genai_client.models.generate_content(
-                    model="gemini-2.5-flash",
-                    contents=prompt
-                )
-                if res and res.text:
-                    state["rejection_feedback"] = res.text.strip()
-                    return state
-            except Exception as e:
-                logger.error(f"Gemini feedback generation failed: {e}")
+        prompt = (
+            f"Write constructive, encouraging 3-paragraph rejection email feedback for a software engineering applicant:\n"
+            f"Strengths: {', '.join(strengths)}\n"
+            f"Missing Skills: {', '.join(missing)}\n"
+            f"Keep the tone supportive and professional."
+        )
+        feedback_text = generate_text(prompt)
+        if feedback_text:
+            state["rejection_feedback"] = feedback_text
+            return state
 
         missing_str = ", ".join(missing) if missing else "specific technical requirements"
         state["rejection_feedback"] = (

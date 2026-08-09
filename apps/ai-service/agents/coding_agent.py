@@ -1,11 +1,8 @@
 import json
 import logging
 import os
-import resource
-import subprocess
-import time
 from typing import Dict, Any, TypedDict, List
-from core.config import settings
+from services.llm_service import generate_text, extract_json_object
 
 logger = logging.getLogger("coding_agent")
 
@@ -15,15 +12,6 @@ try:
 except ImportError:
     LANGGRAPH_AVAILABLE = False
     logger.warning("LangGraph not installed. Coding Agent will use linear node execution.")
-
-# GenAI client for AI complexity analysis & feedback
-genai_client = None
-if settings.gemini_api_key:
-    try:
-        from google import genai
-        genai_client = genai.Client(api_key=settings.gemini_api_key)
-    except Exception as e:
-        logger.warning(f"Failed to initialize GenAI client in coding_agent: {e}")
 
 
 class CodingState(TypedDict, total=False):
@@ -102,26 +90,16 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
     complexity = "O(N)"
     feedback = ""
 
-    if genai_client and code:
-        try:
-            prompt = (
-                f"Analyze the time and space complexity of this candidate python code:\n\n"
-                f"```python\n{code}\n```\n\n"
-                f"Return JSON format: {{\"time_complexity\": \"O(N)\", \"space_complexity\": \"O(1)\", \"summary\": \"Brief explanation\"}}"
-            )
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            if res and res.text:
-                import re
-                match = re.search(r"\{.*\}", res.text, re.DOTALL)
-                if match:
-                    parsed = json.loads(match.group(0))
-                    complexity = parsed.get("time_complexity", "O(N)")
-                    feedback = parsed.get("summary", "")
-        except Exception as e:
-            logger.error(f"Gemini complexity analysis failed: {e}")
+    if code:
+        prompt = (
+            f"Analyze the time and space complexity of this candidate python code:\n\n"
+            f"```python\n{code}\n```\n\n"
+            f"Return JSON format: {{\"time_complexity\": \"O(N)\", \"space_complexity\": \"O(1)\", \"summary\": \"Brief explanation\"}}"
+        )
+        parsed = extract_json_object(generate_text(prompt))
+        if parsed:
+            complexity = parsed.get("time_complexity", "O(N)")
+            feedback = parsed.get("summary", "")
 
     if not feedback:
         if "for " in code and "while " in code:

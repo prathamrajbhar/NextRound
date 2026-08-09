@@ -7,7 +7,7 @@ import {
   ApplicationScheduleSchema,
 } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
-import { authenticate } from '../../middleware/auth';
+import { authenticate, optionalAuthenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { requireOrgScope } from '../../middleware/orgScope';
 import { enqueueScreening } from '../../lib/queues/screening.queue';
@@ -20,6 +20,15 @@ import { serializeApplication, serializeApplicationList, serializeOffer } from '
 export const applicationRouter = Router();
 
 // Helper to check parameter pollution / spoofing attempt
+// Verify an application belongs to the authenticated candidate (via CandidateProfile)
+async function candidateOwnsApplication(applicationId: string, userId: string): Promise<boolean> {
+  const app = await prisma.application.findFirst({
+    where: { id: applicationId, candidate: { user_id: userId } },
+    select: { id: true },
+  });
+  return Boolean(app);
+}
+
 function checkOrgParamPollution(req: Request, res: Response): boolean {
   if (req.body && (req.body.org_id || req.body.orgId)) {
     res.status(403).json({ success: false, error: 'Forbidden: org_id cannot be supplied in body' });
@@ -685,11 +694,37 @@ applicationRouter.post(
         },
       }).catch(() => {});
 
+      // Score the submission server-side against the persisted questions (which
+      // carry correctIndex) so the client gets a real result immediately instead
+      // of a fabricated 0%. The async job still runs for the full pipeline.
+      const storedAssessment = await prisma.assessment.findFirst({
+        where: { application_id: appId, test_type: 'aptitude' },
+        orderBy: { created_at: 'desc' },
+      });
+      const storedQuestions = Array.isArray(storedAssessment?.questions)
+        ? (storedAssessment!.questions as Array<{ id?: string; correctIndex?: unknown }>)
+        : [];
+      const answersArr = Array.isArray(answers)
+        ? (answers as Array<{ questionId?: string; selectedOption?: unknown }>)
+        : [];
+      const answerMap = new Map(answersArr.map((a) => [a.questionId, a.selectedOption]));
+      let correctCount = 0;
+      let totalScored = 0;
+      for (const q of storedQuestions) {
+        if (typeof q.correctIndex !== 'number') continue;
+        totalScored++;
+        if (answerMap.get(q.id) === q.correctIndex) correctCount++;
+      }
+      const computedScore = totalScored > 0 ? Math.round((correctCount / totalScored) * 100) : null;
+
       // Enqueue assessment scoring job in BullMQ
       await enqueueAssessment(appId, answers || [], { totalTimeSeconds, tabSwitchCount });
 
       return res.json({
         success: true,
+        score: computedScore,
+        correctAnswers: correctCount,
+        totalQuestions: totalScored,
         message: 'Aptitude assessment submitted successfully. Processing score...',
       });
     } catch (err) {
@@ -759,12 +794,15 @@ applicationRouter.post(
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
       }
 
-      // Create CodingSubmission record in DB
+      // Create CodingSubmission record in DB (status explicitly 'running' — the
+      // schema default is 'completed', which would mark a fresh submission as
+      // passed with a 0% pass rate before the sandbox even runs).
       const submission = await prisma.codingSubmission.create({
         data: {
           application_id: appId,
           code: code || '',
           language: language || 'python',
+          status: 'running',
           test_results: { status: 'running', complexity: 'Pending', ai_feedback: 'Executing test cases in Python sandbox...' },
           pass_rate: 0.0,
         },
@@ -1000,8 +1038,10 @@ applicationRouter.get(
 );
 
 // POST /api/v1/applications/:id/offer/sign - Digitally sign offer
+// Auth: authenticated candidate owner OR a valid magic_link_token (from the emailed link)
 applicationRouter.post(
   '/:id/offer/sign',
+  optionalAuthenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const appId = req.params.id as string;
@@ -1023,6 +1063,18 @@ applicationRouter.post(
 
       if (!offer) {
         return res.status(404).json({ success: false, error: 'Offer not found for application' });
+      }
+
+      // Authorization: only the owning candidate or a valid magic link token may sign.
+      const isOwner =
+        req.user?.role === 'candidate' && (await candidateOwnsApplication(offer.application_id, req.user.userId));
+      const tokenValid =
+        typeof magic_link_token === 'string' &&
+        magic_link_token.length > 0 &&
+        offer.magic_link_token === magic_link_token;
+
+      if (!isOwner && !tokenValid) {
+        return res.status(403).json({ success: false, error: 'Forbidden: offer ownership could not be verified' });
       }
 
       // Update offer status and save signature SVG vector
@@ -1051,8 +1103,10 @@ applicationRouter.post(
 );
 
 // POST /api/v1/applications/:id/offer/decline - Candidate declines offer
+// Auth: authenticated candidate owner OR a valid magic_link_token (from the emailed link)
 applicationRouter.post(
   '/:id/offer/decline',
+  optionalAuthenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const appId = req.params.id as string;
@@ -1070,6 +1124,18 @@ applicationRouter.post(
 
       if (!offer) {
         return res.status(404).json({ success: false, error: 'Offer not found for application' });
+      }
+
+      // Authorization: only the owning candidate or a valid magic link token may decline.
+      const isOwner =
+        req.user?.role === 'candidate' && (await candidateOwnsApplication(offer.application_id, req.user.userId));
+      const tokenValid =
+        typeof magic_link_token === 'string' &&
+        magic_link_token.length > 0 &&
+        offer.magic_link_token === magic_link_token;
+
+      if (!isOwner && !tokenValid) {
+        return res.status(403).json({ success: false, error: 'Forbidden: offer ownership could not be verified' });
       }
 
       // Decline offer and update application to rejected

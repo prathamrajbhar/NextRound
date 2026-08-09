@@ -1,8 +1,7 @@
 import logging
-import httpx
-from core.config import settings
 from core.http_client import callback_client
 from agents.decision_agent import run_decision_agent
+from workers.worker_base import fetch_internal, run_agent_job
 
 logger = logging.getLogger("decision_worker")
 
@@ -22,7 +21,7 @@ async def process_decision_job(job_data: dict) -> bool:
 
     logger.info(f"Processing decision job for applicationId: {application_id}")
 
-    try:
+    async def run() -> dict:
         evaluation_id = job_data.get("evaluationId")
         composite_score = job_data.get("compositeScore")
         confidence = job_data.get("confidence")
@@ -32,20 +31,14 @@ async def process_decision_job(job_data: dict) -> bool:
         # from Express so the Decision Agent operates on real composite data.
         if evaluation_id is None or composite_score is None:
             try:
-                async with httpx.AsyncClient() as client:
-                    resp = await client.get(
-                        f"{settings.express_api_base_url}/internal/applications/{application_id}/raw",
-                        headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-                    )
-                    resp.raise_for_status()
-                    data = resp.json().get("data", {})
-                    evals = data.get("evaluations") or []
-                    if evals:
-                        evaluation_id = evaluation_id or evals[0].get("id")
-                        if composite_score is None:
-                            composite_score = evals[0].get("composite_score")
-                        if confidence is None:
-                            confidence = evals[0].get("confidence")
+                data = await fetch_internal(f"internal/applications/{application_id}/raw")
+                evals = data.get("evaluations") or []
+                if evals:
+                    evaluation_id = evaluation_id or evals[0].get("id")
+                    if composite_score is None:
+                        composite_score = evals[0].get("composite_score")
+                    if confidence is None:
+                        confidence = evals[0].get("confidence")
             except Exception as fetch_err:
                 logger.warning(f"Failed to fetch stored evaluation for decision fallback: {fetch_err}")
 
@@ -63,46 +56,26 @@ async def process_decision_job(job_data: dict) -> bool:
         eval_id = evaluation_id or f"eval_{application_id}"
 
         # Send decision result to Express API internal callback endpoint
-        patch_payload = {
+        await callback_client.patch(
+            f"internal/evaluations/{eval_id}/decision",
+            json={
+                "application_id": application_id,
+                "decision": result.get("decision"),
+                "decision_rationale": result.get("reasoning"),
+                "auto_offer": result.get("auto_offer"),
+                "offer_letter_content": result.get("offer_letter_content"),
+                "rejection_email_content": result.get("rejection_email_content"),
+            },
+        )
+        return result
+
+    return await run_agent_job(
+        agent_name="decision_agent",
+        action="automated_decision",
+        job_input={
             "application_id": application_id,
-            "decision": result.get("decision"),
-            "decision_rationale": result.get("reasoning"),
-            "auto_offer": result.get("auto_offer"),
-            "offer_letter_content": result.get("offer_letter_content"),
-            "rejection_email_content": result.get("rejection_email_content"),
-        }
-
-        async with httpx.AsyncClient() as client:
-            resp = await client.patch(
-                f"{settings.express_api_base_url}/internal/evaluations/{eval_id}/decision",
-                json=patch_payload,
-                headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-            )
-            resp.raise_for_status()
-
-        # Log agent execution
-        log_payload = {
-            "agent_name": "decision_agent",
-            "action": "automated_decision",
-            "input": {"application_id": application_id, "composite_score": composite_score, "confidence": confidence},
-            "output": result,
-            "status": "completed",
-        }
-        await callback_client.post_callback("internal/agent-logs", log_payload)
-
-        logger.info(f"Successfully processed decision job for applicationId: {application_id} (Decision: {result.get('decision')})")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to process decision job for applicationId {application_id}: {e}")
-        try:
-            log_payload = {
-                "agent_name": "decision_agent",
-                "action": "automated_decision",
-                "status": "failed",
-                "error": str(e),
-            }
-            await callback_client.post_callback("internal/agent-logs", log_payload)
-        except Exception:
-            pass
-        return False
+            "composite_score": job_data.get("compositeScore"),
+            "confidence": job_data.get("confidence"),
+        },
+        work=run,
+    )

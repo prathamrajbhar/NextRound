@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { CompanyLogo } from '@/components/ui';
 import { apiClient } from '@/lib/apiClient';
 import {
@@ -83,6 +83,7 @@ export default function AptitudeTestConsole({
             text: q.text || q.question || 'Question text unavailable.',
             options: q.options || [],
             difficulty: q.difficulty || 'medium',
+            correctIndex: q.correctIndex,
           }));
           setFetchedQuestions(mapped);
         } else {
@@ -152,6 +153,7 @@ export default function AptitudeTestConsole({
           text: q.text || q.question || 'Question text unavailable.',
           options: q.options || [],
           difficulty: q.difficulty || 'medium',
+          correctIndex: q.correctIndex,
         }));
         setFetchedQuestions((prev) => {
           const existingIds = new Set(prev.map((item) => item.id));
@@ -185,6 +187,10 @@ export default function AptitudeTestConsole({
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [timeLeft, setTimeLeft] = useState(900); // 15 min total
   const [questionTimeLeft, setQuestionTimeLeft] = useState(60); // 60s per question
+  // Refs mirroring timer values so interval callbacks can read/transition them
+  // without side effects inside a state updater or an effect body.
+  const timeLeftRef = useRef(900);
+  const questionTimeLeftRef = useRef(60);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);
@@ -199,7 +205,7 @@ export default function AptitudeTestConsole({
         correctCount++;
       }
     });
-    const percentage = activeQuestions.length > 0 ? Math.round((correctCount / activeQuestions.length) * 100) : 0;
+    let percentage = activeQuestions.length > 0 ? Math.round((correctCount / activeQuestions.length) * 100) : 0;
 
     if (applicationId) {
       try {
@@ -207,11 +213,17 @@ export default function AptitudeTestConsole({
           questionId: qId,
           selectedOption: sel,
         }));
-        await apiClient.post(`/applications/${applicationId}/assessment/aptitude`, {
+        const res = await apiClient.post<{ score?: number }>(`/applications/${applicationId}/assessment/aptitude`, {
           answers: formattedAnswers,
           totalTimeSeconds: 900 - timeLeft,
           tabSwitchCount: strikeCount,
         });
+        // For the real assessment the API strips correctIndex (anti-cheat), so the
+        // client cannot score locally — use the server-computed score instead of a
+        // fabricated 0%.
+        if (res && typeof res.score === 'number') {
+          percentage = Math.max(0, Math.min(100, Math.round(res.score)));
+        }
       } catch (err) {
         console.error('Failed to submit aptitude assessment:', err);
       }
@@ -248,40 +260,53 @@ export default function AptitudeTestConsole({
   // Reset timer on question change
   useEffect(() => {
     const timer = setTimeout(() => {
+      questionTimeLeftRef.current = 60;
       setQuestionTimeLeft(60);
     }, 0);
     return () => clearTimeout(timer);
   }, [currentIndex]);
 
-  // 60-Second Per-Question Countdown Timer
+  // 60-Second Per-Question Countdown Timer. Decrements the ref + mirror state
+  // inside the interval callback (never inside a state updater or effect body),
+  // then advances or submits on expiry.
   useEffect(() => {
     if (submitted || showWarningModal) return;
 
     const interval = setInterval(() => {
-      setQuestionTimeLeft((prev) => {
-        if (prev <= 1) {
-          if (currentIndex < activeQuestions.length - 1) {
-            setCurrentIndex((idx) => idx + 1);
-          } else {
-            handleSubmit();
-          }
-          return 60;
+      if (questionTimeLeftRef.current <= 0) return;
+      questionTimeLeftRef.current -= 1;
+      setQuestionTimeLeft(questionTimeLeftRef.current);
+
+      if (questionTimeLeftRef.current === 0) {
+        if (currentIndex < activeQuestions.length - 1) {
+          setCurrentIndex((idx) => idx + 1);
+          questionTimeLeftRef.current = 60;
+          setQuestionTimeLeft(60);
+        } else {
+          handleSubmit();
         }
-        return prev - 1;
-      });
+      }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [currentIndex, submitted, showWarningModal, activeQuestions.length, handleSubmit]);
+  }, [submitted, showWarningModal, currentIndex, activeQuestions.length, handleSubmit]);
 
-  // Overall Test Countdown Timer
+  // Overall Test Countdown Timer. Auto-submits when the 15-minute cap expires.
   useEffect(() => {
     if (submitted || showWarningModal) return;
+
     const interval = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      if (timeLeftRef.current <= 0) return;
+      timeLeftRef.current -= 1;
+      setTimeLeft(timeLeftRef.current);
+
+      if (timeLeftRef.current === 0) {
+        handleSubmit();
+      }
     }, 1000);
+
     return () => clearInterval(interval);
-  }, [submitted, showWarningModal]);
+  }, [submitted, showWarningModal, handleSubmit]);
 
   const currentQ = activeQuestions[currentIndex];
 

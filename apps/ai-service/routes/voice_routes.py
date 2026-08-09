@@ -1,4 +1,5 @@
 import logging
+import asyncio
 import base64
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException, File, UploadFile, Body, Request
@@ -108,7 +109,7 @@ async def generate_interview_response(request: InterviewRespondRequest):
     }
 
     # Execute LangGraph agent
-    output_state = run_interviewer_agent(state)
+    output_state = await asyncio.to_thread(run_interviewer_agent, state)
 
     ai_text = output_state.get("latest_ai_response") or "Thank you for sharing that context. Could you tell me more about your technical architecture decisions?"
     next_stage = output_state.get("current_stage", request.stage)
@@ -154,7 +155,7 @@ async def voice_stream_response(request: InterviewRespondRequest):
         "candidate_resume": request.candidateResume or "",
     }
 
-    output_state = run_interviewer_agent(state)
+    output_state = await asyncio.to_thread(run_interviewer_agent, state)
     ai_text = output_state.get("latest_ai_response") or "Thank you. Let's continue to the next technical topic."
 
     async def event_generator():
@@ -218,7 +219,7 @@ async def generate_mock_response(request: MockRespondRequest):
         "conversation_history": request.conversationHistory or [],
     }
 
-    output = run_mock_interviewer_agent(state)
+    output = await asyncio.to_thread(run_mock_interviewer_agent, state)
     return MockRespondResponse(
         text=output.get("latest_ai_response", "Thank you. Let's continue to the next architectural component."),
         coachingHint=output.get("coaching_hint"),
@@ -240,7 +241,7 @@ async def generate_resume_builder_response(request: ResumeBuilderRespondRequest)
         "conversation_history": request.conversationHistory or [],
     }
 
-    output = run_resume_builder_agent(state)
+    output = await asyncio.to_thread(run_resume_builder_agent, state)
     return ResumeBuilderRespondResponse(
         text=output.get("latest_ai_response", "Let's explore your core engineering achievements next."),
         realtimeInsight=output.get("realtime_insight"),

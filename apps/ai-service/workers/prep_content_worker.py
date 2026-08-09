@@ -1,19 +1,16 @@
-import logging
 import json
-import re
-from typing import Dict, Any, List
-from core.config import settings
-from core.http_client import callback_client
+import logging
+from services.llm_service import generate_text, extract_json_object
+from workers.worker_base import post_internal
 
 logger = logging.getLogger("prep_content_worker")
 
-genai_client = None
-if settings.gemini_api_key:
-    try:
-        from google import genai
-        genai_client = genai.Client(api_key=settings.gemini_api_key)
-    except Exception as e:
-        logger.warning(f"Failed to initialize GenAI client in prep_content_worker: {e}")
+DEFAULT_RUBRIC_DIMENSIONS = [
+    "System Architecture",
+    "Problem Solving & Algorithms",
+    "Behavioral & STAR Method",
+    "Technical Excellence & Testing",
+]
 
 
 async def process_prep_job(job_data: dict) -> bool:
@@ -23,80 +20,51 @@ async def process_prep_job(job_data: dict) -> bool:
     2. Generate questions (targeting 20+ total across dimensions), culture notes, and skill checklist via Gemini API.
     3. Call back Express internal endpoint /internal/prep/generate.
     """
+    # The API's prep-generate payload carries jobTitle/jobDescription; fall back
+    # to roleArchetype when the older "prep" queue shape is used.
     company_name = job_data.get("companyName", "Tech Corp")
-    role_archetype = job_data.get("roleArchetype", "Software Engineer")
+    role_archetype = job_data.get("roleArchetype") or job_data.get("jobTitle", "Software Engineer")
     job_id = job_data.get("jobId")
     org_id = job_data.get("orgId")
 
     logger.info(f"Processing prep content generation for {company_name} - {role_archetype}")
 
-    dimensions = job_data.get("rubricDimensions") or [
-        "System Architecture",
-        "Problem Solving & Algorithms",
-        "Behavioral & STAR Method",
-        "Technical Excellence & Testing",
-    ]
+    dimensions = job_data.get("rubricDimensions") or DEFAULT_RUBRIC_DIMENSIONS
 
-    if not genai_client:
-        logger.error(f"No Gemini client available for prep content generation for {company_name}. No templated placeholder content is generated.")
-        return False
+    prompt = (
+        f"Generate a comprehensive company interview prep guide for {role_archetype} at {company_name}.\n"
+        f"Rubric Dimensions: {json.dumps(dimensions)}\n\n"
+        f"Return JSON format:\n"
+        f"{{\n"
+        f"  \"questions\": [\n"
+        f"    {{\"dimension\": str, \"question\": str, \"suggestedAnswerKey\": str}}\n"
+        f"  ],\n"
+        f"  \"cultureNotes\": str,\n"
+        f"  \"skillChecklist\": [str]\n"
+        f"}}\n"
+        f"Provide 5 detailed, realistic interview questions per dimension."
+    )
 
-    questions: List[Dict[str, str]] = []
-    culture_notes = ""
-    skill_checklist: List[str] = []
-
-    try:
-        prompt = (
-            f"Generate a comprehensive company interview prep guide for {role_archetype} at {company_name}.\n"
-            f"Rubric Dimensions: {json.dumps(dimensions)}\n\n"
-            f"Return JSON format:\n"
-            f"{{\n"
-            f"  \"questions\": [\n"
-            f"    {{\"dimension\": str, \"question\": str, \"suggestedAnswerKey\": str}}\n"
-            f"  ],\n"
-            f"  \"cultureNotes\": str,\n"
-            f"  \"skillChecklist\": [str]\n"
-            f"}}\n"
-            f"Provide 5 detailed, realistic interview questions per dimension."
-        )
-        res = genai_client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt
-        )
-        if res and res.text:
-            match = re.search(r"\{.*\}", res.text, re.DOTALL)
-            if match:
-                parsed = json.loads(match.group(0))
-                questions = parsed.get("questions", [])
-                culture_notes = parsed.get("cultureNotes", "")
-                skill_checklist = parsed.get("skillChecklist", [])
-    except Exception as e:
-        logger.warning(f"GenAI prep worker generation warning: {e}")
-        return False
+    parsed = extract_json_object(generate_text(prompt))
+    questions = parsed.get("questions", []) if parsed else []
+    culture_notes = parsed.get("cultureNotes", "") if parsed else ""
+    skill_checklist = parsed.get("skillChecklist", []) if parsed else []
 
     if not questions:
         logger.error(f"GenAI returned no prep content for {company_name}. No templated fallback is generated.")
         return False
 
-    try:
-        response = await callback_client.post(
-            "/internal/prep/generate",
-            json={
-                "companyName": company_name,
-                "roleArchetype": role_archetype,
-                "questions": questions,
-                "cultureNotes": culture_notes,
-                "skillChecklist": skill_checklist,
-                "jobId": job_id,
-                "orgId": org_id,
-            }
-        )
-        if response.status_code in (200, 201):
-            logger.info(f"Successfully posted generated prep content for {company_name}")
-            return True
-        else:
-            logger.error(f"Failed to post prep content for {company_name}: status {response.status_code}")
-            return False
-    except Exception as e:
-        logger.error(f"Callback error in prep_content_worker for {company_name}: {e}")
-        return False
+    return await post_internal(
+        "POST",
+        "/internal/prep/generate",
+        {
+            "companyName": company_name,
+            "roleArchetype": role_archetype,
+            "questions": questions,
+            "cultureNotes": culture_notes,
+            "skillChecklist": skill_checklist,
+            "jobId": job_id,
+            "orgId": org_id,
+        },
+        context=f"prep content for {company_name}",
+    )

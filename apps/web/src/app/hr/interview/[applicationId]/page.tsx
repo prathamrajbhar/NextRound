@@ -38,7 +38,7 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
   const handleCompleteHRRound = async (result: 'pass' | 'fail', notes: string) => {
     try {
       await apiClient.post(`/interviews/hr/${applicationId}/result`, {
-        result,
+        decision: result,
         notes: notes || 'Completed 1:1 human video call evaluation.',
       });
     } catch {

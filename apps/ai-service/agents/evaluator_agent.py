@@ -1,9 +1,6 @@
 import logging
-import json
-import httpx
 from typing import Dict, Any, TypedDict, List, Optional
 from pydantic import BaseModel, Field
-from core.config import settings
 
 logger = logging.getLogger("evaluator_agent")
 
@@ -14,19 +11,18 @@ except ImportError:
     LANGGRAPH_AVAILABLE = False
     logger.warning("LangGraph not installed. Evaluator Agent will run linear node pipeline.")
 
-# GenAI client initialization
-genai_client = None
-if settings.gemini_api_key:
-    try:
-        from google import genai
-        genai_client = genai.Client(api_key=settings.gemini_api_key)
-    except Exception as e:
-        logger.warning(f"Failed to initialize GenAI client in evaluator_agent: {e}")
-
 
 class ScoringIsolationError(Exception):
     """Raised when computer vision or proctoring signals leak into scoring functions or LLM prompts."""
     pass
+
+
+def _as_float(value, default: float) -> float:
+    """Coerce a score to float, tolerating string/None inputs from job payloads."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
 
 
 class EvaluatorState(TypedDict, total=False):
@@ -51,10 +47,10 @@ class EvaluatorState(TypedDict, total=False):
 
 def aggregate_scores_node(state: EvaluatorState) -> EvaluatorState:
     """Node 1: Aggregate multi-stage evaluation scores into a weighted composite score."""
-    scr = state.get("screening_score", 80.0)
-    apt = state.get("aptitude_score", 85.0)
-    cod = state.get("coding_score", 90.0)
-    inv = state.get("interview_score", 88.0)
+    scr = _as_float(state.get("screening_score"), 80.0)
+    apt = _as_float(state.get("aptitude_score"), 85.0)
+    cod = _as_float(state.get("coding_score"), 90.0)
+    inv = _as_float(state.get("interview_score"), 88.0)
 
     # Standard stage weighting: 20% Screening, 20% Aptitude, 30% Coding, 30% Voice Interview
     composite = (scr * 0.20) + (apt * 0.20) + (cod * 0.30) + (inv * 0.30)

@@ -35,13 +35,20 @@ async def test_stream_sentence_tts():
 
 
 def test_transcribe_audio_bytes():
-    """Verify STT audio transcription service handles audio bytes."""
+    """Verify STT returns a string transcript with a bounded confidence.
+
+    When Whisper STT is unavailable (no Groq API key configured), the service
+    must return an empty transcript rather than fabricating a candidate
+    response, so downstream evaluation never scores invented speech.
+    """
     sample_bytes = b"RIFF\x24\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00\x44\xac\x00\x00\x88\x58\x01\x00\x02\x00\x10\x00data\x00\x00\x00\x00"
     transcript, confidence = transcribe_audio_bytes(sample_bytes)
 
     assert isinstance(transcript, str)
-    assert len(transcript) > 0
-    assert 0.0 <= confidence <= 1.0
+    if transcript:
+        assert 0.0 <= confidence <= 1.0
+    else:
+        assert confidence == 0.0
 
 
 def test_transcribe_endpoint():

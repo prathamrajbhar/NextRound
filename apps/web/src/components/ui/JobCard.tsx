@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/cn';
 import { CompanyLogo } from './CompanyLogo';
 import { Badge } from './Badge';
+import { getJobStatusBadgeClasses } from '@/lib/jobStatus';
 import { MapPin, DollarSign, Briefcase, CheckCircle2, Clock, Users, ArrowUpRight } from '@/lib/lucide-google-icons';
 
 export interface JobCardProps {
@@ -103,11 +104,7 @@ export function JobCard({
             <span
               className={cn(
                 'text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border',
-                status === 'active'
-                  ? 'bg-emerald-50/80 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200/60 dark:border-emerald-900/60'
-                  : status === 'draft'
-                  ? 'bg-amber-50/80 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200/60 dark:border-amber-900/60'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                getJobStatusBadgeClasses(status, 'card')
               )}
             >
               {status}

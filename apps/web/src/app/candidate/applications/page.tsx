@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/apiClient';
 import { Application } from '@/types';
 import { ApplicationsListSkeleton } from '@/components/ui/Skeleton';
 import { Compass, Briefcase, ChevronRight } from '@/lib/lucide-google-icons';
+import { getApplicationStatusBadgeClasses, formatApplicationStatus } from '@/lib/applicationStatus';
 
 export default function CandidateApplications() {
   const [loading, setLoading] = useState(true);
@@ -67,14 +68,8 @@ export default function CandidateApplications() {
                   <td className="px-6 py-4 font-bold text-slate-800 dark:text-slate-100">{app.jobTitle}</td>
                   <td className="px-6 py-4 text-brand-600 dark:text-orange-400 font-bold">{app.orgName}</td>
                   <td className="px-6 py-4">
-                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase ${
-                      app.status === 'decided'
-                        ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-100 dark:border-emerald-900/60'
-                        : app.status === 'interview_scheduled'
-                        ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border-purple-100 dark:border-purple-900/60'
-                        : 'bg-brand-50 dark:bg-orange-950/60 text-brand-700 dark:text-orange-300 border-brand-100 dark:border-orange-900/60'
-                    }`}>
-                      {app.status.replace('_', ' ')}
+                    <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border uppercase ${getApplicationStatusBadgeClasses(app.status, 'table')}`}>
+                      {formatApplicationStatus(app.status)}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-slate-400 dark:text-slate-400">{app.appliedDate}</td>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CompanyLogo } from '@/components/ui';
 import { apiClient } from '@/lib/apiClient';
 import {
@@ -49,16 +49,29 @@ export default function CodingAssessmentConsole({
   >([]);
   const [complexityFeedback, setComplexityFeedback] = useState<string | null>(null);
   const [finalPassRate, setFinalPassRate] = useState<number>(0);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Clear any in-flight status polling when the console unmounts
+  useEffect(() => {
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     async function loadProblem() {
       if (!applicationId) return;
       try {
-        const res = await apiClient.get<{ id: string; title: string; description: string; starterCode: Record<string, string> }>(`/applications/${applicationId}/assessment/coding`);
-        if (res) {
-          setProblem(res);
-          if (res.starterCode && res.starterCode.python) {
-            setCode(res.starterCode.python);
+        // The API wraps the problem in a `problem` field (data: { problem }), and
+        // apiClient unwraps the outer envelope, so read res.problem.
+        const res = await apiClient.get<{ problem: { id: string; title: string; description: string; starterCode: Record<string, string> } }>(`/applications/${applicationId}/assessment/coding`);
+        if (res?.problem) {
+          setProblem(res.problem);
+          if (res.problem.starterCode?.python) {
+            setCode(res.problem.starterCode.python);
           }
         }
       } catch (err) {
@@ -85,38 +98,53 @@ export default function CodingAssessmentConsole({
         if (subRes?.submissionId) {
           const subId = subRes.submissionId;
           let attempts = 0;
-          const interval = setInterval(async () => {
+          pollIntervalRef.current = setInterval(async () => {
             attempts++;
             try {
-              const statusRes = await apiClient.get<{ status: string; score?: number; pass_rate?: number; complexity_analysis?: string; feedback?: string }>(`/applications/${applicationId}/assessment/coding/${subId}`);
-              if (statusRes && (statusRes.status === 'completed' || statusRes.status === 'failed' || attempts > 10)) {
-                clearInterval(interval);
+              // The API returns data: { submission } (the Prisma record), and
+              // apiClient unwraps the outer envelope, so read statusRes.submission.
+              const statusRes = await apiClient.get<{ submission: { status?: string; pass_rate?: number; complexity?: string; ai_feedback?: string } }>(`/applications/${applicationId}/assessment/coding/${subId}`);
+              const sub = statusRes?.submission;
+              const terminal = sub && (sub.status === 'passed' || sub.status === 'failed');
+              if (terminal || attempts > 10) {
+                if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+                pollIntervalRef.current = null;
                 setIsRunning(false);
-                if (statusRes.pass_rate !== undefined) {
-                  setFinalPassRate(Math.round(statusRes.pass_rate * 100));
+                if (terminal) {
+                  const passRate = typeof sub.pass_rate === 'number' ? Math.round(sub.pass_rate * 100) : 0;
+                  setFinalPassRate(passRate);
+                  if (sub.complexity) {
+                    setComplexityFeedback(sub.complexity);
+                  }
+                  const isPassed = sub.status === 'passed';
+                  setTestResults([
+                    {
+                      name: 'Suite 1 (Hidden & Public)',
+                      input: 'Evaluated in isolated sandbox',
+                      expected: 'Pass',
+                      actual: isPassed ? 'Passed' : 'Failed',
+                      status: isPassed ? 'passed' : 'failed',
+                      time: '12ms',
+                    },
+                  ]);
+                  setOutputLogs((prev) => [
+                    ...prev,
+                    `[Sandbox] Result: ${isPassed ? 'passed' : 'failed'}`,
+                    `[Complexity Analysis]: ${sub.complexity || 'O(N) time efficiency verified.'}`,
+                  ]);
+                } else {
+                  // Poll budget exhausted while still running — surface an honest
+                  // pending state instead of a fabricated failure.
+                  setOutputLogs((prev) => [
+                    ...prev,
+                    '[Sandbox] Execution still in progress. Check the submissions tab shortly.',
+                  ]);
                 }
-                if (statusRes.complexity_analysis) {
-                  setComplexityFeedback(statusRes.complexity_analysis);
-                }
-                setTestResults([
-                  {
-                    name: 'Suite 1 (Hidden & Public)',
-                    input: 'Evaluated in isolated sandbox',
-                    expected: 'Pass',
-                    actual: statusRes.status === 'completed' ? 'Passed' : 'Failed',
-                    status: statusRes.status === 'completed' ? 'passed' : 'failed',
-                    time: '12ms',
-                  },
-                ]);
-                setOutputLogs((prev) => [
-                  ...prev,
-                  `[Sandbox] Result: ${statusRes.status}`,
-                  `[LangGraph Complexity Analysis]: ${statusRes.complexity_analysis || 'O(N) time efficiency verified.'}`,
-                ]);
               }
             } catch (err) {
               console.error('Failed checking execution status:', err);
-              clearInterval(interval);
+              if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+              pollIntervalRef.current = null;
               setIsRunning(false);
             }
           }, 1500);
@@ -182,11 +210,11 @@ export default function CodingAssessmentConsole({
               onChange={(e) => setLanguage(e.target.value)}
               className="bg-[#1e1e1e] border border-slate-700 text-xs text-slate-200 font-semibold rounded-lg px-2.5 py-1.5 focus:outline-none cursor-pointer appearance-none pr-7"
             >
-              <option value="TypeScript">TypeScript</option>
-              <option value="JavaScript">JavaScript</option>
-              <option value="Python">Python 3</option>
-              <option value="Java">Java 21</option>
-              <option value="C++">C++ 20</option>
+              <option value="python">Python 3</option>
+              <option value="javascript">JavaScript</option>
+              <option value="typescript">TypeScript</option>
+              <option value="java">Java 21</option>
+              <option value="cpp">C++ 20</option>
             </select>
             <ChevronDown className="h-3.5 w-3.5 text-slate-400 absolute right-2 top-2.5 pointer-events-none" />
           </div>

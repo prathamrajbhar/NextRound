@@ -1,20 +1,10 @@
 import logging
 import json
-import re
-import httpx
-from core.config import settings
 from core.http_client import callback_client
+from services.llm_service import generate_text, extract_json_object
+from workers.worker_base import fetch_internal, run_agent_job
 
 logger = logging.getLogger("video_screening_worker")
-
-# Gemini API Client
-genai_client = None
-if settings.gemini_api_key:
-    try:
-        from google import genai
-        genai_client = genai.Client(api_key=settings.gemini_api_key)
-    except Exception as e:
-        logger.warning(f"Failed to initialize GenAI client in video_screening_worker: {e}")
 
 
 def _response_text(response) -> str:
@@ -42,9 +32,6 @@ def _score_responses_with_gemini(responses, job_title: str, rubric) -> dict:
     if len(transcript_text.strip()) < 30:
         return None
 
-    if not genai_client:
-        return None
-
     rubric_str = json.dumps(rubric) if isinstance(rubric, dict) else ""
     prompt = (
         f"You are an unbiased evaluator scoring asynchronous video interview responses "
@@ -54,24 +41,19 @@ def _score_responses_with_gemini(responses, job_title: str, rubric) -> dict:
         'Return JSON only: {"score": float (0-100), "feedback": str, "key_strengths": [str], '
         '"weaknesses": [str]}'
     )
-    try:
-        res = genai_client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
-        if res and res.text:
-            match = re.search(r"\{.*\}", res.text, re.DOTALL)
-            if match:
-                data = json.loads(match.group(0))
-                if isinstance(data, dict):
-                    score = float(data.get("score", 0))
-                    return {
-                        "score": round(max(0.0, min(100.0, score)), 1),
-                        "passed": score >= 70.0,
-                        "feedback": data.get("feedback", ""),
-                        "key_strengths": data.get("key_strengths", []),
-                        "weaknesses": data.get("weaknesses", []),
-                    }
-    except Exception as e:
-        logger.warning(f"Gemini video screening scoring warning: {e}")
-    return None
+
+    data = extract_json_object(generate_text(prompt))
+    if not data:
+        return None
+
+    score = float(data.get("score", 0))
+    return {
+        "score": round(max(0.0, min(100.0, score)), 1),
+        "passed": score >= 70.0,
+        "feedback": data.get("feedback", ""),
+        "key_strengths": data.get("key_strengths", []),
+        "weaknesses": data.get("weaknesses", []),
+    }
 
 
 async def process_video_screening_job(job_data: dict) -> bool:
@@ -89,18 +71,16 @@ async def process_video_screening_job(job_data: dict) -> bool:
 
     logger.info(f"Processing video-screening scoring job for applicationId: {application_id}")
 
-    try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                f"{settings.express_api_base_url}/internal/applications/{application_id}/raw",
-                headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-            )
-            resp.raise_for_status()
-            app_info = resp.json().get("data", {})
+    # job_id/org_id are only known after fetching the application record.
+    log_extra: dict = {}
 
+    async def run() -> dict:
+        app_info = await fetch_internal(f"internal/applications/{application_id}/raw")
         job_info = app_info.get("job", {})
-        responses = job_data.get("responses") or app_info.get("video_responses") or []
+        log_extra["job_id"] = job_info.get("id")
+        log_extra["org_id"] = job_info.get("org_id")
 
+        responses = job_data.get("responses") or app_info.get("video_responses") or []
         scoring = _score_responses_with_gemini(
             responses,
             job_info.get("title", "Software Engineer"),
@@ -130,31 +110,12 @@ async def process_video_screening_job(job_data: dict) -> bool:
             f"internal/applications/{application_id}/video-screening-result",
             patch_payload,
         )
+        return scoring or {"submitted": True, "score": None}
 
-        log_payload = {
-            "job_id": job_info.get("id"),
-            "org_id": job_info.get("org_id"),
-            "agent_name": "video_screening_agent",
-            "action": "video_screening_scoring",
-            "input": {"application_id": application_id, "response_count": len(responses)},
-            "output": scoring or {"submitted": True, "score": None},
-            "status": "completed",
-        }
-        await callback_client.post_callback("internal/agent-logs", log_payload)
-
-        logger.info(f"Successfully scored video-screening job for applicationId: {application_id}")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to process video-screening job for applicationId {application_id}: {e}")
-        try:
-            log_payload = {
-                "agent_name": "video_screening_agent",
-                "action": "video_screening_scoring",
-                "status": "failed",
-                "error": str(e),
-            }
-            await callback_client.post_callback("internal/agent-logs", log_payload)
-        except Exception:
-            pass
-        return False
+    return await run_agent_job(
+        agent_name="video_screening_agent",
+        action="video_screening_scoring",
+        job_input={"application_id": application_id, "response_count": len(job_data.get("responses") or [])},
+        work=run,
+        log_extra=log_extra,
+    )

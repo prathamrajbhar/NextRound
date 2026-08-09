@@ -41,8 +41,8 @@ def transcribe_audio_bytes(audio_bytes: bytes, filename: str = "audio.webm") -> 
         except Exception as e:
             logger.error(f"Groq Whisper transcription failed: {e}")
 
-    # 2. Fallback: Parse non-empty audio payload signal
-    byte_count = len(audio_bytes)
-    fallback_text = f"Audio received ({byte_count} bytes). Please elaborate on your architectural design choices."
-    logger.info(f"Using fallback audio signal handling for {byte_count} bytes")
-    return fallback_text, 0.85
+    # 2. Fallback: STT unavailable/failed — never fabricate a candidate response.
+    # Returning an empty transcript keeps downstream evaluation honest instead of
+    # scoring a synthetic sentence as if the candidate spoke it.
+    logger.warning(f"Whisper STT unavailable for {len(audio_bytes)} bytes; returning empty transcript.")
+    return "", 0.0

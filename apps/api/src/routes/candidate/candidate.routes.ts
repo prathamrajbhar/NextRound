@@ -23,7 +23,9 @@ const upload = multer({
     if (isAllowedExt || isAllowedMime || !file.mimetype) {
       cb(null, true);
     } else {
-      cb(null, true); // Allow file and let parser validate text content
+      // Reject non-document files (e.g. .exe, .zip) at the boundary instead of
+      // buffering up to 10MB of binary into memory for a parser that can't use it.
+      cb(null, false);
     }
   },
 });

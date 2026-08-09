@@ -1,8 +1,7 @@
 import logging
-import httpx
-from core.config import settings
 from core.http_client import callback_client
 from agents.evaluator_agent import run_evaluator_agent
+from workers.worker_base import run_agent_job
 
 logger = logging.getLogger("evaluator_worker")
 
@@ -22,11 +21,11 @@ async def process_evaluator_job(job_data: dict) -> bool:
 
     logger.info(f"Processing evaluator job for applicationId: {application_id}")
 
-    try:
-        stage = job_data.get("stage", "final_evaluation")
-        interview_id = job_data.get("interviewId")
-        extra = job_data.get("extraData") or {}
+    stage = job_data.get("stage", "final_evaluation")
+    interview_id = job_data.get("interviewId")
+    extra = job_data.get("extraData") or {}
 
+    async def run() -> dict:
         # Run Evaluator LangGraph Agent
         result = await run_evaluator_agent(
             application_id=application_id,
@@ -43,46 +42,21 @@ async def process_evaluator_job(job_data: dict) -> bool:
         eval_id = interview_id or f"eval_{application_id}"
 
         # Send evaluation result to Express API internal callback endpoint
-        patch_payload = {
-            "application_id": application_id,
-            "composite_score": result.get("composite_score"),
-            "confidence": result.get("confidence"),
-            "dimension_scores": result.get("dimension_scores"),
-            "reasoning": result.get("reasoning"),
-        }
+        await callback_client.patch(
+            f"internal/evaluations/{eval_id}",
+            json={
+                "application_id": application_id,
+                "composite_score": result.get("composite_score"),
+                "confidence": result.get("confidence"),
+                "dimension_scores": result.get("dimension_scores"),
+                "reasoning": result.get("reasoning"),
+            },
+        )
+        return result
 
-
-        async with httpx.AsyncClient() as client:
-            resp = await client.patch(
-                f"{settings.express_api_base_url}/internal/evaluations/{eval_id}",
-                json=patch_payload,
-                headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-            )
-            resp.raise_for_status()
-
-        # Log agent execution
-        log_payload = {
-            "agent_name": "evaluator_agent",
-            "action": "final_evaluation_audit",
-            "input": {"application_id": application_id, "stage": stage},
-            "output": result,
-            "status": "completed",
-        }
-        await callback_client.post_callback("internal/agent-logs", log_payload)
-
-        logger.info(f"Successfully processed evaluator job for applicationId: {application_id}")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to process evaluator job for applicationId {application_id}: {e}")
-        try:
-            log_payload = {
-                "agent_name": "evaluator_agent",
-                "action": "final_evaluation_audit",
-                "status": "failed",
-                "error": str(e),
-            }
-            await callback_client.post_callback("internal/agent-logs", log_payload)
-        except Exception:
-            pass
-        return False
+    return await run_agent_job(
+        agent_name="evaluator_agent",
+        action="final_evaluation_audit",
+        job_input={"application_id": application_id, "stage": stage},
+        work=run,
+    )

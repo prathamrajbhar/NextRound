@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { Application } from '@/types';
 import { Briefcase, ArrowRight, Sparkles, Search, CheckCircle2, Mic, Building2 } from '@/lib/lucide-google-icons';
+import { getApplicationStatusBadgeClasses, formatApplicationStatus } from '@/lib/applicationStatus';
 
 interface CandidateApplicationsSectionProps {
   applications: Application[];
@@ -151,15 +152,9 @@ export function CandidateApplicationsSection({ applications }: CandidateApplicat
 
             <div className="flex flex-col sm:items-end gap-2.5 w-full sm:w-auto">
               <span
-                className={`self-start sm:self-auto text-[10px] font-bold px-3 py-1 rounded-full border uppercase tracking-wider ${
-                  app.status === 'decided'
-                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                    : app.status === 'interview_scheduled'
-                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30'
-                    : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30'
-                }`}
+                className={`self-start sm:self-auto text-[10px] font-bold px-3 py-1 rounded-full border uppercase tracking-wider ${getApplicationStatusBadgeClasses(app.status, 'card')}`}
               >
-                {app.status.replace('_', ' ')}
+                {formatApplicationStatus(app.status)}
               </span>
 
               <Link

@@ -263,8 +263,7 @@ export interface InterviewRound {
 
 export interface AsyncVideoResponse {
   questionId: string;
-  question: string;
-  promptText?: string;
+  questionText: string;
   timeLimitSeconds?: number;
   videoUrl: string;
   durationSeconds: number;

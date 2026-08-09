@@ -46,7 +46,7 @@ export default function CandidateVideoScreeningPage({ params }: { params: Promis
       await apiClient.post(`/candidate/applications/${applicationId}/video-screening/submit`, {
         responses: updatedResponses.map((r) => ({
           questionId: r.questionId,
-          questionText: r.promptText || r.question,
+          questionText: r.questionText,
           durationSeconds: r.durationSeconds,
           attempts: r.attempts,
         })),
@@ -99,7 +99,7 @@ export default function CandidateVideoScreeningPage({ params }: { params: Promis
         jobTitle={screening.jobTitle}
         screeningQuestions={screening.responses.map((r) => ({
           questionId: r.questionId,
-          questionText: r.promptText || r.question,
+          questionText: r.questionText,
           timeLimitSeconds: r.timeLimitSeconds || 60,
         }))}
         onEndSession={() => setIsCapturing(false)}
@@ -154,7 +154,7 @@ export default function CandidateVideoScreeningPage({ params }: { params: Promis
             <div key={resp.questionId} className="p-4 rounded-2xl bg-white/60 border border-slate-200/80 flex items-start justify-between gap-4">
               <div className="space-y-1">
                 <span className="text-[10px] font-bold text-brand-600 uppercase tracking-wider">Question {idx + 1}</span>
-                <p className="text-xs font-bold text-slate-800">{resp.promptText || resp.question}</p>
+                <p className="text-xs font-bold text-slate-800">{resp.questionText}</p>
                 <div className="flex items-center gap-3 text-[11px] text-slate-400">
                   <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> Max {resp.timeLimitSeconds || 60}s</span>
                   {resp.durationSeconds > 0 && <span className="flex items-center gap-1"><Video className="h-3 w-3" /> Recorded {resp.durationSeconds}s</span>}

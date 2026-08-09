@@ -1,9 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import crypto from 'crypto';
 import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { requireOrgScope } from '../../middleware/orgScope';
 import { serializeApplicationList } from '../../lib/serializers';
+import { emailService } from '../../services/email.service';
 
 export const hrRouter = Router();
 
@@ -379,9 +381,12 @@ hrRouter.patch(
       });
 
       if (decision === 'hire') {
-        const magicToken = (await import('crypto')).randomUUID();
-        const offer = await prisma.offer.create({
-          data: {
+        // Idempotent offer creation: application_id is unique, so an existing offer
+        // (e.g. from a retried decision) is updated in place, keeping its magic link token.
+        const magicToken = crypto.randomUUID();
+        const offer = await prisma.offer.upsert({
+          where: { application_id: appId },
+          create: {
             application_id: appId,
             role_title: evaluation.application.job.title,
             salary: 150000,
@@ -391,16 +396,27 @@ hrRouter.patch(
             status: 'pending',
             valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
           },
+          update: {
+            role_title: evaluation.application.job.title,
+            salary: 150000,
+            equity: '0.15% ESOPs',
+            offer_letter_content: `Official Job Offer for ${evaluation.application.job.title} (Approved by HR Override)`,
+            status: 'pending',
+            valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+          },
         });
 
-        const candidateName = evaluation.application.candidate.user.email.split('@')[0];
-        const { emailService } = await import('../../services/email.service');
-        await emailService.sendOfferEmail(
-          evaluation.application.candidate.user.email,
-          candidateName,
-          evaluation.application.job.title,
-          { salary: 150000, equity: '0.15% ESOPs', magicLinkToken: magicToken }
-        );
+        // Only email the candidate when a brand-new offer was created (token freshly generated)
+        const isNewOffer = offer.magic_link_token === magicToken;
+        if (isNewOffer) {
+          const candidateName = evaluation.application.candidate.user.email.split('@')[0];
+          await emailService.sendOfferEmail(
+            evaluation.application.candidate.user.email,
+            candidateName,
+            evaluation.application.job.title,
+            { salary: 150000, equity: '0.15% ESOPs', magicLinkToken: magicToken }
+          );
+        }
 
         return res.json({
           success: true,
@@ -408,7 +424,6 @@ hrRouter.patch(
         });
       } else {
         const candidateName = evaluation.application.candidate.user.email.split('@')[0];
-        const { emailService } = await import('../../services/email.service');
         await emailService.sendConstructiveRejection(
           evaluation.application.candidate.user.email,
           candidateName,

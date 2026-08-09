@@ -3,7 +3,7 @@ import { prisma } from '@nextround/database';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { enqueueInterview } from '../../lib/queues/interview.queue';
-import { decisionQueue } from '../../lib/bullmq';
+import { decisionQueue, DEFAULT_JOB_OPTIONS } from '../../lib/bullmq';
 
 export const interviewRouter = Router();
 
@@ -354,11 +354,7 @@ interviewRouter.post('/hr/:applicationId/result', requireRole('hr'), async (req:
         compositeScore,
         confidence,
         extraData: { hr_notes: notes },
-      }, {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 2000 },
-        removeOnComplete: true,
-      });
+      }, DEFAULT_JOB_OPTIONS);
     }
 
     return res.json({

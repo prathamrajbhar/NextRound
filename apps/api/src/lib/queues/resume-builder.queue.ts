@@ -1,4 +1,4 @@
-import { resumeBuilderQueue } from '../bullmq';
+import { resumeBuilderQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface ResumeBuilderJobPayload {
   sessionId: string;
@@ -23,14 +23,7 @@ export async function enqueueResumeBuilder(
     targetCompany,
   };
 
-  const job = await resumeBuilderQueue.add('resume_builder_generate', payload, {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
-    },
-    removeOnComplete: true,
-  });
+  const job = await resumeBuilderQueue.add('resume_builder_generate', payload, DEFAULT_JOB_OPTIONS);
 
   return job;
 }

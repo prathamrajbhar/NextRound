@@ -271,6 +271,7 @@ jobRouter.patch(
           ...(validated.skills && { skills: validated.skills as any }),
           ...(validated.stages && { stages: validated.stages as any }),
           ...(validated.assessmentConfig && { assessmentConfig: validated.assessmentConfig as any }),
+          ...(validated.department !== undefined && { department: validated.department ?? null }),
         },
       });
 
@@ -323,6 +324,7 @@ jobRouter.put(
           ...(validated.skills && { skills: validated.skills as any }),
           ...(validated.stages && { stages: validated.stages as any }),
           ...(validated.assessmentConfig && { assessmentConfig: validated.assessmentConfig as any }),
+          ...(validated.department !== undefined && { department: validated.department ?? null }),
         },
       });
 

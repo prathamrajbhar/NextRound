@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/apiClient';
 import { Job, Application } from '@/types';
 import { ChevronRight, Search, Users, Loader2 } from '@/lib/lucide-google-icons';
 import Image from 'next/image';
+import { getApplicationStatusBadgeClasses, formatApplicationStatus } from '@/lib/applicationStatus';
 
 export default function HrJobCandidatesList({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
@@ -113,12 +114,8 @@ export default function HrJobCandidatesList({ params }: { params: Promise<{ jobI
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${
-                      app.status === 'decided'
-                        ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                        : 'bg-indigo-50 text-indigo-700 border-indigo-100'
-                    }`}>
-                      {app.status.replace('_', ' ')}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${getApplicationStatusBadgeClasses(app.status, 'hr')}`}>
+                      {formatApplicationStatus(app.status)}
                     </span>
                   </td>
                   <td className="px-6 py-4">

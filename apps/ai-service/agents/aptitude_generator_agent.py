@@ -1,37 +1,19 @@
-import json
-import re
 import logging
 import httpx
 from typing import List, Dict, Any
 from core.config import settings
+from services.llm_service import generate_text, extract_json_array
 
 logger = logging.getLogger("aptitude_generator_agent")
-
-genai_client = None
-if settings.gemini_api_key:
-    try:
-        from google import genai
-        genai_client = genai.Client(api_key=settings.gemini_api_key)
-        logger.info(f"Initialized Google GenAI client with model: {settings.gemini_model}")
-    except Exception as e:
-        logger.warning(f"Failed to initialize Google GenAI Client in aptitude_generator_agent: {e}")
 
 
 def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[Dict[str, Any]]:
     """Clean and validate raw LLM text payload into a valid question array."""
-    if not raw_text:
+    parsed = extract_json_array(raw_text)
+    if not parsed:
         return []
-    
-    cleaned = raw_text.strip()
-    match = re.search(r"\[.*\]", cleaned, re.DOTALL)
-    if not match:
-        return []
-    
+
     try:
-        parsed = json.loads(match.group(0))
-        if not isinstance(parsed, list) or len(parsed) == 0:
-            return []
-        
         validated = []
         for idx, q in enumerate(parsed):
             q_id = str(q.get("id") or f"gen_q{idx+1}")
@@ -191,19 +173,13 @@ JSON Format required:
 """
 
     # 1. Primary Provider: Gemini GenAI
-    if genai_client:
-        try:
-            res = genai_client.models.generate_content(
-                model=settings.gemini_model,
-                contents=prompt,
-            )
-            if res and res.text:
-                questions = _parse_llm_json_response(res.text, count, job_title)
-                if questions:
-                    logger.info(f"Successfully generated {len(questions)} dynamic aptitude questions via Gemini ({settings.gemini_model}) for {job_title}.")
-                    return questions
-        except Exception as gemini_err:
-            logger.warning(f"Gemini aptitude question generation failed for {job_title}: {gemini_err}. Trying Ollama failover.")
+    gemini_text = generate_text(prompt)
+    if gemini_text:
+        questions = _parse_llm_json_response(gemini_text, count, job_title)
+        if questions:
+            logger.info(f"Successfully generated {len(questions)} dynamic aptitude questions via Gemini ({settings.gemini_model}) for {job_title}.")
+            return questions
+    logger.warning(f"Gemini aptitude question generation failed for {job_title}. Trying Ollama failover.")
 
     # 2. Failover Provider: Ollama
     ollama_questions = await _generate_with_ollama(prompt, count, job_title)

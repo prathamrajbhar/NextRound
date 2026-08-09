@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getTopicsForRoleAndCompany } from '@/lib/interviewTopics';
 import { evaluateInterview } from '@/lib/interviewScorer';
-import { api } from '@/lib/api';
+import { apiClient } from '@/lib/apiClient';
 
 export interface Message {
   id: string;
@@ -46,7 +46,14 @@ export function useInterviewSession({
   const topicIndex = useRef(0);
   const isFollowUp = useRef(false);
   const transcriptData = useRef<{ question: string; answer: string; feedback: string }[]>([]);
+  const messagesRef = useRef<Message[]>([]);
   const topics = getTopicsForRoleAndCompany(role, company);
+
+  // Keep a ref mirror of messages so async callbacks (submitAnswer's timeouts,
+  // handleComplete) read the latest transcript, not a stale render closure.
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     if (stage !== 'session' && stage !== 'fallback') return;
@@ -61,7 +68,7 @@ export function useInterviewSession({
     if (stage !== 'session' || !interviewId) return;
     const pTimer = setInterval(async () => {
       try {
-        await api.patch(`/interviews/${interviewId}/proctoring`, {
+        await apiClient.patch(`/interviews/${interviewId}/proctoring`, {
           face_count: null,
           gaze_centered: null,
           engagement_index: null,
@@ -81,8 +88,8 @@ export function useInterviewSession({
 
     if (interviewId) {
       try {
-        await api.post(`/interviews/${interviewId}/consent`, { consent: true });
-        await api.post(`/interviews/${interviewId}/session-token`);
+        await apiClient.post(`/interviews/${interviewId}/consent`, { consent: true });
+        await apiClient.post(`/interviews/${interviewId}/session-token`);
       } catch {
         // Continue with local session fallback
       }
@@ -113,13 +120,13 @@ export function useInterviewSession({
     // Call FastAPI voice response router if operational, or fallback to local stage logic
     let aiResponseText = '';
     try {
-      const res = await fetch('http://localhost:8000/api/v1/ai/interview/respond', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8000'}/api/v1/ai/interview/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           interviewId: interviewId || `intv_${currentTimestamp}`,
           transcript: text,
-          turnNumber: messages.length + 1,
+          turnNumber: messagesRef.current.length + 1,
           stage: phase === 'Introduction' ? 'intro' : phase === 'Core Vetting' ? 'technical' : 'closing',
           jobTitle: role,
           conversationHistory: messages.map(m => ({ speaker: m.role, text: m.content })),
@@ -180,7 +187,9 @@ export function useInterviewSession({
   const handleComplete = async () => {
     if (interviewId) {
       try {
-        await api.post(`/interviews/${interviewId}/end`, { transcript: messages });
+        // Send the latest messages via the ref so the saved transcript includes the
+        // final candidate answer and closing AI message.
+        await apiClient.post(`/interviews/${interviewId}/end`, { transcript: messagesRef.current });
       } catch {
         // Fallback swallow
       }

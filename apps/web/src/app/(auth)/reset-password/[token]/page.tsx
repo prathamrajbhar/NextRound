@@ -4,7 +4,7 @@ import React, { useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Lock, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
-import { api } from '@/lib/api';
+import { apiClient } from '@/lib/apiClient';
 
 export default function ResetPasswordPage({ params }: { params: Promise<{ token: string }> }) {
   const router = useRouter();
@@ -31,19 +31,16 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
     setError('');
     setLoading(true);
 
-    const res = await api.post('/auth/reset-password', {
-      token,
-      password,
-    });
-    setLoading(false);
-
-    if (res.success) {
+    try {
+      await apiClient.post('/auth/reset-password', { token, password });
       setSuccess(true);
       setTimeout(() => {
         router.push('/login');
       }, 1500);
-    } else {
-      setError(typeof res.error === 'string' ? res.error : res.error?.message || 'Password reset failed.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Password reset failed.');
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -1,4 +1,4 @@
-import { videoScreeningQueue } from '../bullmq';
+import { videoScreeningQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface VideoScreeningResponse {
   questionId: string;
@@ -21,14 +21,7 @@ export async function enqueueVideoScreening(
     responses,
   };
 
-  const job = await videoScreeningQueue.add('score_video_screening', payload, {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
-    },
-    removeOnComplete: true,
-  });
+  const job = await videoScreeningQueue.add('score_video_screening', payload, DEFAULT_JOB_OPTIONS);
 
   return job;
 }

@@ -26,3 +26,16 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
+
+# Fail fast in production when the internal callback secret is still a known
+# default — silently running with a shared, published secret would let any
+# caller impersonate the AI worker to the Express internal webhooks.
+_DEFAULT_SECRETS = (
+    "internal_secret_key_change_in_production",
+    "super-secret-internal-service-key-for-ai-callbacks",
+)
+if settings.environment.lower() == "production" and settings.internal_service_secret in _DEFAULT_SECRETS:
+    raise RuntimeError(
+        "INTERNAL_SERVICE_SECRET is set to a known default value. Refusing to start in "
+        "production. Set a strong, unique secret in the environment."
+    )

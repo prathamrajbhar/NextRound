@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { UserPublic } from '@nextround/shared';
-import { api } from '@/lib/api';
+import { apiClient } from '@/lib/apiClient';
 
 interface AuthContextType {
   user: UserPublic | null;
@@ -15,79 +15,62 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+async function fetchCurrentUser(): Promise<UserPublic | null> {
+  try {
+    const { user } = await apiClient.get<{ user: UserPublic }>('/auth/me');
+    return user ?? null;
+  } catch {
+    // token invalid or API unreachable — caller clears auth state
+  }
+  return null;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserPublic | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refreshUser = async () => {
-    try {
-      const res = await api.get<{ user: UserPublic }>('/auth/me');
-      if (res.success && res.data?.user) {
-        setUser(res.data.user);
-      } else {
-        setUser(null);
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
-        }
-      }
-    } catch {
-      setUser(null);
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-      }
-    } finally {
-      setLoading(false);
+    const currentUser = await fetchCurrentUser();
+    setUser(currentUser);
+    if (!currentUser && typeof window !== 'undefined') {
+      localStorage.removeItem('token');
     }
+    setLoading(false);
   };
 
   useEffect(() => {
     let mounted = true;
-    const loadUser = async () => {
-      try {
-        const res = await api.get<{ user: UserPublic }>('/auth/me');
-        if (mounted) {
-          if (res.success && res.data?.user) {
-            setUser(res.data.user);
-          } else {
-            setUser(null);
-            if (typeof window !== 'undefined') {
-              localStorage.removeItem('token');
-            }
-          }
-        }
-      } catch {
-        if (mounted) {
-          setUser(null);
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('token');
-          }
-        }
-      } finally {
-        if (mounted) setLoading(false);
+    fetchCurrentUser().then((currentUser) => {
+      if (!mounted) return;
+      setUser(currentUser);
+      if (!currentUser && typeof window !== 'undefined') {
+        localStorage.removeItem('token');
       }
-    };
-    loadUser();
+      setLoading(false);
+    });
     return () => {
       mounted = false;
     };
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await api.post<{ user: UserPublic; accessToken?: string }>('/auth/login', {
-      email,
-      password,
-    });
+    try {
+      const data = await apiClient.post<{ user: UserPublic; accessToken?: string }>('/auth/login', {
+        email,
+        password,
+      });
 
-    if (res.success && res.data?.user) {
-      setUser(res.data.user);
-      if (res.data.accessToken && typeof window !== 'undefined') {
-        localStorage.setItem('token', res.data.accessToken);
+      if (data?.user) {
+        setUser(data.user);
+        if (data.accessToken && typeof window !== 'undefined') {
+          localStorage.setItem('token', data.accessToken);
+        }
+        return { success: true, user: data.user };
       }
-      return { success: true, user: res.data.user };
+      return { success: false, error: 'Login failed' };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Login failed' };
     }
-
-    const errorMsg = typeof res.error === 'string' ? res.error : res.error?.message || 'Login failed';
-    return { success: false, error: errorMsg };
   };
 
   const register = async (
@@ -96,28 +79,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     role: 'hr' | 'candidate',
     orgName?: string
   ) => {
-    const res = await api.post<{ user: UserPublic; accessToken?: string }>('/auth/register', {
-      email,
-      password,
-      role,
-      orgName,
-    });
+    try {
+      const data = await apiClient.post<{ user: UserPublic; accessToken?: string }>('/auth/register', {
+        email,
+        password,
+        role,
+        orgName,
+      });
 
-    if (res.success && res.data?.user) {
-      setUser(res.data.user);
-      if (res.data.accessToken && typeof window !== 'undefined') {
-        localStorage.setItem('token', res.data.accessToken);
+      if (data?.user) {
+        setUser(data.user);
+        if (data.accessToken && typeof window !== 'undefined') {
+          localStorage.setItem('token', data.accessToken);
+        }
+        return { success: true, user: data.user };
       }
-      return { success: true, user: res.data.user };
+      return { success: false, error: 'Registration failed' };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : 'Registration failed' };
     }
-
-    const errorMsg = typeof res.error === 'string' ? res.error : res.error?.message || 'Registration failed';
-    return { success: false, error: errorMsg };
   };
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      await apiClient.post('/auth/logout');
     } catch {
       // Ignore network errors on logout
     }

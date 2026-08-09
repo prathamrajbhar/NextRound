@@ -1,8 +1,5 @@
-import json
 import logging
-import os
 from typing import Dict, Any, TypedDict, List
-from core.config import settings
 
 logger = logging.getLogger("assessment_agent")
 
@@ -12,6 +9,14 @@ try:
 except ImportError:
     LANGGRAPH_AVAILABLE = False
     logger.warning("LangGraph not installed. Assessment Agent will use linear node execution.")
+
+
+def _to_int(value, default: int = 0) -> int:
+    """Coerce a value to int, tolerating Gemini's stringified numbers."""
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
 
 
 class AssessmentState(TypedDict, total=False):
@@ -43,7 +48,7 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
             q_id = str(q.get("id") or "")
             if q_id:
                 answer_key[q_id] = {
-                    "correctIndex": q.get("correctIndex", 0),
+                    "correctIndex": _to_int(q.get("correctIndex"), -1),
                     "category": q.get("category", "Logical Deduction"),
                 }
 
@@ -55,7 +60,7 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
             q_id = str(q.get("id") or "")
             if q_id:
                 answer_key[q_id] = {
-                    "correctIndex": q.get("correctIndex", 0),
+                    "correctIndex": _to_int(q.get("correctIndex"), -1),
                     "category": q.get("category", "Logical Deduction"),
                 }
 
@@ -66,7 +71,9 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
 
     for ans in answers:
         q_id = ans.get("questionId")
-        selected = ans.get("selectedOptionIndex")
+        # selectedOptionIndex may arrive as a string from the client — normalize
+        # to int so it compares against the (also normalized) correctIndex.
+        selected = _to_int(ans.get("selectedOptionIndex"), -1)
         cat = ans.get("category") or (answer_key.get(q_id, {}).get("category") if q_id in answer_key else "Logical")
 
         if cat not in categories:
@@ -75,7 +82,7 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
         categories[cat]["total"] += 1
         correct_idx = answer_key.get(q_id, {}).get("correctIndex")
 
-        if correct_idx is not None and selected == correct_idx:
+        if correct_idx is not None and correct_idx >= 0 and selected == correct_idx:
             categories[cat]["correct"] += 1
             total_correct += 1
 

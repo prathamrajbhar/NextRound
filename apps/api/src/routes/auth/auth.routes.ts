@@ -17,7 +17,7 @@ import {
 } from '../../lib/jwt';
 import { authenticate } from '../../middleware/auth';
 import { authRateLimiter, forgotPasswordRateLimiter } from '../../middleware/rateLimit';
-import { sendEmail } from '../../lib/mailer';
+import { emailService } from '../../services/email.service';
 
 export const authRouter = Router();
 
@@ -324,7 +324,7 @@ authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Reque
       const resetUrl = `${appBaseUrl}/reset-password/${resetToken}`;
 
       try {
-        await sendEmail({
+        await emailService.sendEmail({
           to: user.email,
           subject: 'Reset your NextRound password',
           html: `<p>You requested a password reset. Click <a href="${resetUrl}">here</a> to reset your password. Link expires in 1 hour.</p>`,

@@ -1,19 +1,22 @@
 export enum UserRole {
   HR = 'hr',
   CANDIDATE = 'candidate',
-  ADMIN = 'admin',
 }
 
 export enum ApplicationStatus {
   APPLIED = 'applied',
   SCREENING = 'screening',
+  SCREENING_COMPLETED = 'screening_completed',
   ASSESSMENT = 'assessment',
-  VOICE_SCREEN = 'voice_screen',
+  INTERVIEW_SCHEDULED = 'interview_scheduled',
+  INTERVIEWED = 'interviewed',
+  EVALUATION = 'evaluation',
   HR_ROUND = 'hr_round',
-  DECISION = 'decision',
-  OFFER = 'offer',
+  DECIDED = 'decided',
+  OFFERED = 'offered',
+  ACCEPTED = 'accepted',
   REJECTED = 'rejected',
-  HIRED = 'hired',
+  WITHDRAWN = 'withdrawn',
 }
 
 export enum DecisionType {
@@ -37,7 +40,9 @@ export enum AssessmentCategory {
 
 export enum JobStatus {
   DRAFT = 'draft',
+  PUBLISHED = 'published',
   ACTIVE = 'active',
   PAUSED = 'paused',
   CLOSED = 'closed',
+  DELETED = 'deleted',
 }

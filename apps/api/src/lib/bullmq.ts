@@ -1,9 +1,21 @@
-import { Queue } from 'bullmq';
+import { Queue, type JobsOptions } from 'bullmq';
 import { redis } from './redis';
 
 const connection = {
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379', 10),
+};
+
+/**
+ * Retry policy shared by every worker queue in this app. BullMQ replays a
+ * failed job with exponential backoff starting at `delay`, and discards the
+ * job record once it completes. Override per-enqueue by spreading this object
+ * (e.g. `{ ...DEFAULT_JOB_OPTIONS, priority: 1 }`).
+ */
+export const DEFAULT_JOB_OPTIONS: JobsOptions = {
+  attempts: 3,
+  backoff: { type: 'exponential', delay: 2000 },
+  removeOnComplete: true,
 };
 
 export const QUEUE_NAMES = [

@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Any, TypedDict
 from pydantic import BaseModel, Field
-from core.config import settings
+from services.llm_service import generate_text, extract_json_array
 
 logger = logging.getLogger("jd_parser_agent")
 
@@ -12,15 +12,6 @@ try:
 except ImportError:
     LANGGRAPH_AVAILABLE = False
     logger.warning("LangGraph not installed. Agent will use direct node workflow execution.")
-
-# Try initializing Google GenAI Client
-genai_client = None
-if settings.gemini_api_key:
-    try:
-        from google import genai
-        genai_client = genai.Client(api_key=settings.gemini_api_key)
-    except Exception as e:
-        logger.warning(f"Failed to initialize Google GenAI Client in jd_parser_agent: {e}")
 
 
 class RubricWeights(BaseModel):
@@ -58,20 +49,9 @@ def parse_requirements_node(state: JDParserState) -> JDParserState:
     logger.info(f"Parsing requirements for job {state.get('job_id')}")
 
     skills = []
-    if genai_client and raw:
-        try:
-            prompt = f"Extract core technical skills and requirements from this job description prompt as a JSON list of strings:\n\n{raw}"
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-            )
-            if res and res.text:
-                import json, re
-                match = re.search(r"\[.*\]", res.text, re.DOTALL)
-                if match:
-                    skills = json.loads(match.group(0))
-        except Exception as e:
-            logger.error(f"Gemini requirement parsing failed: {e}")
+    if raw:
+        prompt = f"Extract core technical skills and requirements from this job description prompt as a JSON list of strings:\n\n{raw}"
+        skills = extract_json_array(generate_text(prompt)) or []
 
     state["extracted_skills"] = skills
     return state
@@ -82,22 +62,16 @@ def generate_description_node(state: JDParserState) -> JDParserState:
     raw = state.get("raw_description", "")
     skills = state.get("extracted_skills", [])
 
-    if genai_client and raw:
-        try:
-            prompt = (
-                f"Create a professional, highly engaging ATS-friendly job description in markdown format based on:\n"
-                f"Input: {raw}\nKey Skills: {', '.join(skills)}\n\n"
-                f"Include sections: Role Overview, Key Responsibilities, Requirements & Qualifications, What We Offer."
-            )
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-            )
-            if res and res.text:
-                state["generated_description"] = res.text.strip()
-                return state
-        except Exception as e:
-            logger.error(f"Gemini description generation failed: {e}")
+    if raw:
+        prompt = (
+            f"Create a professional, highly engaging ATS-friendly job description in markdown format based on:\n"
+            f"Input: {raw}\nKey Skills: {', '.join(skills)}\n\n"
+            f"Include sections: Role Overview, Key Responsibilities, Requirements & Qualifications, What We Offer."
+        )
+        generated_description = generate_text(prompt)
+        if generated_description:
+            state["generated_description"] = generated_description
+            return state
 
     state["generated_description"] = ""
     return state

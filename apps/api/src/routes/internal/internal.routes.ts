@@ -7,6 +7,20 @@ import { enqueueEvaluation } from '../../lib/queues/evaluation.queue';
 import { ensureInterviewAndSchedule, advanceAssessmentStage } from '../../lib/pipeline';
 import crypto from 'crypto';
 
+// Statuses that are already past the assessment phase. A late/retried modality
+// result must never regress an application out of these.
+const PAST_ASSESSMENT: string[] = [
+  'interview_scheduled',
+  'interviewed',
+  'evaluation',
+  'hr_round',
+  'decided',
+  'offered',
+  'accepted',
+  'rejected',
+  'withdrawn',
+];
+
 // Derive offer terms from Job config so offers reflect the actual posting.
 // salary is a display string ("$120k - $150k", "₹25L", "$150,000", "₹1.3L - ₹1.8L")
 // — take the top-of-band as an annual figure. A suffix attached to each figure
@@ -405,15 +419,21 @@ internalRouter.patch('/applications/:id/assessment-result', async (req: Request,
       return res.status(404).json({ success: false, error: 'Application not found' });
     }
 
-    // Stay in the assessment phase while modalities are in progress; the
-    // advanceAssessmentStage helper moves the candidate to the Interview stage
-    // once ALL enabled assessment modalities have passed.
-    const updatedStatus = passed ? 'screening_completed' : 'rejected';
+    // Never regress a passed/advanced application. On pass, stay in the
+    // assessment phase while modalities are in progress and let the
+    // advanceAssessmentStage helper move the candidate to the Interview stage
+    // once ALL enabled assessment modalities have passed. On fail, reject only
+    // if the application is still within the assessment phase.
+    let updatedStatus: ApplicationStatus | null = null;
+    if (passed) {
+      updatedStatus = ((await advanceAssessmentStage(id)) as ApplicationStatus | null) ?? 'screening_completed';
+    } else if (!PAST_ASSESSMENT.includes(app.status)) {
+      updatedStatus = 'rejected';
+    }
 
-    const updatedApp = await prisma.application.update({
-      where: { id },
-      data: { status: updatedStatus },
-    });
+    const updatedApp = updatedStatus
+      ? await prisma.application.update({ where: { id }, data: { status: updatedStatus } })
+      : app;
 
     const evaluation = await prisma.evaluation.upsert({
       where: { application_id: id },
@@ -471,6 +491,20 @@ internalRouter.get('/applications/:id/assessment-data', async (req: Request, res
       orderBy: { created_at: 'desc' },
     });
 
+    // Surface the job's configured pass threshold so the AI worker can honor
+    // per-job scoring config instead of a hardcoded 70%. Best-effort lookup.
+    let minScore: number | null = null;
+    try {
+      const app = await prisma.application.findUnique({
+        where: { id },
+        select: { job: { select: { thresholds: true } } },
+      });
+      const thresholds = (app?.job?.thresholds ?? {}) as { minScore?: number };
+      minScore = typeof thresholds.minScore === 'number' ? thresholds.minScore : null;
+    } catch {
+      minScore = null;
+    }
+
     return res.json({
       success: true,
       data: {
@@ -478,6 +512,7 @@ internalRouter.get('/applications/:id/assessment-data', async (req: Request, res
         questions: assessment?.questions || null,
         responses: assessment?.responses || null,
         status: assessment?.status || null,
+        minScore,
       },
     });
   } catch (error) {
@@ -518,14 +553,20 @@ internalRouter.patch('/applications/:id/coding-result', async (req: Request, res
       }).catch((err) => console.warn('Could not update coding submission:', err));
     }
 
-    // Stay in the assessment phase until all enabled modalities pass, then the
+    // Never regress a passed/advanced application. On pass, stay in the
+    // assessment phase until all enabled modalities pass, then the
     // advanceAssessmentStage helper moves the candidate to the Interview stage.
-    const nextStatus = passed ? 'screening_completed' : 'rejected';
+    // On fail, reject only if the application is still within the assessment phase.
+    let updatedStatus: ApplicationStatus | null = null;
+    if (passed) {
+      updatedStatus = ((await advanceAssessmentStage(id)) as ApplicationStatus | null) ?? 'screening_completed';
+    } else if (!PAST_ASSESSMENT.includes(app.status)) {
+      updatedStatus = 'rejected';
+    }
 
-    const updatedApp = await prisma.application.update({
-      where: { id },
-      data: { status: nextStatus },
-    });
+    const updatedApp = updatedStatus
+      ? await prisma.application.update({ where: { id }, data: { status: updatedStatus } })
+      : app;
 
     const evaluation = await prisma.evaluation.upsert({
       where: { application_id: id },
@@ -881,16 +922,27 @@ internalRouter.patch('/evaluations/:id/decision', async (req: Request, res: Resp
     }
 
     if (decision === 'hire') {
+      // Idempotent offer creation: application_id is unique, so a retried decision
+      // updates the existing offer (keeping its magic link token) instead of crashing.
       const magicToken = crypto.randomUUID();
       const salary = deriveSalary(app.job.salary);
       const equity = deriveEquity(app.job);
-      const offer = await prisma.offer.create({
-        data: {
+      const offer = await prisma.offer.upsert({
+        where: { application_id: app.id },
+        create: {
           application_id: app.id,
           role_title: app.job.title,
           salary,
           equity,
           magic_link_token: magicToken,
+          offer_letter_content: offer_letter_content || `Official Offer for ${app.job.title}`,
+          status: 'pending',
+          valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        },
+        update: {
+          role_title: app.job.title,
+          salary,
+          equity,
           offer_letter_content: offer_letter_content || `Official Offer for ${app.job.title}`,
           status: 'pending',
           valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
@@ -902,12 +954,15 @@ internalRouter.patch('/evaluations/:id/decision', async (req: Request, res: Resp
         data: { status: 'offered' },
       });
 
-      const candidateName = app.candidate.user.email.split('@')[0];
-      await emailService.sendOfferEmail(app.candidate.user.email, candidateName, app.job.title, {
-        salary,
-        equity,
-        magicLinkToken: magicToken,
-      });
+      // Only email the candidate when a brand-new offer was created (token freshly generated)
+      if (offer.magic_link_token === magicToken) {
+        const candidateName = app.candidate.user.email.split('@')[0];
+        await emailService.sendOfferEmail(app.candidate.user.email, candidateName, app.job.title, {
+          salary,
+          equity,
+          magicLinkToken: magicToken,
+        });
+      }
 
       return res.json({
         success: true,
@@ -953,9 +1008,16 @@ internalRouter.post('/offers', async (req: Request, res: Response, next: NextFun
   try {
     const { application_id, role_title, salary, equity, start_date, offer_letter_content } = req.body;
 
+    if (!application_id) {
+      return res.status(400).json({ success: false, error: 'application_id is required' });
+    }
+
+    // Idempotent offer creation: application_id is unique, so re-posting updates the
+    // existing offer (keeping its magic link token) instead of crashing on a constraint.
     const magicToken = crypto.randomUUID();
-    const offer = await prisma.offer.create({
-      data: {
+    const offer = await prisma.offer.upsert({
+      where: { application_id },
+      create: {
         application_id,
         role_title: role_title || 'Software Engineer',
         salary: typeof salary === 'number' ? salary : 120000,
@@ -963,6 +1025,15 @@ internalRouter.post('/offers', async (req: Request, res: Response, next: NextFun
         start_date: start_date ? new Date(start_date) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         offer_letter_content: offer_letter_content || 'Formal Offer Document',
         magic_link_token: magicToken,
+        status: 'pending',
+        valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      },
+      update: {
+        role_title: role_title || 'Software Engineer',
+        salary: typeof salary === 'number' ? salary : 120000,
+        equity: equity || null,
+        start_date: start_date ? new Date(start_date) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        offer_letter_content: offer_letter_content || 'Formal Offer Document',
         status: 'pending',
         valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
       },

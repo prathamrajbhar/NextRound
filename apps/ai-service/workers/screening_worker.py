@@ -1,9 +1,8 @@
 import logging
-import httpx
-from core.config import settings
 from core.http_client import callback_client
 from services.embedding_service import embed_resume
 from agents.screening_agent import run_screening_agent
+from workers.worker_base import fetch_internal, run_agent_job
 
 logger = logging.getLogger("screening_worker")
 
@@ -62,20 +61,18 @@ async def process_screening_job(job_data: dict) -> bool:
 
     logger.info(f"Processing screening job for applicationId: {application_id}")
 
-    try:
-        # Fetch raw application data from Express internal endpoint
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                f"{settings.express_api_base_url}/internal/applications/{application_id}/raw",
-                headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-            )
-            resp.raise_for_status()
-            app_info = resp.json().get("data", {})
+    # job_id/org_id are only known after fetching the application record; the work
+    # closure populates them so run_agent_job can attach them to the audit record.
+    log_extra: dict = {}
 
+    async def run() -> dict:
+        app_info = await fetch_internal(f"internal/applications/{application_id}/raw")
         job_info = app_info.get("job", {})
         candidate_info = app_info.get("candidate", {})
         candidate_id = candidate_info.get("id") or job_data.get("candidateId")
         job_id = app_info.get("job_id") or job_data.get("jobId")
+        log_extra["job_id"] = job_id
+        log_extra["org_id"] = job_info.get("org_id")
 
         # Prefer stored raw resume text so the LLM extracts real skills (never a file path).
         resume_text = (candidate_info.get("raw_resume_text") or "").strip()
@@ -109,49 +106,24 @@ async def process_screening_job(job_data: dict) -> bool:
         )
 
         # Patch evaluation result back to Express internal endpoint
-        patch_payload = {
-            "status": result.get("status"),
-            "resume_score": result.get("resume_score"),
-            "composite_score": result.get("composite_score"),
-            "semantic_match_score": result.get("semantic_match_score"),
-            "gap_analysis": result.get("gap_analysis"),
-            "reasoning": result.get("reasoning"),
-            "rejection_feedback": result.get("rejection_feedback"),
-        }
+        await callback_client.patch(
+            f"internal/applications/{application_id}/screening-result",
+            json={
+                "status": result.get("status"),
+                "resume_score": result.get("resume_score"),
+                "composite_score": result.get("composite_score"),
+                "semantic_match_score": result.get("semantic_match_score"),
+                "gap_analysis": result.get("gap_analysis"),
+                "reasoning": result.get("reasoning"),
+                "rejection_feedback": result.get("rejection_feedback"),
+            },
+        )
+        return result
 
-        async with httpx.AsyncClient() as client:
-            resp = await client.patch(
-                f"{settings.express_api_base_url}/internal/applications/{application_id}/screening-result",
-                json=patch_payload,
-                headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-            )
-            resp.raise_for_status()
-
-        # Log agent execution
-        log_payload = {
-            "job_id": job_id,
-            "org_id": job_info.get("org_id"),
-            "agent_name": "screening_agent",
-            "action": "screening_evaluation",
-            "input": {"application_id": application_id, "candidate_id": candidate_id},
-            "output": result,
-            "status": "completed",
-        }
-        await callback_client.post_callback("internal/agent-logs", log_payload)
-
-        logger.info(f"Successfully completed screening job for applicationId: {application_id}")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to process screening job for applicationId {application_id}: {e}")
-        try:
-            log_payload = {
-                "agent_name": "screening_agent",
-                "action": "screening_evaluation",
-                "status": "failed",
-                "error": str(e),
-            }
-            await callback_client.post_callback("internal/agent-logs", log_payload)
-        except Exception:
-            pass
-        return False
+    return await run_agent_job(
+        agent_name="screening_agent",
+        action="screening_evaluation",
+        job_input={"application_id": application_id, "candidate_id": job_data.get("candidateId")},
+        work=run,
+        log_extra=log_extra,
+    )

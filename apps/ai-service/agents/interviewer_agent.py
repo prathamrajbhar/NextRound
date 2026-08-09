@@ -1,9 +1,8 @@
 import logging
 import json
-import re
 from typing import Dict, Any, Optional, TypedDict, List
 from pydantic import BaseModel, Field
-from core.config import settings
+from services.llm_service import generate_text, extract_json_object
 
 logger = logging.getLogger("interviewer_agent")
 
@@ -13,15 +12,6 @@ try:
 except ImportError:
     LANGGRAPH_AVAILABLE = False
     logger.warning("LangGraph not installed in interviewer_agent. Falling back to linear graph runner.")
-
-# Gemini API Client
-genai_client = None
-if settings.gemini_api_key:
-    try:
-        from google import genai
-        genai_client = genai.Client(api_key=settings.gemini_api_key)
-    except Exception as e:
-        logger.warning(f"Failed to initialize GenAI client in interviewer_agent: {e}")
 
 
 # ML_BYPASS: voice streaming pipeline — upgrade to streaming Gemini tokens to Piper/XTTS-v2
@@ -78,28 +68,18 @@ def evaluate_last_answer_node(state: InterviewerState) -> InterviewerState:
     is_shallow = len(words) < 12
     is_evasive = any(term in candidate_ans.lower() for term in ["don't know", "not sure", "skip", "pass", "no idea"])
 
-    if genai_client:
-        try:
-            prompt = (
-                f"You are an AI interviewer evaluator. Evaluate this candidate response:\n"
-                f"Question Context/Stage: {current_stage}\n"
-                f"Candidate Answer: {candidate_ans}\n\n"
-                f"Return JSON format: {{\"score\": float (0-100), \"shallow\": bool, \"evasive\": bool, \"feedback\": str}}"
-            )
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            if res and res.text:
-                match = re.search(r"\{.*\}", res.text, re.DOTALL)
-                if match:
-                    eval_data = json.loads(match.group(0))
-                    is_shallow = eval_data.get("shallow", is_shallow)
-                    is_evasive = eval_data.get("evasive", is_evasive)
-                    stage_key = "technical" if current_stage in ["intro", "technical", "project"] else "communication"
-                    state["scores_so_far"][stage_key] = round(float(eval_data.get("score", 0)), 2)
-        except Exception as e:
-            logger.warning(f"GenAI answer evaluation warning: {e}")
+    prompt = (
+        f"You are an AI interviewer evaluator. Evaluate this candidate response:\n"
+        f"Question Context/Stage: {current_stage}\n"
+        f"Candidate Answer: {candidate_ans}\n\n"
+        f"Return JSON format: {{\"score\": float (0-100), \"shallow\": bool, \"evasive\": bool, \"feedback\": str}}"
+    )
+    eval_data = extract_json_object(generate_text(prompt))
+    if eval_data:
+        is_shallow = eval_data.get("shallow", is_shallow)
+        is_evasive = eval_data.get("evasive", is_evasive)
+        stage_key = "technical" if current_stage in ["intro", "technical", "project"] else "communication"
+        state["scores_so_far"][stage_key] = round(float(eval_data.get("score", 0)), 2)
 
     if is_evasive or is_shallow:
         evasion_flags = state.get("evasion_flags", [])
@@ -116,8 +96,9 @@ def decide_next_action_node(state: InterviewerState) -> InterviewerState:
     follow_up_depth = state.get("follow_up_depth", 0)
     candidate_ans = state.get("latest_candidate_response", "").lower()
 
-    # If candidate wants to end
-    if "goodbye" in candidate_ans or "thank you" in candidate_ans and turn_number > 6:
+    # If candidate wants to end (only close early after enough turns to avoid a
+    # turn-1 "goodbye" trivially ending a live interview)
+    if ("goodbye" in candidate_ans or "thank you" in candidate_ans) and turn_number > 6:
         state["next_action"] = "close_interview"
         return state
 
@@ -159,23 +140,17 @@ def generate_question_node(state: InterviewerState) -> InterviewerState:
         question_text = "Tell me about a challenging technical trade-off or conflict you faced in a project team, and how you resolved it."
     elif current_stage == "project":
         question_text = "What is the most complex engineering project you have built recently? What were the key architecture choices and bottlenecks?"
-    elif genai_client:
-        try:
-            prompt = (
-                f"You are a professional AI interviewer for a {job_title} role.\n"
-                f"Current Interview Stage: {current_stage}\n"
-                f"Candidate Resume Context: {candidate_resume[:1500]}\n"
-                f"Recent Conversation History: {json.dumps(history[-4:])}\n\n"
-                f"Ask ONE concise, engaging spoken interview question appropriate for the {current_stage} stage, referencing candidate's actual experience or projects if available. Keep it under 2 sentences."
-            )
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            if res and res.text:
-                question_text = res.text.strip()
-        except Exception as e:
-            logger.warning(f"GenAI question generation warning: {e}")
+    else:
+        prompt = (
+            f"You are a professional AI interviewer for a {job_title} role.\n"
+            f"Current Interview Stage: {current_stage}\n"
+            f"Candidate Resume Context: {candidate_resume[:1500]}\n"
+            f"Recent Conversation History: {json.dumps(history[-4:])}\n\n"
+            f"Ask ONE concise, engaging spoken interview question appropriate for the {current_stage} stage, referencing candidate's actual experience or projects if available. Keep it under 2 sentences."
+        )
+        generated_question = generate_text(prompt)
+        if generated_question:
+            question_text = generated_question
 
     state["latest_ai_response"] = question_text
     state["follow_up_depth"] = 0
@@ -194,21 +169,15 @@ def generate_follow_up_node(state: InterviewerState) -> InterviewerState:
 
     follow_up_text = "That's an interesting point. Could you elaborate specifically on how you measured performance and handled edge cases in that scenario?"
 
-    if genai_client and candidate_ans:
-        try:
-            prompt = (
-                f"You are an AI technical interviewer. The candidate gave a brief or partial answer:\n"
-                f"Candidate Answer: '{candidate_ans}'\n\n"
-                f"Generate a polite, sharp 1-sentence follow-up probing deeper into technical execution or specific metrics."
-            )
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            if res and res.text:
-                follow_up_text = res.text.strip()
-        except Exception as e:
-            logger.warning(f"GenAI follow up warning: {e}")
+    if candidate_ans:
+        prompt = (
+            f"You are an AI technical interviewer. The candidate gave a brief or partial answer:\n"
+            f"Candidate Answer: '{candidate_ans}'\n\n"
+            f"Generate a polite, sharp 1-sentence follow-up probing deeper into technical execution or specific metrics."
+        )
+        generated_follow_up = generate_text(prompt)
+        if generated_follow_up:
+            follow_up_text = generated_follow_up
 
     state["latest_ai_response"] = follow_up_text
     state["follow_up_depth"] = state.get("follow_up_depth", 0) + 1
@@ -270,8 +239,6 @@ def _gemini_score_transcript(history: Any, job_title: str) -> Optional[Dict[str,
     Returns a dict with technical/communication/problem_solving scores or None
     when Gemini is unavailable, the transcript is too thin, or parsing fails.
     """
-    if not genai_client:
-        return None
     transcript_text, _ = _collect_transcript_text(history)
     if len(transcript_text.strip()) < 40:
         return None
@@ -283,17 +250,7 @@ def _gemini_score_transcript(history: Any, job_title: str) -> Optional[Dict[str,
         'Return JSON: {"technical_depth": float, "communication": float, "problem_solving": float, '
         '"overall_score": float, "summary_feedback": str}'
     )
-    try:
-        res = genai_client.models.generate_content(model="gemini-2.5-flash", contents=prompt)
-        if res and res.text:
-            match = re.search(r"\{.*\}", res.text, re.DOTALL)
-            if match:
-                data = json.loads(match.group(0))
-                if isinstance(data, dict):
-                    return data
-    except Exception as e:
-        logger.warning(f"GenAI transcript scoring warning: {e}")
-    return None
+    return extract_json_object(generate_text(prompt))
 
 
 def finalize_scores_node(state: InterviewerState) -> InterviewerState:

@@ -1,8 +1,7 @@
 import logging
-import httpx
-from core.config import settings
 from core.http_client import callback_client
 from services.embedding_service import embed_text
+from workers.worker_base import fetch_internal, run_agent_job
 
 logger = logging.getLogger("sourcing_worker")
 
@@ -32,18 +31,12 @@ async def process_sourcing_job(job_data: dict) -> bool:
 
     logger.info(f"Processing sourcing index job for jobId: {job_id}")
 
-    try:
-        # Fetch raw job info
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                f"{settings.express_api_base_url}/internal/jobs/{job_id}/raw",
-                headers={"X-Internal-Service-Secret": settings.internal_service_secret},
-            )
-            resp.raise_for_status()
-            job_info = resp.json().get("data", {})
+    log_extra: dict = {"job_id": job_id}
 
+    async def run() -> dict:
+        job_info = await fetch_internal(f"internal/jobs/{job_id}/raw")
         job_desc = job_info.get("description", "")
-        org_id = job_info.get("org_id")
+        log_extra["org_id"] = job_info.get("org_id")
 
         # Generate 768-dim vector embedding for job
         job_vector = embed_text(job_desc)
@@ -54,24 +47,14 @@ async def process_sourcing_job(job_data: dict) -> bool:
         # Callback candidates back to Express
         await callback_client.post_callback(
             f"internal/sourcing/{job_id}/candidates",
-            {"candidates": recommended_candidates}
+            {"candidates": recommended_candidates},
         )
+        return {"candidates_count": len(recommended_candidates)}
 
-        # Log agent execution
-        log_payload = {
-            "job_id": job_id,
-            "org_id": org_id,
-            "agent_name": "sourcing_agent",
-            "action": "sourcing_index",
-            "input": {"job_id": job_id},
-            "output": {"candidates_count": len(recommended_candidates)},
-            "status": "completed",
-        }
-        await callback_client.post_callback("internal/agent-logs", log_payload)
-
-        logger.info(f"Successfully completed sourcing index job for jobId: {job_id}")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to process sourcing job for jobId {job_id}: {e}")
-        return False
+    return await run_agent_job(
+        agent_name="sourcing_agent",
+        action="sourcing_index",
+        job_input={"job_id": job_id},
+        work=run,
+        log_extra=log_extra,
+    )

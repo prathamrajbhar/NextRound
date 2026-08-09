@@ -1,4 +1,4 @@
-import { screeningQueue } from '../bullmq';
+import { screeningQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface ScreeningJobPayload {
   applicationId: string;
@@ -14,14 +14,7 @@ export async function enqueueScreening(
     extraData,
   };
 
-  const job = await screeningQueue.add('screening_evaluate', payload, {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
-    },
-    removeOnComplete: true,
-  });
+  const job = await screeningQueue.add('screening_evaluate', payload, DEFAULT_JOB_OPTIONS);
 
   return job;
 }

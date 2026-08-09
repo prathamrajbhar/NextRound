@@ -206,7 +206,7 @@ export const JobUpdateSchema = z.object({
 });
 
 export const ApplicationStatusOverrideSchema = z.object({
-  status: z.string(),
+  status: z.nativeEnum(ApplicationStatus),
   reasoning: z.string().optional(),
 });
 

@@ -1,4 +1,4 @@
-import { schedulingQueue } from '../bullmq';
+import { schedulingQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface SchedulingJobPayload {
   applicationId: string;
@@ -19,14 +19,7 @@ export async function enqueueScheduling(
     ...payloadData,
   };
 
-  const job = await schedulingQueue.add('schedule_negotiation', payload, {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
-    },
-    removeOnComplete: true,
-  });
+  const job = await schedulingQueue.add('schedule_negotiation', payload, DEFAULT_JOB_OPTIONS);
 
   return job;
 }

@@ -11,21 +11,22 @@ export function middleware(request: NextRequest) {
 
   const targetDashboard = userRole === 'hr' ? '/hr/dashboard' : '/candidate/dashboard';
 
-  // Protected route checking
+  const redirectToLogin = (pathname: string) => {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('from', pathname);
+    return NextResponse.redirect(loginUrl);
+  };
+
+  // HR portal requires an HR token (role-gated, not just any token)
   if (pathname.startsWith('/hr')) {
-    if (!hasToken) {
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('from', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+    if (!hasToken) return redirectToLogin(pathname);
+    if (userRole !== 'hr') return NextResponse.redirect(new URL('/candidate/dashboard', request.url));
   }
 
+  // Candidate portal requires a candidate token (role-gated, not just any token)
   if (pathname.startsWith('/candidate')) {
-    if (!hasToken) {
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('from', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
+    if (!hasToken) return redirectToLogin(pathname);
+    if (userRole !== 'candidate') return NextResponse.redirect(new URL('/hr/dashboard', request.url));
   }
 
   // Redirect away from auth pages if logged in directly to role-specific dashboard

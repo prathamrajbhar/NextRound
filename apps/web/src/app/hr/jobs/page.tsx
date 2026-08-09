@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 import { Job } from '@/types';
 import { Plus, Search, ChevronRight, Briefcase, Loader2, Trash2 } from '@/lib/lucide-google-icons';
+import { getJobStatusBadgeClasses } from '@/lib/jobStatus';
 
 function formatDate(dateStr: string) {
   if (!dateStr) return 'Recently';
@@ -171,13 +172,7 @@ export default function HrJobsList() {
                             disabled={isUpdating}
                             value={currentStatus}
                             onChange={(e) => handleStatusChange(job.id, e.target.value as 'active' | 'draft' | 'closed')}
-                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase cursor-pointer focus:outline-none transition-all ${
-                              currentStatus === 'active'
-                                ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/60'
-                                : currentStatus === 'draft'
-                                ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/60'
-                                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                            }`}
+                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase cursor-pointer focus:outline-none transition-all ${getJobStatusBadgeClasses(currentStatus, 'select')}`}
                           >
                             <option value="active" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">Active</option>
                             <option value="draft" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-semibold">Draft</option>

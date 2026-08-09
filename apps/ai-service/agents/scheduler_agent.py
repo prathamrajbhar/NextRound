@@ -1,7 +1,7 @@
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, TypedDict, List
-from core.config import settings
+from services.llm_service import generate_text
 
 logger = logging.getLogger("scheduler_agent")
 
@@ -11,15 +11,6 @@ try:
 except ImportError:
     LANGGRAPH_AVAILABLE = False
     logger.warning("LangGraph not installed. Scheduler Agent will use linear node execution.")
-
-# GenAI client
-genai_client = None
-if settings.gemini_api_key:
-    try:
-        from google import genai
-        genai_client = genai.Client(api_key=settings.gemini_api_key)
-    except Exception as e:
-        logger.warning(f"Failed to initialize GenAI client in scheduler_agent: {e}")
 
 
 class SchedulerState(TypedDict, total=False):
@@ -39,7 +30,9 @@ def generate_slots_node(state: SchedulerState) -> SchedulerState:
     logger.info(f"Generating interview time slots for application {state.get('application_id')}")
 
     # Generate 3 slots for tomorrow, day after tomorrow, and 3 days from now at 10:00 AM, 2:00 PM, and 4:00 PM UTC
-    now = datetime.utcnow()
+    # datetime.utcnow() is removed in Python 3.13 — use timezone-aware now, then
+    # strip tzinfo so .isoformat() stays naive (the slots append "Z" themselves).
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     slots = [
         (now + timedelta(days=1)).replace(hour=10, minute=0, second=0, microsecond=0).isoformat() + "Z",
         (now + timedelta(days=1)).replace(hour=14, minute=0, second=0, microsecond=0).isoformat() + "Z",
@@ -58,23 +51,16 @@ def format_invitation_email_node(state: SchedulerState) -> SchedulerState:
 
     formatted_slots_str = "\n".join([f"- {slot}" for slot in slots])
 
-    if genai_client:
-        try:
-            prompt = (
-                f"Write a friendly and professional interview invitation email for the role of '{job_title}'.\n"
-                f"Candidate Email: {email}\n"
-                f"Available Slots:\n{formatted_slots_str}\n"
-                f"Ask them to choose one slot or request a reschedule."
-            )
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt
-            )
-            if res and res.text:
-                state["formatted_email"] = res.text.strip()
-                return state
-        except Exception as e:
-            logger.error(f"Gemini email formatting failed: {e}")
+    prompt = (
+        f"Write a friendly and professional interview invitation email for the role of '{job_title}'.\n"
+        f"Candidate Email: {email}\n"
+        f"Available Slots:\n{formatted_slots_str}\n"
+        f"Ask them to choose one slot or request a reschedule."
+    )
+    generated_email = generate_text(prompt)
+    if generated_email:
+        state["formatted_email"] = generated_email
+        return state
 
     state["formatted_email"] = (
         f"Hello,\n\n"

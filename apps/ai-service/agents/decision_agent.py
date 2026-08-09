@@ -1,8 +1,7 @@
 import logging
-import json
 from typing import Dict, Any, TypedDict, Optional
 from pydantic import BaseModel
-from core.config import settings
+from services.llm_service import generate_text
 
 logger = logging.getLogger("decision_agent")
 
@@ -12,15 +11,6 @@ try:
 except ImportError:
     LANGGRAPH_AVAILABLE = False
     logger.warning("LangGraph not installed. Decision Agent will run linear node pipeline.")
-
-# GenAI client initialization
-genai_client = None
-if settings.gemini_api_key:
-    try:
-        from google import genai
-        genai_client = genai.Client(api_key=settings.gemini_api_key)
-    except Exception as e:
-        logger.warning(f"Failed to initialize GenAI client in decision_agent: {e}")
 
 
 class DecisionState(TypedDict, total=False):
@@ -85,16 +75,11 @@ def draft_offer_node(state: DecisionState) -> DecisionState:
         f"Please review the formal details and sign digitally to confirm your acceptance."
     )
 
-    if genai_client:
-        try:
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=f"Draft a formal, welcoming job offer letter body for a Software Engineer who scored {score}/100 in technical assessments."
-            )
-            if res and res.text:
-                content = res.text.strip()
-        except Exception as e:
-            logger.error(f"Gemini offer drafting failed: {e}")
+    offer_text = generate_text(
+        f"Draft a formal, welcoming job offer letter body for a Software Engineer who scored {score}/100 in technical assessments."
+    )
+    if offer_text:
+        content = offer_text
 
     state["auto_offer"] = True
     state["offer_letter_content"] = content
@@ -114,16 +99,11 @@ def draft_rejection_node(state: DecisionState) -> DecisionState:
         f"We encourage you to practice on the NextRound Candidate Prep platform to sharpen your skills for future opportunities."
     )
 
-    if genai_client:
-        try:
-            res = genai_client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=f"Draft an encouraging, constructive rejection email for a candidate with composite assessment score {score}/100."
-            )
-            if res and res.text:
-                content = res.text.strip()
-        except Exception as e:
-            logger.error(f"Gemini rejection drafting failed: {e}")
+    rejection_text = generate_text(
+        f"Draft an encouraging, constructive rejection email for a candidate with composite assessment score {score}/100."
+    )
+    if rejection_text:
+        content = rejection_text
 
     state["auto_offer"] = False
     state["rejection_email_content"] = content

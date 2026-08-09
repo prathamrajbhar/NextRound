@@ -3,6 +3,7 @@
 import React from 'react';
 import { CompanyLogo } from '@/components/ui';
 import { CheckCircle2, ShieldCheck, Clock } from '@/lib/lucide-google-icons';
+import { getApplicationStatusBadgeClasses, formatApplicationStatus } from '@/lib/applicationStatus';
 
 import { Application } from '@/types';
 
@@ -54,15 +55,9 @@ export function ApplicationHeaderBanner({ app, jobLogo, matchPercent }: Applicat
 
       <div className="flex items-center gap-3 flex-shrink-0 self-start md:self-auto">
         <span
-          className={`text-xs font-extrabold px-4 py-1.5 rounded-full border uppercase tracking-wider shadow-2xs ${
-            app.status === 'decided'
-              ? 'bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
-              : app.status === 'interview_scheduled'
-              ? 'bg-purple-50 dark:bg-purple-950/80 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800'
-              : 'bg-brand-50 dark:bg-orange-950/80 text-brand-700 dark:text-orange-300 border-brand-200 dark:border-orange-800'
-          }`}
+          className={`text-xs font-extrabold px-4 py-1.5 rounded-full border uppercase tracking-wider shadow-2xs ${getApplicationStatusBadgeClasses(app.status, 'banner')}`}
         >
-          {app.status.replace('_', ' ')}
+          {formatApplicationStatus(app.status)}
         </span>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { codingQueue } from '../bullmq';
+import { codingQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface CodingJobPayload {
   applicationId: string;
@@ -23,14 +23,7 @@ export async function enqueueCoding(
     submissionId,
   };
 
-  const job = await codingQueue.add('evaluate_coding', payload, {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
-    },
-    removeOnComplete: true,
-  });
+  const job = await codingQueue.add('evaluate_coding', payload, DEFAULT_JOB_OPTIONS);
 
   return job;
 }

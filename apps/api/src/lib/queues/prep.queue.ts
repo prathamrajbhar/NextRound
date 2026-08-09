@@ -1,4 +1,4 @@
-import { prepQueue } from '../bullmq';
+import { prepQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface PrepJobPayload {
   companyName: string;
@@ -23,14 +23,7 @@ export async function enqueuePrepGeneration(
     rubricDimensions,
   };
 
-  const job = await prepQueue.add('prep_generate', payload, {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 2000,
-    },
-    removeOnComplete: true,
-  });
+  const job = await prepQueue.add('prep_generate', payload, DEFAULT_JOB_OPTIONS);
 
   return job;
 }
