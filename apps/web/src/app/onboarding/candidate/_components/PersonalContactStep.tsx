@@ -143,11 +143,10 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
               type="button"
               onClick={triggerReParse}
               disabled={parsing}
-              className="flex items-center gap-1 text-xs font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-2.5 py-1.5 rounded-xl border border-orange-500/30 transition-all cursor-pointer disabled:opacity-50"
+              className="text-slate-400 hover:text-orange-400 p-1 transition-colors cursor-pointer disabled:opacity-50 focus:outline-none"
               title="Re-generate profile fields from resume with AI"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${parsing ? 'animate-spin' : ''}`} />
-              <span>Regenerate</span>
+              <RefreshCw className={`h-4 w-4 transition-transform duration-500 ease-in-out ${parsing ? 'animate-spin' : 'hover:rotate-180 active:rotate-180'}`} />
             </button>
             <button
               type="button"

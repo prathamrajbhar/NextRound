@@ -130,10 +130,10 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
             type="button"
             onClick={() => handleRegenerateField('proudProject')}
             disabled={reparsing === 'proudProject'}
-            className="p-1.5 rounded-lg text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
+            className="text-slate-400 hover:text-orange-400 p-1 transition-colors cursor-pointer disabled:opacity-50 focus:outline-none"
             title="Regenerate with AI"
           >
-            <RefreshCw className={`h-4 w-4 ${reparsing === 'proudProject' ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 transition-transform duration-500 ease-in-out ${reparsing === 'proudProject' ? 'animate-spin' : 'hover:rotate-180 active:rotate-180'}`} />
           </button>
         </div>
         <div className="relative">
@@ -157,10 +157,10 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
               type="button"
               onClick={() => handleRegenerateField('bio')}
               disabled={reparsing === 'bio'}
-              className="p-1.5 rounded-lg text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
+              className="text-slate-400 hover:text-orange-400 p-1 transition-colors cursor-pointer disabled:opacity-50 focus:outline-none"
               title="Regenerate with AI"
             >
-              <RefreshCw className={`h-4 w-4 ${reparsing === 'bio' ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 transition-transform duration-500 ease-in-out ${reparsing === 'bio' ? 'animate-spin' : 'hover:rotate-180 active:rotate-180'}`} />
             </button>
             <span className="text-xs font-mono font-bold text-slate-400">{form.bio.length} / 1000</span>
           </div>
