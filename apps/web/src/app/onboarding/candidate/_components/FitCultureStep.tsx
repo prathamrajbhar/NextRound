@@ -106,11 +106,10 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
             type="button"
             onClick={() => handleRegenerateField('proudProject')}
             disabled={reparsing === 'proudProject'}
-            className="flex items-center gap-1.5 text-xs font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-2.5 py-1 rounded-lg border border-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
-            title="Re-synthesize project description using AI"
+            className="p-1.5 rounded-lg text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
+            title="Regenerate with AI"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${reparsing === 'proudProject' ? 'animate-spin' : ''}`} />
-            <span>{reparsing === 'proudProject' ? 'Regenerating...' : 'Regenerate AI'}</span>
+            <RefreshCw className={`h-4 w-4 ${reparsing === 'proudProject' ? 'animate-spin' : ''}`} />
           </button>
         </div>
         <div className="relative">
@@ -129,16 +128,15 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
       <div>
         <div className="flex justify-between items-center mb-1.5">
           <label className={labelCls}>About Me / Summary</label>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <button
               type="button"
               onClick={() => handleRegenerateField('bio')}
               disabled={reparsing === 'bio'}
-              className="flex items-center gap-1.5 text-xs font-bold text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 px-2.5 py-1 rounded-lg border border-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
-              title="Re-synthesize bio summary using AI"
+              className="p-1.5 rounded-lg text-orange-400 hover:text-orange-300 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 transition-all cursor-pointer disabled:opacity-50"
+              title="Regenerate with AI"
             >
-              <RefreshCw className={`h-3.5 w-3.5 ${reparsing === 'bio' ? 'animate-spin' : ''}`} />
-              <span>{reparsing === 'bio' ? 'Regenerating...' : 'Regenerate AI'}</span>
+              <RefreshCw className={`h-4 w-4 ${reparsing === 'bio' ? 'animate-spin' : ''}`} />
             </button>
             <span className="text-xs font-mono font-bold text-slate-400">{form.bio.length} / 1000</span>
           </div>
@@ -159,9 +157,6 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
       <div>
         <div className="flex items-center justify-between mb-2">
           <label className={labelCls}>Work Values — Drag &amp; Drop Priority Ranking</label>
-          <span className="text-xs font-bold text-orange-400 bg-orange-500/10 px-2.5 py-1 rounded-lg border border-orange-500/20">
-            Drag items to reorder
-          </span>
         </div>
         <p className="text-xs text-slate-400 font-medium mb-3">Drag handles or use arrows to reorder values based on your personal priority.</p>
         
