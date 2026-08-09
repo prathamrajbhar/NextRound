@@ -17,8 +17,8 @@ import {
   Compass,
   BookOpen,
   BarChart3,
-  Sparkles,
-  AlertTriangle,
+  ShieldCheck,
+  HelpCircle,
 } from '@/lib/lucide-google-icons';
 import { ProctoringWarningModal } from './ProctoringWarningModal';
 
@@ -215,28 +215,6 @@ export default function AptitudeTestConsole({
       return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
     });
   }, [fetchedQuestions, questions]);
-
-  // Group questions into Category Sections
-  const categorySections = useMemo(() => {
-    const map = new Map<string, { category: string; startIndex: number; questions: AptitudeQuestion[] }>();
-    STANDARD_CATEGORIES.forEach((cat) => {
-      const catQs = activeQuestions.filter((q) => q.category === cat);
-      if (catQs.length > 0) {
-        const firstIndex = activeQuestions.findIndex((q) => q.category === cat);
-        map.set(cat, { category: cat, startIndex: firstIndex, questions: catQs });
-      }
-    });
-
-    activeQuestions.forEach((q, idx) => {
-      if (!map.has(q.category)) {
-        const firstIdx = activeQuestions.findIndex((item) => item.category === q.category);
-        const catQs = activeQuestions.filter((item) => item.category === q.category);
-        map.set(q.category, { category: q.category, startIndex: firstIdx, questions: catQs });
-      }
-    });
-
-    return Array.from(map.values());
-  }, [activeQuestions]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -473,7 +451,7 @@ export default function AptitudeTestConsole({
           <div className="space-y-2">
             <h2 className="text-xl font-black font-display text-slate-900 dark:text-white">Loading Assessment Questions</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Preparing category-divided questions (Quantitative, Logical, Verbal, Data Interpretation) for {displayRole}...
+              Preparing category-divided questions for {displayRole}...
             </p>
           </div>
         </div>
@@ -481,58 +459,67 @@ export default function AptitudeTestConsole({
     );
   }
 
-  // START SCREEN: 4 Clean Category Cards
+  // START SCREEN: Professional SaaS Single-CTA Launcher
   if (!isStarted) {
     return (
       <div className="w-full h-full flex flex-col justify-center items-center p-4 sm:p-8 bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans relative overflow-y-auto">
-        <div className="max-w-3xl w-full p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md shadow-xl space-y-6 text-center">
+        <div className="max-w-2xl w-full p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl space-y-6 text-center">
           <div className="space-y-2">
             <CompanyLogo name={displayCompany} logoUrl={companyLogoUrl} size="lg" className="mx-auto shadow-md" />
             <h1 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-white">{displayCompany}</h1>
             <p className="text-xs font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-wider">
-              {displayRole} • Aptitude Assessment
+              {displayRole} • Timed Aptitude Assessment
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left pt-2">
-            {STANDARD_CATEGORIES.map((cat) => {
-              const sec = categorySections.find((s) => s.category === cat);
-              const qCount = sec ? sec.questions.length : 0;
-              const startIndex = sec ? sec.startIndex : 0;
-              const IconComp = CATEGORY_ICONS[cat] || Brain;
+          {/* Test Specs Summary Cards */}
+          <div className="grid grid-cols-3 gap-3 text-left">
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
+              <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Questions</span>
+              <span className="text-lg font-black text-slate-900 dark:text-slate-100">{activeQuestions.length} Total</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
+              <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Duration</span>
+              <span className="text-lg font-black text-slate-900 dark:text-slate-100">15 Mins</span>
+            </div>
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800">
+              <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Proctoring</span>
+              <span className="text-lg font-black text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                <ShieldCheck className="h-4 w-4" /> Active
+              </span>
+            </div>
+          </div>
 
-              return (
-                <div
-                  key={cat}
-                  className="p-5 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 bg-white dark:bg-slate-950/80 hover:border-brand-400 dark:hover:border-brand-500 transition-all shadow-sm hover:shadow-md flex flex-col justify-between space-y-4"
-                >
-                  <div className="flex items-start gap-3.5">
-                    <div className="p-3 rounded-xl bg-brand-50 dark:bg-brand-950/50 border border-brand-200 dark:border-brand-800 text-brand-600 dark:text-brand-400 flex-shrink-0">
-                      <IconComp className="h-6 w-6" />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">{cat}</h3>
-                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">
-                        {qCount > 0 ? `${qCount} Questions` : 'Included'}
-                      </span>
-                    </div>
+          {/* Category Syllabus Overview */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-left space-y-2">
+            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">Assessment Syllabus Coverage:</span>
+            <div className="grid grid-cols-2 gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
+              {STANDARD_CATEGORIES.map((cat) => {
+                const IconComp = CATEGORY_ICONS[cat] || Brain;
+                return (
+                  <div key={cat} className="flex items-center gap-2">
+                    <IconComp className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                    <span>{cat}</span>
                   </div>
+                );
+              })}
+            </div>
+          </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCurrentIndex(startIndex);
-                      handleStartTest();
-                    }}
-                    className="w-full py-2.5 px-4 rounded-xl bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white dark:text-slate-950 font-black text-xs uppercase tracking-wider shadow-sm hover:shadow transition-all cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <Play className="h-3.5 w-3.5 fill-current" />
-                    <span>Start {cat}</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
-              );
-            })}
+          {/* Rules & Start Action */}
+          <div className="space-y-3 pt-2">
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Clicking below will launch full-screen security mode. Tab switches and exiting fullscreen are monitored.
+            </p>
+            <button
+              type="button"
+              onClick={handleStartTest}
+              className="w-full py-4 px-6 rounded-xl bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white dark:text-slate-950 font-black text-xs uppercase tracking-wider shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Play className="h-4 w-4 fill-current" />
+              <span>Start Assessment (Enter Fullscreen)</span>
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
@@ -547,9 +534,9 @@ export default function AptitudeTestConsole({
             <Brain className="h-8 w-8 animate-pulse" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-xl font-black font-display text-slate-900 dark:text-white">Initializing Category Questions</h2>
+            <h2 className="text-xl font-black font-display text-slate-900 dark:text-white">Initializing Assessment</h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-              Connecting to AI service to load category questions for {displayRole}...
+              Connecting to AI service to load questions for {displayRole}...
             </p>
           </div>
           <button
@@ -568,18 +555,18 @@ export default function AptitudeTestConsole({
 
   return (
     <div className="w-full h-full flex flex-col justify-between p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans relative overflow-hidden transition-colors duration-300">
-      {/* Top Header Bar */}
+      {/* Top SaaS Header Bar */}
       <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 pb-4 flex-shrink-0">
         <div className="flex items-center gap-3">
           <CompanyLogo name={displayCompany} logoUrl={companyLogoUrl} size="md" className="shadow-xs flex-shrink-0 border border-slate-200 dark:border-slate-800" />
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm sm:text-base font-black font-display text-slate-900 dark:text-slate-100">{displayCompany}</h2>
-              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-700 dark:text-orange-400 border border-brand-200 dark:border-brand-800 uppercase tracking-wider">
-                Aptitude Assessment
+              <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-brand-100 dark:bg-brand-950/80 text-brand-700 dark:text-orange-400 border border-brand-200 dark:border-brand-800 uppercase tracking-wider">
+                {currentQ.category}
               </span>
             </div>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">{displayRole}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium block">{displayRole} • Timed Assessment</span>
           </div>
         </div>
 
@@ -607,29 +594,6 @@ export default function AptitudeTestConsole({
             Question {currentIndex + 1} of {activeQuestions.length}
           </span>
         </div>
-      </div>
-
-      {/* Category Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto py-2.5 border-b border-slate-200/60 dark:border-slate-800/60 no-scrollbar flex-shrink-0">
-        {categorySections.map((sec) => {
-          const isActive = currentQ.category === sec.category;
-          const IconComp = CATEGORY_ICONS[sec.category] || Brain;
-          return (
-            <button
-              key={sec.category}
-              type="button"
-              onClick={() => setCurrentIndex(sec.startIndex)}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap flex-shrink-0 ${
-                isActive
-                  ? 'bg-brand-600 dark:bg-brand-500 text-white dark:text-slate-950 shadow-md ring-2 ring-brand-500/30 font-black'
-                  : 'bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200/80 dark:border-slate-800/80'
-              }`}
-            >
-              <IconComp className="h-3.5 w-3.5" />
-              <span>{sec.category}</span>
-            </button>
-          );
-        })}
       </div>
 
       {/* Main 2-Column Content Layout */}
