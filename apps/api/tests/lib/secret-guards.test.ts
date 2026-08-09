@@ -233,6 +233,8 @@ describe('Production fail-fast secret guards (module load)', () => {
 
     it('loads fine without NEXT_PUBLIC_APP_URL when NODE_ENV is not production (dev/test preserved)', () => {
       process.env.NODE_ENV = 'development';
+      process.env.JWT_SECRET = STRONG_JWT;
+      process.env.REFRESH_TOKEN_SECRET = STRONG_REFRESH;
       delete process.env.NEXT_PUBLIC_APP_URL;
 
       expect(() => isolatedLoad('../../src/routes/auth/auth.routes')).not.toThrow();

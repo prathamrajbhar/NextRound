@@ -97,7 +97,7 @@ model User {
   profile            Json      @default("{}")
   created_at         DateTime  @default(now())
 
-  organization      Organization?     @relation(fields: [org_id], references: [id])
+  organization      Organization?     @relation(fields: [org_id], references: [id], onDelete: SetNull)
   candidate_profile CandidateProfile?
   notifications     Notification[]
 
@@ -140,7 +140,7 @@ model Job {
   embedding       Unsupported("vector(768)")?
   created_at      DateTime                  @default(now())
 
-  organization  Organization  @relation(fields: [org_id], references: [id])
+  organization  Organization  @relation(fields: [org_id], references: [id], onDelete: Cascade)
   applications  Application[]
   agent_logs    AgentLog[]
   prep_contents PrepContent[]
@@ -183,7 +183,7 @@ model CandidateProfile {
   resume_embedding   Unsupported("vector(768)")?
   created_at         DateTime                   @default(now())
 
-  user          User          @relation(fields: [user_id], references: [id])
+  user          User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
   applications  Application[]
   mock_sessions MockSession[]
   talent_bookmarks TalentBookmark[]
@@ -201,8 +201,8 @@ model Application {
   hr_round_completed_at DateTime?
   applied_at            DateTime          @default(now())
 
-  candidate          CandidateProfile   @relation(fields: [candidate_id], references: [id])
-  job                Job                @relation(fields: [job_id], references: [id])
+  candidate          CandidateProfile   @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  job                Job                @relation(fields: [job_id], references: [id], onDelete: Cascade)
   interview          Interview?
   evaluations        Evaluation[]
   assessments        Assessment[]
@@ -231,7 +231,7 @@ model Evaluation {
   reasoning       String?             @db.Text
   created_at      DateTime            @default(now())
 
-  application Application @relation(fields: [application_id], references: [id])
+  application Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
 
   @@index([application_id])
 }
@@ -249,7 +249,7 @@ model Interview {
   status            InterviewStatus @default(scheduled)
   created_at        DateTime        @default(now())
 
-  application Application @relation(fields: [application_id], references: [id])
+  application Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
 
   @@index([application_id])
 }
@@ -265,29 +265,67 @@ model Assessment {
   status             AssessmentStatus @default(pending)
   created_at         DateTime         @default(now())
 
-  application Application @relation(fields: [application_id], references: [id])
+  application Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
 
   @@index([application_id])
 }
 
+model CodingProblem {
+  id                 String   @id @default(uuid())
+  slug               String   @unique
+  title              String
+  description        String   @db.Text
+  difficulty         String   @default("medium")
+  entry_point        String   @default("solution")
+  param_schema       Json     @default("[]")
+  return_type        String   @default("any")
+  public_tests       Json     @default("[]")
+  hidden_tests       Json     @default("[]")
+  reference_solution Json?
+  seed               String?
+  checksum           String?
+  version            Int      @default(1)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  submissions CodingSubmission[]
+
+  @@index([slug])
+  @@index([difficulty])
+}
+
 model CodingSubmission {
-  id                String   @id @default(uuid())
+  id                String         @id @default(uuid())
   application_id    String
+  problem_id        String?
+  attempt_number    Int            @default(1)
+  idempotency_key   String?        @unique
   language          String
-  code              String   @db.Text
-  test_results      Json
-  pass_rate         Float
+  code              String         @db.Text
+  test_results      Json           @default("[]")
+  pass_rate         Float          @default(0)
+  pass_rate_percent Float          @default(0)
+  pass_rate_ratio   Float          @default(0)
   execution_time_ms Int?
   memory_mb         Float?
+  memory_kb         Int?
   complexity_score  Float?
-  status            String?  @default("completed")
+  status            String?        @default("created")
   complexity        String?
-  ai_feedback       String?  @db.Text
-  created_at        DateTime @default(now())
+  ai_feedback       String?        @db.Text
+  stdout_stderr     String?        @db.Text
+  code_hash         String?
+  runner_version    String?
+  error_message     String?        @db.Text
+  created_at        DateTime       @default(now())
 
-  application Application @relation(fields: [application_id], references: [id])
+  application Application    @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  problem     CodingProblem? @relation(fields: [problem_id], references: [id], onDelete: SetNull)
 
   @@index([application_id])
+  @@index([problem_id])
+  @@index([idempotency_key])
+  @@index([status])
 }
 
 model Offer {
@@ -304,7 +342,7 @@ model Offer {
   valid_until          DateTime?
   created_at           DateTime    @default(now())
 
-  application Application @relation(fields: [application_id], references: [id])
+  application Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
 
   @@index([application_id])
   @@index([magic_link_token])
@@ -322,8 +360,8 @@ model AgentLog {
   error      String?     @db.Text
   created_at DateTime    @default(now())
 
-  job          Job?          @relation(fields: [job_id], references: [id])
-  organization Organization? @relation(fields: [org_id], references: [id])
+  job          Job?          @relation(fields: [job_id], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [org_id], references: [id], onDelete: SetNull)
 
   @@index([job_id])
   @@index([org_id])
@@ -349,7 +387,7 @@ model MockSession {
   ended_at         DateTime?
   created_at       DateTime  @default(now())
 
-  candidate CandidateProfile @relation(fields: [candidate_id], references: [id])
+  candidate CandidateProfile @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
 
   @@index([candidate_id])
   @@index([type])
@@ -367,8 +405,8 @@ model PrepContent {
   skill_checklist Json?
   updated_at      DateTime @updatedAt
 
-  job          Job?          @relation(fields: [job_id], references: [id])
-  organization Organization? @relation(fields: [org_id], references: [id])
+  job          Job?          @relation(fields: [job_id], references: [id], onDelete: SetNull)
+  organization Organization? @relation(fields: [org_id], references: [id], onDelete: SetNull)
 
   @@unique([company_name, role_archetype])
   @@index([job_id])
@@ -398,9 +436,9 @@ model TalentBookmark {
   notes        String?  @db.Text
   created_at   DateTime @default(now())
 
-  organization Organization     @relation(fields: [org_id], references: [id])
-  candidate    CandidateProfile @relation(fields: [candidate_id], references: [id])
-  job          Job?             @relation(fields: [job_id], references: [id])
+  organization Organization     @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  candidate    CandidateProfile @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  job          Job?             @relation(fields: [job_id], references: [id], onDelete: SetNull)
 
   @@unique([org_id, candidate_id])
   @@index([org_id])

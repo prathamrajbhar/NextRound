@@ -3,8 +3,8 @@
     "id": "apt_q1",
     "category": "Quantitative Reasoning",
     "difficulty": "medium",
-    "question": "For a software engineering project, reducing workload by 20% while increasing team productivity by 25% results in what net capacity change?",
-    "text": "For a software engineering project, reducing workload by 20% while increasing team productivity by 25% results in what net capacity change?",
+    "question": "For a {role} project, reducing workload by 20% while increasing team productivity by 25% results in what net capacity change?",
+    "text": "For a {role} project, reducing workload by 20% while increasing team productivity by 25% results in what net capacity change?",
     "options": ["No change (0%)", "5% net increase", "10% net increase", "5% net decrease"],
     "correctIndex": 0,
     "explanation": "The 20% workload reduction and 25% productivity increase are treated as offsetting in this scenario, yielding a net capacity change of 0%."

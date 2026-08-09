@@ -1,11 +1,13 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { generateAiCodingProblem } from '../../services/ai-coding-generator.service';
-import { executeCodingSubmission } from '../../services/coding-executor.service';
+import { enqueueSubmissionExecution } from '../../services/submission-queue.service';
+import { authenticate } from '../../middleware/auth';
+import { CodingExecutionRequestSchema } from '@nextround/shared';
 
 export const codingRouter = Router();
 
-// GET /api/v1/coding/problem - Generate LLM DSA coding problem
-codingRouter.get('/problem', async (req: Request, res: Response, next: NextFunction) => {
+// GET /api/v1/coding/problem - Generate & persist immutable DSA coding problem
+codingRouter.get('/problem', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const role = (req.query.role as string) || 'Software Engineer';
     const company = (req.query.company as string) || 'Tech Enterprise';
@@ -22,27 +24,28 @@ codingRouter.get('/problem', async (req: Request, res: Response, next: NextFunct
   }
 });
 
-// POST /api/v1/coding/execute - Execute candidate code in production sandbox
-codingRouter.post('/execute', async (req: Request, res: Response, next: NextFunction) => {
+// POST /api/v1/coding/execute - Enqueue candidate code execution against server-side problem
+codingRouter.post('/execute', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { code, language, testCases } = req.body;
+    const validated = CodingExecutionRequestSchema.parse(req.body);
 
-    if (!code || typeof code !== 'string') {
-      return res.status(400).json({ success: false, error: 'Missing code string' });
-    }
+    const submission = await enqueueSubmissionExecution({
+      applicationId: validated.assessmentId,
+      problemId: validated.problemId,
+      code: validated.code,
+      language: validated.language,
+      idempotencyKey: validated.idempotencyKey,
+    });
 
-    const defaultCases = [
-      { name: 'Case 1', input: 'heights = [50, 50, 50, 50, 50], scroll_y = 100, viewport_height = 100', expected: '[2, 3]' },
-      { name: 'Case 2', input: 'heights = [30, 40, 50, 60, 70], scroll_y = 0, viewport_height = 80', expected: '[0, 2]' },
-    ];
-
-    const casesToRun = Array.isArray(testCases) && testCases.length > 0 ? testCases : defaultCases;
-
-    const summary = executeCodingSubmission(code, language || 'python', casesToRun);
-
-    return res.json({
+    return res.status(202).json({
       success: true,
-      data: summary,
+      data: {
+        submissionId: submission.id,
+        status: submission.status,
+        attemptNumber: submission.attempt_number,
+        idempotencyKey: submission.idempotency_key,
+        message: 'Submission queued successfully for execution.',
+      },
     });
   } catch (err) {
     return next(err);

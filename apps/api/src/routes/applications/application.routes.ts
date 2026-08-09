@@ -827,10 +827,11 @@ applicationRouter.post(
             passRate: execSummary.passRate,
             results: execSummary.results,
             logs: execSummary.logs,
-            complexity: execSummary.complexity,
             ai_feedback: execSummary.allPassed ? 'All test cases passed cleanly!' : `${execSummary.passRate}% pass rate achieved.`,
           })),
-          pass_rate: execSummary.passRate / 100.0,
+          pass_rate: execSummary.passRate,
+          pass_rate_percent: execSummary.passRate,
+          pass_rate_ratio: execSummary.passRateRatio,
         },
       });
 
@@ -841,17 +842,13 @@ applicationRouter.post(
           application_id: appId,
           stage: 'assessment',
           coding_score: execSummary.passRate,
-          composite_score: execSummary.passRate,
-          decision: execSummary.passRate >= 70 ? 'hire' : 'reject',
-          reasoning: `Candidate achieved ${execSummary.passRate}% pass rate on coding assessment.`,
+          reasoning: `Candidate achieved ${execSummary.passRate}% pass rate on coding assessment. Pending recruiter evaluation.`,
         },
         update: {
           coding_score: execSummary.passRate,
+          reasoning: `Candidate achieved ${execSummary.passRate}% pass rate on coding assessment. Pending recruiter evaluation.`,
         },
-      }).catch(() => null);
-
-      // Enqueue job in BullMQ as backup
-      await enqueueCoding(appId, problemId || currentProblem.id, code || '', language || 'python', submission.id).catch(() => null);
+      });
 
       return res.json({
         success: true,

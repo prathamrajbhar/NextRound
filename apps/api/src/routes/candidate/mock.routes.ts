@@ -163,14 +163,15 @@ mockRouter.get(
       const roleName = session?.target_role || session?.topic || (req.query.role as string) || (req.query.topic as string) || 'Software Engineer';
       const companyName = session?.target_company || (req.query.company as string) || 'Tech Enterprise';
       const diffLevel = session?.difficulty || (req.query.difficulty as string) || 'medium';
-      const requestedCount = parseInt(req.query.count as string, 10) || 4;
+      const requestedCount = parseInt(req.query.count as string, 10) || 5;
       const batchNum = parseInt(req.query.batch as string, 10) || 1;
 
       // Generate aptitude questions using Gemini directly
       const rawQuestions = await generateAiAptitudeQuestions(
         roleName,
         `Target Company: ${companyName}. Difficulty: ${diffLevel}. Batch: ${batchNum}`,
-        requestedCount
+        requestedCount,
+        diffLevel
       );
 
       // Practice/mock sessions include correctIndex (no anti-cheat needed for practice)

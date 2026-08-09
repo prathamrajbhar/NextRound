@@ -288,6 +288,61 @@ export const TalentPoolSearchSchema = z.object({
   minMatchScore: z.number().min(0).max(100).optional(),
 });
 
+export const TestCaseSchema = z.object({
+  name: z.string(),
+  args: z.array(z.any()),
+  expected: z.any(),
+  hidden: z.boolean().optional().default(false),
+});
+
+export const CodingProblemSchema = z.object({
+  slug: z.string().min(1),
+  title: z.string().min(2),
+  description: z.string().min(10),
+  difficulty: z.enum(['easy', 'medium', 'hard']).default('medium'),
+  entryPoint: z.string().min(1).default('solution'),
+  paramSchema: z.array(z.object({
+    name: z.string(),
+    type: z.string(),
+  })).default([]),
+  returnType: z.string().default('any'),
+  publicTests: z.array(TestCaseSchema).default([]),
+  hiddenTests: z.array(TestCaseSchema).default([]),
+  referenceSolution: z.record(z.string(), z.string()).optional(),
+  seed: z.string().optional(),
+  checksum: z.string().optional(),
+  version: z.number().int().default(1),
+});
+
+export const CodingExecutionRequestSchema = z.object({
+  assessmentId: z.string().min(1, 'Assessment ID is required'),
+  problemId: z.string().optional(),
+  code: z.string().min(1, 'Code candidate string cannot be empty'),
+  language: z.enum(['python', 'javascript', 'typescript', 'cpp', 'java']),
+  idempotencyKey: z.string().optional(),
+});
+
+export const FileUploadValidationSchema = z.object({
+  allowedMimeTypes: z.array(z.string()).default([
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ]),
+  maxSizeBytes: z.number().int().default(10 * 1024 * 1024),
+  allowedExtensions: z.array(z.string()).default(['.pdf', '.doc', '.docx']),
+});
+
+export const EnvConfigSchema = z.object({
+  PORT: z.string().default('5000'),
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
+  REFRESH_TOKEN_SECRET: z.string().min(16, 'REFRESH_TOKEN_SECRET must be at least 16 characters'),
+  INTERNAL_SERVICE_SECRET: z.string().min(16, 'INTERNAL_SERVICE_SECRET must be at least 16 characters'),
+  REDIS_URL: z.string().default('redis://localhost:6379'),
+  AI_SERVICE_URL: z.string().default('http://localhost:8000'),
+});
+
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
@@ -308,3 +363,7 @@ export type DecisionOverrideInput = z.infer<typeof DecisionOverrideSchema>;
 export type MockSessionCreateInput = z.infer<typeof MockSessionCreateSchema>;
 export type CandidateSettingsInput = z.infer<typeof CandidateSettingsSchema>;
 export type HRProfileUpdateInput = z.infer<typeof HRProfileUpdateSchema>;
+export type CodingProblemInput = z.infer<typeof CodingProblemSchema>;
+export type CodingExecutionRequestInput = z.infer<typeof CodingExecutionRequestSchema>;
+export type EnvConfigInput = z.infer<typeof EnvConfigSchema>;
+

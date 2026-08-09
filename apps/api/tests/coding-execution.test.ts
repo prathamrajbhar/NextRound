@@ -14,11 +14,10 @@ describe('Coding Assessment System - Dynamic Generation & Multi-Language Sandbox
 
     expect(p2).toHaveProperty('id');
     expect(p2).toHaveProperty('title');
-    // Ensure ids are unique
     expect(p1.id).not.toEqual(p2.id);
   });
 
-  it('executes Python candidate code cleanly and passes test cases', () => {
+  it('executes Python candidate code cleanly and passes test cases with typed args', () => {
     const pythonCode = `
 def solution(nums, target):
     for i in range(len(nums)):
@@ -28,11 +27,11 @@ def solution(nums, target):
     return []
 `;
     const testCases = [
-      { name: 'Case 1', input: 'nums = [2, 7, 11, 15], target = 9', expected: '[0, 1]' },
-      { name: 'Case 2', input: 'nums = [3, 2, 4], target = 6', expected: '[1, 2]' },
+      { name: 'Case 1', args: [[2, 7, 11, 15], 9], expected: [0, 1] },
+      { name: 'Case 2', args: [[3, 2, 4], 6], expected: [1, 2] },
     ];
 
-    const result = executeCodingSubmission(pythonCode, 'python', testCases);
+    const result = executeCodingSubmission(pythonCode, 'python', testCases, 'solution');
     expect(result.passRate).toBe(100);
     expect(result.allPassed).toBe(true);
     expect(result.results[0].status).toBe('passed');
@@ -53,28 +52,28 @@ function solution(nums: number[], target: number): number[] {
 }
 `;
     const testCases = [
-      { name: 'Case 1', input: 'nums = [2, 7, 11, 15], target = 9', expected: '[0, 1]' },
-      { name: 'Case 2', input: 'nums = [3, 2, 4], target = 6', expected: '[1, 2]' },
+      { name: 'Case 1', args: [[2, 7, 11, 15], 9], expected: [0, 1] },
+      { name: 'Case 2', args: [[3, 2, 4], 6], expected: [1, 2] },
     ];
 
-    const result = executeCodingSubmission(tsCode, 'typescript', testCases);
+    const result = executeCodingSubmission(tsCode, 'typescript', testCases, 'solution');
     expect(result.passRate).toBe(100);
     expect(result.allPassed).toBe(true);
   });
 
-  it('flags un-implemented stub methods cleanly', () => {
+  it('fails unimplemented stub methods by running real tests without guessing', () => {
     const stubCode = `
 def solution(nums: list[int]) -> int:
     # TODO: Implement solution
     pass
 `;
     const testCases = [
-      { name: 'Case 1', input: 'nums = [1, 2, 3]', expected: '6' },
+      { name: 'Case 1', args: [[1, 2, 3]], expected: 6 },
     ];
 
-    const result = executeCodingSubmission(stubCode, 'python', testCases);
+    const result = executeCodingSubmission(stubCode, 'python', testCases, 'solution');
     expect(result.passRate).toBe(0);
     expect(result.allPassed).toBe(false);
-    expect(result.results[0].actual).toContain('Unimplemented Stub');
+    expect(result.results[0].status).not.toBe('passed');
   });
 });

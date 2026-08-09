@@ -233,111 +233,57 @@ jobRouter.get(
   }
 );
 
-// PATCH /api/v1/jobs/:id - HR update job draft / details
-jobRouter.patch(
-  '/:id',
-  authenticate,
-  requireRole('hr'),
-  requireOrgScope,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (checkOrgParamPollution(req, res)) return;
-      const jobId = req.params.id as string;
+async function handleJobUpdate(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (checkOrgParamPollution(req, res)) return;
+    const jobId = req.params.id as string;
 
-      const existingJob = await prisma.job.findUnique({
-        where: { id: jobId },
-      });
+    const existingJob = await prisma.job.findUnique({
+      where: { id: jobId },
+    });
 
-      if (!existingJob) {
-        return res.status(404).json({ success: false, error: 'Job not found' });
-      }
-
-      if (existingJob.org_id !== req.user!.orgId!) {
-        return res.status(403).json({ success: false, error: 'Forbidden: Access denied to job' });
-      }
-
-      const validated = JobUpdateSchema.parse(req.body);
-
-      const updatedJob = await prisma.job.update({
-        where: { id: jobId },
-        data: {
-          ...(validated.title && { title: validated.title }),
-          ...(validated.description && { description: validated.description }),
-          ...(validated.rubric && { rubric: validated.rubric as any }),
-          ...(validated.thresholds && { thresholds: validated.thresholds as any }),
-          ...(validated.status && { status: validated.status as any }),
-          ...(validated.location !== undefined && { location: validated.location ?? null }),
-          ...(validated.salary !== undefined && { salary: validated.salary ?? null }),
-          ...(validated.experienceLevel !== undefined && { experienceLevel: validated.experienceLevel ?? null }),
-          ...(validated.skills && { skills: validated.skills as any }),
-          ...(validated.stages && { stages: validated.stages as any }),
-          ...(validated.assessmentConfig && { assessmentConfig: validated.assessmentConfig as any }),
-          ...(validated.department !== undefined && { department: validated.department ?? null }),
-        },
-      });
-
-      return res.json({
-        success: true,
-        data: serializeJob(updatedJob),
-      });
-    } catch (err) {
-      return next(err);
+    if (!existingJob) {
+      return res.status(404).json({ success: false, error: 'Job not found' });
     }
-  }
-);
 
-// PUT /api/v1/jobs/:id - Alias for full update (frontend uses PUT)
-jobRouter.put(
-  '/:id',
-  authenticate,
-  requireRole('hr'),
-  requireOrgScope,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      if (checkOrgParamPollution(req, res)) return;
-      const jobId = req.params.id as string;
-
-      const existingJob = await prisma.job.findUnique({
-        where: { id: jobId },
-      });
-
-      if (!existingJob) {
-        return res.status(404).json({ success: false, error: 'Job not found' });
-      }
-
-      if (existingJob.org_id !== req.user!.orgId!) {
-        return res.status(403).json({ success: false, error: 'Forbidden: Access denied to job' });
-      }
-
-      const validated = JobUpdateSchema.parse(req.body);
-
-      const updatedJob = await prisma.job.update({
-        where: { id: jobId },
-        data: {
-          ...(validated.title && { title: validated.title }),
-          ...(validated.description && { description: validated.description }),
-          ...(validated.rubric && { rubric: validated.rubric as any }),
-          ...(validated.thresholds && { thresholds: validated.thresholds as any }),
-          ...(validated.status && { status: validated.status as any }),
-          ...(validated.location !== undefined && { location: validated.location ?? null }),
-          ...(validated.salary !== undefined && { salary: validated.salary ?? null }),
-          ...(validated.experienceLevel !== undefined && { experienceLevel: validated.experienceLevel ?? null }),
-          ...(validated.skills && { skills: validated.skills as any }),
-          ...(validated.stages && { stages: validated.stages as any }),
-          ...(validated.assessmentConfig && { assessmentConfig: validated.assessmentConfig as any }),
-          ...(validated.department !== undefined && { department: validated.department ?? null }),
-        },
-      });
-
-      return res.json({
-        success: true,
-        data: serializeJob(updatedJob),
-      });
-    } catch (err) {
-      return next(err);
+    if (existingJob.org_id !== req.user!.orgId!) {
+      return res.status(403).json({ success: false, error: 'Forbidden: Access denied to job' });
     }
+
+    const validated = JobUpdateSchema.parse(req.body);
+
+    const updatedJob = await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        ...(validated.title && { title: validated.title }),
+        ...(validated.description && { description: validated.description }),
+        ...(validated.rubric && { rubric: validated.rubric as any }),
+        ...(validated.thresholds && { thresholds: validated.thresholds as any }),
+        ...(validated.status && { status: validated.status as any }),
+        ...(validated.location !== undefined && { location: validated.location ?? null }),
+        ...(validated.salary !== undefined && { salary: validated.salary ?? null }),
+        ...(validated.experienceLevel !== undefined && { experienceLevel: validated.experienceLevel ?? null }),
+        ...(validated.skills && { skills: validated.skills as any }),
+        ...(validated.stages && { stages: validated.stages as any }),
+        ...(validated.assessmentConfig && { assessmentConfig: validated.assessmentConfig as any }),
+        ...(validated.department !== undefined && { department: validated.department ?? null }),
+      },
+    });
+
+    return res.json({
+      success: true,
+      data: serializeJob(updatedJob),
+    });
+  } catch (err) {
+    return next(err);
   }
-);
+}
+
+// PATCH /api/v1/jobs/:id - Update job fields
+jobRouter.patch('/:id', authenticate, requireRole('hr'), requireOrgScope, handleJobUpdate);
+
+// PUT /api/v1/jobs/:id - Alias for full job update
+jobRouter.put('/:id', authenticate, requireRole('hr'), requireOrgScope, handleJobUpdate);
 
 // POST /api/v1/jobs/:id/publish - HR publish job & enqueue sourcing agent
 jobRouter.post(

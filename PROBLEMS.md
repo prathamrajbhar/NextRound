@@ -1,86 +1,62 @@
-# NextRound Codebase Audit & Security Findings
+# NextRound
 
-This document summarizes the technical findings, security vulnerabilities, assessment logic flaws, and architectural issues identified across the NextRound codebase.
+This version removes repeated findings. Where multiple entries described the same issue, they are merged and the stronger solution is retained.
 
----
-
-## 1. Critical Security Vulnerabilities
-
-| # | Severity | Problem | Location | Impact | Fix |
-|---:|:---:|---|---|---|---|
-| 1 | P0 | **Remote Code Execution (RCE) via Unsandboxed Python / Native Execution** | `apps/api/src/services/coding-executor.service.ts` | Candidate coding submissions run directly on the host API process via `spawnSync('python3', ...)` without process, container, network, or filesystem isolation. | Execute candidate submissions in an isolated container/microVM sandbox (Docker + gVisor, Firecracker, or Judge0/Piston) with read-only filesystem, dropped capabilities, and disabled network. |
-| 2 | P0 | **Node `vm` Module Used as Security Sandbox** | `coding-executor.service.ts` (`executeNodeVm`) | JavaScript/TypeScript execution relies on Node's `vm` module, which is explicitly not a security boundary and easily escapable to gain full host access. | Run JS/TS inside the same isolated container environment as other languages; do not rely on Node `vm`. |
-| 3 | P0 | **Bypassable AST Blocklist in Python AI Service** | `apps/ai-service/services/code_executor_service.py` | A second code executor relies on AST-based blocklists (`FORBIDDEN_MODULES`), which are trivially bypassed via Python introspection gadgets. | Unify code execution into a single containerized sandbox service instead of maintaining a parallel, insecure implementation. |
-| 4 | P0 | **Path Traversal / Arbitrary File Write in Resume Upload** | `apps/api/src/lib/storage.ts` & `apps/api/src/routes/candidate/candidate.routes.ts` | `req.file.originalname` is concatenated directly into storage keys without stripping `..` sequences, allowing arbitrary file writes outside the upload directory. | Ignore client filenames; generate a random UUID filename on the server and sanitize/reject path components. |
-| 5 | P0 | **Arbitrary Client Test Cases Accepted** | `apps/api/src/routes/coding/*.ts` | `testCases` are accepted directly from `req.body`, allowing a candidate to submit custom expected outputs and fake a passing result. | Never accept test cases from the client. Fetch canonical test cases from the database based on `problemId`. |
-| 6 | P1 | **Token Exposure in LocalStorage** | `apps/web/src/lib/api.ts`, `useInterviewSession.ts` | Auth endpoints set httpOnly cookies but also return `accessToken`/`refreshToken` in JSON responses, which the web app stores in `localStorage` where XSS can steal them. | Rely exclusively on httpOnly cookies and stop returning/storing access tokens in `localStorage`. |
-| 7 | P1 | **Loose File-Type Filter on Uploads** | `apps/api/src/routes/candidate/candidate.routes.ts` | Accepts uploads if `!file.mimetype` is falsy or if mimetype merely includes `'stream'`, permitting arbitrary binary payloads. | Validate file contents via magic bytes (e.g. using `file-type`) rather than trusting user-supplied header strings. |
-| 8 | P1 | **Timing-Unsafe Secret Comparison** | `apps/api/src/middleware/internalSecret.ts` | Secret header comparison uses standard `!==` string inequality, vulnerable to timing attacks. | Use `crypto.timingSafeEqual`. |
-| 9 | P1 | **Deprecated `multer` Dependency with Known CVEs** | `apps/api/package.json` | Uses `multer@^1.4.5-lts.1`, which has documented denial-of-service vulnerabilities. | Upgrade to `multer@2.x` and update multipart parsing calls. |
-
----
-
-## 2. Assessment Engine & Execution Logic Flaws
-
-| # | Severity | Problem | Why It Is Wrong | Correct Solution |
+| # | Severity | Area | Problem and evidence | Best solution |
 |---:|:---:|---|---|---|
-| 10 | P0 | **Double LLM Generation (Display vs Submission)** | Problem generation is triggered once when viewing and again during submission, causing submissions to be evaluated against a different problem than shown. | Generate the problem once, persist it, and evaluate submissions against that exact snapshot. |
-| 11 | P0 | **Hidden Tests Generated Dynamically** | Hidden test sets can change between assessment creation and scoring. | Persist public and hidden test cases together on the assessment snapshot. |
-| 12 | P0 | **C++ / Java Results Evaluated on Compilation Success Alone** | Successful compilation or exit code 0 was treated as passing, without comparing actual output against expected output. | Execute compiled binaries with test inputs, capture stdout, and compare against canonical test outputs. |
-| 13 | P0 | **Regex-Based TypeScript Type Stripping** | Regex stripping fails on generics, union types, arrow functions, and complex TS syntax. | Transpile TypeScript using the official TS compiler API (`ts.transpileModule`) inside the runner sandbox. |
-| 14 | P0 | **Function Stub Sniffing via String Matching** | Uses heuristics like `.includes('return [];')` or `.endsWith('pass')` to guess if code is unimplemented. | Execute code against test harnesses instead of inferring intent from string patterns. |
-| 15 | P1 | **Synchronous Execution + Enqueued Queue Dual-Path** | Code executes synchronously while also enqueuing a BullMQ backup job, causing duplicate execution and state races. | Use a single execution model: enqueue jobs and let a dedicated worker manage status transitions. |
-| 16 | P1 | **Swallowed Queue & Evaluation Errors** | Failures in queue creation or evaluation updates use `.catch(() => null)`, masking underlying failures. | Record errors explicitly, implement retries, and never swallow failed status updates. |
-| 17 | P1 | **Immediate Hire/Reject Decisions at Fixed Threshold** | A single coding score of 70% immediately sets candidate decision to `hire` or `reject`. | Store assessment scores separately; apply policy rules after all candidate stages are completed. |
-| 18 | P1 | **Overwritten Assessment Attempts via Upsert** | Re-submitting overwrites previous evaluation records, losing attempt history. | Store each attempt as an immutable submission record. |
-| 19 | P1 | **Inconsistent Pass Rate Representation** | API returns percentage (e.g. `80`), while database stores decimal (e.g. `0.8`). | Standardize on decimal `0.0–1.0` or explicitly name fields `passRatePercent`. |
-| 20 | P1 | **Prompt Injection Vulnerability in Problem Generator** | Candidate/job input is interpolated directly into LLM prompts without sanitization. | Delimit untrusted inputs as data blocks and validate LLM output against a strict schema. |
+| 1 | P0 | Code execution | Candidate Python, JavaScript/TypeScript, C++, and Java code runs on or is compiled by the API host. Node `vm` is not a security boundary, and host process timeouts are not isolation. | Move execution to a separate sandbox service using isolated containers or microVMs. Use a non-root user, no network, read-only filesystem, dropped capabilities, seccomp/AppArmor, CPU/memory/PID/file limits, output limits, and full process-tree cleanup. |
+| 2 | P0 | Duplicate executors | The Node API and Python AI service contain separate code-execution implementations with different behavior and security controls. | Keep one execution service and one language-neutral execution protocol. Remove the duplicate executor. |
+| 3 | P0 | Client-controlled tests | `/coding/execute` accepts `testCases` from the request body, allowing candidates to provide their own tests and expected outputs. | Accept only assessment/problem ID, code, language, and idempotency key. Load all tests from the server-side immutable assessment snapshot. |
+| 4 | P0 | Problem inconsistency | The problem can be generated when displayed and generated again during submission, so the candidate may be scored against a different problem. | Generate once, persist an immutable problem version with public/hidden tests, entry point, schema, seed, and checksum, then always evaluate that version. |
+| 5 | P0 | Dynamic hidden tests | Hidden tests are regenerated and are not guaranteed to remain stable between attempts. | Store hidden tests server-side in the immutable assessment snapshot. Never expose hidden inputs or expected values to the candidate. |
+| 6 | P0 | Execution authorization | The coding execution endpoint lacks a clearly enforced assessment ownership, status, attempt, and authorization boundary. | Require authentication, candidate ownership, active assessment status, attempt limits, and role authorization before execution. |
+| 7 | P0 | Execution abuse | No complete per-user execution quota, concurrent-job limit, code-size limit, input-size limit, process limit, or output limit is visible. | Add global and endpoint-specific rate limits, quotas, concurrency limits, body/code/test limits, PID limits, file-descriptor limits, and stdout/stderr caps. |
+| 8 | P0 | File upload traversal | Resume storage keys use attacker-controlled `originalname` and pass it to path construction. | Ignore the original filename for storage. Generate `crypto.randomUUID()` plus a validated extension, and verify the resolved path remains inside the upload directory. |
+| 9 | P0 | Upload type validation | Upload validation trusts weak or broad MIME checks, including `application/octet-stream`. | Validate file magic bytes with a file-type detector, enforce allowed formats and size limits, and store uploads outside executable/web-served paths. |
+| 10 | P0 | Secrets exposed to execution | Host environment variables, files, logs, or credentials may be reachable from submitted code. | Use a separate worker with no secrets, minimal environment, isolated filesystem, disabled network, and no access to API/database credentials. |
+| 11 | P1 | C++/Java correctness | Some execution paths treat compilation or process completion as success instead of validating the returned result against each test. | Build a language-specific runner that invokes the exact entry point, passes typed arguments, serializes the result, compares it with the expected result, and fails on compile/runtime/wrong-answer errors. |
+| 12 | P1 | Function detection | The executor guesses names such as `solution`, `twoSum`, or `getVisibleRange`, and may select an arbitrary callable when the expected function is absent. | Persist an exact entry point and parameter schema in every problem. Missing entry point must fail; never guess or choose arbitrary functions. |
+| 13 | P1 | Test input format | Inputs are plain strings such as `nums = [...]`, requiring fragile language-specific parsing. | Store typed JSON arguments, for example `{ "args": [[2, 7], 9] }`, and serialize them through a controlled runner for each language. |
+| 14 | P1 | Output comparison | Whitespace removal is insufficient for arrays, objects, floating-point values, and nested structures. | Parse structured output and use a problem-specific comparator with numeric tolerance where required. |
+| 15 | P1 | Stub detection | String checks for `pass`, `TODO`, `return []`, or `for` can reject valid code or be bypassed. | Do not infer implementation status from source text. Execute the real tests and report the actual result. |
+| 16 | P1 | TypeScript execution | Regex-based type stripping can corrupt generics, unions, object types, arrow functions, and strings. | Compile TypeScript with the official TypeScript compiler, SWC, or esbuild inside the isolated runner. |
+| 17 | P1 | Python runner construction | User code is interpolated into a generated Python script and executed with `exec`; escaping is fragile. | Pass code as a file or stdin to the sandbox runner. Do not concatenate untrusted code into another source string. |
+| 18 | P1 | LLM problem validity | LLM output is used as executable assessment metadata after only limited checks. Invalid tests, inconsistent stubs, and incorrect expected answers can reach candidates. | Use strict runtime schemas, structured model output, a trusted reference solution, test validation, cross-language contract checks, and manual/curated review for hiring assessments. |
+| 19 | P1 | LLM prompt injection | Job descriptions and other untrusted text are inserted into the LLM prompt. | Delimit untrusted data, use a fixed system prompt, request structured output, validate every field, and never let model text directly control execution. |
+| 20 | P1 | LLM JSON parsing | A greedy regular expression extracts JSON from model output and can capture malformed or unrelated braces. | Use provider-supported structured JSON/schema output, then parse and validate with Zod or another runtime validator. |
+| 21 | P1 | LLM uniqueness | A random nonce changes the ID but does not ensure a different or high-quality problem; fallback templates are very limited. | Use a reviewed problem bank, deterministic selection, content hashing/deduplication, and persist previously used problem versions. |
+| 22 | P1 | Request-time AI generation | AI generation occurs in the HTTP request path, creating latency, timeout, and cost problems. | Generate through a worker queue with timeouts, retries, backoff, circuit breaking, caching, persistence, and a deterministic fallback. |
+| 23 | P1 | Queue and synchronous execution | The request path executes code and also enqueues a backup job, which can cause duplicate execution and conflicting status updates. | Use queue-first execution. Return `queued`, let one worker own state transitions, and remove synchronous duplicate execution. |
+| 24 | P1 | Swallowed errors | Queue and evaluation failures are ignored with `.catch(() => null)`. | Record failures, retry safely, alert operators, and expose a reliable submission state. Do not silently discard errors. |
+| 25 | P1 | Database consistency | Submission, evaluation, and queue creation are not one reliable atomic workflow. | Use a database transaction plus an outbox event. Store immutable submission records and process the outbox idempotently. |
+| 26 | P1 | Submission history | Evaluation upsert can overwrite previous attempts and scores. | Store every attempt immutably, enforce idempotency keys, and explicitly calculate the official/latest/best attempt. |
+| 27 | P1 | Score semantics | API percentages and database ratios use different representations; `composite_score` may be set equal to coding score. | Define one score contract, use explicit names such as `passRatePercent`/`passRateRatio`, and calculate composite scores in a versioned scoring service. |
+| 28 | P1 | Automatic hiring decision | A single coding score can immediately write `hire` or `reject`. | Store a score/recommendation separately and apply a documented, configurable multi-stage evaluation policy with human review where required. |
+| 29 | P1 | Rate limiting | Rate limiting is concentrated on authentication while AI, coding, uploads, and expensive routes remain exposed. | Add a general API limiter and stricter per-user/IP/assessment limits for AI, execution, upload, password, and submission routes. |
+| 30 | P1 | Authentication token exposure | Tokens are placed in response bodies and also stored in browser `localStorage` despite httpOnly cookies. | Use one mechanism. Prefer httpOnly, Secure, SameSite cookies; stop returning tokens in JSON and remove localStorage token storage. |
+| 31 | P1 | Secret configuration | Refresh-secret environment names are inconsistent, and weak hardcoded defaults exist outside explicit development/test use. | Centralize environment parsing with a runtime schema, use one variable name, reject missing/default secrets in every non-test environment, and rotate exposed historical defaults. |
+| 32 | P1 | Internal secret comparison | Internal service secrets are compared with normal string equality. | Use length-safe `crypto.timingSafeEqual` after validating equal-length buffers. |
+| 33 | P1 | Dependency risk | The project uses an outdated/deprecated Multer major version. | Upgrade to the maintained version, review breaking changes, run upload security tests, and continuously scan dependencies. |
+| 34 | P1 | Error leakage | Generic errors and database/compiler messages may be returned directly to clients; full errors are logged with raw `console.error`. | Return stable generic production error codes, keep details in protected structured logs, and redact secrets/source code. |
+| 35 | P1 | Data retention and auditability | Source code, scores, and decisions lack a clearly described retention policy and complete immutable audit trail. | Define retention/deletion rules, access controls, encryption, source hashes, problem/runner versions, score events, and decision history. |
+| 36 | P1 | Route architecture | Routes combine authorization, AI generation, execution, persistence, scoring, and queue operations. | Use controller → application service → domain service → repository/queue layers. Keep practice and hiring assessment workflows separate. |
+| 37 | P1 | Runtime validation | `as any`, direct environment reads, and unvalidated JSON weaken the TypeScript/Zod design. | Create shared runtime schemas for requests, environment, LLM output, problem definitions, tests, and job configuration. Remove `any` from domain boundaries. |
+| 38 | P2 | Duplicate job update logic | `PATCH /jobs/:id` and `PUT /jobs/:id` contain duplicated update behavior. | Extract one shared update service/handler and mount both HTTP verbs to it. |
+| 39 | P2 | Frontend configuration duplication | API base URL fallback values are copied across multiple components. | Create one frontend configuration module and import the validated value everywhere. |
+| 40 | P2 | CSP and inline script | Static theme initialization uses `dangerouslySetInnerHTML`, while API security headers do not show an explicit CSP policy. | Keep only static non-user-derived inline code, add nonce/hash-based CSP, and configure Helmet directives explicitly. |
+| 41 | P2 | Database relation deletion | Prisma relations lack deliberate `onDelete` behavior, causing unclear deletion failures or accidental retention. | Decide relation-by-relation between `Cascade`, `Restrict`, and soft deletion; test the chosen behavior. |
+| 42 | P2 | Observability | No complete correlation IDs, structured logs, dependency readiness checks, execution metrics, or queue metrics are visible. | Add request/submission/job IDs, JSON logs with redaction, health/readiness checks, queue metrics, latency metrics, and failure dashboards. |
+| 43 | P2 | Testing coverage | Tests mainly cover happy paths and do not adequately cover sandbox escapes, resource abuse, malformed LLM output, Java/C++, hidden-test leaks, retries, or authorization. | Add security, integration, contract, fuzz, property-based, concurrency, load, compiler, timeout, memory, and API confidentiality tests. |
+| 44 | P2 | Reproducibility | Random generation and changing runner environments make results difficult to reproduce. | Store seed, problem version, code hash, language/compiler version, sandbox image digest, limits, inputs, and outputs. |
+| 45 | P2 | Incomplete implementation markers | Many TODO/FIXME/HACK markers remain in code paths that appear user-facing. | Convert actionable markers into tracked issues, assign owners, and block release for unresolved production-path TODOs. |
 
----
+## Selected final architecture
 
-## 3. Configuration & API Route Issues
-
-| # | Severity | Problem | Where | Fix |
-|---:|:---:|---|---|---|
-| 21 | P1 | **Env Var Name Mismatch** | `.env.example` defines `JWT_REFRESH_SECRET`, but `apps/api/src/lib/jwt.ts` checks `REFRESH_TOKEN_SECRET`. | Align key names across `.env.example` and code logic. |
-| 22 | P1 | **Hardcoded Fallback Secrets** | `jwt.ts` and `internalSecret.ts` contain baked-in default secret strings. | Throw immediately at startup if secrets are missing in non-development environments. |
-| 23 | P1 | **Rate Limiting Only Configured on Auth Routes** | Expensive AI and code execution routes have no rate limiting in `app.ts`. | Apply a global API rate limiter and strict endpoint limiters for code execution and AI generation. |
-| 24 | P1 | **Duplicated Route Logic (PUT/PATCH `/jobs/:id`)** | Byte-for-byte duplicated handlers in `job.routes.ts:237-340`. | Extract a shared update handler function. |
-| 25 | P2 | **Duplicated API Base URL Fallback** | Hardcoded `NEXT_PUBLIC_API_BASE_URL` strings across web components. | Centralize configuration in a single `lib/config.ts`. |
-| 26 | P2 | **Missing Prisma `onDelete` Cascades** | Relations like Application, Evaluation, and CodingSubmission lack explicit `onDelete` rules. | Explicitly define `onDelete: Cascade` or `onDelete: Restrict` in `schema.prisma`. |
-| 27 | P2 | **Brittle Sandbox Telemetry Logs** | Executor logs fake sandbox parameters (`"[Native Sandbox] Target Environment: Linux x86_64"`) when no sandbox exists. | Remove misleading logs and log actual execution environment metrics. |
-| 28 | P3 | **Stray TODO/FIXME Annotations & `: any` Usage** | 30+ TODO comments and `any` types scattered across API routes. | Convert TODOs to tracked issues and replace `any` with strict Zod/Prisma types. |
-
----
-
-## 4. Recommended Target Architecture
-
-| Step | Action |
-|---:|---|
-| 1 | **Immutable Problem Snapshot**: Persist generated assessment problems (with typed public & hidden tests) in the database prior to display. |
-| 2 | **Minimal Submission API**: Candidate submits only `code`, `language`, `problemId`, and an `idempotencyKey`. |
-| 3 | **Transactional Outbox**: Save submission record and job event within a single database transaction. |
-| 4 | **Isolated Sandbox Worker**: Dedicated worker executes submission inside a secure microVM/container with restricted CPU, memory, PIDs, read-only FS, and disabled networking. |
-| 5 | **Typed Output Comparison**: Compare stdout/return values against stored test outputs using language-neutral comparators. |
-| 6 | **Audit Trail & Scoring**: Log immutable submission attempt records and update candidate stage score without automated hiring state mutation. |
-
----
-
-## 5. Implementation Priority
-
-1. **Immediate (P0)**:
-   - Sandbox code execution (remove host execution & Node `vm`).
-   - Fix resume upload path traversal (`storage.ts`).
-   - Eliminate dynamic problem regeneration on submission.
-   - Enforce server-side test case loading.
-
-2. **Short-Term (P1)**:
-   - Remove `localStorage` token storage; use httpOnly cookies.
-   - Add global and code-execution rate limiting.
-   - Fix secret key env var mismatch & fallback secrets.
-   - Upgrade `multer` and validate file magic bytes.
-
-3. **Medium-Term (P2/P3)**:
-   - Unify code execution services and remove duplicate AST-based executor.
-   - Standardize error handling and Prisma cascade rules.
-   - Clean up stray TODOs, DRY violations, and TypeScript `any` types.
+1. Persist an immutable assessment problem and typed test cases.
+2. Accept only code, language, assessment ID, and idempotency key from the candidate.
+3. Validate ownership, assessment state, limits, and language at the API boundary.
+4. Create the submission and outbox event in one database transaction.
+5. Execute through one isolated sandbox worker with no network or secrets.
+6. Use exact entry-point metadata and typed arguments; never guess functions or parse arbitrary input strings.
+7. Store immutable execution results and transition `created → queued → running → passed/failed/timed_out/errored`.
+8. Calculate scores in a separate versioned scoring service; do not automatically make a hiring decision from one test.
