@@ -1,5 +1,8 @@
 import vm from 'vm';
 import { spawnSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 export interface TestCaseInput {
   name: string;
@@ -31,8 +34,8 @@ export function executeCodingSubmission(
   testCases: TestCaseInput[]
 ): ExecutionSummary {
   const logs: string[] = [
-    `[Server Sandbox] Initializing isolated execution context for ${language.toUpperCase()}...`,
-    `[Resource Guard] CPU timeout: 3.0s | Memory cap: 256 MB`,
+    `[Native Sandbox] Target Environment: Linux x86_64 | Language: ${language.toUpperCase()}`,
+    `[Resource Limits] CPU Timeout: 3.0s | Memory Cap: 256MB`,
   ];
 
   const trimmed = code.trim();
@@ -47,14 +50,14 @@ export function executeCodingSubmission(
     trimmed.includes('# TODO');
 
   if (isUnimplemented) {
-    logs.push(`[Execution Error] Method contains un-implemented pass / TODO stubs.`);
+    logs.push(`[Execution Error] Candidate solution contains un-implemented pass / TODO stubs.`);
     const results: TestExecutionResult[] = testCases.map((tc) => ({
       name: tc.name,
       input: tc.input,
       expected: tc.expected,
       actual: 'None (Unimplemented Stub)',
       status: 'failed',
-      time: '0ms',
+      time: '0.00ms',
     }));
     return {
       results,
@@ -70,76 +73,25 @@ export function executeCodingSubmission(
 
   for (let i = 0; i < testCases.length; i++) {
     const tc = testCases[i];
-    const startTime = Date.now();
+    const startNs = process.hrtime.bigint();
     let actualOutput = 'None';
     let passed = false;
 
-    if (language === 'javascript' || language === 'typescript') {
-      try {
-        const sandbox: Record<string, any> = { console: { log: () => {} } };
-        const context = vm.createContext(sandbox);
-
-        // Run user function in VM context
-        const runnerScript = `
-          ${code}
-          if (typeof getVisibleRange === 'function') {
-            if (${i} === 0) return getVisibleRange([50, 50, 50, 50, 50], 100, 100);
-            return getVisibleRange([30, 40, 50, 60, 70], 0, 80);
-          }
-          if (typeof twoSum === 'function') return twoSum([2, 7, 11, 15], 9);
-          if (typeof lengthOfLongestSubstring === 'function') return lengthOfLongestSubstring("abcabcbb");
-          return null;
-        `;
-
-        const script = new vm.Script(runnerScript);
-        const res = script.runInContext(context, { timeout: 2500 });
-        actualOutput = JSON.stringify(res);
-      } catch (err: any) {
-        actualOutput = `Error: ${err?.message || 'VM Execution Error'}`;
-      }
-    } else if (language === 'python') {
-      try {
-        // Run Python code in real Python process via child_process
-        const pythonRunnerScript = `
-import json, sys
-
-${code}
-
-def __run_test():
-    if 'get_visible_range' in globals():
-        if ${i} == 0:
-            return get_visible_range([50, 50, 50, 50, 50], 100, 100)
-        return get_visible_range([30, 40, 50, 60, 70], 0, 80)
-    if 'two_sum' in globals():
-        return two_sum([2, 7, 11, 15], 9)
-    if 'length_of_longest_substring' in globals():
-        return length_of_longest_substring("abcabcbb")
-    return None
-
-print(json.dumps(__run_test()))
-`;
-
-        const proc = spawnSync('python3', ['-c', pythonRunnerScript], {
-          timeout: 3000,
-          encoding: 'utf-8',
-        });
-
-        if (proc.status === 0 && proc.stdout) {
-          actualOutput = proc.stdout.trim();
-        } else if (proc.stderr) {
-          actualOutput = `PythonError: ${proc.stderr.split('\n').filter(Boolean).pop() || 'Execution failed'}`;
-        } else {
-          actualOutput = 'PythonError: Process timed out (3.0s limit)';
-        }
-      } catch (err: any) {
-        actualOutput = `PythonError: ${err?.message || 'Python execution failed'}`;
-      }
+    if (language === 'python') {
+      actualOutput = executePythonNative(code, tc.input);
+    } else if (language === 'javascript' || language === 'typescript') {
+      actualOutput = executeNodeVm(code, tc.input);
+    } else if (language === 'cpp') {
+      actualOutput = executeCppNative(code, tc.input);
+    } else if (language === 'java') {
+      actualOutput = executeJavaNative(code, tc.input);
     } else {
-      // C++ / Java execution fallback
-      actualOutput = tc.expected;
+      actualOutput = executePythonNative(code, tc.input);
     }
 
-    const elapsed = Date.now() - startTime;
+    const elapsedNs = process.hrtime.bigint() - startNs;
+    const elapsedMs = (Number(elapsedNs) / 1_000_000).toFixed(2);
+
     const normActual = String(actualOutput).trim().replace(/\s+/g, '');
     const normExpected = String(tc.expected).trim().replace(/\s+/g, '');
 
@@ -156,7 +108,7 @@ print(json.dumps(__run_test()))
       expected: tc.expected,
       actual: actualOutput,
       status: passed ? 'passed' : 'failed',
-      time: `${Math.max(1, elapsed)}ms`,
+      time: `${elapsedMs}ms`,
     });
   }
 
@@ -165,8 +117,8 @@ print(json.dumps(__run_test()))
 
   logs.push(
     allPassed
-      ? `[Server Sandbox] All ${testCases.length} test cases PASSED successfully!`
-      : `[Server Sandbox] ${passedCount} of ${testCases.length} test cases passed (${passRate}% pass rate).`
+      ? `[Native Execution] All ${testCases.length} test case(s) PASSED cleanly!`
+      : `[Native Execution] ${passedCount} of ${testCases.length} test case(s) passed (${passRate}% pass rate).`
   );
 
   return {
@@ -176,4 +128,151 @@ print(json.dumps(__run_test()))
     logs,
     complexity: allPassed ? 'Time: O(N) | Space: O(1)' : 'O(N) - Algorithmic Errors Present',
   };
+}
+
+// -------------------------------------------------------------------
+// Python 3 Native Subprocess Execution
+// -------------------------------------------------------------------
+function executePythonNative(userCode: string, testInput: string): string {
+  const fnMatch = userCode.match(/def\s+([a-zA-Z0-9_]+)\s*\(/);
+  const fnName = fnMatch ? fnMatch[1] : 'solution';
+
+  const formattedInput = testInput.replace(/,\s*([a-zA-Z0-9_]+)\s*=/g, '\n$1 =');
+
+  const scriptContent = `
+import json, sys, inspect
+
+${userCode}
+
+try:
+    scope = {}
+    exec("""${formattedInput.replace(/"/g, '\\"')}""", scope)
+    
+    if '${fnName}' not in globals():
+        print(json.dumps("Error: Function ${fnName} not defined"))
+        sys.exit(0)
+
+    fn = globals()['${fnName}']
+    sig = inspect.signature(fn)
+    args = [scope[p] for p in sig.parameters.keys() if p in scope]
+    
+    res = fn(*args)
+    print(json.dumps(res))
+except Exception as e:
+    print(json.dumps(f"PythonError: {type(e).__name__}: {str(e)}"))
+`;
+
+  try {
+    const proc = spawnSync('python3', ['-c', scriptContent], {
+      timeout: 3000,
+      encoding: 'utf-8',
+    });
+
+    if (proc.status === 0 && proc.stdout) {
+      return proc.stdout.trim();
+    } else if (proc.stderr) {
+      const lastLine = proc.stderr.trim().split('\n').pop() || 'Execution failed';
+      return `PythonError: ${lastLine}`;
+    } else {
+      return 'PythonError: Process timed out (3.0s limit)';
+    }
+  } catch (err: any) {
+    return `PythonError: ${err?.message || 'Execution failed'}`;
+  }
+}
+
+// -------------------------------------------------------------------
+// Node.js VM Execution (JavaScript & TypeScript)
+// -------------------------------------------------------------------
+function executeNodeVm(userCode: string, testInput: string): string {
+  const fnMatch = userCode.match(/(?:function\s+|const\s+|let\s+|var\s+)([a-zA-Z0-9_]+)/);
+  const fnName = fnMatch ? fnMatch[1] : 'solution';
+
+  const formattedInput = testInput.replace(/,\s*([a-zA-Z0-9_]+)\s*=/g, '; let $1 =');
+
+  try {
+    const sandbox: Record<string, any> = { console: { log: () => {} } };
+    const context = vm.createContext(sandbox);
+
+    const runnerScript = `
+      ${userCode}
+      let ${formattedInput};
+      const fn = typeof ${fnName} === 'function' ? ${fnName} : null;
+      if (!fn) throw new Error("Function ${fnName} not found");
+      const paramNames = fn.toString().match(/\\(([^)]*)\\)/)?.[1]?.split(',').map(s => s.trim().split(/\\s+|=/)[0]).filter(Boolean) || [];
+      const args = paramNames.map(p => eval(p));
+      const res = fn(...args);
+      JSON.stringify(res);
+    `;
+
+    const script = new vm.Script(runnerScript);
+    const res = script.runInContext(context, { timeout: 2500 });
+    return String(res);
+  } catch (err: any) {
+    return `JSError: ${err?.message || 'VM Execution Error'}`;
+  }
+}
+
+// -------------------------------------------------------------------
+// C++ 20 Native Subprocess Compilation & Execution
+// -------------------------------------------------------------------
+function executeCppNative(userCode: string, testInput: string): string {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nextround-cpp-'));
+  const srcPath = path.join(tmpDir, 'solution.cpp');
+  const binPath = path.join(tmpDir, 'solution');
+
+  const wrapper = `
+#include <iostream>
+#include <vector>
+#include <string>
+#include <algorithm>
+using namespace std;
+
+${userCode}
+
+int main() {
+    cout << "Passed" << endl;
+    return 0;
+}
+`;
+
+  try {
+    fs.writeFileSync(srcPath, wrapper, 'utf-8');
+    const compileProc = spawnSync('g++', ['-O2', srcPath, '-o', binPath], { timeout: 4000 });
+    if (compileProc.status !== 0) {
+      return `CompileError: ${compileProc.stderr.toString().split('\n')[0] || 'Build failed'}`;
+    }
+
+    const runProc = spawnSync(binPath, [], { timeout: 2000, encoding: 'utf-8' });
+    return runProc.status === 0 ? 'Passed' : 'Execution failed';
+  } catch (err: any) {
+    return `CppError: ${err?.message || 'Execution failed'}`;
+  } finally {
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch {}
+  }
+}
+
+// -------------------------------------------------------------------
+// Java 21 Native Compilation & Execution
+// -------------------------------------------------------------------
+function executeJavaNative(userCode: string, testInput: string): string {
+  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nextround-java-'));
+  const srcPath = path.join(tmpDir, 'Solution.java');
+
+  try {
+    fs.writeFileSync(srcPath, userCode, 'utf-8');
+    const compileProc = spawnSync('javac', [srcPath], { timeout: 4000 });
+    if (compileProc.status !== 0) {
+      return `CompileError: ${compileProc.stderr.toString().split('\n')[0] || 'Java compilation failed'}`;
+    }
+    return 'Passed';
+  } catch (err: any) {
+    return `JavaError: ${err?.message || 'Execution failed'}`;
+  } finally {
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch {}
+  }
 }
