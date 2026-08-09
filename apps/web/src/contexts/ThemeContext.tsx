@@ -1,46 +1,52 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import {
+  ThemeConfig,
+  DEFAULT_THEME_CONFIG,
+  applyThemeToElement,
+} from '@nextround/shared';
 
-type Theme = 'light' | 'dark';
+type Mode = 'light' | 'dark';
 
 interface ThemeContextValue {
-  theme: Theme;
+  theme: Mode;
+  themeConfig: ThemeConfig;
   toggleTheme: () => void;
-  setTheme: (theme: Theme) => void;
+  setTheme: (mode: Mode) => void;
+  setThemeConfig: (config: ThemeConfig) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   theme: 'dark',
+  themeConfig: DEFAULT_THEME_CONFIG,
   toggleTheme: () => {},
   setTheme: () => {},
+  setThemeConfig: () => {},
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('dark');
+  const [theme, setThemeState] = useState<Mode>('dark');
+  const [themeConfig, setThemeConfigState] = useState<ThemeConfig>(DEFAULT_THEME_CONFIG);
 
-  // Hydrate the persisted theme after mount. Server HTML renders with the
-  // default 'dark' and the first client render matches it, so hydration never
-  // sees mismatched attributes. The <html> class is already applied by
-  // themeInitScript in layout.tsx before hydration, so there is no flash; this
-  // effect only syncs React state to it (and toggles only happen via
-  // applyTheme, which sets the class directly).
   useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (saved === 'light') setThemeState('light');
+    const savedMode = localStorage.getItem('theme') as Mode | null;
+    if (savedMode === 'light' || savedMode === 'dark') {
+      setThemeState(savedMode);
+    }
   }, []);
 
-  const applyTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
+  const applyTheme = (newMode: Mode, config: ThemeConfig = themeConfig) => {
+    setThemeState(newMode);
     const root = document.documentElement;
-    if (newTheme === 'dark') {
+    if (newMode === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
+    applyThemeToElement(root, config, newMode);
     try {
-      localStorage.setItem('theme', newTheme);
+      localStorage.setItem('theme', newMode);
     } catch {
       // Handle private browsing quota errors gracefully
     }
@@ -50,12 +56,25 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
-  const setTheme = (newTheme: Theme) => {
-    applyTheme(newTheme);
+  const setTheme = (newMode: Mode) => {
+    applyTheme(newMode);
+  };
+
+  const setThemeConfig = (newConfig: ThemeConfig) => {
+    setThemeConfigState(newConfig);
+    applyTheme(theme, newConfig);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        themeConfig,
+        toggleTheme,
+        setTheme,
+        setThemeConfig,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );
@@ -64,3 +83,4 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 export function useTheme() {
   return useContext(ThemeContext);
 }
+
