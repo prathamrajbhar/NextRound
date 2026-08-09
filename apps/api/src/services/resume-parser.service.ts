@@ -75,31 +75,38 @@ export async function parseResumeWithGemini(rawText: string): Promise<ParsedResu
   if (apiKey && rawText.length > 20) {
     try {
       const ai = new GoogleGenAI({ apiKey });
-      const prompt = `You are an expert AI recruiter & technical resume analyst.
-Analyze the candidate's raw resume text and extract all profile fields into a single, comprehensive JSON object. Do not include markdown tags or explanation.
+      const prompt = `You are an executive AI recruiter & professional technical resume strategist.
+Analyze the candidate's uploaded raw resume text. DO NOT simply copy-paste raw text snippets ("take and put"). Instead, synthesize, elevate, and craft polished, recruiter-ready profile fields based strictly on the uploaded resume content.
 
-JSON SCHEMAS TO EXTRACT & INFER ACCURATELY:
+WRITING & SYNTHESIS DIRECTIVES:
+1. "headline": Synthesize a punchy, modern technical headline highlighting their primary engineering focus and core stack (e.g., "Full-Stack & AI Systems Engineer | React, Node.js & PyTorch").
+2. "bio": Craft a polished, high-impact 2-4 sentence executive professional summary synthesizing candidate's specialization, technical depth, major project accomplishments, and engineering focus. DO NOT include email, phone, address, or raw resume header lines.
+3. "proudProject": Identify their most technically complex or impactful project from the uploaded resume. Rewrite it into an engaging narrative detailing the project objective, key technologies used, candidate's key architectural/code contributions, and measurable results.
+4. "skills": Extract all technical skills, programming languages, frameworks, databases, cloud tools, and libraries found in the resume.
+5. "targetRoles": Infer 2-4 strategic target job titles tailored to their experience and tech stack.
+
+JSON SCHEMAS TO RETURN:
 - "fullName": candidate's exact full name (e.g. "Pratham Rajbhar" or "Marcus Vance")
-- "headline": candidate's primary professional title or headline (e.g. "Full Stack + AI Engineer" or "Senior Full-Stack Engineer")
-- "location": candidate's current city, state, or country (e.g. "Ahmedabad, Gujarat" or "San Francisco, CA")
-- "phone": contact phone number (e.g. "+91 9512518403" or "+1 (555) 234-5678")
+- "headline": synthesized professional title/headline
+- "location": candidate's city, state, or country
+- "phone": contact phone number
 - "timezone": inferred IANA timezone string (e.g. "Asia/Kolkata", "America/New_York", "Europe/London")
-- "linkedinUrl": complete LinkedIn URL (e.g. "https://linkedin.com/in/username")
-- "githubUrl": complete GitHub URL (e.g. "https://github.com/username")
-- "portfolioUrl": personal portfolio / blog website URL
-- "yearsOfExperience": total estimated numerical years of professional engineering experience (e.g. 4 or 7)
-- "skills": comprehensive array of technical skills, languages, frameworks, databases, and tools present in the resume
-- "targetRoles": array of 2-4 target job role titles inferred directly from candidate's experience (e.g. ["Full-Stack Engineer", "AI/ML Engineer", "Backend Engineer"])
-- "targetLocations": array of target cities/regions inferred from location or resume
+- "linkedinUrl": complete LinkedIn URL if present
+- "githubUrl": complete GitHub URL if present
+- "portfolioUrl": personal portfolio / blog website URL if present
+- "yearsOfExperience": total numerical years of experience (e.g. 3)
+- "skills": string array of tech skills
+- "targetRoles": string array of 2-4 target job roles
+- "targetLocations": string array of target locations
 - "workMode": "Remote" | "Hybrid" | "Onsite"
-- "bio": a high-impact 2-4 sentence executive professional summary describing candidate's core expertise and focus (DO NOT include candidate's address, phone, email, or name header lines in the bio text)
-- "proudProject": a structured description of their most impressive key project or system shipped (include project title, stack, candidate's role, and measurable impact)
-- "currentCtc": estimated or stated annual salary if mentioned (number in LPA or USD)
-- "expectedSalary": estimated target annual salary based on experience level
+- "bio": synthesized 2-4 sentence executive summary
+- "proudProject": synthesized narrative of their top project
+- "currentCtc": numerical estimated/stated annual salary
+- "expectedSalary": numerical target annual salary based on experience
 - "noticePeriod": "Immediate" | "1-2 weeks" | "30 days" | "60+ days" | "90 days"
 - "workAuthorization": "Authorized" | "Sponsorship Required" | "Student / On Work Permit"
 
-Return ONLY valid raw JSON object.
+Return ONLY a valid raw JSON object without markdown formatting.
 
 RESUME CONTENT:
 ${rawText.slice(0, 12000)}`;
