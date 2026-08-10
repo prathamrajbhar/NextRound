@@ -2,20 +2,14 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
+import { rejectOrgIdParam } from '../../middleware/orgScope';
 import { TalentBookmarkCreateSchema, TalentOutreachSchema, TalentPoolSearchSchema } from '@nextround/shared';
 import { notificationService } from '../../services/notification.service';
 
 export const talentPoolRouter = Router();
 
-function rejectExplicitOrgId(req: Request, res: Response, next: NextFunction) {
-  if ((req.body && req.body.org_id) || (req.query && req.query.org_id)) {
-    return res.status(403).json({
-      success: false,
-      error: 'Security Error: org_id parameter is forbidden in request body/query. Scoped automatically by auth token.',
-    });
-  }
-  next();
-}
+// Org scoping is JWT-derived; never accept a client-supplied org_id.
+talentPoolRouter.use(rejectOrgIdParam);
 
 // Row shape returned by the pgvector ranking query. `cosineSimilarity` is the
 // real cosine similarity (0.0-1.0) between the candidate's resume_embedding and
@@ -112,7 +106,6 @@ talentPoolRouter.get(
   '/',
   authenticate,
   requireRole('hr'),
-  rejectExplicitOrgId,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.orgId;
@@ -252,7 +245,6 @@ talentPoolRouter.post(
   '/bookmarks',
   authenticate,
   requireRole('hr'),
-  rejectExplicitOrgId,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.orgId;
@@ -308,7 +300,6 @@ talentPoolRouter.get(
   '/bookmarks',
   authenticate,
   requireRole('hr'),
-  rejectExplicitOrgId,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.orgId;
@@ -344,7 +335,6 @@ talentPoolRouter.delete(
   '/bookmarks/:id',
   authenticate,
   requireRole('hr'),
-  rejectExplicitOrgId,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.orgId;
@@ -379,7 +369,6 @@ talentPoolRouter.post(
   '/outreach',
   authenticate,
   requireRole('hr'),
-  rejectExplicitOrgId,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.orgId;
@@ -431,7 +420,6 @@ talentPoolRouter.post(
   '/external-source',
   authenticate,
   requireRole('hr'),
-  rejectExplicitOrgId,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.orgId;

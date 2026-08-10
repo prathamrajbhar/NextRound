@@ -4,22 +4,9 @@ import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { ResumeBuilderSessionCreateSchema } from '@nextround/shared';
 import { enqueueResumeBuilder } from '../../lib/queues/resume-builder.queue';
+import { getCandidateProfileId } from '../../lib/candidate-profile';
 
 export const resumeBuilderRouter = Router();
-
-async function getCandidateProfileId(userId: string): Promise<string> {
-  let profile = await prisma.candidateProfile.findUnique({
-    where: { user_id: userId },
-    select: { id: true },
-  });
-  if (!profile) {
-    profile = await prisma.candidateProfile.create({
-      data: { user_id: userId },
-      select: { id: true },
-    });
-  }
-  return profile.id;
-}
 
 // GET /api/v1/resume-builder/history - Fetch past generated resume sessions for candidate
 resumeBuilderRouter.get(

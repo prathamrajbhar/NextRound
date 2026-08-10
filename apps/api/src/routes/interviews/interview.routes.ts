@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '@nextround/database';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
+import { rejectOrgIdParam } from '../../middleware/orgScope';
 import { enqueueInterview } from '../../lib/queues/interview.queue';
 import { enqueueDecision } from '../../lib/queues/decision.queue';
 
@@ -32,8 +33,9 @@ function loadIceServers(): { urls: string; username?: string; credential?: strin
 
 export const interviewRouter = Router();
 
-// All routes require authentication
+// All routes require authentication; org scoping is JWT-derived, never client-supplied.
 interviewRouter.use(authenticate);
+interviewRouter.use(rejectOrgIdParam);
 
 // 1. POST /api/v1/interviews/:id/consent
 interviewRouter.post('/:id/consent', async (req: Request, res: Response, next: NextFunction) => {
@@ -294,14 +296,6 @@ interviewRouter.get('/:id/transcript', async (req: Request, res: Response, next:
 interviewRouter.post('/hr/:applicationId/result', requireRole('hr'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const applicationId = req.params.applicationId as string;
-
-    // Security Check: Reject org_id in body/query parameters (403 Forbidden)
-    if (req.body.org_id || req.query.org_id) {
-      return res.status(403).json({
-        success: false,
-        error: 'Forbidden: org_id parameter in body/query is strictly forbidden. Server derives org_id from JWT token.',
-      });
-    }
 
     const orgId = req.user?.orgId;
     if (!orgId) {

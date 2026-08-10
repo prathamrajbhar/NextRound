@@ -4,26 +4,11 @@ import type { ApplicationStatus } from '@nextround/database';
 import { requireInternalSecret } from '../../middleware/internalSecret';
 import { emailService } from '../../services/email.service';
 import { enqueueEvaluation } from '../../lib/queues/evaluation.queue';
-import { ensureInterviewAndSchedule, advanceAssessmentStage } from '../../lib/pipeline';
-import { deriveSalary, deriveEquity } from '../../lib/offer-terms';
-import crypto from 'crypto';
-
-// Statuses that are already past the assessment phase. A late/retried modality
-// result must never regress an application out of these.
-const PAST_ASSESSMENT: string[] = [
-  'interview_scheduled',
-  'interviewed',
-  'evaluation',
-  'hr_round',
-  'decided',
-  'offered',
-  'accepted',
-  'rejected',
-  'withdrawn',
-];
+import { ensureInterviewAndSchedule, advanceAssessmentStage, PAST_ASSESSMENT } from '../../lib/pipeline';
+import { upsertOffer } from '../../services/offer.service';
 
 // Offer terms (salary/equity) are derived from the Job record via
-// lib/offer-terms so offers never fall back to hardcoded amounts.
+// services/offer.service so offers never fall back to hardcoded amounts.
 
 export const internalRouter = Router();
 
@@ -913,41 +898,12 @@ internalRouter.patch('/evaluations/:id/decision', async (req: Request, res: Resp
     }
 
     if (decision === 'hire') {
-      // Idempotent offer creation: application_id is unique, so a retried decision
-      // updates the existing offer (keeping its magic link token) instead of crashing.
-      const magicToken = crypto.randomUUID();
-      const salary = deriveSalary(app.job.salary);
-      const equity = deriveEquity(app.job);
-
       // Never emit a made-up offer: if the Job genuinely has no salary, refuse to
-      // create the offer instead of inventing a number.
-      if (salary === null) {
-        return res.status(422).json({
-          success: false,
-          error: `Cannot generate an offer for "${app.job.title}": the job has no salary configured. Add a salary to the job before generating an offer.`,
-        });
-      }
-
-      const offer = await prisma.offer.upsert({
-        where: { application_id: app.id },
-        create: {
-          application_id: app.id,
-          role_title: app.job.title,
-          salary,
-          equity,
-          magic_link_token: magicToken,
-          offer_letter_content: offer_letter_content || `Official Offer for ${app.job.title}`,
-          status: 'pending',
-          valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-        },
-        update: {
-          role_title: app.job.title,
-          salary,
-          equity,
-          offer_letter_content: offer_letter_content || `Official Offer for ${app.job.title}`,
-          status: 'pending',
-          valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-        },
+      // create the offer instead of inventing a number (throws 422).
+      const { offer, isNew } = await upsertOffer({
+        applicationId: app.id,
+        job: app.job,
+        offerLetterContent: offer_letter_content,
       });
 
       await prisma.application.update({
@@ -956,12 +912,12 @@ internalRouter.patch('/evaluations/:id/decision', async (req: Request, res: Resp
       });
 
       // Only email the candidate when a brand-new offer was created (token freshly generated)
-      if (offer.magic_link_token === magicToken) {
+      if (isNew) {
         const candidateName = app.candidate.user.email.split('@')[0];
         await emailService.sendOfferEmail(app.candidate.user.email, candidateName, app.job.title, {
-          salary,
-          equity: equity ?? undefined,
-          magicLinkToken: magicToken,
+          salary: offer.salary,
+          equity: offer.equity ?? undefined,
+          magicLinkToken: offer.magic_link_token!,
         });
       }
 
@@ -1025,45 +981,17 @@ internalRouter.post('/offers', async (req: Request, res: Response, next: NextFun
       return res.status(404).json({ success: false, error: 'Application not found' });
     }
 
-    const derivedSalary = typeof salary === 'number' ? salary : deriveSalary(app.job.salary);
-
-    // Never emit a made-up offer: if the Job genuinely has no salary, refuse to
-    // create the offer instead of inventing a number.
-    if (derivedSalary === null) {
-      return res.status(422).json({
-        success: false,
-        error: `Cannot generate an offer for "${app.job.title}": the job has no salary configured. Add a salary to the job before generating an offer.`,
-      });
-    }
-
-    const derivedRoleTitle = (role_title && role_title.trim()) || app.job.title;
-    const derivedEquity = equity || deriveEquity(app.job);
-
     // Idempotent offer creation: application_id is unique, so re-posting updates the
     // existing offer (keeping its magic link token) instead of crashing on a constraint.
-    const magicToken = crypto.randomUUID();
-    const offer = await prisma.offer.upsert({
-      where: { application_id },
-      create: {
-        application_id,
-        role_title: derivedRoleTitle,
-        salary: derivedSalary,
-        equity: derivedEquity,
-        start_date: start_date ? new Date(start_date) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        offer_letter_content: offer_letter_content || `Official Offer for ${app.job.title}`,
-        magic_link_token: magicToken,
-        status: 'pending',
-        valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-      },
-      update: {
-        role_title: derivedRoleTitle,
-        salary: derivedSalary,
-        equity: derivedEquity,
-        start_date: start_date ? new Date(start_date) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        offer_letter_content: offer_letter_content || `Official Offer for ${app.job.title}`,
-        status: 'pending',
-        valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-      },
+    // A job with no salary refuses here (throws 422) rather than inventing a number.
+    const { offer } = await upsertOffer({
+      applicationId: application_id,
+      job: app.job,
+      roleTitle: role_title,
+      salary: typeof salary === 'number' ? salary : null,
+      equity: equity || null,
+      startDate: start_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      offerLetterContent: offer_letter_content,
     });
 
     return res.status(201).json({

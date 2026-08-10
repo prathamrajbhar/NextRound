@@ -2,28 +2,20 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
+import { rejectOrgIdParam } from '../../middleware/orgScope';
 import { AnalyticsExportQuerySchema } from '@nextround/shared';
 import { enqueueAnalyticsReport } from '../../lib/queues/analytics.queue';
 
 export const analyticsRouter = Router();
 
-// Middleware helper to ensure org_id is NOT passed in body or query params
-function rejectExplicitOrgId(req: Request, res: Response, next: NextFunction) {
-  if ((req.body && req.body.org_id) || (req.query && req.query.org_id)) {
-    return res.status(403).json({
-      success: false,
-      error: 'Security Error: org_id parameter is forbidden in request body/query. Scoped automatically by auth token.',
-    });
-  }
-  next();
-}
+// Org scoping is JWT-derived; never accept a client-supplied org_id.
+analyticsRouter.use(rejectOrgIdParam);
 
 // GET /api/v1/hr/analytics - Overview metrics, weekly funnel, conversion rates, bias trends
 analyticsRouter.get(
   '/',
   authenticate,
   requireRole('hr'),
-  rejectExplicitOrgId,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.orgId;
@@ -239,7 +231,6 @@ analyticsRouter.get(
   '/export',
   authenticate,
   requireRole('hr'),
-  rejectExplicitOrgId,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const orgId = req.user!.orgId;

@@ -3,7 +3,7 @@ import { JobCreateSchema, JobUpdateSchema } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
 import { authenticate, optionalAuthenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
-import { requireOrgScope } from '../../middleware/orgScope';
+import { requireOrgScope, rejectOrgIdParam } from '../../middleware/orgScope';
 import { enqueueSourcing } from '../../lib/queues/sourcing.queue';
 import {
   serializeJob,
@@ -14,18 +14,8 @@ import { extractRequirementsFromJd } from '../../services/jd-extractor.service';
 
 export const jobRouter = Router();
 
-// Helper to check parameter pollution / spoofing attempt
-function checkOrgParamPollution(req: Request, res: Response): boolean {
-  if (req.body && (req.body.org_id || req.body.orgId)) {
-    res.status(403).json({ success: false, error: 'Forbidden: org_id cannot be supplied in body' });
-    return true;
-  }
-  if (req.query && (req.query.org_id || req.query.orgId)) {
-    res.status(403).json({ success: false, error: 'Forbidden: org_id cannot be supplied in query' });
-    return true;
-  }
-  return false;
-}
+// Org scoping is JWT-derived; never accept a client-supplied org_id.
+jobRouter.use(rejectOrgIdParam);
 
 // POST /api/v1/jobs - HR create draft job
 jobRouter.post(
@@ -35,7 +25,6 @@ jobRouter.post(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
 
       const validated = JobCreateSchema.parse(req.body);
       const orgId = req.user!.orgId!;
@@ -86,7 +75,6 @@ jobRouter.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
 
       // HR user: list jobs in their organization
       if (req.user && req.user.role === 'hr' && req.user.orgId) {
@@ -149,7 +137,6 @@ jobRouter.get(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const orgId = req.user!.orgId!;
       const { status } = req.query;
       const statusFilter = status && typeof status === 'string' ? status : undefined;
@@ -192,7 +179,6 @@ jobRouter.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const jobId = req.params.id as string;
 
       const job = await prisma.job.findUnique({
@@ -235,7 +221,6 @@ jobRouter.get(
 
 async function handleJobUpdate(req: Request, res: Response, next: NextFunction) {
   try {
-    if (checkOrgParamPollution(req, res)) return;
     const jobId = req.params.id as string;
 
     const existingJob = await prisma.job.findUnique({
@@ -293,7 +278,6 @@ jobRouter.post(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const jobId = req.params.id as string;
 
       const existingJob = await prisma.job.findUnique({
@@ -341,7 +325,6 @@ jobRouter.post(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const jobId = req.params.id as string;
 
       const existingJob = await prisma.job.findUnique({
@@ -379,7 +362,6 @@ jobRouter.delete(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const jobId = req.params.id as string;
 
       const existingJob = await prisma.job.findUnique({
@@ -416,7 +398,6 @@ jobRouter.post(
   requireRole('hr'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const { description, title } = req.body;
       if (!description || typeof description !== 'string') {
         return res.status(400).json({ success: false, error: 'Job description is required' });
@@ -441,7 +422,6 @@ jobRouter.post(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const jobId = req.params.id as string;
 
       const existingJob = await prisma.job.findUnique({
@@ -501,7 +481,6 @@ jobRouter.get(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const jobId = req.params.id as string;
 
       const job = await prisma.job.findUnique({
@@ -573,7 +552,6 @@ jobRouter.get(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const jobId = req.params.id as string;
 
       const job = await prisma.job.findUnique({

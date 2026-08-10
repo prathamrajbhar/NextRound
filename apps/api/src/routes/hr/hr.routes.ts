@@ -1,27 +1,17 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import crypto from 'crypto';
 import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
-import { requireOrgScope } from '../../middleware/orgScope';
+import { requireOrgScope, rejectOrgIdParam } from '../../middleware/orgScope';
 import { serializeApplicationList } from '../../lib/serializers';
-import { deriveSalary, deriveEquity } from '../../lib/offer-terms';
+import { deriveSalary } from '../../lib/offer-terms';
+import { upsertOffer } from '../../services/offer.service';
 import { emailService } from '../../services/email.service';
 
 export const hrRouter = Router();
 
-// Helper to check parameter pollution / spoofing attempt
-function checkOrgParamPollution(req: Request, res: Response): boolean {
-  if (req.body && (req.body.org_id || req.body.orgId)) {
-    res.status(403).json({ success: false, error: 'Forbidden: org_id cannot be supplied in body' });
-    return true;
-  }
-  if (req.query && (req.query.org_id || req.query.orgId)) {
-    res.status(403).json({ success: false, error: 'Forbidden: org_id cannot be supplied in query' });
-    return true;
-  }
-  return false;
-}
+// Org scoping is JWT-derived; never accept a client-supplied org_id.
+hrRouter.use(rejectOrgIdParam);
 
 // GET /api/v1/hr/dashboard - Aggregated HR KPI metrics & active job pipeline status
 hrRouter.get(
@@ -31,7 +21,6 @@ hrRouter.get(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const orgId = req.user!.orgId!;
 
       // Active jobs count
@@ -200,7 +189,6 @@ hrRouter.get(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const orgId = req.user!.orgId!;
 
       const items = await prisma.application.findMany({
@@ -242,7 +230,6 @@ hrRouter.patch(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const orgId = req.user!.orgId!;
       const evalId = req.params.id as string;
       const { decision, notes } = req.body; // 'hire' | 'reject'
@@ -287,12 +274,11 @@ hrRouter.patch(
       // salary never leaves an 'offered' application without an honest offer.
       const job = evaluation.application.job;
       const offerSalary = decision === 'hire' ? deriveSalary(job.salary) : null;
-      const offerEquity = decision === 'hire' ? deriveEquity(job) : null;
 
       if (decision === 'hire' && offerSalary === null) {
         return res.status(422).json({
           success: false,
-          error: `Cannot generate an offer for "${job.title}": the job has no salary configured. Add a salary to the job before hiring.`,
+          error: `Cannot generate an offer for "${job.title}": the job has no salary configured. Add a salary to the job before generating an offer.`,
         });
       }
 
@@ -302,40 +288,21 @@ hrRouter.patch(
       });
 
       if (decision === 'hire') {
-        // Idempotent offer creation: application_id is unique, so an existing offer
-        // (e.g. from a retried decision) is updated in place, keeping its magic link token.
-        const magicToken = crypto.randomUUID();
-        const offer = await prisma.offer.upsert({
-          where: { application_id: appId },
-          create: {
-            application_id: appId,
-            role_title: job.title,
-            salary: offerSalary as number,
-            equity: offerEquity,
-            magic_link_token: magicToken,
-            offer_letter_content: `Official Job Offer for ${job.title} (Approved by HR Override)`,
-            status: 'pending',
-            valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-          },
-          update: {
-            role_title: job.title,
-            salary: offerSalary as number,
-            equity: offerEquity,
-            offer_letter_content: `Official Job Offer for ${job.title} (Approved by HR Override)`,
-            status: 'pending',
-            valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-          },
+        const { offer, isNew } = await upsertOffer({
+          applicationId: appId,
+          job,
+          salary: offerSalary as number,
+          offerLetterContent: `Official Job Offer for ${job.title} (Approved by HR Override)`,
         });
 
         // Only email the candidate when a brand-new offer was created (token freshly generated)
-        const isNewOffer = offer.magic_link_token === magicToken;
-        if (isNewOffer) {
+        if (isNew) {
           const candidateName = evaluation.application.candidate.user.email.split('@')[0];
           await emailService.sendOfferEmail(
             evaluation.application.candidate.user.email,
             candidateName,
             job.title,
-            { salary: offerSalary as number, equity: offerEquity ?? undefined, magicLinkToken: magicToken }
+            { salary: offer.salary, equity: offer.equity ?? undefined, magicLinkToken: offer.magic_link_token! }
           );
         }
 
@@ -372,7 +339,6 @@ hrRouter.get(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const orgId = req.user!.orgId!;
       const evalId = req.params.id as string;
 

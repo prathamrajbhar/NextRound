@@ -7,25 +7,9 @@ import { enqueueMockEvaluation } from '../../lib/queues/mock.queue';
 import { serializeMockSession, serializeMockSessionList } from '../../lib/serializers';
 import { generateAiAptitudeQuestions, generateAptitudeChunk } from '../../services/ai-question-generator.service';
 import { generateAiCodingProblem } from '../../services/ai-coding-generator.service';
-
-
+import { getCandidateProfileId } from '../../lib/candidate-profile';
 
 export const mockRouter = Router();
-
-// Helper to get or create candidate profile for current user
-async function getCandidateProfileId(userId: string): Promise<string> {
-  let profile = await prisma.candidateProfile.findUnique({
-    where: { user_id: userId },
-    select: { id: true },
-  });
-  if (!profile) {
-    profile = await prisma.candidateProfile.create({
-      data: { user_id: userId },
-      select: { id: true },
-    });
-  }
-  return profile.id;
-}
 
 // GET /api/v1/mock/topics - Get dynamic available topics
 mockRouter.get('/topics', async (req: Request, res: Response) => {

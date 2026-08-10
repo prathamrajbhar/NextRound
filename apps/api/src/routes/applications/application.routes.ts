@@ -7,7 +7,7 @@ import {
 import { prisma } from '../../lib/prisma';
 import { authenticate, optionalAuthenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
-import { requireOrgScope } from '../../middleware/orgScope';
+import { requireOrgScope, rejectOrgIdParam } from '../../middleware/orgScope';
 import { enqueueScreening } from '../../lib/queues/screening.queue';
 import { enqueueScheduling } from '../../lib/queues/scheduling.queue';
 import { enqueueAssessment } from '../../lib/queues/assessment.queue';
@@ -21,7 +21,9 @@ import { executeCodingSubmission } from '../../services/coding-executor.service'
 
 export const applicationRouter = Router();
 
-// Helper to check parameter pollution / spoofing attempt
+// Org scoping is JWT-derived; never accept a client-supplied org_id.
+applicationRouter.use(rejectOrgIdParam);
+
 // Verify an application belongs to the authenticated candidate (via CandidateProfile)
 async function candidateOwnsApplication(applicationId: string, userId: string): Promise<boolean> {
   const app = await prisma.application.findFirst({
@@ -29,18 +31,6 @@ async function candidateOwnsApplication(applicationId: string, userId: string): 
     select: { id: true },
   });
   return Boolean(app);
-}
-
-function checkOrgParamPollution(req: Request, res: Response): boolean {
-  if (req.body && (req.body.org_id || req.body.orgId)) {
-    res.status(403).json({ success: false, error: 'Forbidden: org_id cannot be supplied in body' });
-    return true;
-  }
-  if (req.query && (req.query.org_id || req.query.orgId)) {
-    res.status(403).json({ success: false, error: 'Forbidden: org_id cannot be supplied in query' });
-    return true;
-  }
-  return false;
 }
 
 // POST /api/v1/applications - Candidate submit application
@@ -206,7 +196,6 @@ applicationRouter.get(
   requireRole('hr'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const jobId = req.query.jobId as string | undefined;
       const orgId = req.user!.orgId!;
 
@@ -257,7 +246,6 @@ applicationRouter.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const appId = req.params.id as string;
 
       const application = await prisma.application.findUnique({
@@ -336,7 +324,6 @@ applicationRouter.post(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const appId = req.params.id as string;
 
       const application = await prisma.application.findUnique({
@@ -382,7 +369,6 @@ applicationRouter.patch(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const appId = req.params.id as string;
 
       const application = await prisma.application.findUnique({
@@ -441,7 +427,6 @@ applicationRouter.patch(
   requireOrgScope,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const appId = req.params.id as string;
 
       const application = await prisma.application.findUnique({
@@ -502,7 +487,6 @@ applicationRouter.post(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const appId = req.params.id as string;
 
       const application = await prisma.application.findUnique({
@@ -1270,7 +1254,6 @@ applicationRouter.get(
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (checkOrgParamPollution(req, res)) return;
       const appId = req.params.id as string;
 
       const application = await prisma.application.findUnique({

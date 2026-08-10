@@ -9,6 +9,22 @@ type JobLike = {
   org_id?: string | null;
 };
 
+/**
+ * Statuses that are already past the assessment phase. A late/retried modality
+ * result must never regress an application out of these.
+ */
+export const PAST_ASSESSMENT: string[] = [
+  'interview_scheduled',
+  'interviewed',
+  'evaluation',
+  'hr_round',
+  'decided',
+  'offered',
+  'accepted',
+  'rejected',
+  'withdrawn',
+];
+
 function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
 }
@@ -108,17 +124,6 @@ export async function advanceAssessmentStage(applicationId: string): Promise<str
   if (!app) return null;
 
   const current = app.status;
-  const PAST_ASSESSMENT = [
-    'interview_scheduled',
-    'interviewed',
-    'evaluation',
-    'hr_round',
-    'decided',
-    'offered',
-    'accepted',
-    'rejected',
-    'withdrawn',
-  ];
   if (PAST_ASSESSMENT.includes(current)) return current;
 
   const enabled = enabledModalities(app.job as JobLike);

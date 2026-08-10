@@ -8,21 +8,16 @@ import {
 import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
-import { requireOrgScope } from '../../middleware/orgScope';
+import { requireOrgScope, rejectOrgIdParam } from '../../middleware/orgScope';
 import { emailService } from '../../services/email.service';
 
 export const organizationRouter = Router();
 
-// Helper to check parameter pollution / spoofing attempt
+// Org scoping is JWT-derived; never accept a client-supplied org_id.
+organizationRouter.use(rejectOrgIdParam);
+
+// Verify the HR user's JWT org matches the target resource's org.
 function enforceOrgMatch(req: Request, res: Response, targetOrgId: string): boolean {
-  if (req.body && (req.body.org_id || req.body.orgId)) {
-    res.status(403).json({ success: false, error: 'Forbidden: org_id cannot be supplied in body' });
-    return false;
-  }
-  if (req.query && (req.query.org_id || req.query.orgId)) {
-    res.status(403).json({ success: false, error: 'Forbidden: org_id cannot be supplied in query' });
-    return false;
-  }
   if (req.user?.orgId !== targetOrgId) {
     res.status(403).json({ success: false, error: 'Forbidden: Access denied to other organization resources' });
     return false;
@@ -37,10 +32,6 @@ organizationRouter.post(
   requireRole('hr'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      if (req.body && (req.body.org_id || req.body.orgId)) {
-        return res.status(403).json({ success: false, error: 'Forbidden: org_id parameter pollution' });
-      }
-
       const validated = OrganizationSchema.parse(req.body);
 
       if (!req.user) {
