@@ -27,10 +27,12 @@ export type AggregateMockSession = {
 }
 
 export type MockSessionAvgAggregateOutputType = {
+  final_score: number | null
   score: number | null
 }
 
 export type MockSessionSumAggregateOutputType = {
+  final_score: number | null
   score: number | null
 }
 
@@ -42,6 +44,11 @@ export type MockSessionMinAggregateOutputType = {
   difficulty: string | null
   type: string | null
   status: string | null
+  current_section: string | null
+  generation_seed: string | null
+  started_at: Date | null
+  completed_at: Date | null
+  final_score: number | null
   topic: string | null
   score: number | null
   resume_pdf_url: string | null
@@ -57,6 +64,11 @@ export type MockSessionMaxAggregateOutputType = {
   difficulty: string | null
   type: string | null
   status: string | null
+  current_section: string | null
+  generation_seed: string | null
+  started_at: Date | null
+  completed_at: Date | null
+  final_score: number | null
   topic: string | null
   score: number | null
   resume_pdf_url: string | null
@@ -72,9 +84,16 @@ export type MockSessionCountAggregateOutputType = {
   difficulty: number
   type: number
   status: number
+  current_section: number
+  generation_seed: number
+  started_at: number
+  completed_at: number
+  final_score: number
+  final_feedback: number
   topic: number
   focus_areas: number
   rubric: number
+  video_prompts: number
   transcript: number
   score: number
   feedback: number
@@ -87,10 +106,12 @@ export type MockSessionCountAggregateOutputType = {
 
 
 export type MockSessionAvgAggregateInputType = {
+  final_score?: true
   score?: true
 }
 
 export type MockSessionSumAggregateInputType = {
+  final_score?: true
   score?: true
 }
 
@@ -102,6 +123,11 @@ export type MockSessionMinAggregateInputType = {
   difficulty?: true
   type?: true
   status?: true
+  current_section?: true
+  generation_seed?: true
+  started_at?: true
+  completed_at?: true
+  final_score?: true
   topic?: true
   score?: true
   resume_pdf_url?: true
@@ -117,6 +143,11 @@ export type MockSessionMaxAggregateInputType = {
   difficulty?: true
   type?: true
   status?: true
+  current_section?: true
+  generation_seed?: true
+  started_at?: true
+  completed_at?: true
+  final_score?: true
   topic?: true
   score?: true
   resume_pdf_url?: true
@@ -132,9 +163,16 @@ export type MockSessionCountAggregateInputType = {
   difficulty?: true
   type?: true
   status?: true
+  current_section?: true
+  generation_seed?: true
+  started_at?: true
+  completed_at?: true
+  final_score?: true
+  final_feedback?: true
   topic?: true
   focus_areas?: true
   rubric?: true
+  video_prompts?: true
   transcript?: true
   score?: true
   feedback?: true
@@ -239,9 +277,16 @@ export type MockSessionGroupByOutputType = {
   difficulty: string | null
   type: string
   status: string
+  current_section: string
+  generation_seed: string | null
+  started_at: Date | null
+  completed_at: Date | null
+  final_score: number | null
+  final_feedback: runtime.JsonValue | null
   topic: string | null
   focus_areas: runtime.JsonValue | null
   rubric: runtime.JsonValue | null
+  video_prompts: runtime.JsonValue | null
   transcript: runtime.JsonValue | null
   score: number | null
   feedback: runtime.JsonValue | null
@@ -282,9 +327,16 @@ export type MockSessionWhereInput = {
   difficulty?: Prisma.StringNullableFilter<"MockSession"> | string | null
   type?: Prisma.StringFilter<"MockSession"> | string
   status?: Prisma.StringFilter<"MockSession"> | string
+  current_section?: Prisma.StringFilter<"MockSession"> | string
+  generation_seed?: Prisma.StringNullableFilter<"MockSession"> | string | null
+  started_at?: Prisma.DateTimeNullableFilter<"MockSession"> | Date | string | null
+  completed_at?: Prisma.DateTimeNullableFilter<"MockSession"> | Date | string | null
+  final_score?: Prisma.FloatNullableFilter<"MockSession"> | number | null
+  final_feedback?: Prisma.JsonNullableFilter<"MockSession">
   topic?: Prisma.StringNullableFilter<"MockSession"> | string | null
   focus_areas?: Prisma.JsonNullableFilter<"MockSession">
   rubric?: Prisma.JsonNullableFilter<"MockSession">
+  video_prompts?: Prisma.JsonNullableFilter<"MockSession">
   transcript?: Prisma.JsonNullableFilter<"MockSession">
   score?: Prisma.FloatNullableFilter<"MockSession"> | number | null
   feedback?: Prisma.JsonNullableFilter<"MockSession">
@@ -293,6 +345,9 @@ export type MockSessionWhereInput = {
   ended_at?: Prisma.DateTimeNullableFilter<"MockSession"> | Date | string | null
   created_at?: Prisma.DateTimeFilter<"MockSession"> | Date | string
   candidate?: Prisma.XOR<Prisma.CandidateProfileScalarRelationFilter, Prisma.CandidateProfileWhereInput>
+  assessments?: Prisma.AssessmentListRelationFilter
+  coding_snapshots?: Prisma.CodingProblemSnapshotListRelationFilter
+  video_submissions?: Prisma.VideoSubmissionListRelationFilter
 }
 
 export type MockSessionOrderByWithRelationInput = {
@@ -303,9 +358,16 @@ export type MockSessionOrderByWithRelationInput = {
   difficulty?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  current_section?: Prisma.SortOrder
+  generation_seed?: Prisma.SortOrderInput | Prisma.SortOrder
+  started_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  completed_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  final_score?: Prisma.SortOrderInput | Prisma.SortOrder
+  final_feedback?: Prisma.SortOrderInput | Prisma.SortOrder
   topic?: Prisma.SortOrderInput | Prisma.SortOrder
   focus_areas?: Prisma.SortOrderInput | Prisma.SortOrder
   rubric?: Prisma.SortOrderInput | Prisma.SortOrder
+  video_prompts?: Prisma.SortOrderInput | Prisma.SortOrder
   transcript?: Prisma.SortOrderInput | Prisma.SortOrder
   score?: Prisma.SortOrderInput | Prisma.SortOrder
   feedback?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -314,6 +376,9 @@ export type MockSessionOrderByWithRelationInput = {
   ended_at?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   candidate?: Prisma.CandidateProfileOrderByWithRelationInput
+  assessments?: Prisma.AssessmentOrderByRelationAggregateInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotOrderByRelationAggregateInput
+  video_submissions?: Prisma.VideoSubmissionOrderByRelationAggregateInput
 }
 
 export type MockSessionWhereUniqueInput = Prisma.AtLeast<{
@@ -327,9 +392,16 @@ export type MockSessionWhereUniqueInput = Prisma.AtLeast<{
   difficulty?: Prisma.StringNullableFilter<"MockSession"> | string | null
   type?: Prisma.StringFilter<"MockSession"> | string
   status?: Prisma.StringFilter<"MockSession"> | string
+  current_section?: Prisma.StringFilter<"MockSession"> | string
+  generation_seed?: Prisma.StringNullableFilter<"MockSession"> | string | null
+  started_at?: Prisma.DateTimeNullableFilter<"MockSession"> | Date | string | null
+  completed_at?: Prisma.DateTimeNullableFilter<"MockSession"> | Date | string | null
+  final_score?: Prisma.FloatNullableFilter<"MockSession"> | number | null
+  final_feedback?: Prisma.JsonNullableFilter<"MockSession">
   topic?: Prisma.StringNullableFilter<"MockSession"> | string | null
   focus_areas?: Prisma.JsonNullableFilter<"MockSession">
   rubric?: Prisma.JsonNullableFilter<"MockSession">
+  video_prompts?: Prisma.JsonNullableFilter<"MockSession">
   transcript?: Prisma.JsonNullableFilter<"MockSession">
   score?: Prisma.FloatNullableFilter<"MockSession"> | number | null
   feedback?: Prisma.JsonNullableFilter<"MockSession">
@@ -338,6 +410,9 @@ export type MockSessionWhereUniqueInput = Prisma.AtLeast<{
   ended_at?: Prisma.DateTimeNullableFilter<"MockSession"> | Date | string | null
   created_at?: Prisma.DateTimeFilter<"MockSession"> | Date | string
   candidate?: Prisma.XOR<Prisma.CandidateProfileScalarRelationFilter, Prisma.CandidateProfileWhereInput>
+  assessments?: Prisma.AssessmentListRelationFilter
+  coding_snapshots?: Prisma.CodingProblemSnapshotListRelationFilter
+  video_submissions?: Prisma.VideoSubmissionListRelationFilter
 }, "id">
 
 export type MockSessionOrderByWithAggregationInput = {
@@ -348,9 +423,16 @@ export type MockSessionOrderByWithAggregationInput = {
   difficulty?: Prisma.SortOrderInput | Prisma.SortOrder
   type?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  current_section?: Prisma.SortOrder
+  generation_seed?: Prisma.SortOrderInput | Prisma.SortOrder
+  started_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  completed_at?: Prisma.SortOrderInput | Prisma.SortOrder
+  final_score?: Prisma.SortOrderInput | Prisma.SortOrder
+  final_feedback?: Prisma.SortOrderInput | Prisma.SortOrder
   topic?: Prisma.SortOrderInput | Prisma.SortOrder
   focus_areas?: Prisma.SortOrderInput | Prisma.SortOrder
   rubric?: Prisma.SortOrderInput | Prisma.SortOrder
+  video_prompts?: Prisma.SortOrderInput | Prisma.SortOrder
   transcript?: Prisma.SortOrderInput | Prisma.SortOrder
   score?: Prisma.SortOrderInput | Prisma.SortOrder
   feedback?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -376,9 +458,16 @@ export type MockSessionScalarWhereWithAggregatesInput = {
   difficulty?: Prisma.StringNullableWithAggregatesFilter<"MockSession"> | string | null
   type?: Prisma.StringWithAggregatesFilter<"MockSession"> | string
   status?: Prisma.StringWithAggregatesFilter<"MockSession"> | string
+  current_section?: Prisma.StringWithAggregatesFilter<"MockSession"> | string
+  generation_seed?: Prisma.StringNullableWithAggregatesFilter<"MockSession"> | string | null
+  started_at?: Prisma.DateTimeNullableWithAggregatesFilter<"MockSession"> | Date | string | null
+  completed_at?: Prisma.DateTimeNullableWithAggregatesFilter<"MockSession"> | Date | string | null
+  final_score?: Prisma.FloatNullableWithAggregatesFilter<"MockSession"> | number | null
+  final_feedback?: Prisma.JsonNullableWithAggregatesFilter<"MockSession">
   topic?: Prisma.StringNullableWithAggregatesFilter<"MockSession"> | string | null
   focus_areas?: Prisma.JsonNullableWithAggregatesFilter<"MockSession">
   rubric?: Prisma.JsonNullableWithAggregatesFilter<"MockSession">
+  video_prompts?: Prisma.JsonNullableWithAggregatesFilter<"MockSession">
   transcript?: Prisma.JsonNullableWithAggregatesFilter<"MockSession">
   score?: Prisma.FloatNullableWithAggregatesFilter<"MockSession"> | number | null
   feedback?: Prisma.JsonNullableWithAggregatesFilter<"MockSession">
@@ -395,9 +484,16 @@ export type MockSessionCreateInput = {
   difficulty?: string | null
   type?: string
   status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -406,6 +502,9 @@ export type MockSessionCreateInput = {
   ended_at?: Date | string | null
   created_at?: Date | string
   candidate: Prisma.CandidateProfileCreateNestedOneWithoutMock_sessionsInput
+  assessments?: Prisma.AssessmentCreateNestedManyWithoutMock_sessionInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotCreateNestedManyWithoutMock_sessionInput
+  video_submissions?: Prisma.VideoSubmissionCreateNestedManyWithoutMock_sessionInput
 }
 
 export type MockSessionUncheckedCreateInput = {
@@ -416,9 +515,16 @@ export type MockSessionUncheckedCreateInput = {
   difficulty?: string | null
   type?: string
   status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -426,6 +532,9 @@ export type MockSessionUncheckedCreateInput = {
   resume_pdf_url?: string | null
   ended_at?: Date | string | null
   created_at?: Date | string
+  assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutMock_sessionInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotUncheckedCreateNestedManyWithoutMock_sessionInput
+  video_submissions?: Prisma.VideoSubmissionUncheckedCreateNestedManyWithoutMock_sessionInput
 }
 
 export type MockSessionUpdateInput = {
@@ -435,9 +544,16 @@ export type MockSessionUpdateInput = {
   difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -446,6 +562,9 @@ export type MockSessionUpdateInput = {
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   candidate?: Prisma.CandidateProfileUpdateOneRequiredWithoutMock_sessionsNestedInput
+  assessments?: Prisma.AssessmentUpdateManyWithoutMock_sessionNestedInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotUpdateManyWithoutMock_sessionNestedInput
+  video_submissions?: Prisma.VideoSubmissionUpdateManyWithoutMock_sessionNestedInput
 }
 
 export type MockSessionUncheckedUpdateInput = {
@@ -456,9 +575,16 @@ export type MockSessionUncheckedUpdateInput = {
   difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -466,6 +592,9 @@ export type MockSessionUncheckedUpdateInput = {
   resume_pdf_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutMock_sessionNestedInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotUncheckedUpdateManyWithoutMock_sessionNestedInput
+  video_submissions?: Prisma.VideoSubmissionUncheckedUpdateManyWithoutMock_sessionNestedInput
 }
 
 export type MockSessionCreateManyInput = {
@@ -476,9 +605,16 @@ export type MockSessionCreateManyInput = {
   difficulty?: string | null
   type?: string
   status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -495,9 +631,16 @@ export type MockSessionUpdateManyMutationInput = {
   difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -515,9 +658,16 @@ export type MockSessionUncheckedUpdateManyInput = {
   difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -537,6 +687,16 @@ export type MockSessionOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
 }
 
+export type MockSessionNullableScalarRelationFilter = {
+  is?: Prisma.MockSessionWhereInput | null
+  isNot?: Prisma.MockSessionWhereInput | null
+}
+
+export type MockSessionScalarRelationFilter = {
+  is?: Prisma.MockSessionWhereInput
+  isNot?: Prisma.MockSessionWhereInput
+}
+
 export type MockSessionCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   candidate_id?: Prisma.SortOrder
@@ -545,9 +705,16 @@ export type MockSessionCountOrderByAggregateInput = {
   difficulty?: Prisma.SortOrder
   type?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  current_section?: Prisma.SortOrder
+  generation_seed?: Prisma.SortOrder
+  started_at?: Prisma.SortOrder
+  completed_at?: Prisma.SortOrder
+  final_score?: Prisma.SortOrder
+  final_feedback?: Prisma.SortOrder
   topic?: Prisma.SortOrder
   focus_areas?: Prisma.SortOrder
   rubric?: Prisma.SortOrder
+  video_prompts?: Prisma.SortOrder
   transcript?: Prisma.SortOrder
   score?: Prisma.SortOrder
   feedback?: Prisma.SortOrder
@@ -558,6 +725,7 @@ export type MockSessionCountOrderByAggregateInput = {
 }
 
 export type MockSessionAvgOrderByAggregateInput = {
+  final_score?: Prisma.SortOrder
   score?: Prisma.SortOrder
 }
 
@@ -569,6 +737,11 @@ export type MockSessionMaxOrderByAggregateInput = {
   difficulty?: Prisma.SortOrder
   type?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  current_section?: Prisma.SortOrder
+  generation_seed?: Prisma.SortOrder
+  started_at?: Prisma.SortOrder
+  completed_at?: Prisma.SortOrder
+  final_score?: Prisma.SortOrder
   topic?: Prisma.SortOrder
   score?: Prisma.SortOrder
   resume_pdf_url?: Prisma.SortOrder
@@ -584,6 +757,11 @@ export type MockSessionMinOrderByAggregateInput = {
   difficulty?: Prisma.SortOrder
   type?: Prisma.SortOrder
   status?: Prisma.SortOrder
+  current_section?: Prisma.SortOrder
+  generation_seed?: Prisma.SortOrder
+  started_at?: Prisma.SortOrder
+  completed_at?: Prisma.SortOrder
+  final_score?: Prisma.SortOrder
   topic?: Prisma.SortOrder
   score?: Prisma.SortOrder
   resume_pdf_url?: Prisma.SortOrder
@@ -592,6 +770,7 @@ export type MockSessionMinOrderByAggregateInput = {
 }
 
 export type MockSessionSumOrderByAggregateInput = {
+  final_score?: Prisma.SortOrder
   score?: Prisma.SortOrder
 }
 
@@ -637,6 +816,50 @@ export type MockSessionUncheckedUpdateManyWithoutCandidateNestedInput = {
   deleteMany?: Prisma.MockSessionScalarWhereInput | Prisma.MockSessionScalarWhereInput[]
 }
 
+export type MockSessionCreateNestedOneWithoutAssessmentsInput = {
+  create?: Prisma.XOR<Prisma.MockSessionCreateWithoutAssessmentsInput, Prisma.MockSessionUncheckedCreateWithoutAssessmentsInput>
+  connectOrCreate?: Prisma.MockSessionCreateOrConnectWithoutAssessmentsInput
+  connect?: Prisma.MockSessionWhereUniqueInput
+}
+
+export type MockSessionUpdateOneWithoutAssessmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.MockSessionCreateWithoutAssessmentsInput, Prisma.MockSessionUncheckedCreateWithoutAssessmentsInput>
+  connectOrCreate?: Prisma.MockSessionCreateOrConnectWithoutAssessmentsInput
+  upsert?: Prisma.MockSessionUpsertWithoutAssessmentsInput
+  disconnect?: Prisma.MockSessionWhereInput | boolean
+  delete?: Prisma.MockSessionWhereInput | boolean
+  connect?: Prisma.MockSessionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MockSessionUpdateToOneWithWhereWithoutAssessmentsInput, Prisma.MockSessionUpdateWithoutAssessmentsInput>, Prisma.MockSessionUncheckedUpdateWithoutAssessmentsInput>
+}
+
+export type MockSessionCreateNestedOneWithoutCoding_snapshotsInput = {
+  create?: Prisma.XOR<Prisma.MockSessionCreateWithoutCoding_snapshotsInput, Prisma.MockSessionUncheckedCreateWithoutCoding_snapshotsInput>
+  connectOrCreate?: Prisma.MockSessionCreateOrConnectWithoutCoding_snapshotsInput
+  connect?: Prisma.MockSessionWhereUniqueInput
+}
+
+export type MockSessionUpdateOneRequiredWithoutCoding_snapshotsNestedInput = {
+  create?: Prisma.XOR<Prisma.MockSessionCreateWithoutCoding_snapshotsInput, Prisma.MockSessionUncheckedCreateWithoutCoding_snapshotsInput>
+  connectOrCreate?: Prisma.MockSessionCreateOrConnectWithoutCoding_snapshotsInput
+  upsert?: Prisma.MockSessionUpsertWithoutCoding_snapshotsInput
+  connect?: Prisma.MockSessionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MockSessionUpdateToOneWithWhereWithoutCoding_snapshotsInput, Prisma.MockSessionUpdateWithoutCoding_snapshotsInput>, Prisma.MockSessionUncheckedUpdateWithoutCoding_snapshotsInput>
+}
+
+export type MockSessionCreateNestedOneWithoutVideo_submissionsInput = {
+  create?: Prisma.XOR<Prisma.MockSessionCreateWithoutVideo_submissionsInput, Prisma.MockSessionUncheckedCreateWithoutVideo_submissionsInput>
+  connectOrCreate?: Prisma.MockSessionCreateOrConnectWithoutVideo_submissionsInput
+  connect?: Prisma.MockSessionWhereUniqueInput
+}
+
+export type MockSessionUpdateOneRequiredWithoutVideo_submissionsNestedInput = {
+  create?: Prisma.XOR<Prisma.MockSessionCreateWithoutVideo_submissionsInput, Prisma.MockSessionUncheckedCreateWithoutVideo_submissionsInput>
+  connectOrCreate?: Prisma.MockSessionCreateOrConnectWithoutVideo_submissionsInput
+  upsert?: Prisma.MockSessionUpsertWithoutVideo_submissionsInput
+  connect?: Prisma.MockSessionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MockSessionUpdateToOneWithWhereWithoutVideo_submissionsInput, Prisma.MockSessionUpdateWithoutVideo_submissionsInput>, Prisma.MockSessionUncheckedUpdateWithoutVideo_submissionsInput>
+}
+
 export type MockSessionCreateWithoutCandidateInput = {
   id?: string
   target_company: string
@@ -644,9 +867,16 @@ export type MockSessionCreateWithoutCandidateInput = {
   difficulty?: string | null
   type?: string
   status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -654,6 +884,9 @@ export type MockSessionCreateWithoutCandidateInput = {
   resume_pdf_url?: string | null
   ended_at?: Date | string | null
   created_at?: Date | string
+  assessments?: Prisma.AssessmentCreateNestedManyWithoutMock_sessionInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotCreateNestedManyWithoutMock_sessionInput
+  video_submissions?: Prisma.VideoSubmissionCreateNestedManyWithoutMock_sessionInput
 }
 
 export type MockSessionUncheckedCreateWithoutCandidateInput = {
@@ -663,9 +896,16 @@ export type MockSessionUncheckedCreateWithoutCandidateInput = {
   difficulty?: string | null
   type?: string
   status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -673,6 +913,9 @@ export type MockSessionUncheckedCreateWithoutCandidateInput = {
   resume_pdf_url?: string | null
   ended_at?: Date | string | null
   created_at?: Date | string
+  assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutMock_sessionInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotUncheckedCreateNestedManyWithoutMock_sessionInput
+  video_submissions?: Prisma.VideoSubmissionUncheckedCreateNestedManyWithoutMock_sessionInput
 }
 
 export type MockSessionCreateOrConnectWithoutCandidateInput = {
@@ -712,9 +955,16 @@ export type MockSessionScalarWhereInput = {
   difficulty?: Prisma.StringNullableFilter<"MockSession"> | string | null
   type?: Prisma.StringFilter<"MockSession"> | string
   status?: Prisma.StringFilter<"MockSession"> | string
+  current_section?: Prisma.StringFilter<"MockSession"> | string
+  generation_seed?: Prisma.StringNullableFilter<"MockSession"> | string | null
+  started_at?: Prisma.DateTimeNullableFilter<"MockSession"> | Date | string | null
+  completed_at?: Prisma.DateTimeNullableFilter<"MockSession"> | Date | string | null
+  final_score?: Prisma.FloatNullableFilter<"MockSession"> | number | null
+  final_feedback?: Prisma.JsonNullableFilter<"MockSession">
   topic?: Prisma.StringNullableFilter<"MockSession"> | string | null
   focus_areas?: Prisma.JsonNullableFilter<"MockSession">
   rubric?: Prisma.JsonNullableFilter<"MockSession">
+  video_prompts?: Prisma.JsonNullableFilter<"MockSession">
   transcript?: Prisma.JsonNullableFilter<"MockSession">
   score?: Prisma.FloatNullableFilter<"MockSession"> | number | null
   feedback?: Prisma.JsonNullableFilter<"MockSession">
@@ -724,6 +974,402 @@ export type MockSessionScalarWhereInput = {
   created_at?: Prisma.DateTimeFilter<"MockSession"> | Date | string
 }
 
+export type MockSessionCreateWithoutAssessmentsInput = {
+  id?: string
+  target_company: string
+  target_role: string
+  difficulty?: string | null
+  type?: string
+  status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: string | null
+  ended_at?: Date | string | null
+  created_at?: Date | string
+  candidate: Prisma.CandidateProfileCreateNestedOneWithoutMock_sessionsInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotCreateNestedManyWithoutMock_sessionInput
+  video_submissions?: Prisma.VideoSubmissionCreateNestedManyWithoutMock_sessionInput
+}
+
+export type MockSessionUncheckedCreateWithoutAssessmentsInput = {
+  id?: string
+  candidate_id: string
+  target_company: string
+  target_role: string
+  difficulty?: string | null
+  type?: string
+  status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: string | null
+  ended_at?: Date | string | null
+  created_at?: Date | string
+  coding_snapshots?: Prisma.CodingProblemSnapshotUncheckedCreateNestedManyWithoutMock_sessionInput
+  video_submissions?: Prisma.VideoSubmissionUncheckedCreateNestedManyWithoutMock_sessionInput
+}
+
+export type MockSessionCreateOrConnectWithoutAssessmentsInput = {
+  where: Prisma.MockSessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.MockSessionCreateWithoutAssessmentsInput, Prisma.MockSessionUncheckedCreateWithoutAssessmentsInput>
+}
+
+export type MockSessionUpsertWithoutAssessmentsInput = {
+  update: Prisma.XOR<Prisma.MockSessionUpdateWithoutAssessmentsInput, Prisma.MockSessionUncheckedUpdateWithoutAssessmentsInput>
+  create: Prisma.XOR<Prisma.MockSessionCreateWithoutAssessmentsInput, Prisma.MockSessionUncheckedCreateWithoutAssessmentsInput>
+  where?: Prisma.MockSessionWhereInput
+}
+
+export type MockSessionUpdateToOneWithWhereWithoutAssessmentsInput = {
+  where?: Prisma.MockSessionWhereInput
+  data: Prisma.XOR<Prisma.MockSessionUpdateWithoutAssessmentsInput, Prisma.MockSessionUncheckedUpdateWithoutAssessmentsInput>
+}
+
+export type MockSessionUpdateWithoutAssessmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  target_company?: Prisma.StringFieldUpdateOperationsInput | string
+  target_role?: Prisma.StringFieldUpdateOperationsInput | string
+  difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidate?: Prisma.CandidateProfileUpdateOneRequiredWithoutMock_sessionsNestedInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotUpdateManyWithoutMock_sessionNestedInput
+  video_submissions?: Prisma.VideoSubmissionUpdateManyWithoutMock_sessionNestedInput
+}
+
+export type MockSessionUncheckedUpdateWithoutAssessmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.StringFieldUpdateOperationsInput | string
+  target_company?: Prisma.StringFieldUpdateOperationsInput | string
+  target_role?: Prisma.StringFieldUpdateOperationsInput | string
+  difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  coding_snapshots?: Prisma.CodingProblemSnapshotUncheckedUpdateManyWithoutMock_sessionNestedInput
+  video_submissions?: Prisma.VideoSubmissionUncheckedUpdateManyWithoutMock_sessionNestedInput
+}
+
+export type MockSessionCreateWithoutCoding_snapshotsInput = {
+  id?: string
+  target_company: string
+  target_role: string
+  difficulty?: string | null
+  type?: string
+  status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: string | null
+  ended_at?: Date | string | null
+  created_at?: Date | string
+  candidate: Prisma.CandidateProfileCreateNestedOneWithoutMock_sessionsInput
+  assessments?: Prisma.AssessmentCreateNestedManyWithoutMock_sessionInput
+  video_submissions?: Prisma.VideoSubmissionCreateNestedManyWithoutMock_sessionInput
+}
+
+export type MockSessionUncheckedCreateWithoutCoding_snapshotsInput = {
+  id?: string
+  candidate_id: string
+  target_company: string
+  target_role: string
+  difficulty?: string | null
+  type?: string
+  status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: string | null
+  ended_at?: Date | string | null
+  created_at?: Date | string
+  assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutMock_sessionInput
+  video_submissions?: Prisma.VideoSubmissionUncheckedCreateNestedManyWithoutMock_sessionInput
+}
+
+export type MockSessionCreateOrConnectWithoutCoding_snapshotsInput = {
+  where: Prisma.MockSessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.MockSessionCreateWithoutCoding_snapshotsInput, Prisma.MockSessionUncheckedCreateWithoutCoding_snapshotsInput>
+}
+
+export type MockSessionUpsertWithoutCoding_snapshotsInput = {
+  update: Prisma.XOR<Prisma.MockSessionUpdateWithoutCoding_snapshotsInput, Prisma.MockSessionUncheckedUpdateWithoutCoding_snapshotsInput>
+  create: Prisma.XOR<Prisma.MockSessionCreateWithoutCoding_snapshotsInput, Prisma.MockSessionUncheckedCreateWithoutCoding_snapshotsInput>
+  where?: Prisma.MockSessionWhereInput
+}
+
+export type MockSessionUpdateToOneWithWhereWithoutCoding_snapshotsInput = {
+  where?: Prisma.MockSessionWhereInput
+  data: Prisma.XOR<Prisma.MockSessionUpdateWithoutCoding_snapshotsInput, Prisma.MockSessionUncheckedUpdateWithoutCoding_snapshotsInput>
+}
+
+export type MockSessionUpdateWithoutCoding_snapshotsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  target_company?: Prisma.StringFieldUpdateOperationsInput | string
+  target_role?: Prisma.StringFieldUpdateOperationsInput | string
+  difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidate?: Prisma.CandidateProfileUpdateOneRequiredWithoutMock_sessionsNestedInput
+  assessments?: Prisma.AssessmentUpdateManyWithoutMock_sessionNestedInput
+  video_submissions?: Prisma.VideoSubmissionUpdateManyWithoutMock_sessionNestedInput
+}
+
+export type MockSessionUncheckedUpdateWithoutCoding_snapshotsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.StringFieldUpdateOperationsInput | string
+  target_company?: Prisma.StringFieldUpdateOperationsInput | string
+  target_role?: Prisma.StringFieldUpdateOperationsInput | string
+  difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutMock_sessionNestedInput
+  video_submissions?: Prisma.VideoSubmissionUncheckedUpdateManyWithoutMock_sessionNestedInput
+}
+
+export type MockSessionCreateWithoutVideo_submissionsInput = {
+  id?: string
+  target_company: string
+  target_role: string
+  difficulty?: string | null
+  type?: string
+  status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: string | null
+  ended_at?: Date | string | null
+  created_at?: Date | string
+  candidate: Prisma.CandidateProfileCreateNestedOneWithoutMock_sessionsInput
+  assessments?: Prisma.AssessmentCreateNestedManyWithoutMock_sessionInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotCreateNestedManyWithoutMock_sessionInput
+}
+
+export type MockSessionUncheckedCreateWithoutVideo_submissionsInput = {
+  id?: string
+  candidate_id: string
+  target_company: string
+  target_role: string
+  difficulty?: string | null
+  type?: string
+  status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: string | null
+  ended_at?: Date | string | null
+  created_at?: Date | string
+  assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutMock_sessionInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotUncheckedCreateNestedManyWithoutMock_sessionInput
+}
+
+export type MockSessionCreateOrConnectWithoutVideo_submissionsInput = {
+  where: Prisma.MockSessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.MockSessionCreateWithoutVideo_submissionsInput, Prisma.MockSessionUncheckedCreateWithoutVideo_submissionsInput>
+}
+
+export type MockSessionUpsertWithoutVideo_submissionsInput = {
+  update: Prisma.XOR<Prisma.MockSessionUpdateWithoutVideo_submissionsInput, Prisma.MockSessionUncheckedUpdateWithoutVideo_submissionsInput>
+  create: Prisma.XOR<Prisma.MockSessionCreateWithoutVideo_submissionsInput, Prisma.MockSessionUncheckedCreateWithoutVideo_submissionsInput>
+  where?: Prisma.MockSessionWhereInput
+}
+
+export type MockSessionUpdateToOneWithWhereWithoutVideo_submissionsInput = {
+  where?: Prisma.MockSessionWhereInput
+  data: Prisma.XOR<Prisma.MockSessionUpdateWithoutVideo_submissionsInput, Prisma.MockSessionUncheckedUpdateWithoutVideo_submissionsInput>
+}
+
+export type MockSessionUpdateWithoutVideo_submissionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  target_company?: Prisma.StringFieldUpdateOperationsInput | string
+  target_role?: Prisma.StringFieldUpdateOperationsInput | string
+  difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidate?: Prisma.CandidateProfileUpdateOneRequiredWithoutMock_sessionsNestedInput
+  assessments?: Prisma.AssessmentUpdateManyWithoutMock_sessionNestedInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotUpdateManyWithoutMock_sessionNestedInput
+}
+
+export type MockSessionUncheckedUpdateWithoutVideo_submissionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.StringFieldUpdateOperationsInput | string
+  target_company?: Prisma.StringFieldUpdateOperationsInput | string
+  target_role?: Prisma.StringFieldUpdateOperationsInput | string
+  difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  type?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  generated_resume?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  resume_pdf_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutMock_sessionNestedInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotUncheckedUpdateManyWithoutMock_sessionNestedInput
+}
+
 export type MockSessionCreateManyCandidateInput = {
   id?: string
   target_company: string
@@ -731,9 +1377,16 @@ export type MockSessionCreateManyCandidateInput = {
   difficulty?: string | null
   type?: string
   status?: string
+  current_section?: string
+  generation_seed?: string | null
+  started_at?: Date | string | null
+  completed_at?: Date | string | null
+  final_score?: number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -750,9 +1403,16 @@ export type MockSessionUpdateWithoutCandidateInput = {
   difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -760,6 +1420,9 @@ export type MockSessionUpdateWithoutCandidateInput = {
   resume_pdf_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assessments?: Prisma.AssessmentUpdateManyWithoutMock_sessionNestedInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotUpdateManyWithoutMock_sessionNestedInput
+  video_submissions?: Prisma.VideoSubmissionUpdateManyWithoutMock_sessionNestedInput
 }
 
 export type MockSessionUncheckedUpdateWithoutCandidateInput = {
@@ -769,9 +1432,16 @@ export type MockSessionUncheckedUpdateWithoutCandidateInput = {
   difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -779,6 +1449,9 @@ export type MockSessionUncheckedUpdateWithoutCandidateInput = {
   resume_pdf_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutMock_sessionNestedInput
+  coding_snapshots?: Prisma.CodingProblemSnapshotUncheckedUpdateManyWithoutMock_sessionNestedInput
+  video_submissions?: Prisma.VideoSubmissionUncheckedUpdateManyWithoutMock_sessionNestedInput
 }
 
 export type MockSessionUncheckedUpdateManyWithoutCandidateInput = {
@@ -788,9 +1461,16 @@ export type MockSessionUncheckedUpdateManyWithoutCandidateInput = {
   difficulty?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   type?: Prisma.StringFieldUpdateOperationsInput | string
   status?: Prisma.StringFieldUpdateOperationsInput | string
+  current_section?: Prisma.StringFieldUpdateOperationsInput | string
+  generation_seed?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  started_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  final_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  final_feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   topic?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   focus_areas?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   rubric?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  video_prompts?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   transcript?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   feedback?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
@@ -800,6 +1480,53 @@ export type MockSessionUncheckedUpdateManyWithoutCandidateInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
+
+/**
+ * Count Type MockSessionCountOutputType
+ */
+
+export type MockSessionCountOutputType = {
+  assessments: number
+  coding_snapshots: number
+  video_submissions: number
+}
+
+export type MockSessionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  assessments?: boolean | MockSessionCountOutputTypeCountAssessmentsArgs
+  coding_snapshots?: boolean | MockSessionCountOutputTypeCountCoding_snapshotsArgs
+  video_submissions?: boolean | MockSessionCountOutputTypeCountVideo_submissionsArgs
+}
+
+/**
+ * MockSessionCountOutputType without action
+ */
+export type MockSessionCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MockSessionCountOutputType
+   */
+  select?: Prisma.MockSessionCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * MockSessionCountOutputType without action
+ */
+export type MockSessionCountOutputTypeCountAssessmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AssessmentWhereInput
+}
+
+/**
+ * MockSessionCountOutputType without action
+ */
+export type MockSessionCountOutputTypeCountCoding_snapshotsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CodingProblemSnapshotWhereInput
+}
+
+/**
+ * MockSessionCountOutputType without action
+ */
+export type MockSessionCountOutputTypeCountVideo_submissionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.VideoSubmissionWhereInput
+}
 
 
 export type MockSessionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -810,9 +1537,16 @@ export type MockSessionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   difficulty?: boolean
   type?: boolean
   status?: boolean
+  current_section?: boolean
+  generation_seed?: boolean
+  started_at?: boolean
+  completed_at?: boolean
+  final_score?: boolean
+  final_feedback?: boolean
   topic?: boolean
   focus_areas?: boolean
   rubric?: boolean
+  video_prompts?: boolean
   transcript?: boolean
   score?: boolean
   feedback?: boolean
@@ -821,6 +1555,10 @@ export type MockSessionSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   ended_at?: boolean
   created_at?: boolean
   candidate?: boolean | Prisma.CandidateProfileDefaultArgs<ExtArgs>
+  assessments?: boolean | Prisma.MockSession$assessmentsArgs<ExtArgs>
+  coding_snapshots?: boolean | Prisma.MockSession$coding_snapshotsArgs<ExtArgs>
+  video_submissions?: boolean | Prisma.MockSession$video_submissionsArgs<ExtArgs>
+  _count?: boolean | Prisma.MockSessionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["mockSession"]>
 
 export type MockSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -831,9 +1569,16 @@ export type MockSessionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   difficulty?: boolean
   type?: boolean
   status?: boolean
+  current_section?: boolean
+  generation_seed?: boolean
+  started_at?: boolean
+  completed_at?: boolean
+  final_score?: boolean
+  final_feedback?: boolean
   topic?: boolean
   focus_areas?: boolean
   rubric?: boolean
+  video_prompts?: boolean
   transcript?: boolean
   score?: boolean
   feedback?: boolean
@@ -852,9 +1597,16 @@ export type MockSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   difficulty?: boolean
   type?: boolean
   status?: boolean
+  current_section?: boolean
+  generation_seed?: boolean
+  started_at?: boolean
+  completed_at?: boolean
+  final_score?: boolean
+  final_feedback?: boolean
   topic?: boolean
   focus_areas?: boolean
   rubric?: boolean
+  video_prompts?: boolean
   transcript?: boolean
   score?: boolean
   feedback?: boolean
@@ -873,9 +1625,16 @@ export type MockSessionSelectScalar = {
   difficulty?: boolean
   type?: boolean
   status?: boolean
+  current_section?: boolean
+  generation_seed?: boolean
+  started_at?: boolean
+  completed_at?: boolean
+  final_score?: boolean
+  final_feedback?: boolean
   topic?: boolean
   focus_areas?: boolean
   rubric?: boolean
+  video_prompts?: boolean
   transcript?: boolean
   score?: boolean
   feedback?: boolean
@@ -885,9 +1644,13 @@ export type MockSessionSelectScalar = {
   created_at?: boolean
 }
 
-export type MockSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "candidate_id" | "target_company" | "target_role" | "difficulty" | "type" | "status" | "topic" | "focus_areas" | "rubric" | "transcript" | "score" | "feedback" | "generated_resume" | "resume_pdf_url" | "ended_at" | "created_at", ExtArgs["result"]["mockSession"]>
+export type MockSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "candidate_id" | "target_company" | "target_role" | "difficulty" | "type" | "status" | "current_section" | "generation_seed" | "started_at" | "completed_at" | "final_score" | "final_feedback" | "topic" | "focus_areas" | "rubric" | "video_prompts" | "transcript" | "score" | "feedback" | "generated_resume" | "resume_pdf_url" | "ended_at" | "created_at", ExtArgs["result"]["mockSession"]>
 export type MockSessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   candidate?: boolean | Prisma.CandidateProfileDefaultArgs<ExtArgs>
+  assessments?: boolean | Prisma.MockSession$assessmentsArgs<ExtArgs>
+  coding_snapshots?: boolean | Prisma.MockSession$coding_snapshotsArgs<ExtArgs>
+  video_submissions?: boolean | Prisma.MockSession$video_submissionsArgs<ExtArgs>
+  _count?: boolean | Prisma.MockSessionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type MockSessionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   candidate?: boolean | Prisma.CandidateProfileDefaultArgs<ExtArgs>
@@ -900,6 +1663,9 @@ export type $MockSessionPayload<ExtArgs extends runtime.Types.Extensions.Interna
   name: "MockSession"
   objects: {
     candidate: Prisma.$CandidateProfilePayload<ExtArgs>
+    assessments: Prisma.$AssessmentPayload<ExtArgs>[]
+    coding_snapshots: Prisma.$CodingProblemSnapshotPayload<ExtArgs>[]
+    video_submissions: Prisma.$VideoSubmissionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -909,9 +1675,16 @@ export type $MockSessionPayload<ExtArgs extends runtime.Types.Extensions.Interna
     difficulty: string | null
     type: string
     status: string
+    current_section: string
+    generation_seed: string | null
+    started_at: Date | null
+    completed_at: Date | null
+    final_score: number | null
+    final_feedback: runtime.JsonValue | null
     topic: string | null
     focus_areas: runtime.JsonValue | null
     rubric: runtime.JsonValue | null
+    video_prompts: runtime.JsonValue | null
     transcript: runtime.JsonValue | null
     score: number | null
     feedback: runtime.JsonValue | null
@@ -1314,6 +2087,9 @@ readonly fields: MockSessionFieldRefs;
 export interface Prisma__MockSessionClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   candidate<T extends Prisma.CandidateProfileDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CandidateProfileDefaultArgs<ExtArgs>>): Prisma.Prisma__CandidateProfileClient<runtime.Types.Result.GetResult<Prisma.$CandidateProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  assessments<T extends Prisma.MockSession$assessmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.MockSession$assessmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AssessmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  coding_snapshots<T extends Prisma.MockSession$coding_snapshotsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.MockSession$coding_snapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CodingProblemSnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  video_submissions<T extends Prisma.MockSession$video_submissionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.MockSession$video_submissionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$VideoSubmissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1350,9 +2126,16 @@ export interface MockSessionFieldRefs {
   readonly difficulty: Prisma.FieldRef<"MockSession", 'String'>
   readonly type: Prisma.FieldRef<"MockSession", 'String'>
   readonly status: Prisma.FieldRef<"MockSession", 'String'>
+  readonly current_section: Prisma.FieldRef<"MockSession", 'String'>
+  readonly generation_seed: Prisma.FieldRef<"MockSession", 'String'>
+  readonly started_at: Prisma.FieldRef<"MockSession", 'DateTime'>
+  readonly completed_at: Prisma.FieldRef<"MockSession", 'DateTime'>
+  readonly final_score: Prisma.FieldRef<"MockSession", 'Float'>
+  readonly final_feedback: Prisma.FieldRef<"MockSession", 'Json'>
   readonly topic: Prisma.FieldRef<"MockSession", 'String'>
   readonly focus_areas: Prisma.FieldRef<"MockSession", 'Json'>
   readonly rubric: Prisma.FieldRef<"MockSession", 'Json'>
+  readonly video_prompts: Prisma.FieldRef<"MockSession", 'Json'>
   readonly transcript: Prisma.FieldRef<"MockSession", 'Json'>
   readonly score: Prisma.FieldRef<"MockSession", 'Float'>
   readonly feedback: Prisma.FieldRef<"MockSession", 'Json'>
@@ -1758,6 +2541,78 @@ export type MockSessionDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * Limit how many MockSessions to delete.
    */
   limit?: number
+}
+
+/**
+ * MockSession.assessments
+ */
+export type MockSession$assessmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Assessment
+   */
+  select?: Prisma.AssessmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Assessment
+   */
+  omit?: Prisma.AssessmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AssessmentInclude<ExtArgs> | null
+  where?: Prisma.AssessmentWhereInput
+  orderBy?: Prisma.AssessmentOrderByWithRelationInput | Prisma.AssessmentOrderByWithRelationInput[]
+  cursor?: Prisma.AssessmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AssessmentScalarFieldEnum | Prisma.AssessmentScalarFieldEnum[]
+}
+
+/**
+ * MockSession.coding_snapshots
+ */
+export type MockSession$coding_snapshotsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CodingProblemSnapshot
+   */
+  select?: Prisma.CodingProblemSnapshotSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CodingProblemSnapshot
+   */
+  omit?: Prisma.CodingProblemSnapshotOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CodingProblemSnapshotInclude<ExtArgs> | null
+  where?: Prisma.CodingProblemSnapshotWhereInput
+  orderBy?: Prisma.CodingProblemSnapshotOrderByWithRelationInput | Prisma.CodingProblemSnapshotOrderByWithRelationInput[]
+  cursor?: Prisma.CodingProblemSnapshotWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CodingProblemSnapshotScalarFieldEnum | Prisma.CodingProblemSnapshotScalarFieldEnum[]
+}
+
+/**
+ * MockSession.video_submissions
+ */
+export type MockSession$video_submissionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the VideoSubmission
+   */
+  select?: Prisma.VideoSubmissionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the VideoSubmission
+   */
+  omit?: Prisma.VideoSubmissionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.VideoSubmissionInclude<ExtArgs> | null
+  where?: Prisma.VideoSubmissionWhereInput
+  orderBy?: Prisma.VideoSubmissionOrderByWithRelationInput | Prisma.VideoSubmissionOrderByWithRelationInput[]
+  cursor?: Prisma.VideoSubmissionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.VideoSubmissionScalarFieldEnum | Prisma.VideoSubmissionScalarFieldEnum[]
 }
 
 /**

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Clock, TrendingUp, Award, Scale, ShieldCheck, DollarSign } from '@/lib/lucide-google-icons';
+import { Clock, TrendingUp, Award, DollarSign } from '@/lib/lucide-google-icons';
 
 interface AnalyticsKpiCardsProps {
   data?: {
@@ -9,18 +9,16 @@ interface AnalyticsKpiCardsProps {
     totalApplications?: number;
     activeJobs?: number;
     offerAcceptanceRatePercent?: number;
-    biasCleanRatePercent?: number;
   };
 }
 
 export function AnalyticsKpiCards({ data }: AnalyticsKpiCardsProps) {
   const avgHours = data?.avgTimeToHireDays ? data.avgTimeToHireDays * 24 : 0;
   const passRate = data?.offerAcceptanceRatePercent ?? 0;
-  const biasCheck = data?.biasCleanRatePercent ?? 0;
   const totalApps = data?.totalApplications ?? 0;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {/* Card 1: Time to Hire */}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel flex items-center justify-between hover:scale-[1.01] transition-all">
         <div className="space-y-1">
@@ -57,25 +55,7 @@ export function AnalyticsKpiCards({ data }: AnalyticsKpiCardsProps) {
         </div>
       </div>
 
-      {/* Card 3: Fairness Check */}
-      <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel flex items-center justify-between hover:scale-[1.01] transition-all">
-        <div className="space-y-1">
-          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
-            Fairness &amp; Bias Check
-          </span>
-          <span className="text-2xl font-black text-slate-900 dark:text-slate-100 font-display block">
-            {biasCheck}%
-          </span>
-          <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
-            <ShieldCheck className="h-3 w-3" /> {biasCheck}% Fair Evaluation
-          </span>
-        </div>
-        <div className="h-11 w-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400 flex-shrink-0">
-          <Scale className="h-5.5 w-5.5" />
-        </div>
-      </div>
-
-      {/* Card 4: Active Jobs */}
+      {/* Card 3: Active Jobs */}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel flex items-center justify-between hover:scale-[1.01] transition-all">
         <div className="space-y-1">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">

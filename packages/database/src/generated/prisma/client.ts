@@ -92,6 +92,21 @@ export type CodingProblem = Prisma.CodingProblemModel
  */
 export type CodingSubmission = Prisma.CodingSubmissionModel
 /**
+ * Model GeneratedQuestionChunk
+ * 
+ */
+export type GeneratedQuestionChunk = Prisma.GeneratedQuestionChunkModel
+/**
+ * Model CodingProblemSnapshot
+ * 
+ */
+export type CodingProblemSnapshot = Prisma.CodingProblemSnapshotModel
+/**
+ * Model VideoSubmission
+ * 
+ */
+export type VideoSubmission = Prisma.VideoSubmissionModel
+/**
  * Model Offer
  * 
  */

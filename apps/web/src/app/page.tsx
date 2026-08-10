@@ -60,8 +60,8 @@ export default function LandingPage() {
             <span className="mt-1 block text-sm font-semibold text-slate-500 dark:text-slate-400">Screening &amp; Rubric Scoring</span>
           </div>
           <div>
-            <span className="block text-4xl font-extrabold text-emerald-600 dark:text-emerald-400">100%</span>
-            <span className="mt-1 block text-sm font-semibold text-slate-500 dark:text-slate-400">Transparent Bias Auditing</span>
+            <span className="block text-4xl font-extrabold text-emerald-600 dark:text-emerald-400">Instant</span>
+            <span className="mt-1 block text-sm font-semibold text-slate-500 dark:text-slate-400">Candidate Feedback</span>
           </div>
         </div>
       </section>
@@ -227,8 +227,8 @@ export default function LandingPage() {
               </div>
               <div>
                 <div className="flex justify-between text-xs font-extrabold text-slate-705 dark:text-slate-300 mb-1">
-                  <span>Bias Compliance Audit</span>
-                  <span className="text-emerald-600 dark:text-emerald-400">Verified Standard</span>
+                  <span>Real-Time Analysis &amp; Decisions</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">Instant Verdicts</span>
                 </div>
                 <div className="w-full bg-white/45 dark:bg-slate-700/40 border border-white/20 dark:border-slate-600/20 rounded-full h-2 shadow-inner p-0.5">
                   <div className="bg-emerald-500 dark:bg-emerald-400 h-1 rounded-full transition-all duration-500" style={{ width: '100%' }}></div>

@@ -227,7 +227,7 @@ Secured endpoints callable exclusively by the Python AI service via `X-Internal-
 | PATCH | `/internal/applications/:id/assessment-result` | Save aptitude category score breakdown. |
 | PATCH | `/internal/applications/:id/coding-result` | Save code pass rate, execution timing, memory, complexity score. |
 | PATCH | `/internal/applications/:id/video-screening-result` | Save video transcript and screening score. |
-| PATCH | `/internal/evaluations/:id` | Save composite score, confidence level, bias report JSON. |
+| PATCH | `/internal/evaluations/:id` | Save composite score and confidence level. |
 | PATCH | `/internal/evaluations/:id/decision` | Write final decision and drafted offer/rejection email body. |
 | POST | `/internal/analytics/:orgId/weekly-report` | Save aggregated weekly hiring metrics. |
 | PATCH | `/internal/mock-sessions/:sessionId/complete` | Save practice session transcript, score, coaching feedback. |

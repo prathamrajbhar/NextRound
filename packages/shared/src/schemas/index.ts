@@ -341,6 +341,56 @@ export const CodingExecutionRequestSchema = z.object({
   idempotencyKey: z.string().optional(),
 });
 
+// ---------------------------------------------------------------------------
+// Mock interview flow schemas (spec §5)
+// ---------------------------------------------------------------------------
+
+/** Query params for GET .../assessment/aptitude/chunk */
+export const MockAptitudeChunkQuerySchema = z.object({
+  chunkIndex: z.coerce.number().int().min(0).default(0),
+  chunkSize: z.coerce.number().int().min(1).max(10).default(3),
+});
+
+export const MockAptitudeAnswerSchema = z.object({
+  questionId: z.string().min(1),
+  selectedIndex: z.number().int().min(0),
+});
+
+/** POST .../assessment/aptitude/chunk — submit one chunk's answers */
+export const MockAptitudeChunkSubmitSchema = z.object({
+  chunkIndex: z.coerce.number().int().min(0),
+  chunkSize: z.coerce.number().int().min(1).max(10).default(3),
+  answers: z.array(MockAptitudeAnswerSchema).default([]),
+  clientRequestId: z.string().min(1).max(128).optional(),
+});
+
+/** POST .../assessment/aptitude — final aptitude submission */
+export const MockAptitudeSubmitSchema = z.object({
+  answers: z.array(MockAptitudeAnswerSchema).default([]),
+  totalTimeSeconds: z.number().int().min(0).optional(),
+  tabSwitchCount: z.number().int().min(0).optional(),
+  idempotencyKey: z.string().min(1).max(128).optional(),
+});
+
+/** POST .../assessment/coding — submit candidate code */
+export const MockCodingSubmitSchema = z.object({
+  code: z.string().min(1, 'Code cannot be empty').max(200_000, 'Code is too large'),
+  language: z.enum(['python', 'javascript', 'typescript', 'java', 'cpp']),
+  idempotencyKey: z.string().min(1).max(128).optional(),
+});
+
+/** POST .../assessment/video — submit recorded video answer */
+export const MockVideoSubmitSchema = z.object({
+  videoUrl: z.string().url().min(1),
+  durationSeconds: z.number().int().min(1).max(600),
+  promptId: z.string().optional(),
+  promptIndex: z.number().int().min(0).optional(),
+  idempotencyKey: z.string().min(1).max(128).optional(),
+});
+
+/** POST .../complete — complete the mock session */
+export const MockCompleteSchema = z.object({}).passthrough();
+
 export const FileUploadValidationSchema = z.object({
   allowedMimeTypes: z.array(z.string()).default([
     'application/pdf',
@@ -385,6 +435,13 @@ export type HRProfileUpdateInput = z.infer<typeof HRProfileUpdateSchema>;
 export type CodingProblemInput = z.infer<typeof CodingProblemSchema>;
 export type CodingExecutionRequestInput = z.infer<typeof CodingExecutionRequestSchema>;
 export type EnvConfigInput = z.infer<typeof EnvConfigSchema>;
+export type MockAptitudeChunkQueryInput = z.infer<typeof MockAptitudeChunkQuerySchema>;
+export type MockAptitudeAnswerInput = z.infer<typeof MockAptitudeAnswerSchema>;
+export type MockAptitudeChunkSubmitInput = z.infer<typeof MockAptitudeChunkSubmitSchema>;
+export type MockAptitudeSubmitInput = z.infer<typeof MockAptitudeSubmitSchema>;
+export type MockCodingSubmitInput = z.infer<typeof MockCodingSubmitSchema>;
+export type MockVideoSubmitInput = z.infer<typeof MockVideoSubmitSchema>;
+export type MockCompleteInput = z.infer<typeof MockCompleteSchema>;
 export type AptitudeQuestionInput = z.infer<typeof AptitudeQuestionSchema>;
 export type AptitudeChunkInput = z.infer<typeof AptitudeChunkSchema>;
 export type AptitudeChunkRequestInput = z.infer<typeof AptitudeChunkRequestSchema>;

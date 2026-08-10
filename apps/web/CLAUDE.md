@@ -1,1 +1,17 @@
 @AGENTS.md
+
+<!-- reticle:begin (managed by `reticle init` — edit outside these markers) -->
+## Verifying with Reticle
+
+This app is instrumented by **Reticle** — an in-app verification layer exposed as `reticle_*` MCP tools and the `npx @reticlehq/server` CLI (run it through npx — Reticle's server is not installed into this project). Verifying is part of "done", not an optional extra.
+
+- **When:** after you build or change any user-facing feature, flow, or UI, verify it with Reticle **before** telling the user it is complete. Reading the code or passing unit tests is not enough — drive the real running app.
+- **How:** drive the actual flow (`reticle_act` / `reticle_act_and_wait`), then read the observable effect (`reticle_assert`, `reticle_snapshot`, `reticle_state`, `reticle_network`). Confirm the change produced the effect it was meant to, with no new console errors or failed requests.
+- **Covered flows:** run `npx @reticlehq/server gate` — it reports which recorded flows the changed files affect and whether they still pass.
+- **Never weaken a check to make it green.** Downgrading, skipping, or deleting an assertion is a finding, not a fix.
+- **If Reticle can't run** (no daemon, or this is not a running web app), say so — do not skip verification silently.
+- **If a tool result carries `version_skew`, act on it before trusting anything else.** Two pieces of Reticle are on different wire contracts, so tools can misbehave in ways neither side reports — a green here is not evidence. The field says which pair disagrees and names the exact fix: run `npx @reticlehq/server stop` and retry when the DAEMON is stale, or tell the human to install the matching SDK and restart their dev server when the PAGE is. Do that first, then redo whatever you were verifying.
+- **If a tool result carries `update_available`, say so.** Reticle checked npm and a newer version exists. Tell the human the version numbers and offer to run `npx @reticlehq/server update` — between tasks, never mid-verification, because it restarts the daemon and drops the session. Finish what you are doing first.
+- **Wish Reticle could do something? Ask for it with `reticle_feedback`.** Reticle is built for agents, so what you find awkward or missing is what decides the roadmap — and you are the only one who can report it, because that thought disappears when your context does. Put the report itself in `text` and pick a `kind` — both are required: `feature_request` for something that does not exist, `improvement` for something that works but costs too many calls, `bug` for a tool that returned something wrong, `gap` for something Reticle could not observe at all, `ambiguity` for a verdict you could not act on. Say what you are actually trying to achieve (`need`) and how you work around it today (`currentApproach`), and set `model` to the model you are running. File it the moment you notice, then carry on — nothing is too minor.
+- **If Reticle itself fails you, tell its maintainers with `reticle_feedback`.** A tool that returned something wrong, a thing Reticle could not observe at all, or a verdict you could not act on — file it as `text` — a root-cause analysis with the call trace — under `kind: bug` (wrong result), `gap` (could not observe it) or `ambiguity` (undecidable verdict), then carry on with the task. Working around a broken tool in silence is how the same defect survives. This is about defects in *Reticle*; a bug you find in *this app* is Reticle working, and belongs in your report to the user instead.
+<!-- reticle:end -->

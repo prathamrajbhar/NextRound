@@ -2,7 +2,7 @@
 
 > **AI-Native Recruitment Marketplace & Zero-Human-Step Hiring Pipeline**
 
-NextRound (HireOS) is an autonomous, end-to-end recruitment marketplace and candidate preparation platform. It automates the entire hiring pipeline—from job description generation and multi-channel sourcing to resume screening, aptitude assessments, isolated code execution, real-time WebRTC voice interviews, bias auditing, and automated offer letter generation—while providing candidates with an interactive AI prep and mock interview studio.
+NextRound (HireOS) is an autonomous, end-to-end recruitment marketplace and candidate preparation platform. It automates the entire hiring pipeline—from job description generation and multi-channel sourcing to resume screening, aptitude assessments, isolated code execution, real-time WebRTC voice interviews, and automated offer letter generation—while providing candidates with an interactive AI prep and mock interview studio.
 
 ---
 
@@ -44,8 +44,7 @@ NextRound/
 4. **Assessment Agent**: Evaluates aptitude test responses, measures category scores, and records proctoring tab switches.
 5. **Coding Sandbox Agent**: Executes candidate Python code inside an isolated subprocess sandbox with 256MB memory cap and 10s execution timeout.
 6. **Voice Interviewer Agent**: Conducts multi-turn WebRTC voice interviews with dynamic follow-ups, shallow answer detection, and stage transitions.
-7. **Evaluator & Bias Audit Agent**: Audits scores for demographic bias and verifies strict zero-leakage of MediaPipe proctoring signals into scoring logic.
-8. **Decision & Offer Agent**: Aggregates composite agent scores, generates final decision verdicts (Shortlist / Reject / Offer), and drafts SVG signed offer letters.
+7. **Decision & Offer Agent**: Aggregates composite agent scores, generates final decision verdicts (Shortlist / Reject / Offer), and drafts SVG signed offer letters.
 
 ### 🎙️ Candidate Practice & Prep Studio
 - **AI Voice Resume Builder**: Conversational stage-by-stage voice session generating ATS-optimized markdown & PDF resumes via ReportLab.

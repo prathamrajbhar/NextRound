@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { ChevronRight, ShieldCheck, ShieldAlert, Clock } from '@/lib/lucide-google-icons';
+import { ChevronRight, Clock } from '@/lib/lucide-google-icons';
 import { Application } from '@/types';
 
 interface CandidateCardProps {
@@ -11,7 +11,6 @@ interface CandidateCardProps {
 }
 
 export default function CandidateCard({ app, onSelectCandidate }: CandidateCardProps) {
-  const hasFlags = app.biasReport && app.biasReport.flaggedPhrases.length > 0;
 
   const handleClick = () => {
     if (onSelectCandidate) {
@@ -57,22 +56,6 @@ export default function CandidateCard({ app, onSelectCandidate }: CandidateCardP
         )}
       </div>
 
-      {/* Bias Audit Report Badge */}
-      {app.biasReport && (
-        <div className="mt-3 flex items-center gap-1">
-          {hasFlags ? (
-            <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border border-amber-200/60 dark:border-amber-900/60 px-2.5 py-0.5 rounded-full shadow-2xs">
-              <ShieldAlert className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-              Bias Audit: Warning
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-[9px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200/60 dark:border-emerald-900/60 px-2.5 py-0.5 rounded-full shadow-2xs">
-              <ShieldCheck className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
-              Bias Audit: Audited
-            </span>
-          )}
-        </div>
-      )}
 
       {/* Scorecard breakdown mini-bars */}
       {app.scores && (

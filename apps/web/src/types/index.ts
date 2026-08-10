@@ -92,13 +92,6 @@ export interface Application {
     experience: number;
     confidence: number;
   };
-  biasReport?: {
-    overallScore: number;
-    flaggedPhrases: { phrase: string; category: string; explanation: string }[];
-    genderBiasCheck: string;
-    originBiasCheck: string;
-    explanation: string;
-  };
   reasoning?: string;
   decision?: 'hire' | 'reject' | 'hold';
   transcript?: { question: string; answer: string; score: number; feedback: string }[];

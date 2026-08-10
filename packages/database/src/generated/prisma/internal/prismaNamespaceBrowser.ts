@@ -61,6 +61,9 @@ export const ModelName = {
   Assessment: 'Assessment',
   CodingProblem: 'CodingProblem',
   CodingSubmission: 'CodingSubmission',
+  GeneratedQuestionChunk: 'GeneratedQuestionChunk',
+  CodingProblemSnapshot: 'CodingProblemSnapshot',
+  VideoSubmission: 'VideoSubmission',
   Offer: 'Offer',
   AgentLog: 'AgentLog',
   MockSession: 'MockSession',
@@ -223,12 +226,17 @@ export type InterviewScalarFieldEnum = (typeof InterviewScalarFieldEnum)[keyof t
 export const AssessmentScalarFieldEnum = {
   id: 'id',
   application_id: 'application_id',
+  session_id: 'session_id',
   test_type: 'test_type',
   questions: 'questions',
   responses: 'responses',
   score: 'score',
   category_breakdown: 'category_breakdown',
   status: 'status',
+  question_schema_version: 'question_schema_version',
+  current_chunk_index: 'current_chunk_index',
+  total_question_count: 'total_question_count',
+  chunk_submissions: 'chunk_submissions',
   created_at: 'created_at'
 } as const
 
@@ -260,7 +268,9 @@ export type CodingProblemScalarFieldEnum = (typeof CodingProblemScalarFieldEnum)
 export const CodingSubmissionScalarFieldEnum = {
   id: 'id',
   application_id: 'application_id',
+  candidate_id: 'candidate_id',
   problem_id: 'problem_id',
+  problem_snapshot_id: 'problem_snapshot_id',
   attempt_number: 'attempt_number',
   idempotency_key: 'idempotency_key',
   language: 'language',
@@ -280,10 +290,72 @@ export const CodingSubmissionScalarFieldEnum = {
   code_hash: 'code_hash',
   runner_version: 'runner_version',
   error_message: 'error_message',
-  created_at: 'created_at'
+  created_at: 'created_at',
+  completed_at: 'completed_at'
 } as const
 
 export type CodingSubmissionScalarFieldEnum = (typeof CodingSubmissionScalarFieldEnum)[keyof typeof CodingSubmissionScalarFieldEnum]
+
+
+export const GeneratedQuestionChunkScalarFieldEnum = {
+  id: 'id',
+  assessment_id: 'assessment_id',
+  chunk_index: 'chunk_index',
+  chunk_size: 'chunk_size',
+  question_ids: 'question_ids',
+  questions: 'questions',
+  prompt_version: 'prompt_version',
+  generation_seed: 'generation_seed',
+  content_hash: 'content_hash',
+  created_at: 'created_at'
+} as const
+
+export type GeneratedQuestionChunkScalarFieldEnum = (typeof GeneratedQuestionChunkScalarFieldEnum)[keyof typeof GeneratedQuestionChunkScalarFieldEnum]
+
+
+export const CodingProblemSnapshotScalarFieldEnum = {
+  id: 'id',
+  assessment_id: 'assessment_id',
+  session_id: 'session_id',
+  problem_id: 'problem_id',
+  slug: 'slug',
+  title: 'title',
+  description: 'description',
+  difficulty: 'difficulty',
+  category: 'category',
+  entry_point: 'entry_point',
+  parameter_schema: 'parameter_schema',
+  return_type: 'return_type',
+  public_test_cases: 'public_test_cases',
+  hidden_test_cases: 'hidden_test_cases',
+  starter_code: 'starter_code',
+  reference_solution_hash: 'reference_solution_hash',
+  problem_version: 'problem_version',
+  content_hash: 'content_hash',
+  created_at: 'created_at'
+} as const
+
+export type CodingProblemSnapshotScalarFieldEnum = (typeof CodingProblemSnapshotScalarFieldEnum)[keyof typeof CodingProblemSnapshotScalarFieldEnum]
+
+
+export const VideoSubmissionScalarFieldEnum = {
+  id: 'id',
+  session_id: 'session_id',
+  candidate_id: 'candidate_id',
+  prompt_id: 'prompt_id',
+  prompt_index: 'prompt_index',
+  video_url: 'video_url',
+  duration_seconds: 'duration_seconds',
+  status: 'status',
+  transcript: 'transcript',
+  score: 'score',
+  feedback: 'feedback',
+  idempotency_key: 'idempotency_key',
+  created_at: 'created_at',
+  completed_at: 'completed_at'
+} as const
+
+export type VideoSubmissionScalarFieldEnum = (typeof VideoSubmissionScalarFieldEnum)[keyof typeof VideoSubmissionScalarFieldEnum]
 
 
 export const OfferScalarFieldEnum = {
@@ -328,9 +400,16 @@ export const MockSessionScalarFieldEnum = {
   difficulty: 'difficulty',
   type: 'type',
   status: 'status',
+  current_section: 'current_section',
+  generation_seed: 'generation_seed',
+  started_at: 'started_at',
+  completed_at: 'completed_at',
+  final_score: 'final_score',
+  final_feedback: 'final_feedback',
   topic: 'topic',
   focus_areas: 'focus_areas',
   rubric: 'rubric',
+  video_prompts: 'video_prompts',
   transcript: 'transcript',
   score: 'score',
   feedback: 'feedback',

@@ -2,7 +2,7 @@
 
 ## Project
 - **Name**: NextRound / HireOS
-- **Description**: AI-native recruitment marketplace with zero-human-step hiring pipeline (sourcing, screening, voice interview, evaluator + bias audit, decision, offer) and candidate prep/mock interview layer.
+- **Description**: AI-native recruitment marketplace with zero-human-step hiring pipeline (sourcing, screening, voice interview, evaluator, decision, offer) and candidate prep/mock interview layer.
 - **Documentation**: Full specs in `docs/` — `prd.md` (product), `architecture.md` (system), `features.md` (feature specs + agent triggers), `api.md` (all REST endpoints), `screens.md` (all screens + components), `schema.md` (Prisma schema), `agents.md` (per-agent LangGraph specs).
 
 ## Stack (LOCKED — do not substitute)

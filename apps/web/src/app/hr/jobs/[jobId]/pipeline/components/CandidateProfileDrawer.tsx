@@ -5,8 +5,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   X,
-  ShieldCheck,
-  ShieldAlert,
   CheckCircle2,
   ExternalLink,
   Award,
@@ -37,8 +35,6 @@ export default function CandidateProfileDrawer({
   const [activeTab, setActiveTab] = useState<'resume' | 'scorecard' | 'transcript'>('resume');
 
   if (!isOpen || !app) return null;
-
-  const hasFlags = app.biasReport && app.biasReport.flaggedPhrases.length > 0;
 
   // Handler to generate candidate resume from available application data only
   const handleDownloadResume = () => {
@@ -252,27 +248,6 @@ export default function CandidateProfileDrawer({
 
           {activeTab === 'scorecard' && (
             <>
-              {/* Bias Audit Status */}
-              <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800 flex justify-between items-center shadow-2xs">
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
-                    AI Bias &amp; Fairness Audit
-                  </span>
-                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                    {hasFlags ? '1 Flagged Content Warning Detected' : 'Double-pass auditing verified zero demographic bias.'}
-                  </p>
-                </div>
-                {hasFlags ? (
-                  <span className="px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/90 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-[10px] font-extrabold flex items-center gap-1">
-                    <ShieldAlert className="h-3.5 w-3.5" /> Flagged
-                  </span>
-                ) : (
-                  <span className="px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-[10px] font-extrabold flex items-center gap-1">
-                    <ShieldCheck className="h-3.5 w-3.5" /> Verified Audited
-                  </span>
-                )}
-              </div>
-
               {/* Rubric Score Breakdown Bars */}
               {app.scores && (
                 <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-2xs">

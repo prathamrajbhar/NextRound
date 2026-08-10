@@ -1,3 +1,4 @@
+import { ReticleDev } from './reticle-dev';
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -24,7 +25,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "NextRound — AI-Native Recruitment Marketplace",
-  description: "Build hiring pipelines, run voice AI interviews, and get structured bias-audited recruitment shortlists with NextRound.",
+  description: "Build hiring pipelines, run voice AI interviews, and get structured recruitment shortlists with NextRound.",
   icons: {
     icon: [
       { url: '/logo.png', type: 'image/png' },
@@ -68,7 +69,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/logo.png" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       </head>
-      <body className="min-h-full flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white relative">
+      <body className="min-h-full flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white relative">{process.env.NODE_ENV === 'development' ? <ReticleDev /> : null}
         {/* Decorative Background Blobs */}
         <div className="blob-container">
           <div className="blob blob-1"></div>

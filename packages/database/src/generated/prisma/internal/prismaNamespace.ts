@@ -407,6 +407,9 @@ export const ModelName = {
   Assessment: 'Assessment',
   CodingProblem: 'CodingProblem',
   CodingSubmission: 'CodingSubmission',
+  GeneratedQuestionChunk: 'GeneratedQuestionChunk',
+  CodingProblemSnapshot: 'CodingProblemSnapshot',
+  VideoSubmission: 'VideoSubmission',
   Offer: 'Offer',
   AgentLog: 'AgentLog',
   MockSession: 'MockSession',
@@ -428,7 +431,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "codingProblem" | "codingSubmission" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark"
+    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "videoSubmission" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1172,6 +1175,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    GeneratedQuestionChunk: {
+      payload: Prisma.$GeneratedQuestionChunkPayload<ExtArgs>
+      fields: Prisma.GeneratedQuestionChunkFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.GeneratedQuestionChunkFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GeneratedQuestionChunkPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.GeneratedQuestionChunkFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GeneratedQuestionChunkPayload>
+        }
+        findFirst: {
+          args: Prisma.GeneratedQuestionChunkFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GeneratedQuestionChunkPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.GeneratedQuestionChunkFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GeneratedQuestionChunkPayload>
+        }
+        findMany: {
+          args: Prisma.GeneratedQuestionChunkFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GeneratedQuestionChunkPayload>[]
+        }
+        create: {
+          args: Prisma.GeneratedQuestionChunkCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GeneratedQuestionChunkPayload>
+        }
+        createMany: {
+          args: Prisma.GeneratedQuestionChunkCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.GeneratedQuestionChunkCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GeneratedQuestionChunkPayload>[]
+        }
+        delete: {
+          args: Prisma.GeneratedQuestionChunkDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GeneratedQuestionChunkPayload>
+        }
+        update: {
+          args: Prisma.GeneratedQuestionChunkUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GeneratedQuestionChunkPayload>
+        }
+        deleteMany: {
+          args: Prisma.GeneratedQuestionChunkDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.GeneratedQuestionChunkUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.GeneratedQuestionChunkUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GeneratedQuestionChunkPayload>[]
+        }
+        upsert: {
+          args: Prisma.GeneratedQuestionChunkUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$GeneratedQuestionChunkPayload>
+        }
+        aggregate: {
+          args: Prisma.GeneratedQuestionChunkAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateGeneratedQuestionChunk>
+        }
+        groupBy: {
+          args: Prisma.GeneratedQuestionChunkGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GeneratedQuestionChunkGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.GeneratedQuestionChunkCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.GeneratedQuestionChunkCountAggregateOutputType> | number
+        }
+      }
+    }
+    CodingProblemSnapshot: {
+      payload: Prisma.$CodingProblemSnapshotPayload<ExtArgs>
+      fields: Prisma.CodingProblemSnapshotFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CodingProblemSnapshotFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CodingProblemSnapshotPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CodingProblemSnapshotFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CodingProblemSnapshotPayload>
+        }
+        findFirst: {
+          args: Prisma.CodingProblemSnapshotFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CodingProblemSnapshotPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CodingProblemSnapshotFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CodingProblemSnapshotPayload>
+        }
+        findMany: {
+          args: Prisma.CodingProblemSnapshotFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CodingProblemSnapshotPayload>[]
+        }
+        create: {
+          args: Prisma.CodingProblemSnapshotCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CodingProblemSnapshotPayload>
+        }
+        createMany: {
+          args: Prisma.CodingProblemSnapshotCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CodingProblemSnapshotCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CodingProblemSnapshotPayload>[]
+        }
+        delete: {
+          args: Prisma.CodingProblemSnapshotDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CodingProblemSnapshotPayload>
+        }
+        update: {
+          args: Prisma.CodingProblemSnapshotUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CodingProblemSnapshotPayload>
+        }
+        deleteMany: {
+          args: Prisma.CodingProblemSnapshotDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CodingProblemSnapshotUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CodingProblemSnapshotUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CodingProblemSnapshotPayload>[]
+        }
+        upsert: {
+          args: Prisma.CodingProblemSnapshotUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CodingProblemSnapshotPayload>
+        }
+        aggregate: {
+          args: Prisma.CodingProblemSnapshotAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCodingProblemSnapshot>
+        }
+        groupBy: {
+          args: Prisma.CodingProblemSnapshotGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CodingProblemSnapshotGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CodingProblemSnapshotCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CodingProblemSnapshotCountAggregateOutputType> | number
+        }
+      }
+    }
+    VideoSubmission: {
+      payload: Prisma.$VideoSubmissionPayload<ExtArgs>
+      fields: Prisma.VideoSubmissionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.VideoSubmissionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.VideoSubmissionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
+        }
+        findFirst: {
+          args: Prisma.VideoSubmissionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.VideoSubmissionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
+        }
+        findMany: {
+          args: Prisma.VideoSubmissionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>[]
+        }
+        create: {
+          args: Prisma.VideoSubmissionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
+        }
+        createMany: {
+          args: Prisma.VideoSubmissionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.VideoSubmissionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>[]
+        }
+        delete: {
+          args: Prisma.VideoSubmissionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
+        }
+        update: {
+          args: Prisma.VideoSubmissionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
+        }
+        deleteMany: {
+          args: Prisma.VideoSubmissionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.VideoSubmissionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.VideoSubmissionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>[]
+        }
+        upsert: {
+          args: Prisma.VideoSubmissionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
+        }
+        aggregate: {
+          args: Prisma.VideoSubmissionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateVideoSubmission>
+        }
+        groupBy: {
+          args: Prisma.VideoSubmissionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.VideoSubmissionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.VideoSubmissionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.VideoSubmissionCountAggregateOutputType> | number
+        }
+      }
+    }
     Offer: {
       payload: Prisma.$OfferPayload<ExtArgs>
       fields: Prisma.OfferFieldRefs
@@ -1793,12 +2018,17 @@ export type InterviewScalarFieldEnum = (typeof InterviewScalarFieldEnum)[keyof t
 export const AssessmentScalarFieldEnum = {
   id: 'id',
   application_id: 'application_id',
+  session_id: 'session_id',
   test_type: 'test_type',
   questions: 'questions',
   responses: 'responses',
   score: 'score',
   category_breakdown: 'category_breakdown',
   status: 'status',
+  question_schema_version: 'question_schema_version',
+  current_chunk_index: 'current_chunk_index',
+  total_question_count: 'total_question_count',
+  chunk_submissions: 'chunk_submissions',
   created_at: 'created_at'
 } as const
 
@@ -1830,7 +2060,9 @@ export type CodingProblemScalarFieldEnum = (typeof CodingProblemScalarFieldEnum)
 export const CodingSubmissionScalarFieldEnum = {
   id: 'id',
   application_id: 'application_id',
+  candidate_id: 'candidate_id',
   problem_id: 'problem_id',
+  problem_snapshot_id: 'problem_snapshot_id',
   attempt_number: 'attempt_number',
   idempotency_key: 'idempotency_key',
   language: 'language',
@@ -1850,10 +2082,72 @@ export const CodingSubmissionScalarFieldEnum = {
   code_hash: 'code_hash',
   runner_version: 'runner_version',
   error_message: 'error_message',
-  created_at: 'created_at'
+  created_at: 'created_at',
+  completed_at: 'completed_at'
 } as const
 
 export type CodingSubmissionScalarFieldEnum = (typeof CodingSubmissionScalarFieldEnum)[keyof typeof CodingSubmissionScalarFieldEnum]
+
+
+export const GeneratedQuestionChunkScalarFieldEnum = {
+  id: 'id',
+  assessment_id: 'assessment_id',
+  chunk_index: 'chunk_index',
+  chunk_size: 'chunk_size',
+  question_ids: 'question_ids',
+  questions: 'questions',
+  prompt_version: 'prompt_version',
+  generation_seed: 'generation_seed',
+  content_hash: 'content_hash',
+  created_at: 'created_at'
+} as const
+
+export type GeneratedQuestionChunkScalarFieldEnum = (typeof GeneratedQuestionChunkScalarFieldEnum)[keyof typeof GeneratedQuestionChunkScalarFieldEnum]
+
+
+export const CodingProblemSnapshotScalarFieldEnum = {
+  id: 'id',
+  assessment_id: 'assessment_id',
+  session_id: 'session_id',
+  problem_id: 'problem_id',
+  slug: 'slug',
+  title: 'title',
+  description: 'description',
+  difficulty: 'difficulty',
+  category: 'category',
+  entry_point: 'entry_point',
+  parameter_schema: 'parameter_schema',
+  return_type: 'return_type',
+  public_test_cases: 'public_test_cases',
+  hidden_test_cases: 'hidden_test_cases',
+  starter_code: 'starter_code',
+  reference_solution_hash: 'reference_solution_hash',
+  problem_version: 'problem_version',
+  content_hash: 'content_hash',
+  created_at: 'created_at'
+} as const
+
+export type CodingProblemSnapshotScalarFieldEnum = (typeof CodingProblemSnapshotScalarFieldEnum)[keyof typeof CodingProblemSnapshotScalarFieldEnum]
+
+
+export const VideoSubmissionScalarFieldEnum = {
+  id: 'id',
+  session_id: 'session_id',
+  candidate_id: 'candidate_id',
+  prompt_id: 'prompt_id',
+  prompt_index: 'prompt_index',
+  video_url: 'video_url',
+  duration_seconds: 'duration_seconds',
+  status: 'status',
+  transcript: 'transcript',
+  score: 'score',
+  feedback: 'feedback',
+  idempotency_key: 'idempotency_key',
+  created_at: 'created_at',
+  completed_at: 'completed_at'
+} as const
+
+export type VideoSubmissionScalarFieldEnum = (typeof VideoSubmissionScalarFieldEnum)[keyof typeof VideoSubmissionScalarFieldEnum]
 
 
 export const OfferScalarFieldEnum = {
@@ -1898,9 +2192,16 @@ export const MockSessionScalarFieldEnum = {
   difficulty: 'difficulty',
   type: 'type',
   status: 'status',
+  current_section: 'current_section',
+  generation_seed: 'generation_seed',
+  started_at: 'started_at',
+  completed_at: 'completed_at',
+  final_score: 'final_score',
+  final_feedback: 'final_feedback',
   topic: 'topic',
   focus_areas: 'focus_areas',
   rubric: 'rubric',
+  video_prompts: 'video_prompts',
   transcript: 'transcript',
   score: 'score',
   feedback: 'feedback',
@@ -2384,6 +2685,9 @@ export type GlobalOmitConfig = {
   assessment?: Prisma.AssessmentOmit
   codingProblem?: Prisma.CodingProblemOmit
   codingSubmission?: Prisma.CodingSubmissionOmit
+  generatedQuestionChunk?: Prisma.GeneratedQuestionChunkOmit
+  codingProblemSnapshot?: Prisma.CodingProblemSnapshotOmit
+  videoSubmission?: Prisma.VideoSubmissionOmit
   offer?: Prisma.OfferOmit
   agentLog?: Prisma.AgentLogOmit
   mockSession?: Prisma.MockSessionOmit

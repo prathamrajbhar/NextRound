@@ -19,8 +19,8 @@ Complete inventory of all platform screens, grouped by surface. Includes route, 
 **Components:** Job Header (title, company, location), Rich Text JD Body, Rubric Skill Tags, CompanyLogo card, Sticky "Apply Now" button, Similar Jobs list.
 
 ### A4. About Page (`/about`)
-**Purpose:** Company vision, bias-free AI methodology, and platform trust overview.
-**Components:** Mission Banner, Bias Audit Explainer section, How AI decisions are made, Leadership Team cards.
+**Purpose:** Company vision, AI methodology, and platform trust overview.
+**Components:** Mission Banner, How AI decisions are made, Leadership Team cards.
 
 ### A5. Contact Page (`/contact`)
 **Purpose:** Enterprise sales inquiries, demo scheduling, and support contact form.

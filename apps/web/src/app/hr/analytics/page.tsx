@@ -21,14 +21,12 @@ interface HRAnalyticsData {
   totalCandidatesProcessed: number;
   zeroHumanHires: number;
   avgTimeToOfferDays: number;
-  biasReductionScore: number;
   funnel: { stage: string; count: number; pct: number }[];
   monthlyTrends: { month: string; applicants: number; hires: number; passRate: number }[];
   kpis?: {
     totalApplications?: number;
     zeroHumanHires?: number;
     avgTimeToHireDays?: number;
-    biasCleanRatePercent?: number;
   };
   dropoffAnalysis?: { stage: string; percentage: number; dropCount: number }[];
   weeklyFunnel?: { week?: string; applied?: number; offered?: number }[];
@@ -38,7 +36,6 @@ const INITIAL_ANALYTICS: HRAnalyticsData = {
   totalCandidatesProcessed: 0,
   zeroHumanHires: 0,
   avgTimeToOfferDays: 0,
-  biasReductionScore: 0,
   funnel: [
     { stage: 'Sourced', count: 0, pct: 0 },
     { stage: 'Screened', count: 0, pct: 0 },
@@ -88,7 +85,6 @@ export default function HrAnalyticsDashboard() {
             totalCandidatesProcessed: raw.kpis?.totalApplications ?? raw.totalCandidatesProcessed ?? 0,
             zeroHumanHires: raw.kpis?.zeroHumanHires ?? raw.zeroHumanHires ?? 0,
             avgTimeToOfferDays: raw.kpis?.avgTimeToHireDays ?? raw.avgTimeToOfferDays ?? 0,
-            biasReductionScore: raw.kpis?.biasCleanRatePercent ?? raw.biasReductionScore ?? 0,
             funnel,
             monthlyTrends,
           });
@@ -396,34 +392,34 @@ export default function HrAnalyticsDashboard() {
             <div className="space-y-4 text-xs font-semibold">
               <div>
                 <div className="flex justify-between text-slate-800 dark:text-slate-200 mb-1 font-extrabold">
-                  <span>Candidate Experience Rating</span>
+                  <span>Average Time to Offer</span>
                   <span className="text-emerald-600 dark:text-emerald-400">
-                    {(analyticsData.kpis?.totalApplications ?? 0) > 0
-                      ? `${((((analyticsData.kpis?.biasCleanRatePercent ?? 0) / 100) * 5)).toFixed(1)} / 5.0 Rating`
+                    {(analyticsData.avgTimeToOfferDays ?? 0) > 0
+                      ? `${analyticsData.avgTimeToOfferDays} days`
                       : 'N/A'}
                   </span>
                 </div>
                 <div className="w-full bg-slate-200/60 dark:bg-slate-800/60 rounded-full h-2 overflow-hidden">
                   <div
                     className="bg-emerald-500 h-full rounded-full"
-                    style={{ width: (analyticsData.kpis?.totalApplications ?? 0) > 0 ? `${analyticsData.kpis?.biasCleanRatePercent || 0}%` : '0%' }}
+                    style={{ width: '65%' }}
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between text-slate-800 dark:text-slate-200 mb-1 font-extrabold">
-                  <span>AI Evaluation Accuracy</span>
+                  <span>Zero-Human-Touch Hires</span>
                   <span className="text-indigo-600 dark:text-indigo-400">
-                    {(analyticsData.kpis?.totalApplications ?? 0) > 0
-                      ? `${analyticsData.kpis?.biasCleanRatePercent}% Accuracy`
+                    {(analyticsData.zeroHumanHires ?? 0) > 0
+                      ? `${analyticsData.zeroHumanHires} hires`
                       : 'N/A'}
                   </span>
                 </div>
                 <div className="w-full bg-slate-200/60 dark:bg-slate-800/60 rounded-full h-2 overflow-hidden">
                   <div
                     className="bg-indigo-500 h-full rounded-full"
-                    style={{ width: (analyticsData.kpis?.totalApplications ?? 0) > 0 ? `${analyticsData.kpis?.biasCleanRatePercent || 0}%` : '0%' }}
+                    style={{ width: '45%' }}
                   />
                 </div>
               </div>

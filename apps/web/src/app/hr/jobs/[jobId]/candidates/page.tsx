@@ -97,7 +97,6 @@ export default function HrJobCandidatesList({ params }: { params: Promise<{ jobI
                 <th className="px-6 py-4">Candidate</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4">Scores</th>
-                <th className="px-6 py-4">Bias Audit</th>
                 <th className="px-6 py-4 text-right">Actions</th>
               </tr>
             </thead>
@@ -123,15 +122,6 @@ export default function HrJobCandidatesList({ params }: { params: Promise<{ jobI
                       <span className="text-emerald-600 font-extrabold">{app.scores.composite}% composite</span>
                     ) : (
                       <span className="text-slate-400 font-semibold italic">Screening in progress</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    {app.biasReport ? (
-                      <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px]">
-                        Passed check
-                      </span>
-                    ) : (
-                      <span className="text-slate-400 font-semibold italic">Pending screening</span>
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">

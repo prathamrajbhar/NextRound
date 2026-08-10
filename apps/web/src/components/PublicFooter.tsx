@@ -39,7 +39,7 @@ export default function PublicFooter() {
             <ul className="mt-4 space-y-2">
               <li>
                 <Link href="/about" className="text-sm text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-orange-400 transition-colors">
-                  Bias Audit Standards
+                  Security & Privacy
                 </Link>
               </li>
               <li>

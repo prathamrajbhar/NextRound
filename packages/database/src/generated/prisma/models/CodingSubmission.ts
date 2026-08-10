@@ -51,7 +51,9 @@ export type CodingSubmissionSumAggregateOutputType = {
 export type CodingSubmissionMinAggregateOutputType = {
   id: string | null
   application_id: string | null
+  candidate_id: string | null
   problem_id: string | null
+  problem_snapshot_id: string | null
   attempt_number: number | null
   idempotency_key: string | null
   language: string | null
@@ -71,12 +73,15 @@ export type CodingSubmissionMinAggregateOutputType = {
   runner_version: string | null
   error_message: string | null
   created_at: Date | null
+  completed_at: Date | null
 }
 
 export type CodingSubmissionMaxAggregateOutputType = {
   id: string | null
   application_id: string | null
+  candidate_id: string | null
   problem_id: string | null
+  problem_snapshot_id: string | null
   attempt_number: number | null
   idempotency_key: string | null
   language: string | null
@@ -96,12 +101,15 @@ export type CodingSubmissionMaxAggregateOutputType = {
   runner_version: string | null
   error_message: string | null
   created_at: Date | null
+  completed_at: Date | null
 }
 
 export type CodingSubmissionCountAggregateOutputType = {
   id: number
   application_id: number
+  candidate_id: number
   problem_id: number
+  problem_snapshot_id: number
   attempt_number: number
   idempotency_key: number
   language: number
@@ -122,6 +130,7 @@ export type CodingSubmissionCountAggregateOutputType = {
   runner_version: number
   error_message: number
   created_at: number
+  completed_at: number
   _all: number
 }
 
@@ -151,7 +160,9 @@ export type CodingSubmissionSumAggregateInputType = {
 export type CodingSubmissionMinAggregateInputType = {
   id?: true
   application_id?: true
+  candidate_id?: true
   problem_id?: true
+  problem_snapshot_id?: true
   attempt_number?: true
   idempotency_key?: true
   language?: true
@@ -171,12 +182,15 @@ export type CodingSubmissionMinAggregateInputType = {
   runner_version?: true
   error_message?: true
   created_at?: true
+  completed_at?: true
 }
 
 export type CodingSubmissionMaxAggregateInputType = {
   id?: true
   application_id?: true
+  candidate_id?: true
   problem_id?: true
+  problem_snapshot_id?: true
   attempt_number?: true
   idempotency_key?: true
   language?: true
@@ -196,12 +210,15 @@ export type CodingSubmissionMaxAggregateInputType = {
   runner_version?: true
   error_message?: true
   created_at?: true
+  completed_at?: true
 }
 
 export type CodingSubmissionCountAggregateInputType = {
   id?: true
   application_id?: true
+  candidate_id?: true
   problem_id?: true
+  problem_snapshot_id?: true
   attempt_number?: true
   idempotency_key?: true
   language?: true
@@ -222,6 +239,7 @@ export type CodingSubmissionCountAggregateInputType = {
   runner_version?: true
   error_message?: true
   created_at?: true
+  completed_at?: true
   _all?: true
 }
 
@@ -313,8 +331,10 @@ export type CodingSubmissionGroupByArgs<ExtArgs extends runtime.Types.Extensions
 
 export type CodingSubmissionGroupByOutputType = {
   id: string
-  application_id: string
+  application_id: string | null
+  candidate_id: string | null
   problem_id: string | null
+  problem_snapshot_id: string | null
   attempt_number: number
   idempotency_key: string | null
   language: string
@@ -335,6 +355,7 @@ export type CodingSubmissionGroupByOutputType = {
   runner_version: string | null
   error_message: string | null
   created_at: Date
+  completed_at: Date | null
   _count: CodingSubmissionCountAggregateOutputType | null
   _avg: CodingSubmissionAvgAggregateOutputType | null
   _sum: CodingSubmissionSumAggregateOutputType | null
@@ -362,8 +383,10 @@ export type CodingSubmissionWhereInput = {
   OR?: Prisma.CodingSubmissionWhereInput[]
   NOT?: Prisma.CodingSubmissionWhereInput | Prisma.CodingSubmissionWhereInput[]
   id?: Prisma.StringFilter<"CodingSubmission"> | string
-  application_id?: Prisma.StringFilter<"CodingSubmission"> | string
+  application_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
+  candidate_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   problem_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
+  problem_snapshot_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   attempt_number?: Prisma.IntFilter<"CodingSubmission"> | number
   idempotency_key?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   language?: Prisma.StringFilter<"CodingSubmission"> | string
@@ -384,14 +407,18 @@ export type CodingSubmissionWhereInput = {
   runner_version?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   error_message?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   created_at?: Prisma.DateTimeFilter<"CodingSubmission"> | Date | string
-  application?: Prisma.XOR<Prisma.ApplicationScalarRelationFilter, Prisma.ApplicationWhereInput>
+  completed_at?: Prisma.DateTimeNullableFilter<"CodingSubmission"> | Date | string | null
+  application?: Prisma.XOR<Prisma.ApplicationNullableScalarRelationFilter, Prisma.ApplicationWhereInput> | null
   problem?: Prisma.XOR<Prisma.CodingProblemNullableScalarRelationFilter, Prisma.CodingProblemWhereInput> | null
+  snapshot?: Prisma.XOR<Prisma.CodingProblemSnapshotNullableScalarRelationFilter, Prisma.CodingProblemSnapshotWhereInput> | null
 }
 
 export type CodingSubmissionOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  application_id?: Prisma.SortOrder
+  application_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  candidate_id?: Prisma.SortOrderInput | Prisma.SortOrder
   problem_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  problem_snapshot_id?: Prisma.SortOrderInput | Prisma.SortOrder
   attempt_number?: Prisma.SortOrder
   idempotency_key?: Prisma.SortOrderInput | Prisma.SortOrder
   language?: Prisma.SortOrder
@@ -412,8 +439,10 @@ export type CodingSubmissionOrderByWithRelationInput = {
   runner_version?: Prisma.SortOrderInput | Prisma.SortOrder
   error_message?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
+  completed_at?: Prisma.SortOrderInput | Prisma.SortOrder
   application?: Prisma.ApplicationOrderByWithRelationInput
   problem?: Prisma.CodingProblemOrderByWithRelationInput
+  snapshot?: Prisma.CodingProblemSnapshotOrderByWithRelationInput
 }
 
 export type CodingSubmissionWhereUniqueInput = Prisma.AtLeast<{
@@ -422,8 +451,10 @@ export type CodingSubmissionWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.CodingSubmissionWhereInput | Prisma.CodingSubmissionWhereInput[]
   OR?: Prisma.CodingSubmissionWhereInput[]
   NOT?: Prisma.CodingSubmissionWhereInput | Prisma.CodingSubmissionWhereInput[]
-  application_id?: Prisma.StringFilter<"CodingSubmission"> | string
+  application_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
+  candidate_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   problem_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
+  problem_snapshot_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   attempt_number?: Prisma.IntFilter<"CodingSubmission"> | number
   language?: Prisma.StringFilter<"CodingSubmission"> | string
   code?: Prisma.StringFilter<"CodingSubmission"> | string
@@ -443,14 +474,18 @@ export type CodingSubmissionWhereUniqueInput = Prisma.AtLeast<{
   runner_version?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   error_message?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   created_at?: Prisma.DateTimeFilter<"CodingSubmission"> | Date | string
-  application?: Prisma.XOR<Prisma.ApplicationScalarRelationFilter, Prisma.ApplicationWhereInput>
+  completed_at?: Prisma.DateTimeNullableFilter<"CodingSubmission"> | Date | string | null
+  application?: Prisma.XOR<Prisma.ApplicationNullableScalarRelationFilter, Prisma.ApplicationWhereInput> | null
   problem?: Prisma.XOR<Prisma.CodingProblemNullableScalarRelationFilter, Prisma.CodingProblemWhereInput> | null
+  snapshot?: Prisma.XOR<Prisma.CodingProblemSnapshotNullableScalarRelationFilter, Prisma.CodingProblemSnapshotWhereInput> | null
 }, "id" | "idempotency_key">
 
 export type CodingSubmissionOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  application_id?: Prisma.SortOrder
+  application_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  candidate_id?: Prisma.SortOrderInput | Prisma.SortOrder
   problem_id?: Prisma.SortOrderInput | Prisma.SortOrder
+  problem_snapshot_id?: Prisma.SortOrderInput | Prisma.SortOrder
   attempt_number?: Prisma.SortOrder
   idempotency_key?: Prisma.SortOrderInput | Prisma.SortOrder
   language?: Prisma.SortOrder
@@ -471,6 +506,7 @@ export type CodingSubmissionOrderByWithAggregationInput = {
   runner_version?: Prisma.SortOrderInput | Prisma.SortOrder
   error_message?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
+  completed_at?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.CodingSubmissionCountOrderByAggregateInput
   _avg?: Prisma.CodingSubmissionAvgOrderByAggregateInput
   _max?: Prisma.CodingSubmissionMaxOrderByAggregateInput
@@ -483,8 +519,10 @@ export type CodingSubmissionScalarWhereWithAggregatesInput = {
   OR?: Prisma.CodingSubmissionScalarWhereWithAggregatesInput[]
   NOT?: Prisma.CodingSubmissionScalarWhereWithAggregatesInput | Prisma.CodingSubmissionScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"CodingSubmission"> | string
-  application_id?: Prisma.StringWithAggregatesFilter<"CodingSubmission"> | string
+  application_id?: Prisma.StringNullableWithAggregatesFilter<"CodingSubmission"> | string | null
+  candidate_id?: Prisma.StringNullableWithAggregatesFilter<"CodingSubmission"> | string | null
   problem_id?: Prisma.StringNullableWithAggregatesFilter<"CodingSubmission"> | string | null
+  problem_snapshot_id?: Prisma.StringNullableWithAggregatesFilter<"CodingSubmission"> | string | null
   attempt_number?: Prisma.IntWithAggregatesFilter<"CodingSubmission"> | number
   idempotency_key?: Prisma.StringNullableWithAggregatesFilter<"CodingSubmission"> | string | null
   language?: Prisma.StringWithAggregatesFilter<"CodingSubmission"> | string
@@ -505,10 +543,12 @@ export type CodingSubmissionScalarWhereWithAggregatesInput = {
   runner_version?: Prisma.StringNullableWithAggregatesFilter<"CodingSubmission"> | string | null
   error_message?: Prisma.StringNullableWithAggregatesFilter<"CodingSubmission"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"CodingSubmission"> | Date | string
+  completed_at?: Prisma.DateTimeNullableWithAggregatesFilter<"CodingSubmission"> | Date | string | null
 }
 
 export type CodingSubmissionCreateInput = {
   id?: string
+  candidate_id?: string | null
   attempt_number?: number
   idempotency_key?: string | null
   language: string
@@ -529,14 +569,18 @@ export type CodingSubmissionCreateInput = {
   runner_version?: string | null
   error_message?: string | null
   created_at?: Date | string
-  application: Prisma.ApplicationCreateNestedOneWithoutCoding_submissionsInput
+  completed_at?: Date | string | null
+  application?: Prisma.ApplicationCreateNestedOneWithoutCoding_submissionsInput
   problem?: Prisma.CodingProblemCreateNestedOneWithoutSubmissionsInput
+  snapshot?: Prisma.CodingProblemSnapshotCreateNestedOneWithoutSubmissionsInput
 }
 
 export type CodingSubmissionUncheckedCreateInput = {
   id?: string
-  application_id: string
+  application_id?: string | null
+  candidate_id?: string | null
   problem_id?: string | null
+  problem_snapshot_id?: string | null
   attempt_number?: number
   idempotency_key?: string | null
   language: string
@@ -557,10 +601,12 @@ export type CodingSubmissionUncheckedCreateInput = {
   runner_version?: string | null
   error_message?: string | null
   created_at?: Date | string
+  completed_at?: Date | string | null
 }
 
 export type CodingSubmissionUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
   idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
@@ -581,14 +627,18 @@ export type CodingSubmissionUpdateInput = {
   runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  application?: Prisma.ApplicationUpdateOneRequiredWithoutCoding_submissionsNestedInput
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  application?: Prisma.ApplicationUpdateOneWithoutCoding_submissionsNestedInput
   problem?: Prisma.CodingProblemUpdateOneWithoutSubmissionsNestedInput
+  snapshot?: Prisma.CodingProblemSnapshotUpdateOneWithoutSubmissionsNestedInput
 }
 
 export type CodingSubmissionUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  application_id?: Prisma.StringFieldUpdateOperationsInput | string
+  application_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   problem_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  problem_snapshot_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
   idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
@@ -609,12 +659,15 @@ export type CodingSubmissionUncheckedUpdateInput = {
   runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type CodingSubmissionCreateManyInput = {
   id?: string
-  application_id: string
+  application_id?: string | null
+  candidate_id?: string | null
   problem_id?: string | null
+  problem_snapshot_id?: string | null
   attempt_number?: number
   idempotency_key?: string | null
   language: string
@@ -635,10 +688,12 @@ export type CodingSubmissionCreateManyInput = {
   runner_version?: string | null
   error_message?: string | null
   created_at?: Date | string
+  completed_at?: Date | string | null
 }
 
 export type CodingSubmissionUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
   idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
@@ -659,12 +714,15 @@ export type CodingSubmissionUpdateManyMutationInput = {
   runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type CodingSubmissionUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  application_id?: Prisma.StringFieldUpdateOperationsInput | string
+  application_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   problem_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  problem_snapshot_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
   idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
@@ -685,6 +743,7 @@ export type CodingSubmissionUncheckedUpdateManyInput = {
   runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type CodingSubmissionListRelationFilter = {
@@ -700,7 +759,9 @@ export type CodingSubmissionOrderByRelationAggregateInput = {
 export type CodingSubmissionCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   application_id?: Prisma.SortOrder
+  candidate_id?: Prisma.SortOrder
   problem_id?: Prisma.SortOrder
+  problem_snapshot_id?: Prisma.SortOrder
   attempt_number?: Prisma.SortOrder
   idempotency_key?: Prisma.SortOrder
   language?: Prisma.SortOrder
@@ -721,6 +782,7 @@ export type CodingSubmissionCountOrderByAggregateInput = {
   runner_version?: Prisma.SortOrder
   error_message?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
+  completed_at?: Prisma.SortOrder
 }
 
 export type CodingSubmissionAvgOrderByAggregateInput = {
@@ -737,7 +799,9 @@ export type CodingSubmissionAvgOrderByAggregateInput = {
 export type CodingSubmissionMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   application_id?: Prisma.SortOrder
+  candidate_id?: Prisma.SortOrder
   problem_id?: Prisma.SortOrder
+  problem_snapshot_id?: Prisma.SortOrder
   attempt_number?: Prisma.SortOrder
   idempotency_key?: Prisma.SortOrder
   language?: Prisma.SortOrder
@@ -757,12 +821,15 @@ export type CodingSubmissionMaxOrderByAggregateInput = {
   runner_version?: Prisma.SortOrder
   error_message?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
+  completed_at?: Prisma.SortOrder
 }
 
 export type CodingSubmissionMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   application_id?: Prisma.SortOrder
+  candidate_id?: Prisma.SortOrder
   problem_id?: Prisma.SortOrder
+  problem_snapshot_id?: Prisma.SortOrder
   attempt_number?: Prisma.SortOrder
   idempotency_key?: Prisma.SortOrder
   language?: Prisma.SortOrder
@@ -782,6 +849,7 @@ export type CodingSubmissionMinOrderByAggregateInput = {
   runner_version?: Prisma.SortOrder
   error_message?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
+  completed_at?: Prisma.SortOrder
 }
 
 export type CodingSubmissionSumOrderByAggregateInput = {
@@ -887,8 +955,51 @@ export type FloatFieldUpdateOperationsInput = {
   divide?: number
 }
 
+export type CodingSubmissionCreateNestedManyWithoutSnapshotInput = {
+  create?: Prisma.XOR<Prisma.CodingSubmissionCreateWithoutSnapshotInput, Prisma.CodingSubmissionUncheckedCreateWithoutSnapshotInput> | Prisma.CodingSubmissionCreateWithoutSnapshotInput[] | Prisma.CodingSubmissionUncheckedCreateWithoutSnapshotInput[]
+  connectOrCreate?: Prisma.CodingSubmissionCreateOrConnectWithoutSnapshotInput | Prisma.CodingSubmissionCreateOrConnectWithoutSnapshotInput[]
+  createMany?: Prisma.CodingSubmissionCreateManySnapshotInputEnvelope
+  connect?: Prisma.CodingSubmissionWhereUniqueInput | Prisma.CodingSubmissionWhereUniqueInput[]
+}
+
+export type CodingSubmissionUncheckedCreateNestedManyWithoutSnapshotInput = {
+  create?: Prisma.XOR<Prisma.CodingSubmissionCreateWithoutSnapshotInput, Prisma.CodingSubmissionUncheckedCreateWithoutSnapshotInput> | Prisma.CodingSubmissionCreateWithoutSnapshotInput[] | Prisma.CodingSubmissionUncheckedCreateWithoutSnapshotInput[]
+  connectOrCreate?: Prisma.CodingSubmissionCreateOrConnectWithoutSnapshotInput | Prisma.CodingSubmissionCreateOrConnectWithoutSnapshotInput[]
+  createMany?: Prisma.CodingSubmissionCreateManySnapshotInputEnvelope
+  connect?: Prisma.CodingSubmissionWhereUniqueInput | Prisma.CodingSubmissionWhereUniqueInput[]
+}
+
+export type CodingSubmissionUpdateManyWithoutSnapshotNestedInput = {
+  create?: Prisma.XOR<Prisma.CodingSubmissionCreateWithoutSnapshotInput, Prisma.CodingSubmissionUncheckedCreateWithoutSnapshotInput> | Prisma.CodingSubmissionCreateWithoutSnapshotInput[] | Prisma.CodingSubmissionUncheckedCreateWithoutSnapshotInput[]
+  connectOrCreate?: Prisma.CodingSubmissionCreateOrConnectWithoutSnapshotInput | Prisma.CodingSubmissionCreateOrConnectWithoutSnapshotInput[]
+  upsert?: Prisma.CodingSubmissionUpsertWithWhereUniqueWithoutSnapshotInput | Prisma.CodingSubmissionUpsertWithWhereUniqueWithoutSnapshotInput[]
+  createMany?: Prisma.CodingSubmissionCreateManySnapshotInputEnvelope
+  set?: Prisma.CodingSubmissionWhereUniqueInput | Prisma.CodingSubmissionWhereUniqueInput[]
+  disconnect?: Prisma.CodingSubmissionWhereUniqueInput | Prisma.CodingSubmissionWhereUniqueInput[]
+  delete?: Prisma.CodingSubmissionWhereUniqueInput | Prisma.CodingSubmissionWhereUniqueInput[]
+  connect?: Prisma.CodingSubmissionWhereUniqueInput | Prisma.CodingSubmissionWhereUniqueInput[]
+  update?: Prisma.CodingSubmissionUpdateWithWhereUniqueWithoutSnapshotInput | Prisma.CodingSubmissionUpdateWithWhereUniqueWithoutSnapshotInput[]
+  updateMany?: Prisma.CodingSubmissionUpdateManyWithWhereWithoutSnapshotInput | Prisma.CodingSubmissionUpdateManyWithWhereWithoutSnapshotInput[]
+  deleteMany?: Prisma.CodingSubmissionScalarWhereInput | Prisma.CodingSubmissionScalarWhereInput[]
+}
+
+export type CodingSubmissionUncheckedUpdateManyWithoutSnapshotNestedInput = {
+  create?: Prisma.XOR<Prisma.CodingSubmissionCreateWithoutSnapshotInput, Prisma.CodingSubmissionUncheckedCreateWithoutSnapshotInput> | Prisma.CodingSubmissionCreateWithoutSnapshotInput[] | Prisma.CodingSubmissionUncheckedCreateWithoutSnapshotInput[]
+  connectOrCreate?: Prisma.CodingSubmissionCreateOrConnectWithoutSnapshotInput | Prisma.CodingSubmissionCreateOrConnectWithoutSnapshotInput[]
+  upsert?: Prisma.CodingSubmissionUpsertWithWhereUniqueWithoutSnapshotInput | Prisma.CodingSubmissionUpsertWithWhereUniqueWithoutSnapshotInput[]
+  createMany?: Prisma.CodingSubmissionCreateManySnapshotInputEnvelope
+  set?: Prisma.CodingSubmissionWhereUniqueInput | Prisma.CodingSubmissionWhereUniqueInput[]
+  disconnect?: Prisma.CodingSubmissionWhereUniqueInput | Prisma.CodingSubmissionWhereUniqueInput[]
+  delete?: Prisma.CodingSubmissionWhereUniqueInput | Prisma.CodingSubmissionWhereUniqueInput[]
+  connect?: Prisma.CodingSubmissionWhereUniqueInput | Prisma.CodingSubmissionWhereUniqueInput[]
+  update?: Prisma.CodingSubmissionUpdateWithWhereUniqueWithoutSnapshotInput | Prisma.CodingSubmissionUpdateWithWhereUniqueWithoutSnapshotInput[]
+  updateMany?: Prisma.CodingSubmissionUpdateManyWithWhereWithoutSnapshotInput | Prisma.CodingSubmissionUpdateManyWithWhereWithoutSnapshotInput[]
+  deleteMany?: Prisma.CodingSubmissionScalarWhereInput | Prisma.CodingSubmissionScalarWhereInput[]
+}
+
 export type CodingSubmissionCreateWithoutApplicationInput = {
   id?: string
+  candidate_id?: string | null
   attempt_number?: number
   idempotency_key?: string | null
   language: string
@@ -909,12 +1020,16 @@ export type CodingSubmissionCreateWithoutApplicationInput = {
   runner_version?: string | null
   error_message?: string | null
   created_at?: Date | string
+  completed_at?: Date | string | null
   problem?: Prisma.CodingProblemCreateNestedOneWithoutSubmissionsInput
+  snapshot?: Prisma.CodingProblemSnapshotCreateNestedOneWithoutSubmissionsInput
 }
 
 export type CodingSubmissionUncheckedCreateWithoutApplicationInput = {
   id?: string
+  candidate_id?: string | null
   problem_id?: string | null
+  problem_snapshot_id?: string | null
   attempt_number?: number
   idempotency_key?: string | null
   language: string
@@ -935,6 +1050,7 @@ export type CodingSubmissionUncheckedCreateWithoutApplicationInput = {
   runner_version?: string | null
   error_message?: string | null
   created_at?: Date | string
+  completed_at?: Date | string | null
 }
 
 export type CodingSubmissionCreateOrConnectWithoutApplicationInput = {
@@ -968,8 +1084,10 @@ export type CodingSubmissionScalarWhereInput = {
   OR?: Prisma.CodingSubmissionScalarWhereInput[]
   NOT?: Prisma.CodingSubmissionScalarWhereInput | Prisma.CodingSubmissionScalarWhereInput[]
   id?: Prisma.StringFilter<"CodingSubmission"> | string
-  application_id?: Prisma.StringFilter<"CodingSubmission"> | string
+  application_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
+  candidate_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   problem_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
+  problem_snapshot_id?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   attempt_number?: Prisma.IntFilter<"CodingSubmission"> | number
   idempotency_key?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   language?: Prisma.StringFilter<"CodingSubmission"> | string
@@ -990,10 +1108,12 @@ export type CodingSubmissionScalarWhereInput = {
   runner_version?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   error_message?: Prisma.StringNullableFilter<"CodingSubmission"> | string | null
   created_at?: Prisma.DateTimeFilter<"CodingSubmission"> | Date | string
+  completed_at?: Prisma.DateTimeNullableFilter<"CodingSubmission"> | Date | string | null
 }
 
 export type CodingSubmissionCreateWithoutProblemInput = {
   id?: string
+  candidate_id?: string | null
   attempt_number?: number
   idempotency_key?: string | null
   language: string
@@ -1014,12 +1134,16 @@ export type CodingSubmissionCreateWithoutProblemInput = {
   runner_version?: string | null
   error_message?: string | null
   created_at?: Date | string
-  application: Prisma.ApplicationCreateNestedOneWithoutCoding_submissionsInput
+  completed_at?: Date | string | null
+  application?: Prisma.ApplicationCreateNestedOneWithoutCoding_submissionsInput
+  snapshot?: Prisma.CodingProblemSnapshotCreateNestedOneWithoutSubmissionsInput
 }
 
 export type CodingSubmissionUncheckedCreateWithoutProblemInput = {
   id?: string
-  application_id: string
+  application_id?: string | null
+  candidate_id?: string | null
+  problem_snapshot_id?: string | null
   attempt_number?: number
   idempotency_key?: string | null
   language: string
@@ -1040,6 +1164,7 @@ export type CodingSubmissionUncheckedCreateWithoutProblemInput = {
   runner_version?: string | null
   error_message?: string | null
   created_at?: Date | string
+  completed_at?: Date | string | null
 }
 
 export type CodingSubmissionCreateOrConnectWithoutProblemInput = {
@@ -1068,8 +1193,38 @@ export type CodingSubmissionUpdateManyWithWhereWithoutProblemInput = {
   data: Prisma.XOR<Prisma.CodingSubmissionUpdateManyMutationInput, Prisma.CodingSubmissionUncheckedUpdateManyWithoutProblemInput>
 }
 
-export type CodingSubmissionCreateManyApplicationInput = {
+export type CodingSubmissionCreateWithoutSnapshotInput = {
   id?: string
+  candidate_id?: string | null
+  attempt_number?: number
+  idempotency_key?: string | null
+  language: string
+  code: string
+  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  pass_rate?: number
+  pass_rate_percent?: number
+  pass_rate_ratio?: number
+  execution_time_ms?: number | null
+  memory_mb?: number | null
+  memory_kb?: number | null
+  complexity_score?: number | null
+  status?: string | null
+  complexity?: string | null
+  ai_feedback?: string | null
+  stdout_stderr?: string | null
+  code_hash?: string | null
+  runner_version?: string | null
+  error_message?: string | null
+  created_at?: Date | string
+  completed_at?: Date | string | null
+  application?: Prisma.ApplicationCreateNestedOneWithoutCoding_submissionsInput
+  problem?: Prisma.CodingProblemCreateNestedOneWithoutSubmissionsInput
+}
+
+export type CodingSubmissionUncheckedCreateWithoutSnapshotInput = {
+  id?: string
+  application_id?: string | null
+  candidate_id?: string | null
   problem_id?: string | null
   attempt_number?: number
   idempotency_key?: string | null
@@ -1091,86 +1246,40 @@ export type CodingSubmissionCreateManyApplicationInput = {
   runner_version?: string | null
   error_message?: string | null
   created_at?: Date | string
+  completed_at?: Date | string | null
 }
 
-export type CodingSubmissionUpdateWithoutApplicationInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
-  idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
-  code?: Prisma.StringFieldUpdateOperationsInput | string
-  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  pass_rate?: Prisma.FloatFieldUpdateOperationsInput | number
-  pass_rate_percent?: Prisma.FloatFieldUpdateOperationsInput | number
-  pass_rate_ratio?: Prisma.FloatFieldUpdateOperationsInput | number
-  execution_time_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  memory_mb?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  memory_kb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  complexity_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  complexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  stdout_stderr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  code_hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  problem?: Prisma.CodingProblemUpdateOneWithoutSubmissionsNestedInput
+export type CodingSubmissionCreateOrConnectWithoutSnapshotInput = {
+  where: Prisma.CodingSubmissionWhereUniqueInput
+  create: Prisma.XOR<Prisma.CodingSubmissionCreateWithoutSnapshotInput, Prisma.CodingSubmissionUncheckedCreateWithoutSnapshotInput>
 }
 
-export type CodingSubmissionUncheckedUpdateWithoutApplicationInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  problem_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
-  idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
-  code?: Prisma.StringFieldUpdateOperationsInput | string
-  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  pass_rate?: Prisma.FloatFieldUpdateOperationsInput | number
-  pass_rate_percent?: Prisma.FloatFieldUpdateOperationsInput | number
-  pass_rate_ratio?: Prisma.FloatFieldUpdateOperationsInput | number
-  execution_time_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  memory_mb?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  memory_kb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  complexity_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  complexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  stdout_stderr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  code_hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type CodingSubmissionCreateManySnapshotInputEnvelope = {
+  data: Prisma.CodingSubmissionCreateManySnapshotInput | Prisma.CodingSubmissionCreateManySnapshotInput[]
+  skipDuplicates?: boolean
 }
 
-export type CodingSubmissionUncheckedUpdateManyWithoutApplicationInput = {
-  id?: Prisma.StringFieldUpdateOperationsInput | string
-  problem_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
-  idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  language?: Prisma.StringFieldUpdateOperationsInput | string
-  code?: Prisma.StringFieldUpdateOperationsInput | string
-  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  pass_rate?: Prisma.FloatFieldUpdateOperationsInput | number
-  pass_rate_percent?: Prisma.FloatFieldUpdateOperationsInput | number
-  pass_rate_ratio?: Prisma.FloatFieldUpdateOperationsInput | number
-  execution_time_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  memory_mb?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  memory_kb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  complexity_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  complexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ai_feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  stdout_stderr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  code_hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+export type CodingSubmissionUpsertWithWhereUniqueWithoutSnapshotInput = {
+  where: Prisma.CodingSubmissionWhereUniqueInput
+  update: Prisma.XOR<Prisma.CodingSubmissionUpdateWithoutSnapshotInput, Prisma.CodingSubmissionUncheckedUpdateWithoutSnapshotInput>
+  create: Prisma.XOR<Prisma.CodingSubmissionCreateWithoutSnapshotInput, Prisma.CodingSubmissionUncheckedCreateWithoutSnapshotInput>
 }
 
-export type CodingSubmissionCreateManyProblemInput = {
+export type CodingSubmissionUpdateWithWhereUniqueWithoutSnapshotInput = {
+  where: Prisma.CodingSubmissionWhereUniqueInput
+  data: Prisma.XOR<Prisma.CodingSubmissionUpdateWithoutSnapshotInput, Prisma.CodingSubmissionUncheckedUpdateWithoutSnapshotInput>
+}
+
+export type CodingSubmissionUpdateManyWithWhereWithoutSnapshotInput = {
+  where: Prisma.CodingSubmissionScalarWhereInput
+  data: Prisma.XOR<Prisma.CodingSubmissionUpdateManyMutationInput, Prisma.CodingSubmissionUncheckedUpdateManyWithoutSnapshotInput>
+}
+
+export type CodingSubmissionCreateManyApplicationInput = {
   id?: string
-  application_id: string
+  candidate_id?: string | null
+  problem_id?: string | null
+  problem_snapshot_id?: string | null
   attempt_number?: number
   idempotency_key?: string | null
   language: string
@@ -1191,10 +1300,124 @@ export type CodingSubmissionCreateManyProblemInput = {
   runner_version?: string | null
   error_message?: string | null
   created_at?: Date | string
+  completed_at?: Date | string | null
+}
+
+export type CodingSubmissionUpdateWithoutApplicationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
+  idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  pass_rate?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_percent?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_ratio?: Prisma.FloatFieldUpdateOperationsInput | number
+  execution_time_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  memory_mb?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  memory_kb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  complexity_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stdout_stderr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  code_hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  problem?: Prisma.CodingProblemUpdateOneWithoutSubmissionsNestedInput
+  snapshot?: Prisma.CodingProblemSnapshotUpdateOneWithoutSubmissionsNestedInput
+}
+
+export type CodingSubmissionUncheckedUpdateWithoutApplicationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  problem_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  problem_snapshot_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
+  idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  pass_rate?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_percent?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_ratio?: Prisma.FloatFieldUpdateOperationsInput | number
+  execution_time_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  memory_mb?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  memory_kb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  complexity_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stdout_stderr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  code_hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
+export type CodingSubmissionUncheckedUpdateManyWithoutApplicationInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  problem_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  problem_snapshot_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
+  idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  pass_rate?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_percent?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_ratio?: Prisma.FloatFieldUpdateOperationsInput | number
+  execution_time_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  memory_mb?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  memory_kb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  complexity_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stdout_stderr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  code_hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
+export type CodingSubmissionCreateManyProblemInput = {
+  id?: string
+  application_id?: string | null
+  candidate_id?: string | null
+  problem_snapshot_id?: string | null
+  attempt_number?: number
+  idempotency_key?: string | null
+  language: string
+  code: string
+  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  pass_rate?: number
+  pass_rate_percent?: number
+  pass_rate_ratio?: number
+  execution_time_ms?: number | null
+  memory_mb?: number | null
+  memory_kb?: number | null
+  complexity_score?: number | null
+  status?: string | null
+  complexity?: string | null
+  ai_feedback?: string | null
+  stdout_stderr?: string | null
+  code_hash?: string | null
+  runner_version?: string | null
+  error_message?: string | null
+  created_at?: Date | string
+  completed_at?: Date | string | null
 }
 
 export type CodingSubmissionUpdateWithoutProblemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
   idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1215,12 +1438,16 @@ export type CodingSubmissionUpdateWithoutProblemInput = {
   runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  application?: Prisma.ApplicationUpdateOneRequiredWithoutCoding_submissionsNestedInput
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  application?: Prisma.ApplicationUpdateOneWithoutCoding_submissionsNestedInput
+  snapshot?: Prisma.CodingProblemSnapshotUpdateOneWithoutSubmissionsNestedInput
 }
 
 export type CodingSubmissionUncheckedUpdateWithoutProblemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  application_id?: Prisma.StringFieldUpdateOperationsInput | string
+  application_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  problem_snapshot_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
   idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1241,11 +1468,14 @@ export type CodingSubmissionUncheckedUpdateWithoutProblemInput = {
   runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 export type CodingSubmissionUncheckedUpdateManyWithoutProblemInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  application_id?: Prisma.StringFieldUpdateOperationsInput | string
+  application_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  problem_snapshot_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
   idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   language?: Prisma.StringFieldUpdateOperationsInput | string
@@ -1266,6 +1496,119 @@ export type CodingSubmissionUncheckedUpdateManyWithoutProblemInput = {
   runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
+export type CodingSubmissionCreateManySnapshotInput = {
+  id?: string
+  application_id?: string | null
+  candidate_id?: string | null
+  problem_id?: string | null
+  attempt_number?: number
+  idempotency_key?: string | null
+  language: string
+  code: string
+  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  pass_rate?: number
+  pass_rate_percent?: number
+  pass_rate_ratio?: number
+  execution_time_ms?: number | null
+  memory_mb?: number | null
+  memory_kb?: number | null
+  complexity_score?: number | null
+  status?: string | null
+  complexity?: string | null
+  ai_feedback?: string | null
+  stdout_stderr?: string | null
+  code_hash?: string | null
+  runner_version?: string | null
+  error_message?: string | null
+  created_at?: Date | string
+  completed_at?: Date | string | null
+}
+
+export type CodingSubmissionUpdateWithoutSnapshotInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
+  idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  pass_rate?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_percent?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_ratio?: Prisma.FloatFieldUpdateOperationsInput | number
+  execution_time_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  memory_mb?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  memory_kb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  complexity_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stdout_stderr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  code_hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  application?: Prisma.ApplicationUpdateOneWithoutCoding_submissionsNestedInput
+  problem?: Prisma.CodingProblemUpdateOneWithoutSubmissionsNestedInput
+}
+
+export type CodingSubmissionUncheckedUpdateWithoutSnapshotInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  application_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  problem_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
+  idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  pass_rate?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_percent?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_ratio?: Prisma.FloatFieldUpdateOperationsInput | number
+  execution_time_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  memory_mb?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  memory_kb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  complexity_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stdout_stderr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  code_hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+}
+
+export type CodingSubmissionUncheckedUpdateManyWithoutSnapshotInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  application_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  candidate_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  problem_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  attempt_number?: Prisma.IntFieldUpdateOperationsInput | number
+  idempotency_key?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  language?: Prisma.StringFieldUpdateOperationsInput | string
+  code?: Prisma.StringFieldUpdateOperationsInput | string
+  test_results?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  pass_rate?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_percent?: Prisma.FloatFieldUpdateOperationsInput | number
+  pass_rate_ratio?: Prisma.FloatFieldUpdateOperationsInput | number
+  execution_time_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  memory_mb?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  memory_kb?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  complexity_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  status?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  complexity?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ai_feedback?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  stdout_stderr?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  code_hash?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  runner_version?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  error_message?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
 
 
@@ -1273,7 +1616,9 @@ export type CodingSubmissionUncheckedUpdateManyWithoutProblemInput = {
 export type CodingSubmissionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   application_id?: boolean
+  candidate_id?: boolean
   problem_id?: boolean
+  problem_snapshot_id?: boolean
   attempt_number?: boolean
   idempotency_key?: boolean
   language?: boolean
@@ -1294,14 +1639,18 @@ export type CodingSubmissionSelect<ExtArgs extends runtime.Types.Extensions.Inte
   runner_version?: boolean
   error_message?: boolean
   created_at?: boolean
-  application?: boolean | Prisma.ApplicationDefaultArgs<ExtArgs>
+  completed_at?: boolean
+  application?: boolean | Prisma.CodingSubmission$applicationArgs<ExtArgs>
   problem?: boolean | Prisma.CodingSubmission$problemArgs<ExtArgs>
+  snapshot?: boolean | Prisma.CodingSubmission$snapshotArgs<ExtArgs>
 }, ExtArgs["result"]["codingSubmission"]>
 
 export type CodingSubmissionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   application_id?: boolean
+  candidate_id?: boolean
   problem_id?: boolean
+  problem_snapshot_id?: boolean
   attempt_number?: boolean
   idempotency_key?: boolean
   language?: boolean
@@ -1322,14 +1671,18 @@ export type CodingSubmissionSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   runner_version?: boolean
   error_message?: boolean
   created_at?: boolean
-  application?: boolean | Prisma.ApplicationDefaultArgs<ExtArgs>
+  completed_at?: boolean
+  application?: boolean | Prisma.CodingSubmission$applicationArgs<ExtArgs>
   problem?: boolean | Prisma.CodingSubmission$problemArgs<ExtArgs>
+  snapshot?: boolean | Prisma.CodingSubmission$snapshotArgs<ExtArgs>
 }, ExtArgs["result"]["codingSubmission"]>
 
 export type CodingSubmissionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   application_id?: boolean
+  candidate_id?: boolean
   problem_id?: boolean
+  problem_snapshot_id?: boolean
   attempt_number?: boolean
   idempotency_key?: boolean
   language?: boolean
@@ -1350,14 +1703,18 @@ export type CodingSubmissionSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   runner_version?: boolean
   error_message?: boolean
   created_at?: boolean
-  application?: boolean | Prisma.ApplicationDefaultArgs<ExtArgs>
+  completed_at?: boolean
+  application?: boolean | Prisma.CodingSubmission$applicationArgs<ExtArgs>
   problem?: boolean | Prisma.CodingSubmission$problemArgs<ExtArgs>
+  snapshot?: boolean | Prisma.CodingSubmission$snapshotArgs<ExtArgs>
 }, ExtArgs["result"]["codingSubmission"]>
 
 export type CodingSubmissionSelectScalar = {
   id?: boolean
   application_id?: boolean
+  candidate_id?: boolean
   problem_id?: boolean
+  problem_snapshot_id?: boolean
   attempt_number?: boolean
   idempotency_key?: boolean
   language?: boolean
@@ -1378,32 +1735,39 @@ export type CodingSubmissionSelectScalar = {
   runner_version?: boolean
   error_message?: boolean
   created_at?: boolean
+  completed_at?: boolean
 }
 
-export type CodingSubmissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "application_id" | "problem_id" | "attempt_number" | "idempotency_key" | "language" | "code" | "test_results" | "pass_rate" | "pass_rate_percent" | "pass_rate_ratio" | "execution_time_ms" | "memory_mb" | "memory_kb" | "complexity_score" | "status" | "complexity" | "ai_feedback" | "stdout_stderr" | "code_hash" | "runner_version" | "error_message" | "created_at", ExtArgs["result"]["codingSubmission"]>
+export type CodingSubmissionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "application_id" | "candidate_id" | "problem_id" | "problem_snapshot_id" | "attempt_number" | "idempotency_key" | "language" | "code" | "test_results" | "pass_rate" | "pass_rate_percent" | "pass_rate_ratio" | "execution_time_ms" | "memory_mb" | "memory_kb" | "complexity_score" | "status" | "complexity" | "ai_feedback" | "stdout_stderr" | "code_hash" | "runner_version" | "error_message" | "created_at" | "completed_at", ExtArgs["result"]["codingSubmission"]>
 export type CodingSubmissionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  application?: boolean | Prisma.ApplicationDefaultArgs<ExtArgs>
+  application?: boolean | Prisma.CodingSubmission$applicationArgs<ExtArgs>
   problem?: boolean | Prisma.CodingSubmission$problemArgs<ExtArgs>
+  snapshot?: boolean | Prisma.CodingSubmission$snapshotArgs<ExtArgs>
 }
 export type CodingSubmissionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  application?: boolean | Prisma.ApplicationDefaultArgs<ExtArgs>
+  application?: boolean | Prisma.CodingSubmission$applicationArgs<ExtArgs>
   problem?: boolean | Prisma.CodingSubmission$problemArgs<ExtArgs>
+  snapshot?: boolean | Prisma.CodingSubmission$snapshotArgs<ExtArgs>
 }
 export type CodingSubmissionIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  application?: boolean | Prisma.ApplicationDefaultArgs<ExtArgs>
+  application?: boolean | Prisma.CodingSubmission$applicationArgs<ExtArgs>
   problem?: boolean | Prisma.CodingSubmission$problemArgs<ExtArgs>
+  snapshot?: boolean | Prisma.CodingSubmission$snapshotArgs<ExtArgs>
 }
 
 export type $CodingSubmissionPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "CodingSubmission"
   objects: {
-    application: Prisma.$ApplicationPayload<ExtArgs>
+    application: Prisma.$ApplicationPayload<ExtArgs> | null
     problem: Prisma.$CodingProblemPayload<ExtArgs> | null
+    snapshot: Prisma.$CodingProblemSnapshotPayload<ExtArgs> | null
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    application_id: string
+    application_id: string | null
+    candidate_id: string | null
     problem_id: string | null
+    problem_snapshot_id: string | null
     attempt_number: number
     idempotency_key: string | null
     language: string
@@ -1424,6 +1788,7 @@ export type $CodingSubmissionPayload<ExtArgs extends runtime.Types.Extensions.In
     runner_version: string | null
     error_message: string | null
     created_at: Date
+    completed_at: Date | null
   }, ExtArgs["result"]["codingSubmission"]>
   composites: {}
 }
@@ -1818,8 +2183,9 @@ readonly fields: CodingSubmissionFieldRefs;
  */
 export interface Prisma__CodingSubmissionClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  application<T extends Prisma.ApplicationDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ApplicationDefaultArgs<ExtArgs>>): Prisma.Prisma__ApplicationClient<runtime.Types.Result.GetResult<Prisma.$ApplicationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  application<T extends Prisma.CodingSubmission$applicationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CodingSubmission$applicationArgs<ExtArgs>>): Prisma.Prisma__ApplicationClient<runtime.Types.Result.GetResult<Prisma.$ApplicationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   problem<T extends Prisma.CodingSubmission$problemArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CodingSubmission$problemArgs<ExtArgs>>): Prisma.Prisma__CodingProblemClient<runtime.Types.Result.GetResult<Prisma.$CodingProblemPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  snapshot<T extends Prisma.CodingSubmission$snapshotArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CodingSubmission$snapshotArgs<ExtArgs>>): Prisma.Prisma__CodingProblemSnapshotClient<runtime.Types.Result.GetResult<Prisma.$CodingProblemSnapshotPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1851,7 +2217,9 @@ export interface Prisma__CodingSubmissionClient<T, Null = never, ExtArgs extends
 export interface CodingSubmissionFieldRefs {
   readonly id: Prisma.FieldRef<"CodingSubmission", 'String'>
   readonly application_id: Prisma.FieldRef<"CodingSubmission", 'String'>
+  readonly candidate_id: Prisma.FieldRef<"CodingSubmission", 'String'>
   readonly problem_id: Prisma.FieldRef<"CodingSubmission", 'String'>
+  readonly problem_snapshot_id: Prisma.FieldRef<"CodingSubmission", 'String'>
   readonly attempt_number: Prisma.FieldRef<"CodingSubmission", 'Int'>
   readonly idempotency_key: Prisma.FieldRef<"CodingSubmission", 'String'>
   readonly language: Prisma.FieldRef<"CodingSubmission", 'String'>
@@ -1872,6 +2240,7 @@ export interface CodingSubmissionFieldRefs {
   readonly runner_version: Prisma.FieldRef<"CodingSubmission", 'String'>
   readonly error_message: Prisma.FieldRef<"CodingSubmission", 'String'>
   readonly created_at: Prisma.FieldRef<"CodingSubmission", 'DateTime'>
+  readonly completed_at: Prisma.FieldRef<"CodingSubmission", 'DateTime'>
 }
     
 
@@ -2273,6 +2642,25 @@ export type CodingSubmissionDeleteManyArgs<ExtArgs extends runtime.Types.Extensi
 }
 
 /**
+ * CodingSubmission.application
+ */
+export type CodingSubmission$applicationArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Application
+   */
+  select?: Prisma.ApplicationSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Application
+   */
+  omit?: Prisma.ApplicationOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ApplicationInclude<ExtArgs> | null
+  where?: Prisma.ApplicationWhereInput
+}
+
+/**
  * CodingSubmission.problem
  */
 export type CodingSubmission$problemArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2289,6 +2677,25 @@ export type CodingSubmission$problemArgs<ExtArgs extends runtime.Types.Extension
    */
   include?: Prisma.CodingProblemInclude<ExtArgs> | null
   where?: Prisma.CodingProblemWhereInput
+}
+
+/**
+ * CodingSubmission.snapshot
+ */
+export type CodingSubmission$snapshotArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CodingProblemSnapshot
+   */
+  select?: Prisma.CodingProblemSnapshotSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CodingProblemSnapshot
+   */
+  omit?: Prisma.CodingProblemSnapshotOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CodingProblemSnapshotInclude<ExtArgs> | null
+  where?: Prisma.CodingProblemSnapshotWhereInput
 }
 
 /**

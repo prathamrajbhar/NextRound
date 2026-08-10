@@ -431,6 +431,11 @@ export type ApplicationScalarRelationFilter = {
   isNot?: Prisma.ApplicationWhereInput
 }
 
+export type ApplicationNullableScalarRelationFilter = {
+  is?: Prisma.ApplicationWhereInput | null
+  isNot?: Prisma.ApplicationWhereInput | null
+}
+
 export type ApplicationCreateNestedManyWithoutJobInput = {
   create?: Prisma.XOR<Prisma.ApplicationCreateWithoutJobInput, Prisma.ApplicationUncheckedCreateWithoutJobInput> | Prisma.ApplicationCreateWithoutJobInput[] | Prisma.ApplicationUncheckedCreateWithoutJobInput[]
   connectOrCreate?: Prisma.ApplicationCreateOrConnectWithoutJobInput | Prisma.ApplicationCreateOrConnectWithoutJobInput[]
@@ -557,10 +562,12 @@ export type ApplicationCreateNestedOneWithoutAssessmentsInput = {
   connect?: Prisma.ApplicationWhereUniqueInput
 }
 
-export type ApplicationUpdateOneRequiredWithoutAssessmentsNestedInput = {
+export type ApplicationUpdateOneWithoutAssessmentsNestedInput = {
   create?: Prisma.XOR<Prisma.ApplicationCreateWithoutAssessmentsInput, Prisma.ApplicationUncheckedCreateWithoutAssessmentsInput>
   connectOrCreate?: Prisma.ApplicationCreateOrConnectWithoutAssessmentsInput
   upsert?: Prisma.ApplicationUpsertWithoutAssessmentsInput
+  disconnect?: Prisma.ApplicationWhereInput | boolean
+  delete?: Prisma.ApplicationWhereInput | boolean
   connect?: Prisma.ApplicationWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.ApplicationUpdateToOneWithWhereWithoutAssessmentsInput, Prisma.ApplicationUpdateWithoutAssessmentsInput>, Prisma.ApplicationUncheckedUpdateWithoutAssessmentsInput>
 }
@@ -571,10 +578,12 @@ export type ApplicationCreateNestedOneWithoutCoding_submissionsInput = {
   connect?: Prisma.ApplicationWhereUniqueInput
 }
 
-export type ApplicationUpdateOneRequiredWithoutCoding_submissionsNestedInput = {
+export type ApplicationUpdateOneWithoutCoding_submissionsNestedInput = {
   create?: Prisma.XOR<Prisma.ApplicationCreateWithoutCoding_submissionsInput, Prisma.ApplicationUncheckedCreateWithoutCoding_submissionsInput>
   connectOrCreate?: Prisma.ApplicationCreateOrConnectWithoutCoding_submissionsInput
   upsert?: Prisma.ApplicationUpsertWithoutCoding_submissionsInput
+  disconnect?: Prisma.ApplicationWhereInput | boolean
+  delete?: Prisma.ApplicationWhereInput | boolean
   connect?: Prisma.ApplicationWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.ApplicationUpdateToOneWithWhereWithoutCoding_submissionsInput, Prisma.ApplicationUpdateWithoutCoding_submissionsInput>, Prisma.ApplicationUncheckedUpdateWithoutCoding_submissionsInput>
 }

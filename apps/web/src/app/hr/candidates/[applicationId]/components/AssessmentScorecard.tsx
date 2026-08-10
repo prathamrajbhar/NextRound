@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ClipboardCheck, ChevronDown, ShieldCheck, Lock } from '@/lib/lucide-google-icons';
+import { ClipboardCheck, ChevronDown } from '@/lib/lucide-google-icons';
 
 interface AssessmentData {
   overallScore?: number;
@@ -18,12 +18,6 @@ interface AssessmentData {
   categoryScores?: Record<string, number>;
   complexityAnalysis?: string;
   passRate?: number;
-  biasReport?: {
-    severity?: 'low' | 'medium' | 'high';
-    anomalies?: string[];
-    linguistic_neutrality?: string;
-    demographic_isolation?: string;
-  };
   scoringIsolationAsserted?: boolean;
 }
 
@@ -57,35 +51,6 @@ export function AssessmentScorecard({ assessmentData }: AssessmentScorecardProps
         <div className="bg-white/50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 p-3 rounded-2xl text-xs font-semibold text-slate-700 dark:text-slate-300">
           <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase block">Coding Algorithmic Logic</span>
           <span className="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-1 block">{assessmentData.codingScore ?? assessmentData.codeScore ?? 85}%</span>
-        </div>
-      </div>
-
-      {/* Bias Audit & Scoring Isolation Badges */}
-      <div className="p-3 rounded-2xl bg-indigo-950/40 border border-indigo-800/60 space-y-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-300">
-            <ShieldCheck className="h-4 w-4 text-emerald-400" />
-            <span>Demographic Anomaly Audit</span>
-          </div>
-          <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase border ${
-            assessmentData.biasReport?.severity && assessmentData.biasReport.severity !== 'low'
-              ? 'bg-rose-950/80 text-rose-300 border-rose-800'
-              : 'bg-emerald-950/80 text-emerald-300 border-emerald-800'
-          }`}>
-            {assessmentData.biasReport?.severity && assessmentData.biasReport.severity !== 'low'
-              ? 'Anomaly Flagged'
-              : 'Clean / Neutrality Passed'}
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between text-[11px] text-slate-300 pt-1 border-t border-indigo-900/60">
-          <div className="flex items-center gap-1.5 font-mono text-[10px] text-teal-400">
-            <Lock className="h-3.5 w-3.5" />
-            <span>Scoring Isolation: Programmatically Asserted</span>
-          </div>
-          <span className="text-[9px] font-bold text-slate-400 uppercase">
-            CV Signals Excluded from Score Math
-          </span>
         </div>
       </div>
 

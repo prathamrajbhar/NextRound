@@ -256,19 +256,29 @@ model Interview {
 }
 
 model Assessment {
-  id                 String           @id @default(uuid())
-  application_id     String
-  test_type          AssessmentType
-  questions          Json
-  responses          Json?
-  score              Float?
-  category_breakdown Json?
-  status             AssessmentStatus @default(pending)
-  created_at         DateTime         @default(now())
+  id                     String           @id @default(uuid())
+  application_id         String?
+  session_id             String?
+  test_type              AssessmentType
+  questions              Json
+  responses              Json?
+  score                  Float?
+  category_breakdown     Json?
+  status                 AssessmentStatus @default(pending)
+  question_schema_version Int             @default(1)
+  current_chunk_index    Int              @default(0)
+  total_question_count   Int              @default(0)
+  // Idempotency ledger for chunk submissions: { "<chunkIndex>": { clientRequestId, submittedAt } }
+  chunk_submissions      Json?
+  created_at             DateTime         @default(now())
 
-  application Application @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  application    Application?             @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  mock_session   MockSession?             @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  chunks         GeneratedQuestionChunk[]
+  snapshots      CodingProblemSnapshot[]
 
   @@index([application_id])
+  @@index([session_id])
 }
 
 model CodingProblem {
@@ -297,8 +307,10 @@ model CodingProblem {
 
 model CodingSubmission {
   id                String         @id @default(uuid())
-  application_id    String
+  application_id    String?
+  candidate_id      String?
   problem_id        String?
+  problem_snapshot_id String?
   attempt_number    Int            @default(1)
   idempotency_key   String?        @unique
   language          String
@@ -319,13 +331,88 @@ model CodingSubmission {
   runner_version    String?
   error_message     String?        @db.Text
   created_at        DateTime       @default(now())
+  completed_at      DateTime?
 
-  application Application    @relation(fields: [application_id], references: [id], onDelete: Cascade)
-  problem     CodingProblem? @relation(fields: [problem_id], references: [id], onDelete: SetNull)
+  application Application?         @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  problem     CodingProblem?       @relation(fields: [problem_id], references: [id], onDelete: SetNull)
+  snapshot    CodingProblemSnapshot? @relation(fields: [problem_snapshot_id], references: [id], onDelete: SetNull)
 
   @@index([application_id])
+  @@index([candidate_id])
   @@index([problem_id])
+  @@index([problem_snapshot_id])
   @@index([idempotency_key])
+  @@index([status])
+}
+
+model GeneratedQuestionChunk {
+  id              String   @id @default(uuid())
+  assessment_id   String
+  chunk_index     Int
+  chunk_size      Int
+  question_ids    Json     @default("[]")
+  questions       Json
+  prompt_version  String   @default("v1")
+  generation_seed String?
+  content_hash    String?
+  created_at      DateTime @default(now())
+
+  assessment Assessment @relation(fields: [assessment_id], references: [id], onDelete: Cascade)
+
+  @@unique([assessment_id, chunk_index])
+  @@index([assessment_id])
+}
+
+model CodingProblemSnapshot {
+  id                      String   @id @default(uuid())
+  assessment_id           String?
+  session_id              String
+  problem_id              String?
+  slug                    String?
+  title                   String
+  description             String   @db.Text
+  difficulty              String   @default("medium")
+  category                String?
+  entry_point             String   @default("solution")
+  parameter_schema        Json     @default("[]")
+  return_type             String   @default("any")
+  public_test_cases       Json     @default("[]")
+  hidden_test_cases       Json     @default("[]")
+  starter_code            Json     @default("{}")
+  reference_solution_hash String?
+  problem_version         Int      @default(1)
+  content_hash            String?
+  created_at              DateTime @default(now())
+
+  mock_session MockSession        @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  assessment   Assessment?        @relation(fields: [assessment_id], references: [id], onDelete: SetNull)
+  submissions  CodingSubmission[]
+
+  @@unique([session_id])
+  @@index([session_id])
+  @@index([assessment_id])
+}
+
+model VideoSubmission {
+  id               String    @id @default(uuid())
+  session_id       String
+  candidate_id     String
+  prompt_id        String?
+  prompt_index     Int       @default(0)
+  video_url        String
+  duration_seconds Int       @default(0)
+  status           String    @default("queued")
+  transcript       String?   @db.Text
+  score            Float?
+  feedback         Json?
+  idempotency_key  String?   @unique
+  created_at       DateTime  @default(now())
+  completed_at     DateTime?
+
+  mock_session MockSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@index([session_id])
+  @@index([candidate_id])
   @@index([status])
 }
 
@@ -376,10 +463,21 @@ model MockSession {
   target_role      String
   difficulty       String?
   type             String    @default("mock")
-  status           String    @default("active")
+  // Mock interview lifecycle: created -> in_progress -> aptitude_in_progress ->
+  // aptitude_completed -> coding_in_progress -> coding_completed ->
+  // video_in_progress -> video_processing -> video_completed ->
+  // feedback_processing -> completed (or abandoned from any active state).
+  status           String    @default("created")
+  current_section  String    @default("aptitude")
+  generation_seed  String?
+  started_at       DateTime?
+  completed_at     DateTime?
+  final_score      Float?
+  final_feedback   Json?
   topic            String?
   focus_areas      Json?
   rubric           Json?
+  video_prompts    Json?
   transcript       Json?
   score            Float?
   feedback         Json?
@@ -388,7 +486,10 @@ model MockSession {
   ended_at         DateTime?
   created_at       DateTime  @default(now())
 
-  candidate CandidateProfile @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  candidate         CandidateProfile      @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  assessments       Assessment[]
+  coding_snapshots  CodingProblemSnapshot[]
+  video_submissions VideoSubmission[]
 
   @@index([candidate_id])
   @@index([type])

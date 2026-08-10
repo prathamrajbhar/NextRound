@@ -163,15 +163,12 @@ Coding Assessment:
   Python → Express: PATCH /api/v1/internal/applications/:id/coding-result
 ```
 
-### Workflow 5: Evaluation, Bias Audit & Decision
+### Workflow 5: Evaluation & Decision
 ```
 BullMQ → Python: "evaluation-queue" worker
 Python: Aggregates resume_score + interview_score + aptitude_score + coding_score
-Python (LLM-as-Judge Bias Audit):
-  Scans evaluation for demographic code correlations (names, age, school prestige)
-  Generates demographic_anomaly_report JSON
 Python → Express: PATCH /api/v1/internal/evaluations/:id
-Express → Prisma: Updates Evaluation with composite_score, confidence, bias_report
+Express → Prisma: Updates Evaluation with composite_score, confidence
 
 BullMQ → Python: "decision-queue" worker
 Python: Compares composite_score against Job.thresholds
@@ -242,7 +239,7 @@ All endpoints under `/api/v1/internal/*` reject any request that does not includ
 | `assessment-queue` | Aptitude test category scoring and weighted score computation | High |
 | `coding-queue` | Isolated code execution, unit test runner, complexity analysis | High |
 | `interview-queue` | Post-interview transcript assembly, audio file persistence | High |
-| `evaluation-queue` | Composite score aggregation, LLM-as-judge bias audit | Critical |
+| `evaluation-queue` | Composite score aggregation and final evaluation | Critical |
 | `decision-queue` | Threshold matching, offer/rejection drafting, email delivery | Critical |
 | `analytics-queue` | Weekly funnel metric aggregation, PDF report generation | Low |
 | `mock-queue` | Practice session feedback scoring and coaching narrative | Low |

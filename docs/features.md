@@ -232,7 +232,6 @@ The Interviewer Agent replaces static question scripts with a fully adaptive dia
 **What it does:**
 - Aggregates weekly hiring funnel metrics: candidates per stage (Sourced → Screened → Assessment → Interview → Decided → Hired).
 - Tracks role-by-role time-to-hire velocity and composite score distribution trends.
-- Monitors bias audit score stability over time to detect drift.
 - Generates downloadable PDF executive reports on demand.
 
 **Trigger:** Weekly cron schedule (every Monday 00:00 UTC) or on-demand via `GET /api/v1/analytics/org/report.pdf`

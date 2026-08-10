@@ -579,14 +579,6 @@ export type CodingProblemNullableScalarRelationFilter = {
   isNot?: Prisma.CodingProblemWhereInput | null
 }
 
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type CodingProblemCreateNestedOneWithoutSubmissionsInput = {
   create?: Prisma.XOR<Prisma.CodingProblemCreateWithoutSubmissionsInput, Prisma.CodingProblemUncheckedCreateWithoutSubmissionsInput>
   connectOrCreate?: Prisma.CodingProblemCreateOrConnectWithoutSubmissionsInput

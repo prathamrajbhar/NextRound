@@ -278,32 +278,6 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
             </div>
           </div>
 
-          {/* Bias Audit Log */}
-          {app.biasReport && (
-            <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
-              <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 text-purple-600 dark:text-purple-400">
-                <Scale className="h-4.5 w-4.5" />
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display">Double-Pass Bias Audit Log</h3>
-              </div>
-              <div className="space-y-3.5 text-xs font-semibold text-slate-700 dark:text-slate-300">
-                <div className="flex justify-between items-center bg-emerald-50/70 dark:bg-emerald-950/50 border border-emerald-200/60 dark:border-emerald-900/60 p-3 rounded-xl text-emerald-800 dark:text-emerald-300">
-                  <span>Auditor Score Normalized</span>
-                  <span className="font-extrabold">{app.biasReport.overallScore}% reliability</span>
-                </div>
-                <p className="leading-relaxed font-medium">{app.biasReport.explanation}</p>
-                <div className="grid grid-cols-2 gap-4 border-t border-slate-200/60 dark:border-slate-800 pt-3">
-                  <div>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase block">Gender Check</span>
-                    <span className="text-slate-800 dark:text-slate-200 font-bold mt-1 block">{app.biasReport.genderBiasCheck}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase block">Origin Bias Check</span>
-                    <span className="text-slate-800 dark:text-slate-200 font-bold mt-1 block">{app.biasReport.originBiasCheck}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Right Column: Decision Control & Replay Link (1 Col) */}
