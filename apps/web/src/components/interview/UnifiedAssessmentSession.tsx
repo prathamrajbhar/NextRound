@@ -49,12 +49,19 @@ export function UnifiedAssessmentSession({
     startSession,
     submitAnswer,
     wrapUp,
+    strikeCount,
+    showWarningModal,
+    onResumeFullscreen,
+    onEliminate,
   } = useInterviewSession({
     company: targetCompany,
     role: targetRole,
     difficulty,
     storageKey: `mockSession_${sessionId}`,
-    onComplete: () => handleComplete(),
+    onComplete: (results) => {
+      const score = results && typeof results === 'object' && 'score' in results ? (results as any).score : undefined;
+      handleComplete(score);
+    },
   });
 
   const handleComplete = useAssessmentCompletion({ sessionId, applicationId, messages });
@@ -161,6 +168,10 @@ export function UnifiedAssessmentSession({
       isAnalyzing={isAnalyzing}
       onSubmitAnswer={submitAnswer}
       onEndSession={wrapUp}
+      strikeCount={strikeCount}
+      showWarningModal={showWarningModal}
+      onResumeFullscreen={onResumeFullscreen}
+      onEliminate={onEliminate}
     />
   );
 }

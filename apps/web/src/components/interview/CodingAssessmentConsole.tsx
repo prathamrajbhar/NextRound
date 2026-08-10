@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { useCodingProblem, type SupportedLanguage } from './coding/useCodingProblem';
 import { CodingStateScreen } from './coding/CodingStateScreen';
@@ -8,6 +8,7 @@ import { CodingHeader } from './coding/CodingHeader';
 import { CodingProblemPanel, type CodingLeftTab } from './coding/CodingProblemPanel';
 import { CodingWorkspacePanel, type CodingBottomTab } from './coding/CodingWorkspacePanel';
 import { CodingSubmissionSummary } from './coding/CodingSubmissionSummary';
+import { ProctoringWarningModal } from './ProctoringWarningModal';
 import type { TestResult } from './coding/types';
 
 interface CodingConsoleProps {
@@ -42,6 +43,56 @@ export default function CodingAssessmentConsole({
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [complexityFeedback, setComplexityFeedback] = useState<string | null>(null);
   const [finalPassRate, setFinalPassRate] = useState(0);
+  const [strikeCount, setStrikeCount] = useState(0);
+  const [showWarningModal, setShowWarningModal] = useState(false);
+
+  // Enter fullscreen on start when problem is loaded
+  useEffect(() => {
+    if (problem && !submitted) {
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.error('Failed to enter fullscreen:', err);
+        });
+      }
+    }
+  }, [problem, submitted]);
+
+  // Anti-Cheat proctoring listeners for coding round
+  useEffect(() => {
+    if (!problem || submitted) return;
+
+    const handleProctoringViolation = () => {
+      if (document.hidden || !document.fullscreenElement) {
+        setStrikeCount((prev) => {
+          const next = prev + 1;
+          setShowWarningModal(true);
+          return next;
+        });
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleProctoringViolation);
+    document.addEventListener('visibilitychange', handleProctoringViolation);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleProctoringViolation);
+      document.removeEventListener('visibilitychange', handleProctoringViolation);
+    };
+  }, [problem, submitted]);
+
+  const handleResumeFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error('Failed to enter fullscreen:', err);
+      });
+    }
+    setShowWarningModal(false);
+  };
+
+  const handleEliminateCandidate = () => {
+    setShowWarningModal(false);
+    onComplete(0);
+  };
 
   const handleLanguageChange = (newLang: SupportedLanguage) => {
     setLanguage(newLang);
@@ -169,6 +220,14 @@ export default function CodingAssessmentConsole({
           onComplete={onComplete}
         />
       )}
+
+      {/* Fullscreen Proctoring Warning Modal */}
+      <ProctoringWarningModal
+        isOpen={showWarningModal}
+        strikeCount={strikeCount}
+        onResumeFullscreen={handleResumeFullscreen}
+        onEliminate={handleEliminateCandidate}
+      />
     </div>
   );
 }

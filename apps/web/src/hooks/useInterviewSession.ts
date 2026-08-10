@@ -44,6 +44,8 @@ export function useInterviewSession({
     gazeCentered: null as boolean | null,
     engagementIndex: null as number | null,
   });
+  const [strikeCount, setStrikeCount] = useState(0);
+  const [showWarningModal, setShowWarningModal] = useState(false);
 
   const topicIndex = useRef(0);
   const isFollowUp = useRef(false);
@@ -62,11 +64,12 @@ export function useInterviewSession({
 
   useEffect(() => {
     if (stage !== 'session' && stage !== 'fallback') return;
+    if (showWarningModal) return;
     const t = setInterval(() => {
       setTimeRemaining((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
     return () => clearInterval(t);
-  }, [stage]);
+  }, [stage, showWarningModal]);
 
   // Periodic proctoring telemetry logging to Express API (only real CV signals, never fabricated)
   useEffect(() => {
@@ -86,10 +89,39 @@ export function useInterviewSession({
     return () => clearInterval(pTimer);
   }, [stage, interviewId]);
 
+  // Anti-Cheat proctoring listeners for fullscreen and visibility changes
+  useEffect(() => {
+    if (stage !== 'session') return;
+
+    const handleProctoringViolation = () => {
+      if (document.hidden || !document.fullscreenElement) {
+        setStrikeCount((prev) => {
+          const next = prev + 1;
+          setShowWarningModal(true);
+          return next;
+        });
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleProctoringViolation);
+    document.addEventListener('visibilitychange', handleProctoringViolation);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleProctoringViolation);
+      document.removeEventListener('visibilitychange', handleProctoringViolation);
+    };
+  }, [stage]);
+
   const startSession = async () => {
     setStage('session');
     setPhase('Introduction');
     setIsAnalyzing(true);
+
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error('Failed to enter fullscreen:', err);
+      });
+    }
 
     if (interviewId) {
       try {
@@ -220,6 +252,39 @@ export function useInterviewSession({
     onComplete(results);
   };
 
+  const handleResumeFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error('Failed to enter fullscreen:', err);
+      });
+    }
+    setShowWarningModal(false);
+  };
+
+  const handleEliminateCandidate = async () => {
+    if (interviewId) {
+      try {
+        await apiClient.post(`/interviews/${interviewId}/end`, { transcript: messagesRef.current });
+      } catch (err) {
+        console.error('[interview] Failed to persist transcript to backend on elimination', err);
+      }
+    }
+    const results = {
+      status: 'completed' as const,
+      isPending: false,
+      score: 0,
+      feedback: 'Disqualified due to proctoring violations.',
+      rubric: { technical: 0, communication: 0, cultureFit: 0 },
+      transcript: messagesRef.current.map((item) => ({
+        question: item.role === 'ai' ? item.content : '',
+        answer: item.role === 'candidate' ? item.content : '',
+        feedback: '',
+      })),
+    };
+    localStorage.setItem(storageKey, JSON.stringify(results));
+    onComplete(results);
+  };
+
   const simulateSpeaking = () => {
     // No-op: fabricated speech simulation removed. Real candidates respond via live mic.
   };
@@ -242,5 +307,9 @@ export function useInterviewSession({
     toggleMic: () => setMicActive(p => !p),
     toggleCam: () => setCamActive(p => !p),
     setStage,
+    strikeCount,
+    showWarningModal,
+    onResumeFullscreen: handleResumeFullscreen,
+    onEliminate: handleEliminateCandidate,
   };
 }

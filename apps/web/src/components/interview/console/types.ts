@@ -36,6 +36,12 @@ export interface UnifiedInterviewConsoleProps {
   onSubmitAnswer?: (text: string) => void;
   onEndSession: () => void;
 
+  // Proctoring properties (for anti-cheat enforcement)
+  strikeCount?: number;
+  showWarningModal?: boolean;
+  onResumeFullscreen?: () => void;
+  onEliminate?: () => void;
+
   // Video screening questions (for video-screening mode)
   screeningQuestions?: ScreeningQuestion[];
   onSubmitScreening?: (responses: Record<string, { duration: number; attempts: number }>) => void;

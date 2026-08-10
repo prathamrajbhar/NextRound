@@ -15,6 +15,7 @@ import { ConsoleTranscriptDrawer } from './console/ConsoleTranscriptDrawer';
 import { ConsoleControlBar } from './console/ConsoleControlBar';
 import { ConsoleExitConfirm } from './console/ConsoleExitConfirm';
 import { useScreeningRecorder } from './console/useScreeningRecorder';
+import { ProctoringWarningModal } from './ProctoringWarningModal';
 
 export type { InterviewConsoleMode, UnifiedInterviewConsoleProps };
 
@@ -45,6 +46,10 @@ export function UnifiedInterviewConsole({
   screeningQuestions = DEFAULT_SCREENING_QUESTIONS,
   onSubmitScreening,
   onCompleteHRRound,
+  strikeCount = 0,
+  showWarningModal = false,
+  onResumeFullscreen,
+  onEliminate,
 }: UnifiedInterviewConsoleProps) {
   // Device & Stream States
   const [micActive, setMicActive] = useState(true);
@@ -195,6 +200,14 @@ export function UnifiedInterviewConsole({
 
       {/* Exit Confirmation Modal */}
       <ConsoleExitConfirm isOpen={showExitConfirm} onCancel={() => setShowExitConfirm(false)} onConfirm={handleEndSession} />
+
+      {/* Fullscreen Proctoring Warning Modal */}
+      <ProctoringWarningModal
+        isOpen={showWarningModal}
+        strikeCount={strikeCount}
+        onResumeFullscreen={onResumeFullscreen || (() => {})}
+        onEliminate={onEliminate}
+      />
     </div>
   );
 }
