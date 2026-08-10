@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# @nextround/web
 
-## Getting Started
+Next.js 16 (App Router) frontend for NextRound / HireOS.
 
-First, run the development server:
+## Areas
+
+- **Public** — job listings, about, pricing, contact
+- **Candidate Portal** — jobs, applications, assessments, interviews, mock prep, resume builder, offers
+- **HR Portal** — jobs, candidates, pipeline, interviews, sentiment analysis, analytics, talent pool
+- **Voice Assessment Console** — live voice interview UI with status orb, subtitles, and proctoring HUD
+
+## Development
+
+Run the full stack from the repo root:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Type-check and lint this app:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run typecheck --workspace=@nextround/web
+npm run lint --workspace=@nextround/web
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+API client contracts, Zod schemas, and shared types live in `packages/shared`. Database models live in `packages/database`.

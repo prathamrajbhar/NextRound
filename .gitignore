@@ -11,12 +11,18 @@ out/
 # Python caches
 __pycache__/
 *.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 .venv/
 venv/
 
 # Production build output
 build/
 dist/
+
+# Runtime uploads (generated per user request, never source)
+uploads/
 
 # Debug logs
 npm-debug.log*
