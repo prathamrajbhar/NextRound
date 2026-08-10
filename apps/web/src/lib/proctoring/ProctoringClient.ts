@@ -90,10 +90,13 @@ export class ProctoringClient {
 
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
     document.addEventListener('fullscreenchange', this.handleFullscreenChange);
+    document.addEventListener('copy', this.handleCopy);
+    document.addEventListener('paste', this.handlePaste);
     window.addEventListener('focus', this.handleFocus);
     window.addEventListener('blur', this.handleBlur);
     window.addEventListener('online', this.handleOnline);
     window.addEventListener('offline', this.handleOffline);
+    window.addEventListener('beforeunload', this.handleBeforeUnload);
   }
 
   private removeEventListeners() {
@@ -101,10 +104,13 @@ export class ProctoringClient {
 
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     document.removeEventListener('fullscreenchange', this.handleFullscreenChange);
+    document.removeEventListener('copy', this.handleCopy);
+    document.removeEventListener('paste', this.handlePaste);
     window.removeEventListener('focus', this.handleFocus);
     window.removeEventListener('blur', this.handleBlur);
     window.removeEventListener('online', this.handleOnline);
     window.removeEventListener('offline', this.handleOffline);
+    window.removeEventListener('beforeunload', this.handleBeforeUnload);
   }
 
   logEvent(
@@ -492,6 +498,25 @@ export class ProctoringClient {
       console.error('[ProctoringClient] Server end failed:', err);
     }
   }
+
+  private handleCopy = () => {
+    this.logEvent('copy_activity', 'info', 'browser', {
+      timestamp: new Date().toISOString(),
+    });
+  };
+
+  private handlePaste = () => {
+    this.logEvent('paste_activity', 'warning', 'browser', {
+      timestamp: new Date().toISOString(),
+    });
+    this.config.onViolation('paste_activity');
+  };
+
+  private handleBeforeUnload = () => {
+    this.logEvent('session_unload_attempt', 'warning', 'browser', {
+      timestamp: new Date().toISOString(),
+    });
+  };
 
   stop() {
     this.removeEventListeners();
