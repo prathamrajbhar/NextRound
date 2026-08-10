@@ -44,7 +44,3 @@ export function verifyAccessToken(token: string): JwtPayload {
 export function verifyRefreshToken(token: string): JwtPayload {
   return jwt.verify(token, REFRESH_TOKEN_SECRET) as JwtPayload;
 }
-
-// Backwards compatibility wrappers
-export const signToken = signAccessToken;
-export const verifyToken = verifyAccessToken;

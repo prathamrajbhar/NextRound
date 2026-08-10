@@ -38,22 +38,3 @@ apiRouter.use('/resume-builder', resumeBuilderRouter);
 apiRouter.use('/prep', prepRouter);
 apiRouter.use('/internal', internalRouter);
 apiRouter.use('/', userRouter);
-
-export {
-  authRouter,
-  candidateRouter,
-  mockRouter,
-  resumeBuilderRouter,
-  hrRouter,
-  analyticsRouter,
-  sentimentRouter,
-  talentPoolRouter,
-  jobRouter,
-  applicationRouter,
-  interviewRouter,
-  prepRouter,
-  organizationRouter,
-  internalRouter,
-  notificationRouter,
-  userRouter,
-};

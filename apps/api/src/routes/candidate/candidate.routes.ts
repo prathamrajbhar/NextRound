@@ -4,7 +4,7 @@ import { CandidateProfileSchema } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
 import { authenticate, optionalAuthenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
-import { uploadFile } from '../../lib/s3';
+import { uploadFile } from '../../lib/storage';
 import { serializeApplicationList, serializeOffer } from '../../lib/serializers';
 import { extractTextFromBuffer, parseResumeWithGemini, generateFieldWithGemini } from '../../services/resume-parser.service';
 import { syncCandidateSocialProfiles } from '../../services/social-sync.service';
