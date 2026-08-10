@@ -141,3 +141,18 @@ export type Notification = Prisma.NotificationModel
  * 
  */
 export type TalentBookmark = Prisma.TalentBookmarkModel
+/**
+ * Model ProctoringSession
+ * 
+ */
+export type ProctoringSession = Prisma.ProctoringSessionModel
+/**
+ * Model ProctoringEvent
+ * 
+ */
+export type ProctoringEvent = Prisma.ProctoringEventModel
+/**
+ * Model ProctoringViolation
+ * 
+ */
+export type ProctoringViolation = Prisma.ProctoringViolationModel

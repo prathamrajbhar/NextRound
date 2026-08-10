@@ -416,7 +416,10 @@ export const ModelName = {
   MockSession: 'MockSession',
   PrepContent: 'PrepContent',
   Notification: 'Notification',
-  TalentBookmark: 'TalentBookmark'
+  TalentBookmark: 'TalentBookmark',
+  ProctoringSession: 'ProctoringSession',
+  ProctoringEvent: 'ProctoringEvent',
+  ProctoringViolation: 'ProctoringViolation'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -432,7 +435,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "aptitudeQuestion" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "videoSubmission" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark"
+    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "aptitudeQuestion" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "videoSubmission" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark" | "proctoringSession" | "proctoringEvent" | "proctoringViolation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1916,6 +1919,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ProctoringSession: {
+      payload: Prisma.$ProctoringSessionPayload<ExtArgs>
+      fields: Prisma.ProctoringSessionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ProctoringSessionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringSessionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ProctoringSessionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringSessionPayload>
+        }
+        findFirst: {
+          args: Prisma.ProctoringSessionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringSessionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ProctoringSessionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringSessionPayload>
+        }
+        findMany: {
+          args: Prisma.ProctoringSessionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringSessionPayload>[]
+        }
+        create: {
+          args: Prisma.ProctoringSessionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringSessionPayload>
+        }
+        createMany: {
+          args: Prisma.ProctoringSessionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ProctoringSessionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringSessionPayload>[]
+        }
+        delete: {
+          args: Prisma.ProctoringSessionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringSessionPayload>
+        }
+        update: {
+          args: Prisma.ProctoringSessionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringSessionPayload>
+        }
+        deleteMany: {
+          args: Prisma.ProctoringSessionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ProctoringSessionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ProctoringSessionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringSessionPayload>[]
+        }
+        upsert: {
+          args: Prisma.ProctoringSessionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringSessionPayload>
+        }
+        aggregate: {
+          args: Prisma.ProctoringSessionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProctoringSession>
+        }
+        groupBy: {
+          args: Prisma.ProctoringSessionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProctoringSessionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ProctoringSessionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProctoringSessionCountAggregateOutputType> | number
+        }
+      }
+    }
+    ProctoringEvent: {
+      payload: Prisma.$ProctoringEventPayload<ExtArgs>
+      fields: Prisma.ProctoringEventFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ProctoringEventFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEventPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ProctoringEventFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEventPayload>
+        }
+        findFirst: {
+          args: Prisma.ProctoringEventFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEventPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ProctoringEventFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEventPayload>
+        }
+        findMany: {
+          args: Prisma.ProctoringEventFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEventPayload>[]
+        }
+        create: {
+          args: Prisma.ProctoringEventCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEventPayload>
+        }
+        createMany: {
+          args: Prisma.ProctoringEventCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ProctoringEventCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEventPayload>[]
+        }
+        delete: {
+          args: Prisma.ProctoringEventDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEventPayload>
+        }
+        update: {
+          args: Prisma.ProctoringEventUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEventPayload>
+        }
+        deleteMany: {
+          args: Prisma.ProctoringEventDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ProctoringEventUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ProctoringEventUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEventPayload>[]
+        }
+        upsert: {
+          args: Prisma.ProctoringEventUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEventPayload>
+        }
+        aggregate: {
+          args: Prisma.ProctoringEventAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProctoringEvent>
+        }
+        groupBy: {
+          args: Prisma.ProctoringEventGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProctoringEventGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ProctoringEventCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProctoringEventCountAggregateOutputType> | number
+        }
+      }
+    }
+    ProctoringViolation: {
+      payload: Prisma.$ProctoringViolationPayload<ExtArgs>
+      fields: Prisma.ProctoringViolationFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ProctoringViolationFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringViolationPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ProctoringViolationFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringViolationPayload>
+        }
+        findFirst: {
+          args: Prisma.ProctoringViolationFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringViolationPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ProctoringViolationFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringViolationPayload>
+        }
+        findMany: {
+          args: Prisma.ProctoringViolationFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringViolationPayload>[]
+        }
+        create: {
+          args: Prisma.ProctoringViolationCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringViolationPayload>
+        }
+        createMany: {
+          args: Prisma.ProctoringViolationCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ProctoringViolationCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringViolationPayload>[]
+        }
+        delete: {
+          args: Prisma.ProctoringViolationDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringViolationPayload>
+        }
+        update: {
+          args: Prisma.ProctoringViolationUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringViolationPayload>
+        }
+        deleteMany: {
+          args: Prisma.ProctoringViolationDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ProctoringViolationUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ProctoringViolationUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringViolationPayload>[]
+        }
+        upsert: {
+          args: Prisma.ProctoringViolationUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringViolationPayload>
+        }
+        aggregate: {
+          args: Prisma.ProctoringViolationAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProctoringViolation>
+        }
+        groupBy: {
+          args: Prisma.ProctoringViolationGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProctoringViolationGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ProctoringViolationCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProctoringViolationCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2347,6 +2572,63 @@ export const TalentBookmarkScalarFieldEnum = {
 } as const
 
 export type TalentBookmarkScalarFieldEnum = (typeof TalentBookmarkScalarFieldEnum)[keyof typeof TalentBookmarkScalarFieldEnum]
+
+
+export const ProctoringSessionScalarFieldEnum = {
+  id: 'id',
+  candidate_id: 'candidate_id',
+  assessment_id: 'assessment_id',
+  application_id: 'application_id',
+  mock_session_id: 'mock_session_id',
+  session_type: 'session_type',
+  status: 'status',
+  policy_version: 'policy_version',
+  consent_version: 'consent_version',
+  started_at: 'started_at',
+  ended_at: 'ended_at',
+  last_heartbeat_at: 'last_heartbeat_at',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type ProctoringSessionScalarFieldEnum = (typeof ProctoringSessionScalarFieldEnum)[keyof typeof ProctoringSessionScalarFieldEnum]
+
+
+export const ProctoringEventScalarFieldEnum = {
+  id: 'id',
+  proctoring_session_id: 'proctoring_session_id',
+  client_event_id: 'client_event_id',
+  client_sequence: 'client_sequence',
+  server_sequence: 'server_sequence',
+  kind: 'kind',
+  severity: 'severity',
+  source: 'source',
+  client_timestamp: 'client_timestamp',
+  server_received_at: 'server_received_at',
+  session_elapsed_ms: 'session_elapsed_ms',
+  payload_json: 'payload_json',
+  created_at: 'created_at'
+} as const
+
+export type ProctoringEventScalarFieldEnum = (typeof ProctoringEventScalarFieldEnum)[keyof typeof ProctoringEventScalarFieldEnum]
+
+
+export const ProctoringViolationScalarFieldEnum = {
+  id: 'id',
+  proctoring_session_id: 'proctoring_session_id',
+  rule_code: 'rule_code',
+  severity: 'severity',
+  occurrence_count: 'occurrence_count',
+  first_seen_at: 'first_seen_at',
+  last_seen_at: 'last_seen_at',
+  status: 'status',
+  reviewer_id: 'reviewer_id',
+  review_reason: 'review_reason',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type ProctoringViolationScalarFieldEnum = (typeof ProctoringViolationScalarFieldEnum)[keyof typeof ProctoringViolationScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -2790,6 +3072,9 @@ export type GlobalOmitConfig = {
   prepContent?: Prisma.PrepContentOmit
   notification?: Prisma.NotificationOmit
   talentBookmark?: Prisma.TalentBookmarkOmit
+  proctoringSession?: Prisma.ProctoringSessionOmit
+  proctoringEvent?: Prisma.ProctoringEventOmit
+  proctoringViolation?: Prisma.ProctoringViolationOmit
 }
 
 /* Types for Logging */

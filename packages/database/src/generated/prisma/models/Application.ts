@@ -213,6 +213,7 @@ export type ApplicationWhereInput = {
   assessments?: Prisma.AssessmentListRelationFilter
   coding_submissions?: Prisma.CodingSubmissionListRelationFilter
   offer?: Prisma.XOR<Prisma.OfferNullableScalarRelationFilter, Prisma.OfferWhereInput> | null
+  proctoring_sessions?: Prisma.ProctoringSessionListRelationFilter
 }
 
 export type ApplicationOrderByWithRelationInput = {
@@ -231,6 +232,7 @@ export type ApplicationOrderByWithRelationInput = {
   assessments?: Prisma.AssessmentOrderByRelationAggregateInput
   coding_submissions?: Prisma.CodingSubmissionOrderByRelationAggregateInput
   offer?: Prisma.OfferOrderByWithRelationInput
+  proctoring_sessions?: Prisma.ProctoringSessionOrderByRelationAggregateInput
 }
 
 export type ApplicationWhereUniqueInput = Prisma.AtLeast<{
@@ -253,6 +255,7 @@ export type ApplicationWhereUniqueInput = Prisma.AtLeast<{
   assessments?: Prisma.AssessmentListRelationFilter
   coding_submissions?: Prisma.CodingSubmissionListRelationFilter
   offer?: Prisma.XOR<Prisma.OfferNullableScalarRelationFilter, Prisma.OfferWhereInput> | null
+  proctoring_sessions?: Prisma.ProctoringSessionListRelationFilter
 }, "id" | "candidate_id_job_id">
 
 export type ApplicationOrderByWithAggregationInput = {
@@ -297,6 +300,7 @@ export type ApplicationCreateInput = {
   assessments?: Prisma.AssessmentCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationUncheckedCreateInput = {
@@ -313,6 +317,7 @@ export type ApplicationUncheckedCreateInput = {
   assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferUncheckedCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationUpdateInput = {
@@ -329,6 +334,7 @@ export type ApplicationUpdateInput = {
   assessments?: Prisma.AssessmentUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationUncheckedUpdateInput = {
@@ -345,6 +351,7 @@ export type ApplicationUncheckedUpdateInput = {
   assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUncheckedUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationCreateManyInput = {
@@ -602,6 +609,22 @@ export type ApplicationUpdateOneRequiredWithoutOfferNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.ApplicationUpdateToOneWithWhereWithoutOfferInput, Prisma.ApplicationUpdateWithoutOfferInput>, Prisma.ApplicationUncheckedUpdateWithoutOfferInput>
 }
 
+export type ApplicationCreateNestedOneWithoutProctoring_sessionsInput = {
+  create?: Prisma.XOR<Prisma.ApplicationCreateWithoutProctoring_sessionsInput, Prisma.ApplicationUncheckedCreateWithoutProctoring_sessionsInput>
+  connectOrCreate?: Prisma.ApplicationCreateOrConnectWithoutProctoring_sessionsInput
+  connect?: Prisma.ApplicationWhereUniqueInput
+}
+
+export type ApplicationUpdateOneWithoutProctoring_sessionsNestedInput = {
+  create?: Prisma.XOR<Prisma.ApplicationCreateWithoutProctoring_sessionsInput, Prisma.ApplicationUncheckedCreateWithoutProctoring_sessionsInput>
+  connectOrCreate?: Prisma.ApplicationCreateOrConnectWithoutProctoring_sessionsInput
+  upsert?: Prisma.ApplicationUpsertWithoutProctoring_sessionsInput
+  disconnect?: Prisma.ApplicationWhereInput | boolean
+  delete?: Prisma.ApplicationWhereInput | boolean
+  connect?: Prisma.ApplicationWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ApplicationUpdateToOneWithWhereWithoutProctoring_sessionsInput, Prisma.ApplicationUpdateWithoutProctoring_sessionsInput>, Prisma.ApplicationUncheckedUpdateWithoutProctoring_sessionsInput>
+}
+
 export type ApplicationCreateWithoutJobInput = {
   id?: string
   status?: $Enums.ApplicationStatus
@@ -615,6 +638,7 @@ export type ApplicationCreateWithoutJobInput = {
   assessments?: Prisma.AssessmentCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationUncheckedCreateWithoutJobInput = {
@@ -630,6 +654,7 @@ export type ApplicationUncheckedCreateWithoutJobInput = {
   assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferUncheckedCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationCreateOrConnectWithoutJobInput = {
@@ -685,6 +710,7 @@ export type ApplicationCreateWithoutCandidateInput = {
   assessments?: Prisma.AssessmentCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationUncheckedCreateWithoutCandidateInput = {
@@ -700,6 +726,7 @@ export type ApplicationUncheckedCreateWithoutCandidateInput = {
   assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferUncheckedCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationCreateOrConnectWithoutCandidateInput = {
@@ -741,6 +768,7 @@ export type ApplicationCreateWithoutEvaluationsInput = {
   assessments?: Prisma.AssessmentCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationUncheckedCreateWithoutEvaluationsInput = {
@@ -756,6 +784,7 @@ export type ApplicationUncheckedCreateWithoutEvaluationsInput = {
   assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferUncheckedCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationCreateOrConnectWithoutEvaluationsInput = {
@@ -787,6 +816,7 @@ export type ApplicationUpdateWithoutEvaluationsInput = {
   assessments?: Prisma.AssessmentUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationUncheckedUpdateWithoutEvaluationsInput = {
@@ -802,6 +832,7 @@ export type ApplicationUncheckedUpdateWithoutEvaluationsInput = {
   assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUncheckedUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationCreateWithoutInterviewInput = {
@@ -817,6 +848,7 @@ export type ApplicationCreateWithoutInterviewInput = {
   assessments?: Prisma.AssessmentCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationUncheckedCreateWithoutInterviewInput = {
@@ -832,6 +864,7 @@ export type ApplicationUncheckedCreateWithoutInterviewInput = {
   assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferUncheckedCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationCreateOrConnectWithoutInterviewInput = {
@@ -863,6 +896,7 @@ export type ApplicationUpdateWithoutInterviewInput = {
   assessments?: Prisma.AssessmentUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationUncheckedUpdateWithoutInterviewInput = {
@@ -878,6 +912,7 @@ export type ApplicationUncheckedUpdateWithoutInterviewInput = {
   assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUncheckedUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationCreateWithoutAssessmentsInput = {
@@ -893,6 +928,7 @@ export type ApplicationCreateWithoutAssessmentsInput = {
   evaluations?: Prisma.EvaluationCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationUncheckedCreateWithoutAssessmentsInput = {
@@ -908,6 +944,7 @@ export type ApplicationUncheckedCreateWithoutAssessmentsInput = {
   evaluations?: Prisma.EvaluationUncheckedCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferUncheckedCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationCreateOrConnectWithoutAssessmentsInput = {
@@ -939,6 +976,7 @@ export type ApplicationUpdateWithoutAssessmentsInput = {
   evaluations?: Prisma.EvaluationUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationUncheckedUpdateWithoutAssessmentsInput = {
@@ -954,6 +992,7 @@ export type ApplicationUncheckedUpdateWithoutAssessmentsInput = {
   evaluations?: Prisma.EvaluationUncheckedUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUncheckedUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationCreateWithoutCoding_submissionsInput = {
@@ -969,6 +1008,7 @@ export type ApplicationCreateWithoutCoding_submissionsInput = {
   evaluations?: Prisma.EvaluationCreateNestedManyWithoutApplicationInput
   assessments?: Prisma.AssessmentCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationUncheckedCreateWithoutCoding_submissionsInput = {
@@ -984,6 +1024,7 @@ export type ApplicationUncheckedCreateWithoutCoding_submissionsInput = {
   evaluations?: Prisma.EvaluationUncheckedCreateNestedManyWithoutApplicationInput
   assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutApplicationInput
   offer?: Prisma.OfferUncheckedCreateNestedOneWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationCreateOrConnectWithoutCoding_submissionsInput = {
@@ -1015,6 +1056,7 @@ export type ApplicationUpdateWithoutCoding_submissionsInput = {
   evaluations?: Prisma.EvaluationUpdateManyWithoutApplicationNestedInput
   assessments?: Prisma.AssessmentUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationUncheckedUpdateWithoutCoding_submissionsInput = {
@@ -1030,6 +1072,7 @@ export type ApplicationUncheckedUpdateWithoutCoding_submissionsInput = {
   evaluations?: Prisma.EvaluationUncheckedUpdateManyWithoutApplicationNestedInput
   assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUncheckedUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationCreateWithoutOfferInput = {
@@ -1045,6 +1088,7 @@ export type ApplicationCreateWithoutOfferInput = {
   evaluations?: Prisma.EvaluationCreateNestedManyWithoutApplicationInput
   assessments?: Prisma.AssessmentCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionCreateNestedManyWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationUncheckedCreateWithoutOfferInput = {
@@ -1060,6 +1104,7 @@ export type ApplicationUncheckedCreateWithoutOfferInput = {
   evaluations?: Prisma.EvaluationUncheckedCreateNestedManyWithoutApplicationInput
   assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutApplicationInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedCreateNestedManyWithoutApplicationInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutApplicationInput
 }
 
 export type ApplicationCreateOrConnectWithoutOfferInput = {
@@ -1091,6 +1136,7 @@ export type ApplicationUpdateWithoutOfferInput = {
   evaluations?: Prisma.EvaluationUpdateManyWithoutApplicationNestedInput
   assessments?: Prisma.AssessmentUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUpdateManyWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationUncheckedUpdateWithoutOfferInput = {
@@ -1106,6 +1152,87 @@ export type ApplicationUncheckedUpdateWithoutOfferInput = {
   evaluations?: Prisma.EvaluationUncheckedUpdateManyWithoutApplicationNestedInput
   assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedUpdateManyWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutApplicationNestedInput
+}
+
+export type ApplicationCreateWithoutProctoring_sessionsInput = {
+  id?: string
+  status?: $Enums.ApplicationStatus
+  hr_round_status?: $Enums.HrRoundStatus | null
+  hr_round_scheduled_at?: Date | string | null
+  hr_round_completed_at?: Date | string | null
+  applied_at?: Date | string
+  candidate: Prisma.CandidateProfileCreateNestedOneWithoutApplicationsInput
+  job: Prisma.JobCreateNestedOneWithoutApplicationsInput
+  interview?: Prisma.InterviewCreateNestedOneWithoutApplicationInput
+  evaluations?: Prisma.EvaluationCreateNestedManyWithoutApplicationInput
+  assessments?: Prisma.AssessmentCreateNestedManyWithoutApplicationInput
+  coding_submissions?: Prisma.CodingSubmissionCreateNestedManyWithoutApplicationInput
+  offer?: Prisma.OfferCreateNestedOneWithoutApplicationInput
+}
+
+export type ApplicationUncheckedCreateWithoutProctoring_sessionsInput = {
+  id?: string
+  candidate_id: string
+  job_id: string
+  status?: $Enums.ApplicationStatus
+  hr_round_status?: $Enums.HrRoundStatus | null
+  hr_round_scheduled_at?: Date | string | null
+  hr_round_completed_at?: Date | string | null
+  applied_at?: Date | string
+  interview?: Prisma.InterviewUncheckedCreateNestedOneWithoutApplicationInput
+  evaluations?: Prisma.EvaluationUncheckedCreateNestedManyWithoutApplicationInput
+  assessments?: Prisma.AssessmentUncheckedCreateNestedManyWithoutApplicationInput
+  coding_submissions?: Prisma.CodingSubmissionUncheckedCreateNestedManyWithoutApplicationInput
+  offer?: Prisma.OfferUncheckedCreateNestedOneWithoutApplicationInput
+}
+
+export type ApplicationCreateOrConnectWithoutProctoring_sessionsInput = {
+  where: Prisma.ApplicationWhereUniqueInput
+  create: Prisma.XOR<Prisma.ApplicationCreateWithoutProctoring_sessionsInput, Prisma.ApplicationUncheckedCreateWithoutProctoring_sessionsInput>
+}
+
+export type ApplicationUpsertWithoutProctoring_sessionsInput = {
+  update: Prisma.XOR<Prisma.ApplicationUpdateWithoutProctoring_sessionsInput, Prisma.ApplicationUncheckedUpdateWithoutProctoring_sessionsInput>
+  create: Prisma.XOR<Prisma.ApplicationCreateWithoutProctoring_sessionsInput, Prisma.ApplicationUncheckedCreateWithoutProctoring_sessionsInput>
+  where?: Prisma.ApplicationWhereInput
+}
+
+export type ApplicationUpdateToOneWithWhereWithoutProctoring_sessionsInput = {
+  where?: Prisma.ApplicationWhereInput
+  data: Prisma.XOR<Prisma.ApplicationUpdateWithoutProctoring_sessionsInput, Prisma.ApplicationUncheckedUpdateWithoutProctoring_sessionsInput>
+}
+
+export type ApplicationUpdateWithoutProctoring_sessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumApplicationStatusFieldUpdateOperationsInput | $Enums.ApplicationStatus
+  hr_round_status?: Prisma.NullableEnumHrRoundStatusFieldUpdateOperationsInput | $Enums.HrRoundStatus | null
+  hr_round_scheduled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hr_round_completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  applied_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidate?: Prisma.CandidateProfileUpdateOneRequiredWithoutApplicationsNestedInput
+  job?: Prisma.JobUpdateOneRequiredWithoutApplicationsNestedInput
+  interview?: Prisma.InterviewUpdateOneWithoutApplicationNestedInput
+  evaluations?: Prisma.EvaluationUpdateManyWithoutApplicationNestedInput
+  assessments?: Prisma.AssessmentUpdateManyWithoutApplicationNestedInput
+  coding_submissions?: Prisma.CodingSubmissionUpdateManyWithoutApplicationNestedInput
+  offer?: Prisma.OfferUpdateOneWithoutApplicationNestedInput
+}
+
+export type ApplicationUncheckedUpdateWithoutProctoring_sessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.StringFieldUpdateOperationsInput | string
+  job_id?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.EnumApplicationStatusFieldUpdateOperationsInput | $Enums.ApplicationStatus
+  hr_round_status?: Prisma.NullableEnumHrRoundStatusFieldUpdateOperationsInput | $Enums.HrRoundStatus | null
+  hr_round_scheduled_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  hr_round_completed_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  applied_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  interview?: Prisma.InterviewUncheckedUpdateOneWithoutApplicationNestedInput
+  evaluations?: Prisma.EvaluationUncheckedUpdateManyWithoutApplicationNestedInput
+  assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutApplicationNestedInput
+  coding_submissions?: Prisma.CodingSubmissionUncheckedUpdateManyWithoutApplicationNestedInput
+  offer?: Prisma.OfferUncheckedUpdateOneWithoutApplicationNestedInput
 }
 
 export type ApplicationCreateManyJobInput = {
@@ -1131,6 +1258,7 @@ export type ApplicationUpdateWithoutJobInput = {
   assessments?: Prisma.AssessmentUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationUncheckedUpdateWithoutJobInput = {
@@ -1146,6 +1274,7 @@ export type ApplicationUncheckedUpdateWithoutJobInput = {
   assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUncheckedUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationUncheckedUpdateManyWithoutJobInput = {
@@ -1181,6 +1310,7 @@ export type ApplicationUpdateWithoutCandidateInput = {
   assessments?: Prisma.AssessmentUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationUncheckedUpdateWithoutCandidateInput = {
@@ -1196,6 +1326,7 @@ export type ApplicationUncheckedUpdateWithoutCandidateInput = {
   assessments?: Prisma.AssessmentUncheckedUpdateManyWithoutApplicationNestedInput
   coding_submissions?: Prisma.CodingSubmissionUncheckedUpdateManyWithoutApplicationNestedInput
   offer?: Prisma.OfferUncheckedUpdateOneWithoutApplicationNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutApplicationNestedInput
 }
 
 export type ApplicationUncheckedUpdateManyWithoutCandidateInput = {
@@ -1217,12 +1348,14 @@ export type ApplicationCountOutputType = {
   evaluations: number
   assessments: number
   coding_submissions: number
+  proctoring_sessions: number
 }
 
 export type ApplicationCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   evaluations?: boolean | ApplicationCountOutputTypeCountEvaluationsArgs
   assessments?: boolean | ApplicationCountOutputTypeCountAssessmentsArgs
   coding_submissions?: boolean | ApplicationCountOutputTypeCountCoding_submissionsArgs
+  proctoring_sessions?: boolean | ApplicationCountOutputTypeCountProctoring_sessionsArgs
 }
 
 /**
@@ -1256,6 +1389,13 @@ export type ApplicationCountOutputTypeCountCoding_submissionsArgs<ExtArgs extend
   where?: Prisma.CodingSubmissionWhereInput
 }
 
+/**
+ * ApplicationCountOutputType without action
+ */
+export type ApplicationCountOutputTypeCountProctoring_sessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProctoringSessionWhereInput
+}
+
 
 export type ApplicationSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1273,6 +1413,7 @@ export type ApplicationSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   assessments?: boolean | Prisma.Application$assessmentsArgs<ExtArgs>
   coding_submissions?: boolean | Prisma.Application$coding_submissionsArgs<ExtArgs>
   offer?: boolean | Prisma.Application$offerArgs<ExtArgs>
+  proctoring_sessions?: boolean | Prisma.Application$proctoring_sessionsArgs<ExtArgs>
   _count?: boolean | Prisma.ApplicationCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["application"]>
 
@@ -1322,6 +1463,7 @@ export type ApplicationInclude<ExtArgs extends runtime.Types.Extensions.Internal
   assessments?: boolean | Prisma.Application$assessmentsArgs<ExtArgs>
   coding_submissions?: boolean | Prisma.Application$coding_submissionsArgs<ExtArgs>
   offer?: boolean | Prisma.Application$offerArgs<ExtArgs>
+  proctoring_sessions?: boolean | Prisma.Application$proctoring_sessionsArgs<ExtArgs>
   _count?: boolean | Prisma.ApplicationCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ApplicationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1343,6 +1485,7 @@ export type $ApplicationPayload<ExtArgs extends runtime.Types.Extensions.Interna
     assessments: Prisma.$AssessmentPayload<ExtArgs>[]
     coding_submissions: Prisma.$CodingSubmissionPayload<ExtArgs>[]
     offer: Prisma.$OfferPayload<ExtArgs> | null
+    proctoring_sessions: Prisma.$ProctoringSessionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1754,6 +1897,7 @@ export interface Prisma__ApplicationClient<T, Null = never, ExtArgs extends runt
   assessments<T extends Prisma.Application$assessmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Application$assessmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AssessmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   coding_submissions<T extends Prisma.Application$coding_submissionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Application$coding_submissionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CodingSubmissionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   offer<T extends Prisma.Application$offerArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Application$offerArgs<ExtArgs>>): Prisma.Prisma__OfferClient<runtime.Types.Result.GetResult<Prisma.$OfferPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  proctoring_sessions<T extends Prisma.Application$proctoring_sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Application$proctoring_sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProctoringSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2299,6 +2443,30 @@ export type Application$offerArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   include?: Prisma.OfferInclude<ExtArgs> | null
   where?: Prisma.OfferWhereInput
+}
+
+/**
+ * Application.proctoring_sessions
+ */
+export type Application$proctoring_sessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProctoringSession
+   */
+  select?: Prisma.ProctoringSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProctoringSession
+   */
+  omit?: Prisma.ProctoringSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProctoringSessionInclude<ExtArgs> | null
+  where?: Prisma.ProctoringSessionWhereInput
+  orderBy?: Prisma.ProctoringSessionOrderByWithRelationInput | Prisma.ProctoringSessionOrderByWithRelationInput[]
+  cursor?: Prisma.ProctoringSessionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProctoringSessionScalarFieldEnum | Prisma.ProctoringSessionScalarFieldEnum[]
 }
 
 /**

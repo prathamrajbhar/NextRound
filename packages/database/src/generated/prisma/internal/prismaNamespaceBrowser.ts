@@ -70,7 +70,10 @@ export const ModelName = {
   MockSession: 'MockSession',
   PrepContent: 'PrepContent',
   Notification: 'Notification',
-  TalentBookmark: 'TalentBookmark'
+  TalentBookmark: 'TalentBookmark',
+  ProctoringSession: 'ProctoringSession',
+  ProctoringEvent: 'ProctoringEvent',
+  ProctoringViolation: 'ProctoringViolation'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -481,6 +484,63 @@ export const TalentBookmarkScalarFieldEnum = {
 } as const
 
 export type TalentBookmarkScalarFieldEnum = (typeof TalentBookmarkScalarFieldEnum)[keyof typeof TalentBookmarkScalarFieldEnum]
+
+
+export const ProctoringSessionScalarFieldEnum = {
+  id: 'id',
+  candidate_id: 'candidate_id',
+  assessment_id: 'assessment_id',
+  application_id: 'application_id',
+  mock_session_id: 'mock_session_id',
+  session_type: 'session_type',
+  status: 'status',
+  policy_version: 'policy_version',
+  consent_version: 'consent_version',
+  started_at: 'started_at',
+  ended_at: 'ended_at',
+  last_heartbeat_at: 'last_heartbeat_at',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type ProctoringSessionScalarFieldEnum = (typeof ProctoringSessionScalarFieldEnum)[keyof typeof ProctoringSessionScalarFieldEnum]
+
+
+export const ProctoringEventScalarFieldEnum = {
+  id: 'id',
+  proctoring_session_id: 'proctoring_session_id',
+  client_event_id: 'client_event_id',
+  client_sequence: 'client_sequence',
+  server_sequence: 'server_sequence',
+  kind: 'kind',
+  severity: 'severity',
+  source: 'source',
+  client_timestamp: 'client_timestamp',
+  server_received_at: 'server_received_at',
+  session_elapsed_ms: 'session_elapsed_ms',
+  payload_json: 'payload_json',
+  created_at: 'created_at'
+} as const
+
+export type ProctoringEventScalarFieldEnum = (typeof ProctoringEventScalarFieldEnum)[keyof typeof ProctoringEventScalarFieldEnum]
+
+
+export const ProctoringViolationScalarFieldEnum = {
+  id: 'id',
+  proctoring_session_id: 'proctoring_session_id',
+  rule_code: 'rule_code',
+  severity: 'severity',
+  occurrence_count: 'occurrence_count',
+  first_seen_at: 'first_seen_at',
+  last_seen_at: 'last_seen_at',
+  status: 'status',
+  reviewer_id: 'reviewer_id',
+  review_reason: 'review_reason',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type ProctoringViolationScalarFieldEnum = (typeof ProctoringViolationScalarFieldEnum)[keyof typeof ProctoringViolationScalarFieldEnum]
 
 
 export const SortOrder = {

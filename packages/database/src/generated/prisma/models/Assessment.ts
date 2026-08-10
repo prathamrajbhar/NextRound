@@ -288,6 +288,7 @@ export type AssessmentWhereInput = {
   mock_session?: Prisma.XOR<Prisma.MockSessionNullableScalarRelationFilter, Prisma.MockSessionWhereInput> | null
   chunks?: Prisma.GeneratedQuestionChunkListRelationFilter
   snapshots?: Prisma.CodingProblemSnapshotListRelationFilter
+  proctoring_sessions?: Prisma.ProctoringSessionListRelationFilter
 }
 
 export type AssessmentOrderByWithRelationInput = {
@@ -309,6 +310,7 @@ export type AssessmentOrderByWithRelationInput = {
   mock_session?: Prisma.MockSessionOrderByWithRelationInput
   chunks?: Prisma.GeneratedQuestionChunkOrderByRelationAggregateInput
   snapshots?: Prisma.CodingProblemSnapshotOrderByRelationAggregateInput
+  proctoring_sessions?: Prisma.ProctoringSessionOrderByRelationAggregateInput
 }
 
 export type AssessmentWhereUniqueInput = Prisma.AtLeast<{
@@ -333,6 +335,7 @@ export type AssessmentWhereUniqueInput = Prisma.AtLeast<{
   mock_session?: Prisma.XOR<Prisma.MockSessionNullableScalarRelationFilter, Prisma.MockSessionWhereInput> | null
   chunks?: Prisma.GeneratedQuestionChunkListRelationFilter
   snapshots?: Prisma.CodingProblemSnapshotListRelationFilter
+  proctoring_sessions?: Prisma.ProctoringSessionListRelationFilter
 }, "id">
 
 export type AssessmentOrderByWithAggregationInput = {
@@ -394,6 +397,7 @@ export type AssessmentCreateInput = {
   mock_session?: Prisma.MockSessionCreateNestedOneWithoutAssessmentsInput
   chunks?: Prisma.GeneratedQuestionChunkCreateNestedManyWithoutAssessmentInput
   snapshots?: Prisma.CodingProblemSnapshotCreateNestedManyWithoutAssessmentInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutAssessmentInput
 }
 
 export type AssessmentUncheckedCreateInput = {
@@ -413,6 +417,7 @@ export type AssessmentUncheckedCreateInput = {
   created_at?: Date | string
   chunks?: Prisma.GeneratedQuestionChunkUncheckedCreateNestedManyWithoutAssessmentInput
   snapshots?: Prisma.CodingProblemSnapshotUncheckedCreateNestedManyWithoutAssessmentInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutAssessmentInput
 }
 
 export type AssessmentUpdateInput = {
@@ -432,6 +437,7 @@ export type AssessmentUpdateInput = {
   mock_session?: Prisma.MockSessionUpdateOneWithoutAssessmentsNestedInput
   chunks?: Prisma.GeneratedQuestionChunkUpdateManyWithoutAssessmentNestedInput
   snapshots?: Prisma.CodingProblemSnapshotUpdateManyWithoutAssessmentNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutAssessmentNestedInput
 }
 
 export type AssessmentUncheckedUpdateInput = {
@@ -451,6 +457,7 @@ export type AssessmentUncheckedUpdateInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chunks?: Prisma.GeneratedQuestionChunkUncheckedUpdateManyWithoutAssessmentNestedInput
   snapshots?: Prisma.CodingProblemSnapshotUncheckedUpdateManyWithoutAssessmentNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutAssessmentNestedInput
 }
 
 export type AssessmentCreateManyInput = {
@@ -709,6 +716,22 @@ export type AssessmentUncheckedUpdateManyWithoutMock_sessionNestedInput = {
   deleteMany?: Prisma.AssessmentScalarWhereInput | Prisma.AssessmentScalarWhereInput[]
 }
 
+export type AssessmentCreateNestedOneWithoutProctoring_sessionsInput = {
+  create?: Prisma.XOR<Prisma.AssessmentCreateWithoutProctoring_sessionsInput, Prisma.AssessmentUncheckedCreateWithoutProctoring_sessionsInput>
+  connectOrCreate?: Prisma.AssessmentCreateOrConnectWithoutProctoring_sessionsInput
+  connect?: Prisma.AssessmentWhereUniqueInput
+}
+
+export type AssessmentUpdateOneWithoutProctoring_sessionsNestedInput = {
+  create?: Prisma.XOR<Prisma.AssessmentCreateWithoutProctoring_sessionsInput, Prisma.AssessmentUncheckedCreateWithoutProctoring_sessionsInput>
+  connectOrCreate?: Prisma.AssessmentCreateOrConnectWithoutProctoring_sessionsInput
+  upsert?: Prisma.AssessmentUpsertWithoutProctoring_sessionsInput
+  disconnect?: Prisma.AssessmentWhereInput | boolean
+  delete?: Prisma.AssessmentWhereInput | boolean
+  connect?: Prisma.AssessmentWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.AssessmentUpdateToOneWithWhereWithoutProctoring_sessionsInput, Prisma.AssessmentUpdateWithoutProctoring_sessionsInput>, Prisma.AssessmentUncheckedUpdateWithoutProctoring_sessionsInput>
+}
+
 export type AssessmentCreateWithoutApplicationInput = {
   id?: string
   test_type: $Enums.AssessmentType
@@ -725,6 +748,7 @@ export type AssessmentCreateWithoutApplicationInput = {
   mock_session?: Prisma.MockSessionCreateNestedOneWithoutAssessmentsInput
   chunks?: Prisma.GeneratedQuestionChunkCreateNestedManyWithoutAssessmentInput
   snapshots?: Prisma.CodingProblemSnapshotCreateNestedManyWithoutAssessmentInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutAssessmentInput
 }
 
 export type AssessmentUncheckedCreateWithoutApplicationInput = {
@@ -743,6 +767,7 @@ export type AssessmentUncheckedCreateWithoutApplicationInput = {
   created_at?: Date | string
   chunks?: Prisma.GeneratedQuestionChunkUncheckedCreateNestedManyWithoutAssessmentInput
   snapshots?: Prisma.CodingProblemSnapshotUncheckedCreateNestedManyWithoutAssessmentInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutAssessmentInput
 }
 
 export type AssessmentCreateOrConnectWithoutApplicationInput = {
@@ -807,6 +832,7 @@ export type AssessmentCreateWithoutChunksInput = {
   application?: Prisma.ApplicationCreateNestedOneWithoutAssessmentsInput
   mock_session?: Prisma.MockSessionCreateNestedOneWithoutAssessmentsInput
   snapshots?: Prisma.CodingProblemSnapshotCreateNestedManyWithoutAssessmentInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutAssessmentInput
 }
 
 export type AssessmentUncheckedCreateWithoutChunksInput = {
@@ -825,6 +851,7 @@ export type AssessmentUncheckedCreateWithoutChunksInput = {
   chunk_submissions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string
   snapshots?: Prisma.CodingProblemSnapshotUncheckedCreateNestedManyWithoutAssessmentInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutAssessmentInput
 }
 
 export type AssessmentCreateOrConnectWithoutChunksInput = {
@@ -859,6 +886,7 @@ export type AssessmentUpdateWithoutChunksInput = {
   application?: Prisma.ApplicationUpdateOneWithoutAssessmentsNestedInput
   mock_session?: Prisma.MockSessionUpdateOneWithoutAssessmentsNestedInput
   snapshots?: Prisma.CodingProblemSnapshotUpdateManyWithoutAssessmentNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutAssessmentNestedInput
 }
 
 export type AssessmentUncheckedUpdateWithoutChunksInput = {
@@ -877,6 +905,7 @@ export type AssessmentUncheckedUpdateWithoutChunksInput = {
   chunk_submissions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   snapshots?: Prisma.CodingProblemSnapshotUncheckedUpdateManyWithoutAssessmentNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutAssessmentNestedInput
 }
 
 export type AssessmentCreateWithoutSnapshotsInput = {
@@ -895,6 +924,7 @@ export type AssessmentCreateWithoutSnapshotsInput = {
   application?: Prisma.ApplicationCreateNestedOneWithoutAssessmentsInput
   mock_session?: Prisma.MockSessionCreateNestedOneWithoutAssessmentsInput
   chunks?: Prisma.GeneratedQuestionChunkCreateNestedManyWithoutAssessmentInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutAssessmentInput
 }
 
 export type AssessmentUncheckedCreateWithoutSnapshotsInput = {
@@ -913,6 +943,7 @@ export type AssessmentUncheckedCreateWithoutSnapshotsInput = {
   chunk_submissions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Date | string
   chunks?: Prisma.GeneratedQuestionChunkUncheckedCreateNestedManyWithoutAssessmentInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutAssessmentInput
 }
 
 export type AssessmentCreateOrConnectWithoutSnapshotsInput = {
@@ -947,6 +978,7 @@ export type AssessmentUpdateWithoutSnapshotsInput = {
   application?: Prisma.ApplicationUpdateOneWithoutAssessmentsNestedInput
   mock_session?: Prisma.MockSessionUpdateOneWithoutAssessmentsNestedInput
   chunks?: Prisma.GeneratedQuestionChunkUpdateManyWithoutAssessmentNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutAssessmentNestedInput
 }
 
 export type AssessmentUncheckedUpdateWithoutSnapshotsInput = {
@@ -965,6 +997,7 @@ export type AssessmentUncheckedUpdateWithoutSnapshotsInput = {
   chunk_submissions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chunks?: Prisma.GeneratedQuestionChunkUncheckedUpdateManyWithoutAssessmentNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutAssessmentNestedInput
 }
 
 export type AssessmentCreateWithoutMock_sessionInput = {
@@ -983,6 +1016,7 @@ export type AssessmentCreateWithoutMock_sessionInput = {
   application?: Prisma.ApplicationCreateNestedOneWithoutAssessmentsInput
   chunks?: Prisma.GeneratedQuestionChunkCreateNestedManyWithoutAssessmentInput
   snapshots?: Prisma.CodingProblemSnapshotCreateNestedManyWithoutAssessmentInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutAssessmentInput
 }
 
 export type AssessmentUncheckedCreateWithoutMock_sessionInput = {
@@ -1001,6 +1035,7 @@ export type AssessmentUncheckedCreateWithoutMock_sessionInput = {
   created_at?: Date | string
   chunks?: Prisma.GeneratedQuestionChunkUncheckedCreateNestedManyWithoutAssessmentInput
   snapshots?: Prisma.CodingProblemSnapshotUncheckedCreateNestedManyWithoutAssessmentInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutAssessmentInput
 }
 
 export type AssessmentCreateOrConnectWithoutMock_sessionInput = {
@@ -1027,6 +1062,98 @@ export type AssessmentUpdateWithWhereUniqueWithoutMock_sessionInput = {
 export type AssessmentUpdateManyWithWhereWithoutMock_sessionInput = {
   where: Prisma.AssessmentScalarWhereInput
   data: Prisma.XOR<Prisma.AssessmentUpdateManyMutationInput, Prisma.AssessmentUncheckedUpdateManyWithoutMock_sessionInput>
+}
+
+export type AssessmentCreateWithoutProctoring_sessionsInput = {
+  id?: string
+  test_type: $Enums.AssessmentType
+  questions: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  responses?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: number | null
+  category_breakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.AssessmentStatus
+  question_schema_version?: number
+  current_chunk_index?: number
+  total_question_count?: number
+  chunk_submissions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  application?: Prisma.ApplicationCreateNestedOneWithoutAssessmentsInput
+  mock_session?: Prisma.MockSessionCreateNestedOneWithoutAssessmentsInput
+  chunks?: Prisma.GeneratedQuestionChunkCreateNestedManyWithoutAssessmentInput
+  snapshots?: Prisma.CodingProblemSnapshotCreateNestedManyWithoutAssessmentInput
+}
+
+export type AssessmentUncheckedCreateWithoutProctoring_sessionsInput = {
+  id?: string
+  application_id?: string | null
+  session_id?: string | null
+  test_type: $Enums.AssessmentType
+  questions: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  responses?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: number | null
+  category_breakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: $Enums.AssessmentStatus
+  question_schema_version?: number
+  current_chunk_index?: number
+  total_question_count?: number
+  chunk_submissions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  created_at?: Date | string
+  chunks?: Prisma.GeneratedQuestionChunkUncheckedCreateNestedManyWithoutAssessmentInput
+  snapshots?: Prisma.CodingProblemSnapshotUncheckedCreateNestedManyWithoutAssessmentInput
+}
+
+export type AssessmentCreateOrConnectWithoutProctoring_sessionsInput = {
+  where: Prisma.AssessmentWhereUniqueInput
+  create: Prisma.XOR<Prisma.AssessmentCreateWithoutProctoring_sessionsInput, Prisma.AssessmentUncheckedCreateWithoutProctoring_sessionsInput>
+}
+
+export type AssessmentUpsertWithoutProctoring_sessionsInput = {
+  update: Prisma.XOR<Prisma.AssessmentUpdateWithoutProctoring_sessionsInput, Prisma.AssessmentUncheckedUpdateWithoutProctoring_sessionsInput>
+  create: Prisma.XOR<Prisma.AssessmentCreateWithoutProctoring_sessionsInput, Prisma.AssessmentUncheckedCreateWithoutProctoring_sessionsInput>
+  where?: Prisma.AssessmentWhereInput
+}
+
+export type AssessmentUpdateToOneWithWhereWithoutProctoring_sessionsInput = {
+  where?: Prisma.AssessmentWhereInput
+  data: Prisma.XOR<Prisma.AssessmentUpdateWithoutProctoring_sessionsInput, Prisma.AssessmentUncheckedUpdateWithoutProctoring_sessionsInput>
+}
+
+export type AssessmentUpdateWithoutProctoring_sessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  test_type?: Prisma.EnumAssessmentTypeFieldUpdateOperationsInput | $Enums.AssessmentType
+  questions?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  responses?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  category_breakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumAssessmentStatusFieldUpdateOperationsInput | $Enums.AssessmentStatus
+  question_schema_version?: Prisma.IntFieldUpdateOperationsInput | number
+  current_chunk_index?: Prisma.IntFieldUpdateOperationsInput | number
+  total_question_count?: Prisma.IntFieldUpdateOperationsInput | number
+  chunk_submissions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  application?: Prisma.ApplicationUpdateOneWithoutAssessmentsNestedInput
+  mock_session?: Prisma.MockSessionUpdateOneWithoutAssessmentsNestedInput
+  chunks?: Prisma.GeneratedQuestionChunkUpdateManyWithoutAssessmentNestedInput
+  snapshots?: Prisma.CodingProblemSnapshotUpdateManyWithoutAssessmentNestedInput
+}
+
+export type AssessmentUncheckedUpdateWithoutProctoring_sessionsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  application_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  session_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  test_type?: Prisma.EnumAssessmentTypeFieldUpdateOperationsInput | $Enums.AssessmentType
+  questions?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  responses?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  category_breakdown?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  status?: Prisma.EnumAssessmentStatusFieldUpdateOperationsInput | $Enums.AssessmentStatus
+  question_schema_version?: Prisma.IntFieldUpdateOperationsInput | number
+  current_chunk_index?: Prisma.IntFieldUpdateOperationsInput | number
+  total_question_count?: Prisma.IntFieldUpdateOperationsInput | number
+  chunk_submissions?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  chunks?: Prisma.GeneratedQuestionChunkUncheckedUpdateManyWithoutAssessmentNestedInput
+  snapshots?: Prisma.CodingProblemSnapshotUncheckedUpdateManyWithoutAssessmentNestedInput
 }
 
 export type AssessmentCreateManyApplicationInput = {
@@ -1061,6 +1188,7 @@ export type AssessmentUpdateWithoutApplicationInput = {
   mock_session?: Prisma.MockSessionUpdateOneWithoutAssessmentsNestedInput
   chunks?: Prisma.GeneratedQuestionChunkUpdateManyWithoutAssessmentNestedInput
   snapshots?: Prisma.CodingProblemSnapshotUpdateManyWithoutAssessmentNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutAssessmentNestedInput
 }
 
 export type AssessmentUncheckedUpdateWithoutApplicationInput = {
@@ -1079,6 +1207,7 @@ export type AssessmentUncheckedUpdateWithoutApplicationInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chunks?: Prisma.GeneratedQuestionChunkUncheckedUpdateManyWithoutAssessmentNestedInput
   snapshots?: Prisma.CodingProblemSnapshotUncheckedUpdateManyWithoutAssessmentNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutAssessmentNestedInput
 }
 
 export type AssessmentUncheckedUpdateManyWithoutApplicationInput = {
@@ -1129,6 +1258,7 @@ export type AssessmentUpdateWithoutMock_sessionInput = {
   application?: Prisma.ApplicationUpdateOneWithoutAssessmentsNestedInput
   chunks?: Prisma.GeneratedQuestionChunkUpdateManyWithoutAssessmentNestedInput
   snapshots?: Prisma.CodingProblemSnapshotUpdateManyWithoutAssessmentNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutAssessmentNestedInput
 }
 
 export type AssessmentUncheckedUpdateWithoutMock_sessionInput = {
@@ -1147,6 +1277,7 @@ export type AssessmentUncheckedUpdateWithoutMock_sessionInput = {
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   chunks?: Prisma.GeneratedQuestionChunkUncheckedUpdateManyWithoutAssessmentNestedInput
   snapshots?: Prisma.CodingProblemSnapshotUncheckedUpdateManyWithoutAssessmentNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutAssessmentNestedInput
 }
 
 export type AssessmentUncheckedUpdateManyWithoutMock_sessionInput = {
@@ -1173,11 +1304,13 @@ export type AssessmentUncheckedUpdateManyWithoutMock_sessionInput = {
 export type AssessmentCountOutputType = {
   chunks: number
   snapshots: number
+  proctoring_sessions: number
 }
 
 export type AssessmentCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   chunks?: boolean | AssessmentCountOutputTypeCountChunksArgs
   snapshots?: boolean | AssessmentCountOutputTypeCountSnapshotsArgs
+  proctoring_sessions?: boolean | AssessmentCountOutputTypeCountProctoring_sessionsArgs
 }
 
 /**
@@ -1204,6 +1337,13 @@ export type AssessmentCountOutputTypeCountSnapshotsArgs<ExtArgs extends runtime.
   where?: Prisma.CodingProblemSnapshotWhereInput
 }
 
+/**
+ * AssessmentCountOutputType without action
+ */
+export type AssessmentCountOutputTypeCountProctoring_sessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProctoringSessionWhereInput
+}
+
 
 export type AssessmentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1224,6 +1364,7 @@ export type AssessmentSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   mock_session?: boolean | Prisma.Assessment$mock_sessionArgs<ExtArgs>
   chunks?: boolean | Prisma.Assessment$chunksArgs<ExtArgs>
   snapshots?: boolean | Prisma.Assessment$snapshotsArgs<ExtArgs>
+  proctoring_sessions?: boolean | Prisma.Assessment$proctoring_sessionsArgs<ExtArgs>
   _count?: boolean | Prisma.AssessmentCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["assessment"]>
 
@@ -1288,6 +1429,7 @@ export type AssessmentInclude<ExtArgs extends runtime.Types.Extensions.InternalA
   mock_session?: boolean | Prisma.Assessment$mock_sessionArgs<ExtArgs>
   chunks?: boolean | Prisma.Assessment$chunksArgs<ExtArgs>
   snapshots?: boolean | Prisma.Assessment$snapshotsArgs<ExtArgs>
+  proctoring_sessions?: boolean | Prisma.Assessment$proctoring_sessionsArgs<ExtArgs>
   _count?: boolean | Prisma.AssessmentCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type AssessmentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1306,6 +1448,7 @@ export type $AssessmentPayload<ExtArgs extends runtime.Types.Extensions.Internal
     mock_session: Prisma.$MockSessionPayload<ExtArgs> | null
     chunks: Prisma.$GeneratedQuestionChunkPayload<ExtArgs>[]
     snapshots: Prisma.$CodingProblemSnapshotPayload<ExtArgs>[]
+    proctoring_sessions: Prisma.$ProctoringSessionPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1720,6 +1863,7 @@ export interface Prisma__AssessmentClient<T, Null = never, ExtArgs extends runti
   mock_session<T extends Prisma.Assessment$mock_sessionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Assessment$mock_sessionArgs<ExtArgs>>): Prisma.Prisma__MockSessionClient<runtime.Types.Result.GetResult<Prisma.$MockSessionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   chunks<T extends Prisma.Assessment$chunksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Assessment$chunksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$GeneratedQuestionChunkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   snapshots<T extends Prisma.Assessment$snapshotsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Assessment$snapshotsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CodingProblemSnapshotPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  proctoring_sessions<T extends Prisma.Assessment$proctoring_sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Assessment$proctoring_sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProctoringSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2247,6 +2391,30 @@ export type Assessment$snapshotsArgs<ExtArgs extends runtime.Types.Extensions.In
   take?: number
   skip?: number
   distinct?: Prisma.CodingProblemSnapshotScalarFieldEnum | Prisma.CodingProblemSnapshotScalarFieldEnum[]
+}
+
+/**
+ * Assessment.proctoring_sessions
+ */
+export type Assessment$proctoring_sessionsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProctoringSession
+   */
+  select?: Prisma.ProctoringSessionSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProctoringSession
+   */
+  omit?: Prisma.ProctoringSessionOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProctoringSessionInclude<ExtArgs> | null
+  where?: Prisma.ProctoringSessionWhereInput
+  orderBy?: Prisma.ProctoringSessionOrderByWithRelationInput | Prisma.ProctoringSessionOrderByWithRelationInput[]
+  cursor?: Prisma.ProctoringSessionWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProctoringSessionScalarFieldEnum | Prisma.ProctoringSessionScalarFieldEnum[]
 }
 
 /**

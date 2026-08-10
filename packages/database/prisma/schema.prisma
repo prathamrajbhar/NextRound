@@ -188,6 +188,7 @@ model CandidateProfile {
   applications  Application[]
   mock_sessions MockSession[]
   talent_bookmarks TalentBookmark[]
+  proctoring_sessions ProctoringSession[]
 
   @@index([user_id])
 }
@@ -209,6 +210,7 @@ model Application {
   assessments        Assessment[]
   coding_submissions CodingSubmission[]
   offer              Offer?
+  proctoring_sessions ProctoringSession[]
 
   @@unique([candidate_id, job_id])
   @@index([job_id])
@@ -276,6 +278,7 @@ model Assessment {
   mock_session   MockSession?             @relation(fields: [session_id], references: [id], onDelete: Cascade)
   chunks         GeneratedQuestionChunk[]
   snapshots      CodingProblemSnapshot[]
+  proctoring_sessions ProctoringSession[]
 
   @@index([application_id])
   @@index([session_id])
@@ -513,6 +516,7 @@ model MockSession {
   assessments       Assessment[]
   coding_snapshots  CodingProblemSnapshot[]
   video_submissions VideoSubmission[]
+  proctoring_sessions ProctoringSession[]
 
   @@index([candidate_id])
   @@index([type])
@@ -569,4 +573,75 @@ model TalentBookmark {
   @@index([org_id])
   @@index([candidate_id])
   @@index([job_id])
+}
+
+model ProctoringSession {
+  id                String    @id @default(uuid())
+  candidate_id      String
+  assessment_id     String?
+  application_id    String?
+  mock_session_id   String?
+  session_type      String    // "aptitude" | "coding" | "video" | "interview"
+  status            String    // "active" | "paused" | "ended"
+  policy_version    String
+  consent_version   String
+  started_at        DateTime  @default(now())
+  ended_at          DateTime?
+  last_heartbeat_at DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  candidate      CandidateProfile     @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+  assessment     Assessment?          @relation(fields: [assessment_id], references: [id], onDelete: Cascade)
+  application    Application?         @relation(fields: [application_id], references: [id], onDelete: Cascade)
+  mock_session   MockSession?         @relation(fields: [mock_session_id], references: [id], onDelete: Cascade)
+  events         ProctoringEvent[]
+  violations     ProctoringViolation[]
+
+  @@index([candidate_id])
+  @@index([assessment_id])
+  @@index([application_id])
+  @@index([mock_session_id])
+}
+
+model ProctoringEvent {
+  id                    String            @id @default(uuid())
+  proctoring_session_id String
+  client_event_id       String
+  client_sequence       Int
+  server_sequence       Int
+  kind                  String            // "tab_hidden", "tab_visible", "fullscreen_exit", "fullscreen_enter", "heartbeat", "camera_stopped", etc.
+  severity              String            // "info" | "warning" | "low" | "medium" | "high"
+  source                String            // "browser" | "system"
+  client_timestamp      DateTime
+  server_received_at    DateTime          @default(now())
+  session_elapsed_ms    Int
+  payload_json          Json              @default("{}")
+  created_at            DateTime          @default(now())
+
+  proctoring_session    ProctoringSession @relation(fields: [proctoring_session_id], references: [id], onDelete: Cascade)
+
+  @@unique([proctoring_session_id, client_event_id])
+  @@unique([proctoring_session_id, server_sequence])
+  @@index([proctoring_session_id])
+}
+
+model ProctoringViolation {
+  id                    String            @id @default(uuid())
+  proctoring_session_id String
+  rule_code             String            // e.g. "repeated_tab_switch", "fullscreen_exit_review"
+  severity              String            // "low" | "medium" | "high"
+  occurrence_count      Int               @default(1)
+  first_seen_at         DateTime
+  last_seen_at          DateTime
+  status                String            @default("pending_review")
+  reviewer_id           String?
+  review_reason         String?
+  created_at            DateTime          @default(now())
+  updated_at            DateTime          @updatedAt
+
+  proctoring_session    ProctoringSession @relation(fields: [proctoring_session_id], references: [id], onDelete: Cascade)
+
+  @@unique([proctoring_session_id, rule_code])
+  @@index([proctoring_session_id])
 }
