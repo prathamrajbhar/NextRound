@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getPolicy, evaluateSessionPolicy } from '../src/services/proctoring-policy.service';
-import { CreateProctoringSessionSchema, BatchEventsSchema } from '../src/validators/proctoring.schemas';
+import { CreateProctoringSessionSchema, BatchEventsSchema, ReviewViolationSchema } from '../src/validators/proctoring.schemas';
 
 // Valid UUIDs for Zod schemas
 const VALID_UUID_1 = '123e4567-e89b-12d3-a456-426614174000';
@@ -136,6 +136,65 @@ describe('Proctoring Policy Engine', () => {
     expect(gapViolation).toBeDefined();
     expect(gapViolation?.severity).toBe('high');
   });
+
+  it('should flag face_count_changed (0 face) when cumulative missing duration >= 10s', () => {
+    const events: any[] = [
+      { id: '1', kind: 'face_count_changed', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:00Z'), session_elapsed_ms: 0, payload_json: { newFaceCount: 0 } },
+      { id: '2', kind: 'face_count_changed', severity: 'info', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:12Z'), session_elapsed_ms: 12000, payload_json: { newFaceCount: 1 } },
+    ];
+    const { violations } = evaluateSessionPolicy(policy, events);
+    const faceViolation = violations.find((v) => v.rule_code === 'no_face_detected');
+    expect(faceViolation).toBeDefined();
+    expect(faceViolation?.severity).toBe('medium');
+  });
+
+  it('should flag multiple faces when cumulative duration >= 5s', () => {
+    const events: any[] = [
+      { id: '1', kind: 'face_count_changed', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:00Z'), session_elapsed_ms: 0, payload_json: { newFaceCount: 2 } },
+      { id: '2', kind: 'face_count_changed', severity: 'info', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:06Z'), session_elapsed_ms: 6000, payload_json: { newFaceCount: 1 } },
+    ];
+    const { violations } = evaluateSessionPolicy(policy, events);
+    const faceViolation = violations.find((v) => v.rule_code === 'multiple_faces_detected');
+    expect(faceViolation).toBeDefined();
+    expect(faceViolation?.severity).toBe('high');
+  });
+
+  it('should flag multiple voices when occurrence count >= 2', () => {
+    const events: any[] = [
+      { id: '1', kind: 'multiple_voices_detected', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:00Z'), session_elapsed_ms: 0 },
+      { id: '2', kind: 'multiple_voices_detected', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:05Z'), session_elapsed_ms: 5000 },
+    ];
+    const { violations } = evaluateSessionPolicy(policy, events);
+    const voiceViolation = violations.find((v) => v.rule_code === 'multiple_voices_detected');
+    expect(voiceViolation).toBeDefined();
+    expect(voiceViolation?.severity).toBe('medium');
+  });
+
+  it('should flag copy/paste abuse when occurrence count >= 5', () => {
+    const events: any[] = [
+      { id: '1', kind: 'copy_activity', severity: 'info', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:00Z'), session_elapsed_ms: 0 },
+      { id: '2', kind: 'paste_activity', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:05Z'), session_elapsed_ms: 5000 },
+      { id: '3', kind: 'copy_activity', severity: 'info', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:10Z'), session_elapsed_ms: 10000 },
+      { id: '4', kind: 'paste_activity', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:15Z'), session_elapsed_ms: 15000 },
+      { id: '5', kind: 'paste_activity', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:20Z'), session_elapsed_ms: 20000 },
+    ];
+    const { violations } = evaluateSessionPolicy(policy, events);
+    const cpViolation = violations.find((v) => v.rule_code === 'copy_paste_abuse');
+    expect(cpViolation).toBeDefined();
+    expect(cpViolation?.severity).toBe('low');
+  });
+
+  it('should flag suspicious behavior pattern when multiple warnings occur in a 30s sliding window', () => {
+    const events: any[] = [
+      { id: '1', kind: 'tab_hidden', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:00Z'), session_elapsed_ms: 0 },
+      { id: '2', kind: 'fullscreen_exit', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:10Z'), session_elapsed_ms: 10000 },
+      { id: '3', kind: 'no_face_detected', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:25Z'), session_elapsed_ms: 25000 },
+    ];
+    const { violations } = evaluateSessionPolicy(policy, events);
+    const patternViolation = violations.find((v) => v.rule_code === 'suspicious_behavior_pattern');
+    expect(patternViolation).toBeDefined();
+    expect(patternViolation?.severity).toBe('high');
+  });
 });
 
 describe('Proctoring Zod Schemas', () => {
@@ -200,6 +259,26 @@ describe('Proctoring Zod Schemas', () => {
     };
 
     const parsed = BatchEventsSchema.safeParse(payload);
+    expect(parsed.success).toBe(false);
+  });
+});
+
+describe('HR Review Validator Schema', () => {
+  it('should validate valid HR review payloads', () => {
+    const payload = {
+      status: 'resolved',
+      review_reason: 'Legitimate network drop, verified with candidate.',
+    };
+    const parsed = ReviewViolationSchema.safeParse(payload);
+    expect(parsed.success).toBe(true);
+  });
+
+  it('should reject invalid status', () => {
+    const payload = {
+      status: 'invalid-status',
+      review_reason: 'Reason is here',
+    };
+    const parsed = ReviewViolationSchema.safeParse(payload);
     expect(parsed.success).toBe(false);
   });
 });

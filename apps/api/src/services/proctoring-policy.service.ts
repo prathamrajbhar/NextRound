@@ -54,6 +54,7 @@ export function evaluateSessionPolicy(
   policy: ProctoringPolicy,
   events: Array<{
     kind: string;
+    severity: string;
     client_timestamp: Date;
     session_elapsed_ms: number;
     payload_json: any;

@@ -24,6 +24,8 @@ interface ProctoringViolation {
   first_seen_at: string;
   last_seen_at: string;
   status: string;
+  reviewer_id?: string | null;
+  review_reason?: string | null;
 }
 
 interface ProctoringEvent {

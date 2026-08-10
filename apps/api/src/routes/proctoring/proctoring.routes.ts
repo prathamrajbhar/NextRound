@@ -115,7 +115,7 @@ proctoringRouter.post(
       req.body.status,
       req.body.review_reason,
       req.user!.userId,
-      req.user!.orgId
+      req.user!.orgId ?? null
     );
     ok(res, result);
   })
