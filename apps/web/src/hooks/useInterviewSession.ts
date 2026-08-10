@@ -117,7 +117,7 @@ export function useInterviewSession({
     setPhase('Introduction');
     setIsAnalyzing(true);
 
-    if (document.documentElement.requestFullscreen) {
+    if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => {
         console.error('Failed to enter fullscreen:', err);
       });

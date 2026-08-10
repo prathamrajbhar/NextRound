@@ -271,7 +271,7 @@ export function useAptitudeSession({
     setQuestionTimeLeft(QUESTION_TIME_LIMIT);
     questionTimeLeftRef.current = QUESTION_TIME_LIMIT;
 
-    if (document.documentElement.requestFullscreen) {
+    if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch((err) => {
         console.error('Failed to enter fullscreen:', err);
       });
