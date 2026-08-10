@@ -14,6 +14,7 @@ import {
   Activity,
   ChevronDown,
 } from '@/lib/lucide-google-icons';
+import { apiClient } from '@/lib/apiClient';
 
 interface ProctoringViolation {
   id: string;
@@ -55,8 +56,33 @@ interface ProctoringReportCardProps {
 
 export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
   const [timelineExpanded, setTimelineExpanded] = useState(false);
+  const [reviewingViolationId, setReviewingViolationId] = useState<string | null>(null);
+  const [reviewStatus, setReviewStatus] = useState<'acknowledged' | 'false_positive' | 'escalated' | 'resolved'>('acknowledged');
+  const [reviewReason, setReviewReason] = useState('');
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   const { session, violations, events } = report;
+  const [localViolations, setLocalViolations] = useState<ProctoringViolation[]>(violations);
+
+  const handleReviewSubmit = async (violationId: string) => {
+    if (!reviewReason.trim()) return;
+    setIsSubmittingReview(true);
+    try {
+      await apiClient.post(`/proctoring/violations/${violationId}/review`, {
+        status: reviewStatus,
+        review_reason: reviewReason,
+      });
+      setLocalViolations(prev =>
+        prev.map(v => (v.id === violationId ? { ...v, status: reviewStatus, review_reason: reviewReason } : v))
+      );
+      setReviewingViolationId(null);
+      setReviewReason('');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to submit review');
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   // Format elapsed time (ms -> mm:ss)
   const formatElapsed = (ms: number) => {
@@ -138,30 +164,127 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
       </div>
 
       {/* Main Violation Alert Badges */}
-      {violations.length > 0 ? (
-        <div className="space-y-2">
+      {localViolations.length > 0 ? (
+        <div className="space-y-3">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
-            Flagged Security Violations
+            Flagged Security Violations & HR Reviews
           </span>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            {violations.map((violation) => (
-              <div
-                key={violation.id}
-                className={`p-3 rounded-2xl border flex items-center justify-between text-xs font-semibold ${
-                  violation.severity === 'high'
-                    ? 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/40 text-rose-800 dark:text-rose-300'
-                    : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300'
-                }`}
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <AlertTriangle className="h-4.5 w-4.5 flex-shrink-0" />
-                  <span className="truncate">{getRuleName(violation.rule_code)}</span>
+          <div className="space-y-3">
+            {localViolations.map((violation) => {
+              const isPending = violation.status === 'pending_review';
+              const isReviewing = reviewingViolationId === violation.id;
+
+              return (
+                <div
+                  key={violation.id}
+                  className={`p-4 rounded-3xl border space-y-3 transition-all ${
+                    violation.severity === 'high'
+                      ? 'bg-rose-50/50 dark:bg-rose-950/10 border-rose-200 dark:border-rose-900/30 text-rose-800 dark:text-rose-300'
+                      : 'bg-amber-50/50 dark:bg-amber-950/10 border-amber-200 dark:border-amber-900/30 text-amber-800 dark:text-amber-300'
+                  }`}
+                >
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <AlertTriangle className="h-4.5 w-4.5 flex-shrink-0" />
+                      <span className="truncate font-extrabold text-sm">{getRuleName(violation.rule_code)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-lg bg-black/10 border border-black/10 font-black font-mono">
+                        {violation.occurrence_count}×
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider ${
+                        violation.status === 'pending_review' ? 'bg-amber-500/20 text-amber-500' :
+                        violation.status === 'resolved' ? 'bg-emerald-500/20 text-emerald-500' :
+                        violation.status === 'false_positive' ? 'bg-slate-500/20 text-slate-400' :
+                        violation.status === 'acknowledged' ? 'bg-blue-500/20 text-blue-400' :
+                        'bg-rose-500/20 text-rose-400'
+                      }`}>
+                        {violation.status.replace(/_/g, ' ')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Evidence Metadata */}
+                  <div className="text-[10px] opacity-75 space-y-0.5">
+                    <div>First Seen: {new Date(violation.first_seen_at).toLocaleTimeString()}</div>
+                    <div>Last Seen: {new Date(violation.last_seen_at).toLocaleTimeString()}</div>
+                  </div>
+
+                  {/* Review Notes Display */}
+                  {violation.review_reason && (
+                    <div className="p-2.5 rounded-2xl bg-black/10 border border-black/10 text-[11px] space-y-1">
+                      <span className="font-extrabold block text-[9px] opacity-60 uppercase tracking-widest">Reviewer Comments</span>
+                      <p className="italic leading-relaxed">{violation.review_reason}</p>
+                    </div>
+                  )}
+
+                  {/* HR Action controls */}
+                  {isPending && !isReviewing && (
+                    <button
+                      onClick={() => {
+                        setReviewingViolationId(violation.id);
+                        setReviewStatus('acknowledged');
+                        setReviewReason('');
+                      }}
+                      className="py-1.5 px-3 rounded-xl bg-black/10 hover:bg-black/20 text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer block text-center w-fit"
+                    >
+                      Audit & Review Note
+                    </button>
+                  )}
+
+                  {isReviewing && (
+                    <div className="space-y-3 border-t border-black/10 pt-3 text-slate-800 dark:text-slate-200">
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase tracking-wider">Action Type</label>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(['acknowledged', 'false_positive', 'escalated', 'resolved'] as const).map((s) => (
+                            <button
+                              key={s}
+                              type="button"
+                              onClick={() => setReviewStatus(s)}
+                              className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer ${
+                                reviewStatus === s
+                                  ? 'bg-orange-500 text-white shadow-sm'
+                                  : 'bg-black/10 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-black/20'
+                              }`}
+                            >
+                              {s.replace(/_/g, ' ')}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase tracking-wider">Reviewer Notes</label>
+                        <textarea
+                          rows={2}
+                          value={reviewReason}
+                          onChange={(e) => setReviewReason(e.target.value)}
+                          placeholder="Explain false positive validation, security review, or remediation details..."
+                          className="w-full p-2.5 rounded-2xl bg-white dark:bg-slate-950 border border-slate-350 dark:border-slate-850 text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-orange-500 placeholder-slate-500"
+                        />
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          disabled={isSubmittingReview || !reviewReason.trim()}
+                          onClick={() => handleReviewSubmit(violation.id)}
+                          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Submit Note
+                        </button>
+                        <button
+                          onClick={() => setReviewingViolationId(null)}
+                          className="px-4 py-2 rounded-xl bg-black/10 text-slate-500 text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer hover:bg-black/20"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <span className="px-2 py-0.5 rounded-lg bg-black/10 border border-black/10 font-black font-mono">
-                  {violation.occurrence_count}×
-                </span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ) : (
