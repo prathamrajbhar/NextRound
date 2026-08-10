@@ -2,10 +2,9 @@
 
 import React, { useState } from 'react';
 import { Trophy, ScrollText, ChevronUp, ChevronDown, GripVertical, RefreshCw } from '@/lib/lucide-google-icons';
+import { apiClient } from '@/lib/apiClient';
 import { OnboardingStepProps } from './useCandidateOnboarding';
 import { inputCls, labelCls } from './CandidateOnboardingShell';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api/v1';
 
 export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingStepProps) {
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
@@ -17,10 +16,6 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
 
     setReparsing(field);
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-
       const payload = {
         field,
         rawResumeText: form.rawResumeText,
@@ -34,39 +29,29 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
         currentValue: form[field],
       };
 
-      const res = await fetch(`${API_BASE_URL}/candidate/regenerate-field`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
+      // regenerate-field failures fall through to a parse-resume file upload.
+      const regenerated = await apiClient
+        .post<{ text?: string }>('/candidate/regenerate-field', payload)
+        .catch(() => undefined);
 
-      const json = await res.json();
-      if (json.success && json.data?.text) {
-        update(field, json.data.text);
+      if (regenerated?.text) {
+        update(field, regenerated.text);
       } else if (form.resumeFile) {
-        // Fallback to parse-resume file upload if regenerate-field endpoint failed
         const formData = new FormData();
         formData.append('resume', form.resumeFile);
-        const fallbackHeaders: Record<string, string> = {};
-        if (token) fallbackHeaders['Authorization'] = `Bearer ${token}`;
+        const parsed = await apiClient.post<{
+          profile?: { proudProject?: string; bio?: string };
+          rawText?: string;
+        }>('/candidate/parse-resume', formData);
 
-        const parseRes = await fetch(`${API_BASE_URL}/candidate/parse-resume`, {
-          method: 'POST',
-          headers: fallbackHeaders,
-          credentials: 'include',
-          body: formData,
-        });
-
-        const parseJson = await parseRes.json();
-        if (parseJson.success && parseJson.data?.profile) {
-          if (field === 'proudProject' && parseJson.data.profile.proudProject) {
-            update('proudProject', parseJson.data.profile.proudProject);
-          } else if (field === 'bio' && parseJson.data.profile.bio) {
-            update('bio', parseJson.data.profile.bio);
+        if (parsed?.profile) {
+          if (field === 'proudProject' && parsed.profile.proudProject) {
+            update('proudProject', parsed.profile.proudProject);
+          } else if (field === 'bio' && parsed.profile.bio) {
+            update('bio', parsed.profile.bio);
           }
           if (mergeParsedProfile) {
-            mergeParsedProfile(parseJson.data.profile, parseJson.data.rawText);
+            mergeParsedProfile(parsed.profile, parsed.rawText);
           }
         }
       }

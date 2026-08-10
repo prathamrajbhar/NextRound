@@ -1,9 +1,5 @@
 import { ApiEnvelope } from '@nextround/shared';
-
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  'http://localhost:4000/api/v1';
+import { API_BASE_URL } from './config';
 
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -94,8 +90,11 @@ async function fetchNetworkApi<T>(
   isRetry = false
 ): Promise<ApiEnvelope<T>> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  // Don't force a Content-Type on multipart bodies — the browser must set the
+  // boundary itself or the server can't parse the upload.
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
     ...(options.headers as Record<string, string>),
   };
 

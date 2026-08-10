@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { getTopicsForRoleAndCompany } from '@/lib/interviewTopics';
 import { evaluateInterview } from '@/lib/interviewScorer';
 import { apiClient } from '@/lib/apiClient';
+import { siteConfig } from '@/lib/config';
 
 export interface Message {
   id: string;
@@ -125,7 +126,7 @@ export function useInterviewSession({
     let aiResponseText = '';
     setAiRespondError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8000'}/api/v1/ai/interview/respond`, {
+      const res = await fetch(`${siteConfig.aiServiceUrl}/api/v1/ai/interview/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

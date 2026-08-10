@@ -14,14 +14,24 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return result.data as T;
 }
 
+/**
+ * Serialize a request body for JSON endpoints, passing multipart FormData
+ * through untouched (the browser adds the boundary).
+ */
+function serializeBody(body: unknown): BodyInit | undefined {
+  if (body === undefined) return undefined;
+  if (typeof FormData !== 'undefined' && body instanceof FormData) return body;
+  return JSON.stringify(body);
+}
+
 export const apiClient = {
   get: <T>(endpoint: string, options?: RequestInit) => request<T>(endpoint, { method: 'GET', ...options }),
   post: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
-    request<T>(endpoint, { method: 'POST', body: body ? JSON.stringify(body) : undefined, ...options }),
+    request<T>(endpoint, { method: 'POST', body: serializeBody(body), ...options }),
   put: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
-    request<T>(endpoint, { method: 'PUT', body: body ? JSON.stringify(body) : undefined, ...options }),
+    request<T>(endpoint, { method: 'PUT', body: serializeBody(body), ...options }),
   patch: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
-    request<T>(endpoint, { method: 'PATCH', body: body ? JSON.stringify(body) : undefined, ...options }),
+    request<T>(endpoint, { method: 'PATCH', body: serializeBody(body), ...options }),
   delete: <T>(endpoint: string, options?: RequestInit) => request<T>(endpoint, { method: 'DELETE', ...options }),
   clearCache: clearApiCache,
 };

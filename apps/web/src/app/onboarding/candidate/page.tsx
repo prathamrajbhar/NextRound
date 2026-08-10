@@ -3,6 +3,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Code, Sliders, Wallet, Handshake, Share2 } from '@/lib/lucide-google-icons';
+import { apiClient } from '@/lib/apiClient';
 import { CandidateOnboardingShell, OnboardingStep } from './_components/CandidateOnboardingShell';
 import {
   useCandidateOnboarding,
@@ -24,8 +25,6 @@ const STEPS: OnboardingStep[] = [
   { label: 'Compensation & Eligibility', description: 'Salary & work rights', icon: Wallet },
   { label: 'Fit & Culture', description: 'What matters to you', icon: Handshake },
 ];
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api/v1';
 
 export default function CandidateOnboarding() {
   const router = useRouter();
@@ -50,31 +49,12 @@ export default function CandidateOnboarding() {
     setSubmitting(true);
     setError('');
     try {
-      const payload = buildCandidatePayload(form);
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const res = await fetch(`${API_BASE_URL}/candidate/profile`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json();
+      await apiClient.post('/candidate/profile', buildCandidatePayload(form));
       setSubmitting(false);
-
-      if (data.success) {
-        router.push('/candidate/dashboard');
-      } else {
-        setError(typeof data.error === 'string' ? data.error : 'Failed to complete profile onboarding');
-      }
-    } catch {
+      router.push('/candidate/dashboard');
+    } catch (err) {
       setSubmitting(false);
-      setError('Failed to upload profile data. Please try again.');
+      setError(err instanceof Error ? err.message : 'Failed to upload profile data. Please try again.');
     }
   };
 

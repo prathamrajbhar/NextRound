@@ -2,10 +2,9 @@
 
 import React, { useState, useRef } from 'react';
 import { User, Mail, Phone, MapPin, Compass, Lightbulb, FileUp, Check, Loader2, Sparkles, RefreshCw } from '@/lib/lucide-google-icons';
-import { OnboardingStepProps } from './useCandidateOnboarding';
+import { apiClient } from '@/lib/apiClient';
+import { OnboardingStepProps, ParsedProfilePayload } from './useCandidateOnboarding';
 import { inputCls, labelCls, selectCls } from './CandidateOnboardingShell';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api/v1';
 
 const TIMEZONES = [
   'Asia/Kolkata',
@@ -36,31 +35,21 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
       const formData = new FormData();
       formData.append('resume', form.resumeFile);
 
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      const parsed = await apiClient.post<{
+        profile?: ParsedProfilePayload;
+        rawText?: string;
+      }>('/candidate/parse-resume', formData);
 
-      const res = await fetch(`${API_BASE_URL}/candidate/parse-resume`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: formData,
-      });
-
-      const json = await res.json();
-
-      if (json.success && json.data?.profile) {
+      if (parsed?.profile) {
         if (mergeParsedProfile) {
-          mergeParsedProfile(json.data.profile, json.data.rawText);
+          mergeParsedProfile(parsed.profile, parsed.rawText);
         }
         setParseStatus('Profile fields re-synthesized & updated with AI!');
       } else {
-        setParseError(typeof json.error === 'string' ? json.error : 'Could not re-parse resume.');
+        setParseError('Could not re-parse resume.');
       }
-    } catch {
-      setParseError('Failed to re-parse resume text.');
+    } catch (err) {
+      setParseError(err instanceof Error ? err.message : 'Failed to re-parse resume text.');
     } finally {
       setParsing(false);
     }
@@ -80,31 +69,21 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
       const formData = new FormData();
       formData.append('resume', file);
 
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const headers: Record<string, string> = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      const parsed = await apiClient.post<{
+        profile?: ParsedProfilePayload;
+        rawText?: string;
+      }>('/candidate/parse-resume', formData);
 
-      const res = await fetch(`${API_BASE_URL}/candidate/parse-resume`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: formData,
-      });
-
-      const json = await res.json();
-
-      if (json.success && json.data?.profile) {
+      if (parsed?.profile) {
         if (mergeParsedProfile) {
-          mergeParsedProfile(json.data.profile, json.data.rawText);
+          mergeParsedProfile(parsed.profile, parsed.rawText);
         }
         setParseStatus('Resume parsed with Gemini AI! Profile fields pre-filled.');
       } else {
-        setParseError(typeof json.error === 'string' ? json.error : 'Could not parse resume text.');
+        setParseError('Could not parse resume text.');
       }
-    } catch {
-      setParseError('Failed to parse resume text.');
+    } catch (err) {
+      setParseError(err instanceof Error ? err.message : 'Failed to parse resume text.');
     } finally {
       setParsing(false);
     }

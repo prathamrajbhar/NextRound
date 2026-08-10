@@ -3,10 +3,9 @@
 import React, { useState } from 'react';
 import { Link, Loader2, RefreshCw, CheckCircle2, Code, Star, ExternalLink, Check, AlertCircle } from '@/lib/lucide-google-icons';
 import { GithubIcon, LinkedinIcon } from '@/lib/lucide-google-icons';
+import { apiClient } from '@/lib/apiClient';
 import { OnboardingStepProps } from './useCandidateOnboarding';
 import { inputCls, labelCls } from './CandidateOnboardingShell';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000/api/v1';
 
 interface GitHubRepo {
   name: string;
@@ -49,23 +48,12 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
     setSyncError(null);
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      const social = await apiClient.post<{
+        github?: { publicRepos?: number; topLanguages?: unknown[] };
+        extractedSkills?: string[];
+      } | null>('/candidate/sync-social', { githubUrl: form.githubUrl.trim() });
 
-      const res = await fetch(`${API_BASE_URL}/candidate/sync-social`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({ githubUrl: form.githubUrl.trim() }),
-      });
-
-      const json = await res.json();
-
-      if (json.success && json.data) {
-        const social = json.data;
+      if (social) {
         if (mergeSocialData) {
           mergeSocialData(social, social.extractedSkills);
         }
@@ -73,10 +61,10 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
         const ghLangs = social.github?.topLanguages?.length || 0;
         setSyncStatus(`Synced GitHub profile! Imported ${ghRepos} public repos and ${ghLangs} primary languages.`);
       } else {
-        setSyncError(typeof json.error === 'string' ? json.error : 'Could not sync GitHub profile.');
+        setSyncError('Could not sync GitHub profile.');
       }
-    } catch {
-      setSyncError('Failed to connect to GitHub sync endpoint.');
+    } catch (err) {
+      setSyncError(err instanceof Error ? err.message : 'Failed to connect to GitHub sync endpoint.');
     } finally {
       setSyncingGithub(false);
     }
@@ -93,32 +81,21 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
     setSyncError(null);
 
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      const social = await apiClient.post<{
+        extractedSkills?: string[];
+      } | null>('/candidate/sync-social', { linkedinUrl: form.linkedinUrl.trim() });
 
-      const res = await fetch(`${API_BASE_URL}/candidate/sync-social`, {
-        method: 'POST',
-        headers,
-        credentials: 'include',
-        body: JSON.stringify({ linkedinUrl: form.linkedinUrl.trim() }),
-      });
-
-      const json = await res.json();
-
-      if (json.success && json.data) {
+      if (social) {
         if (mergeSocialData) {
-          mergeSocialData(json.data, json.data.extractedSkills);
+          mergeSocialData(social, social.extractedSkills);
         }
         setLinkedinSynced(true);
         setSyncStatus('LinkedIn profile verified & linked.');
       } else {
-        setSyncError(typeof json.error === 'string' ? json.error : 'Could not sync LinkedIn profile.');
+        setSyncError('Could not sync LinkedIn profile.');
       }
-    } catch {
-      setSyncError('Failed to sync LinkedIn profile.');
+    } catch (err) {
+      setSyncError(err instanceof Error ? err.message : 'Failed to sync LinkedIn profile.');
     } finally {
       setSyncingLinkedin(false);
     }
