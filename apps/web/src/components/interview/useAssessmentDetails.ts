@@ -1,0 +1,52 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { apiClient } from '@/lib/apiClient';
+import { MockSession, Application } from '@/types';
+
+interface UseAssessmentDetailsOptions {
+  sessionId: string;
+  applicationId?: string;
+  company?: string;
+  role?: string;
+}
+
+/**
+ * Resolves the display company/role/difficulty for an assessment: prefers the
+ * linked Application (job context) over the MockSession record over the
+ * fallback props.
+ */
+export function useAssessmentDetails({ sessionId, applicationId, company, role }: UseAssessmentDetailsOptions) {
+  const [session, setSession] = useState<Partial<MockSession>>({
+    id: sessionId,
+    targetCompany: company || '',
+    targetRole: role || '',
+    difficulty: 'senior',
+  });
+  const [app, setApp] = useState<Partial<Application> | null>(null);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const isJobAptitudeSession = sessionId.startsWith('session-');
+        if (!isJobAptitudeSession && sessionId !== 'new' && sessionId !== 'practice') {
+          const res = await apiClient.get<{ session: MockSession }>(`/mock/sessions/${sessionId}`).catch(() => null);
+          if (res?.session) setSession(res.session);
+        }
+        if (applicationId) {
+          const resApp = await apiClient.get<Application>(`/applications/${applicationId}`).catch(() => null);
+          if (resApp) setApp(resApp);
+        }
+      } catch (err) {
+        console.error('Failed to load session details:', err);
+      }
+    }
+    fetchData();
+  }, [sessionId, applicationId]);
+
+  const targetCompany = app?.orgName || session.targetCompany || company || '';
+  const targetRole = app?.jobTitle || session.targetRole || role || '';
+  const difficulty = session.difficulty || 'senior';
+
+  return { targetCompany, targetRole, difficulty };
+}
