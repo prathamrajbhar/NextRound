@@ -168,26 +168,26 @@ mockRouter.get(
         ? (assessment!.questions as any[])
         : [];
 
-       if (allQuestions.length === 0) {
-        // First access — select all questions from DB and persist
-        const rawDiff   = normalizeDifficulty(session.difficulty);
-        
-        // Find matching job with assessmentConfig
-        const job = await prisma.job.findFirst({
-          where: {
-            title: { equals: session.target_role, mode: 'insensitive' },
-            organization: {
-              name: { equals: session.target_company, mode: 'insensitive' },
-            },
-            status: 'active',
+      // Find matching job with assessmentConfig
+      const job = await prisma.job.findFirst({
+        where: {
+          title: { equals: session.target_role, mode: 'insensitive' },
+          organization: {
+            name: { equals: session.target_company, mode: 'insensitive' },
           },
-        });
+          status: 'active',
+        },
+      });
 
-        const assessmentConfig = (job?.assessmentConfig as any) || {};
-        const mcqDistribution = assessmentConfig.mcqDistribution as Record<string, number> | undefined;
-        const totalCount = mcqDistribution
-          ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
-          : 16;
+      const assessmentConfig = (job?.assessmentConfig as any) || {};
+      const mcqDistribution = assessmentConfig.mcqDistribution as Record<string, number> | undefined;
+      const totalCount = mcqDistribution
+        ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
+        : 16;
+
+      if (allQuestions.length !== totalCount) {
+        // Select all questions from DB and persist
+        const rawDiff   = normalizeDifficulty(session.difficulty);
 
         const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
         const selected = await selectAptitudeQuestions({
@@ -261,25 +261,25 @@ mockRouter.get(
         ? (assessment!.questions as any[])
         : [];
 
-      if (allQuestions.length === 0) {
-        const rawDiff  = normalizeDifficulty(session.difficulty);
-        
-        // Find matching job with assessmentConfig
-        const job = await prisma.job.findFirst({
-          where: {
-            title: { equals: session.target_role, mode: 'insensitive' },
-            organization: {
-              name: { equals: session.target_company, mode: 'insensitive' },
-            },
-            status: 'active',
+      // Find matching job with assessmentConfig
+      const job = await prisma.job.findFirst({
+        where: {
+          title: { equals: session.target_role, mode: 'insensitive' },
+          organization: {
+            name: { equals: session.target_company, mode: 'insensitive' },
           },
-        });
+          status: 'active',
+        },
+      });
 
-        const assessmentConfig = (job?.assessmentConfig as any) || {};
-        const mcqDistribution = assessmentConfig.mcqDistribution as Record<string, number> | undefined;
-        const totalCount = mcqDistribution
-          ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
-          : 16;
+      const assessmentConfig = (job?.assessmentConfig as any) || {};
+      const mcqDistribution = assessmentConfig.mcqDistribution as Record<string, number> | undefined;
+      const totalCount = mcqDistribution
+        ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
+        : 16;
+
+      if (allQuestions.length !== totalCount) {
+        const rawDiff  = normalizeDifficulty(session.difficulty);
 
         const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
         const selected = await selectAptitudeQuestions({
