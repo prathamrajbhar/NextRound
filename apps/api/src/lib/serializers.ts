@@ -1,7 +1,8 @@
 // TypeScript strict, zero `any` guarantee. These mappers translate raw Prisma
 // records into the flat camelCase DTO shapes the web frontend consumes.
 
-type Rec = Record<string, unknown>;
+/** Loose record type for raw Prisma rows and DTO-shaped payloads. */
+export type Rec = Record<string, unknown>;
 
 function isObject(v: unknown): v is Rec {
   return typeof v === 'object' && v !== null;

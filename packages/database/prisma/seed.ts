@@ -1145,7 +1145,7 @@ const usedNames = new Set<string>();
 const usedEmails = new Set<string>();
 
 function uniqueFullName(): { first: string; last: string; full: string } {
-  for (;;) {
+  for (; ;) {
     const first = pick(FIRST_NAMES);
     const last = pick(LAST_NAMES);
     const full = `${first} ${last}`;
@@ -1822,14 +1822,14 @@ async function main(): Promise<void> {
         responses:
           asStatus === 'completed' && testType !== 'coding'
             ? {
-                startedAt: appliedAt.toISOString(),
-                submittedAt: daysAgo(randInt(0, 2)).toISOString(),
-                answers: APTITUDE_QUESTIONS.map((q) => ({
-                  questionId: q.id,
-                  selectedIndex: rng() < 0.7 ? q.answer : randInt(0, 3),
-                  correct: rng() < 0.7,
-                })),
-              }
+              startedAt: appliedAt.toISOString(),
+              submittedAt: daysAgo(randInt(0, 2)).toISOString(),
+              answers: APTITUDE_QUESTIONS.map((q) => ({
+                questionId: q.id,
+                selectedIndex: rng() < 0.7 ? q.answer : randInt(0, 3),
+                correct: rng() < 0.7,
+              })),
+            }
             : null,
         category_breakdown:
           asStatus === 'completed'
@@ -2043,9 +2043,9 @@ async function main(): Promise<void> {
         score,
         feedback: completed
           ? {
-              strengths: pickN(['clear communication', 'strong technical depth', 'good structure', 'calm under pressure'], 2),
-              improvements: pickN(['more concrete metrics', 'faster to the point', 'show more enthusiasm'], 1),
-            }
+            strengths: pickN(['clear communication', 'strong technical depth', 'good structure', 'calm under pressure'], 2),
+            improvements: pickN(['more concrete metrics', 'faster to the point', 'show more enthusiasm'], 1),
+          }
           : null,
         generated_resume: chance(0.3) ? { atsScore: randInt(70, 95), suggestions: pickN(['Add quantifiable impact', 'Include tech stack list', 'Tighten summary'], 2) } : null,
         resume_pdf_url: chance(0.4) ? `https://storage.nextround.dev/resumes/${cand.profileId}/mock-resume.pdf` : null,
