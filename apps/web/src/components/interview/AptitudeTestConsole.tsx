@@ -20,6 +20,10 @@ interface AptitudeTestConsoleProps {
   onComplete: (score: number) => void;
   applicationId?: string;
   sessionId?: string;
+  proctoringClient?: any;
+  strikeCount?: number;
+  showWarningModal?: boolean;
+  onResumeFullscreen?: () => void;
 }
 
 const MAX_STRIKES = 3;
@@ -34,6 +38,10 @@ export default function AptitudeTestConsole({
   onComplete,
   applicationId,
   sessionId,
+  proctoringClient,
+  strikeCount,
+  showWarningModal,
+  onResumeFullscreen,
 }: AptitudeTestConsoleProps) {
   const router = useRouter();
   const displayCompany = company || companyName || 'NextRound';
@@ -46,6 +54,7 @@ export default function AptitudeTestConsole({
     role: displayRole,
     company: displayCompany,
     onComplete,
+    disableProctoring: !!proctoringClient,
   });
 
   const {
@@ -65,20 +74,22 @@ export default function AptitudeTestConsole({
     submitted,
     isSubmitting,
     finalScore,
-    showWarningModal,
-    strikeCount,
     handleFinalSubmit,
     handleCategorySubmit,
     handleSelectOption,
-    handleResumeFullscreen,
+    handleResumeFullscreen: localResumeFS,
     handleEliminateCandidate,
     handleStartCategorySection,
     getCategoryQuestionCount,
   } = session;
 
+  const displayStrikeCount = strikeCount !== undefined ? strikeCount : session.strikeCount;
+  const displayShowWarning = showWarningModal !== undefined ? showWarningModal : session.showWarningModal;
+  const displayResumeFullscreen = onResumeFullscreen !== undefined ? onResumeFullscreen : localResumeFS;
+
   // SUBMITTED STATE
   if (submitted) {
-    const isEliminated = strikeCount >= MAX_STRIKES;
+    const isEliminated = displayStrikeCount >= MAX_STRIKES;
     return (
       <AptitudeResultScreen
         companyName={displayCompany}
@@ -185,11 +196,12 @@ export default function AptitudeTestConsole({
       onNext={() => setCurrentIndex((prev) => Math.min(activeCategoryQuestions.length - 1, prev + 1))}
       onNavigate={setCurrentIndex}
       onSectionSubmit={handleCategorySubmit}
-      showWarningModal={showWarningModal}
-      strikeCount={strikeCount}
+      showWarningModal={displayShowWarning}
+      strikeCount={displayStrikeCount}
       maxStrikes={MAX_STRIKES}
-      onResumeFullscreen={handleResumeFullscreen}
+      onResumeFullscreen={displayResumeFullscreen}
       onEliminate={handleEliminateCandidate}
     />
   );
+}
 }

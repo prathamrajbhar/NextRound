@@ -19,6 +19,7 @@ interface UseAptitudeSessionOptions {
   role: string;
   company: string;
   onComplete: (score: number) => void;
+  disableProctoring?: boolean;
 }
 
 /**
@@ -34,6 +35,7 @@ export function useAptitudeSession({
   role,
   company,
   onComplete,
+  disableProctoring = false,
 }: UseAptitudeSessionOptions) {
   const { questions: fetchedQuestions, isLoading, isPrefetching, prefetchNextBatch, fetchError } = useAptitudeQuestions({
     applicationId,
@@ -197,7 +199,7 @@ export function useAptitudeSession({
 
   // Anti-Cheat proctoring listeners
   useEffect(() => {
-    if (submitted || !isStarted || !selectedCategory) return;
+    if (disableProctoring || submitted || !isStarted || !selectedCategory) return;
 
     const handleProctoringViolation = () => {
       if (document.hidden || !document.fullscreenElement) {
