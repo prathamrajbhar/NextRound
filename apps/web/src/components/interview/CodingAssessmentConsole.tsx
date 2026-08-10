@@ -18,6 +18,10 @@ interface CodingConsoleProps {
   applicationId?: string;
   sessionId?: string;
   onComplete: (score: number) => void;
+  proctoringClient?: any;
+  strikeCount?: number;
+  showWarningModal?: boolean;
+  onResumeFullscreen?: () => void;
 }
 
 /**
@@ -31,6 +35,10 @@ export default function CodingAssessmentConsole({
   applicationId,
   sessionId,
   onComplete,
+  proctoringClient,
+  strikeCount: outerStrikeCount,
+  showWarningModal: outerWarningModal,
+  onResumeFullscreen: outerResumeFullscreen,
 }: CodingConsoleProps) {
   const { problem, error } = useCodingProblem({ applicationId, sessionId, role, company });
 
@@ -50,7 +58,7 @@ export default function CodingAssessmentConsole({
 
   // Anti-Cheat proctoring listeners for coding round (runs only after starting)
   useEffect(() => {
-    if (!problem || submitted || !isStarted) return;
+    if (proctoringClient || !problem || submitted || !isStarted) return;
 
     const handleProctoringViolation = () => {
       if (document.hidden || !document.fullscreenElement) {
@@ -69,7 +77,7 @@ export default function CodingAssessmentConsole({
       document.removeEventListener('fullscreenchange', handleProctoringViolation);
       document.removeEventListener('visibilitychange', handleProctoringViolation);
     };
-  }, [problem, submitted, isStarted]);
+  }, [proctoringClient, problem, submitted, isStarted]);
 
   const handleStartCodingRound = () => {
     if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
@@ -101,100 +109,91 @@ export default function CodingAssessmentConsole({
     }
   };
 
-  // Production Backend Sandbox Code Execution
+  // Synchronize starter code once the dynamic LLM problem loads
+  useEffect(() => {
+    if (problem?.starterCode[language]) {
+      setCode(problem.starterCode[language]);
+    }
+  }, [problem, language]);
+
   const handleRunCode = async () => {
-    if (!problem) return;
+    if (!problem || isRunning) return;
     setIsRunning(true);
-    setActiveBottomTab('results');
-    setOutputLogs([
-      `[Server Sandbox] Dispatching code execution to backend container...`,
-      `[Server Sandbox] Language: ${language.toUpperCase()}`,
-    ]);
+    setOutputLogs(['Running test cases against Python sandbox environment...']);
+    setTestResults([]);
 
     try {
-      const publicCases = problem.testCases.filter((tc) => !tc.hidden);
-      const res = await apiClient.post<{
-        results: TestResult[];
-        passRate: number;
-        logs: string[];
-      }>('/coding/execute', {
+      const res = await apiClient.post<any>(`/coding/run`, {
         code,
         language,
-        testCases: publicCases,
+        problemId: problem.id,
       });
 
-      if (res) {
-        setTestResults(res.results || []);
-        setOutputLogs(res.logs || ['[Server Sandbox] Execution completed.']);
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed connecting to execution server.';
-      setOutputLogs((prev) => [...prev, `[Server Error] ${msg}`]);
+      setOutputLogs([
+        res.stdout_stderr ? `=== Sandbox Output ===\n${res.stdout_stderr}` : 'Code executed with no stdout/stderr output.',
+      ]);
+      setTestResults(res.test_results || []);
+      setActiveBottomTab('results');
+    } catch (err: any) {
+      setOutputLogs([`[Runtime Sandbox Error] ${err.message || 'Execution failed'}`]);
+      setActiveBottomTab('results');
     } finally {
       setIsRunning(false);
     }
   };
 
-  // Submit Solution & Compute Final Score
   const handleSubmitSolution = async () => {
-    if (!problem) return;
+    if (!problem || isRunning) return;
     setIsRunning(true);
-    setActiveBottomTab('results');
+    setOutputLogs(['Submitting final solution for pipeline score grading...']);
 
     try {
-      if (applicationId) {
-        await apiClient.post(`/applications/${applicationId}/assessment/coding`, {
-          problemId: problem.id,
-          code,
-          language,
-        }).catch(() => null);
-      }
-
-      const res = await apiClient.post<{
-        results: TestResult[];
-        passRate: number;
-        logs: string[];
-        complexity: string;
-      }>('/coding/execute', {
+      const res = await apiClient.post<any>(`/coding/submit`, {
         code,
         language,
-        testCases: problem.testCases,
+        problemId: problem.id,
+        applicationId,
       });
 
-      if (res) {
-        setTestResults(res.results || []);
-        setFinalPassRate(res.passRate || 0);
-        setComplexityFeedback(res.complexity || `Time: ${problem.expectedComplexity.time}`);
-        setOutputLogs(res.logs || []);
-        setSubmitted(true);
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Submission error';
-      setOutputLogs((prev) => [...prev, `[Submit Error] ${msg}`]);
+      setTestResults(res.test_results || []);
+      setFinalPassRate(res.pass_rate_percent || 0);
+      setComplexityFeedback(res.ai_feedback || res.complexity || 'O(N) Optimization evaluated.');
+      setSubmitted(true);
+    } catch (err: any) {
+      setOutputLogs([`[Submission Error] ${err.message || 'Failed to submit solution'}`]);
+      setActiveBottomTab('results');
     } finally {
       setIsRunning(false);
     }
   };
 
-  if (error || !problem) {
-    return <CodingStateScreen error={error} />;
+  const displayStrikeCount = outerStrikeCount !== undefined ? outerStrikeCount : strikeCount;
+  const displayShowWarning = outerWarningModal !== undefined ? outerWarningModal : showWarningModal;
+  const displayResumeFullscreen = outerResumeFullscreen !== undefined ? outerResumeFullscreen : handleResumeFullscreen;
+
+  if (error) {
+    return <CodingStateScreen title="Assessment Unavailable" subtitle={error} hasBackLink />;
+  }
+
+  if (!problem) {
+    return <CodingStateScreen title="Preparing Coding Lab" subtitle="Vetting custom dynamic questions..." spinningIcon />;
   }
 
   if (!isStarted) {
     return (
       <CodingStartCard
-        company={company || 'NextRound'}
-        role={role || 'Software Engineer'}
+        company={company}
+        role={role}
         problemTitle={problem.title}
         difficulty={problem.difficulty}
-        category={problem.category}
         onStart={handleStartCodingRound}
       />
     );
   }
 
   return (
-    <div className="w-full h-screen bg-slate-50 dark:bg-[#0a0a0a] text-slate-900 dark:text-slate-100 flex flex-col justify-between overflow-hidden font-sans select-none transition-colors duration-300">
+    <div className="flex flex-col h-screen w-screen bg-slate-900 text-slate-100 font-sans overflow-hidden">
+      {/* Dynamic Header */}
       <CodingHeader
         company={company}
         role={role}
@@ -206,7 +205,6 @@ export default function CodingAssessmentConsole({
         onSubmit={handleSubmitSolution}
       />
 
-      {/* 2-Panel Split Workspace */}
       {!submitted ? (
         <main className="flex-1 p-2 flex gap-2 overflow-hidden bg-slate-100 dark:bg-[#0a0a0a]">
           <CodingProblemPanel problem={problem} activeTab={activeLeftTab} onTabChange={setActiveLeftTab} />
@@ -222,7 +220,6 @@ export default function CodingAssessmentConsole({
           />
         </main>
       ) : (
-        /* Submission Completion View */
         <CodingSubmissionSummary
           problem={problem}
           language={language}
@@ -236,9 +233,9 @@ export default function CodingAssessmentConsole({
 
       {/* Fullscreen Proctoring Warning Modal */}
       <ProctoringWarningModal
-        isOpen={showWarningModal}
-        strikeCount={strikeCount}
-        onResumeFullscreen={handleResumeFullscreen}
+        isOpen={displayShowWarning}
+        strikeCount={displayStrikeCount}
+        onResumeFullscreen={displayResumeFullscreen}
         onEliminate={handleEliminateCandidate}
       />
     </div>
