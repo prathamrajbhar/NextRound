@@ -47,7 +47,9 @@ export async function fetchApi<T>(
         if (freshData.success) {
           apiCache.set(cacheKey, { data: freshData, timestamp: Date.now() });
         }
-      }).catch(() => {});
+      }).catch((err) => {
+        console.error('Failed to refresh stale cache entry:', err);
+      });
 
       return cached.data as ApiEnvelope<T>;
     }

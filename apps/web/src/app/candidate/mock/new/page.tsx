@@ -57,10 +57,40 @@ function MockInterviewSetupForm() {
       setTimeout(() => setMicLevel(0), 0);
       return;
     }
-    const interval = setInterval(() => {
-      setMicLevel(Math.floor(Math.random() * 35) + 30);
-    }, 150);
-    return () => clearInterval(interval);
+    let audioContext: AudioContext | null = null;
+    let analyser: AnalyserNode | null = null;
+    let microphone: MediaStreamAudioSourceNode | null = null;
+    let rafId: number | null = null;
+
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then((stream) => {
+        audioContext = new AudioContext();
+        analyser = audioContext.createAnalyser();
+        microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        const updateLevel = () => {
+          if (!analyser) return;
+          analyser.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+          setMicLevel(Math.floor((average / 255) * 100));
+          rafId = requestAnimationFrame(updateLevel);
+        };
+        updateLevel();
+      })
+      .catch((err) => {
+        console.error('Microphone access failed:', err);
+        setMicLevel(0);
+      });
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      if (microphone) microphone.disconnect();
+      if (audioContext) audioContext.close();
+    };
   }, [micActive]);
 
   useEffect(() => {

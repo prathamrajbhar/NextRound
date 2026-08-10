@@ -54,14 +54,33 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
 
   // Audio level animation during mic test
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let animationFrameId: number;
     if (micTesting) {
-      interval = setInterval(() => {
-        setAudioLevel(Math.floor(Math.random() * 70) + 20);
-      }, 150);
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => {
+          const audioContext = new AudioContext();
+          const analyser = audioContext.createAnalyser();
+          const microphone = audioContext.createMediaStreamSource(stream);
+          microphone.connect(analyser);
+          analyser.fftSize = 256;
+          const bufferLength = analyser.frequencyBinCount;
+          const dataArray = new Uint8Array(bufferLength);
+
+          const updateLevel = () => {
+            analyser.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+            setAudioLevel(Math.floor((average / 255) * 100));
+            animationFrameId = requestAnimationFrame(updateLevel);
+          };
+          updateLevel();
+        })
+        .catch((err) => {
+          console.error('Microphone access failed:', err);
+          setAudioLevel(0);
+        });
     }
     return () => {
-      if (interval) clearInterval(interval);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
       setAudioLevel(0);
     };
   }, [micTesting]);

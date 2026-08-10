@@ -45,7 +45,9 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
                       : data.scores,
                   transcript: parsed.transcript || data.transcript,
                 };
-              } catch {}
+              } catch (err) {
+                console.error('Failed to parse local interview data:', err);
+              }
             }
           }
           setApp(nextApp);
@@ -71,14 +73,23 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
     return <div className="text-center text-xs text-slate-400 p-8">Loading replay...</div>;
   }
 
-  const transcript = app.transcript || [
-    {
-      question: 'Explain how Next.js App Router leverages React Server Components to reduce client-side bundle sizes.',
-      answer: 'React Server Components execute solely on the server. The output is streamed as a JSON-like protocol rather than raw HTML or full JS chunks.',
-      score: 90,
-      feedback: 'Accurate description of Server Component serialization and dependency isolation.'
-    },
-  ];
+  const transcript = Array.isArray(app.transcript) && app.transcript.length > 0
+    ? app.transcript
+    : null;
+
+  if (!transcript) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-200">
+        <div className="rounded-3xl border border-white/60 bg-white/40 p-8 shadow-md backdrop-blur-md text-center">
+          <h2 className="text-lg font-bold text-slate-900 mb-2">No Interview Recording Available</h2>
+          <p className="text-sm text-slate-600">This candidate has not completed a voice interview yet.</p>
+          <Link href={`/hr/candidates/${applicationId}`} className="inline-block mt-4 text-xs font-bold text-purple-600 hover:underline">
+            ← Back to Candidate Details
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">

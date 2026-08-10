@@ -228,7 +228,10 @@ export async function recordAssessmentResult(applicationId: string, body: Record
         status: 'completed',
       },
     })
-    .catch(() => {});
+    .catch((err) => {
+      console.error(`Failed to update assessment ${id} with evaluation results:`, err);
+      throw err;
+    });
 
   if (passed) {
     await advanceAssessmentStage(id).catch((err) =>

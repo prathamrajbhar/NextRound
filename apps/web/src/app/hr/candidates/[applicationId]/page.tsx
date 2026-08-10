@@ -52,7 +52,11 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
         if (!appData && typeof window !== 'undefined') {
           const storedHrResult = localStorage.getItem(`hrRoundResult_${applicationId}`);
           if (storedHrResult) {
-            try { appData = JSON.parse(storedHrResult); } catch {}
+            try {
+              appData = JSON.parse(storedHrResult);
+            } catch (err) {
+              console.error('Failed to parse stored HR result:', err);
+            }
           }
         }
 
@@ -61,14 +65,20 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
           if (typeof window !== 'undefined') {
             const localVoice = localStorage.getItem(`candidateInterview_${applicationId}`);
             if (localVoice) {
-              try { voiceInterviewData = JSON.parse(localVoice); } catch {}
+              try {
+                voiceInterviewData = JSON.parse(localVoice);
+              } catch (err) {
+                console.error('Failed to parse local voice interview data:', err);
+              }
             }
             const localAssess = localStorage.getItem(`assessmentResult_${applicationId}`);
             if (localAssess) {
               try {
                 const parsed = JSON.parse(localAssess);
                 setAssessmentData(parsed);
-              } catch {}
+              } catch (err) {
+                console.error('Failed to parse local assessment data:', err);
+              }
             }
           }
 

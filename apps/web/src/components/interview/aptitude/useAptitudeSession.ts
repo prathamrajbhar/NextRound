@@ -131,7 +131,7 @@ export function useAptitudeSession({
   }, [answers, applicationId, activeQuestions, strikeCount, timeLeft]);
 
   // Submit current category section & return to Category Selection Hub
-  const handleCategorySubmit = useCallback(() => {
+  const handleCategorySubmit = useCallback(async () => {
     if (!selectedCategory) return;
 
     let catCorrect = 0;
@@ -159,11 +159,13 @@ export function useAptitudeSession({
     });
 
     // Exit fullscreen & return to hub screen
-    try {
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
+    if (document.fullscreenElement) {
+      try {
+        await document.exitFullscreen();
+      } catch (err) {
+        console.error('Failed to exit fullscreen:', err);
       }
-    } catch {}
+    }
 
     setSelectedCategory(null);
     setIsStarted(false);
@@ -251,7 +253,9 @@ export function useAptitudeSession({
 
   const handleResumeFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error('Failed to enter fullscreen:', err);
+      });
     }
     setShowWarningModal(false);
   };
@@ -267,11 +271,11 @@ export function useAptitudeSession({
     setQuestionTimeLeft(QUESTION_TIME_LIMIT);
     questionTimeLeftRef.current = QUESTION_TIME_LIMIT;
 
-    try {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
-    } catch {}
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error('Failed to enter fullscreen:', err);
+      });
+    }
     setIsStarted(true);
   };
 

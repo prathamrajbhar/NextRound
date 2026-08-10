@@ -51,11 +51,11 @@ export default function InterviewCheckScreen({
   const handleLaunch = () => {
     if (!consent) return;
 
-    try {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
-    } catch {}
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error('Failed to enter fullscreen:', err);
+      });
+    }
 
     onJoin();
   };

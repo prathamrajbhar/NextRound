@@ -42,7 +42,9 @@ export function useLocalMediaStream({
     }
 
     if (audioCtxRef.current) {
-      audioCtxRef.current.close().catch(() => {});
+      audioCtxRef.current.close().catch((err) => {
+        console.error('Failed to close audio context:', err);
+      });
       audioCtxRef.current = null;
     }
 

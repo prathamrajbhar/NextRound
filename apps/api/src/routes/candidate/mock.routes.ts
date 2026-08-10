@@ -49,8 +49,8 @@ mockRouter.post(
       const mockSession = await prisma.mockSession.create({
         data: {
           candidate_id: candidateId,
-          target_company: targetCompany,
-          target_role: targetRole,
+          target_company: targetCompany || '',
+          target_role: targetRole || '',
           topic: topic,
           difficulty: difficulty,
           type: 'mock',
@@ -143,27 +143,44 @@ mockRouter.get(
         },
       });
 
-      const roleName = session?.target_role || session?.topic || (req.query.role as string) || (req.query.topic as string) || 'Software Engineer';
-      const companyName = session?.target_company || (req.query.company as string) || 'Tech Enterprise';
-      const diffLevel = session?.difficulty || (req.query.difficulty as string) || 'medium';
+      if (!session) {
+        return res.status(404).json({ success: false, error: 'Mock session not found' });
+      }
+
+      const roleName = session.target_role || req.query.role as string;
+      const companyName = session.target_company || req.query.company as string;
+      const diffLevel = session.difficulty || req.query.difficulty as string;
+      const category = req.query.category as string;
+
+      if (!roleName) {
+        return res.status(400).json({ success: false, error: 'Target role is required for question generation' });
+      }
+      if (!diffLevel || !['easy', 'medium', 'hard'].includes(diffLevel)) {
+        return res.status(400).json({ success: false, error: 'Valid difficulty (easy, medium, hard) is required' });
+      }
+      if (!category) {
+        return res.status(400).json({ success: false, error: 'Category is required for question generation' });
+      }
+
       const chunkIndex = Math.max(0, parseInt(req.query.chunkIndex as string, 10) || 0);
       const chunkSize = Math.max(1, Math.min(10, parseInt(req.query.chunkSize as string, 10) || 3));
 
       const rawChunk = await generateAptitudeChunk({
         jobTitle: roleName,
-        jobDescription: `Target Company: ${companyName}. Difficulty: ${diffLevel}`,
+        jobDescription: `Target Company: ${companyName || 'Tech Enterprise'}. Difficulty: ${diffLevel}`,
         difficulty: diffLevel,
+        category,
         chunkIndex,
         chunkSize,
       });
 
       const sanitizedQuestions = rawChunk.map((q: any) => ({
         id: q.id,
-        category: q.category || 'Logical Reasoning',
+        category: q.category,
         question: q.question || q.text,
         text: q.question || q.text,
-        options: q.options || [],
-        difficulty: q.difficulty || diffLevel,
+        options: q.options,
+        difficulty: q.difficulty,
         correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : undefined,
       }));
 
@@ -197,28 +214,45 @@ mockRouter.get(
         },
       });
 
-      const roleName = session?.target_role || session?.topic || (req.query.role as string) || (req.query.topic as string) || 'Software Engineer';
-      const companyName = session?.target_company || (req.query.company as string) || 'Tech Enterprise';
-      const diffLevel = session?.difficulty || (req.query.difficulty as string) || 'medium';
+      if (!session) {
+        return res.status(404).json({ success: false, error: 'Mock session not found' });
+      }
+
+      const roleName = session.target_role || req.query.role as string;
+      const companyName = session.target_company || req.query.company as string;
+      const diffLevel = session.difficulty || req.query.difficulty as string;
+      const category = req.query.category as string;
+
+      if (!roleName) {
+        return res.status(400).json({ success: false, error: 'Target role is required for question generation' });
+      }
+      if (!diffLevel || !['easy', 'medium', 'hard'].includes(diffLevel)) {
+        return res.status(400).json({ success: false, error: 'Valid difficulty (easy, medium, hard) is required' });
+      }
+      if (!category) {
+        return res.status(400).json({ success: false, error: 'Category is required for question generation' });
+      }
+
       const requestedCount = parseInt(req.query.count as string, 10) || 5;
       const batchNum = parseInt(req.query.batch as string, 10) || 1;
 
-      // Generate aptitude questions using Gemini directly
+      // Generate aptitude questions using AI
       const rawQuestions = await generateAiAptitudeQuestions(
         roleName,
-        `Target Company: ${companyName}. Difficulty: ${diffLevel}. Batch: ${batchNum}`,
+        `Target Company: ${companyName || 'Tech Enterprise'}. Difficulty: ${diffLevel}. Batch: ${batchNum}`,
         requestedCount,
-        diffLevel
+        diffLevel,
+        category
       );
 
       // Practice/mock sessions include correctIndex (no anti-cheat needed for practice)
       const sanitizedQuestions = rawQuestions.map((q: any) => ({
         id: q.id,
-        category: q.category || 'Logical Reasoning',
+        category: q.category,
         question: q.question || q.text,
         text: q.question || q.text,
-        options: q.options || [],
-        difficulty: q.difficulty || diffLevel,
+        options: q.options,
+        difficulty: q.difficulty,
         correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : undefined,
       }));
 
@@ -268,57 +302,7 @@ mockRouter.get(
 );
 
 
-// Helper to build feedback object from real session transcript (no fabricated scores or telemetry)
-function generateDynamicFeedback(session: any, rawTranscript?: any, rawScore?: number) {
-  const transcript = Array.isArray(rawTranscript) ? rawTranscript : (Array.isArray(session.transcript) ? session.transcript : []);
-  const candidateMsgs = transcript.filter((t: any) => t.role === 'candidate' || t.speaker === 'candidate');
-  const interviewerMsgs = transcript.filter((t: any) => t.role === 'interviewer' || t.speaker === 'interviewer');
-
-  const transcriptHighlights = [];
-  const minLen = Math.min(interviewerMsgs.length, candidateMsgs.length);
-  for (let i = 0; i < minLen; i++) {
-    const q = interviewerMsgs[i]?.text || interviewerMsgs[i]?.content || '';
-    const a = candidateMsgs[i]?.text || candidateMsgs[i]?.content;
-    if (a && a !== 'No response recorded.') {
-      transcriptHighlights.push({
-        speaker: q,
-        timestamp: candidateMsgs[i]?.timestamp || new Date().toISOString(),
-        text: a,
-        note: '',
-      });
-    }
-  }
-
-  const score = rawScore !== undefined ? rawScore : (session.score ?? 0);
-
-  return {
-    sessionId: session.id,
-    targetCompany: session.target_company || '',
-    targetRole: session.target_role || '',
-    difficulty: session.difficulty || '',
-    overallScore: score,
-    detailedBreakdown: [
-      {
-        category: 'Overall Evaluation',
-        score,
-        feedback: candidateMsgs.length > 0
-          ? `Evaluated candidate session with ${candidateMsgs.length} response(s) recorded.`
-          : `Session completed without recorded candidate responses.`,
-      },
-    ],
-    keyStrengths: [],
-    areasToImprove: [],
-    metrics: {},
-    telemetry: {
-      gazeFocusPercent: null,
-      speechWpm: null,
-      verified: false,
-    },
-    transcriptHighlights,
-  };
-}
-
-// POST /api/v1/mock/sessions/:id/end - End mock session & compute evaluation
+// POST /api/v1/mock/sessions/:id/end - End mock session & queue real evaluation
 mockRouter.post(
   '/sessions/:id/end',
   authenticate,
@@ -337,9 +321,15 @@ mockRouter.post(
         return res.status(404).json({ success: false, error: 'Mock session not found' });
       }
 
-      const transcript = req.body.transcript || session.transcript || [];
-      const score = req.body.score !== undefined ? req.body.score : (session.score ?? 0);
-      const feedbackObj = generateDynamicFeedback(session, transcript, score);
+      const transcript = req.body.transcript;
+      if (!Array.isArray(transcript) || transcript.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Transcript is required to complete a mock session.'
+        });
+      }
+
+      const score = typeof req.body.score === 'number' ? req.body.score : null;
 
       const updated = await prisma.mockSession.update({
         where: { id: session.id },
@@ -348,10 +338,10 @@ mockRouter.post(
           score,
           ended_at: new Date(),
           transcript: transcript as any,
-          feedback: feedbackObj as any,
         },
       });
 
+      // Queue the real evaluation job
       try {
         await enqueueMockEvaluation(
           updated.id,
@@ -361,12 +351,20 @@ mockRouter.post(
           updated.difficulty || undefined
         );
       } catch (e) {
-        console.warn('Queue worker bypassed; evaluation will not be ready until a real worker processes it.', e);
+        console.error('Failed to enqueue mock evaluation job:', e);
+        return res.status(500).json({
+          success: false,
+          error: 'Session saved but evaluation failed to queue. Feedback will not be available.'
+        });
       }
 
       return res.json({
         success: true,
-        data: feedbackObj,
+        data: {
+          sessionId: updated.id,
+          status: 'pending_evaluation',
+          message: 'Session completed and queued for evaluation.'
+        },
       });
     } catch (err) {
       return next(err);
@@ -393,13 +391,17 @@ mockRouter.get(
         return res.status(404).json({ success: false, error: 'Mock session not found' });
       }
 
-      const feedbackData = (session.feedback && typeof session.feedback === 'object' && Object.keys(session.feedback).length > 0)
-        ? session.feedback
-        : generateDynamicFeedback(session);
+      // Only return feedback if evaluation has actually completed
+      if (!session.feedback || typeof session.feedback !== 'object' || Object.keys(session.feedback).length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Evaluation not yet complete. Feedback will be available once the evaluation worker processes this session.'
+        });
+      }
 
       return res.json({
         success: true,
-        data: feedbackData,
+        data: session.feedback,
       });
     } catch (err) {
       return next(err);

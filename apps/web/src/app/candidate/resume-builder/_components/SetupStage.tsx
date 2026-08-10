@@ -51,16 +51,43 @@ export function SetupStage({
   const [micTesting, setMicTesting] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
 
-  // Equalizer visualizer effect for mic diagnostic check
+  // Real microphone level monitoring (no fake random values)
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let audioContext: AudioContext | null = null;
+    let analyser: AnalyserNode | null = null;
+    let microphone: MediaStreamAudioSourceNode | null = null;
+    let rafId: number | null = null;
+
     if (micTesting) {
-      interval = setInterval(() => {
-        setAudioLevel(Math.floor(Math.random() * 70) + 20);
-      }, 150);
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => {
+          audioContext = new AudioContext();
+          analyser = audioContext.createAnalyser();
+          microphone = audioContext.createMediaStreamSource(stream);
+          microphone.connect(analyser);
+          analyser.fftSize = 256;
+          const bufferLength = analyser.frequencyBinCount;
+          const dataArray = new Uint8Array(bufferLength);
+
+          const updateLevel = () => {
+            if (!analyser) return;
+            analyser.getByteFrequencyData(dataArray);
+            const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+            setAudioLevel(Math.floor((average / 255) * 100));
+            rafId = requestAnimationFrame(updateLevel);
+          };
+          updateLevel();
+        })
+        .catch((err) => {
+          console.error('Microphone access failed:', err);
+          setAudioLevel(0);
+        });
     }
+
     return () => {
-      if (interval) clearInterval(interval);
+      if (rafId) cancelAnimationFrame(rafId);
+      if (microphone) microphone.disconnect();
+      if (audioContext) audioContext.close();
       setAudioLevel(0);
     };
   }, [micTesting]);

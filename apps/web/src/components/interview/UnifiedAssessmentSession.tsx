@@ -63,11 +63,11 @@ export function UnifiedAssessmentSession({
 
   const handleLaunchNextRound = () => {
     if (!pendingNextRound) return;
-    try {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      }
-    } catch {}
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error('Failed to enter fullscreen:', err);
+      });
+    }
 
     setComprehensiveStep(pendingNextRound.nextStep);
     setPendingNextRound(null);

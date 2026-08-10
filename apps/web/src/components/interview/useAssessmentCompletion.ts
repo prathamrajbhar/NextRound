@@ -19,14 +19,16 @@ export function useAssessmentCompletion({ sessionId, applicationId, messages }: 
   const router = useRouter();
 
   const handleComplete = async (score?: number) => {
-    try {
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
+    if (document.fullscreenElement) {
+      try {
+        await document.exitFullscreen();
+      } catch (err) {
+        console.error('Failed to exit fullscreen:', err);
       }
-    } catch {}
+    }
 
-    try {
-      if (sessionId && sessionId !== 'new' && sessionId !== 'practice') {
+    if (sessionId && sessionId !== 'new' && sessionId !== 'practice') {
+      try {
         await apiClient.post(`/mock/sessions/${sessionId}/end`, {
           score,
           transcript: messages.map((m) => ({
@@ -34,11 +36,14 @@ export function useAssessmentCompletion({ sessionId, applicationId, messages }: 
             text: m.content,
             timestamp: m.timestamp,
           })),
-        }).catch(() => null);
+        });
+      } catch (err) {
+        console.error('Failed to end mock session:', err);
+        // Session end failure means no evaluation will be available
+        throw new Error('Failed to save assessment results. Please try again.');
       }
-    } catch (err) {
-      console.error('Error ending mock session:', err);
     }
+
     if (applicationId) {
       localStorage.setItem(`candidateAssessmentCompleted_${applicationId}`, 'true');
       const scoreObj = {

@@ -685,10 +685,16 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
     rawQuestions = assessment.questions as any[];
   } else {
     // Generate AI questions tailored to the job using Gemini directly
+    const diffLevel = (app.job?.experienceLevel?.toLowerCase() === 'junior' || app.job?.experienceLevel?.toLowerCase() === 'entry') ? 'easy' :
+                      (app.job?.experienceLevel?.toLowerCase() === 'senior' || app.job?.experienceLevel?.toLowerCase() === 'lead') ? 'hard' : 'medium';
+    const category = app.job?.department || 'technical';
+
     rawQuestions = await generateAiAptitudeQuestions(
       app.job?.title || 'Software Engineer',
       app.job?.description || '',
-      qCount
+      qCount,
+      diffLevel,
+      category
     );
 
     // Persist generated questions in DB Assessment record
@@ -747,7 +753,9 @@ export async function submitAptitude(
         status: 'in_progress',
       },
     })
-    .catch(() => {});
+    .catch((err) => {
+      console.error(`Failed to update assessment responses for application ${appId}:`, err);
+    });
 
   // Score the submission server-side against the persisted questions (which
   // carry correctIndex) so the client gets a real result immediately instead

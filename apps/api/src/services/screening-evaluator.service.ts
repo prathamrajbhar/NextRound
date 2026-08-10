@@ -54,7 +54,7 @@ export async function evaluateApplicationScreening(
   const thresholds = (app.job.thresholds as any) || {};
   const minScore = typeof thresholds.minScore === 'number' ? thresholds.minScore : null;
   if (minScore === null) {
-    throw new Error(`Job ${app.jobId} has no minScore threshold configured; screening cannot run.`);
+    throw new Error(`Job ${app.job_id} has no minScore threshold configured; screening cannot run.`);
   }
 
   const prompt = `You are an elite AI technical screening agent evaluating a job application.

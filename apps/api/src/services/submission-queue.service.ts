@@ -56,7 +56,7 @@ export async function enqueueSubmissionExecution(input: CreateSubmissionInput) {
 
   // Asynchronously execute queue job without blocking HTTP request
   processSubmissionJob(submission.id).catch((err) => {
-    // Log error to console/logger and record failed status in DB (never swallow)
+    // Log error to console/logger and record failed status in DB
     console.error(`[Queue Error] Submission ${submission.id} failed processing:`, err);
     prisma.codingSubmission
       .update({
@@ -66,7 +66,9 @@ export async function enqueueSubmissionExecution(input: CreateSubmissionInput) {
           error_message: err?.message || 'Submission queue execution error',
         },
       })
-      .catch(() => { });
+      .catch((updateErr) => {
+        console.error(`Failed to mark submission ${submission.id} as errored:`, updateErr);
+      });
   });
 
   return submission;
@@ -136,7 +138,9 @@ export async function processSubmissionJob(submissionId: string) {
   });
 
   // Calculate composite evaluation score without automatically setting decision
-  await updateApplicationCodingScore(submission.application_id, summary.passRate);
+  if (submission.application_id) {
+    await updateApplicationCodingScore(submission.application_id, summary.passRate);
+  }
 
   return updated;
 }

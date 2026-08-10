@@ -61,7 +61,9 @@ export default function CandidateLayout({
           setNotifications(formatted);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error('Failed to load notifications:', err);
+      });
 
     const handleStorageChange = () => {
       const updatedAvatar = localStorage.getItem('candidate_avatar');

@@ -140,9 +140,6 @@ Return ONLY raw JSON array:
   throw new Error(`AI aptitude chunk generation failed for chunk ${chunkIndex} (both Gemini and Ollama failed).`);
 }
 
-/**
- * Generates dynamic questions for full assessment backwards compatibility.
- */
 export async function generateAiAptitudeQuestions(
   jobTitle: string,
   jobDescription: string,
@@ -150,6 +147,13 @@ export async function generateAiAptitudeQuestions(
   difficulty: string,
   category: string
 ): Promise<GeneratedQuestion[]> {
+  if (!difficulty || !['easy', 'medium', 'hard'].includes(difficulty.toLowerCase())) {
+    throw new Error('generateAiAptitudeQuestions requires a valid difficulty (easy, medium, hard); none provided.');
+  }
+  if (!category) {
+    throw new Error('generateAiAptitudeQuestions requires a category; none provided.');
+  }
+
   const targetCount = Math.max(1, Math.min(100, count));
   const chunkSize = 3;
   const numChunks = Math.ceil(targetCount / chunkSize);

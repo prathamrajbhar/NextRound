@@ -98,10 +98,14 @@ export function UnifiedInterviewConsole({
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error('Failed to enter fullscreen:', err);
+      });
     } else {
       if (document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
+        document.exitFullscreen().catch((err) => {
+          console.error('Failed to exit fullscreen:', err);
+        });
       }
     }
   };

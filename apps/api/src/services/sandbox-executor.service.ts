@@ -551,7 +551,7 @@ function javaLiteral(value: unknown): string {
       return `new int[]{${value.map(String).join(',')}}`;
     }
     if (value.every((x) => typeof x === 'string')) {
-      return `new String[]{${value.map(JSON.stringify).join(',')}}`;
+      return `new String[]{${value.map(x => JSON.stringify(x)).join(',')}}`;
     }
     if (value.every((x) => typeof x === 'boolean')) {
       return `new boolean[]{${value.map((x) => (x ? 'true' : 'false')).join(',')}}`;
