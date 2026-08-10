@@ -17,6 +17,11 @@ export interface ProctoringSummary {
   maxHeartbeatGapMs: number;
   cameraOffDurationMs: number;
   micOffDurationMs: number;
+  totalFaceMissingMs?: number;
+  totalMultipleFacesMs?: number;
+  multipleVoicesCount?: number;
+  copyPasteActivityCount?: number;
+  suspiciousBehaviorPattern?: boolean;
 }
 
 export interface PolicyViolationResult {
@@ -77,6 +82,16 @@ export function evaluateSessionPolicy(
   let cameraOffDurationMs = 0;
   let micOffDurationMs = 0;
 
+  let faceMissingStart: Date | null = null;
+  let totalFaceMissingMs = 0;
+  let faceMissingCount = 0;
+  let multipleFacesStart: Date | null = null;
+  let totalMultipleFacesMs = 0;
+  let multipleFacesCount = 0;
+  let multipleVoicesCount = 0;
+  let backgroundNoiseHighCount = 0;
+  let copyPasteActivityCount = 0;
+
   for (const event of sorted) {
     // Visibility Changes
     if (event.kind === 'tab_hidden') {
@@ -133,6 +148,57 @@ export function evaluateSessionPolicy(
         micStoppedAt = null;
       }
     }
+
+    // Face detection tracking
+    if (event.kind === 'face_count_changed') {
+      const newCount = event.payload_json?.newFaceCount ?? 1;
+      if (newCount === 0) {
+        if (!faceMissingStart) {
+          faceMissingStart = event.client_timestamp;
+          faceMissingCount++;
+        }
+      } else {
+        if (faceMissingStart) {
+          totalFaceMissingMs += Math.max(0, event.client_timestamp.getTime() - faceMissingStart.getTime());
+          faceMissingStart = null;
+        }
+      }
+
+      if (newCount >= 2) {
+        if (!multipleFacesStart) {
+          multipleFacesStart = event.client_timestamp;
+          multipleFacesCount++;
+        }
+      } else {
+        if (multipleFacesStart) {
+          totalMultipleFacesMs += Math.max(0, event.client_timestamp.getTime() - multipleFacesStart.getTime());
+          multipleFacesStart = null;
+        }
+      }
+    }
+
+    if (event.kind === 'no_face_detected') {
+      if (!faceMissingStart) {
+        faceMissingStart = event.client_timestamp;
+        faceMissingCount++;
+      }
+    } else if (event.kind === 'multiple_faces_detected') {
+      if (!multipleFacesStart) {
+        multipleFacesStart = event.client_timestamp;
+        multipleFacesCount++;
+      }
+    }
+
+    // Other events
+    if (event.kind === 'multiple_voices_detected') {
+      multipleVoicesCount++;
+    }
+    if (event.kind === 'background_noise_high') {
+      backgroundNoiseHighCount++;
+    }
+    if (event.kind === 'copy_activity' || event.kind === 'paste_activity') {
+      copyPasteActivityCount++;
+    }
   }
 
   // Handle open intervals at the end of the session
@@ -150,6 +216,12 @@ export function evaluateSessionPolicy(
     }
     if (micStoppedAt) {
       micOffDurationMs += Math.max(0, lastEventTime.getTime() - micStoppedAt.getTime());
+    }
+    if (faceMissingStart) {
+      totalFaceMissingMs += Math.max(0, lastEventTime.getTime() - faceMissingStart.getTime());
+    }
+    if (multipleFacesStart) {
+      totalMultipleFacesMs += Math.max(0, lastEventTime.getTime() - multipleFacesStart.getTime());
     }
   }
 
@@ -216,6 +288,82 @@ export function evaluateSessionPolicy(
     });
   }
 
+  // Rule 5: No Face Detected Duration
+  const faceMissingSecs = totalFaceMissingMs / 1000;
+  if (faceMissingSecs >= 10) {
+    violations.push({
+      rule_code: 'no_face_detected',
+      severity: 'medium',
+      occurrence_count: faceMissingCount || 1,
+      first_seen_at: sessionStart,
+      last_seen_at: sessionEnd,
+    });
+  }
+
+  // Rule 6: Multiple Faces Detected Duration
+  const multipleFacesSecs = totalMultipleFacesMs / 1000;
+  if (multipleFacesSecs >= 5) {
+    violations.push({
+      rule_code: 'multiple_faces_detected',
+      severity: 'high',
+      occurrence_count: multipleFacesCount || 1,
+      first_seen_at: sessionStart,
+      last_seen_at: sessionEnd,
+    });
+  }
+
+  // Rule 7: Multiple Voices Detected
+  if (multipleVoicesCount >= 2) {
+    violations.push({
+      rule_code: 'multiple_voices_detected',
+      severity: 'medium',
+      occurrence_count: multipleVoicesCount,
+      first_seen_at: sessionStart,
+      last_seen_at: sessionEnd,
+    });
+  }
+
+  // Rule 8: Copy/Paste Abuse
+  if (copyPasteActivityCount >= 5) {
+    violations.push({
+      rule_code: 'copy_paste_abuse',
+      severity: 'low',
+      occurrence_count: copyPasteActivityCount,
+      first_seen_at: sessionStart,
+      last_seen_at: sessionEnd,
+    });
+  }
+
+  // Rule 9: Suspicious sliding-window rapid warning check
+  // (3 warning/high events in a 30s window)
+  const warningEvents = sorted.filter(e => e.severity === 'warning' || e.severity === 'high');
+  let hasRapidWarnings = false;
+  for (let i = 0; i < warningEvents.length; i++) {
+    let count = 1;
+    const tStart = warningEvents[i].client_timestamp.getTime();
+    for (let j = i + 1; j < warningEvents.length; j++) {
+      if (warningEvents[j].client_timestamp.getTime() - tStart <= 30000) {
+        count++;
+      } else {
+        break;
+      }
+    }
+    if (count >= 3) {
+      hasRapidWarnings = true;
+      break;
+    }
+  }
+
+  if (hasRapidWarnings) {
+    violations.push({
+      rule_code: 'suspicious_behavior_pattern',
+      severity: 'high',
+      occurrence_count: 1,
+      first_seen_at: sessionStart,
+      last_seen_at: sessionEnd,
+    });
+  }
+
   return {
     violations,
     summary: {
@@ -226,6 +374,11 @@ export function evaluateSessionPolicy(
       maxHeartbeatGapMs,
       cameraOffDurationMs,
       micOffDurationMs,
+      totalFaceMissingMs,
+      totalMultipleFacesMs,
+      multipleVoicesCount,
+      copyPasteActivityCount,
+      suspiciousBehaviorPattern: hasRapidWarnings,
     },
   };
 }
