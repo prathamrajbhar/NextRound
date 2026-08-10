@@ -19,6 +19,7 @@ import SkillsScorecard from './components/SkillsScorecard';
 import DecisionControl from './components/DecisionControl';
 import { CandidateHeader } from './components/CandidateHeader';
 import { AssessmentScorecard } from './components/AssessmentScorecard';
+import { ProctoringReportCard } from './components/ProctoringReportCard';
 
 interface VoiceData {
   status?: 'pending_evaluation' | 'pending_review' | 'completed';
@@ -42,6 +43,7 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
   const [loading, setLoading] = useState(true);
 
   const [assessmentData, setAssessmentData] = useState<AssessData | null>(null);
+  const [proctorReport, setProctorReport] = useState<any>(null);
 
   useEffect(() => {
     async function fetchCandidateData() {
@@ -116,6 +118,13 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
             } catch (jobErr) {
               console.warn('Failed to fetch associated job:', jobErr);
             }
+          }
+
+          try {
+            const report = await apiClient.get<any>(`/proctoring/applications/${applicationId}/report`).catch(() => null);
+            if (report) setProctorReport(report);
+          } catch (proctorErr) {
+            console.warn('Failed to fetch proctoring report:', proctorErr);
           }
         }
       } catch (err) {
@@ -277,6 +286,11 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
 
           {/* Dynamic Assessment Section */}
           <AssessmentScorecard assessmentData={assessmentData} />
+
+          {/* Proctoring Audit Report */}
+          {proctorReport && (
+            <ProctoringReportCard report={proctorReport} />
+          )}
 
           {/* Gap Analysis */}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
