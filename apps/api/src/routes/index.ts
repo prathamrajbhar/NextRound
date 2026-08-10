@@ -16,6 +16,7 @@ import { internalRouter } from './internal/internal.routes';
 import { notificationRouter } from './common/notification.routes';
 import { userRouter } from './common/user.routes';
 import { codingRouter } from './coding/coding.routes';
+import { proctoringRouter } from './proctoring/proctoring.routes';
 
 export const apiRouter = Router();
 
@@ -26,6 +27,7 @@ apiRouter.use('/jobs', jobRouter);
 apiRouter.use('/applications', applicationRouter);
 apiRouter.use('/coding', codingRouter);
 apiRouter.use('/candidate', candidateRouter);
+apiRouter.use('/proctoring', proctoringRouter);
 
 apiRouter.use('/hr/analytics', analyticsRouter);
 apiRouter.use('/hr/sentiment', sentimentRouter);
