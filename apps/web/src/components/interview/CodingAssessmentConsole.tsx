@@ -9,6 +9,7 @@ import { CodingProblemPanel, type CodingLeftTab } from './coding/CodingProblemPa
 import { CodingWorkspacePanel, type CodingBottomTab } from './coding/CodingWorkspacePanel';
 import { CodingSubmissionSummary } from './coding/CodingSubmissionSummary';
 import { ProctoringWarningModal } from './ProctoringWarningModal';
+import { CodingStartCard } from './coding/CodingStartCard';
 import type { TestResult } from './coding/types';
 
 interface CodingConsoleProps {
@@ -45,21 +46,11 @@ export default function CodingAssessmentConsole({
   const [finalPassRate, setFinalPassRate] = useState(0);
   const [strikeCount, setStrikeCount] = useState(0);
   const [showWarningModal, setShowWarningModal] = useState(false);
+  const [isStarted, setIsStarted] = useState(false);
 
-  // Enter fullscreen on start when problem is loaded
+  // Anti-Cheat proctoring listeners for coding round (runs only after starting)
   useEffect(() => {
-    if (problem && !submitted) {
-      if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch((err) => {
-          console.error('Failed to enter fullscreen:', err);
-        });
-      }
-    }
-  }, [problem, submitted]);
-
-  // Anti-Cheat proctoring listeners for coding round
-  useEffect(() => {
-    if (!problem || submitted) return;
+    if (!problem || submitted || !isStarted) return;
 
     const handleProctoringViolation = () => {
       if (document.hidden || !document.fullscreenElement) {
@@ -78,7 +69,16 @@ export default function CodingAssessmentConsole({
       document.removeEventListener('fullscreenchange', handleProctoringViolation);
       document.removeEventListener('visibilitychange', handleProctoringViolation);
     };
-  }, [problem, submitted]);
+  }, [problem, submitted, isStarted]);
+
+  const handleStartCodingRound = () => {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error('Failed to enter fullscreen:', err);
+      });
+    }
+    setIsStarted(true);
+  };
 
   const handleResumeFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -178,6 +178,19 @@ export default function CodingAssessmentConsole({
 
   if (error || !problem) {
     return <CodingStateScreen error={error} />;
+  }
+
+  if (!isStarted) {
+    return (
+      <CodingStartCard
+        company={company || 'NextRound'}
+        role={role || 'Software Engineer'}
+        problemTitle={problem.title}
+        difficulty={problem.difficulty}
+        category={problem.category}
+        onStart={handleStartCodingRound}
+      />
+    );
   }
 
   return (
