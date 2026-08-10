@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useInterviewSession } from '@/hooks/useInterviewSession';
 import InterviewCheckScreen from '@/components/interview/InterviewCheckScreen';
 import UnifiedInterviewConsole from '@/components/interview/UnifiedInterviewConsole';
@@ -10,6 +10,8 @@ import { AssessmentStageShell } from '@/components/interview/AssessmentStageShel
 import { NextRoundTransitionCard } from '@/components/interview/NextRoundTransitionCard';
 import { useAssessmentDetails } from '@/components/interview/useAssessmentDetails';
 import { useAssessmentCompletion } from '@/components/interview/useAssessmentCompletion';
+import { useProctoringSession } from '@/lib/proctoring/useProctoringSession';
+import { apiClient } from '@/lib/apiClient';
 
 interface InterRoundData {
   completedStageName: string;
@@ -38,6 +40,21 @@ export function UnifiedAssessmentSession({
 
   const [comprehensiveStep, setComprehensiveStep] = useState<'aptitude' | 'coding' | 'technical'>('aptitude');
   const [pendingNextRound, setPendingNextRound] = useState<InterRoundData | null>(null);
+  const [candidateId, setCandidateId] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const res = await apiClient.get<{ profile: { id: string } }>('/candidate/profile');
+        if (res && res.profile) {
+          setCandidateId(res.profile.id);
+        }
+      } catch (err) {
+        console.warn('Failed to load candidate profile for proctoring:', err);
+      }
+    }
+    loadProfile();
+  }, []);
 
   const {
     stage,
@@ -60,11 +77,44 @@ export function UnifiedAssessmentSession({
     storageKey: `mockSession_${sessionId}`,
     onComplete: (results) => {
       const score = results && typeof results === 'object' && 'score' in results ? (results as any).score : undefined;
-      handleComplete(score);
+      handleCompleteWithProctor(score);
     },
   });
 
   const handleComplete = useAssessmentCompletion({ sessionId, applicationId, messages });
+
+  const {
+    strikeCount: proctorStrikeCount,
+    showWarningModal: proctorShowWarning,
+    handleResumeFullscreen: proctorResumeFS,
+    handleEnd: proctorEnd,
+    trackMediaStream,
+    proctoringClient,
+  } = useProctoringSession({
+    sessionId,
+    candidateId: (stage !== 'check' && candidateId) ? candidateId : '',
+    sessionType: track === 'comprehensive' ? 'interview' : (track as any),
+    applicationId,
+    mockSessionId: applicationId ? undefined : sessionId,
+    policyVersion: 'assessment-v1',
+    consentVersion: 'v1',
+    onDisqualified: () => {
+      if (track === 'comprehensive') {
+        onEliminate();
+      } else {
+        handleCompleteWithProctor(0);
+      }
+    },
+  });
+
+  const handleCompleteWithProctor = async (score?: number) => {
+    try {
+      await proctorEnd();
+    } catch (err) {
+      console.error('Failed to end proctoring session:', err);
+    }
+    handleComplete(score);
+  };
 
   const activeRoundTrack = track === 'comprehensive' ? comprehensiveStep : track;
 
@@ -115,6 +165,10 @@ export function UnifiedAssessmentSession({
           role={targetRole}
           applicationId={applicationId}
           sessionId={sessionId}
+          proctoringClient={proctoringClient}
+          strikeCount={proctorStrikeCount}
+          showWarningModal={proctorShowWarning}
+          onResumeFullscreen={proctorResumeFS}
           onComplete={(score) => {
             if (track === 'comprehensive') {
               setPendingNextRound({
@@ -125,7 +179,7 @@ export function UnifiedAssessmentSession({
                 stageNumber: 1,
               });
             } else {
-              handleComplete(score);
+              handleCompleteWithProctor(score);
             }
           }}
         />
@@ -139,6 +193,12 @@ export function UnifiedAssessmentSession({
         <CodingAssessmentConsole
           company={targetCompany}
           role={targetRole}
+          applicationId={applicationId}
+          sessionId={sessionId}
+          proctoringClient={proctoringClient}
+          strikeCount={proctorStrikeCount}
+          showWarningModal={proctorShowWarning}
+          onResumeFullscreen={proctorResumeFS}
           onComplete={(score) => {
             if (track === 'comprehensive') {
               setPendingNextRound({
@@ -149,7 +209,7 @@ export function UnifiedAssessmentSession({
                 stageNumber: 2,
               });
             } else {
-              handleComplete(score);
+              handleCompleteWithProctor(score);
             }
           }}
         />
@@ -167,11 +227,12 @@ export function UnifiedAssessmentSession({
       phase={phase}
       isAnalyzing={isAnalyzing}
       onSubmitAnswer={submitAnswer}
-      onEndSession={wrapUp}
-      strikeCount={strikeCount}
-      showWarningModal={showWarningModal}
-      onResumeFullscreen={onResumeFullscreen}
+      onEndSession={handleCompleteWithProctor}
+      strikeCount={proctorStrikeCount}
+      showWarningModal={proctorShowWarning}
+      onResumeFullscreen={proctorResumeFS}
       onEliminate={onEliminate}
+      proctoringClient={proctoringClient}
     />
   );
 }
