@@ -19,7 +19,7 @@ export const ProctoringEventSchema = z.object({
   source: z.string().min(1, 'Event source is required'),
   client_timestamp: z.string().datetime({ message: 'Must be ISO 8601 datetime format' }),
   session_elapsed_ms: z.number().int().nonnegative(),
-  payload_json: z.record(z.any()).nullable().optional(),
+  payload_json: z.record(z.string(), z.any()).nullable().optional(),
 });
 
 export const BatchEventsSchema = z.object({

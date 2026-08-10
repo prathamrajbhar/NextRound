@@ -116,18 +116,18 @@ export function evaluateSessionPolicy(
     }
 
     // Media permissions
-    if (event.kind === 'camera_stopped') {
+    if (event.kind === 'camera_stopped' || event.kind === 'video_stopped') {
       if (!cameraStoppedAt) cameraStoppedAt = event.client_timestamp;
-    } else if (event.kind === 'camera_started') {
+    } else if (event.kind === 'camera_started' || event.kind === 'video_started') {
       if (cameraStoppedAt) {
         cameraOffDurationMs += Math.max(0, event.client_timestamp.getTime() - cameraStoppedAt.getTime());
         cameraStoppedAt = null;
       }
     }
 
-    if (event.kind === 'microphone_stopped') {
+    if (event.kind === 'microphone_stopped' || event.kind === 'audio_stopped') {
       if (!micStoppedAt) micStoppedAt = event.client_timestamp;
-    } else if (event.kind === 'microphone_started') {
+    } else if (event.kind === 'microphone_started' || event.kind === 'audio_started') {
       if (micStoppedAt) {
         micOffDurationMs += Math.max(0, event.client_timestamp.getTime() - micStoppedAt.getTime());
         micStoppedAt = null;

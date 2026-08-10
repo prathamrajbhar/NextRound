@@ -172,11 +172,11 @@ export default function CodingAssessmentConsole({
   const displayResumeFullscreen = outerResumeFullscreen !== undefined ? outerResumeFullscreen : handleResumeFullscreen;
 
   if (error) {
-    return <CodingStateScreen title="Assessment Unavailable" subtitle={error} hasBackLink />;
+    return <CodingStateScreen error={error} />;
   }
 
   if (!problem) {
-    return <CodingStateScreen title="Preparing Coding Lab" subtitle="Vetting custom dynamic questions..." spinningIcon />;
+    return <CodingStateScreen loadingLabel="Preparing Coding Lab. Vetting custom dynamic questions..." />;
   }
 
   if (!isStarted) {
@@ -186,6 +186,7 @@ export default function CodingAssessmentConsole({
         role={role}
         problemTitle={problem.title}
         difficulty={problem.difficulty}
+        category={problem.category}
         onStart={handleStartCodingRound}
       />
     );

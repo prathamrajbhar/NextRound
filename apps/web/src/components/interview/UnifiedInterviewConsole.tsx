@@ -50,6 +50,7 @@ export function UnifiedInterviewConsole({
   showWarningModal = false,
   onResumeFullscreen,
   onEliminate,
+  proctoringClient,
 }: UnifiedInterviewConsoleProps) {
   // Device & Stream States
   const [micActive, setMicActive] = useState(true);
@@ -82,6 +83,11 @@ export function UnifiedInterviewConsole({
     videoRef,
     camActive,
     micActive,
+    onStreamCreated: (stream) => {
+      if (proctoringClient) {
+        proctoringClient.trackMediaStream(stream);
+      }
+    },
   });
 
   // Auto-scroll transcript drawer

@@ -41,6 +41,7 @@ export interface UnifiedInterviewConsoleProps {
   showWarningModal?: boolean;
   onResumeFullscreen?: () => void;
   onEliminate?: () => void;
+  proctoringClient?: any;
 
   // Video screening questions (for video-screening mode)
   screeningQuestions?: ScreeningQuestion[];

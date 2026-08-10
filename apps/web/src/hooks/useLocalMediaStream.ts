@@ -8,6 +8,7 @@ interface UseLocalMediaStreamOptions {
   micActive: boolean;
   /** Set to false to fully release the stream (e.g. gate acquisition on a stage). Default true. */
   enabled?: boolean;
+  onStreamCreated?: (stream: MediaStream) => void;
 }
 
 /**
@@ -23,6 +24,7 @@ export function useLocalMediaStream({
   camActive,
   micActive,
   enabled = true,
+  onStreamCreated,
 }: UseLocalMediaStreamOptions) {
   const streamRef = useRef<MediaStream | null>(null);
   const setupGenerationRef = useRef(0);
@@ -86,6 +88,7 @@ export function useLocalMediaStream({
 
         streamRef.current = stream;
         setHasCamPermission(true);
+        onStreamCreated?.(stream);
 
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
