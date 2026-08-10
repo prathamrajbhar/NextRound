@@ -42,6 +42,12 @@ export class ProctoringClient {
   private voiceActivityStreak = 0;
   private silenceStreak = 0;
 
+  // Face Analysis properties
+  private faceVideoEl: HTMLVideoElement | null = null;
+  private faceCanvasEl: HTMLCanvasElement | null = null;
+  private faceIntervalId: any = null;
+  private lastFaceCount = 1;
+
   constructor(config: ProctoringClientConfig) {
     this.config = config;
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
@@ -125,6 +131,9 @@ export class ProctoringClient {
   trackMediaStream(stream: MediaStream) {
     if (stream.getAudioTracks().length > 0) {
       this.startAudioAnalysis(stream);
+    }
+    if (stream.getVideoTracks().length > 0) {
+      this.startFaceAnalysis(stream);
     }
 
     stream.getTracks().forEach((track) => {
@@ -258,6 +267,134 @@ export class ProctoringClient {
     }
   }
 
+  private startFaceAnalysis(stream: MediaStream) {
+    if (typeof window === 'undefined') return;
+    if (this.faceIntervalId) return; // Already analyzing video
+
+    try {
+      this.faceVideoEl = document.createElement('video');
+      this.faceVideoEl.srcObject = stream;
+      this.faceVideoEl.muted = true;
+      this.faceVideoEl.playsInline = true;
+      this.faceVideoEl.setAttribute('autoplay', 'true');
+      this.faceVideoEl.play().catch(() => {});
+
+      this.faceCanvasEl = document.createElement('canvas');
+      this.faceCanvasEl.width = 160;
+      this.faceCanvasEl.height = 120;
+
+      this.faceIntervalId = setInterval(async () => {
+        if (this.isPaused || !this.faceVideoEl) return;
+
+        // Try Shape Detection API if supported
+        if ('FaceDetector' in window) {
+          try {
+            const faceDetector = new (window as any).FaceDetector({ maxDetectedFaces: 5, fastMode: true });
+            const detectedFaces = await faceDetector.detect(this.faceVideoEl);
+            const faceCount = detectedFaces.length;
+            this.processFaceCount(faceCount, 0.95);
+            return;
+          } catch (err) {
+            // Fallback to canvas blob heuristic
+          }
+        }
+
+        // Heuristic Canvas fallback: YCbCr skin tone + motion-contour blobs
+        const ctx = this.faceCanvasEl?.getContext('2d');
+        if (!ctx || !this.faceVideoEl || this.faceVideoEl.paused || this.faceVideoEl.ended) return;
+
+        ctx.drawImage(this.faceVideoEl, 0, 0, 160, 120);
+        const imgData = ctx.getImageData(0, 0, 160, 120);
+        const data = imgData.data;
+
+        const gridCols = 8;
+        const gridRows = 6;
+        const cellWidth = 20;
+        const cellHeight = 20;
+        const grid = Array(gridRows).fill(0).map(() => Array(gridCols).fill(0));
+
+        for (let y = 0; y < 120; y += 2) {
+          for (let x = 0; x < 160; x += 2) {
+            const idx = (y * 160 + x) * 4;
+            const r = data[idx];
+            const g = data[idx + 1];
+            const b = data[idx + 2];
+
+            const Y = 0.299 * r + 0.587 * g + 0.114 * b;
+            const Cb = -0.1687 * r - 0.3313 * g + 0.5 * b + 128;
+            const Cr = 0.5 * r - 0.4187 * g - 0.0813 * b + 128;
+
+            if (Y > 40 && Cb > 85 && Cb < 135 && Cr > 135 && Cr < 180) {
+              const col = Math.floor(x / cellWidth);
+              const row = Math.floor(y / cellHeight);
+              if (col < gridCols && row < gridRows) {
+                grid[row][col]++;
+              }
+            }
+          }
+        }
+
+        const threshold = 30;
+        const visited = Array(gridRows).fill(0).map(() => Array(gridCols).fill(false));
+        let blobs = 0;
+
+        for (let r = 0; r < gridRows; r++) {
+          for (let c = 0; c < gridCols; c++) {
+            if (grid[r][c] >= threshold && !visited[r][c]) {
+              blobs++;
+              const queue = [[r, c]];
+              visited[r][c] = true;
+              while (queue.length > 0) {
+                const [currR, currC] = queue.shift()!;
+                const directions = [
+                  [-1, 0], [1, 0], [0, -1], [0, 1]
+                ];
+                for (const [dr, dc] of directions) {
+                  const newR = currR + dr;
+                  const newC = currC + dc;
+                  if (
+                    newR >= 0 && newR < gridRows &&
+                    newC >= 0 && newC < gridCols &&
+                    grid[newR][newC] >= threshold &&
+                    !visited[newR][newC]
+                  ) {
+                    visited[newR][newC] = true;
+                    queue.push([newR, newC]);
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        const faceCount = blobs;
+        this.processFaceCount(faceCount, 0.70);
+      }, 4000);
+
+    } catch (err) {
+      console.warn('[ProctoringClient] Canvas Face Detection initialization failed:', err);
+    }
+  }
+
+  private processFaceCount(faceCount: number, confidence: number) {
+    if (faceCount !== this.lastFaceCount) {
+      this.logEvent('face_count_changed', 'info', 'browser', {
+        confidence,
+        prevFaceCount: this.lastFaceCount,
+        newFaceCount: faceCount,
+      });
+
+      if (faceCount === 0) {
+        this.logEvent('no_face_detected', 'warning', 'browser', { confidence });
+        this.config.onViolation('no_face_detected');
+      } else if (faceCount >= 2) {
+        this.logEvent('multiple_faces_detected', 'warning', 'browser', { confidence });
+        this.config.onViolation('multiple_faces_detected');
+      }
+      this.lastFaceCount = faceCount;
+    }
+  }
+
   private handleVisibilityChange = () => {
     const isHidden = document.hidden;
     const kind = isHidden ? 'tab_hidden' : 'tab_visible';
@@ -339,6 +476,13 @@ export class ProctoringClient {
     if (this.audioContext) {
       this.audioContext.close().catch(() => {});
     }
+    if (this.faceIntervalId) {
+      clearInterval(this.faceIntervalId);
+    }
+    if (this.faceVideoEl) {
+      this.faceVideoEl.srcObject = null;
+      this.faceVideoEl = null;
+    }
     this.logEvent('session_ended', 'info', 'system');
     // Flush event buffer to server synchronously before ending session
     await this.buffer.flush();
@@ -359,6 +503,13 @@ export class ProctoringClient {
     }
     if (this.audioContext) {
       this.audioContext.close().catch(() => {});
+    }
+    if (this.faceIntervalId) {
+      clearInterval(this.faceIntervalId);
+    }
+    if (this.faceVideoEl) {
+      this.faceVideoEl.srcObject = null;
+      this.faceVideoEl = null;
     }
     this.buffer.flush();
   }
