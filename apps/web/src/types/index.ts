@@ -559,4 +559,5 @@ export interface ATSResumeData {
     gpa?: string;
   }[];
   certifications: string[];
+  pdfUrl?: string;
 }

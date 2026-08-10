@@ -289,37 +289,58 @@ export function SetupStage({
             </div>
           </div>
 
-          {/* Audio Pre-Check Diagnostic */}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-3">
-            <div className="flex justify-between items-center">
+          {/* Microphone Pre-Check */}
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Mic className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100">Microphone Pre-Check</span>
+                <Mic className={`h-4 w-4 ${micTesting ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'}`} />
+                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">Microphone Pre-Check</span>
+                {micTesting && (
+                  <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Live
+                  </span>
+                )}
               </div>
               <button
                 type="button"
                 onClick={() => setMicTesting(!micTesting)}
-                className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 transition-all cursor-pointer"
+                className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
+                  micTesting
+                    ? 'border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40'
+                    : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
               >
-                {micTesting ? 'Stop Test' : 'Test Mic'}
+                {micTesting ? 'Stop' : 'Test Mic'}
               </button>
             </div>
 
-            {/* Equalizer Bar */}
-            <div className="h-8 rounded-xl bg-slate-900 dark:bg-slate-950 px-3 flex items-center gap-1 border border-slate-800">
-              {[...Array(14)].map((_, i) => {
-                const barHeight = micTesting ? Math.min(100, Math.max(15, audioLevel + Math.sin(i) * 30)) : 10;
+            {/* Waveform bars */}
+            <div className="h-10 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 flex items-end gap-[3px] overflow-hidden">
+              {[...Array(20)].map((_, i) => {
+                const barHeight = micTesting
+                  ? Math.min(100, Math.max(8, audioLevel + Math.abs(Math.sin(i * 1.1)) * Math.min(audioLevel * 0.5, 25)))
+                  : 12;
                 return (
                   <div
                     key={i}
-                    className="flex-1 bg-gradient-to-t from-emerald-500 to-orange-400 rounded-full transition-all duration-100"
+                    className={`flex-1 rounded-sm transition-all duration-75 ${
+                      micTesting && audioLevel > 5
+                        ? 'bg-emerald-500 dark:bg-emerald-400'
+                        : 'bg-slate-300 dark:bg-slate-600'
+                    }`}
                     style={{ height: `${barHeight}%` }}
                   />
                 );
               })}
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">
-              {micTesting ? '🎤 Microphone active! Speak naturally.' : 'Verify audio clarity before starting session.'}
+
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              {micTesting
+                ? audioLevel > 5
+                  ? 'Signal detected — your microphone is working.'
+                  : 'Listening… speak to test your microphone.'
+                : 'Test your microphone before starting the session.'}
             </p>
           </div>
 

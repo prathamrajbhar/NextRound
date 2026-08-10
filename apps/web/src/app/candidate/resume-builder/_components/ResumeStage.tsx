@@ -3,6 +3,7 @@
 import React from 'react';
 import { Award, Sliders, Check, Copy, Download } from '@/lib/lucide-google-icons';
 import { ATSResumeData } from '@/types';
+import { siteConfig } from '@/lib/config';
 
 interface ResumeStageProps {
   resumeData: ATSResumeData;
@@ -21,6 +22,13 @@ export function ResumeStage({
   onCopyResumeText,
   onRestart,
 }: ResumeStageProps) {
+  const getAbsolutePdfUrl = (url?: string) => {
+    if (!url) return '#';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const base = siteConfig.apiBaseUrl.replace(/\/api\/v[0-9]+$/, '');
+    return `${base}${url}`;
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Left Controls */}
@@ -90,12 +98,23 @@ export function ResumeStage({
               {copiedText ? 'Copied Full Resume Text!' : 'Copy Plain Text (ATS)'}
             </button>
 
-            <button
-              onClick={() => alert('Downloading official ATS PDF Resume file...')}
-              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer text-center"
-            >
-              <Download className="h-4 w-4" /> Download PDF Resume
-            </button>
+            {resumeData.pdfUrl ? (
+              <a
+                href={getAbsolutePdfUrl(resumeData.pdfUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-2 text-center"
+              >
+                <Download className="h-4 w-4" /> Download PDF Resume
+              </a>
+            ) : (
+              <button
+                disabled
+                className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-extrabold flex items-center justify-center gap-2 cursor-not-allowed"
+              >
+                <Download className="h-4 w-4" /> PDF Link Unavailable
+              </button>
+            )}
 
             <button
               onClick={onRestart}

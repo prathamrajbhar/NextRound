@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Bot,
   Clock,
@@ -13,6 +13,7 @@ import {
   Sparkles,
   ArrowRight,
   ShieldCheck,
+  Send,
 } from '@/lib/lucide-google-icons';
 
 interface InterviewStageProps {
@@ -28,6 +29,9 @@ interface InterviewStageProps {
   micActive: boolean;
   setMicActive: (val: boolean) => void;
   candidateSpeechText: string;
+  realtimeInsight?: string | null;
+  voiceError?: string | null;
+  onSubmitResponse?: (text: string) => void;
   onEndCall: () => void;
 }
 
@@ -44,13 +48,25 @@ export function InterviewStage({
   micActive,
   setMicActive,
   candidateSpeechText,
+  realtimeInsight,
+  voiceError,
+  onSubmitResponse,
   onEndCall,
 }: InterviewStageProps) {
+  const [textInput, setTextInput] = useState('');
+
   return (
     <div className="relative w-full h-[calc(100vh-6.5rem)] rounded-3xl overflow-hidden border border-white/60 dark:border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-900 dark:text-white shadow-2xl flex flex-col justify-between p-4 sm:p-5 backdrop-blur-md glass-panel select-none font-sans">
       
       {/* Background Ambient Radial Glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-orange-500/15 via-transparent to-transparent pointer-events-none" />
+
+      {/* Voice Error Banner */}
+      {voiceError && (
+        <div className="absolute top-16 left-4 right-4 z-50 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center gap-2 text-xs font-semibold text-rose-400 animate-bounce">
+          <span>⚠️ {voiceError}</span>
+        </div>
+      )}
 
       {/* Top Modern Header */}
       <div className="flex items-center justify-between z-20 border-b border-slate-200/60 dark:border-slate-800/80 pb-3 px-2">
@@ -78,14 +94,14 @@ export function InterviewStage({
         </div>
       </div>
 
-      {/* Main 2-Tile Stage Grid (Full Height Fill, 50/50 Split) */}
+      {/* Main 2-Tile Stage Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 my-3 flex-1 min-h-0 relative z-10">
         
         {/* Left Tile: Modern AI Presenter */}
-        <div className="relative rounded-2xl border border-white/60 dark:border-slate-800/90 bg-white/60 dark:bg-slate-900/90 overflow-hidden flex flex-col items-center justify-between p-6 shadow-inner space-y-6">
+        <div className="relative rounded-2xl border border-white/60 dark:border-slate-800/90 bg-white/60 dark:bg-slate-900/90 overflow-hidden flex flex-col items-center justify-between p-6 shadow-inner space-y-4">
           <div className="w-full flex justify-between items-center">
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md border border-slate-800 text-xs font-bold text-slate-200">
-              <span className={`h-2.5 w-2.5 rounded-full ${aiState === 'speaking' ? 'bg-orange-400 animate-ping' : 'bg-slate-500'}`} />
+              <span className={`h-2.5 w-2.5 rounded-full ${aiState === 'speaking' ? 'bg-orange-400 animate-ping' : aiState === 'evaluating' ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'}`} />
               {aiState === 'speaking' ? 'AI Speaking...' : aiState === 'evaluating' ? 'Thinking...' : 'AI Listening...'}
             </div>
           </div>
@@ -118,6 +134,18 @@ export function InterviewStage({
             </p>
           </div>
 
+          {/* Live Extraction Insight */}
+          {realtimeInsight && (
+            <div className="w-full max-w-lg p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center animate-in fade-in duration-300">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-400 block mb-0.5">
+                ✦ Live Extraction Insight
+              </span>
+              <p className="text-[11px] font-medium text-amber-200 leading-relaxed">
+                {realtimeInsight}
+              </p>
+            </div>
+          )}
+
           {/* Audio Equalizer Spectrum */}
           <div className="flex items-center gap-1.5 h-6">
             {[30, 65, 95, 45, 80, 100, 55, 75, 40, 85, 70, 50, 90].map((h, i) => (
@@ -136,7 +164,7 @@ export function InterviewStage({
         <div className="relative rounded-2xl border border-white/60 dark:border-slate-800/90 bg-slate-950 overflow-hidden flex flex-col justify-between p-4 shadow-inner space-y-4">
           <div className="flex justify-between items-center z-20">
             <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900/90 backdrop-blur-md border border-slate-800 text-xs font-bold text-slate-200">
-              <span className={`h-2 w-2 rounded-full ${micActive ? 'bg-emerald-400' : 'bg-rose-500'}`} />
+              <span className={`h-2 w-2 rounded-full ${micActive ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'}`} />
               {micActive ? 'Mic Active' : 'Mic Muted'}
             </div>
           </div>
@@ -159,12 +187,44 @@ export function InterviewStage({
                 <span className="text-xs text-slate-400 font-bold">Camera Off</span>
               </div>
             )}
+          </div>
 
-            {/* Recognized Candidate Speech Subtitles Overlay */}
+          {/* recognized speech & text fallback form */}
+          <div className="space-y-3">
             {candidateSpeechText && (
-              <div className="absolute bottom-4 left-4 right-4 p-3.5 rounded-2xl bg-slate-950/95 border border-slate-800 backdrop-blur-md text-xs font-medium text-slate-100 shadow-xl animate-in fade-in duration-200">
+              <div className="p-3.5 rounded-2xl bg-slate-950/95 border border-slate-800 backdrop-blur-md text-xs font-medium text-slate-100 shadow-xl animate-in fade-in duration-200">
                 &ldquo;{candidateSpeechText}&rdquo;
               </div>
+            )}
+
+            {onSubmitResponse && (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const val = textInput.trim();
+                  if (val) {
+                    onSubmitResponse(val);
+                    setTextInput('');
+                  }
+                }}
+                className="flex items-center gap-2"
+              >
+                <input
+                  type="text"
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  placeholder={aiState === 'listening' ? "Type response fallback..." : "Please wait..."}
+                  disabled={aiState !== 'listening'}
+                  className="flex-1 px-4 py-2 bg-slate-900 border border-slate-800 text-xs rounded-xl focus:outline-none focus:border-orange-500 text-white placeholder-slate-500 disabled:opacity-50"
+                />
+                <button
+                  type="submit"
+                  disabled={aiState !== 'listening' || !textInput.trim()}
+                  className="px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center cursor-pointer"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                </button>
+              </form>
             )}
           </div>
 
@@ -230,3 +290,4 @@ export function InterviewStage({
     </div>
   );
 }
+

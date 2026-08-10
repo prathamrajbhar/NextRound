@@ -1,14 +1,76 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { apiClient } from '@/lib/apiClient';
-import { ATSResumeData, DynamicConversationTurn } from '@/types';
 import { useLocalMediaStream } from '@/hooks/useLocalMediaStream';
 import { SetupStage } from './_components/SetupStage';
 import { InterviewStage } from './_components/InterviewStage';
 import { ResumeStage } from './_components/ResumeStage';
+import { useResumeVoiceSession } from './_hooks/useResumeVoiceSession';
+import { ATSResumeData } from '@/types';
+import { apiClient } from '@/lib/apiClient';
 
-const DEFAULT_DYNAMIC_TURNS: DynamicConversationTurn[] = [];
+interface RawResumeData {
+  name?: string;
+  title?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  linkedin?: string;
+  github?: string;
+  portfolio?: string;
+  contact?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    location?: string;
+    linkedin?: string;
+    github?: string;
+    portfolio?: string;
+  };
+  summary?: string;
+  atsScore?: number;
+  ats_score?: number;
+  scoreBreakdown?: { label: string; score: number; description: string }[];
+  score_breakdown?: { label: string; score: number; description: string }[];
+  work_history?: {
+    title?: string;
+    role?: string;
+    company?: string;
+    dates?: string;
+    period?: string;
+    location?: string;
+    bullets?: string[];
+    highlights?: string[];
+  }[];
+  experience?: {
+    title?: string;
+    role?: string;
+    company?: string;
+    dates?: string;
+    period?: string;
+    location?: string;
+    bullets?: string[];
+    highlights?: string[];
+  }[];
+  skills?: string[] | { category: string; items: string[] }[];
+  projects?: {
+    name?: string;
+    title?: string;
+    description?: string;
+    techStack?: string[];
+    tech_stack?: string[];
+    impact?: string;
+  }[];
+  education?: {
+    degree?: string;
+    institution?: string;
+    year?: string;
+    dates?: string;
+    gpa?: string;
+  }[];
+  certifications?: string[];
+}
+import { Sparkles, Loader2, AlertCircle } from '@/lib/lucide-google-icons';
 
 const DEFAULT_GENERATED_RESUME: ATSResumeData = {
   name: '',
@@ -30,6 +92,7 @@ const DEFAULT_GENERATED_RESUME: ATSResumeData = {
 };
 
 type Stage = 'setup' | 'interview' | 'resume';
+type ResumeStatus = 'idle' | 'generating' | 'completed' | 'error';
 
 export default function AIResumeBuilderPage() {
   const [stage, setStage] = useState<Stage>('setup');
@@ -38,35 +101,59 @@ export default function AIResumeBuilderPage() {
   const [targetRole, setTargetRole] = useState('Senior Full Stack Engineer');
   const [experienceLevel, setExperienceLevel] = useState('Senior (5+ Years)');
 
-  // Production Interview Call State
+  // Call duration countdown
   const [timeRemaining, setTimeRemaining] = useState(900); // 15 mins
   const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [micActive, setMicActive] = useState(true);
-  const [camActive, setCamActive] = useState(true);
 
-  const [turnIndex, setTurnIndex] = useState(0);
-  const [aiState, setAiState] = useState<'speaking' | 'listening' | 'evaluating'>('speaking');
-  const [candidateSpeechText] = useState('');
-
-  // Dynamic Turns State
-  const [dynamicTurns] = useState<DynamicConversationTurn[]>(DEFAULT_DYNAMIC_TURNS);
-
-  // Resume State
-  const [resumeData] = useState<ATSResumeData>(DEFAULT_GENERATED_RESUME);
+  // Resume status
+  const [resumeStatus, setResumeStatus] = useState<ResumeStatus>('idle');
+  const [resumeData, setResumeData] = useState<ATSResumeData>(DEFAULT_GENERATED_RESUME);
   const [selectedTemplate, setSelectedTemplate] = useState<'classic' | 'modern' | 'executive'>('classic');
   const [copiedText, setCopiedText] = useState(false);
 
   // Video Ref for Local WebCam Feed
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const currentTurn = dynamicTurns[turnIndex] && { aiMessage: dynamicTurns[turnIndex].aiMessage, simulatedUserAnswer: dynamicTurns[turnIndex].simulatedUserAnswer };
+  // Instantiate Voice Session Hook
+  const {
+    sessionId,
+    conversationHistory,
+    aiState,
+    candidateSpeechText,
+    realtimeInsight,
+    micActive,
+    camActive,
+    setCamActive,
+    toggleMic,
+    error: voiceError,
+    startCall,
+    submitResponse,
+    endCall,
+  } = useResumeVoiceSession({
+    targetRole,
+    experienceLevel,
+    onComplete: () => {
+      setIsTimerRunning(false);
+      setStage('resume');
+      setResumeStatus('generating');
+    },
+  });
 
-  // Local webcam feed during interview stage (video-only); released when the stage leaves
-  // 'interview' or the component unmounts (unmount cleanup + pagehide handler).
+  // Extract current AI message
+  const lastAiMessage = [...conversationHistory]
+    .reverse()
+    .find((h) => h.role === 'ai')?.content || 'Connecting to AI voice agent...';
+
+  const currentTurn = {
+    aiMessage: lastAiMessage,
+    simulatedUserAnswer: '',
+  };
+
+  // Local webcam feed (video-only); released when unmounted
   useLocalMediaStream({
     videoRef,
     camActive,
-    micActive: false,
+    micActive: false, // Mic is managed by SpeechRecognition in hook
     enabled: stage === 'interview',
   });
 
@@ -79,55 +166,99 @@ export default function AIResumeBuilderPage() {
     return () => clearInterval(timer);
   }, [isTimerRunning, timeRemaining]);
 
+  // Polling for resume builder worker completion
+  useEffect(() => {
+    if (stage !== 'resume' || !sessionId || resumeStatus !== 'generating') return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await apiClient.get<{
+          status: string;
+          generatedResume: RawResumeData;
+          resumePdfUrl: string;
+        }>(`/resume-builder/${sessionId}/result`);
+
+        if (res && res.status === 'completed') {
+          clearInterval(pollInterval);
+
+          const raw = res.generatedResume || {};
+          const contact = raw.contact || {};
+
+          // Map backend format to strict frontend ATSResumeData interface
+          const mappedResume: ATSResumeData = {
+            name: contact.name || raw.name || '',
+            title: raw.title || targetRole,
+            email: contact.email || raw.email || '',
+            phone: contact.phone || raw.phone || '',
+            location: contact.location || raw.location || '',
+            linkedin: contact.linkedin || raw.linkedin || '',
+            github: contact.github || raw.github || '',
+            portfolio: contact.portfolio || raw.portfolio || '',
+            summary: raw.summary || '',
+            atsScore: raw.atsScore || raw.ats_score || 85,
+            scoreBreakdown: raw.scoreBreakdown || raw.score_breakdown || [
+              { label: 'Keyword Relevance', score: 85, description: 'Alignment with target role competencies' },
+              { label: 'Quantifiable Impact', score: 80, description: 'Percentage of bullet points containing metrics' },
+              { label: 'Structural Formatting', score: 90, description: 'Compliance with standard ATS parsers' }
+            ],
+            experience: (raw.work_history || raw.experience || []).map((exp) => ({
+              role: exp.role || exp.title || '',
+              company: exp.company || '',
+              period: exp.period || exp.dates || '',
+              location: exp.location || 'Remote',
+              highlights: exp.highlights || exp.bullets || [],
+            })),
+            projects: (raw.projects || []).map((proj) => ({
+              title: proj.title || proj.name || '',
+              techStack: proj.techStack || proj.tech_stack || [],
+              description: proj.description || '',
+              impact: proj.impact || proj.description || '',
+            })),
+            skills: Array.isArray(raw.skills)
+              ? (typeof raw.skills[0] === 'string'
+                  ? [{ category: 'Core Competencies', items: raw.skills as string[] }]
+                  : raw.skills as { category: string; items: string[] }[])
+              : [],
+            education: (raw.education || []).map((edu) => ({
+              degree: edu.degree || '',
+              institution: edu.institution || '',
+              year: edu.year || edu.dates || '',
+              gpa: edu.gpa || undefined,
+            })),
+            certifications: raw.certifications || [],
+            pdfUrl: res.resumePdfUrl || undefined,
+          };
+
+          setResumeData(mappedResume);
+          setResumeStatus('completed');
+        } else if (res && res.status === 'failed') {
+          clearInterval(pollInterval);
+          setResumeStatus('error');
+        }
+      } catch (err) {
+        console.error('Error polling resume result:', err);
+      }
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [stage, sessionId, resumeStatus, targetRole]);
+
   const formatTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const [sessionId, setSessionId] = useState<string | null>(null);
-
   const handleStartCall = async () => {
-    if (dynamicTurns.length === 0) {
-      // No live conversation turns are available yet; surface an empty resume state.
-      setStage('resume');
-      return;
-    }
     setStage('interview');
     setTimeRemaining(900);
     setIsTimerRunning(true);
-    setTurnIndex(0);
-    setAiState('speaking');
-
-    try {
-      const res = await apiClient.post<{ sessionId: string }>('/resume-builder/sessions', {
-        targetRole,
-        experienceLevel,
-      });
-      if (res?.sessionId) {
-        setSessionId(res.sessionId);
-      }
-    } catch (err) {
-      console.error('Failed to create resume builder session:', err);
-    }
-
-    setTimeout(() => {
-      setAiState('listening');
-    }, 3000);
+    startCall();
   };
 
   const handleEndCall = async () => {
     setIsTimerRunning(false);
-    setStage('resume');
-    if (sessionId) {
-      try {
-        await apiClient.post(`/resume-builder/${sessionId}/end`, {
-          transcript: [],
-        });
-      } catch (err) {
-        console.error('Failed to end resume builder session:', err);
-      }
-    }
+    endCall();
   };
 
   const handleCopyResumeText = () => {
@@ -162,23 +293,68 @@ export default function AIResumeBuilderPage() {
           camActive={camActive}
           setCamActive={setCamActive}
           micActive={micActive}
-          setMicActive={setMicActive}
+          setMicActive={toggleMic}
           candidateSpeechText={candidateSpeechText}
+          realtimeInsight={realtimeInsight}
+          voiceError={voiceError}
+          onSubmitResponse={submitResponse}
           onEndCall={handleEndCall}
         />
       )}
 
       {stage === 'resume' && (
-        <ResumeStage
-          resumeData={resumeData}
-          selectedTemplate={selectedTemplate}
-          setSelectedTemplate={setSelectedTemplate}
-          copiedText={copiedText}
-          onCopyResumeText={handleCopyResumeText}
-          onRestart={() => setStage('setup')}
-        />
+        <>
+          {resumeStatus === 'generating' && (
+            <div className="flex-1 flex flex-col items-center justify-center space-y-6 min-h-[500px]">
+              <div className="relative flex items-center justify-center">
+                <Loader2 className="h-16 w-16 text-orange-500 animate-spin" />
+                <Sparkles className="absolute h-6 w-6 text-amber-400 animate-pulse" />
+              </div>
+              <div className="text-center space-y-2 max-w-md">
+                <h3 className="text-lg font-extrabold text-slate-900 dark:text-slate-100 font-display">
+                  AI Resumé Generation in Progress
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                  NextRound is processing your voice transcript, quantifying impact metrics, and compiling an ATS-optimized ReportLab PDF. This will take a moment...
+                </p>
+              </div>
+            </div>
+          )}
+
+          {resumeStatus === 'error' && (
+            <div className="flex-1 flex flex-col items-center justify-center space-y-4 min-h-[500px]">
+              <AlertCircle className="h-14 w-14 text-rose-500" />
+              <div className="text-center space-y-1">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
+                  Generation Failed
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                  We encountered an error generating your resume from the interview. Please try again.
+                </p>
+              </div>
+              <button
+                onClick={() => setStage('setup')}
+                className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-all"
+              >
+                Restart Session
+              </button>
+            </div>
+          )}
+
+          {resumeStatus === 'completed' && (
+            <ResumeStage
+              resumeData={resumeData}
+              selectedTemplate={selectedTemplate}
+              setSelectedTemplate={setSelectedTemplate}
+              copiedText={copiedText}
+              onCopyResumeText={handleCopyResumeText}
+              onRestart={() => setStage('setup')}
+            />
+          )}
+        </>
       )}
     </div>
   );
 }
+
 
