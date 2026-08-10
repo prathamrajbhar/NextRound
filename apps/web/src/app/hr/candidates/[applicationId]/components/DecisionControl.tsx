@@ -24,6 +24,7 @@ export default function DecisionControl({
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [proctorReviewed, setProctorReviewed] = useState(false);
 
   const handleSaveDecision = async () => {
     setLoading(true);
@@ -86,11 +87,25 @@ export default function DecisionControl({
           />
         </div>
 
+        <div className="py-1">
+          <label className="flex items-start gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={proctorReviewed}
+              onChange={(e) => setProctorReviewed(e.target.checked)}
+              className="mt-0.5 rounded border-slate-350 dark:border-slate-700 bg-slate-200/50 dark:bg-slate-800 text-purple-600 h-4 w-4 cursor-pointer flex-shrink-0"
+            />
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-extrabold leading-relaxed">
+              I verify that I have reviewed the Proctoring and Integrity Report before submitting this decision.
+            </span>
+          </label>
+        </div>
+
         <button
           type="button"
-          disabled={loading}
+          disabled={loading || !proctorReviewed}
           onClick={handleSaveDecision}
-          className="w-full rounded-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold py-2.5 text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50"
+          className="w-full rounded-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white font-bold py-2.5 text-xs shadow-sm transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {loading ? 'Saving Parameters...' : 'Save Decision parameters'}
         </button>
@@ -105,15 +120,17 @@ export default function DecisionControl({
           <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 space-y-2">
             <button
               type="button"
+              disabled={!proctorReviewed}
               onClick={() => alert(`POST /evaluations/${appId}/decision/approve successful`)}
-              className="w-full rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 text-xs shadow transition-all cursor-pointer"
+              className="w-full rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 text-xs shadow transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Approve Offer
             </button>
             <button
               type="button"
+              disabled={!proctorReviewed}
               onClick={() => alert(`Decision overridden for application ${appId}`)}
-              className="w-full rounded-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold py-2.5 text-xs shadow-sm transition-all cursor-pointer glass-panel"
+              className="w-full rounded-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold py-2.5 text-xs shadow-sm transition-all cursor-pointer glass-panel disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Override Decision
             </button>
