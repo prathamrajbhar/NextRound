@@ -6,13 +6,13 @@
 - **Documentation**: Full specs in `docs/` — `prd.md` (product), `architecture.md` (system), `features.md` (feature specs + agent triggers), `api.md` (all REST endpoints), `screens.md` (all screens + components), `schema.md` (Prisma schema), `agents.md` (per-agent LangGraph specs).
 
 ## Stack (LOCKED — do not substitute)
-- **Frontend**: Next.js 16.2.11 (App Router), React 19.2.8, TypeScript 6.0, Tailwind CSS 4.3.3, Lucide React 1.23, WebRTC, MediaPipe (client-side CV)
-- **Backend API**: Express.js 5.2.1, TypeScript 6.0, Zod 4.4.3, Prisma ORM 7.9.0, PostgreSQL 16 + pgvector, Custom JWT
-- **AI Service**: Python 3.13, FastAPI 0.139.2, Uvicorn 0.50, LangGraph, Gemini API (`google-genai` SDK v2.10), Groq API v1.5 (Whisper-large-v3 STT), Piper/Coqui TTS
-- **Infra & Queues**: Turborepo 2.10, BullMQ 5.80.9 + Redis 8, Nodemailer 8, Native File Storage
+- **Frontend**: Next.js 16.3.0 (App Router), React 19.2.8, TypeScript 7.0.2 native (via `@typescript/native` alias; `typescript` = 6.0.2 API shim for JS-API tooling), Tailwind CSS 4.3.3, Lucide React 1.31, WebRTC, MediaPipe (client-side CV)
+- **Backend API**: Express.js 5.2.1, TypeScript 7.0.2, Zod 4.4.3, Prisma ORM 7.9.1, PostgreSQL 16 + pgvector, Custom JWT
+- **AI Service**: Python 3.13, FastAPI 0.141.1, Uvicorn 0.52.1, LangGraph 1.2.10, Gemini API (`google-genai` SDK 2.17.0), Groq API 1.6.0 (Whisper-large-v3 STT), Piper/Coqui TTS
+- **Infra & Queues**: Turborepo 2.10.9, BullMQ 6.0.9 + Redis 8, Nodemailer 9.0.5, Native File Storage
 
 ## Commands
-- `npm run dev` — Start web, api, and ai-service concurrently
+- `npm run dev` — Start web + api via turbo (ai-service has no package.json; run it separately with `cd apps/ai-service && .venv/bin/uvicorn main:app --reload`)
 - `npm run build` — Build all workspace apps and packages
 - `npm run lint` — Lint and typecheck monorepo
 - `npm run test` — Execute test suite
@@ -21,7 +21,7 @@
 ## Folder conventions
 - `apps/web`: Next.js 16 App Router frontend (Public, Candidate Portal, HR Portal, Voice Assessment Console)
 - `apps/api`: Express.js 5 REST API (`/api/v1`) with BullMQ job producers
-- `apps/ai-service`: Python FastAPI 0.139 + LangGraph agent orchestration
+- `apps/ai-service`: Python FastAPI 0.141 + LangGraph agent orchestration
 - `packages/database`: Prisma 7 schema and database client export
 - `packages/shared`: Shared TypeScript types, Zod schemas, API payload contracts
 - `packages/config`: Shared ESLint, TypeScript, and Tailwind configurations
