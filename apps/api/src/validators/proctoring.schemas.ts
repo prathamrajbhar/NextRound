@@ -1,0 +1,27 @@
+import { z } from 'zod';
+
+export const CreateProctoringSessionSchema = z.object({
+  id: z.string().uuid('Session ID must be a valid UUID'),
+  candidate_id: z.string().uuid('Candidate ID must be a valid UUID'),
+  session_type: z.enum(['aptitude', 'coding', 'video', 'interview']),
+  assessment_id: z.string().uuid().nullable().optional(),
+  application_id: z.string().uuid().nullable().optional(),
+  mock_session_id: z.string().uuid().nullable().optional(),
+  policy_version: z.string().default('assessment-v1'),
+  consent_version: z.string().default('v1'),
+});
+
+export const ProctoringEventSchema = z.object({
+  client_event_id: z.string().uuid('Event ID must be a valid UUID'),
+  client_sequence: z.number().int().nonnegative(),
+  kind: z.string().min(1, 'Event kind is required'),
+  severity: z.enum(['info', 'warning', 'low', 'medium', 'high']),
+  source: z.string().min(1, 'Event source is required'),
+  client_timestamp: z.string().datetime({ message: 'Must be ISO 8601 datetime format' }),
+  session_elapsed_ms: z.number().int().nonnegative(),
+  payload_json: z.record(z.any()).nullable().optional(),
+});
+
+export const BatchEventsSchema = z.object({
+  events: z.array(ProctoringEventSchema).nonempty('Events array cannot be empty'),
+});
