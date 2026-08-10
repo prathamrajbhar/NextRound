@@ -40,6 +40,8 @@ export type CodingProblemMinAggregateOutputType = {
   title: string | null
   description: string | null
   difficulty: string | null
+  category: string | null
+  is_active: boolean | null
   entry_point: string | null
   return_type: string | null
   seed: string | null
@@ -55,6 +57,8 @@ export type CodingProblemMaxAggregateOutputType = {
   title: string | null
   description: string | null
   difficulty: string | null
+  category: string | null
+  is_active: boolean | null
   entry_point: string | null
   return_type: string | null
   seed: string | null
@@ -70,6 +74,10 @@ export type CodingProblemCountAggregateOutputType = {
   title: number
   description: number
   difficulty: number
+  category: number
+  tags: number
+  is_active: number
+  starter_code: number
   entry_point: number
   param_schema: number
   return_type: number
@@ -99,6 +107,8 @@ export type CodingProblemMinAggregateInputType = {
   title?: true
   description?: true
   difficulty?: true
+  category?: true
+  is_active?: true
   entry_point?: true
   return_type?: true
   seed?: true
@@ -114,6 +124,8 @@ export type CodingProblemMaxAggregateInputType = {
   title?: true
   description?: true
   difficulty?: true
+  category?: true
+  is_active?: true
   entry_point?: true
   return_type?: true
   seed?: true
@@ -129,6 +141,10 @@ export type CodingProblemCountAggregateInputType = {
   title?: true
   description?: true
   difficulty?: true
+  category?: true
+  tags?: true
+  is_active?: true
+  starter_code?: true
   entry_point?: true
   param_schema?: true
   return_type?: true
@@ -235,6 +251,10 @@ export type CodingProblemGroupByOutputType = {
   title: string
   description: string
   difficulty: string
+  category: string
+  tags: runtime.JsonValue
+  is_active: boolean
+  starter_code: runtime.JsonValue
   entry_point: string
   param_schema: runtime.JsonValue
   return_type: string
@@ -277,6 +297,10 @@ export type CodingProblemWhereInput = {
   title?: Prisma.StringFilter<"CodingProblem"> | string
   description?: Prisma.StringFilter<"CodingProblem"> | string
   difficulty?: Prisma.StringFilter<"CodingProblem"> | string
+  category?: Prisma.StringFilter<"CodingProblem"> | string
+  tags?: Prisma.JsonFilter<"CodingProblem">
+  is_active?: Prisma.BoolFilter<"CodingProblem"> | boolean
+  starter_code?: Prisma.JsonFilter<"CodingProblem">
   entry_point?: Prisma.StringFilter<"CodingProblem"> | string
   param_schema?: Prisma.JsonFilter<"CodingProblem">
   return_type?: Prisma.StringFilter<"CodingProblem"> | string
@@ -297,6 +321,10 @@ export type CodingProblemOrderByWithRelationInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
+  category?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
+  is_active?: Prisma.SortOrder
+  starter_code?: Prisma.SortOrder
   entry_point?: Prisma.SortOrder
   param_schema?: Prisma.SortOrder
   return_type?: Prisma.SortOrder
@@ -320,6 +348,10 @@ export type CodingProblemWhereUniqueInput = Prisma.AtLeast<{
   title?: Prisma.StringFilter<"CodingProblem"> | string
   description?: Prisma.StringFilter<"CodingProblem"> | string
   difficulty?: Prisma.StringFilter<"CodingProblem"> | string
+  category?: Prisma.StringFilter<"CodingProblem"> | string
+  tags?: Prisma.JsonFilter<"CodingProblem">
+  is_active?: Prisma.BoolFilter<"CodingProblem"> | boolean
+  starter_code?: Prisma.JsonFilter<"CodingProblem">
   entry_point?: Prisma.StringFilter<"CodingProblem"> | string
   param_schema?: Prisma.JsonFilter<"CodingProblem">
   return_type?: Prisma.StringFilter<"CodingProblem"> | string
@@ -340,6 +372,10 @@ export type CodingProblemOrderByWithAggregationInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
+  category?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
+  is_active?: Prisma.SortOrder
+  starter_code?: Prisma.SortOrder
   entry_point?: Prisma.SortOrder
   param_schema?: Prisma.SortOrder
   return_type?: Prisma.SortOrder
@@ -367,6 +403,10 @@ export type CodingProblemScalarWhereWithAggregatesInput = {
   title?: Prisma.StringWithAggregatesFilter<"CodingProblem"> | string
   description?: Prisma.StringWithAggregatesFilter<"CodingProblem"> | string
   difficulty?: Prisma.StringWithAggregatesFilter<"CodingProblem"> | string
+  category?: Prisma.StringWithAggregatesFilter<"CodingProblem"> | string
+  tags?: Prisma.JsonWithAggregatesFilter<"CodingProblem">
+  is_active?: Prisma.BoolWithAggregatesFilter<"CodingProblem"> | boolean
+  starter_code?: Prisma.JsonWithAggregatesFilter<"CodingProblem">
   entry_point?: Prisma.StringWithAggregatesFilter<"CodingProblem"> | string
   param_schema?: Prisma.JsonWithAggregatesFilter<"CodingProblem">
   return_type?: Prisma.StringWithAggregatesFilter<"CodingProblem"> | string
@@ -386,6 +426,10 @@ export type CodingProblemCreateInput = {
   title: string
   description: string
   difficulty?: string
+  category?: string
+  tags?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  is_active?: boolean
+  starter_code?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   entry_point?: string
   param_schema?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   return_type?: string
@@ -406,6 +450,10 @@ export type CodingProblemUncheckedCreateInput = {
   title: string
   description: string
   difficulty?: string
+  category?: string
+  tags?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  is_active?: boolean
+  starter_code?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   entry_point?: string
   param_schema?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   return_type?: string
@@ -426,6 +474,10 @@ export type CodingProblemUpdateInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   difficulty?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  starter_code?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   entry_point?: Prisma.StringFieldUpdateOperationsInput | string
   param_schema?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   return_type?: Prisma.StringFieldUpdateOperationsInput | string
@@ -446,6 +498,10 @@ export type CodingProblemUncheckedUpdateInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   difficulty?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  starter_code?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   entry_point?: Prisma.StringFieldUpdateOperationsInput | string
   param_schema?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   return_type?: Prisma.StringFieldUpdateOperationsInput | string
@@ -466,6 +522,10 @@ export type CodingProblemCreateManyInput = {
   title: string
   description: string
   difficulty?: string
+  category?: string
+  tags?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  is_active?: boolean
+  starter_code?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   entry_point?: string
   param_schema?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   return_type?: string
@@ -485,6 +545,10 @@ export type CodingProblemUpdateManyMutationInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   difficulty?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  starter_code?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   entry_point?: Prisma.StringFieldUpdateOperationsInput | string
   param_schema?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   return_type?: Prisma.StringFieldUpdateOperationsInput | string
@@ -504,6 +568,10 @@ export type CodingProblemUncheckedUpdateManyInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   difficulty?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  starter_code?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   entry_point?: Prisma.StringFieldUpdateOperationsInput | string
   param_schema?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   return_type?: Prisma.StringFieldUpdateOperationsInput | string
@@ -523,6 +591,10 @@ export type CodingProblemCountOrderByAggregateInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
+  category?: Prisma.SortOrder
+  tags?: Prisma.SortOrder
+  is_active?: Prisma.SortOrder
+  starter_code?: Prisma.SortOrder
   entry_point?: Prisma.SortOrder
   param_schema?: Prisma.SortOrder
   return_type?: Prisma.SortOrder
@@ -546,6 +618,8 @@ export type CodingProblemMaxOrderByAggregateInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
+  category?: Prisma.SortOrder
+  is_active?: Prisma.SortOrder
   entry_point?: Prisma.SortOrder
   return_type?: Prisma.SortOrder
   seed?: Prisma.SortOrder
@@ -561,6 +635,8 @@ export type CodingProblemMinOrderByAggregateInput = {
   title?: Prisma.SortOrder
   description?: Prisma.SortOrder
   difficulty?: Prisma.SortOrder
+  category?: Prisma.SortOrder
+  is_active?: Prisma.SortOrder
   entry_point?: Prisma.SortOrder
   return_type?: Prisma.SortOrder
   seed?: Prisma.SortOrder
@@ -601,6 +677,10 @@ export type CodingProblemCreateWithoutSubmissionsInput = {
   title: string
   description: string
   difficulty?: string
+  category?: string
+  tags?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  is_active?: boolean
+  starter_code?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   entry_point?: string
   param_schema?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   return_type?: string
@@ -620,6 +700,10 @@ export type CodingProblemUncheckedCreateWithoutSubmissionsInput = {
   title: string
   description: string
   difficulty?: string
+  category?: string
+  tags?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  is_active?: boolean
+  starter_code?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   entry_point?: string
   param_schema?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   return_type?: string
@@ -655,6 +739,10 @@ export type CodingProblemUpdateWithoutSubmissionsInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   difficulty?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  starter_code?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   entry_point?: Prisma.StringFieldUpdateOperationsInput | string
   param_schema?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   return_type?: Prisma.StringFieldUpdateOperationsInput | string
@@ -674,6 +762,10 @@ export type CodingProblemUncheckedUpdateWithoutSubmissionsInput = {
   title?: Prisma.StringFieldUpdateOperationsInput | string
   description?: Prisma.StringFieldUpdateOperationsInput | string
   difficulty?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  tags?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  is_active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  starter_code?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   entry_point?: Prisma.StringFieldUpdateOperationsInput | string
   param_schema?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   return_type?: Prisma.StringFieldUpdateOperationsInput | string
@@ -724,6 +816,10 @@ export type CodingProblemSelect<ExtArgs extends runtime.Types.Extensions.Interna
   title?: boolean
   description?: boolean
   difficulty?: boolean
+  category?: boolean
+  tags?: boolean
+  is_active?: boolean
+  starter_code?: boolean
   entry_point?: boolean
   param_schema?: boolean
   return_type?: boolean
@@ -745,6 +841,10 @@ export type CodingProblemSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   title?: boolean
   description?: boolean
   difficulty?: boolean
+  category?: boolean
+  tags?: boolean
+  is_active?: boolean
+  starter_code?: boolean
   entry_point?: boolean
   param_schema?: boolean
   return_type?: boolean
@@ -764,6 +864,10 @@ export type CodingProblemSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   title?: boolean
   description?: boolean
   difficulty?: boolean
+  category?: boolean
+  tags?: boolean
+  is_active?: boolean
+  starter_code?: boolean
   entry_point?: boolean
   param_schema?: boolean
   return_type?: boolean
@@ -783,6 +887,10 @@ export type CodingProblemSelectScalar = {
   title?: boolean
   description?: boolean
   difficulty?: boolean
+  category?: boolean
+  tags?: boolean
+  is_active?: boolean
+  starter_code?: boolean
   entry_point?: boolean
   param_schema?: boolean
   return_type?: boolean
@@ -796,7 +904,7 @@ export type CodingProblemSelectScalar = {
   updated_at?: boolean
 }
 
-export type CodingProblemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "title" | "description" | "difficulty" | "entry_point" | "param_schema" | "return_type" | "public_tests" | "hidden_tests" | "reference_solution" | "seed" | "checksum" | "version" | "created_at" | "updated_at", ExtArgs["result"]["codingProblem"]>
+export type CodingProblemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "slug" | "title" | "description" | "difficulty" | "category" | "tags" | "is_active" | "starter_code" | "entry_point" | "param_schema" | "return_type" | "public_tests" | "hidden_tests" | "reference_solution" | "seed" | "checksum" | "version" | "created_at" | "updated_at", ExtArgs["result"]["codingProblem"]>
 export type CodingProblemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   submissions?: boolean | Prisma.CodingProblem$submissionsArgs<ExtArgs>
   _count?: boolean | Prisma.CodingProblemCountOutputTypeDefaultArgs<ExtArgs>
@@ -815,6 +923,10 @@ export type $CodingProblemPayload<ExtArgs extends runtime.Types.Extensions.Inter
     title: string
     description: string
     difficulty: string
+    category: string
+    tags: runtime.JsonValue
+    is_active: boolean
+    starter_code: runtime.JsonValue
     entry_point: string
     param_schema: runtime.JsonValue
     return_type: string
@@ -1255,6 +1367,10 @@ export interface CodingProblemFieldRefs {
   readonly title: Prisma.FieldRef<"CodingProblem", 'String'>
   readonly description: Prisma.FieldRef<"CodingProblem", 'String'>
   readonly difficulty: Prisma.FieldRef<"CodingProblem", 'String'>
+  readonly category: Prisma.FieldRef<"CodingProblem", 'String'>
+  readonly tags: Prisma.FieldRef<"CodingProblem", 'Json'>
+  readonly is_active: Prisma.FieldRef<"CodingProblem", 'Boolean'>
+  readonly starter_code: Prisma.FieldRef<"CodingProblem", 'Json'>
   readonly entry_point: Prisma.FieldRef<"CodingProblem", 'String'>
   readonly param_schema: Prisma.FieldRef<"CodingProblem", 'Json'>
   readonly return_type: Prisma.FieldRef<"CodingProblem", 'String'>

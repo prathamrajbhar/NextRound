@@ -1,24 +1,26 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { generateAiCodingProblem } from '../../services/ai-coding-generator.service';
+import { selectCodingProblem } from '../../services/question-bank.service';
 import { enqueueSubmissionExecution } from '../../services/submission-queue.service';
 import { authenticate } from '../../middleware/auth';
 import { CodingExecutionRequestSchema } from '@nextround/shared';
 
 export const codingRouter = Router();
 
-// GET /api/v1/coding/problem - Generate & persist immutable DSA coding problem
+// GET /api/v1/coding/problem - Serve a random DB coding problem (mock/standalone practice)
 codingRouter.get('/problem', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const role = (req.query.role as string) || 'Software Engineer';
-    const company = (req.query.company as string) || 'Tech Enterprise';
-    const difficulty = (req.query.difficulty as string) || 'medium';
+    const difficulty = (req.query.difficulty as 'easy' | 'medium' | 'hard') || undefined;
+    const category   = (req.query.category as string) || undefined;
 
-    const problem = await generateAiCodingProblem(role, `Target Company: ${company}`, difficulty);
+    const problem = await selectCodingProblem({ difficulty, category });
 
-    return res.json({
-      success: true,
-      data: { problem },
-    });
+    // Strip hidden tests before sending to client
+    const sanitized = {
+      ...problem,
+      testCases: problem.testCases.filter(tc => !tc.hidden),
+    };
+
+    return res.json({ success: true, data: { problem: sanitized } });
   } catch (err) {
     return next(err);
   }

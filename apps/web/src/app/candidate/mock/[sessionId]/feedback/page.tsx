@@ -42,18 +42,34 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let pollTimer: ReturnType<typeof setTimeout> | null = null;
+    let attempts = 0;
+    const MAX_ATTEMPTS = 20; // poll up to ~60s
+
     async function fetchFeedback() {
       try {
         setLoading(true);
         const res = await apiClient.get<FeedbackData>(`/mock/sessions/${sessionId}/feedback`);
-        if (res) setFeedbackData(res);
-      } catch (err) {
-        console.error('Failed to load feedback:', err);
-      } finally {
-        setLoading(false);
+        if (res) {
+          setFeedbackData(res);
+          setLoading(false);
+          return; // done
+        }
+      } catch {
+        // 404 means feedback not ready yet — keep polling
+      }
+
+      attempts++;
+      if (attempts < MAX_ATTEMPTS) {
+        setLoading(false); // show "calculating" state while polling
+        pollTimer = setTimeout(fetchFeedback, 3000);
+      } else {
+        setLoading(false); // give up after MAX_ATTEMPTS
       }
     }
+
     fetchFeedback();
+    return () => { if (pollTimer) clearTimeout(pollTimer); };
   }, [sessionId]);
 
   const targetCompany = feedbackData?.targetCompany || 'Practice Mode';
@@ -67,16 +83,24 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
   const growthAreas = feedbackData?.areasToImprove || [];
 
   if (loading) {
-    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading interview feedback...</div>;
+    return (
+      <div className="p-8 text-center space-y-3">
+        <div className="h-10 w-10 mx-auto rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
+        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Loading interview feedback...</p>
+      </div>
+    );
   }
 
   if (!feedbackData) {
     return (
-      <div className="p-8 text-center space-y-4">
-        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Feedback Unavailable</h2>
-        <p className="text-xs text-slate-500">Feedback for this session is being calculated or session was not completed.</p>
-        <Link href="/candidate/mock/new" className="inline-block text-xs font-bold text-emerald-600 hover:underline">
-          Start New Practice Mock
+      <div className="p-8 text-center space-y-4 animate-in fade-in duration-300">
+        <div className="h-12 w-12 mx-auto rounded-full border-2 border-brand-400 border-t-transparent animate-spin opacity-60" />
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Calculating Your Results</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+          Your session is being evaluated. This usually takes under a minute. The page will update automatically.
+        </p>
+        <Link href="/candidate/mock/new" className="inline-block text-xs font-bold text-brand-600 dark:text-orange-400 hover:underline mt-2">
+          Start a New Practice Session
         </Link>
       </div>
     );

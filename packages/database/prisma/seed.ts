@@ -728,10 +728,20 @@ function buildJobStages(): string[] {
 
 function buildAssessmentConfig(): unknown {
   // Mirrors the edit page's assessmentConfig shape; codingProblemId references packages/shared/data/coding-problems.json
+  const mcqCount = randInt(15, 25);
+  const base = Math.floor(mcqCount / 4);
+  const remainder = mcqCount % 4;
+  
   return {
-    mcqCount: randInt(5, 10),
+    mcqCount,
     codingProblemId: pick(['virtualized-list', 'rate-limiter', 'lru-cache', 'two-sum', 'valid-parentheses']),
     passingScore: randInt(70, 85),
+    mcqDistribution: {
+      'Quantitative Aptitude': base + (remainder > 0 ? 1 : 0),
+      'Logical Reasoning': base + (remainder > 1 ? 1 : 0),
+      'Verbal Ability': base + (remainder > 2 ? 1 : 0),
+      'Data Interpretation': base,
+    },
   };
 }
 
@@ -1495,6 +1505,10 @@ async function main(): Promise<void> {
   await prisma.candidateProfile.deleteMany({});
   await prisma.user.deleteMany({});
   await prisma.organization.deleteMany({});
+  await prisma.aptitudeQuestion.deleteMany({});
+  await prisma.codingProblem.deleteMany({});
+  await prisma.aptitudeQuestion.deleteMany({});
+  await prisma.codingProblem.deleteMany({});
 
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
 
@@ -2104,6 +2118,255 @@ async function main(): Promise<void> {
     });
   }
   await prisma.agentLog.createMany({ data: agentLogRows as never });
+
+  /* ---------- Question Bank ---------- */
+  console.log('📚 Seeding question bank…');
+
+  // ── Aptitude Questions ──────────────────────────────────────────────────
+  const APTITUDE_SEED = [
+    // Quantitative Aptitude (6)
+    { category: 'Quantitative Aptitude', difficulty: 'easy',   question: 'A train travels 360 km in 4 hours. What is its average speed in km/h?', options: ['80', '90', '100', '120'], correct_index: 1, explanation: '360 / 4 = 90 km/h', tags: ['speed', 'distance'] },
+    { category: 'Quantitative Aptitude', difficulty: 'easy',   question: 'If 15% of a number is 45, what is the number?', options: ['200', '250', '300', '350'], correct_index: 2, explanation: 'x × 0.15 = 45 → x = 300', tags: ['percentage'] },
+    { category: 'Quantitative Aptitude', difficulty: 'medium', question: 'A sum of money doubles itself in 8 years at simple interest. What is the annual rate of interest?', options: ['10%', '12.5%', '15%', '8%'], correct_index: 1, explanation: 'SI rate = 100/T = 100/8 = 12.5%', tags: ['simple interest'] },
+    { category: 'Quantitative Aptitude', difficulty: 'medium', question: 'Two pipes A and B can fill a tank in 12 and 18 hours respectively. How long will they take together?', options: ['6.5 hrs', '7.2 hrs', '8 hrs', '9 hrs'], correct_index: 1, explanation: '1/12 + 1/18 = 5/36 → 36/5 = 7.2 hrs', tags: ['pipes', 'work'] },
+    { category: 'Quantitative Aptitude', difficulty: 'hard',   question: 'A merchant marks goods 40% above cost price and allows a 25% discount. What is the profit percent?', options: ['5%', '10%', '15%', '20%'], correct_index: 0, explanation: 'SP = 1.4 × 0.75 × CP = 1.05 CP → 5% profit', tags: ['profit', 'discount'] },
+    { category: 'Quantitative Aptitude', difficulty: 'hard',   question: 'In how many ways can 5 boys and 3 girls be seated in a row so that no two girls sit together?', options: ['14400', '21600', '28800', '36000'], correct_index: 0, explanation: 'Arrange 5 boys (5!), place 3 girls in 6 gaps: P(6,3) = 120. Total = 120×120 = 14400', tags: ['permutation', 'combination'] },
+
+    // Logical Reasoning (6)
+    { category: 'Logical Reasoning', difficulty: 'easy',   question: 'Find the next number in the series: 2, 6, 12, 20, 30, ?', options: ['40', '42', '44', '46'], correct_index: 1, explanation: 'n(n+1): 1×2, 2×3, 3×4, 4×5, 5×6, 6×7 = 42', tags: ['series', 'pattern'] },
+    { category: 'Logical Reasoning', difficulty: 'easy',   question: 'All managers are leaders. Some leaders are visionaries. Which conclusion is definitely true?', options: ['All managers are visionaries', 'Some managers are visionaries', 'All visionaries are managers', 'Some managers are leaders'], correct_index: 3, explanation: 'Since all managers are leaders, some managers are leaders is definitely true', tags: ['syllogism'] },
+    { category: 'Logical Reasoning', difficulty: 'medium', question: 'A clock shows 3:25. What is the angle between the hour and minute hands?', options: ['42.5°', '47.5°', '52.5°', '57.5°'], correct_index: 2, explanation: 'Hour hand: 97.5°, Minute hand: 150°. Difference = 52.5°', tags: ['clock', 'angles'] },
+    { category: 'Logical Reasoning', difficulty: 'medium', question: 'If COMPUTER is coded as RFUVQNPC, what does PRINTER get coded as?', options: ['QSJOUFS', 'SFMJOUF', 'QSJOUFZ', 'QSJOUFE'], correct_index: 0, explanation: 'Each letter is shifted +1 in reverse alphabet order. P→Q, R→S, I→J, N→O, T→U, E→F, R→S = QSJOUFS', tags: ['coding', 'cipher'] },
+    { category: 'Logical Reasoning', difficulty: 'hard',   question: '5 people sit in a circle. A is between B and E. D is not next to A. C is between D and B. Who sits opposite to A?', options: ['B', 'C', 'D', 'E'], correct_index: 2, explanation: 'Circular arrangement: B-A-E-...; C between D and B gives D-C-B-A-E. Opposite A is D.', tags: ['arrangement', 'circular'] },
+    { category: 'Logical Reasoning', difficulty: 'hard',   question: 'A man walks 10 km north, turns right and walks 5 km, turns right and walks 10 km. How far is he from the start?', options: ['5 km', '10 km', '15 km', '25 km'], correct_index: 0, explanation: 'Net displacement: 5 km east (the two north/south legs cancel)', tags: ['direction', 'distance'] },
+
+    // Verbal Ability (6)
+    { category: 'Verbal Ability', difficulty: 'easy',   question: 'Choose the word most similar in meaning to BENEVOLENT.', options: ['Hostile', 'Charitable', 'Indifferent', 'Selfish'], correct_index: 1, explanation: 'Benevolent means well-meaning and kindly — closest to charitable', tags: ['vocabulary', 'synonyms'] },
+    { category: 'Verbal Ability', difficulty: 'easy',   question: 'Identify the correctly spelled word.', options: ['Accomodate', 'Accommodate', 'Acommodate', 'Acomodate'], correct_index: 1, explanation: 'Accommodate has two c-s and two m-s', tags: ['spelling'] },
+    { category: 'Verbal Ability', difficulty: 'medium', question: 'The CEO ______ the report before the board meeting. Choose the correct verb form.', options: ['review', 'reviewing', 'reviewed', 'reviews'], correct_index: 2, explanation: 'Past tense required for a completed action before a stated event', tags: ['grammar', 'tense'] },
+    { category: 'Verbal Ability', difficulty: 'medium', question: 'Select the best antonym for VERBOSE.', options: ['Wordy', 'Concise', 'Fluent', 'Eloquent'], correct_index: 1, explanation: 'Verbose = using more words than needed; antonym is concise', tags: ['vocabulary', 'antonyms'] },
+    { category: 'Verbal Ability', difficulty: 'hard',   question: 'Read: "The report was neither comprehensive nor accurate." Which inference is correct?', options: ['The report was partially accurate', 'The report was both incomplete and inaccurate', 'The report was accurate but brief', 'The report was accurate'], correct_index: 1, explanation: '"Neither A nor B" means both A and B are false', tags: ['reading comprehension', 'inference'] },
+    { category: 'Verbal Ability', difficulty: 'hard',   question: 'Fill the blank: "The scientist discovery was so ______ that it overturned decades of accepted theory." Best fit?', options: ['mundane', 'predictable', 'seminal', 'incremental'], correct_index: 2, explanation: 'Seminal means strongly influencing future development; fits a groundbreaking discovery', tags: ['vocabulary', 'context'] },
+
+    // Data Interpretation (6)
+    { category: 'Data Interpretation', difficulty: 'easy',   question: 'A bar chart shows sales: Q1=200, Q2=250, Q3=300, Q4=350. What is the average quarterly sales?', options: ['250', '275', '300', '325'], correct_index: 1, explanation: '(200+250+300+350)/4 = 1100/4 = 275', tags: ['bar chart', 'average'] },
+    { category: 'Data Interpretation', difficulty: 'easy',   question: 'A pie chart shows 25% for Technology, 30% for Finance, 20% for Healthcare, 25% for Retail. If total is 400 employees, how many are in Finance?', options: ['80', '100', '120', '125'], correct_index: 2, explanation: '30% of 400 = 120', tags: ['pie chart', 'percentage'] },
+    { category: 'Data Interpretation', difficulty: 'medium', question: 'A table shows revenue growth: Year1=100, Year2=120, Year3=156, Year4=218. What is the CAGR from Year1 to Year4 (approx)?', options: ['20%', '22%', '30%', '28%'], correct_index: 2, explanation: '(218/100)^(1/3) - 1 ≈ 1.298 - 1 = 29.8% ≈ 30%', tags: ['CAGR', 'growth'] },
+    { category: 'Data Interpretation', difficulty: 'medium', question: 'Data: Product A sold 500 units at ₹200 each; Product B sold 300 units at ₹400 each. What % of total revenue comes from Product B?', options: ['40%', '50%', '54.5%', '60%'], correct_index: 2, explanation: 'Revenue A=100000, B=120000, Total=220000. B%=120000/220000≈54.5%', tags: ['revenue', 'percentage'] },
+    { category: 'Data Interpretation', difficulty: 'hard',   question: 'A line graph shows website traffic (thousands): Jan=40, Feb=52, Mar=46, Apr=61, May=58, Jun=70. What is the month-over-month growth rate in June?', options: ['15.5%', '17.2%', '20.7%', '13.8%'], correct_index: 2, explanation: '(70-58)/58 × 100 = 12/58 × 100 ≈ 20.7%', tags: ['line graph', 'growth rate'] },
+    { category: 'Data Interpretation', difficulty: 'hard',   question: 'Scatter plot shows correlation between ads spend (₹L) and sales (₹L): points at (2,8),(4,14),(6,20),(8,26),(10,32). What is the expected sales at ads spend of ₹12L?', options: ['₹36L', '₹38L', '₹40L', '₹42L'], correct_index: 1, explanation: 'Pattern: sales = 3×spend + 2. At 12: 3×12+2 = 38', tags: ['scatter plot', 'linear regression'] },
+  ];
+
+  await prisma.aptitudeQuestion.createMany({
+    data: APTITUDE_SEED.map(q => ({
+      category: q.category,
+      difficulty: q.difficulty,
+      question: q.question,
+      options: q.options,
+      correct_index: q.correct_index,
+      explanation: q.explanation,
+      tags: q.tags,
+      is_active: true,
+    })),
+    skipDuplicates: true,
+  });
+  log(`Aptitude questions: ${APTITUDE_SEED.length}`);
+
+  // ── Coding Problems ─────────────────────────────────────────────────────
+  const CODING_SEED = [
+    {
+      slug: 'two-sum',
+      title: 'Two Sum',
+      category: 'Arrays',
+      difficulty: 'easy',
+      tags: ['array', 'hash-map'],
+      description: `Given an array of integers \`nums\` and an integer \`target\`, return the **indices** of the two numbers that add up to \`target\`.
+
+You may assume each input has exactly one solution, and you may not use the same element twice.
+
+**Example:**
+\`\`\`
+Input:  nums = [2, 7, 11, 15], target = 9
+Output: [0, 1]
+\`\`\`
+
+**Constraints:**
+- 2 ≤ nums.length ≤ 10⁴
+- -10⁹ ≤ nums[i] ≤ 10⁹
+- Only one valid answer exists`,
+      starter_code: {
+        python: 'def two_sum(nums: list[int], target: int) -> list[int]:\n    # Write your solution here\n    pass\n',
+        javascript: 'function twoSum(nums, target) {\n  // Write your solution here\n}\n',
+        typescript: 'function twoSum(nums: number[], target: number): number[] {\n  // Write your solution here\n}\n',
+        java: 'class Solution {\n  public int[] twoSum(int[] nums, int target) {\n    // Write your solution here\n    return new int[]{};\n  }\n}\n',
+        cpp: '#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n  vector<int> twoSum(vector<int>& nums, int target) {\n    // Write your solution here\n    return {};\n  }\n};\n',
+      },
+      entry_point: 'two_sum',
+      public_tests: [
+        { input: [[2, 7, 11, 15], 9],  expected: [0, 1], description: 'Basic case' },
+        { input: [[3, 2, 4], 6],        expected: [1, 2], description: 'Non-adjacent' },
+        { input: [[3, 3], 6],           expected: [0, 1], description: 'Duplicate values' },
+      ],
+      hidden_tests: [
+        { input: [[-1, -2, -3, -4, -5], -8], expected: [2, 4], description: 'Negative numbers' },
+        { input: [[1000000000, -999999999, 0, 1], 1], expected: [2, 3], description: 'Large values' },
+        { input: [[0, 4, 3, 0], 0],             expected: [0, 3], description: 'Zero target' },
+      ],
+      reference_solution: { python: 'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen: return [seen[target-n], i]\n        seen[n] = i\n' },
+    },
+    {
+      slug: 'valid-parentheses',
+      title: 'Valid Parentheses',
+      category: 'Stacks',
+      difficulty: 'easy',
+      tags: ['stack', 'string'],
+      description: `Given a string \`s\` containing only the characters \`(\`, \`)\`, \`{\`, \`}\`, \`[\` and \`]\`, determine if the input string is **valid**.
+
+A string is valid if:
+1. Open brackets must be closed by the same type of brackets.
+2. Open brackets must be closed in the correct order.
+
+**Examples:**
+\`\`\`
+Input: s = "()"      Output: true
+Input: s = "()[]{}"  Output: true
+Input: s = "(]"      Output: false
+Input: s = "([)]"    Output: false
+\`\`\`
+
+**Constraints:** 1 ≤ s.length ≤ 10⁴`,
+      starter_code: {
+        python: 'def is_valid(s: str) -> bool:\n    # Write your solution here\n    pass\n',
+        javascript: 'function isValid(s) {\n  // Write your solution here\n}\n',
+        typescript: 'function isValid(s: string): boolean {\n  // Write your solution here\n}\n',
+        java: 'class Solution {\n  public boolean isValid(String s) {\n    // Write your solution here\n    return false;\n  }\n}\n',
+        cpp: 'class Solution {\npublic:\n  bool isValid(string s) {\n    // Write your solution here\n    return false;\n  }\n};\n',
+      },
+      entry_point: 'is_valid',
+      public_tests: [
+        { input: ['()'],     expected: true,  description: 'Simple pair' },
+        { input: ['()[]{}'], expected: true,  description: 'Multiple types' },
+        { input: ['(]'],     expected: false, description: 'Mismatched' },
+      ],
+      hidden_tests: [
+        { input: ['([)]'],   expected: false, description: 'Interleaved brackets' },
+        { input: ['{[]}'],   expected: true,  description: 'Nested' },
+        { input: [''],       expected: true,  description: 'Empty string' },
+        { input: [']'],      expected: false, description: 'Single closing' },
+        { input: ['(((((('], expected: false, description: 'Only opening' },
+      ],
+      reference_solution: { python: "def is_valid(s):\n    stack=[]\n    pairs={')':'(','}':'{',']':'['}\n    for c in s:\n        if c in pairs:\n            if not stack or stack[-1]!=pairs[c]: return False\n            stack.pop()\n        else: stack.append(c)\n    return not stack\n" },
+    },
+    {
+      slug: 'reverse-linked-list',
+      title: 'Reverse a Linked List',
+      category: 'Linked Lists',
+      difficulty: 'medium',
+      tags: ['linked-list', 'recursion', 'iterative'],
+      description: `Given the head of a singly linked list, reverse the list and return the reversed list.
+
+The list is represented as an array of values for input/output purposes.
+
+**Examples:**
+\`\`\`
+Input:  head = [1, 2, 3, 4, 5]
+Output: [5, 4, 3, 2, 1]
+
+Input:  head = [1, 2]
+Output: [2, 1]
+\`\`\`
+
+**Constraints:**
+- 0 ≤ number of nodes ≤ 5000
+- -5000 ≤ Node.val ≤ 5000`,
+      starter_code: {
+        python: 'def reverse_list(head: list[int]) -> list[int]:\n    # The list is given as a Python list for simplicity\n    # Write your solution here\n    pass\n',
+        javascript: 'function reverseList(head) {\n  // head is an array representing the linked list\n  // Return the reversed array\n}\n',
+        typescript: 'function reverseList(head: number[]): number[] {\n  // head is an array representing the linked list\n  // Return the reversed array\n}\n',
+        java: 'class Solution {\n  public int[] reverseList(int[] head) {\n    // head is an array representing the linked list\n    return new int[]{};\n  }\n}\n',
+        cpp: '#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n  vector<int> reverseList(vector<int>& head) {\n    return {};\n  }\n};\n',
+      },
+      entry_point: 'reverse_list',
+      public_tests: [
+        { input: [[1, 2, 3, 4, 5]], expected: [5, 4, 3, 2, 1], description: 'Five elements' },
+        { input: [[1, 2]],          expected: [2, 1],           description: 'Two elements' },
+        { input: [[]],              expected: [],               description: 'Empty list' },
+      ],
+      hidden_tests: [
+        { input: [[1]],                       expected: [1],                       description: 'Single element' },
+        { input: [[1, 2, 3, 4, 5, 6, 7, 8]], expected: [8, 7, 6, 5, 4, 3, 2, 1], description: 'Eight elements' },
+        { input: [[-5, 0, 5]],               expected: [5, 0, -5],               description: 'Negative values' },
+      ],
+      reference_solution: { python: 'def reverse_list(head):\n    return head[::-1]\n' },
+    },
+    {
+      slug: 'max-subarray',
+      title: 'Maximum Subarray Sum',
+      category: 'Dynamic Programming',
+      difficulty: 'medium',
+      tags: ['array', 'dynamic-programming', 'kadane'],
+      description: `Given an integer array \`nums\`, find the **contiguous subarray** with the largest sum and return its sum.
+
+A subarray is a contiguous part of an array.
+
+**Examples:**
+\`\`\`
+Input:  nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]
+Output: 6   (subarray [4,-1,2,1])
+
+Input:  nums = [1]
+Output: 1
+
+Input:  nums = [5, 4, -1, 7, 8]
+Output: 23
+\`\`\`
+
+**Constraints:**
+- 1 ≤ nums.length ≤ 10⁵
+- -10⁴ ≤ nums[i] ≤ 10⁴`,
+      starter_code: {
+        python: 'def max_sub_array(nums: list[int]) -> int:\n    # Write your solution here\n    pass\n',
+        javascript: 'function maxSubArray(nums) {\n  // Write your solution here\n}\n',
+        typescript: 'function maxSubArray(nums: number[]): number {\n  // Write your solution here\n}\n',
+        java: 'class Solution {\n  public int maxSubArray(int[] nums) {\n    // Write your solution here\n    return 0;\n  }\n}\n',
+        cpp: 'class Solution {\npublic:\n  int maxSubArray(vector<int>& nums) {\n    // Write your solution here\n    return 0;\n  }\n};\n',
+      },
+      entry_point: 'max_sub_array',
+      public_tests: [
+        { input: [[-2, 1, -3, 4, -1, 2, 1, -5, 4]], expected: 6,  description: 'Mixed negatives' },
+        { input: [[1]],                               expected: 1,  description: 'Single element' },
+        { input: [[5, 4, -1, 7, 8]],                 expected: 23, description: 'Mostly positive' },
+      ],
+      hidden_tests: [
+        { input: [[-1]],                              expected: -1, description: 'All negative single' },
+        { input: [[-2, -3, -1, -5]],                  expected: -1, description: 'All negatives' },
+        { input: [[1, 2, 3, 4, 5]],                   expected: 15, description: 'All positives' },
+        { input: [[0, -3, 1, 1]],                     expected: 2,  description: 'Zero in array' },
+      ],
+      reference_solution: { python: 'def max_sub_array(nums):\n    best=cur=nums[0]\n    for n in nums[1:]:\n        cur=max(n,cur+n)\n        best=max(best,cur)\n    return best\n' },
+    },
+  ];
+
+  for (const p of CODING_SEED) {
+    await prisma.codingProblem.create({
+      data: {
+        slug: p.slug,
+        title: p.title,
+        category: p.category,
+        difficulty: p.difficulty,
+        tags: p.tags,
+        description: p.description,
+        starter_code: p.starter_code,
+        entry_point: p.entry_point,
+        public_tests: p.public_tests as never,
+        hidden_tests: p.hidden_tests as never,
+        reference_solution: p.reference_solution as never,
+        is_active: true,
+        version: 1,
+      },
+    });
+  }
+  log(`Coding problems: ${CODING_SEED.length}`);
 
   /* ---------- Summary ---------- */
   const seconds = ((Date.now() - startedAt) / 1000).toFixed(1);

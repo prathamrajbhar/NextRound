@@ -405,6 +405,7 @@ export const ModelName = {
   Evaluation: 'Evaluation',
   Interview: 'Interview',
   Assessment: 'Assessment',
+  AptitudeQuestion: 'AptitudeQuestion',
   CodingProblem: 'CodingProblem',
   CodingSubmission: 'CodingSubmission',
   GeneratedQuestionChunk: 'GeneratedQuestionChunk',
@@ -431,7 +432,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "videoSubmission" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark"
+    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "aptitudeQuestion" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "videoSubmission" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1024,6 +1025,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.AssessmentCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.AssessmentCountAggregateOutputType> | number
+        }
+      }
+    }
+    AptitudeQuestion: {
+      payload: Prisma.$AptitudeQuestionPayload<ExtArgs>
+      fields: Prisma.AptitudeQuestionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AptitudeQuestionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AptitudeQuestionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AptitudeQuestionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AptitudeQuestionPayload>
+        }
+        findFirst: {
+          args: Prisma.AptitudeQuestionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AptitudeQuestionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AptitudeQuestionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AptitudeQuestionPayload>
+        }
+        findMany: {
+          args: Prisma.AptitudeQuestionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AptitudeQuestionPayload>[]
+        }
+        create: {
+          args: Prisma.AptitudeQuestionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AptitudeQuestionPayload>
+        }
+        createMany: {
+          args: Prisma.AptitudeQuestionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AptitudeQuestionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AptitudeQuestionPayload>[]
+        }
+        delete: {
+          args: Prisma.AptitudeQuestionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AptitudeQuestionPayload>
+        }
+        update: {
+          args: Prisma.AptitudeQuestionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AptitudeQuestionPayload>
+        }
+        deleteMany: {
+          args: Prisma.AptitudeQuestionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AptitudeQuestionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AptitudeQuestionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AptitudeQuestionPayload>[]
+        }
+        upsert: {
+          args: Prisma.AptitudeQuestionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AptitudeQuestionPayload>
+        }
+        aggregate: {
+          args: Prisma.AptitudeQuestionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAptitudeQuestion>
+        }
+        groupBy: {
+          args: Prisma.AptitudeQuestionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AptitudeQuestionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AptitudeQuestionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AptitudeQuestionCountAggregateOutputType> | number
         }
       }
     }
@@ -2035,12 +2110,32 @@ export const AssessmentScalarFieldEnum = {
 export type AssessmentScalarFieldEnum = (typeof AssessmentScalarFieldEnum)[keyof typeof AssessmentScalarFieldEnum]
 
 
+export const AptitudeQuestionScalarFieldEnum = {
+  id: 'id',
+  category: 'category',
+  difficulty: 'difficulty',
+  question: 'question',
+  options: 'options',
+  correct_index: 'correct_index',
+  explanation: 'explanation',
+  tags: 'tags',
+  is_active: 'is_active',
+  created_at: 'created_at'
+} as const
+
+export type AptitudeQuestionScalarFieldEnum = (typeof AptitudeQuestionScalarFieldEnum)[keyof typeof AptitudeQuestionScalarFieldEnum]
+
+
 export const CodingProblemScalarFieldEnum = {
   id: 'id',
   slug: 'slug',
   title: 'title',
   description: 'description',
   difficulty: 'difficulty',
+  category: 'category',
+  tags: 'tags',
+  is_active: 'is_active',
+  starter_code: 'starter_code',
   entry_point: 'entry_point',
   param_schema: 'param_schema',
   return_type: 'return_type',
@@ -2683,6 +2778,7 @@ export type GlobalOmitConfig = {
   evaluation?: Prisma.EvaluationOmit
   interview?: Prisma.InterviewOmit
   assessment?: Prisma.AssessmentOmit
+  aptitudeQuestion?: Prisma.AptitudeQuestionOmit
   codingProblem?: Prisma.CodingProblemOmit
   codingSubmission?: Prisma.CodingSubmissionOmit
   generatedQuestionChunk?: Prisma.GeneratedQuestionChunkOmit

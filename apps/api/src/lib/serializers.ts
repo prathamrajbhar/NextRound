@@ -87,7 +87,17 @@ function defaultThresholds(): Rec {
 }
 
 function defaultAssessmentConfig(): Rec {
-  return { mcqCount: 5, codingProblemId: 'virtualized-list', passingScore: 80 };
+  return { 
+    mcqCount: 20, 
+    codingProblemId: 'virtualized-list', 
+    passingScore: 80,
+    mcqDistribution: {
+      'Quantitative Aptitude': 5,
+      'Logical Reasoning': 5,
+      'Verbal Ability': 5,
+      'Data Interpretation': 5,
+    }
+  };
 }
 
 const DEFAULT_STAGES = ['screening', 'assessment', 'voice_screen', 'decision'];

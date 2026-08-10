@@ -82,7 +82,12 @@ function MockInterviewSetupForm() {
         updateLevel();
       })
       .catch((err) => {
-        console.error('Microphone access failed:', err);
+        // NotAllowedError / NotFoundError are expected when mic is denied or absent
+        // — silently reset the level bar, do not surface to the Next.js dev overlay
+        const name = err instanceof DOMException ? err.name : '';
+        if (!['NotAllowedError', 'NotFoundError', 'AbortError'].includes(name)) {
+          console.error('Microphone access failed:', err);
+        }
         setMicLevel(0);
       });
 

@@ -35,7 +35,7 @@ export function useAptitudeSession({
   company,
   onComplete,
 }: UseAptitudeSessionOptions) {
-  const { questions: fetchedQuestions, isLoading, isPrefetching, prefetchNextBatch } = useAptitudeQuestions({
+  const { questions: fetchedQuestions, isLoading, isPrefetching, prefetchNextBatch, fetchError } = useAptitudeQuestions({
     applicationId,
     sessionId,
     role,
@@ -73,10 +73,34 @@ export function useAptitudeSession({
     });
   }, [fetchedQuestions, questions]);
 
-  // Available unique categories from questions
+  // Available unique categories — always all 4 standard categories so the hub
+  // shows every section upfront. Questions are loaded per-category on demand.
   const availableCategories = useMemo(() => {
-    const categoriesPresent = Array.from(new Set(activeQuestions.map((q) => q.category)));
-    return STANDARD_CATEGORIES.filter((cat) => categoriesPresent.includes(cat));
+    return [...STANDARD_CATEGORIES] as string[];
+  }, []);
+
+  // Get question count per category for display purposes
+  // If we have actual questions loaded, use those counts
+  // Otherwise estimate from standard distribution
+  const getCategoryQuestionCount = useCallback((category: string): number => {
+    const actualQuestions = activeQuestions.filter(q => q.category === category);
+    if (actualQuestions.length > 0) {
+      return actualQuestions.length;
+    }
+    
+    // Fallback: estimate from total if we don't have questions loaded yet
+    // This ensures we show reasonable estimates before questions are loaded
+    const totalQuestions = activeQuestions.length;
+    if (totalQuestions === 0) {
+      // Default to 5 per category if no data available
+      return 5;
+    }
+    
+    // Distribute evenly across categories
+    const base = Math.floor(totalQuestions / 4);
+    const remainder = totalQuestions % 4;
+    const categoryIndex = (STANDARD_CATEGORIES as readonly string[]).indexOf(category);
+    return base + (categoryIndex >= 0 && categoryIndex < remainder ? 1 : 0);
   }, [activeQuestions]);
 
   // Active questions for the currently selected category section
@@ -281,6 +305,7 @@ export function useAptitudeSession({
 
   return {
     isLoading,
+    fetchError,
     activeQuestions,
     availableCategories,
     activeCategoryQuestions,
@@ -297,6 +322,7 @@ export function useAptitudeSession({
     finalScore,
     showWarningModal,
     strikeCount,
+    getCategoryQuestionCount,
     handleFinalSubmit,
     handleCategorySubmit,
     handleSelectOption,

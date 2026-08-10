@@ -1,16 +1,9 @@
 import json
 import logging
-import os
 from typing import Dict, Any, TypedDict, List, Optional
-from core.config import settings
 from services.llm_service import generate_text, extract_json_object
 
 logger = logging.getLogger("coding_agent")
-
-# Canonical coding problem bank — single source of truth shared with the
-# Express API. Lives at packages/shared/data/coding-problems.json (see
-# core/config.py for the path resolution mechanism).
-_CODING_PROBLEMS_PATH = os.path.join(settings.shared_data_dir, "coding-problems.json")
 
 from core.langgraph import LANGGRAPH_AVAILABLE, StateGraph, END
 
@@ -37,14 +30,6 @@ class CodingState(TypedDict, total=False):
 
 from services.code_executor_service import execute_code_sandbox
 
-
-def execute_sandbox_node(state: CodingState) -> CodingState:
-    """Node 1: Execute candidate code in AST-inspected, resource-capped sandbox across all test cases."""
-    code = state.get("code", "")
-    language = state.get("language", "python")
-    problem_id = state.get("problem_id", "virtualized-list")
-
-    logger.info(f"Executing sandbox evaluation for problem {problem_id}")
 
 def execute_sandbox_node(state: CodingState) -> CodingState:
     """Node 1: Execute candidate code in AST-inspected, resource-capped sandbox across all test cases."""
@@ -88,6 +73,8 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
 
 def analyze_complexity_node(state: CodingState) -> CodingState:
     """Node 2: Analyze time/space complexity using Gemini LLM or static heuristic."""
+    from services.complexity_cache_service import get_cached_complexity, set_cached_complexity
+    
     code = state.get("code", "")
     pass_rate = state.get("pass_rate", 0.0)
 
@@ -96,17 +83,25 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
     feedback = ""
 
     if code:
-        prompt = (
-            f"Analyze the time and space complexity of this candidate python code:\n\n"
-            f"```python\n{code}\n```\n\n"
-            f"Return JSON format: {{\"time_complexity\": \"O(N)\", \"space_complexity\": \"O(1)\", \"summary\": \"Brief explanation\"}}"
-        )
-        parsed = extract_json_object(generate_text(prompt))
-        if parsed:
-            complexity = parsed.get("time_complexity")
-            feedback = parsed.get("summary", "")
-            if complexity:
-                complexity_source = "llm"
+        # Try cache first
+        cached = get_cached_complexity(code)
+        if cached:
+            complexity, complexity_source = cached
+        else:
+            # Not cached, run analysis
+            prompt = (
+                f"Analyze the time and space complexity of this candidate python code:\n\n"
+                f"```python\n{code}\n```\n\n"
+                f"Return JSON format: {{\"time_complexity\": \"O(N)\", \"space_complexity\": \"O(1)\", \"summary\": \"Brief explanation\"}}"
+            )
+            parsed = extract_json_object(generate_text(prompt))
+            if parsed:
+                complexity = parsed.get("time_complexity")
+                feedback = parsed.get("summary", "")
+                if complexity:
+                    complexity_source = "llm"
+                    # Cache the result
+                    set_cached_complexity(code, complexity, complexity_source)
 
     # Static heuristic fallback when the LLM returned nothing usable.
     # Values are explicitly labelled "estimated (heuristic)" so callers can
@@ -123,6 +118,9 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
         else:
             complexity = "O(1) estimated (heuristic)"
             feedback = "No iteration detected. Estimated O(1) — heuristic only."
+        
+        # Cache the heuristic result too
+        set_cached_complexity(code, complexity, complexity_source)
 
     passed = pass_rate >= 0.8
     score = round(pass_rate * 100.0, 1)

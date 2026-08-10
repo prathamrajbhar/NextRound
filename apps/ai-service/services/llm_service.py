@@ -12,7 +12,6 @@ error rather than substituting canned or fabricated content.
 
 import json
 import logging
-import re
 from typing import Any, List, Optional
 
 from core.config import settings
@@ -90,28 +89,56 @@ def generate_text(prompt: str) -> Optional[str]:
 
 
 def extract_json_object(text: str) -> Optional[dict]:
-    """Extract the first JSON object ({...}) from an LLM response, or None."""
+    """Extract the first JSON object ({...}) from an LLM response using bracket matching.
+    
+    More efficient than greedy regex for large responses. Matches opening {
+    and counts brackets until balance is reached.
+    """
     if not text:
         return None
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    if not match:
+    
+    start = text.find('{')
+    if start == -1:
         return None
-    try:
-        data = json.loads(match.group(0))
-        return data if isinstance(data, dict) else None
-    except (ValueError, TypeError):
-        return None
+    
+    depth = 0
+    for i, char in enumerate(text[start:], start):
+        if char == '{':
+            depth += 1
+        elif char == '}':
+            depth -= 1
+            if depth == 0:
+                try:
+                    data = json.loads(text[start:i+1])
+                    return data if isinstance(data, dict) else None
+                except (ValueError, TypeError):
+                    return None
+    return None
 
 
 def extract_json_array(text: str) -> Optional[List[Any]]:
-    """Extract the first JSON array ([...]) from an LLM response, or None."""
+    """Extract the first JSON array ([...]) from an LLM response using bracket matching.
+    
+    More efficient than greedy regex for large responses. Matches opening [
+    and counts brackets until balance is reached.
+    """
     if not text:
         return None
-    match = re.search(r"\[.*\]", text, re.DOTALL)
-    if not match:
+    
+    start = text.find('[')
+    if start == -1:
         return None
-    try:
-        data = json.loads(match.group(0))
-        return data if isinstance(data, list) else None
-    except (ValueError, TypeError):
-        return None
+    
+    depth = 0
+    for i, char in enumerate(text[start:], start):
+        if char == '[':
+            depth += 1
+        elif char == ']':
+            depth -= 1
+            if depth == 0:
+                try:
+                    data = json.loads(text[start:i+1])
+                    return data if isinstance(data, list) else None
+                except (ValueError, TypeError):
+                    return None
+    return None

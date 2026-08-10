@@ -82,6 +82,11 @@ export type Interview = Prisma.InterviewModel
  */
 export type Assessment = Prisma.AssessmentModel
 /**
+ * Model AptitudeQuestion
+ * 
+ */
+export type AptitudeQuestion = Prisma.AptitudeQuestionModel
+/**
  * Model CodingProblem
  * 
  */

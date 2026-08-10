@@ -12,14 +12,16 @@ export interface AptitudeQuestion {
   correctIndex?: number;
 }
 
-export interface RawApiQuestion {
+interface RawApiQuestion {
   id?: string;
   category?: string;
   text?: string;
   question?: string;
   options?: string[];
   difficulty?: string;
+  /** correct_index (real assessments, stripped) or correctIndex (mock/practice) */
   correctIndex?: number;
+  correct_index?: number;
 }
 
 export const STANDARD_CATEGORIES = [
@@ -33,49 +35,11 @@ export function normalizeCategory(rawCat?: string, index: number = 0): string {
   if (!rawCat) return STANDARD_CATEGORIES[index % 4];
   const cat = rawCat.trim();
   if ((STANDARD_CATEGORIES as readonly string[]).includes(cat)) return cat;
-
   const lower = cat.toLowerCase();
-  if (
-    lower.includes('quant') ||
-    lower.includes('math') ||
-    lower.includes('arithmetic') ||
-    lower.includes('throughput') ||
-    lower.includes('latency') ||
-    lower.includes('rate') ||
-    lower.includes('system')
-  ) {
-    return 'Quantitative Aptitude';
-  }
-  if (
-    lower.includes('logic') ||
-    lower.includes('reason') ||
-    lower.includes('deduction') ||
-    lower.includes('algo') ||
-    lower.includes('complexity')
-  ) {
-    return 'Logical Reasoning';
-  }
-  if (
-    lower.includes('verbal') ||
-    lower.includes('english') ||
-    lower.includes('language') ||
-    lower.includes('grammar') ||
-    lower.includes('vocab') ||
-    lower.includes('text')
-  ) {
-    return 'Verbal Ability';
-  }
-  if (
-    lower.includes('data') ||
-    lower.includes('chart') ||
-    lower.includes('graph') ||
-    lower.includes('stat') ||
-    lower.includes('table') ||
-    lower.includes('interpretation') ||
-    lower.includes('pipeline')
-  ) {
-    return 'Data Interpretation';
-  }
+  if (lower.includes('quant') || lower.includes('math') || lower.includes('arithmetic')) return 'Quantitative Aptitude';
+  if (lower.includes('logic') || lower.includes('reason') || lower.includes('deduction')) return 'Logical Reasoning';
+  if (lower.includes('verbal') || lower.includes('english') || lower.includes('grammar')) return 'Verbal Ability';
+  if (lower.includes('data') || lower.includes('chart') || lower.includes('graph') || lower.includes('interpretation')) return 'Data Interpretation';
   return STANDARD_CATEGORIES[index % 4];
 }
 
@@ -86,80 +50,79 @@ interface UseAptitudeQuestionsOptions {
   company: string;
 }
 
+function normalizeQuestion(q: RawApiQuestion, idx: number): AptitudeQuestion {
+  return {
+    id: q.id || `q_${idx}`,
+    category: normalizeCategory(q.category, idx),
+    text: q.text || q.question || 'Question unavailable.',
+    options: q.options || [],
+    difficulty: q.difficulty || 'medium',
+    correctIndex: q.correctIndex ?? q.correct_index,
+  };
+}
+
 /**
- * Owns aptitude question loading: the initial batch fetch plus background
- * prefetching of follow-up batches for mock sessions. Also normalizes raw API
- * questions into the local `AptitudeQuestion` shape used by the console.
+ * Fetches aptitude questions from the server.
+ * The server selects randomly from the DB question bank — no category/batch
+ * params needed. One request returns the full set for this session.
  */
-export function useAptitudeQuestions({ applicationId, sessionId, role, company }: UseAptitudeQuestionsOptions) {
+export function useAptitudeQuestions({
+  applicationId,
+  sessionId,
+  role,
+  company,
+}: UseAptitudeQuestionsOptions) {
   const [questions, setQuestions] = useState<AptitudeQuestion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isPrefetching, setIsPrefetching] = useState(false);
-  const [batchCount, setBatchCount] = useState(1);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  // isPrefetching kept for API compatibility with useAptitudeSession
+  const [isPrefetching] = useState(false);
 
-  // 1. Initial Batch Direct Fetch
   useEffect(() => {
-    async function loadInitialBatch() {
+    let cancelled = false;
+
+    async function load() {
       apiClient.clearCache('/aptitude');
-      const endpoint = applicationId
-        ? `/applications/${applicationId}/assessment/aptitude`
-        : `/mock/sessions/${sessionId || 'practice'}/aptitude?role=${encodeURIComponent(role)}&company=${encodeURIComponent(company)}&batch=1&count=4`;
+      setIsLoading(true);
+      setFetchError(null);
 
       try {
-        setIsLoading(true);
-        const res = await apiClient.get<{ questions: RawApiQuestion[] }>(endpoint).catch(() => null);
+        const endpoint = applicationId
+          ? `/applications/${applicationId}/assessment/aptitude`
+          : `/mock/sessions/${sessionId || 'practice'}/aptitude?role=${encodeURIComponent(role)}&company=${encodeURIComponent(company)}`;
+
+        const res = await apiClient.get<{ questions: RawApiQuestion[] }>(endpoint);
+
+        if (cancelled) return;
+
         if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
-          const mapped = res.questions.map((q: RawApiQuestion, idx: number) => ({
-            id: q.id || `q_b1_${idx}`,
-            category: normalizeCategory(q.category, idx),
-            text: q.text || q.question || 'Question text unavailable.',
-            options: q.options || [],
-            difficulty: q.difficulty || 'medium',
-            correctIndex: q.correctIndex,
-          }));
-          setQuestions(mapped);
+          setQuestions(res.questions.map(normalizeQuestion));
+        } else {
+          setFetchError('No questions returned from server.');
+          setQuestions([]);
         }
       } catch (err) {
-        console.error('Failed to load initial aptitude questions:', err);
+        if (!cancelled) {
+          const msg = err instanceof Error ? err.message : 'Failed to load questions.';
+          // 401 means session expired — give a clear actionable message
+          const isAuth = msg.toLowerCase().includes('401') || msg.toLowerCase().includes('authentication') || msg.toLowerCase().includes('token');
+          setFetchError(isAuth
+            ? 'Your session has expired. Please log in again to start the assessment.'
+            : `Could not load questions: ${msg}`
+          );
+          setQuestions([]);
+        }
       } finally {
-        setIsLoading(false);
+        if (!cancelled) setIsLoading(false);
       }
     }
-    loadInitialBatch();
+
+    load();
+    return () => { cancelled = true; };
   }, [applicationId, sessionId, role, company]);
 
-  // 2. Background Batch Prefetching
-  const prefetchNextBatch = useCallback(async () => {
-    if (isPrefetching || isLoading || applicationId) return;
+  // No-op: questions are fully loaded in one shot from the DB
+  const prefetchNextBatch = useCallback(async () => {}, []);
 
-    const nextBatchNum = batchCount + 1;
-    const prefetchEndpoint = `/mock/sessions/${sessionId || 'practice'}/aptitude?role=${encodeURIComponent(role)}&company=${encodeURIComponent(company)}&batch=${nextBatchNum}&count=4`;
-
-    try {
-      setIsPrefetching(true);
-      const res = await apiClient.get<{ questions: RawApiQuestion[] }>(prefetchEndpoint).catch(() => null);
-      if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
-        const newMapped = res.questions.map((q: RawApiQuestion, idx: number) => ({
-          id: `${q.id || 'q'}_b${nextBatchNum}_${idx}`,
-          category: normalizeCategory(q.category, idx),
-          text: q.text || q.question || 'Question text unavailable.',
-          options: q.options || [],
-          difficulty: q.difficulty || 'medium',
-          correctIndex: q.correctIndex,
-        }));
-        setQuestions((prev) => {
-          const existingIds = new Set(prev.map((item) => item.id));
-          const uniqueNew = newMapped.filter((item: AptitudeQuestion) => !existingIds.has(item.id));
-          return [...prev, ...uniqueNew];
-        });
-        setBatchCount(nextBatchNum);
-      }
-    } catch (err) {
-      console.error(`Failed to prefetch aptitude batch ${nextBatchNum}:`, err);
-    } finally {
-      setIsPrefetching(false);
-    }
-  }, [isPrefetching, isLoading, applicationId, batchCount, sessionId, role, company]);
-
-  return { questions, isLoading, isPrefetching, prefetchNextBatch };
+  return { questions, isLoading, isPrefetching, prefetchNextBatch, fetchError };
 }

@@ -59,6 +59,7 @@ export const ModelName = {
   Evaluation: 'Evaluation',
   Interview: 'Interview',
   Assessment: 'Assessment',
+  AptitudeQuestion: 'AptitudeQuestion',
   CodingProblem: 'CodingProblem',
   CodingSubmission: 'CodingSubmission',
   GeneratedQuestionChunk: 'GeneratedQuestionChunk',
@@ -243,12 +244,32 @@ export const AssessmentScalarFieldEnum = {
 export type AssessmentScalarFieldEnum = (typeof AssessmentScalarFieldEnum)[keyof typeof AssessmentScalarFieldEnum]
 
 
+export const AptitudeQuestionScalarFieldEnum = {
+  id: 'id',
+  category: 'category',
+  difficulty: 'difficulty',
+  question: 'question',
+  options: 'options',
+  correct_index: 'correct_index',
+  explanation: 'explanation',
+  tags: 'tags',
+  is_active: 'is_active',
+  created_at: 'created_at'
+} as const
+
+export type AptitudeQuestionScalarFieldEnum = (typeof AptitudeQuestionScalarFieldEnum)[keyof typeof AptitudeQuestionScalarFieldEnum]
+
+
 export const CodingProblemScalarFieldEnum = {
   id: 'id',
   slug: 'slug',
   title: 'title',
   description: 'description',
   difficulty: 'difficulty',
+  category: 'category',
+  tags: 'tags',
+  is_active: 'is_active',
+  starter_code: 'starter_code',
   entry_point: 'entry_point',
   param_schema: 'param_schema',
   return_type: 'return_type',

@@ -78,7 +78,7 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
         if (mergeParsedProfile) {
           mergeParsedProfile(parsed.profile, parsed.rawText);
         }
-        setParseStatus('Resume parsed with Gemini AI! Profile fields pre-filled.');
+        setParseStatus(null);
       } else {
         setParseError('Could not parse resume text.');
       }

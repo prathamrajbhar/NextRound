@@ -117,11 +117,11 @@ export function useInterviewSession({
     setPhase('Introduction');
     setIsAnalyzing(true);
 
-    if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error('Failed to enter fullscreen:', err);
-      });
-    }
+    // requestFullscreen MUST be called synchronously inside the user gesture —
+    // any await before this breaks the browser's activation check.
+    const fsPromise = !document.fullscreenElement
+      ? document.documentElement.requestFullscreen().catch(() => {/* denied — non-fatal */})
+      : Promise.resolve();
 
     if (interviewId) {
       try {
@@ -131,6 +131,8 @@ export function useInterviewSession({
         // Continue with local session fallback
       }
     }
+
+    await fsPromise;
 
     setTimeout(() => {
       setMessages([

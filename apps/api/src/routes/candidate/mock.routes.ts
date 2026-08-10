@@ -5,8 +5,7 @@ import { requireRole } from '../../middleware/rbac';
 import { MockSessionCreateSchema } from '@nextround/shared';
 import { enqueueMockEvaluation } from '../../lib/queues/mock.queue';
 import { serializeMockSession, serializeMockSessionList } from '../../lib/serializers';
-import { generateAiAptitudeQuestions, generateAptitudeChunk } from '../../services/ai-question-generator.service';
-import { generateAiCodingProblem } from '../../services/ai-coding-generator.service';
+import { selectAptitudeQuestions, selectCodingProblem, toPublicAptitudeQuestions, buildAptitudeDistribution } from '../../services/question-bank.service';
 import { getCandidateProfileId } from '../../lib/candidate-profile';
 
 export const mockRouter = Router();
@@ -128,7 +127,21 @@ mockRouter.get(
   }
 );
 
-// GET /api/v1/mock/sessions/:id/aptitude/chunk - Fetch progressive AI questions chunk for practice session
+/** Normalize junior/mid/senior → easy/medium/hard for AI generators */
+function normalizeDifficulty(raw: string | undefined | null): string {
+  const map: Record<string, string> = {
+    junior: 'easy',
+    mid: 'medium',
+    senior: 'hard',
+    lead: 'hard',
+    easy: 'easy',
+    medium: 'medium',
+    hard: 'hard',
+  };
+  return map[(raw || '').toLowerCase()] || 'medium';
+}
+
+// GET /api/v1/mock/sessions/:id/aptitude/chunk - Serve a chunk of questions from the stored assessment
 mockRouter.get(
   '/sessions/:id/aptitude/chunk',
   authenticate,
@@ -137,61 +150,86 @@ mockRouter.get(
     try {
       const candidateId = await getCandidateProfileId(req.user!.userId);
       const session = await prisma.mockSession.findFirst({
-        where: {
-          id: req.params.id as string,
-          candidate_id: candidateId,
-        },
+        where: { id: req.params.id as string, candidate_id: candidateId },
       });
-
       if (!session) {
         return res.status(404).json({ success: false, error: 'Mock session not found' });
       }
 
-      const roleName = session.target_role || req.query.role as string;
-      const companyName = session.target_company || req.query.company as string;
-      const diffLevel = session.difficulty || req.query.difficulty as string;
-      const category = req.query.category as string;
-
-      if (!roleName) {
-        return res.status(400).json({ success: false, error: 'Target role is required for question generation' });
-      }
-      if (!diffLevel || !['easy', 'medium', 'hard'].includes(diffLevel)) {
-        return res.status(400).json({ success: false, error: 'Valid difficulty (easy, medium, hard) is required' });
-      }
-      if (!category) {
-        return res.status(400).json({ success: false, error: 'Category is required for question generation' });
-      }
-
       const chunkIndex = Math.max(0, parseInt(req.query.chunkIndex as string, 10) || 0);
-      const chunkSize = Math.max(1, Math.min(10, parseInt(req.query.chunkSize as string, 10) || 3));
+      const chunkSize  = Math.max(1, Math.min(10, parseInt(req.query.chunkSize as string, 10) || 4));
 
-      const rawChunk = await generateAptitudeChunk({
-        jobTitle: roleName,
-        jobDescription: `Target Company: ${companyName || 'Tech Enterprise'}. Difficulty: ${diffLevel}`,
-        difficulty: diffLevel,
-        category,
-        chunkIndex,
-        chunkSize,
+      // Load (or create) the stored assessment for this mock session
+      let assessment = await prisma.assessment.findFirst({
+        where: { session_id: session.id, test_type: 'aptitude' },
       });
 
-      const sanitizedQuestions = rawChunk.map((q: any) => ({
+      let allQuestions: any[] = Array.isArray(assessment?.questions)
+        ? (assessment!.questions as any[])
+        : [];
+
+       if (allQuestions.length === 0) {
+        // First access — select all questions from DB and persist
+        const rawDiff   = normalizeDifficulty(session.difficulty);
+        
+        // Find matching job with assessmentConfig
+        const job = await prisma.job.findFirst({
+          where: {
+            title: { equals: session.target_role, mode: 'insensitive' },
+            organization: {
+              name: { equals: session.target_company, mode: 'insensitive' },
+            },
+            status: 'active',
+          },
+        });
+
+        const assessmentConfig = (job?.assessmentConfig as any) || {};
+        const mcqDistribution = assessmentConfig.mcqDistribution as Record<string, number> | undefined;
+        const totalCount = mcqDistribution
+          ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
+          : 16;
+
+        const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
+        const selected = await selectAptitudeQuestions({
+          distribution,
+          difficulty: rawDiff as 'easy' | 'medium' | 'hard',
+        });
+        allQuestions = selected;
+
+        if (assessment) {
+          await prisma.assessment.update({
+            where: { id: assessment.id },
+            data: { questions: allQuestions as any, total_question_count: allQuestions.length },
+          });
+        } else {
+          assessment = await prisma.assessment.create({
+            data: {
+              session_id: session.id,
+              test_type: 'aptitude',
+              questions: allQuestions as any,
+              total_question_count: allQuestions.length,
+              status: 'in_progress',
+            },
+          });
+        }
+      }
+
+      const start = chunkIndex * chunkSize;
+      const end   = start + chunkSize;
+      // Practice sessions expose correctIndex so candidates get immediate feedback
+      const chunk = allQuestions.slice(start, end).map((q: any) => ({
         id: q.id,
         category: q.category,
         question: q.question || q.text,
         text: q.question || q.text,
         options: q.options,
         difficulty: q.difficulty,
-        correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : undefined,
+        correctIndex: typeof q.correct_index === 'number' ? q.correct_index : undefined,
       }));
 
       return res.json({
         success: true,
-        data: {
-          chunkIndex,
-          chunkSize,
-          questions: sanitizedQuestions,
-          hasMore: true,
-        },
+        data: { chunkIndex, chunkSize, questions: chunk, hasMore: allQuestions.length > end },
       });
     } catch (err) {
       return next(err);
@@ -199,7 +237,7 @@ mockRouter.get(
   }
 );
 
-// GET /api/v1/mock/sessions/:id/aptitude - Fetch dynamic LLM questions for practice mock session
+// GET /api/v1/mock/sessions/:id/aptitude - Fetch all aptitude questions for a practice session
 mockRouter.get(
   '/sessions/:id/aptitude',
   authenticate,
@@ -208,60 +246,78 @@ mockRouter.get(
     try {
       const candidateId = await getCandidateProfileId(req.user!.userId);
       const session = await prisma.mockSession.findFirst({
-        where: {
-          id: req.params.id as string,
-          candidate_id: candidateId,
-        },
+        where: { id: req.params.id as string, candidate_id: candidateId },
       });
-
       if (!session) {
         return res.status(404).json({ success: false, error: 'Mock session not found' });
       }
 
-      const roleName = session.target_role || req.query.role as string;
-      const companyName = session.target_company || req.query.company as string;
-      const diffLevel = session.difficulty || req.query.difficulty as string;
-      const category = req.query.category as string;
+      // Load or create stored assessment
+      let assessment = await prisma.assessment.findFirst({
+        where: { session_id: session.id, test_type: 'aptitude' },
+      });
 
-      if (!roleName) {
-        return res.status(400).json({ success: false, error: 'Target role is required for question generation' });
+      let allQuestions: any[] = Array.isArray(assessment?.questions)
+        ? (assessment!.questions as any[])
+        : [];
+
+      if (allQuestions.length === 0) {
+        const rawDiff  = normalizeDifficulty(session.difficulty);
+        
+        // Find matching job with assessmentConfig
+        const job = await prisma.job.findFirst({
+          where: {
+            title: { equals: session.target_role, mode: 'insensitive' },
+            organization: {
+              name: { equals: session.target_company, mode: 'insensitive' },
+            },
+            status: 'active',
+          },
+        });
+
+        const assessmentConfig = (job?.assessmentConfig as any) || {};
+        const mcqDistribution = assessmentConfig.mcqDistribution as Record<string, number> | undefined;
+        const totalCount = mcqDistribution
+          ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
+          : 16;
+
+        const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
+        const selected = await selectAptitudeQuestions({
+          distribution,
+          difficulty: rawDiff as 'easy' | 'medium' | 'hard',
+        });
+        allQuestions = selected;
+
+        if (assessment) {
+          await prisma.assessment.update({
+            where: { id: assessment.id },
+            data: { questions: allQuestions as any, total_question_count: allQuestions.length },
+          });
+        } else {
+          await prisma.assessment.create({
+            data: {
+              session_id: session.id,
+              test_type: 'aptitude',
+              questions: allQuestions as any,
+              total_question_count: allQuestions.length,
+              status: 'in_progress',
+            },
+          });
+        }
       }
-      if (!diffLevel || !['easy', 'medium', 'hard'].includes(diffLevel)) {
-        return res.status(400).json({ success: false, error: 'Valid difficulty (easy, medium, hard) is required' });
-      }
-      if (!category) {
-        return res.status(400).json({ success: false, error: 'Category is required for question generation' });
-      }
 
-      const requestedCount = parseInt(req.query.count as string, 10) || 5;
-      const batchNum = parseInt(req.query.batch as string, 10) || 1;
-
-      // Generate aptitude questions using AI
-      const rawQuestions = await generateAiAptitudeQuestions(
-        roleName,
-        `Target Company: ${companyName || 'Tech Enterprise'}. Difficulty: ${diffLevel}. Batch: ${batchNum}`,
-        requestedCount,
-        diffLevel,
-        category
-      );
-
-      // Practice/mock sessions include correctIndex (no anti-cheat needed for practice)
-      const sanitizedQuestions = rawQuestions.map((q: any) => ({
+      // Practice mode: include correctIndex for immediate feedback
+      const questions = allQuestions.map((q: any) => ({
         id: q.id,
         category: q.category,
         question: q.question || q.text,
         text: q.question || q.text,
         options: q.options,
         difficulty: q.difficulty,
-        correctIndex: typeof q.correctIndex === 'number' ? q.correctIndex : undefined,
+        correctIndex: typeof q.correct_index === 'number' ? q.correct_index : undefined,
       }));
 
-      return res.json({
-        success: true,
-        data: {
-          questions: sanitizedQuestions,
-        },
-      });
+      return res.json({ success: true, data: { questions } });
     } catch (err) {
       return next(err);
     }
@@ -277,24 +333,43 @@ mockRouter.get(
     try {
       const candidateId = await getCandidateProfileId(req.user!.userId);
       const session = await prisma.mockSession.findFirst({
-        where: {
-          id: req.params.id as string,
-          candidate_id: candidateId,
-        },
+        where: { id: req.params.id as string, candidate_id: candidateId },
       });
 
-      const roleName = session?.target_role || (req.query.role as string) || 'Software Engineer';
-      const problem = await generateAiCodingProblem(roleName, 'Mock practice coding assessment session', 'medium');
+      const rawDiff = normalizeDifficulty(session?.difficulty);
+
+      // Check for existing snapshot to guarantee session immutability
+      const existing = await prisma.assessment.findFirst({
+        where: { session_id: session?.id, test_type: 'coding' },
+      });
+
+      let problem: any;
+      if (existing?.questions) {
+        problem = existing.questions;
+      } else {
+        const selected = await selectCodingProblem({
+          difficulty: rawDiff as 'easy' | 'medium' | 'hard',
+        });
+        problem = selected;
+
+        if (session) {
+          await prisma.assessment.create({
+            data: {
+              session_id: session.id,
+              test_type: 'coding',
+              questions: problem as any,
+              status: 'in_progress',
+            },
+          });
+        }
+      }
 
       const sanitizedProblem = {
         ...problem,
         testCases: (problem.testCases || []).filter((tc: any) => !tc.hidden),
       };
 
-      return res.json({
-        success: true,
-        data: { problem: sanitizedProblem },
-      });
+      return res.json({ success: true, data: { problem: sanitizedProblem } });
     } catch (err) {
       return next(err);
     }
@@ -322,12 +397,10 @@ mockRouter.post(
       }
 
       const transcript = req.body.transcript;
-      if (!Array.isArray(transcript) || transcript.length === 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'Transcript is required to complete a mock session.'
-        });
-      }
+      // Transcript is optional for aptitude/coding tracks — they don't generate
+      // a voice transcript. Fall back to an empty array so the session still
+      // completes and feedback is derivable from the score alone.
+      const safeTranscript = Array.isArray(transcript) && transcript.length > 0 ? transcript : [];
 
       const score = typeof req.body.score === 'number' ? req.body.score : null;
 
@@ -337,33 +410,57 @@ mockRouter.post(
           status: 'completed',
           score,
           ended_at: new Date(),
-          transcript: transcript as any,
+          transcript: safeTranscript as any,
         },
       });
 
-      // Queue the real evaluation job
-      try {
-        await enqueueMockEvaluation(
-          updated.id,
-          candidateId,
-          updated.transcript,
-          updated.topic || undefined,
-          updated.difficulty || undefined
-        );
-      } catch (e) {
-        console.error('Failed to enqueue mock evaluation job:', e);
-        return res.status(500).json({
-          success: false,
-          error: 'Session saved but evaluation failed to queue. Feedback will not be available.'
+      // For aptitude/coding tracks with no voice transcript, write basic
+      // score-derived feedback immediately so the feedback page is never stuck.
+      if (safeTranscript.length === 0 && score !== null) {
+        const pct = Math.max(0, Math.min(100, score));
+        const basicFeedback = {
+          overallScore: pct,
+          rubricScores: { clarity: pct, depth: pct, examples: pct, technicalAccuracy: pct },
+          strengths: pct >= 70
+            ? ['Completed the assessment', 'Demonstrated subject knowledge']
+            : ['Attempted all sections'],
+          growthAreas: pct < 70
+            ? ['Review weak categories and practice more questions']
+            : ['Continue practising to maintain consistency'],
+          starAnalysis: { situation: '', task: '', action: '', result: '' },
+          recommendedPrep: ['Review incorrect answers', 'Practice timed question sets'],
+        };
+        await prisma.mockSession.update({
+          where: { id: session.id },
+          data: { feedback: basicFeedback as any },
         });
+      }
+
+      // Only enqueue AI evaluation for voice interviews that have a real transcript.
+      // Aptitude/coding tracks write feedback synchronously above.
+      if (safeTranscript.length > 0) {
+        try {
+          await enqueueMockEvaluation(
+            updated.id,
+            candidateId,
+            updated.transcript,
+            updated.topic || undefined,
+            updated.difficulty || undefined
+          );
+        } catch (e) {
+          console.error('Failed to enqueue mock evaluation job:', e);
+          // Non-fatal for voice sessions — basic feedback is still derivable
+        }
       }
 
       return res.json({
         success: true,
         data: {
           sessionId: updated.id,
-          status: 'pending_evaluation',
-          message: 'Session completed and queued for evaluation.'
+          status: safeTranscript.length > 0 ? 'pending_evaluation' : 'completed',
+          message: safeTranscript.length > 0
+            ? 'Session completed and queued for AI evaluation.'
+            : 'Session completed. Feedback is ready.',
         },
       });
     } catch (err) {

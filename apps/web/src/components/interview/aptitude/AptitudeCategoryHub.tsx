@@ -31,6 +31,7 @@ interface AptitudeCategoryHubProps {
   activeQuestions: AptitudeQuestion[];
   completedCategoryScores: Record<string, number>;
   isSubmitting: boolean;
+  getCategoryQuestionCount?: (category: string) => number;
   onStartCategory: (category: string) => void;
   onFinalSubmit: () => void;
 }
@@ -47,6 +48,7 @@ export function AptitudeCategoryHub({
   activeQuestions,
   completedCategoryScores,
   isSubmitting,
+  getCategoryQuestionCount,
   onStartCategory,
   onFinalSubmit,
 }: AptitudeCategoryHubProps) {
@@ -75,6 +77,7 @@ export function AptitudeCategoryHub({
             const isCatCompleted = completedCategoryScores[cat] !== undefined;
             const score = completedCategoryScores[cat];
             const catQs = activeQuestions.filter((q) => q.category === cat);
+            const questionCount = getCategoryQuestionCount ? getCategoryQuestionCount(cat) : catQs.length;
 
             return (
               <div
@@ -97,7 +100,7 @@ export function AptitudeCategoryHub({
                     <div className="space-y-1">
                       <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">{cat}</h3>
                       <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block">
-                        {catQs.length} Questions
+                        {questionCount} Questions
                       </span>
                     </div>
                   </div>

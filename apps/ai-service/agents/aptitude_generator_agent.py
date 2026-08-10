@@ -1,7 +1,5 @@
 import json
 import logging
-import os
-import httpx
 from typing import List, Dict, Any
 from core.config import settings
 from services.llm_service import generate_text, extract_json_array
@@ -28,6 +26,13 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
             stem = str(q.get("question") or q.get("text") or "")
             opts = q.get("options")
             correct_idx = q.get("correctIndex")
+            explanation = q.get("explanation", "")
+            
+            # Validate required fields are non-null
+            if not cat or not diff:
+                logger.debug(f"Skipping question {q_id}: missing category or difficulty")
+                continue
+            
             # A question without a real correct answer index is unusable for
             # assessment — fabricating correctIndex=0 would mark a random option
             # as the answer key. Skip it rather than invent one.
@@ -39,12 +44,13 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
 
             validated.append({
                 "id": q_id,
-                "category": str(cat) if cat else None,
-                "difficulty": str(diff) if diff else None,
+                "category": str(cat),
+                "difficulty": str(diff),
                 "question": stem,
                 "text": stem,
                 "options": opts,
                 "correctIndex": correct_idx,
+                "explanation": str(explanation) if explanation else "",
                 # Mark LLM-generated questions so callers can distinguish them
                 # from static-bank fallback questions.
                 "source": "ai-generated",

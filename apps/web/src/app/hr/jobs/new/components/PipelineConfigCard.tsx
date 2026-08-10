@@ -231,14 +231,41 @@ export default function PipelineConfigCard({
             <div className="pl-9 pr-1 pt-2 space-y-4 animate-in fade-in duration-150">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Total Questions</span>
-                <span className="text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2.5 py-0.5 rounded-lg border border-indigo-200/50 dark:border-indigo-800/40">
-                  {assessmentConfig.mcqCount} MCQs
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2.5 py-0.5 rounded-lg border border-indigo-200/50 dark:border-indigo-800/40">
+                    {assessmentConfig.mcqCount} MCQs
+                  </span>
+                  <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                    ≈ {Math.ceil(assessmentConfig.mcqCount * 1.5)} min
+                  </span>
+                </div>
               </div>
 
               {/* Category distribution */}
               <div className="space-y-2 border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
-                <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Aptitude Categories</span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Aptitude Categories</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const equalDist = Math.floor(assessmentConfig.mcqCount / 4);
+                      const remainder = assessmentConfig.mcqCount % 4;
+                      const newDist = {
+                        'Quantitative Aptitude': equalDist + (remainder > 0 ? 1 : 0),
+                        'Logical Reasoning': equalDist + (remainder > 1 ? 1 : 0),
+                        'Verbal Ability': equalDist + (remainder > 2 ? 1 : 0),
+                        'Data Interpretation': equalDist,
+                      };
+                      setAssessmentConfig({
+                        ...assessmentConfig,
+                        mcqDistribution: newDist,
+                      });
+                    }}
+                    className="text-[9px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    Reset Equal
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 gap-2">
                   {CATEGORIES.map((cat) => {
                     const count = distribution[cat] || 0;
@@ -262,13 +289,14 @@ export default function PipelineConfigCard({
                           <input
                             type="number"
                             min="0"
+                            max="50"
                             value={count}
-                            onChange={(e) => handleCategoryCountChange(cat, Math.max(0, parseInt(e.target.value) || 0))}
+                            onChange={(e) => handleCategoryCountChange(cat, Math.max(0, Math.min(50, parseInt(e.target.value) || 0)))}
                             className="w-8 text-center font-extrabold text-[10px] text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           <button
                             type="button"
-                            onClick={() => handleCategoryCountChange(cat, count + 1)}
+                            onClick={() => handleCategoryCountChange(cat, Math.min(50, count + 1))}
                             className="h-4.5 w-4.5 rounded bg-slate-50 dark:bg-slate-750 text-slate-800 dark:text-slate-200 flex items-center justify-center cursor-pointer font-bold text-[10px] hover:bg-slate-100 dark:hover:bg-slate-700"
                           >
                             +
@@ -277,6 +305,31 @@ export default function PipelineConfigCard({
                       </div>
                     );
                   })}
+                </div>
+                {/* Quick presets */}
+                <div className="flex gap-1 pt-1">
+                  <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400 mr-1">Presets:</span>
+                  {[
+                    { name: 'Quick (8Q)', dist: { 'Quantitative Aptitude': 2, 'Logical Reasoning': 2, 'Verbal Ability': 2, 'Data Interpretation': 2 } },
+                    { name: 'Standard (20Q)', dist: { 'Quantitative Aptitude': 5, 'Logical Reasoning': 5, 'Verbal Ability': 5, 'Data Interpretation': 5 } },
+                    { name: 'Comprehensive (40Q)', dist: { 'Quantitative Aptitude': 10, 'Logical Reasoning': 10, 'Verbal Ability': 10, 'Data Interpretation': 10 } }
+                  ].map((preset) => (
+                    <button
+                      key={preset.name}
+                      type="button"
+                      onClick={() => {
+                        const totalCount = Object.values(preset.dist).reduce((sum, val) => sum + val, 0);
+                        setAssessmentConfig({
+                          ...assessmentConfig,
+                          mcqCount: totalCount,
+                          mcqDistribution: preset.dist,
+                        });
+                      }}
+                      className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+                    >
+                      {preset.name}
+                    </button>
+                  ))}
                 </div>
               </div>
 

@@ -5,8 +5,12 @@ import { enqueueScheduling } from '../lib/queues/scheduling.queue';
 import { enqueueAssessment } from '../lib/queues/assessment.queue';
 import { emailService } from './email.service';
 import { evaluateApplicationScreening } from './screening-evaluator.service';
-import { generateAiAptitudeQuestions, generateAptitudeChunk } from './ai-question-generator.service';
-import { generateAiCodingProblem } from './ai-coding-generator.service';
+import {
+  selectAptitudeQuestions,
+  selectCodingProblem,
+  toPublicAptitudeQuestions,
+  buildAptitudeDistribution,
+} from './question-bank.service';
 import { executeCodingSubmission } from './coding-executor.service';
 import { notFound, forbidden, badRequest } from '../lib/http-errors';
 
@@ -490,7 +494,7 @@ function getAppForCandidate(appId: string, userId: string) {
   });
 }
 
-/** GET /:id/assessment/aptitude/chunk — progressive AI aptitude chunk. */
+/** GET /:id/assessment/aptitude/chunk — progressive DB aptitude chunk. */
 export async function getAptitudeChunk(
   appId: string,
   userId: string,
@@ -508,82 +512,68 @@ export async function getAptitudeChunk(
     orderBy: { created_at: 'desc' },
   });
 
-  let existingQuestions: any[] = Array.isArray(assessment?.questions)
+  // If assessment already has questions stored, serve from there
+  const existingQuestions: any[] = Array.isArray(assessment?.questions)
     ? (assessment!.questions as any[])
     : [];
   const startIndex = chunkIndex * chunkSize;
-  const targetCount = startIndex + chunkSize;
+  const endIndex   = startIndex + chunkSize;
 
-  if (existingQuestions.length >= targetCount) {
-    const chunkQuestions = existingQuestions.slice(startIndex, targetCount).map((q: any) => ({
+  if (existingQuestions.length >= endIndex) {
+    const chunkQs = existingQuestions.slice(startIndex, endIndex).map((q: any) => ({
       id: q.id,
-      category: q.category || 'Logical Reasoning',
+      category: q.category,
       question: q.question || q.text,
       text: q.question || q.text,
       options: q.options || [],
       difficulty: q.difficulty || 'medium',
     }));
-
-    return {
-      assessmentId: assessment?.id,
-      chunkIndex,
-      chunkSize,
-      questions: chunkQuestions,
-      hasMore: true,
-    };
+    return { assessmentId: assessment?.id, chunkIndex, chunkSize, questions: chunkQs, hasMore: existingQuestions.length > endIndex };
   }
 
-  const previousStems = existingQuestions.map((q: any) => q.question || q.text || '');
+  // Select the full question set from DB if not yet stored
   const assessmentConfig = (app.job?.assessmentConfig as any) || {};
-  const difficulty = assessmentConfig.difficulty;
-  const category = assessmentConfig.category;
-  if (!difficulty || !category) {
-    throw new Error('Aptitude chunk generation requires difficulty and category configured on the job assessment; none are configured.');
-  }
+  const mcqDistribution  = assessmentConfig.mcqDistribution as Record<string, number> | undefined;
+  const totalCount = mcqDistribution
+    ? Object.values(mcqDistribution).reduce((s, v) => s + Number(v), 0)
+    : Math.max(1, Math.min(100, Number(assessmentConfig.mcqCount) || 20));
 
-  const newChunk = await generateAptitudeChunk({
-    jobTitle: app.job?.title || '',
-    jobDescription: app.job?.description || '',
-    difficulty,
-    category,
-    chunkIndex,
-    chunkSize,
-    previousQuestions: previousStems,
-  });
+  const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
+  const allQuestions = await selectAptitudeQuestions({ distribution });
 
-  const updatedQuestions = [...existingQuestions, ...newChunk];
-
+  // Persist all questions server-side (with correct_index for scoring later)
   if (assessment) {
     assessment = await prisma.assessment.update({
       where: { id: assessment.id },
-      data: { questions: updatedQuestions, status: 'in_progress' },
+      data: { questions: allQuestions as any, total_question_count: allQuestions.length, status: 'in_progress' },
     });
   } else {
     assessment = await prisma.assessment.create({
       data: {
         application_id: appId,
         test_type: 'aptitude',
-        questions: updatedQuestions,
+        questions: allQuestions as any,
+        total_question_count: allQuestions.length,
         status: 'in_progress',
       },
     });
   }
 
-  const sanitizedChunk = newChunk.map((q: any) => ({
+  const chunkQs = allQuestions.slice(startIndex, endIndex).map((q) => ({
     id: q.id,
-    category: q.category || 'Logical Reasoning',
-    question: q.question || q.text,
-    text: q.question || q.text,
-    options: q.options || [],
-    difficulty: q.difficulty || 'medium',
+    category: q.category,
+    question: q.question,
+    text: q.text,
+    options: q.options,
+    difficulty: q.difficulty,
   }));
 
   return {
     assessmentId: assessment.id,
     chunkIndex,
     chunkSize,
-    questions: sanitizedChunk,
-    hasMore: true,
+    questions: chunkQs,
+    hasMore: allQuestions.length > endIndex,
   };
 }
 
@@ -605,6 +595,7 @@ export async function submitAptitudeChunk(
     orderBy: { created_at: 'desc' },
   });
 
+  // Persist submitted answers
   if (assessment) {
     const existingResponses = Array.isArray(assessment.responses) ? (assessment.responses as any[]) : [];
     const mergedResponses = [...existingResponses, ...(Array.isArray(answers) ? answers : [])];
@@ -618,35 +609,14 @@ export async function submitAptitudeChunk(
   const existingQuestions: any[] = Array.isArray(assessment?.questions)
     ? (assessment!.questions as any[])
     : [];
-  const previousStems = existingQuestions.map((q: any) => q.question || q.text || '');
-  const assessmentConfig = (app.job?.assessmentConfig as any) || {};
-  const difficulty = assessmentConfig.difficulty;
-  const category = assessmentConfig.category;
-  if (!difficulty || !category) {
-    throw new Error('Aptitude chunk generation requires difficulty and category configured on the job assessment; none are configured.');
-  }
 
-  const nextChunk = await generateAptitudeChunk({
-    jobTitle: app.job?.title || '',
-    jobDescription: app.job?.description || '',
-    difficulty,
-    category,
-    chunkIndex: nextChunkIndex,
-    chunkSize: Number(chunkSize),
-    previousQuestions: previousStems,
-  });
-
-  const updatedQuestions = [...existingQuestions, ...nextChunk];
-  if (assessment) {
-    await prisma.assessment.update({
-      where: { id: assessment.id },
-      data: { questions: updatedQuestions },
-    });
-  }
-
-  const sanitizedNextChunk = nextChunk.map((q: any) => ({
+  // Questions are already stored in the assessment from getAptitudeChunk.
+  // Serve from cache — no further DB selection needed.
+  const startOfNext = nextChunkIndex * Number(chunkSize);
+  const endOfNext   = startOfNext + Number(chunkSize);
+  const nextQs = existingQuestions.slice(startOfNext, endOfNext).map((q: any) => ({
     id: q.id,
-    category: q.category || 'Logical Reasoning',
+    category: q.category,
     question: q.question || q.text,
     text: q.question || q.text,
     options: q.options || [],
@@ -656,104 +626,68 @@ export async function submitAptitudeChunk(
   return {
     currentChunkSubmitted: chunkIndex,
     nextChunkIndex,
-    questions: sanitizedNextChunk,
+    questions: nextQs,
     hasMore: true,
   };
 }
 
-/** GET /:id/assessment/aptitude — fetch dynamic LLM aptitude test questions. */
+/** GET /:id/assessment/aptitude — fetch aptitude questions from DB question bank. */
 export async function getAptitudeAssessment(appId: string, userId: string) {
   const app = await getAppForCandidate(appId, userId);
   if (!app || app.candidate.user_id !== userId) {
     throw forbidden('Forbidden: Access denied');
   }
 
-  // Determine exact number of questions set by the employer
   const assessmentConfig = (app.job?.assessmentConfig as any) || {};
-  const thresholds = (app.job?.thresholds as any) || {};
-  const mcqDistribution = assessmentConfig.mcqDistribution || {};
-  const hasDistribution = Object.keys(mcqDistribution).length > 0;
+  const mcqDistribution  = assessmentConfig.mcqDistribution as Record<string, number> | undefined;
+  const totalCount = mcqDistribution
+    ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
+    : Math.max(1, Math.min(100, Number(assessmentConfig.mcqCount) || 20));
 
-  let qCount = 0;
-  if (hasDistribution) {
-    qCount = Object.values(mcqDistribution).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0) as number;
-  } else {
-    qCount = Math.max(1, Math.min(100, Number(assessmentConfig.mcqCount || thresholds.qCount) || 5));
-  }
-
-  // Check if assessment already exists with the employer's set qCount
+  // Return existing assessment if it already has the right number of questions
   let assessment = await prisma.assessment.findFirst({
     where: { application_id: appId, test_type: 'aptitude' },
     orderBy: { created_at: 'desc' },
   });
 
-  let rawQuestions: any[] = [];
+  let allQuestions: any[] = [];
 
-  if (assessment && Array.isArray(assessment.questions) && assessment.questions.length === qCount) {
-    rawQuestions = assessment.questions as any[];
+  if (assessment && Array.isArray(assessment.questions) && (assessment.questions as any[]).length === totalCount) {
+    allQuestions = assessment.questions as any[];
   } else {
-    // Generate AI questions tailored to the job using Gemini directly
-    const diffLevel = (app.job?.experienceLevel?.toLowerCase() === 'junior' || app.job?.experienceLevel?.toLowerCase() === 'entry') ? 'easy' :
-                      (app.job?.experienceLevel?.toLowerCase() === 'senior' || app.job?.experienceLevel?.toLowerCase() === 'lead') ? 'hard' : 'medium';
-    const category = app.job?.department || 'technical';
+    const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
+    const selected = await selectAptitudeQuestions({ distribution });
+    allQuestions = selected;
 
-    if (hasDistribution) {
-      rawQuestions = [];
-      for (const [catName, catCount] of Object.entries(mcqDistribution)) {
-        const countForCat = Math.max(0, Number(catCount) || 0);
-        if (countForCat > 0) {
-          const catQuestions = await generateAiAptitudeQuestions(
-            app.job?.title || 'Software Engineer',
-            app.job?.description || '',
-            countForCat,
-            diffLevel,
-            catName
-          );
-          rawQuestions.push(...catQuestions);
-        }
-      }
-    } else {
-      rawQuestions = await generateAiAptitudeQuestions(
-        app.job?.title || 'Software Engineer',
-        app.job?.description || '',
-        qCount,
-        diffLevel,
-        category
-      );
-    }
-
-    // Persist generated questions in DB Assessment record
     if (assessment) {
       assessment = await prisma.assessment.update({
         where: { id: assessment.id },
-        data: { questions: rawQuestions, status: 'pending' },
+        data: { questions: allQuestions as any, total_question_count: allQuestions.length, status: 'pending' },
       });
     } else {
       assessment = await prisma.assessment.create({
         data: {
           application_id: appId,
           test_type: 'aptitude',
-          questions: rawQuestions,
+          questions: allQuestions as any,
+          total_question_count: allQuestions.length,
           status: 'pending',
         },
       });
     }
   }
 
-  // Strip correctIndex before returning to client to prevent answer leakage
-  const sanitizedQuestions = rawQuestions.slice(0, qCount).map((q: any) => ({
+  // Strip correct_index before returning to client
+  const sanitizedQuestions = allQuestions.map((q: any) => ({
     id: q.id,
-    category: q.category || 'Logical Reasoning',
+    category: q.category,
     question: q.question || q.text,
     text: q.question || q.text,
     options: q.options || [],
     difficulty: q.difficulty || 'medium',
   }));
 
-  return {
-    assessmentId: assessment?.id,
-    questions: sanitizedQuestions,
-  };
+  return { assessmentId: assessment?.id, questions: sanitizedQuestions };
 }
 
 /** POST /:id/assessment/aptitude — submit aptitude answers. */
@@ -822,14 +756,14 @@ export async function submitAptitude(
 // Coding assessment
 // ---------------------------------------------------------------------------
 
-/** GET /:id/assessment/coding — fetch coding problem. */
+/** GET /:id/assessment/coding — fetch coding problem from DB question bank. */
 export async function getCodingAssessment(appId: string, userId: string) {
   const app = await getAppForCandidate(appId, userId);
   if (!app || app.candidate.user_id !== userId) {
     throw forbidden('Forbidden: Access denied');
   }
 
-  // Check if there is an existing coding assessment for this application
+  // Return existing coding assessment if already assigned
   let assessment = await prisma.assessment.findFirst({
     where: { application_id: appId, test_type: 'coding' },
   });
@@ -839,14 +773,12 @@ export async function getCodingAssessment(appId: string, userId: string) {
   if (assessment) {
     problem = assessment.questions;
   } else {
-    const jobTitle = app.job?.title || 'Software Engineer';
-    const jobDescription = app.job?.description || '';
     const jobConfig = (app.job?.thresholds as any) || {};
-    const difficulty = jobConfig.difficulty || 'medium';
+    const difficulty = jobConfig.difficulty as 'easy' | 'medium' | 'hard' | undefined;
 
-    problem = await generateAiCodingProblem(jobTitle, jobDescription, difficulty);
+    const selected = await selectCodingProblem({ difficulty });
+    problem = selected;
 
-    // Persist the generated problem into the Assessment table
     assessment = await prisma.assessment.create({
       data: {
         application_id: appId,

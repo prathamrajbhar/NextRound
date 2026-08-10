@@ -100,15 +100,30 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
           if (data.assessmentConfig) {
             const config = { ...data.assessmentConfig } as any;
             if (!config.mcqDistribution) {
-              const total = config.mcqCount || 5;
+              const total = config.mcqCount || 20;
+              const base = Math.floor(total / 4);
+              const remainder = total % 4;
               config.mcqDistribution = {
-                'Quantitative Aptitude': Math.ceil(total / 4),
-                'Logical Reasoning': Math.floor((total + 2) / 4),
-                'Verbal Ability': Math.floor((total + 1) / 4),
-                'Data Interpretation': Math.floor(total / 4),
+                'Quantitative Aptitude': base + (remainder > 0 ? 1 : 0),
+                'Logical Reasoning': base + (remainder > 1 ? 1 : 0),
+                'Verbal Ability': base + (remainder > 2 ? 1 : 0),
+                'Data Interpretation': base,
               };
             }
             setAssessmentConfig(config);
+          } else {
+            // Set default configuration if none exists
+            setAssessmentConfig({
+              mcqCount: 20,
+              codingProblemId: 'virtualized-list',
+              passingScore: 80,
+              mcqDistribution: {
+                'Quantitative Aptitude': 5,
+                'Logical Reasoning': 5,
+                'Verbal Ability': 5,
+                'Data Interpretation': 5,
+              },
+            });
           }
         }
       } catch (err) {

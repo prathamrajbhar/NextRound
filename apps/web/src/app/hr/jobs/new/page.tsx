@@ -62,14 +62,14 @@ export default function HrCreateJob() {
     passingScore: number;
     mcqDistribution?: Record<string, number>;
   }>({
-    mcqCount: 5,
+    mcqCount: 20,
     codingProblemId: 'virtualized-list',
     passingScore: 80,
     mcqDistribution: {
-      'Quantitative Aptitude': 2,
-      'Logical Reasoning': 1,
-      'Verbal Ability': 1,
-      'Data Interpretation': 1,
+      'Quantitative Aptitude': 5,
+      'Logical Reasoning': 5,
+      'Verbal Ability': 5,
+      'Data Interpretation': 5,
     },
   });
 

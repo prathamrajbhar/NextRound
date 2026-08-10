@@ -204,6 +204,7 @@ export const Wallet = createMaterialIcon('account_balance_wallet');
 export const Wand2 = createMaterialIcon('auto_fix_high');
 export const Maximize2 = createMaterialIcon('fullscreen');
 export const Wifi = createMaterialIcon('wifi');
+export const WifiOff = createMaterialIcon('wifi_off');
 export const X = createMaterialIcon('close');
 export const XCircle = createMaterialIcon('cancel');
 export const Zap = createMaterialIcon('bolt');

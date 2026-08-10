@@ -28,6 +28,18 @@ export interface JobCardProps {
   compact?: boolean;
 }
 
+/** Strip markdown syntax for plain-text previews */
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/#{1,6}\s*/g, '')       // headings
+    .replace(/\*\*(.+?)\*\*/g, '$1') // bold
+    .replace(/\*(.+?)\*/g, '$1')     // italic
+    .replace(/^[*\-]\s+/gm, '')      // bullet markers
+    .replace(/`(.+?)`/g, '$1')       // inline code
+    .replace(/\n+/g, ' ')            // collapse newlines
+    .trim();
+}
+
 export function JobCard({
   id,
   orgName,
@@ -119,7 +131,7 @@ export function JobCard({
             compact ? 'line-clamp-2' : 'line-clamp-3'
           )}
         >
-          {description}
+          {stripMarkdown(description)}
         </p>
 
         {/* Key Job Info Chips */}
