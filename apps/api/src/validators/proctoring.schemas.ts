@@ -25,3 +25,8 @@ export const ProctoringEventSchema = z.object({
 export const BatchEventsSchema = z.object({
   events: z.array(ProctoringEventSchema).nonempty('Events array cannot be empty'),
 });
+
+export const ReviewViolationSchema = z.object({
+  status: z.enum(['acknowledged', 'false_positive', 'escalated', 'resolved']),
+  review_reason: z.string().min(1, 'Review notes/reason is required'),
+});

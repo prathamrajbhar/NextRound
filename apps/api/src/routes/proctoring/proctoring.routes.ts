@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { authenticate } from '../../middleware/auth';
 import { asyncHandler, ok, validate } from '../../lib/http';
-import { CreateProctoringSessionSchema, BatchEventsSchema } from '../../validators/proctoring.schemas';
+import { forbidden } from '../../lib/http-errors';
+import { CreateProctoringSessionSchema, BatchEventsSchema, ReviewViolationSchema } from '../../validators/proctoring.schemas';
 import * as proctoringService from '../../services/proctoring.service';
 
 export const proctoringRouter = Router();
@@ -98,5 +99,24 @@ proctoringRouter.get(
     } else {
       ok(res, report);
     }
+  })
+);
+
+// 9. POST /api/v1/proctoring/violations/:id/review - Review proctoring violation (HR only)
+proctoringRouter.post(
+  '/violations/:id/review',
+  validate(ReviewViolationSchema),
+  asyncHandler(async (req, res) => {
+    if (req.user!.role !== 'hr') {
+      throw forbidden('Access denied: HR role required for violation review');
+    }
+    const result = await proctoringService.reviewProctoringViolation(
+      req.params.id as string,
+      req.body.status,
+      req.body.review_reason,
+      req.user!.userId,
+      req.user!.orgId
+    );
+    ok(res, result);
   })
 );
