@@ -3,12 +3,7 @@ from typing import Dict, Any, TypedDict, List
 
 logger = logging.getLogger("assessment_agent")
 
-try:
-    from langgraph.graph import StateGraph, END
-    LANGGRAPH_AVAILABLE = True
-except ImportError:
-    LANGGRAPH_AVAILABLE = False
-    logger.warning("LangGraph not installed. Assessment Agent will use linear node execution.")
+from core.langgraph import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
 def _to_int(value, default: int = 0) -> int:

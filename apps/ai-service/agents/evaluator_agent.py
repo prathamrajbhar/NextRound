@@ -4,12 +4,7 @@ from pydantic import BaseModel, Field
 
 logger = logging.getLogger("evaluator_agent")
 
-try:
-    from langgraph.graph import StateGraph, END
-    LANGGRAPH_AVAILABLE = True
-except ImportError:
-    LANGGRAPH_AVAILABLE = False
-    logger.warning("LangGraph not installed. Evaluator Agent will run linear node pipeline.")
+from core.langgraph import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
 class ScoringIsolationError(Exception):

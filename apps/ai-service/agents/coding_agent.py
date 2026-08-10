@@ -12,12 +12,7 @@ logger = logging.getLogger("coding_agent")
 # core/config.py for the path resolution mechanism).
 _CODING_PROBLEMS_PATH = os.path.join(settings.shared_data_dir, "coding-problems.json")
 
-try:
-    from langgraph.graph import StateGraph, END
-    LANGGRAPH_AVAILABLE = True
-except ImportError:
-    LANGGRAPH_AVAILABLE = False
-    logger.warning("LangGraph not installed. Coding Agent will use linear node execution.")
+from core.langgraph import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
 class CodingState(TypedDict, total=False):

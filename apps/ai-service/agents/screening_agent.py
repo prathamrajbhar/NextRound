@@ -6,12 +6,7 @@ from services.llm_service import generate_text, extract_json_array, extract_json
 
 logger = logging.getLogger("screening_agent")
 
-try:
-    from langgraph.graph import StateGraph, END
-    LANGGRAPH_AVAILABLE = True
-except ImportError:
-    LANGGRAPH_AVAILABLE = False
-    logger.warning("LangGraph not installed. Screening Agent will use linear node execution.")
+from core.langgraph import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
 class GapAnalysis(BaseModel):
