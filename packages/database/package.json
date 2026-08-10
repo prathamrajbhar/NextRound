@@ -11,19 +11,20 @@
     "lint": "tsc --noEmit",
     "test": "echo 'No tests in database package'",
     "migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
     "seed": "prisma db seed"
   },
-  "prisma": {
-    "seed": "npx tsx prisma/seed.ts"
-  },
   "dependencies": {
-    "@prisma/client": "^5.17.0",
-    "bcryptjs": "^2.4.3"
+    "@prisma/adapter-pg": "7.9.1",
+    "@prisma/client": "7.9.1",
+    "bcryptjs": "^2.4.3",
+    "pg": "^8.16.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
-    "prisma": "^5.17.0",
+    "@types/pg": "^8.15.0",
+    "prisma": "7.9.1",
     "tsx": "^4.19.2",
-    "typescript": "^6.0.0"
+    "@typescript/native": "npm:typescript@^7.0.2"
   }
 }

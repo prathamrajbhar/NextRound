@@ -19,8 +19,9 @@
     "db:studio": "npm run studio --workspace=@nextround/database"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0",
-    "turbo": "^2.10.0",
-    "typescript": "^6.0.0"
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "concurrently": "^10.0.4",
+    "turbo": "^2.10.9",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   }
 }

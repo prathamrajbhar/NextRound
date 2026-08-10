@@ -1,15 +1,17 @@
+import { vi } from 'vitest';
+
 // Mock database and other globals if needed
-jest.mock('@nextround/database', () => ({
+vi.mock('@nextround/database', () => ({
   prisma: {
     codingProblem: {
-      upsert: jest.fn(),
+      upsert: vi.fn(),
     },
     application: {
-      findUnique: jest.fn(),
-      update: jest.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
     },
     evaluation: {
-      upsert: jest.fn(),
+      upsert: vi.fn(),
     },
   },
 }));

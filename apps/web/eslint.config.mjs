@@ -14,6 +14,13 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
+    settings: {
+      react: {
+        // Pin a concrete version so eslint-plugin-react skips `detect` mode
+        // (its `context.getFilename()` call is removed in ESLint 10).
+        version: "19.2.8",
+      },
+    },
     rules: {
       "@next/next/no-img-element": "off",
       "@next/next/google-font-display": "off",

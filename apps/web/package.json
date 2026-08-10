@@ -12,24 +12,22 @@
   "dependencies": {
     "@nextround/config": "*",
     "@nextround/shared": "*",
-    "@tailwindcss/oxide-win32-x64-msvc": "^4.3.2",
     "clsx": "^2.1.1",
-    "lightningcss-win32-x64-msvc": "^1.32.0",
-    "lucide-react": "^1.23.0",
-    "next": "16.2.10",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
+    "lucide-react": "^1.31.0",
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^26",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "~9.39.4",
-    "eslint-config-next": "16.2.10",
-    "tailwindcss": "^4",
-    "typescript": "^6"
+    "eslint": "^10.8.1",
+    "eslint-config-next": "16.3.0",
+    "tailwindcss": "^4.3.3",
+    "@typescript/native": "npm:typescript@^7.0.2"
   },
   "optionalDependencies": {
     "lightningcss": "^1.32.0"

@@ -15,10 +15,18 @@
  *
  * Run: npx prisma db seed  (from packages/database)
  */
-import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
+
+import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+import { PrismaClient } from '../src/generated/prisma/client';
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error('DATABASE_URL is not set. Load dotenv before seeding.');
+}
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 /* ============================================================
  * 1. CONFIG
