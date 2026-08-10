@@ -56,10 +56,21 @@ export default function HrCreateJob() {
     'hr_round',
     'decision',
   ]);
-  const [assessmentConfig, setAssessmentConfig] = useState({
+  const [assessmentConfig, setAssessmentConfig] = useState<{
+    mcqCount: number;
+    codingProblemId: string;
+    passingScore: number;
+    mcqDistribution?: Record<string, number>;
+  }>({
     mcqCount: 5,
     codingProblemId: 'virtualized-list',
     passingScore: 80,
+    mcqDistribution: {
+      'Quantitative Aptitude': 2,
+      'Logical Reasoning': 1,
+      'Verbal Ability': 1,
+      'Data Interpretation': 1,
+    },
   });
 
   const handleAiAssist = async () => {

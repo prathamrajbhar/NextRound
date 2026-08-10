@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Settings, AudioLines, ClipboardCheck, Video, ChevronRight, Eye } from 'lucide-react';
+import { Settings, AudioLines, ClipboardCheck, Video, ChevronRight, Eye, Brain, BookOpen, BarChart3, Cpu } from 'lucide-react';
 
 interface PipelineConfigCardProps {
   minScore: number;
@@ -21,9 +21,36 @@ interface PipelineConfigCardProps {
     mcqCount: number;
     codingProblemId: string;
     passingScore: number;
+    mcqDistribution?: Record<string, number>;
   };
-  setAssessmentConfig: (val: { mcqCount: number; codingProblemId: string; passingScore: number }) => void;
+  setAssessmentConfig: React.Dispatch<React.SetStateAction<{
+    mcqCount: number;
+    codingProblemId: string;
+    passingScore: number;
+    mcqDistribution?: Record<string, number>;
+  }>>;
 }
+
+const CATEGORIES = [
+  'Quantitative Aptitude',
+  'Logical Reasoning',
+  'Verbal Ability',
+  'Data Interpretation',
+] as const;
+
+const CATEGORY_ICONS: Record<string, any> = {
+  'Quantitative Aptitude': Cpu,
+  'Logical Reasoning': Brain,
+  'Verbal Ability': BookOpen,
+  'Data Interpretation': BarChart3,
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'Quantitative Aptitude': 'text-blue-500 dark:text-blue-400',
+  'Logical Reasoning': 'text-purple-500 dark:text-purple-400',
+  'Verbal Ability': 'text-emerald-500 dark:text-emerald-400',
+  'Data Interpretation': 'text-amber-500 dark:text-amber-400',
+};
 
 export default function PipelineConfigCard({
   minScore,
@@ -62,6 +89,26 @@ export default function PipelineConfigCard({
     setAssessmentConfig({
       ...assessmentConfig,
       [key]: value,
+    });
+  };
+
+  const distribution = assessmentConfig.mcqDistribution || {
+    'Quantitative Aptitude': Math.ceil(assessmentConfig.mcqCount / 4),
+    'Logical Reasoning': Math.floor((assessmentConfig.mcqCount + 2) / 4),
+    'Verbal Ability': Math.floor((assessmentConfig.mcqCount + 1) / 4),
+    'Data Interpretation': Math.floor(assessmentConfig.mcqCount / 4),
+  };
+
+  const handleCategoryCountChange = (category: string, newCount: number) => {
+    const updatedDist = {
+      ...distribution,
+      [category]: Math.max(0, newCount),
+    };
+    const totalCount = Object.values(updatedDist).reduce((sum, val) => sum + val, 0);
+    setAssessmentConfig({
+      ...assessmentConfig,
+      mcqCount: totalCount,
+      mcqDistribution: updatedDist,
     });
   };
 
@@ -181,35 +228,59 @@ export default function PipelineConfigCard({
 
           {/* Assessment inline details when active */}
           {isActive('assessment') && (
-            <div className="pl-9 pr-1 pt-2 space-y-3 animate-in fade-in duration-150">
+            <div className="pl-9 pr-1 pt-2 space-y-4 animate-in fade-in duration-150">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Number of Questions</span>
-                <div className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 bg-slate-50 dark:bg-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => handleConfigChange('mcqCount', Math.max(1, (assessmentConfig.mcqCount || 1) - 1))}
-                    className="h-5 w-5 rounded bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex items-center justify-center cursor-pointer font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-600"
-                  >
-                    -
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    value={assessmentConfig.mcqCount}
-                    onChange={(e) => handleConfigChange('mcqCount', Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-12 text-center font-extrabold text-xs text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleConfigChange('mcqCount', (assessmentConfig.mcqCount || 1) + 1)}
-                    className="h-5 w-5 rounded bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 flex items-center justify-center cursor-pointer font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-600"
-                  >
-                    +
-                  </button>
+                <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Total Questions</span>
+                <span className="text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2.5 py-0.5 rounded-lg border border-indigo-200/50 dark:border-indigo-800/40">
+                  {assessmentConfig.mcqCount} MCQs
+                </span>
+              </div>
+
+              {/* Category distribution */}
+              <div className="space-y-2 border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
+                <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Aptitude Categories</span>
+                <div className="grid grid-cols-1 gap-2">
+                  {CATEGORIES.map((cat) => {
+                    const count = distribution[cat] || 0;
+                    const Icon = CATEGORY_ICONS[cat] || ClipboardCheck;
+                    const colorClass = CATEGORY_COLORS[cat] || 'text-slate-500';
+                    return (
+                      <div key={cat} className="flex items-center justify-between p-2 rounded-xl bg-slate-50/50 dark:bg-slate-900/60 border border-slate-200/45 dark:border-slate-800/60 gap-2">
+                        <div className="flex items-center gap-2">
+                          <Icon className={`h-3.5 w-3.5 ${colorClass}`} />
+                          <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">{cat}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 bg-white dark:bg-slate-800">
+                          <button
+                            type="button"
+                            onClick={() => handleCategoryCountChange(cat, count - 1)}
+                            className="h-4.5 w-4.5 rounded bg-slate-50 dark:bg-slate-750 text-slate-800 dark:text-slate-200 flex items-center justify-center cursor-pointer font-bold text-[10px] hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                            disabled={count <= 0}
+                          >
+                            -
+                          </button>
+                          <input
+                            type="number"
+                            min="0"
+                            value={count}
+                            onChange={(e) => handleCategoryCountChange(cat, Math.max(0, parseInt(e.target.value) || 0))}
+                            className="w-8 text-center font-extrabold text-[10px] text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleCategoryCountChange(cat, count + 1)}
+                            className="h-4.5 w-4.5 rounded bg-slate-50 dark:bg-slate-750 text-slate-800 dark:text-slate-200 flex items-center justify-center cursor-pointer font-bold text-[10px] hover:bg-slate-100 dark:hover:bg-slate-700"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1 border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
                 <div className="flex justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
                   <span>Passing Score</span>
                   <span className="text-amber-600 dark:text-amber-400 font-extrabold">{assessmentConfig.passingScore}%</span>

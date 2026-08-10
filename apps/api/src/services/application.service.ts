@@ -671,7 +671,15 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
   // Determine exact number of questions set by the employer
   const assessmentConfig = (app.job?.assessmentConfig as any) || {};
   const thresholds = (app.job?.thresholds as any) || {};
-  const qCount = Math.max(1, Math.min(100, Number(assessmentConfig.mcqCount || thresholds.qCount) || 5));
+  const mcqDistribution = assessmentConfig.mcqDistribution || {};
+  const hasDistribution = Object.keys(mcqDistribution).length > 0;
+
+  let qCount = 0;
+  if (hasDistribution) {
+    qCount = Object.values(mcqDistribution).reduce((sum: number, val: any) => sum + (Number(val) || 0), 0) as number;
+  } else {
+    qCount = Math.max(1, Math.min(100, Number(assessmentConfig.mcqCount || thresholds.qCount) || 5));
+  }
 
   // Check if assessment already exists with the employer's set qCount
   let assessment = await prisma.assessment.findFirst({
@@ -689,13 +697,30 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
                       (app.job?.experienceLevel?.toLowerCase() === 'senior' || app.job?.experienceLevel?.toLowerCase() === 'lead') ? 'hard' : 'medium';
     const category = app.job?.department || 'technical';
 
-    rawQuestions = await generateAiAptitudeQuestions(
-      app.job?.title || 'Software Engineer',
-      app.job?.description || '',
-      qCount,
-      diffLevel,
-      category
-    );
+    if (hasDistribution) {
+      rawQuestions = [];
+      for (const [catName, catCount] of Object.entries(mcqDistribution)) {
+        const countForCat = Math.max(0, Number(catCount) || 0);
+        if (countForCat > 0) {
+          const catQuestions = await generateAiAptitudeQuestions(
+            app.job?.title || 'Software Engineer',
+            app.job?.description || '',
+            countForCat,
+            diffLevel,
+            catName
+          );
+          rawQuestions.push(...catQuestions);
+        }
+      }
+    } else {
+      rawQuestions = await generateAiAptitudeQuestions(
+        app.job?.title || 'Software Engineer',
+        app.job?.description || '',
+        qCount,
+        diffLevel,
+        category
+      );
+    }
 
     // Persist generated questions in DB Assessment record
     if (assessment) {

@@ -44,10 +44,21 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
     'hr_round',
     'decision',
   ]);
-  const [assessmentConfig, setAssessmentConfig] = useState({
+  const [assessmentConfig, setAssessmentConfig] = useState<{
+    mcqCount: number;
+    codingProblemId: string;
+    passingScore: number;
+    mcqDistribution?: Record<string, number>;
+  }>({
     mcqCount: 5,
     codingProblemId: 'virtualized-list',
     passingScore: 80,
+    mcqDistribution: {
+      'Quantitative Aptitude': 2,
+      'Logical Reasoning': 1,
+      'Verbal Ability': 1,
+      'Data Interpretation': 1,
+    },
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -86,7 +97,19 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
             setAutoOffer(data.thresholds.autoOffer ?? false);
           }
           if (data.stages) setStages(data.stages as ('screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision')[]);
-          if (data.assessmentConfig) setAssessmentConfig(data.assessmentConfig);
+          if (data.assessmentConfig) {
+            const config = { ...data.assessmentConfig } as any;
+            if (!config.mcqDistribution) {
+              const total = config.mcqCount || 5;
+              config.mcqDistribution = {
+                'Quantitative Aptitude': Math.ceil(total / 4),
+                'Logical Reasoning': Math.floor((total + 2) / 4),
+                'Verbal Ability': Math.floor((total + 1) / 4),
+                'Data Interpretation': Math.floor(total / 4),
+              };
+            }
+            setAssessmentConfig(config);
+          }
         }
       } catch (err) {
         console.error('Failed to fetch job:', err);

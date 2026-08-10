@@ -42,6 +42,7 @@ export interface Job {
     mcqCount: number;
     codingProblemId: string;
     passingScore: number;
+    mcqDistribution?: Record<string, number>;
   };
 }
 
