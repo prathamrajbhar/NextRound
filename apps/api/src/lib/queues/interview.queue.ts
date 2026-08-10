@@ -1,4 +1,4 @@
-import { interviewQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
+import { interviewQueue, JOB_NAMES, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface InterviewJobPayload {
   interviewId: string;
@@ -21,7 +21,7 @@ export async function enqueueInterview(
     extraData,
   };
 
-  const job = await interviewQueue.add('interview_evaluate', payload, DEFAULT_JOB_OPTIONS);
+  const job = await interviewQueue.add(JOB_NAMES.interview, payload, DEFAULT_JOB_OPTIONS);
 
   return job;
 }

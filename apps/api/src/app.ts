@@ -4,7 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { UPLOAD_ROOT_DIR } from './lib/storage';
-import { errorHandler } from './middleware/errorHandler';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { apiRouter } from './routes';
 
 export const app = express();
@@ -37,5 +37,8 @@ app.get('/api/v1/health', (_req, res) => {
 
 // Mounted API v1 Router
 app.use('/api/v1', apiRouter);
+
+// JSON 404 for unmatched routes (inside /api/v1)
+app.use(notFoundHandler);
 
 app.use(errorHandler);

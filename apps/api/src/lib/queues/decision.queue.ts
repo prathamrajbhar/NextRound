@@ -1,4 +1,4 @@
-import { decisionQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
+import { decisionQueue, JOB_NAMES, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface DecisionJobPayload {
   applicationId: string;
@@ -23,7 +23,7 @@ export async function enqueueDecision(
     extraData,
   };
 
-  const job = await decisionQueue.add('run_decision', payload, {
+  const job = await decisionQueue.add(JOB_NAMES.decision, payload, {
     ...DEFAULT_JOB_OPTIONS,
     priority: 1, // Critical priority
   });

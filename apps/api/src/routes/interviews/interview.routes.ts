@@ -3,7 +3,7 @@ import { prisma } from '@nextround/database';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { enqueueInterview } from '../../lib/queues/interview.queue';
-import { decisionQueue, DEFAULT_JOB_OPTIONS } from '../../lib/bullmq';
+import { enqueueDecision } from '../../lib/queues/decision.queue';
 
 // ICE servers for the WebRTC session are env-configurable. The dev default is
 // the public Google STUN list; no TURN credentials are invented. A production
@@ -376,13 +376,13 @@ interviewRouter.post('/hr/:applicationId/result', requireRole('hr'), async (req:
         compositeScore = totalWeight > 0 ? weights.reduce((s, v) => s + v, 0) / totalWeight : null;
       }
 
-      await decisionQueue.add('decision_evaluate', {
+      await enqueueDecision(
         applicationId,
-        evaluationId: hrEvaluation.id,
-        compositeScore,
-        confidence,
-        extraData: { hr_notes: notes },
-      }, DEFAULT_JOB_OPTIONS);
+        hrEvaluation.id,
+        compositeScore ?? undefined,
+        confidence ?? undefined,
+        { hr_notes: notes }
+      );
     }
 
     return res.json({

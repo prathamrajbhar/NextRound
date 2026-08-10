@@ -1,14 +1,16 @@
-import { sourcingQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
+import { sourcingQueue, JOB_NAMES, DEFAULT_JOB_OPTIONS } from '../bullmq';
+
+export type SourcingAction = (typeof JOB_NAMES.sourcing)[keyof typeof JOB_NAMES.sourcing];
 
 export interface SourcingJobPayload {
   jobId: string;
-  action: 'ai-jd-assist' | 'sourcing_index' | 'prep-generate';
+  action: SourcingAction;
   extraData?: Record<string, any>;
 }
 
 export async function enqueueSourcing(
   jobId: string,
-  action: 'ai-jd-assist' | 'sourcing_index' | 'prep-generate' = 'sourcing_index',
+  action: SourcingAction = JOB_NAMES.sourcing.sourcingIndex,
   extraData?: Record<string, any>
 ) {
   const payload: SourcingJobPayload = {

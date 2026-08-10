@@ -1,4 +1,4 @@
-import { evaluatorQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
+import { evaluatorQueue, JOB_NAMES, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface EvaluationJobPayload {
   applicationId: string;
@@ -18,7 +18,7 @@ export async function enqueueEvaluation(
     extraData,
   };
 
-  const job = await evaluatorQueue.add('run_evaluation', payload, {
+  const job = await evaluatorQueue.add(JOB_NAMES.evaluator, payload, {
     ...DEFAULT_JOB_OPTIONS,
     priority: 1, // Critical priority
   });

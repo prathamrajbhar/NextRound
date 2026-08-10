@@ -1,4 +1,4 @@
-import { analyticsQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
+import { analyticsQueue, JOB_NAMES, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface AnalyticsJobPayload {
   orgId?: string;
@@ -8,7 +8,7 @@ export interface AnalyticsJobPayload {
 }
 
 export async function enqueueAnalyticsReport(payload: AnalyticsJobPayload) {
-  const job = await analyticsQueue.add('generate_analytics_report', payload, {
+  const job = await analyticsQueue.add(JOB_NAMES.analytics, payload, {
     ...DEFAULT_JOB_OPTIONS,
     backoff: { type: 'exponential', delay: 3000 },
   });

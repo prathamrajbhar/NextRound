@@ -1,4 +1,4 @@
-import { mockQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
+import { mockQueue, JOB_NAMES, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface MockJobPayload {
   sessionId: string;
@@ -23,7 +23,7 @@ export async function enqueueMockEvaluation(
     transcript,
   };
 
-  const job = await mockQueue.add('mock_evaluate', payload, DEFAULT_JOB_OPTIONS);
+  const job = await mockQueue.add(JOB_NAMES.mock, payload, DEFAULT_JOB_OPTIONS);
 
   return job;
 }

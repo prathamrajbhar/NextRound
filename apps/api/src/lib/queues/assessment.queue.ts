@@ -1,4 +1,4 @@
-import { assessmentQueue, DEFAULT_JOB_OPTIONS } from '../bullmq';
+import { assessmentQueue, JOB_NAMES, DEFAULT_JOB_OPTIONS } from '../bullmq';
 
 export interface AptitudeAnswer {
   questionId: string;
@@ -26,7 +26,7 @@ export async function enqueueAssessment(
     tabSwitchCount: extra?.tabSwitchCount,
   };
 
-  const job = await assessmentQueue.add('score_aptitude', payload, DEFAULT_JOB_OPTIONS);
+  const job = await assessmentQueue.add(JOB_NAMES.assessment, payload, DEFAULT_JOB_OPTIONS);
 
   return job;
 }

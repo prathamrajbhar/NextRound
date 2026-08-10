@@ -18,6 +18,33 @@ export const DEFAULT_JOB_OPTIONS: JobsOptions = {
   removeOnComplete: true,
 };
 
+/**
+ * Canonical BullMQ job names, keyed by queue. Every enqueue in the app must
+ * use a name from here (via the per-queue wrappers in `lib/queues/`) so two
+ * producers can never enqueue the same queue under different names again.
+ * The sourcing queue multiplexes job types via its `action` field, so its
+ * names are nested.
+ */
+export const JOB_NAMES = {
+  sourcing: {
+    jdAssist: 'ai-jd-assist',
+    sourcingIndex: 'sourcing_index',
+    prepGenerate: 'prep-generate',
+  },
+  screening: 'screening_evaluate',
+  interview: 'interview_evaluate',
+  evaluator: 'run_evaluation',
+  decision: 'run_decision',
+  scheduling: 'schedule_negotiation',
+  assessment: 'score_aptitude',
+  coding: 'evaluate_coding',
+  videoScreening: 'score_video_screening',
+  mock: 'mock_evaluate',
+  prep: 'prep_generate',
+  resumeBuilder: 'resume_builder_generate',
+  analytics: 'generate_analytics_report',
+} as const;
+
 export const QUEUE_NAMES = [
   'sourcing',
   'screening',
