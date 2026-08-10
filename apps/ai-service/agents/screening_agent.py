@@ -60,12 +60,13 @@ def parse_resume_node(state: ScreeningState) -> ScreeningState:
         skills = extract_json_array(generate_text(prompt)) or []
 
     if not skills and resume_text:
-        # Keyword-based fallback skill extraction
+        # Keyword-based extraction from the actual resume text — never invents
+        # skills that are not present in the resume.
         common = ["Python", "TypeScript", "JavaScript", "React", "Node.js", "SQL", "PostgreSQL", "Docker", "AWS", "GraphQL", "REST API", "Git", "System Design"]
         skills = [s for s in common if s.lower() in resume_text.lower()]
 
-    if not skills:
-        skills = ["TypeScript", "React", "Node.js", "SQL", "Problem Solving"]
+    # If the resume yields no skills, the list stays empty — no fabricated
+    # default skill set is injected.
 
     # Coerce every extracted skill to a non-empty string so downstream nodes
     # (gap analysis, feedback generation) can safely lowercase/join them.
@@ -95,10 +96,18 @@ def _score_rubric_dimensions_with_llm(resume_text: str, job_description: str) ->
 
 
 def score_against_rubric_node(state: ScreeningState) -> ScreeningState:
-    """Node 2: Evaluate candidate against job rubric & compute vector embedding cosine similarity."""
+    """Node 2: Evaluate candidate against job rubric & compute vector embedding cosine similarity.
+
+    Rubric dimension scores come exclusively from a real LLM evaluation of the
+    resume against the job. No heuristic or default-0 scores are used — if the
+    LLM cannot produce a complete score set, screening fails rather than
+    fabricating a score.
+    """
     resume_text = state.get("resume_text", "")
     job_description = state.get("job_description", "")
-    rubric = state.get("rubric") or {"technical": 30, "communication": 20, "problemSolving": 25, "experience": 25}
+    rubric = state.get("rubric")
+    if not rubric:
+        raise RuntimeError("Screening rubric is missing; cannot score the application.")
 
     # Vector embedding match
     job_vector = embed_text(job_description)
@@ -106,23 +115,20 @@ def score_against_rubric_node(state: ScreeningState) -> ScreeningState:
     similarity = cosine_similarity(job_vector, resume_vector)
     semantic_score = round(similarity * 100, 2)
 
-    # Calculate rubric dimension scores from real resume signals.
-    # Prefer a genuine Gemini rubric evaluation; fall back to deterministic
-    # content-aware heuristics so screening never auto-rejects every candidate.
-    skills = state.get("parsed_skills", [])
     llm_scores = _score_rubric_dimensions_with_llm(resume_text, job_description)
-    if llm_scores:
-        tech_score = round(float(llm_scores.get("technical", 0) or 0), 2)
-        comm_score = round(float(llm_scores.get("communication", 0) or 0), 2)
-        prob_score = round(float(llm_scores.get("problem_solving", 0) or 0), 2)
-        exp_score = round(float(llm_scores.get("experience", 0) or 0), 2)
-    else:
-        resume_len = len(resume_text)
-        tech_score = min(100.0, max(0.0, len(skills) * 15.0))
-        comm_score = min(100.0, 40.0 + resume_len // 40)
-        prob_terms = ["system design", "architecture", "distributed", "scalab", "algorithm", "problem solving"]
-        prob_score = min(100.0, sum(1 for t in prob_terms if t in resume_text.lower()) * 20.0)
-        exp_score = min(100.0, 50.0 + resume_len // 60)
+    if not llm_scores:
+        raise RuntimeError("Screening LLM returned no rubric scores; cannot evaluate the application.")
+
+    required = ("technical", "communication", "problem_solving", "experience")
+    parsed = {dim: llm_scores.get(dim) for dim in required}
+    if any(v is None for v in parsed.values()):
+        missing = ", ".join(dim for dim, v in parsed.items() if v is None)
+        raise RuntimeError(f"Screening LLM returned an incomplete score set; missing: {missing}.")
+
+    tech_score = round(float(parsed["technical"]), 2)
+    comm_score = round(float(parsed["communication"]), 2)
+    prob_score = round(float(parsed["problem_solving"]), 2)
+    exp_score = round(float(parsed["experience"]), 2)
 
     tech_w = rubric.get("technical", 30) / 100.0
     comm_w = rubric.get("communication", 20) / 100.0
@@ -148,11 +154,12 @@ def compute_gaps_node(state: ScreeningState) -> ScreeningState:
     key_jd_terms = ["system architecture", "postgresql", "redis", "bullmq", "webrtc", "docker", "kubernetes", "microservices"]
     missing = [term.title() for term in key_jd_terms if term in job_desc and term not in [s.lower() for s in skills]]
 
-    strengths = skills[:4] if skills else ["Strong foundational knowledge"]
-    exp_gaps = ["More hands-on experience with production-scale distributed architecture recommended."] if missing else []
+    strengths = skills[:4]
+    exp_gaps = []
 
+    strengths_txt = ", ".join(strengths) if strengths else "No skills were extractable from the resume."
     feedback = (
-        f"Candidate demonstrated solid strengths in {', '.join(strengths)}. "
+        f"Strengths: {strengths_txt}. "
         f"Gaps identified in: {', '.join(missing) if missing else 'None'}"
     )
 
@@ -167,8 +174,10 @@ def compute_gaps_node(state: ScreeningState) -> ScreeningState:
 
 def make_decision_node(state: ScreeningState) -> ScreeningState:
     """Node 4: Gate decision by comparing composite score against job threshold."""
-    composite_score = state.get("composite_score", 0.0)
-    min_score = state.get("min_score", 70.0)
+    composite_score = state.get("composite_score")
+    min_score = state.get("min_score")
+    if composite_score is None or min_score is None:
+        raise RuntimeError("Screening cannot decide without real composite and threshold scores.")
 
     decision = "screening_completed" if composite_score >= min_score else "rejected"
     reasoning = (
@@ -197,16 +206,9 @@ def generate_feedback_node(state: ScreeningState) -> ScreeningState:
             f"Keep the tone supportive and professional."
         )
         feedback_text = generate_text(prompt)
-        if feedback_text:
-            state["rejection_feedback"] = feedback_text
-            return state
-
-        missing_str = ", ".join(missing) if missing else "specific technical requirements"
-        state["rejection_feedback"] = (
-            f"Thank you for applying. While we were impressed with your experience in {', '.join(strengths[:2]) if strengths else 'engineering'}, "
-            f"we are currently looking for candidates with deeper hands-on expertise in {missing_str}. "
-            f"We encourage you to bolster these areas and apply for future roles."
-        )
+        if not feedback_text:
+            raise RuntimeError("Screening LLM returned no rejection feedback for a rejected applicant.")
+        state["rejection_feedback"] = feedback_text
     else:
         state["rejection_feedback"] = ""
 

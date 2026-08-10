@@ -44,9 +44,9 @@ async def fetch_github_profile(github_id: str) -> Dict[str, Any]:
                 "bio": profile.get("bio", ""),
                 "location": profile.get("location", ""),
                 "website": profile.get("website", ""),
-                "followers": profile.get("followers", "0"),
-                "following": profile.get("following", "0"),
-                "contributions_last_year": profile.get("contributions_last_year", "0"),
+                "followers": profile.get("followers"),
+                "following": profile.get("following"),
+                "contributions_last_year": profile.get("contributions_last_year"),
                 "repositories": recent_repos[:10],
                 "pinned_repositories": pinned_repos,
                 "extracted_skills": repo_languages,
@@ -125,8 +125,9 @@ async def aggregate_external_profile(
 
     gh_res, li_res = await asyncio.gather(*tasks)
 
-    # Combine profiles
-    name = "External Candidate"
+    # Combine profiles. name starts empty — a candidate with no discoverable
+    # name is reported as empty, never given a placeholder label.
+    name = None
     headline = ""
     bio_summary = ""
     all_skills = set()
@@ -137,7 +138,7 @@ async def aggregate_external_profile(
         name = gh_res.get("name") or name
         bio_summary += f"GitHub Bio: {gh_res.get('bio')}\n"
         all_skills.update(gh_res.get("extracted_skills", []))
-        
+
         # Add repo summaries
         for r in gh_res.get("repositories", [])[:3]:
             if r.get("summary"):
@@ -145,7 +146,7 @@ async def aggregate_external_profile(
 
     if li_res.get("success"):
         sources.append("linkedin")
-        name = li_res.get("name") if (name == "External Candidate" or li_res.get("name")) else name
+        name = li_res.get("name") or name
         headline = li_res.get("headline", "")
         bio_summary += f"LinkedIn Headline: {headline}\nAbout: {li_res.get('about')}\n"
         all_skills.update(li_res.get("extracted_skills", []))

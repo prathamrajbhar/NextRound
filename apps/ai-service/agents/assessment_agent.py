@@ -44,14 +44,14 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
             if q_id:
                 answer_key[q_id] = {
                     "correctIndex": _to_int(q.get("correctIndex"), -1),
-                    "category": q.get("category", "Logical Deduction"),
+                    "category": q.get("category"),
                 }
 
     # Dynamic fallback generator is disabled
     if not answer_key:
         raise ValueError("Aptitude evaluation requires stored_questions to be populated. Fallback is disabled.")
 
-    categories = {"Logical": {"correct": 0, "total": 0}, "Numerical": {"correct": 0, "total": 0}, "Verbal": {"correct": 0, "total": 0}, "Spatial": {"correct": 0, "total": 0}}
+    categories = {}
 
     total_correct = 0
     total_q = len(answers)
@@ -61,7 +61,10 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
         # selectedOptionIndex may arrive as a string from the client — normalize
         # to int so it compares against the (also normalized) correctIndex.
         selected = _to_int(ans.get("selectedOptionIndex"), -1)
-        cat = ans.get("category") or (answer_key.get(q_id, {}).get("category") if q_id in answer_key else "Logical")
+        # The category is taken from the answer, then the stored question. When
+        # neither provides one, the question is bucketed as "Uncategorized" — a
+        # category is never fabricated.
+        cat = ans.get("category") or (answer_key.get(q_id, {}).get("category") if q_id in answer_key else None) or "Uncategorized"
 
         if cat not in categories:
             categories[cat] = {"correct": 0, "total": 0}
@@ -73,12 +76,12 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
             categories[cat]["correct"] += 1
             total_correct += 1
 
-    category_scores = {}
-    for cat_name, stats in categories.items():
-        if stats["total"] > 0:
-            category_scores[cat_name] = round((stats["correct"] / stats["total"]) * 100.0, 1)
-        else:
-            category_scores[cat_name] = 0.0
+    # Only categories that actually contain answered questions are reported.
+    category_scores = {
+        cat_name: round((stats["correct"] / stats["total"]) * 100.0, 1)
+        for cat_name, stats in categories.items()
+        if stats["total"] > 0
+    }
 
     overall_score = round((total_correct / max(1, total_q)) * 100.0, 1)
 
@@ -92,8 +95,10 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
 
 def compute_verdict_node(state: AssessmentState) -> AssessmentState:
     """Node 2: Compare composite aptitude score against job passing threshold."""
-    score = state.get("score", 0.0)
-    min_score = state.get("min_score", 70.0)
+    score = state.get("score")
+    min_score = state.get("min_score")
+    if score is None or min_score is None:
+        raise ValueError("Aptitude verdict requires real score and min_score values.")
     tab_switches = state.get("tab_switch_count", 0)
 
     passed = score >= min_score

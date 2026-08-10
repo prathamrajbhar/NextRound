@@ -24,7 +24,7 @@ try:
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     REPORTLAB_AVAILABLE = True
 except ImportError:
-    logger.warning("ReportLab not installed. Falling back to HTML/text-based PDF export mock.")
+    logger.warning("ReportLab not installed. PDF generation will fail with an explicit error — no mock PDF is produced.")
 
 
 def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> str:
@@ -125,9 +125,9 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
             if work_history:
                 story.append(Paragraph("WORK EXPERIENCE", heading_style))
                 for item in work_history:
-                    title = item.get("title", "Software Engineer")
-                    company = item.get("company", "Tech Co")
-                    dates = item.get("dates", "2022 - Present")
+                    title = item.get("title", "")
+                    company = item.get("company", "")
+                    dates = item.get("dates", "")
                     story.append(Paragraph(f"<b>{_esc(title)}</b> — <i>{_esc(company)}</i> ({_esc(dates)})", body_style))
                     bullets = item.get("bullets", [])
                     for b in bullets:
@@ -144,7 +144,7 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
             if projects:
                 story.append(Paragraph("KEY PROJECTS", heading_style))
                 for proj in projects:
-                    pname = proj.get("name", "Project")
+                    pname = proj.get("name", "")
                     pdesc = proj.get("description", "")
                     story.append(Paragraph(f"<b>{_esc(pname)}</b>: {_esc(pdesc)}", body_style))
 
@@ -152,8 +152,8 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
             if education:
                 story.append(Paragraph("EDUCATION", heading_style))
                 for edu in education:
-                    deg = edu.get("degree", "B.S. Computer Science")
-                    inst = edu.get("institution", "University")
+                    deg = edu.get("degree", "")
+                    inst = edu.get("institution", "")
                     story.append(Paragraph(f"<b>{_esc(deg)}</b> — {_esc(inst)}", body_style))
 
             doc.build(story)

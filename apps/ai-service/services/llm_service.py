@@ -5,9 +5,9 @@ hardcoded the model string, and duplicated the regex-JSON-extraction code. This
 module centralizes the client, the model choice (from settings), and JSON
 parsing so that switching models or providers touches exactly one file.
 
-All functions degrade gracefully: when no API key is configured or a model call
-fails they return None instead of raising, so downstream agents can keep their
-deterministic fallbacks.
+All functions return None when no API key is configured or a model call fails.
+Callers treat a None result as a missing AI output: they fail with an explicit
+error rather than substituting canned or fabricated content.
 """
 
 import json

@@ -25,22 +25,19 @@ class MockInterviewerState(TypedDict, total=False):
 
 def run_mock_interviewer_agent(state: MockInterviewerState) -> MockInterviewerState:
     """Runs a turn of the Mock Interviewer Agent with real-time coaching hints."""
-    topic = state.get("topic", "System Design & Architecture")
-    difficulty = state.get("difficulty", "medium")
-    target_role = state.get("target_role", "Software Engineer")
-    target_company = state.get("target_company", "Tech Enterprise")
+    topic = state.get("topic")
+    difficulty = state.get("difficulty")
+    target_role = state.get("target_role")
+    target_company = state.get("target_company")
     history = state.get("conversation_history", [])
     candidate_input = state.get("latest_candidate_response", "").strip()
     turn = state.get("turn_number", 0) + 1
     state["turn_number"] = turn
 
-    ai_response = ""
-    hint = None
-
     prompt = (
         f"You are NextRound AI Mock Interviewer simulating a practice interview.\n"
-        f"Role: {target_role} at {target_company}\n"
-        f"Topic: {topic} (Difficulty: {difficulty})\n"
+        f"Role: {target_role or ''} at {target_company or ''}\n"
+        f"Topic: {topic or ''} (Difficulty: {difficulty or ''})\n"
         f"Turn: {turn}\n"
         f"Conversation History: {json.dumps(history[-6:])}\n"
         f"Latest Candidate Response: '{candidate_input}'\n\n"
@@ -49,11 +46,15 @@ def run_mock_interviewer_agent(state: MockInterviewerState) -> MockInterviewerSt
         f"2. 'coaching_hint': A brief, actionable real-time tip for the candidate on how to structure their answer (e.g., 'Use STAR format', 'Quantify metrics', 'Address scalability edge cases')."
     )
     parsed = extract_json_object(generate_text(prompt))
-    if parsed:
-        ai_response = parsed.get("response", "")
-        hint = parsed.get("coaching_hint", None)
+    ai_response = (parsed or {}).get("response")
+    hint = (parsed or {}).get("coaching_hint") if parsed else None
 
-    state["latest_ai_response"] = ai_response or ""
+    # A turn without real LLM output must fail — the caller raises a proper HTTP
+    # error instead of receiving canned text.
+    if not ai_response:
+        raise RuntimeError("Mock interviewer LLM returned no response for this turn.")
+
+    state["latest_ai_response"] = ai_response
     state["coaching_hint"] = hint
     state["is_complete"] = turn >= 6
 

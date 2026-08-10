@@ -17,8 +17,12 @@ export interface ScreeningEvaluationResult {
 }
 
 /**
- * Runs AI screening evaluation for a candidate application using Gemini LLM
- * or context-aware keyword matching fallback.
+ * Runs AI screening evaluation for a candidate application using Gemini LLM.
+ *
+ * Every score and every gap-analysis field comes from a validated LLM response.
+ * No heuristic score, default threshold, or canned strengths list is ever used —
+ * if the LLM cannot produce a complete, valid result the evaluation fails
+ * instead of fabricating one.
  */
 export async function evaluateApplicationScreening(
   applicationId: string
@@ -45,13 +49,15 @@ export async function evaluateApplicationScreening(
   const candidateRawText = app.candidate.raw_resume_text || app.candidate.bio || '';
   const candidateExp = app.candidate.years_of_experience || 0;
 
+  // The pass threshold comes from the job's real config. Fabricating a 70 would
+  // silently gate candidates against an invented number.
   const thresholds = (app.job.thresholds as any) || {};
-  const minScore = typeof thresholds.minScore === 'number' ? thresholds.minScore : 70;
+  const minScore = typeof thresholds.minScore === 'number' ? thresholds.minScore : null;
+  if (minScore === null) {
+    throw new Error(`Job ${app.jobId} has no minScore threshold configured; screening cannot run.`);
+  }
 
-  let result: ScreeningEvaluationResult | null = null;
-
-  try {
-    const prompt = `You are an elite AI technical screening agent evaluating a job application.
+  const prompt = `You are an elite AI technical screening agent evaluating a job application.
 
 JOB DETAILS:
 Title: ${jobTitle}
@@ -66,7 +72,7 @@ Resume Bio / Text: ${candidateRawText.slice(0, 4000)}
 
 DIRECTIVES:
 1. Compare candidate's experience, skills, and background against job requirements.
-2. Compute an overall resumeScore (0-100).
+2. Compute an overall resumeScore (0-100) and semanticMatchScore (0-100).
 3. Generate a gapAnalysis object containing matchingSkills, missingSkills, experienceMatch, keyStrengths.
 4. Provide a 2-3 sentence executive reasoning summary.
 
@@ -83,62 +89,46 @@ Return ONLY a JSON object matching:
   "reasoning": string
 }`;
 
-    const text = await generateText(prompt);
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      const score = Math.max(0, Math.min(100, Number(parsed.resumeScore) || 75));
-      const semantic = Math.max(0, Math.min(100, Number(parsed.semanticMatchScore) || score));
-      result = {
-        status: score >= minScore ? 'screening_completed' : 'rejected',
-        resumeScore: score,
-        compositeScore: score,
-        semanticMatchScore: semantic,
-        gapAnalysis: {
-          matchingSkills: Array.isArray(parsed.gapAnalysis?.matchingSkills) ? parsed.gapAnalysis.matchingSkills : candidateSkills.slice(0, 4),
-          missingSkills: Array.isArray(parsed.gapAnalysis?.missingSkills) ? parsed.gapAnalysis.missingSkills : [],
-          experienceMatch: parsed.gapAnalysis?.experienceMatch || `${candidateExp} years experience evaluated`,
-          keyStrengths: Array.isArray(parsed.gapAnalysis?.keyStrengths) ? parsed.gapAnalysis.keyStrengths : ['Relevant technical stack', 'Profile alignment'],
-        },
-        reasoning: parsed.reasoning || `Candidate scored ${score}% in automated AI resume qualification screening.`,
-      };
-    }
+  const text = await generateText(prompt);
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('AI screening LLM returned no parseable JSON.');
+  }
+  let parsed: any;
+  try {
+    parsed = JSON.parse(jsonMatch[0]);
   } catch (err) {
-    console.error('AI application screening evaluation error:', err);
+    throw new Error(`AI screening LLM returned malformed JSON: ${(err as Error).message}`);
   }
 
-  // Context-aware Heuristic Fallback if Gemini unavailable or failed
-  if (!result) {
-    const jobTextLower = `${jobTitle} ${jobDesc}`.toLowerCase();
-    const matching: string[] = [];
-    const missing: string[] = [];
-
-    candidateSkills.forEach((skill) => {
-      if (jobTextLower.includes(skill.toLowerCase())) {
-        matching.push(skill);
-      }
-    });
-
-    // Score calculation
-    let calculatedScore = 70;
-    if (matching.length > 0) calculatedScore += Math.min(20, matching.length * 5);
-    if (candidateExp >= 3) calculatedScore += 5;
-    calculatedScore = Math.min(95, calculatedScore);
-
-    result = {
-      status: calculatedScore >= minScore ? 'screening_completed' : 'rejected',
-      resumeScore: calculatedScore,
-      compositeScore: calculatedScore,
-      semanticMatchScore: calculatedScore,
-      gapAnalysis: {
-        matchingSkills: matching.length > 0 ? matching : candidateSkills.slice(0, 3),
-        missingSkills: missing,
-        experienceMatch: `${candidateExp} years experience evaluated against ${jobTitle} requirements.`,
-        keyStrengths: candidateSkills.length > 0 ? [`Demonstrated skills in ${candidateSkills.slice(0, 3).join(', ')}`] : ['Solid foundational profile'],
-      },
-      reasoning: `AI Screening Agent completed parsing. Qualification match score: ${calculatedScore}%.`,
-    };
+  const rawScore = Number(parsed.resumeScore);
+  const rawSemantic = Number(parsed.semanticMatchScore);
+  if (!Number.isFinite(rawScore) || !Number.isFinite(rawSemantic)) {
+    throw new Error('AI screening LLM returned missing or non-numeric scores.');
   }
+  const score = Math.max(0, Math.min(100, rawScore));
+  const semantic = Math.max(0, Math.min(100, rawSemantic));
+
+  const gap = parsed.gapAnalysis || {};
+  const matchingSkills = Array.isArray(gap.matchingSkills) ? gap.matchingSkills.map(String) : [];
+  const missingSkills = Array.isArray(gap.missingSkills) ? gap.missingSkills.map(String) : [];
+  const keyStrengths = Array.isArray(gap.keyStrengths) ? gap.keyStrengths.map(String) : [];
+  const experienceMatch = typeof gap.experienceMatch === 'string' ? gap.experienceMatch : '';
+  const reasoning = typeof parsed.reasoning === 'string' ? parsed.reasoning : '';
+
+  const result: ScreeningEvaluationResult = {
+    status: score >= minScore ? 'screening_completed' : 'rejected',
+    resumeScore: score,
+    compositeScore: score,
+    semanticMatchScore: semantic,
+    gapAnalysis: {
+      matchingSkills,
+      missingSkills,
+      experienceMatch,
+      keyStrengths,
+    },
+    reasoning,
+  };
 
   // Update Application record status in DB
   const updatedApp = await prisma.application.update({
@@ -183,11 +173,10 @@ Return ONLY a JSON object matching:
     },
   });
 
-  // If screening passed, ensure Interview record is created
+  // If screening passed, ensure Interview record is created. A failure here is
+  // a real failure — it is not silently swallowed.
   if (result.status !== 'rejected') {
-    await ensureInterviewAndSchedule(applicationId).catch((err) =>
-      console.error(`Failed to ensure interview for application ${applicationId}:`, err)
-    );
+    await ensureInterviewAndSchedule(applicationId);
   }
 
   return { application: updatedApp, evaluation };

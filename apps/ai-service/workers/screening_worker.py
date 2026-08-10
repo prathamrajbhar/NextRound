@@ -79,9 +79,16 @@ async def process_screening_job(job_data: dict) -> bool:
         if not resume_text:
             resume_text = build_profile_summary(candidate_info)
         job_desc = job_info.get("description", "")
-        rubric = job_info.get("rubric") or {"technical": 30, "communication": 20, "problemSolving": 25, "experience": 25}
+        # The scoring rubric and pass threshold come from the job's real config.
+        # Fabricating defaults would silently score candidates against invented
+        # weights — screening fails fast instead when they are absent.
+        rubric = job_info.get("rubric")
         thresholds = job_info.get("thresholds") or {}
-        min_score = thresholds.get("minScore", 70.0)
+        min_score = thresholds.get("minScore")
+        if not rubric:
+            raise RuntimeError(f"Screening job for application {application_id} has no scoring rubric configured.")
+        if min_score is None:
+            raise RuntimeError(f"Screening job for application {application_id} has no minScore threshold configured.")
 
         # Generate & update 768-dim candidate resume embedding
         if candidate_id:

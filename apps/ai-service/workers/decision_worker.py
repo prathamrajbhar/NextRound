@@ -75,9 +75,11 @@ async def process_decision_job(job_data: dict) -> bool:
 
         # A missing composite must never be coerced to 0.0 (which would route to
         # an auto-reject). It stays None and the Decision Agent sends it to the
-        # HR Hold Queue for manual review instead.
+        # HR Hold Queue for manual review instead. Confidence likewise stays None
+        # when unknown — never fabricated as 1.0 — so a missing confidence routes
+        # the application to the HR Hold Queue rather than to an auto decision.
         composite_score = _coerce_optional_float(composite_score)
-        confidence = float(confidence or 1.0)
+        confidence = _coerce_optional_float(confidence)
 
         # Run Decision LangGraph Agent
         result = await run_decision_agent(
@@ -90,7 +92,15 @@ async def process_decision_job(job_data: dict) -> bool:
             equity=job_terms.get("equity"),
         )
 
-        eval_id = evaluation_id or f"eval_{application_id}"
+        # The decision callback targets the real evaluation record. A fabricated
+        # "eval_<applicationId>" id would write a decision to a non-existent
+        # evaluation; fail instead when no real evaluation id is available.
+        if not evaluation_id:
+            raise RuntimeError(
+                f"No evaluation id available for decision job on application {application_id}. "
+                "Refusing to write a decision to a fabricated evaluation."
+            )
+        eval_id = evaluation_id
 
         # Send decision result to Express API internal callback endpoint
         await callback_client.patch(

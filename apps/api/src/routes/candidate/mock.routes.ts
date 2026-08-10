@@ -39,22 +39,23 @@ mockRouter.post(
       const candidateId = await getCandidateProfileId(req.user!.userId);
       const { topic, targetCompany, targetRole, difficulty, focusAreas } = parsed.data;
 
+      if (!targetRole && !topic) {
+        return res.status(400).json({
+          success: false,
+          error: 'A target role or practice topic is required to start a mock session.',
+        });
+      }
+
       const mockSession = await prisma.mockSession.create({
         data: {
           candidate_id: candidateId,
-          target_company: targetCompany || 'General Tech',
-          target_role: targetRole || 'Software Engineer',
-          topic: topic || 'System Design',
-          difficulty: difficulty || 'medium',
+          target_company: targetCompany,
+          target_role: targetRole,
+          topic: topic,
+          difficulty: difficulty,
           type: 'mock',
           status: 'active',
           focus_areas: focusAreas || [],
-          rubric: {
-            clarity: 25,
-            depth: 25,
-            examples: 25,
-            technicalAccuracy: 25,
-          },
         },
       });
 

@@ -23,21 +23,24 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
         validated = []
         for idx, q in enumerate(parsed):
             q_id = str(q.get("id") or f"gen_q{idx+1}")
-            cat = str(q.get("category") or "Logical Deduction")
-            diff = str(q.get("difficulty") or "medium")
+            cat = q.get("category")
+            diff = q.get("difficulty")
             stem = str(q.get("question") or q.get("text") or "")
             opts = q.get("options")
+            correct_idx = q.get("correctIndex")
+            # A question without a real correct answer index is unusable for
+            # assessment — fabricating correctIndex=0 would mark a random option
+            # as the answer key. Skip it rather than invent one.
             if not stem or not isinstance(opts, list) or len(opts) < 2:
                 continue
-            opts = [str(o) for o in opts]
-            correct_idx = q.get("correctIndex")
             if not isinstance(correct_idx, int) or correct_idx < 0 or correct_idx >= len(opts):
-                correct_idx = 0
-            
+                continue
+            opts = [str(o) for o in opts]
+
             validated.append({
                 "id": q_id,
-                "category": cat,
-                "difficulty": diff,
+                "category": str(cat) if cat else None,
+                "difficulty": str(diff) if diff else None,
                 "question": stem,
                 "text": stem,
                 "options": opts,
@@ -46,7 +49,7 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
                 # from static-bank fallback questions.
                 "source": "ai-generated",
             })
-        
+
         return validated[:count]
     except Exception as parse_err:
         logger.warning(f"JSON parse error in LLM payload for {job_title}: {parse_err}")

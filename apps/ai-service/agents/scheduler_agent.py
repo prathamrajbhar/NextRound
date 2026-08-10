@@ -33,12 +33,6 @@ BAND_TIMES = {
     "evening": (18, 0),
 }
 
-# Used ONLY when the org has no availability configuration at all. These are
-# real future UTC datetimes on business days at representative working hours —
-# they are never attributed to an org availability config.
-DEFAULT_BAND_TIMES = [(10, 0), (14, 0), (16, 0)]
-
-
 def _day_category(dt: datetime) -> str:
     """Monday-Friday -> 'weekday', Saturday/Sunday -> 'weekend'."""
     return "weekday" if dt.weekday() < 5 else "weekend"
@@ -74,33 +68,12 @@ def compute_available_slots(now: datetime, availability: Any, count: int = 3) ->
     return slots
 
 
-def default_slots(now: datetime, count: int = 3) -> List[str]:
-    """Honest fallback slots when the org has not configured availability hours.
-
-    Real future UTC datetimes on the next business days at representative
-    working hours. Not claimed to come from any org configuration.
-    """
-    slots: List[str] = []
-    day_offset = 1
-    band_idx = 0
-    while len(slots) < count and day_offset <= 14:
-        candidate_day = now + timedelta(days=day_offset)
-        if candidate_day.weekday() < 5 and band_idx < len(DEFAULT_BAND_TIMES):
-            hour, minute = DEFAULT_BAND_TIMES[band_idx]
-            slot_dt = candidate_day.replace(hour=hour, minute=minute, second=0, microsecond=0)
-            if slot_dt > now:
-                slots.append(slot_dt.isoformat() + "Z")
-                band_idx += 1
-        day_offset += 1
-    return slots
-
-
 def generate_slots_node(state: SchedulerState) -> SchedulerState:
     """Node 1: Generate 3 prospective interview time slots.
 
-    Slots are driven by the org's real availability config when present; when it
-    is absent (or yields no valid future time) the node reports the honest
-    outcome instead of fabricating a hardcoded schedule.
+    Slots are driven by the org's real availability config when present. When it
+    is absent (or yields no valid future time) the node reports no slots and an
+    honest status instead of fabricating a hardcoded schedule.
     """
     logger.info(f"Generating interview time slots for application {state.get('application_id')}")
 
@@ -116,9 +89,12 @@ def generate_slots_node(state: SchedulerState) -> SchedulerState:
                 "reporting no slots rather than fabricating times."
             )
     else:
-        slots = default_slots(now)
-        state["slot_source"] = "default_business_hours"
-        logger.info("No org availability config present; using default business-hours slots.")
+        slots = []
+        state["slot_source"] = "no_availability_config"
+        logger.warning(
+            "No org availability config present; reporting no slots "
+            "rather than inventing interview times."
+        )
 
     state["available_slots"] = slots
     return state
@@ -157,17 +133,9 @@ def format_invitation_email_node(state: SchedulerState) -> SchedulerState:
         f"Ask them to choose one slot or request a reschedule."
     )
     generated_email = generate_text(prompt)
-    if generated_email:
-        state["formatted_email"] = generated_email
-        return state
-
-    state["formatted_email"] = (
-        f"Hello,\n\n"
-        f"Thank you for progressing in our recruitment pipeline for the {role} position. "
-        f"Please select your preferred interview time slot from the options below:\n\n"
-        f"{formatted_slots_str}\n\n"
-        f"Best regards,\nNextRound AI Hiring Platform"
-    )
+    if not generated_email:
+        raise RuntimeError("Scheduler LLM returned no invitation email; not sending a canned substitute.")
+    state["formatted_email"] = generated_email
     return state
 
 
@@ -216,8 +184,8 @@ async def run_scheduler_agent(
             return {
                 "available_slots": final_state.get("available_slots", []),
                 "formatted_email": final_state.get("formatted_email", ""),
-                "status": final_state.get("status", "completed"),
-                "slot_source": final_state.get("slot_source", "default_business_hours"),
+                "status": final_state.get("status"),
+                "slot_source": final_state.get("slot_source"),
             }
         except Exception as e:
             logger.error(f"LangGraph execution error in Scheduler Agent: {e}")
@@ -228,6 +196,6 @@ async def run_scheduler_agent(
     return {
         "available_slots": s2.get("available_slots", []),
         "formatted_email": s2.get("formatted_email", ""),
-        "status": s2.get("status", "completed"),
-        "slot_source": s1.get("slot_source", "default_business_hours"),
+        "status": s2.get("status"),
+        "slot_source": s1.get("slot_source"),
     }

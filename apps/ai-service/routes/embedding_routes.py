@@ -69,20 +69,23 @@ async def compute_similarity(req: SimilarityRequest):
     start_time = time.perf_counter()
     vec_a, src_a = embed_text_with_source(req.text_a)
     vec_b, src_b = embed_text_with_source(req.text_b)
-    score = cosine_similarity(vec_a, vec_b)
     elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
-    # The score is only semantically meaningful if neither side is a fallback.
-    sources = {src_a, src_b}
-    source = "hash-fallback" if ("hash-fallback" in sources or "empty" in sources) else (
-        "onnx" if "onnx" in sources else "gemini"
-    )
-    model_name = SOURCE_MODEL_LABELS.get(source, "Fallback-768 hash")
+    # The score is only semantically meaningful if neither side is a fallback
+    # (zero/hash vector). Report None when either side lacks a real embedding
+    # rather than returning a fabricated cosine of 0.0.
+    semantic = {"onnx", "gemini"}
+    if src_a in semantic and src_b in semantic:
+        score = cosine_similarity(vec_a, vec_b)
+        model_name = SOURCE_MODEL_LABELS.get("onnx" if src_a == "onnx" or src_b == "onnx" else "gemini")
+    else:
+        score = None
+        model_name = None
 
     return {
         "success": True,
         "data": {
-            "similarity_score": round(score, 4),
+            "similarity_score": round(score, 4) if score is not None else None,
             "model": model_name,
             "latency_ms": elapsed_ms,
         },

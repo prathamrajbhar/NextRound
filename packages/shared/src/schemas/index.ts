@@ -110,15 +110,15 @@ export const DecisionOverrideSchema = z.object({
 
 export const MockSessionCreateSchema = z.object({
   topic: z.string().optional(),
-  targetCompany: z.string().optional().default('General Tech'),
-  targetRole: z.string().optional().default('Senior Software Engineer'),
-  difficulty: z.enum(['easy', 'medium', 'hard', 'junior', 'mid', 'senior', 'lead']).default('medium'),
+  targetCompany: z.string().optional().nullable(),
+  targetRole: z.string().optional().nullable(),
+  difficulty: z.enum(['easy', 'medium', 'hard', 'junior', 'mid', 'senior', 'lead']).optional().nullable(),
   focusAreas: z.array(z.string()).optional().default([]),
 });
 
 export const ResumeBuilderSessionCreateSchema = z.object({
   targetRole: z.string().min(2, 'Target role is required'),
-  targetCompany: z.string().optional().default('Target Enterprise'),
+  targetCompany: z.string().optional().nullable(),
   existingResumeText: z.string().optional(),
   careerGoals: z.string().optional(),
 });

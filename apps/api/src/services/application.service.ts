@@ -534,12 +534,18 @@ export async function getAptitudeChunk(
   }
 
   const previousStems = existingQuestions.map((q: any) => q.question || q.text || '');
-  const thresholds = (app.job?.thresholds as any) || {};
+  const assessmentConfig = (app.job?.assessmentConfig as any) || {};
+  const difficulty = assessmentConfig.difficulty;
+  const category = assessmentConfig.category;
+  if (!difficulty || !category) {
+    throw new Error('Aptitude chunk generation requires difficulty and category configured on the job assessment; none are configured.');
+  }
 
   const newChunk = await generateAptitudeChunk({
-    jobTitle: app.job?.title || 'Software Engineer',
+    jobTitle: app.job?.title || '',
     jobDescription: app.job?.description || '',
-    difficulty: thresholds.difficulty || 'medium',
+    difficulty,
+    category,
     chunkIndex,
     chunkSize,
     previousQuestions: previousStems,
@@ -613,12 +619,18 @@ export async function submitAptitudeChunk(
     ? (assessment!.questions as any[])
     : [];
   const previousStems = existingQuestions.map((q: any) => q.question || q.text || '');
-  const thresholds = (app.job?.thresholds as any) || {};
+  const assessmentConfig = (app.job?.assessmentConfig as any) || {};
+  const difficulty = assessmentConfig.difficulty;
+  const category = assessmentConfig.category;
+  if (!difficulty || !category) {
+    throw new Error('Aptitude chunk generation requires difficulty and category configured on the job assessment; none are configured.');
+  }
 
   const nextChunk = await generateAptitudeChunk({
-    jobTitle: app.job?.title || 'Software Engineer',
+    jobTitle: app.job?.title || '',
     jobDescription: app.job?.description || '',
-    difficulty: thresholds.difficulty || 'medium',
+    difficulty,
+    category,
     chunkIndex: nextChunkIndex,
     chunkSize: Number(chunkSize),
     previousQuestions: previousStems,

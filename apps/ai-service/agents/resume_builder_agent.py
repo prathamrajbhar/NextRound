@@ -23,9 +23,9 @@ class ResumeBuilderState(TypedDict, total=False):
 
 def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
     """Runs one stage turn for the AI Voice Resume Builder Agent."""
-    target_role = state.get("target_role", "Software Engineer")
-    target_company = state.get("target_company", "Top Tech Company")
-    current_stage = state.get("current_stage", "intro")
+    target_role = state.get("target_role")
+    target_company = state.get("target_company")
+    current_stage = state.get("current_stage") or "intro"
     turn = state.get("turn_number", 0) + 1
     state["turn_number"] = turn
 
@@ -39,12 +39,9 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
         current_stage = STAGES[stage_idx]
         state["current_stage"] = current_stage
 
-    ai_response = ""
-    insight = None
-
     prompt = (
         f"You are the NextRound AI Voice Resume Builder Agent.\n"
-        f"Goal: Help candidate build an ATS-optimized resume for {target_role} at {target_company}.\n"
+        f"Goal: Help candidate build an ATS-optimized resume for {target_role or ''} at {target_company or ''}.\n"
         f"Current Stage: {current_stage}\n"
         f"Turn: {turn}\n"
         f"History: {json.dumps(history[-6:])}\n"
@@ -54,11 +51,15 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
         f"2. 'realtime_insight': A brief extraction or tip highlighting a quantifiable metric or strong keyword derived from candidate input."
     )
     parsed = extract_json_object(generate_text(prompt))
-    if parsed:
-        ai_response = parsed.get("response", "")
-        insight = parsed.get("realtime_insight", None)
+    ai_response = (parsed or {}).get("response")
+    insight = (parsed or {}).get("realtime_insight") if parsed else None
 
-    state["latest_ai_response"] = ai_response or ""
+    # A turn without real LLM output must fail — the caller raises a proper HTTP
+    # error instead of receiving canned text.
+    if not ai_response:
+        raise RuntimeError("Resume builder LLM returned no response for this turn.")
+
+    state["latest_ai_response"] = ai_response
     state["realtime_insight"] = insight
     state["is_complete"] = current_stage == "closing" or turn >= 10
 

@@ -25,7 +25,7 @@ class TranscribeRequest(BaseModel):
 
 class TranscribeResponse(BaseModel):
     transcript: str
-    confidence: float
+    confidence: Optional[float] = None
 
 
 class InterviewRespondRequest(BaseModel):
@@ -35,7 +35,7 @@ class InterviewRespondRequest(BaseModel):
     turnNumber: int = 0
     stage: str = "intro"
     candidateResume: Optional[str] = None
-    jobTitle: Optional[str] = "Software Engineer"
+    jobTitle: Optional[str] = None
     conversationHistory: List[Dict[str, Any]] = Field(default_factory=list)
     voice: Optional[str] = "en-US-ChristopherNeural"
 
@@ -102,16 +102,18 @@ async def generate_interview_response(request: InterviewRespondRequest):
         "application_id": request.applicationId or request.interviewId,
         "current_stage": request.stage,
         "turn_number": request.turnNumber,
-        "job_title": request.jobTitle or "Software Engineer",
+        "job_title": request.jobTitle,
         "latest_candidate_response": request.transcript,
         "conversation_history": request.conversationHistory or [],
-        "candidate_resume": request.candidateResume or "",
+        "candidate_resume": request.candidateResume,
     }
 
     # Execute LangGraph agent
     output_state = await asyncio.to_thread(run_interviewer_agent, state)
 
-    ai_text = output_state.get("latest_ai_response") or "Thank you for sharing that context. Could you tell me more about your technical architecture decisions?"
+    ai_text = output_state.get("latest_ai_response")
+    if not ai_text:
+        raise HTTPException(status_code=503, detail="Interviewer LLM returned no response. Try again in a moment.")
     next_stage = output_state.get("current_stage", request.stage)
     is_complete = bool(output_state.get("is_complete", False))
     scorecard = output_state.get("final_scorecard")
@@ -149,14 +151,16 @@ async def voice_stream_response(request: InterviewRespondRequest):
         "application_id": request.applicationId or request.interviewId,
         "current_stage": request.stage,
         "turn_number": request.turnNumber,
-        "job_title": request.jobTitle or "Software Engineer",
+        "job_title": request.jobTitle,
         "latest_candidate_response": request.transcript,
         "conversation_history": request.conversationHistory or [],
-        "candidate_resume": request.candidateResume or "",
+        "candidate_resume": request.candidateResume,
     }
 
     output_state = await asyncio.to_thread(run_interviewer_agent, state)
-    ai_text = output_state.get("latest_ai_response") or "Thank you. Let's continue to the next technical topic."
+    ai_text = output_state.get("latest_ai_response")
+    if not ai_text:
+        raise HTTPException(status_code=503, detail="Interviewer LLM returned no response. Try again in a moment.")
 
     async def event_generator():
         async for chunk in stream_sentence_tts(ai_text, voice=request.voice or "en-US-ChristopherNeural"):
@@ -169,10 +173,10 @@ async def voice_stream_response(request: InterviewRespondRequest):
 class MockRespondRequest(BaseModel):
     sessionId: str
     transcript: str
-    topic: Optional[str] = "System Design & Architecture"
-    difficulty: Optional[str] = "medium"
-    targetRole: Optional[str] = "Software Engineer"
-    targetCompany: Optional[str] = "Tech Enterprise"
+    topic: Optional[str] = None
+    difficulty: Optional[str] = None
+    targetRole: Optional[str] = None
+    targetCompany: Optional[str] = None
     turnNumber: int = 0
     conversationHistory: List[Dict[str, Any]] = Field(default_factory=list)
 
@@ -187,9 +191,9 @@ class MockRespondResponse(BaseModel):
 class ResumeBuilderRespondRequest(BaseModel):
     sessionId: str
     transcript: str
-    targetRole: Optional[str] = "Software Engineer"
-    targetCompany: Optional[str] = "Target Enterprise"
-    stage: Optional[str] = "intro"
+    targetRole: Optional[str] = None
+    targetCompany: Optional[str] = None
+    stage: Optional[str] = None
     turnNumber: int = 0
     conversationHistory: List[Dict[str, Any]] = Field(default_factory=list)
 
@@ -210,18 +214,21 @@ async def generate_mock_response(request: MockRespondRequest):
     """Generate next mock interviewer turn response with inline coaching hints."""
     state: MockInterviewerState = {
         "session_id": request.sessionId,
-        "topic": request.topic or "System Design & Architecture",
-        "difficulty": request.difficulty or "medium",
-        "target_role": request.targetRole or "Software Engineer",
-        "target_company": request.targetCompany or "Tech Enterprise",
+        "topic": request.topic,
+        "difficulty": request.difficulty,
+        "target_role": request.targetRole,
+        "target_company": request.targetCompany,
         "turn_number": request.turnNumber,
         "latest_candidate_response": request.transcript,
         "conversation_history": request.conversationHistory or [],
     }
 
     output = await asyncio.to_thread(run_mock_interviewer_agent, state)
+    text = output.get("latest_ai_response")
+    if not text:
+        raise HTTPException(status_code=503, detail="Mock interviewer LLM returned no response. Try again in a moment.")
     return MockRespondResponse(
-        text=output.get("latest_ai_response", "Thank you. Let's continue to the next architectural component."),
+        text=text,
         coachingHint=output.get("coaching_hint"),
         turnNumber=output.get("turn_number", request.turnNumber + 1),
         isComplete=output.get("is_complete", False),
@@ -233,19 +240,22 @@ async def generate_resume_builder_response(request: ResumeBuilderRespondRequest)
     """Generate next voice resume builder turn response with real-time metric extraction hints."""
     state: ResumeBuilderState = {
         "session_id": request.sessionId,
-        "target_role": request.targetRole or "Software Engineer",
-        "target_company": request.targetCompany or "Target Enterprise",
-        "current_stage": request.stage or "intro",
+        "target_role": request.targetRole,
+        "target_company": request.targetCompany,
+        "current_stage": request.stage,
         "turn_number": request.turnNumber,
         "latest_candidate_response": request.transcript,
         "conversation_history": request.conversationHistory or [],
     }
 
     output = await asyncio.to_thread(run_resume_builder_agent, state)
+    text = output.get("latest_ai_response")
+    if not text:
+        raise HTTPException(status_code=503, detail="Resume builder LLM returned no response. Try again in a moment.")
     return ResumeBuilderRespondResponse(
-        text=output.get("latest_ai_response", "Let's explore your core engineering achievements next."),
+        text=text,
         realtimeInsight=output.get("realtime_insight"),
-        stage=output.get("current_stage", request.stage or "intro"),
+        stage=output.get("current_stage") or request.stage or "",
         turnNumber=output.get("turn_number", request.turnNumber + 1),
         isComplete=output.get("is_complete", False),
     )

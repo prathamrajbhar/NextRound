@@ -5,8 +5,6 @@ from workers.worker_base import run_agent_job
 
 logger = logging.getLogger("aptitude_worker")
 
-DEFAULT_MIN_SCORE = 70.0  # pass threshold; overridden by job config when present
-
 
 async def process_aptitude_job(job_data: dict) -> bool:
     """
@@ -25,9 +23,12 @@ async def process_aptitude_job(job_data: dict) -> bool:
     logger.info(f"Processing aptitude assessment job for applicationId: {application_id}")
 
     async def run() -> dict:
-        # Fetch stored generated questions and pass threshold for this session from Express
+        # Fetch stored generated questions and pass threshold for this session from Express.
+        # Both are required: scoring against a fabricated threshold or empty
+        # question set would be dishonest. The assessment agent raises when the
+        # stored question set is empty.
         stored_questions = []
-        min_score = DEFAULT_MIN_SCORE
+        min_score = None
         try:
             response = await callback_client.get(
                 f"internal/applications/{application_id}/assessment-data",
@@ -40,7 +41,10 @@ async def process_aptitude_job(job_data: dict) -> bool:
             if isinstance(threshold, (int, float)):
                 min_score = float(threshold)
         except Exception as err:
-            logger.warning(f"Could not fetch stored assessment questions for {application_id}: {err}")
+            raise RuntimeError(f"Could not fetch stored assessment questions for {application_id}: {err}") from err
+
+        if min_score is None:
+            raise RuntimeError(f"Aptitude job for application {application_id} has no pass threshold configured.")
 
         # Run Assessment LangGraph Agent
         result = await run_assessment_agent(

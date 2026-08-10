@@ -121,31 +121,27 @@ def decide_next_action_node(state: InterviewerState) -> InterviewerState:
 
 
 def generate_question_node(state: InterviewerState) -> InterviewerState:
-    """Node 4: Generate main stage question using candidate resume & job rubric."""
+    """Node 4: Generate main stage question using candidate resume & job rubric.
+
+    Every stage question is produced by the LLM — no canned template is ever
+    used. If the LLM returns nothing the interview fails instead of asking a
+    fabricated question.
+    """
     current_stage = state.get("current_stage", "technical")
-    job_title = state.get("job_title", "Software Engineer")
+    job_title = state.get("job_title")
     candidate_resume = state.get("candidate_resume", "")
     history = state.get("conversation_history", [])
 
-    question_text = f"Could you walk me through your recent experience with system design and technical architecture relevant to {job_title}?"
-
-    if current_stage == "intro":
-        question_text = f"Welcome to your AI Voice Interview for the {job_title} role at NextRound! To start, please introduce yourself and highlight your core technical background."
-    elif current_stage == "behavioral":
-        question_text = "Tell me about a challenging technical trade-off or conflict you faced in a project team, and how you resolved it."
-    elif current_stage == "project":
-        question_text = "What is the most complex engineering project you have built recently? What were the key architecture choices and bottlenecks?"
-    else:
-        prompt = (
-            f"You are a professional AI interviewer for a {job_title} role.\n"
-            f"Current Interview Stage: {current_stage}\n"
-            f"Candidate Resume Context: {candidate_resume[:1500]}\n"
-            f"Recent Conversation History: {json.dumps(history[-4:])}\n\n"
-            f"Ask ONE concise, engaging spoken interview question appropriate for the {current_stage} stage, referencing candidate's actual experience or projects if available. Keep it under 2 sentences."
-        )
-        generated_question = generate_text(prompt)
-        if generated_question:
-            question_text = generated_question
+    prompt = (
+        f"You are a professional AI interviewer for the role of {job_title or 'an open position'}.\n"
+        f"Current Interview Stage: {current_stage}\n"
+        f"Candidate Resume Context: {candidate_resume[:1500]}\n"
+        f"Recent Conversation History: {json.dumps(history[-4:])}\n\n"
+        f"Ask ONE concise, engaging spoken interview question appropriate for the {current_stage} stage, referencing candidate's actual experience or projects if available. Keep it under 2 sentences."
+    )
+    question_text = generate_text(prompt)
+    if not question_text:
+        raise RuntimeError("Interviewer LLM returned no question for this turn.")
 
     state["latest_ai_response"] = question_text
     state["follow_up_depth"] = 0
@@ -162,17 +158,14 @@ def generate_follow_up_node(state: InterviewerState) -> InterviewerState:
     current_stage = state.get("current_stage", "technical")
     history = state.get("conversation_history", [])
 
-    follow_up_text = "That's an interesting point. Could you elaborate specifically on how you measured performance and handled edge cases in that scenario?"
-
-    if candidate_ans:
-        prompt = (
-            f"You are an AI technical interviewer. The candidate gave a brief or partial answer:\n"
-            f"Candidate Answer: '{candidate_ans}'\n\n"
-            f"Generate a polite, sharp 1-sentence follow-up probing deeper into technical execution or specific metrics."
-        )
-        generated_follow_up = generate_text(prompt)
-        if generated_follow_up:
-            follow_up_text = generated_follow_up
+    prompt = (
+        f"You are an AI technical interviewer. The candidate gave a brief or partial answer:\n"
+        f"Candidate Answer: '{candidate_ans}'\n\n"
+        f"Generate a polite, sharp 1-sentence follow-up probing deeper into technical execution or specific metrics."
+    )
+    follow_up_text = generate_text(prompt)
+    if not follow_up_text:
+        raise RuntimeError("Interviewer LLM returned no follow-up question.")
 
     state["latest_ai_response"] = follow_up_text
     state["follow_up_depth"] = state.get("follow_up_depth", 0) + 1
@@ -199,11 +192,23 @@ def advance_stage_node(state: InterviewerState) -> InterviewerState:
 
 
 def close_interview_node(state: InterviewerState) -> InterviewerState:
-    """Node 7: Close interview session with polite concluding remark."""
-    state["latest_ai_response"] = ""
-    state["is_complete"] = True
-
+    """Node 7: Close interview session with a real LLM concluding remark."""
+    current_stage = state.get("current_stage", "closing")
     history = state.get("conversation_history", [])
+
+    prompt = (
+        "You are a professional AI interviewer ending a completed interview.\n"
+        f"Candidate Context: {json.dumps(history[-4:])}\n\n"
+        "Say goodbye to the candidate in 1-2 sentences, thank them for their time, "
+        "and tell them their results are being prepared. Do not invent scores."
+    )
+    closing_text = generate_text(prompt)
+    if not closing_text:
+        raise RuntimeError("Interviewer LLM returned no closing message.")
+
+    state["latest_ai_response"] = closing_text
+    state["is_complete"] = True
+    history.append({"speaker": "ai", "text": closing_text, "stage": current_stage})
     state["conversation_history"] = history
 
     return finalize_scores_node(state)
@@ -251,9 +256,10 @@ def _gemini_score_transcript(history: Any, job_title: str) -> Optional[Dict[str,
 def finalize_scores_node(state: InterviewerState) -> InterviewerState:
     """Node 8: Aggregate turn scores into a final evaluation scorecard.
 
-    Prefers a Gemini score of the full transcript when real candidate content
-    exists; falls back to a deterministic, content-aware baseline so a completed
-    interview always emits a scorecard and never stalls the pipeline.
+    Every score is either a Gemini score of the full transcript or a real
+    per-turn LLM score recorded during the interview. No length-based baseline
+    or default-0 score is ever used. If no real score exists the interview
+    evaluation fails instead of reporting fabricated numbers.
     """
     scores = state.get("scores_so_far", {})
     history = state.get("conversation_history", [])
@@ -261,28 +267,34 @@ def finalize_scores_node(state: InterviewerState) -> InterviewerState:
     turn_number = state.get("turn_number", 0)
     total_turns = max(turn_count, turn_number, 1)
 
-    llm = _gemini_score_transcript(history, state.get("job_title", "Software Engineer"))
+    tech = comm = prob = composite = summary_feedback = None
+
+    llm = _gemini_score_transcript(history, state.get("job_title") or "")
     if llm:
-        tech = round(float(llm.get("technical_depth", scores.get("technical", 0.0) or 0.0)), 1)
-        comm = round(float(llm.get("communication", scores.get("communication", 0.0) or 0.0)), 1)
-        prob = round(float(llm.get("problem_solving", scores.get("problemSolving", 0.0) or 0.0)), 1)
-        composite = round(float(llm.get("overall_score", (tech * 0.4) + (comm * 0.3) + (prob * 0.3))), 1)
-        summary_feedback = llm.get("summary_feedback") or "Candidate completed the interview."
+        # Only accept scores the model actually returned — never default 0.0.
+        tech = round(float(llm["technical_depth"]), 1) if llm.get("technical_depth") is not None else None
+        comm = round(float(llm["communication"]), 1) if llm.get("communication") is not None else None
+        prob = round(float(llm["problem_solving"]), 1) if llm.get("problem_solving") is not None else None
+        if llm.get("overall_score") is not None:
+            composite = round(float(llm["overall_score"]), 1)
+        summary_feedback = llm.get("summary_feedback")
+
+    # Fall back to real per-turn scores when the transcript-level score is
+    # missing, but only for dimensions the model actually returned.
+    if tech is None and scores.get("technical") is not None:
+        tech = round(float(scores["technical"]), 1)
+    if comm is None and scores.get("communication") is not None:
+        comm = round(float(scores["communication"]), 1)
+    if prob is None and scores.get("problemSolving") is not None:
+        prob = round(float(scores["problemSolving"]), 1)
+
+    if tech is not None or comm is not None or prob is not None:
+        if composite is None:
+            dims = [d for d in (tech, comm, prob) if d is not None]
+            if dims:
+                composite = round(sum(dims) / len(dims), 1)
     else:
-        transcript_text, _ = _collect_transcript_text(history)
-        tech = float(scores.get("technical", 0.0) or 0.0)
-        comm = float(scores.get("communication", 0.0) or 0.0)
-        prob = float(scores.get("problemSolving", 0.0) or 0.0)
-        if transcript_text.strip() and total_turns >= 2:
-            # A genuine multi-turn transcript exists. In completion mode the
-            # per-turn scores_so_far only reflect the synthetic closing turn,
-            # so base every dimension on the transcript content instead of that
-            # single throwaway score. Uses a conservative content-length
-            # baseline so a real interview advances to the human HR gate.
-            depth = min(88.0, 72.0 + len(transcript_text.strip()) // 400)
-            tech = comm = prob = depth
-        composite = round((tech * 0.4) + (comm * 0.3) + (prob * 0.3), 1)
-        summary_feedback = f"Candidate completed the interview with {total_turns} turn(s) recorded."
+        raise RuntimeError("No real interview scores were produced; refusing to emit a fabricated scorecard.")
 
     state["final_scorecard"] = {
         "overall_score": composite,

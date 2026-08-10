@@ -39,12 +39,21 @@ const CATEGORIES = [
  * to ensure non-repetition.
  */
 export async function generateAptitudeChunk(options: AptitudeChunkOptions): Promise<AptitudeQuestionInput[]> {
-  const isProduction = process.env.NODE_ENV === 'production';
   const chunkSize = Math.max(1, Math.min(10, options.chunkSize || 3));
   const chunkIndex = Math.max(0, options.chunkIndex || 0);
-  const diff = ['easy', 'medium', 'hard'].includes(String(options.difficulty).toLowerCase()) ? String(options.difficulty).toLowerCase() : 'medium';
-  const role = options.jobTitle || 'Software Engineer';
-  const targetCategory = options.category || CATEGORIES[chunkIndex % CATEGORIES.length];
+
+  // Difficulty and role are caller-provided config. No default category or
+  // difficulty is invented — the caller supplies what the job actually needs.
+  const requestedDiff = String(options.difficulty ?? '').toLowerCase();
+  const diff = ['easy', 'medium', 'hard'].includes(requestedDiff) ? requestedDiff : null;
+  const role = options.jobTitle || '';
+  const targetCategory = options.category || null;
+  if (!targetCategory) {
+    throw new Error('generateAptitudeChunk requires a category; no category is invented.');
+  }
+  if (!diff) {
+    throw new Error('generateAptitudeChunk requires a difficulty; no difficulty is invented.');
+  }
 
   try {
     const previousStems = (options.previousQuestions || []).slice(-15).join('\n- ');
@@ -93,22 +102,27 @@ Return ONLY raw JSON array:
 
     if (cleanJson && Array.isArray(cleanJson) && cleanJson.length > 0) {
       const mapped = cleanJson.slice(0, chunkSize).map((q: any, idx: number) => {
-        const opts = Array.isArray(q.options) && q.options.length >= 2
-          ? q.options.map(String).slice(0, 4)
-          : ['Option A', 'Option B', 'Option C', 'Option D'];
-        while (opts.length < 4) {
-          opts.push(`Option ${String.fromCharCode(65 + opts.length)}`);
+        // Every field must be real: options, question text, and correctIndex all
+        // come from the LLM. Fabricated options or a default correctIndex are
+        // rejected — a malformed question is skipped, never invented.
+        const opts = Array.isArray(q.options) ? q.options.map(String).slice(0, 4) : [];
+        const stem = typeof q.question === 'string' ? q.question : (typeof q.text === 'string' ? q.text : null);
+        const correctIndex = typeof q.correctIndex === 'number' && Number.isInteger(q.correctIndex) && q.correctIndex >= 0 && q.correctIndex <= 3
+          ? q.correctIndex
+          : null;
+
+        if (opts.length < 4 || !stem || correctIndex === null) {
+          throw new Error(`LLM returned a malformed question at index ${idx} (missing options, stem, or valid correctIndex).`);
         }
-        const stem = String(q.question || q.text || `Question ${idx + 1}`);
 
         return {
           id: String(q.id || `chunk_${chunkIndex}_q${idx + 1}`),
-          category: String(q.category || targetCategory),
+          category: targetCategory,
           difficulty: diff as any,
           question: stem,
           text: stem,
           options: opts,
-          correctIndex: typeof q.correctIndex === 'number' && q.correctIndex >= 0 && q.correctIndex <= 3 ? q.correctIndex : 0,
+          correctIndex,
           explanation: q.explanation ? String(q.explanation) : undefined,
           source: 'ai-chunk-generator',
         };
@@ -133,7 +147,8 @@ export async function generateAiAptitudeQuestions(
   jobTitle: string,
   jobDescription: string,
   count: number = 5,
-  difficulty?: string
+  difficulty: string,
+  category: string
 ): Promise<GeneratedQuestion[]> {
   const targetCount = Math.max(1, Math.min(100, count));
   const chunkSize = 3;
@@ -148,6 +163,7 @@ export async function generateAiAptitudeQuestions(
       jobTitle,
       jobDescription,
       difficulty,
+      category,
       chunkIndex: c,
       chunkSize: currentChunkSize,
       previousQuestions,

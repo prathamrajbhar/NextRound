@@ -30,21 +30,21 @@ def threshold_match_node(state: DecisionState) -> DecisionState:
     """Node 1: Compare composite score and confidence rating against target decision thresholds."""
     score = state.get("composite_score")
     conf = state.get("confidence")
-    if conf is None:
-        conf = 1.0
 
     # Decision Threshold Contract:
     # Score >= 80.0 AND Confidence >= 0.70 -> HIRE (Auto Offer)
     # Score < 65.0 AND Confidence >= 0.70 -> REJECT (Constructive Rejection)
     # Confidence < 0.70 OR Score 65..79 -> HOLD (HR Manual Review Queue)
     # No composite score -> HOLD (an unknown score must never become an auto-reject)
+    # Missing confidence -> HOLD (an unknown confidence must never be assumed to
+    # be high; fabricating 1.0 would let an unscored candidate auto-pass).
 
     if score is None:
         decision = "hold_for_review"
         reasoning = "No composite score was produced for this application. Routed to HR Hold Queue for manual review."
-    elif conf < 0.70:
+    elif conf is None or conf < 0.70:
         decision = "hold_for_review"
-        reasoning = f"Confidence rating ({conf}) is below 0.70 threshold. Application routed to HR Hold Queue."
+        reasoning = f"Confidence rating ({conf if conf is not None else 'N/A'}) is below 0.70 threshold. Application routed to HR Hold Queue."
     elif score >= 80.0:
         decision = "hire"
         reasoning = f"Composite score of {score}/100 exceeds 80.0 offer threshold with high confidence ({conf}). Recommended decision: HIRE."
@@ -66,63 +66,59 @@ def draft_offer_node(state: DecisionState) -> DecisionState:
 
     Job title, salary, and equity come from the job payload that reaches the
     agent. When a term is absent it is carried as pending ("To be confirmed")
-    rather than inventing a value.
+    rather than inventing a value. The letter body is ALWAYS produced by the
+    LLM — a canned template is never substituted for real AI output. If the LLM
+    is unavailable the decision fails instead of drafting a fabricated offer.
     """
     if state.get("decision") != "hire":
         return state
 
     score = state.get("composite_score")
-    job_title = state.get("job_title") or "the position"
+    job_title = state.get("job_title")
     salary = state.get("salary")
     equity = state.get("equity")
 
     salary_line = f"Base Salary: {salary} / year" if salary else "Base Salary: To be confirmed"
     equity_line = f"Equity: {equity}" if equity else "Equity: To be confirmed"
-
-    content = (
-        f"OFFER OF EMPLOYMENT\n\n"
-        f"We are pleased to offer you a position at NextRound / HireOS partner organization.\n"
-        f"Based on your outstanding overall candidate evaluation score of {score}/100 across our autonomous screening, "
-        f"aptitude, coding, and voice interview assessments, we believe you will be an invaluable addition to our engineering team.\n\n"
-        f"Position: {job_title}\n"
-        f"{salary_line}\n"
-        f"{equity_line}\n"
-        f"Validity: 14 Days from issuance\n\n"
-        f"Please review the formal details and sign digitally to confirm your acceptance."
-    )
+    position_line = f"Position: {job_title}" if job_title else "Position: To be confirmed"
 
     offer_text = generate_text(
-        f"Draft a formal, welcoming job offer letter body for a {job_title} who scored {score}/100 in technical assessments."
+        f"Draft a formal, welcoming job offer letter body for the role of {job_title or 'the confirmed position'}. "
+        f"The candidate scored {score}/100 in technical assessments. Include these terms verbatim:\n"
+        f"{position_line}\n{salary_line}\n{equity_line}"
     )
-    if offer_text:
-        content = offer_text
+    if not offer_text:
+        raise RuntimeError(
+            "LLM returned no offer letter draft for a HIRE decision. Refusing to send a canned template."
+        )
 
     state["auto_offer"] = True
-    state["offer_letter_content"] = content
+    state["offer_letter_content"] = offer_text
     return state
 
 
 def draft_rejection_node(state: DecisionState) -> DecisionState:
-    """Node 3: Draft constructive rejection feedback email when decision is REJECT."""
+    """Node 3: Draft constructive rejection feedback email when decision is REJECT.
+
+    The rejection body is ALWAYS produced by the LLM — a canned template is
+    never substituted for real AI output. If the LLM is unavailable the decision
+    fails instead of drafting a fabricated rejection email.
+    """
     if state.get("decision") != "reject":
         return state
 
     score = state.get("composite_score")
-    content = (
-        f"Thank you for taking the time to complete our comprehensive technical assessment.\n"
-        f"While your profile displayed commendable effort, your composite score of {score}/100 did not meet the minimum requirement for this specific position.\n"
-        f"We have generated structured feedback highlighting key growth areas in system architecture and algorithmic optimization. "
-        f"We encourage you to practice on the NextRound Candidate Prep platform to sharpen your skills for future opportunities."
-    )
 
     rejection_text = generate_text(
         f"Draft an encouraging, constructive rejection email for a candidate with composite assessment score {score}/100."
     )
-    if rejection_text:
-        content = rejection_text
+    if not rejection_text:
+        raise RuntimeError(
+            "LLM returned no rejection email draft for a REJECT decision. Refusing to send a canned template."
+        )
 
     state["auto_offer"] = False
-    state["rejection_email_content"] = content
+    state["rejection_email_content"] = rejection_text
     return state
 
 
@@ -201,7 +197,7 @@ async def run_decision_agent(
     application_id: str,
     evaluation_id: Optional[str] = None,
     composite_score: Optional[float] = None,
-    confidence: float = 1.0,
+    confidence: Optional[float] = None,
     job_title: Optional[str] = None,
     salary: Optional[str] = None,
     equity: Optional[str] = None,

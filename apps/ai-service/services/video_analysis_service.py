@@ -85,10 +85,12 @@ def analyze_frame_expression(
         emotions_dist = {"neutral": 0.50, "focused": 0.30, "confident": 0.10, "stressed": 0.05, "confused": 0.03, "hesitant": 0.02}
         primary_emotion = "neutral"
 
-    # Engagement index (0-100) & Soft Skills Confidence Score (0-100)
+    # Engagement index (0-100) & Soft Skills Confidence Score (0-100).
+    # Scores reflect the real computed value clamped to 0-100 — no artificial
+    # floor is applied, so a genuinely low-signal frame is reported as low.
     base_engagement = 85.0 if eye_contact else 55.0
-    engagement_score = round(max(30.0, min(100.0, base_engagement - (abs_yaw * 1.2) + (smile_ratio * 15.0))), 1)
-    soft_skills_confidence = round(max(30.0, min(100.0, (emotions_dist["confident"] * 40.0) + (emotions_dist["focused"] * 35.0) + (emotions_dist["neutral"] * 25.0) + (engagement_score * 0.2))), 1)
+    engagement_score = round(min(100.0, max(0.0, base_engagement - (abs_yaw * 1.2) + (smile_ratio * 15.0))), 1)
+    soft_skills_confidence = round(min(100.0, max(0.0, (emotions_dist["confident"] * 40.0) + (emotions_dist["focused"] * 35.0) + (emotions_dist["neutral"] * 25.0) + (engagement_score * 0.2))), 1)
 
 
     return {
@@ -185,8 +187,8 @@ def analyze_video_session(frames: List[Dict[str, Any]]) -> Dict[str, Any]:
         e: round((count / num_valid) * 100.0, 1) for e, count in emotion_counts.items()
     }
 
-    # Focus stability score (0-100)
-    focus_stability = round(max(20.0, min(100.0, eye_contact_percentage - (off_screen_flags * 5.0))), 1)
+    # Focus stability score (0-100) — computed from real telemetry, no floor.
+    focus_stability = round(min(100.0, max(0.0, eye_contact_percentage - (off_screen_flags * 5.0))), 1)
 
     return {
         "success": True,
