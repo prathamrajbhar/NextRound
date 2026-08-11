@@ -1,9 +1,3 @@
-# NextRound — Data Dictionary
- 
-Source: `packages/database/prisma/schema.prisma`
- 
----
- 
 ## User
 | Field | Type | Description |
 |---|---|---|
@@ -176,17 +170,6 @@ Source: `packages/database/prisma/schema.prisma`
 | questions | Json | AI-generated questions |
 | created_at | DateTime | Created date |
  
-## CodingProblemSnapshot
-| Field | Type | Description |
-|---|---|---|
-| id | UUID | Primary key |
-| session_id | UUID | Mock session |
-| title / description | String/Text | Problem content |
-| difficulty | String | Difficulty level |
-| public_test_cases / hidden_test_cases | Json | Test cases |
-| starter_code | Json | Starter code |
-| created_at | DateTime | Created date |
- 
 ## Offer
 | Field | Type | Description |
 |---|---|---|
@@ -197,17 +180,6 @@ Source: `packages/database/prisma/schema.prisma`
 | status | Enum | pending/accepted/declined/expired |
 | offer_letter_content | Text | Offer letter |
 | valid_until | DateTime | Expiry date |
-| created_at | DateTime | Created date |
- 
-## AgentLog
-| Field | Type | Description |
-|---|---|---|
-| id | UUID | Primary key |
-| job_id / org_id | UUID | Related job/org |
-| agent_name | String | AI agent name |
-| action | String | Action performed |
-| status | Enum | running/completed/failed |
-| error | Text | Error message |
 | created_at | DateTime | Created date |
  
 ## MockSession
@@ -223,7 +195,7 @@ Source: `packages/database/prisma/schema.prisma`
 | final_feedback | Json | Final feedback |
 | created_at | DateTime | Created date |
  
-## InterviewPreparation
+## PrepContent
 | Field | Type | Description |
 |---|---|---|
 | id | UUID | Primary key |
@@ -243,15 +215,6 @@ Source: `packages/database/prisma/schema.prisma`
 | read | Boolean | Read status |
 | created_at | DateTime | Sent date |
  
-## TalentBookmark
-| Field | Type | Description |
-|---|---|---|
-| id | UUID | Primary key |
-| org_id | UUID | Bookmarking org |
-| candidate_id | UUID | Bookmarked candidate |
-| job_id | UUID | Related job |
-| notes | Text | Recruiter notes |
-| created_at | DateTime | Bookmarked date |
  
 ## ProctoringSession
 | Field | Type | Description |
