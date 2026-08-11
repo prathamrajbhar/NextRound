@@ -59,7 +59,6 @@ sequenceDiagram
 - Heartbeat every 10 seconds.
 - Camera permission and track state.
 - Microphone permission and track state.
-- Screen-share start/stop when required.
 - Network disconnection/reconnection.
 - Assessment start, pause, resume, and submit.
 
@@ -187,7 +186,6 @@ Integrate it into `UnifiedAssessmentSession` and `UnifiedInterviewConsole`, then
 | Heartbeat gap under 30 seconds | Record network issue |
 | Heartbeat gap over policy limit | Pause or mark for review |
 | Camera/microphone stopped | Warn or pause when required |
-| Screen share stopped | Pause when screen sharing is mandatory |
 | Background noise | Record only; never auto-reject |
 | Multiple possible voices | Low-confidence review signal only |
 
@@ -265,7 +263,6 @@ The browser may report events, but only the backend policy service decides sever
 - [ ] Fullscreen exit creates a warning.
 - [ ] Heartbeat retries after network failure.
 - [ ] Camera/microphone track ending is detected.
-- [ ] Screen-share ending is detected.
 - [ ] Duplicate events are ignored.
 - [ ] Events after session closure are rejected.
 - [ ] Client cannot set severity or final risk decision.
@@ -292,7 +289,7 @@ The browser may report events, but only the backend policy service decides sever
 
 - Proctoring sessions are persisted and ownership-protected.
 - Browser events are validated, deduplicated, and auditable.
-- Tab, fullscreen, heartbeat, camera, microphone, and screen-share states work.
+- Tab, fullscreen, heartbeat, camera, and microphone states work.
 - Policies are configurable and versioned.
 - One signal never automatically rejects a candidate.
 - Failed operations show real errors instead of fake results.
