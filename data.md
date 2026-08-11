@@ -223,7 +223,7 @@ Source: `packages/database/prisma/schema.prisma`
 | final_feedback | Json | Final feedback |
 | created_at | DateTime | Created date |
  
-## PrepContent
+## InterviewPreparation
 | Field | Type | Description |
 |---|---|---|
 | id | UUID | Primary key |
