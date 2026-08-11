@@ -68,6 +68,124 @@ export default function CandidateResumesPage() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
+    // Format contact metadata with bullet points
+    const contactInfo = [
+      r.phone,
+      r.email,
+      r.location,
+      r.linkedin,
+      r.github,
+      r.portfolio
+    ].filter(Boolean).join(' • ');
+
+    // Handle flexible skills shapes (flat string array vs grouped categorized objects)
+    let skillsHtml = '';
+    const skillsList = r.skills || [];
+    if (skillsList.length > 0) {
+      if (typeof skillsList[0] === 'string') {
+        skillsHtml = `
+          <div class="section-title">Core Competencies & Skills</div>
+          <div class="skills-list">
+            ${skillsList.map((s: string) => `<span class="skill-tag">${s}</span>`).join('')}
+          </div>
+        `;
+      } else {
+        skillsHtml = `
+          <div class="section-title">Core Competencies & Skills</div>
+          <div style="font-size: 12px; line-height: 1.6; margin-bottom: 12px;">
+            ${(skillsList as Array<{ category?: string; items?: string[] }>).map((group) => `
+              <div style="margin-bottom: 6px;">
+                <strong style="font-weight: 700; color: #0f172a;">${group.category || 'Skills'}:</strong>
+                <span style="color: #334155;">${(group.items || []).join(', ')}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    }
+
+    // Format Professional Experience (support role/title and period/duration keys)
+    const experienceList = r.experience || [];
+    let experienceHtml = '';
+    if (experienceList.length > 0) {
+      experienceHtml = `
+        <div class="section-title">Professional Experience</div>
+        ${(experienceList as Array<{ role?: string; title?: string; company?: string; period?: string; duration?: string; location?: string; highlights?: string[]; bullets?: string[] }>).map((exp) => {
+          const roleTitle = exp.role || exp.title || '';
+          const duration = exp.period || exp.duration || '';
+          const loc = exp.location ? ` | ${exp.location}` : '';
+          const highlights = exp.highlights || exp.bullets || [];
+          return `
+            <div style="margin-bottom: 14px;">
+              <div class="job-header">
+                <span>${roleTitle} <span style="font-weight: 600; color: #475569;">— ${exp.company || ''}</span></span>
+                <span class="job-period">${duration}${loc}</span>
+              </div>
+              <ul>
+                ${highlights.map((h: string) => `<li>${h}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    // Format Featured Projects dynamically
+    const projectsList = r.projects || [];
+    let projectsHtml = '';
+    if (projectsList.length > 0) {
+      projectsHtml = `
+        <div class="section-title">Featured Technical Projects</div>
+        ${(projectsList as Array<{ title?: string; name?: string; techStack?: string[]; tech_stack?: string[]; description?: string; impact?: string }>).map((proj) => {
+          const title = proj.title || proj.name || '';
+          const tech = proj.techStack || proj.tech_stack || [];
+          const techStr = tech.length > 0 ? ` [${tech.join(', ')}]` : '';
+          const desc = proj.description || '';
+          const impact = proj.impact || '';
+          return `
+            <div style="margin-bottom: 14px;">
+              <div class="job-header">
+                <span>${title}<span style="font-weight: 500; font-size: 11px; color: #64748b;">${techStr}</span></span>
+              </div>
+              <p style="margin: 4px 0; color: #334155;">${desc}</p>
+              ${impact ? `<p style="margin: 0; color: #ea580c; font-size: 11px; font-weight: 600;">Impact: ${impact}</p>` : ''}
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    // Format Education dynamically
+    const educationList = r.education || [];
+    let educationHtml = '';
+    if (educationList.length > 0) {
+      educationHtml = `
+        <div class="section-title">Education & Credentials</div>
+        ${(educationList as Array<{ degree?: string; institution?: string; year?: string; dates?: string; gpa?: string }>).map((edu) => {
+          const degree = edu.degree || '';
+          const institution = edu.institution || '';
+          const year = edu.year || edu.dates || '';
+          const gpa = edu.gpa ? ` (GPA: ${edu.gpa})` : '';
+          return `
+            <div class="job-header" style="margin-bottom: 6px;">
+              <span><strong style="font-weight: 700;">${degree}</strong> — ${institution}</span>
+              <span class="job-period">${year}${gpa}</span>
+            </div>
+          `;
+        }).join('')}
+      `;
+    }
+
+    // Format Certifications
+    const certList = r.certifications || [];
+    let certsHtml = '';
+    if (certList.length > 0) {
+      certsHtml = `
+        <div class="section-title">Certifications</div>
+        <p style="margin: 0; color: #334155; font-size: 12px;">${certList.join(', ')}</p>
+      `;
+    }
+
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -76,7 +194,7 @@ export default function CandidateResumesPage() {
         <style>
           body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 40px; color: #1e293b; line-height: 1.5; font-size: 13px; }
           h1 { font-size: 22px; margin: 0 0 4px 0; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px; }
-          .subtitle { font-size: 13px; color: #475569; margin-bottom: 16px; font-weight: 600; }
+          .subtitle { font-size: 12px; color: #475569; margin-bottom: 16px; font-weight: 600; }
           .section-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #64748b; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 4px; margin: 18px 0 10px 0; }
           .skills-list { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
           .skill-tag { background: #f1f5f9; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; color: #334155; }
@@ -88,48 +206,27 @@ export default function CandidateResumesPage() {
       </head>
       <body>
         <h1>${r.name || 'Candidate Name'}</h1>
-        <div class="subtitle">${r.title || item.targetRole} ${r.email ? `• ${r.email}` : ''} ${r.phone ? `• ${r.phone}` : ''} ${r.location ? `• ${r.location}` : ''}</div>
+        <div class="subtitle">${contactInfo}</div>
         
         ${r.summary ? `
           <div class="section-title">Professional Summary</div>
           <p style="margin: 0 0 12px 0; color: #334155;">${r.summary}</p>
         ` : ''}
 
-        ${(r.skills || []).length > 0 ? `
-          <div class="section-title">Core Competencies & Skills</div>
-          <div class="skills-list">
-            ${(r.skills || []).map((s: string) => `<span class="skill-tag">${s}</span>`).join('')}
-          </div>
-        ` : ''}
+        ${skillsHtml}
 
-        <div class="section-title">Professional Experience</div>
-        ${((r.experience as Array<{ role?: string; company?: string; period?: string; highlights?: string[] }>) || [
-          {
-            role: item.targetRole,
-            company: item.targetCompany || 'Technology Corp',
-            period: '2023 – Present',
-            highlights: [
-              'Architected high-throughput microservices handling millions of daily requests.',
-              'Engineered automated deployment pipelines reducing release friction by 40%.',
-              'Collaborated across cross-functional teams to deliver scalable product features.'
-            ]
-          }
-        ]).map((exp) => `
-          <div style="margin-bottom: 14px;">
-            <div class="job-header">
-              <span>${exp.role || ''} — ${exp.company || ''}</span>
-              <span class="job-period">${exp.period || ''}</span>
-            </div>
-            <ul>
-              ${(exp.highlights || []).map((h: string) => `<li>${h}</li>`).join('')}
-            </ul>
-          </div>
-        `).join('')}
+        ${experienceHtml}
 
-          <script>
-            window.onload = function() { window.print(); };
-          </script>
-        </body>
+        ${projectsHtml}
+
+        ${educationHtml}
+
+        ${certsHtml}
+
+        <script>
+          window.onload = function() { window.print(); };
+        </script>
+      </body>
       </html>
     `;
 
