@@ -3,10 +3,27 @@ import { z } from 'zod';
 export const CreateProctoringSessionSchema = z.object({
   id: z.string().uuid('Session ID must be a valid UUID'),
   candidate_id: z.string().uuid('Candidate ID must be a valid UUID'),
-  session_type: z.enum(['aptitude', 'coding', 'video', 'interview']),
-  assessment_id: z.string().uuid().nullable().optional(),
-  application_id: z.string().uuid().nullable().optional(),
-  mock_session_id: z.string().uuid().nullable().optional(),
+  session_type: z
+    .enum(['aptitude', 'coding', 'video', 'interview', 'technical'])
+    .transform((val) => (val === 'technical' ? ('interview' as const) : val)),
+  assessment_id: z
+    .string()
+    .uuid()
+    .nullable()
+    .optional()
+    .or(z.literal('').transform(() => null)),
+  application_id: z
+    .string()
+    .uuid()
+    .nullable()
+    .optional()
+    .or(z.literal('').transform(() => null)),
+  mock_session_id: z
+    .string()
+    .uuid()
+    .nullable()
+    .optional()
+    .or(z.literal('').transform(() => null)),
   policy_version: z.string().default('assessment-v1'),
   consent_version: z.string().default('v1'),
 });

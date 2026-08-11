@@ -93,8 +93,8 @@ export function UnifiedAssessmentSession({
   } = useProctoringSession({
     sessionId,
     candidateId: (stage !== 'check' && candidateId) ? candidateId : '',
-    sessionType: track === 'comprehensive' ? 'interview' : (track as 'aptitude' | 'coding' | 'video' | 'interview'),
-    applicationId,
+    sessionType: track === 'coding' ? 'coding' : track === 'aptitude' ? 'aptitude' : track === 'video' ? 'video' : 'interview',
+    applicationId: applicationId || undefined,
     mockSessionId: applicationId ? undefined : sessionId,
     policyVersion: 'assessment-v1',
     consentVersion: 'v1',
