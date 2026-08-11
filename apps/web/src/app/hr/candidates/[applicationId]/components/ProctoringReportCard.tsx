@@ -16,7 +16,7 @@ import {
 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
 
-interface ProctoringViolation {
+export interface ProctoringViolation {
   id: string;
   rule_code: string;
   severity: 'low' | 'medium' | 'high';
@@ -28,17 +28,17 @@ interface ProctoringViolation {
   review_reason?: string | null;
 }
 
-interface ProctoringEvent {
+export interface ProctoringEvent {
   id: string;
   kind: string;
   severity: 'info' | 'warning' | 'low' | 'medium' | 'high';
   source: string;
   client_timestamp: string;
   session_elapsed_ms: number;
-  payload_json?: any;
+  payload_json?: Record<string, unknown>;
 }
 
-interface ProctoringReport {
+export interface ProctoringReport {
   session: {
     id: string;
     session_type: string;

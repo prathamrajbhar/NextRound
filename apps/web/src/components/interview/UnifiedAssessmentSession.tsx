@@ -76,7 +76,7 @@ export function UnifiedAssessmentSession({
     difficulty,
     storageKey: `mockSession_${sessionId}`,
     onComplete: (results) => {
-      const score = results && typeof results === 'object' && 'score' in results ? (results as any).score : undefined;
+      const score = results && typeof results === 'object' && 'score' in results ? (results as { score?: number }).score : undefined;
       handleCompleteWithProctor(score);
     },
   });
@@ -93,7 +93,7 @@ export function UnifiedAssessmentSession({
   } = useProctoringSession({
     sessionId,
     candidateId: (stage !== 'check' && candidateId) ? candidateId : '',
-    sessionType: track === 'comprehensive' ? 'interview' : (track as any),
+    sessionType: track === 'comprehensive' ? 'interview' : (track as 'aptitude' | 'coding' | 'video' | 'interview'),
     applicationId,
     mockSessionId: applicationId ? undefined : sessionId,
     policyVersion: 'assessment-v1',

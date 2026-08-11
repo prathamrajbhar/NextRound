@@ -1,4 +1,5 @@
 import type { Message, InterviewPhase } from '@/hooks/useInterviewSession';
+import type { ProctoringClient } from '@/lib/proctoring/ProctoringClient';
 
 export type InterviewConsoleMode =
   | 'ai-voice'
@@ -41,7 +42,7 @@ export interface UnifiedInterviewConsoleProps {
   showWarningModal?: boolean;
   onResumeFullscreen?: () => void;
   onEliminate?: () => void;
-  proctoringClient?: any;
+  proctoringClient?: ProctoringClient | null;
 
   // Video screening questions (for video-screening mode)
   screeningQuestions?: ScreeningQuestion[];

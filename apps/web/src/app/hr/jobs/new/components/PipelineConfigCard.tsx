@@ -38,7 +38,7 @@ const CATEGORIES = [
   'Data Interpretation',
 ] as const;
 
-const CATEGORY_ICONS: Record<string, any> = {
+const CATEGORY_ICONS: Record<string, React.ElementType> = {
   'Quantitative Aptitude': Cpu,
   'Logical Reasoning': Brain,
   'Verbal Ability': BookOpen,

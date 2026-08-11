@@ -28,7 +28,7 @@ const generateUUID = () => {
 export class ProctoringClient {
   private config: ProctoringClientConfig;
   private buffer: ProctoringEventBuffer;
-  private heartbeatIntervalId: any = null;
+  private heartbeatIntervalId: ReturnType<typeof setInterval> | null = null;
   private startTime: number;
   private isPaused = false;
   private activeTracks: MediaStreamTrack[] = [];
@@ -36,7 +36,7 @@ export class ProctoringClient {
   // Sound Analysis properties
   private audioContext: AudioContext | null = null;
   private audioAnalyser: AnalyserNode | null = null;
-  private audioIntervalId: any = null;
+  private audioIntervalId: ReturnType<typeof setInterval> | null = null;
   private backgroundNoiseFloor = 0;
   private lastAudioVolume = 0;
   private voiceActivityStreak = 0;
@@ -45,7 +45,7 @@ export class ProctoringClient {
   // Face Analysis properties
   private faceVideoEl: HTMLVideoElement | null = null;
   private faceCanvasEl: HTMLCanvasElement | null = null;
-  private faceIntervalId: any = null;
+  private faceIntervalId: ReturnType<typeof setInterval> | null = null;
   private lastFaceCount = 1;
 
   constructor(config: ProctoringClientConfig) {
@@ -117,7 +117,7 @@ export class ProctoringClient {
     kind: string,
     severity: 'info' | 'warning' | 'low' | 'medium' | 'high',
     source: 'browser' | 'system',
-    payload: any = {}
+    payload: Record<string, unknown> = {}
   ) {
     if (this.isPaused && kind !== 'session_resumed') return;
 
@@ -179,7 +179,7 @@ export class ProctoringClient {
     if (this.audioIntervalId) return; // Already analyzing audio
 
     try {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!AudioContextClass) return;
 
       this.audioContext = new AudioContextClass();
@@ -295,12 +295,12 @@ export class ProctoringClient {
         // Try Shape Detection API if supported
         if ('FaceDetector' in window) {
           try {
-            const faceDetector = new (window as any).FaceDetector({ maxDetectedFaces: 5, fastMode: true });
+            const faceDetector = new (window as typeof window & { FaceDetector: new (config?: { maxDetectedFaces?: number; fastMode?: boolean }) => { detect: (el: HTMLVideoElement) => Promise<unknown[]> } }).FaceDetector({ maxDetectedFaces: 5, fastMode: true });
             const detectedFaces = await faceDetector.detect(this.faceVideoEl);
             const faceCount = detectedFaces.length;
             this.processFaceCount(faceCount, 0.95);
             return;
-          } catch (err) {
+          } catch {
             // Fallback to canvas blob heuristic
           }
         }

@@ -6,7 +6,7 @@ export interface ClientProctoringEvent {
   source: 'browser' | 'system';
   client_timestamp: string;
   session_elapsed_ms: number;
-  payload_json: any;
+  payload_json: Record<string, unknown>;
 }
 
 export class ProctoringEventBuffer {

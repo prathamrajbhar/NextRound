@@ -10,6 +10,8 @@ import { AptitudeQuestionScreen } from './aptitude/AptitudeQuestionScreen';
 import { AlertTriangle, LogIn } from '@/lib/lucide-google-icons';
 import type { AptitudeQuestion } from './aptitude/useAptitudeQuestions';
 
+import type { ProctoringClient } from '@/lib/proctoring/ProctoringClient';
+
 interface AptitudeTestConsoleProps {
   questions?: AptitudeQuestion[];
   companyName?: string;
@@ -20,7 +22,7 @@ interface AptitudeTestConsoleProps {
   onComplete: (score: number) => void;
   applicationId?: string;
   sessionId?: string;
-  proctoringClient?: any;
+  proctoringClient?: ProctoringClient | null;
   strikeCount?: number;
   showWarningModal?: boolean;
   onResumeFullscreen?: () => void;

@@ -30,6 +30,7 @@ export function useProctoringSession({
 }: UseProctoringSessionProps) {
   const [strikeCount, setStrikeCount] = useState(0);
   const [showWarningModal, setShowWarningModal] = useState(false);
+  const [proctoringClient, setProctoringClient] = useState<ProctoringClient | null>(null);
   const clientRef = useRef<ProctoringClient | null>(null);
 
   useEffect(() => {
@@ -67,9 +68,13 @@ export function useProctoringSession({
 
     client.start();
     clientRef.current = client;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setProctoringClient(client);
 
     return () => {
       client.stop();
+      clientRef.current = null;
+      setProctoringClient(null);
     };
   }, [
     sessionId,
@@ -80,6 +85,8 @@ export function useProctoringSession({
     assessmentId,
     policyVersion,
     consentVersion,
+    onViolationDetected,
+    onDisqualified,
   ]);
 
   const handleResumeFullscreen = () => {
@@ -128,6 +135,6 @@ export function useProctoringSession({
     handleResume,
     handleEnd,
     trackMediaStream,
-    proctoringClient: clientRef.current,
+    proctoringClient,
   };
 }

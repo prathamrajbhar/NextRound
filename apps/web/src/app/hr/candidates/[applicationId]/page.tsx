@@ -19,7 +19,7 @@ import SkillsScorecard from './components/SkillsScorecard';
 import DecisionControl from './components/DecisionControl';
 import { CandidateHeader } from './components/CandidateHeader';
 import { AssessmentScorecard } from './components/AssessmentScorecard';
-import { ProctoringReportCard } from './components/ProctoringReportCard';
+import { ProctoringReportCard, type ProctoringReport } from './components/ProctoringReportCard';
 
 interface VoiceData {
   status?: 'pending_evaluation' | 'pending_review' | 'completed';
@@ -43,7 +43,7 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
   const [loading, setLoading] = useState(true);
 
   const [assessmentData, setAssessmentData] = useState<AssessData | null>(null);
-  const [proctorReport, setProctorReport] = useState<any>(null);
+  const [proctorReport, setProctorReport] = useState<ProctoringReport | null>(null);
 
   useEffect(() => {
     async function fetchCandidateData() {
@@ -121,7 +121,7 @@ export default function HrCandidateEvaluationPage({ params }: { params: Promise<
           }
 
           try {
-            const report = await apiClient.get<any>(`/proctoring/applications/${applicationId}/report`).catch(() => null);
+            const report = await apiClient.get<ProctoringReport>(`/proctoring/applications/${applicationId}/report`).catch(() => null);
             if (report) setProctorReport(report);
           } catch (proctorErr) {
             console.warn('Failed to fetch proctoring report:', proctorErr);

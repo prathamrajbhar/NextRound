@@ -98,7 +98,7 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
           }
           if (data.stages) setStages(data.stages as ('screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision')[]);
           if (data.assessmentConfig) {
-            const config = { ...data.assessmentConfig } as any;
+            const config = { ...data.assessmentConfig } as typeof assessmentConfig;
             if (!config.mcqDistribution) {
               const total = config.mcqCount || 20;
               const base = Math.floor(total / 4);

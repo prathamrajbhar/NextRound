@@ -12,13 +12,15 @@ import { ProctoringWarningModal } from './ProctoringWarningModal';
 import { CodingStartCard } from './coding/CodingStartCard';
 import type { TestResult } from './coding/types';
 
+import type { ProctoringClient } from '@/lib/proctoring/ProctoringClient';
+
 interface CodingConsoleProps {
   company?: string;
   role?: string;
   applicationId?: string;
   sessionId?: string;
   onComplete: (score: number) => void;
-  proctoringClient?: any;
+  proctoringClient?: ProctoringClient | null;
   strikeCount?: number;
   showWarningModal?: boolean;
   onResumeFullscreen?: () => void;
@@ -112,6 +114,7 @@ export default function CodingAssessmentConsole({
   // Synchronize starter code once the dynamic LLM problem loads
   useEffect(() => {
     if (problem?.starterCode[language]) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCode(problem.starterCode[language]);
     }
   }, [problem, language]);
@@ -123,7 +126,7 @@ export default function CodingAssessmentConsole({
     setTestResults([]);
 
     try {
-      const res = await apiClient.post<any>(`/coding/run`, {
+      const res = await apiClient.post<{ stdout_stderr: string; test_results?: TestResult[] }>(`/coding/run`, {
         code,
         language,
         problemId: problem.id,
@@ -134,8 +137,8 @@ export default function CodingAssessmentConsole({
       ]);
       setTestResults(res.test_results || []);
       setActiveBottomTab('results');
-    } catch (err: any) {
-      setOutputLogs([`[Runtime Sandbox Error] ${err.message || 'Execution failed'}`]);
+    } catch (err: unknown) {
+      setOutputLogs([`[Runtime Sandbox Error] ${(err as Error).message || 'Execution failed'}`]);
       setActiveBottomTab('results');
     } finally {
       setIsRunning(false);
@@ -148,7 +151,7 @@ export default function CodingAssessmentConsole({
     setOutputLogs(['Submitting final solution for pipeline score grading...']);
 
     try {
-      const res = await apiClient.post<any>(`/coding/submit`, {
+      const res = await apiClient.post<{ test_results?: TestResult[]; pass_rate_percent?: number; ai_feedback?: string; complexity?: string }>(`/coding/submit`, {
         code,
         language,
         problemId: problem.id,
@@ -159,8 +162,8 @@ export default function CodingAssessmentConsole({
       setFinalPassRate(res.pass_rate_percent || 0);
       setComplexityFeedback(res.ai_feedback || res.complexity || 'O(N) Optimization evaluated.');
       setSubmitted(true);
-    } catch (err: any) {
-      setOutputLogs([`[Submission Error] ${err.message || 'Failed to submit solution'}`]);
+    } catch (err: unknown) {
+      setOutputLogs([`[Submission Error] ${(err as Error).message || 'Failed to submit solution'}`]);
       setActiveBottomTab('results');
     } finally {
       setIsRunning(false);

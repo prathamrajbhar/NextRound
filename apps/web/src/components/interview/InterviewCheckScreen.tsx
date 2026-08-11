@@ -291,7 +291,8 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
   }, [checkMic, checkCamera, checkConnection]);
 
   /* Auto-run on mount */
-  useEffect(() => { runAll(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
+  useEffect(() => { runAll(); }, []);
 
   /* ── launch ──────────────────────────────────────────────────────── */
 
