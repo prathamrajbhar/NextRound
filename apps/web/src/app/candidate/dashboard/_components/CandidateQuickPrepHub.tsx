@@ -64,10 +64,10 @@ export function CandidateQuickPrepHub() {
                   <IconComp className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-100 group-hover:text-emerald-400 transition-colors">
+                  <h4 className="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">
                     {track.title}
                   </h4>
-                  <p className="text-[11px] font-medium text-slate-300 dark:text-slate-400 mt-1 leading-snug">
+                  <p className="text-[11px] font-medium text-slate-300 mt-1 leading-snug">
                     {track.description}
                   </p>
                 </div>
