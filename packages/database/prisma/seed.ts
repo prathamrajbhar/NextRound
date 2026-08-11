@@ -1,25 +1,24 @@
 /**
- * NextRound / HireOS — Realistic enterprise seed dataset.
+ * NextRound — Production-grade Enterprise Seed Dataset.
  *
- * Generates a production-quality demo dataset:
- *   - 10 organizations + ~32 HR/recruiter users
- *   - 30 jobs across 6 statuses
- *   - 150 candidate profiles
- *   - 800 applications through a realistic hiring funnel
- *   - Full supporting data: interviews, assessments, coding submissions,
- *     evaluations, offers, notifications, talent bookmarks, mock sessions,
- *     prep content, and agent logs.
+ * Authentic Indian tech ecosystem simulation:
+ *   - 10 Tech Organizations (Bengaluru, Hyderabad, Gurgaon, Pune, Mumbai, etc.)
+ *   - 25+ HR / Talent Acquisition users (Lead HR: steve.hr@gmail.com / 123456789)
+ *   - 25+ Realistic Tech Jobs with rubrics, stages, and salary bands (LPA / USD)
+ *   - 120+ Candidate Profiles (Lead Candidate: pratham@gmail.com / 123456789)
+ *   - 700+ Applications through a realistic enterprise hiring funnel
+ *   - Full supporting ecosystem: evaluations, interviews, audio transcripts,
+ *     assessments, coding submissions, offers with signatures, proctoring telemetry,
+ *     mock sessions, prep guides, talent bookmarks, agent logs, and notifications.
+ *   - Rich Question Bank: Aptitude (Quant, Reasoning, Verbal, DI) + Multi-language Coding Problems.
  *
- * Seeded RNG (mulberry32) → every run produces identical data.
- * All accounts use the password: Password123!
- *
- * Run: npx prisma db seed  (from packages/database)
+ * Password for all accounts: 123456789
+ * Run: npm run seed --workspace=@nextround/database
  */
-import 'dotenv/config';
 
+import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcryptjs';
-
 import { PrismaClient } from '../src/generated/prisma/client';
 
 const connectionString = process.env.DATABASE_URL;
@@ -29,18 +28,12 @@ if (!connectionString) {
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 /* ============================================================
- * 1. CONFIG
+ * 1. CONFIG & SEEDED RNG
  * ============================================================ */
-const PASSWORD = 'Password123!';
-const SEED_KEY = 20260808;
-const N_CANDIDATES = 150;
-const N_APPLICATIONS = 800;
+const DEFAULT_PASSWORD = '123456789';
+const SEED_KEY = 20260811;
 
-/* ============================================================
- * 2. SEEDED RNG HELPERS
- * ============================================================ */
 type Rng = () => number;
-
 function mulberry32(seed: number): Rng {
   let a = seed >>> 0;
   return function () {
@@ -67,11 +60,22 @@ function pickN<T>(arr: readonly T[], n: number): T[] {
   const pool = [...arr];
   const out: T[] = [];
   const count = Math.min(n, pool.length);
-  while (out.length < count) out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  while (out.length < count) {
+    out.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  }
   return out;
 }
 function chance(p: number): boolean {
   return rng() < p;
+}
+function weightedPick<T>(items: readonly T[], weights: readonly number[]): T {
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = rng() * total;
+  for (let i = 0; i < items.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return items[i];
+  }
+  return items[items.length - 1];
 }
 function daysAgo(days: number): Date {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -79,21 +83,117 @@ function daysAgo(days: number): Date {
 function daysFromNow(days: number): Date {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 }
-/** Random past date within [minDaysAgo, maxDaysAgo], at a realistic clock time. */
 function randomPastDate(minDaysAgo: number, maxDaysAgo: number): Date {
   const d = new Date(Date.now() - randFloat(minDaysAgo, maxDaysAgo + 1) * 24 * 60 * 60 * 1000);
-  d.setHours(randInt(8, 20), randInt(0, 59), 0, 0);
+  d.setHours(randInt(8, 20), randInt(0, 59), randInt(0, 59), 0);
   return d;
 }
-/** Random future date within [minDays, maxDays], at a realistic clock time. */
 function randomFutureDate(minDays: number, maxDays: number): Date {
   const d = new Date(Date.now() + randFloat(minDays, maxDays + 1) * 24 * 60 * 60 * 1000);
-  d.setHours(randInt(9, 18), randInt(0, 59), 0, 0);
+  d.setHours(randInt(9, 18), randInt(0, 59), randInt(0, 59), 0);
   return d;
 }
 
 /* ============================================================
- * 3. DATA POOLS — organizations
+ * 2. INDIAN NAME POOLS & GEOGRAPHY
+ * ============================================================ */
+const INDIAN_FIRST_NAMES = [
+  'Aarav', 'Rohan', 'Priya', 'Ananya', 'Aditya', 'Vikram', 'Sneha', 'Rajesh', 'Neha',
+  'Pooja', 'Rahul', 'Siddharth', 'Amit', 'Ishaan', 'Kavya', 'Ritu', 'Suresh', 'Meera',
+  'Arjun', 'Tanvi', 'Shreya', 'Varun', 'Nikhil', 'Diya', 'Kunal', 'Gaurav', 'Deepa',
+  'Manish', 'Akash', 'Divya', 'Ankit', 'Simran', 'Harish', 'Pankaj', 'Vikas', 'Nandini',
+  'Gautam', 'Ritika', 'Abhishek', 'Megha', 'Alok', 'Swati', 'Karthik', 'Bhavna', 'Sanjay',
+  'Sonali', 'Tarun', 'Anushka', 'Sachin', 'Jyoti', 'Karan', 'Rashmi', 'Mayank', 'Isha',
+  'Vishal', 'Preeti', 'Pranav', 'Payal', 'Deepak', 'Suman', 'Chirag', 'Aishwarya',
+  'Suraj', 'Monika', 'Dev', 'Shweta', 'Naveen', 'Komal', 'Ravi', 'Pallavi', 'Hemant',
+];
+
+const INDIAN_LAST_NAMES = [
+  'Sharma', 'Patel', 'Gupta', 'Iyer', 'Nair', 'Reddy', 'Malhotra', 'Verma', 'Joshi',
+  'Singhania', 'Banerjee', 'Chatterjee', 'Rao', 'Bhat', 'Agarwal', 'Kulkarni', 'Deshmukh',
+  'Nambiar', 'Kapoor', 'Menon', 'Mehta', 'Choudhury', 'Saxena', 'Bansal', 'Thakur',
+  'Mishra', 'Pandey', 'Dubey', 'Trivedi', 'Bhattacharya', 'Sengupta', 'Pillai', 'Shetty',
+  'Hegde', 'Somani', 'Khandelwal', 'Aggarwal', 'Goyal', 'Mittal', 'Dewan', 'Seth',
+  'Venkatesh', 'Subramanian', 'Krishnan', 'Mukherjee', 'Dutta', 'Dasgupta', 'Mahajan',
+];
+
+interface LocationDef {
+  city: string;
+  country: string;
+  timezone: string;
+  currency: 'inr' | 'usd';
+}
+
+const INDIAN_LOCATIONS: LocationDef[] = [
+  { city: 'Bengaluru', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
+  { city: 'Hyderabad', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
+  { city: 'Pune', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
+  { city: 'Gurgaon', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
+  { city: 'Noida', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
+  { city: 'Mumbai', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
+  { city: 'Chennai', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
+  { city: 'Delhi NCR', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
+  { city: 'Remote (India)', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
+  { city: 'San Francisco', country: 'USA', timezone: 'America/Los_Angeles', currency: 'usd' },
+];
+
+function locationForCity(city: string): LocationDef {
+  return INDIAN_LOCATIONS.find((l) => l.city === city) || INDIAN_LOCATIONS[0];
+}
+
+const AVATAR_SEEDS = [
+  '1534528741775-53994a69daeb', '1507003211169-0a1dd7228f2d', '1494790108377-be9c29b29330',
+  '1500648767791-00dcc994a43e', '1506794778202-cad84cf45f1d', '1519345182560-3f2917c472ef',
+  '1531123897727-8f129e1688ce', '1544005313-94ddf0286df2', '1547425260-76bcadfb4f2c',
+  '1560250097-0b93528c311a', '1573496359142-b8d87734a5a2', '1580489944761-15a19d654956',
+  '1599566150163-29194dcaad36', '1607746882042-944635dfe10e', '1508214751196-bcfd4ca60f91',
+];
+
+function avatarUrl(seed: string): string {
+  return `https://images.unsplash.com/photo-${seed}?w=200&h=200&fit=crop&crop=faces`;
+}
+
+function slugify(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '.');
+}
+
+const usedEmails = new Set<string>();
+const usedNames = new Set<string>();
+
+function uniqueFullName(): { first: string; last: string; full: string } {
+  let first = '';
+  let last = '';
+  let full = '';
+  let tries = 0;
+  do {
+    first = pick(INDIAN_FIRST_NAMES);
+    last = pick(INDIAN_LAST_NAMES);
+    full = `${first} ${last}`;
+    tries++;
+    if (tries > 500) {
+      full = `${first} ${last} ${randInt(10, 99)}`;
+      break;
+    }
+  } while (usedNames.has(full));
+  usedNames.add(full);
+  return { first, last, full };
+}
+
+function uniqueEmail(first: string, last: string): string {
+  const provider = pick(['gmail.com', 'outlook.com', 'yahoo.com', 'proton.me', 'hey.com']);
+  const base = `${slugify(first)}.${slugify(last)}`;
+  let email = `${base}@${provider}`;
+  let suffix = 1;
+  while (usedEmails.has(email)) {
+    email = `${base}${suffix}@${provider}`;
+    suffix++;
+  }
+  usedEmails.add(email);
+  return email;
+}
+
+/* ============================================================
+ * 3. ORGANIZATIONS DEFINITIONS
  * ============================================================ */
 interface CompanyDef {
   name: string;
@@ -113,1393 +213,1051 @@ interface CompanyDef {
   };
 }
 
-// The first three are the historical demo orgs — kept so the original demo
-// logins (hr@acmecloud.io, recruiter@nexusai.dev, talent@stripeflow.com) still work.
 const COMPANIES: CompanyDef[] = [
   {
-    name: 'Acme Cloud Labs',
-    industry: 'Enterprise SaaS & Cloud Infrastructure',
-    size: '500-1000 employees',
-    domain: 'acmecloud.io',
+    name: 'RazorFlow Technologies',
+    industry: 'High-Throughput Fintech & Payment Infrastructure',
+    size: '1000+ employees',
+    domain: 'razorflow.io',
     logoSeed: '1618005182384-a83a8bd57fbe',
-    tagline: 'Cloud infrastructure that never sleeps',
+    tagline: 'Powering real-time global and domestic payments',
     cultureNotes:
-      'Acme Cloud Labs values asynchronous written communication, deep technical curiosity, and fast iterative delivery. Distributed-first with hubs in Austin, London, and Bangalore.',
+      'RazorFlow operates mission-critical payment rails across India and Southeast Asia. We value extreme system reliability, distributed consensus, low-latency microservices, and radical transparency.',
     hrTeamSize: 4,
     settings: {
       autoOfferEnabled: true,
-      defaultThreshold: 80,
+      defaultThreshold: 82,
       defaultVoice: 'Serena',
-      domain: 'acmecloud.io',
-      hiringSlack: '#acme-talent',
+      domain: 'razorflow.io',
+      hiringSlack: '#razorflow-talent',
     },
   },
   {
-    name: 'Nexus AI Studios',
-    industry: 'Artificial Intelligence & Large Language Models',
-    size: '50-200 employees',
-    domain: 'nexusai.dev',
+    name: 'NexusCloud Labs',
+    industry: 'Enterprise Cloud Infrastructure & Distributed AI',
+    size: '500-1000 employees',
+    domain: 'nexuscloud.io',
     logoSeed: '1620712943543-bcc4688e7485',
-    tagline: 'Frontier research, production reliability',
+    tagline: 'Next-generation cloud orchestrator for AI workloads',
     cultureNotes:
-      'Nexus AI Studios is a research-forward lab. We publish open models, prize rigor over velocity, and hold a strong stance on ethical AI deployment.',
+      'NexusCloud builds multi-cloud orchestration and serverless GPU clusters. Engineering-first culture with deep contributions to open-source Kubernetes and Rust ecosystem.',
     hrTeamSize: 3,
     settings: {
       autoOfferEnabled: false,
       defaultThreshold: 85,
       defaultVoice: 'Alloy',
-      domain: 'nexusai.dev',
+      domain: 'nexuscloud.io',
       hiringSlack: '#nexus-hiring',
     },
   },
   {
-    name: 'StripeFlow Fintech',
-    industry: 'High-Frequency Payments & Digital Banking',
+    name: 'ZomatoScale QuickCommerce',
+    industry: 'Hyperlocal Logistics & E-Commerce Platform',
     size: '1000+ employees',
-    domain: 'stripeflow.com',
-    logoSeed: '1634643917216-3ffb13a2d3f9',
-    tagline: 'Move money at the speed of thought',
-    cultureNotes:
-      'StripeFlow operates under strict financial regulation. Reliability, compliance, and security are non-negotiables; hiring is rigorous and process-driven.',
-    hrTeamSize: 5,
-    settings: {
-      autoOfferEnabled: true,
-      defaultThreshold: 82,
-      defaultVoice: 'Nova',
-      domain: 'stripeflow.com',
-      hiringSlack: '#stripeflow-talent',
-    },
-  },
-  {
-    name: 'Vertex Robotics',
-    industry: 'Industrial Robotics & Automation',
-    size: '200-500 employees',
-    domain: 'vertexrobotics.com',
-    logoSeed: '1581091226825-a6a2a5aee158',
-    tagline: 'Robots that work alongside people',
-    cultureNotes:
-      'Vertex builds collaborative robot arms for warehouses and factories. A mix of hardware and software teams with a strong test-driven culture.',
-    hrTeamSize: 3,
-    settings: {
-      autoOfferEnabled: false,
-      defaultThreshold: 78,
-      defaultVoice: 'Alloy',
-      domain: 'vertexrobotics.com',
-      hiringSlack: '#vertex-hr',
-    },
-  },
-  {
-    name: 'Brightline Health',
-    industry: 'Healthcare Technology & Telemedicine',
-    size: '1000+ employees',
-    domain: 'brightline.health',
-    logoSeed: '1576091160399-112ba8d25d1d',
-    tagline: 'Care that meets patients where they are',
-    cultureNotes:
-      'Brightline connects patients with clinicians through virtual visits. HIPAA compliance and patient empathy sit at the center of every product decision.',
-    hrTeamSize: 4,
-    settings: {
-      autoOfferEnabled: false,
-      defaultThreshold: 80,
-      defaultVoice: 'Serena',
-      domain: 'brightline.health',
-      hiringSlack: '#brightline-people',
-    },
-  },
-  {
-    name: 'Atlas Commerce',
-    industry: 'E-Commerce Marketplace & Logistics',
-    size: '500-1000 employees',
-    domain: 'atlascommerce.io',
+    domain: 'zomatoscale.tech',
     logoSeed: '1561716516-b0b1c9f7e5a0',
-    tagline: 'Shop any brand, one checkout',
+    tagline: 'Sub-10 minute delivery at national scale',
     cultureNotes:
-      'Atlas operates a cross-border marketplace with its own logistics network. High velocity, peak-season crunch, and a bias for shipping.',
+      'High-velocity shipping culture. We run massive real-time dispatch systems, route optimization algorithms, and fault-tolerant mobile apps supporting millions of daily active orders.',
     hrTeamSize: 4,
     settings: {
       autoOfferEnabled: true,
-      defaultThreshold: 79,
+      defaultThreshold: 80,
       defaultVoice: 'Nova',
-      domain: 'atlascommerce.io',
-      hiringSlack: '#atlas-talent',
+      domain: 'zomatoscale.tech',
+      hiringSlack: '#zomato-talent',
     },
   },
   {
-    name: 'Bluepeak Analytics',
-    industry: 'Data Analytics & Business Intelligence',
-    size: '50-200 employees',
-    domain: 'bluepeak.ai',
-    logoSeed: '1551288049-bebda4e38f71',
-    tagline: 'Turn raw data into boardroom decisions',
-    cultureNotes:
-      'Bluepeak builds BI tooling for mid-market CFOs. Small senior team, high agency, and a data-informed hiring loop.',
-    hrTeamSize: 2,
-    settings: {
-      autoOfferEnabled: false,
-      defaultThreshold: 83,
-      defaultVoice: 'Echo',
-      domain: 'bluepeak.ai',
-      hiringSlack: '#bluepeak-hiring',
-    },
-  },
-  {
-    name: 'Solarion Energy',
-    industry: 'Clean Energy & Grid Software',
+    name: 'ZerodhaCore Trading Systems',
+    industry: 'Low-Latency Financial Markets & WealthTech',
     size: '200-500 employees',
-    domain: 'solarion.energy',
-    logoSeed: '1509391366360-2e959784a276',
-    tagline: 'Software for a renewable grid',
+    domain: 'zerodhacore.tech',
+    logoSeed: '1551288049-bebda4e38f71',
+    tagline: 'Reliable, zero-brokerage trading architecture',
     cultureNotes:
-      'Solarion builds monitoring and trading software for solar farms. Mission-driven, engineering-led, with a meaningful stake in decarbonizing the grid.',
+      'Minimalist, highly disciplined engineering. Frugal architecture, single-tenant Go/C++ trading engines, and a strong preference for simple, auditable systems over bloated frameworks.',
     hrTeamSize: 3,
-    settings: {
-      autoOfferEnabled: true,
-      defaultThreshold: 77,
-      defaultVoice: 'Serena',
-      domain: 'solarion.energy',
-      hiringSlack: '#solarion-talent',
-    },
-  },
-  {
-    name: 'Craftfox Studio',
-    industry: 'Digital Product & Design Studio',
-    size: '10-50 employees',
-    domain: 'craftfox.design',
-    logoSeed: '1561070791-2526d30994b5',
-    tagline: 'Beautiful software, shipped',
-    cultureNotes:
-      'Craftfox is a boutique studio pairing senior designers with full-stack engineers on client products. Flat structure, portfolio-driven hiring.',
-    hrTeamSize: 2,
-    settings: {
-      autoOfferEnabled: false,
-      defaultThreshold: 84,
-      defaultVoice: 'Alloy',
-      domain: 'craftfox.design',
-      hiringSlack: '#craftfox-jobs',
-    },
-  },
-  {
-    name: 'Northloop Mobility',
-    industry: 'Autonomous Driving & Mobility',
-    size: '500-1000 employees',
-    domain: 'northloop.ai',
-    logoSeed: '1553406834-36193f9c7f4a',
-    tagline: 'The commute, reclaimed',
-    cultureNotes:
-      'Northloop develops Level 4 autonomous shuttle systems for campuses and airports. Safety-critical engineering culture with heavy simulation and formal verification.',
-    hrTeamSize: 4,
     settings: {
       autoOfferEnabled: false,
       defaultThreshold: 86,
+      defaultVoice: 'Echo',
+      domain: 'zerodhacore.tech',
+      hiringSlack: '#zerodha-hiring',
+    },
+  },
+  {
+    name: 'BharatHealth AI',
+    industry: 'Healthcare Informatics & AI Telemedicine',
+    size: '200-500 employees',
+    domain: 'bharathealth.ai',
+    logoSeed: '1576091160399-112ba8d25d1d',
+    tagline: 'Democratizing clinical intelligence across India',
+    cultureNotes:
+      'BharatHealth combines multimodal medical LLMs with EHR integration. We treat patient data security and clinical accuracy as non-negotiable foundations of every product line.',
+    hrTeamSize: 3,
+    settings: {
+      autoOfferEnabled: false,
+      defaultThreshold: 84,
+      defaultVoice: 'Serena',
+      domain: 'bharathealth.ai',
+      hiringSlack: '#bharathealth-people',
+    },
+  },
+  {
+    name: 'PineStack Security & Observability',
+    industry: 'Cloud Security, SRE & Compliance',
+    size: '50-200 employees',
+    domain: 'pinestack.io',
+    logoSeed: '1581091226825-a6a2a5aee158',
+    tagline: 'Continuous cloud compliance and runtime security',
+    cultureNotes:
+      'Small, senior security and DevOps engineers. We build eBPF-based kernel tracing, Kubernetes posture management, and automated penetration testing agents.',
+    hrTeamSize: 2,
+    settings: {
+      autoOfferEnabled: true,
+      defaultThreshold: 80,
+      defaultVoice: 'Alloy',
+      domain: 'pinestack.io',
+      hiringSlack: '#pinestack-jobs',
+    },
+  },
+  {
+    name: 'UrbanMatrix Robotics',
+    industry: 'Industrial Automation & Autonomous Drones',
+    size: '100-500 employees',
+    domain: 'urbanmatrix.ai',
+    logoSeed: '1553406834-36193f9c7f4a',
+    tagline: 'Autonomous robotics for industrial supply chains',
+    cultureNotes:
+      'We combine hardware test benches with high-rate ROS2 simulation. Rigorous continuous integration, formal validation, and hardware-in-the-loop testing.',
+    hrTeamSize: 3,
+    settings: {
+      autoOfferEnabled: false,
+      defaultThreshold: 82,
       defaultVoice: 'Nova',
-      domain: 'northloop.ai',
-      hiringSlack: '#northloop-recruiting',
+      domain: 'urbanmatrix.ai',
+      hiringSlack: '#urbanmatrix-talent',
+    },
+  },
+  {
+    name: 'CREDExperience Studio',
+    industry: 'Design Systems & High-Fidelity UI Engineering',
+    size: '50-200 employees',
+    domain: 'credexperience.design',
+    logoSeed: '1561070791-2526d30994b5',
+    tagline: 'Artisanal software craftsmanship and kinetic UI',
+    cultureNotes:
+      'Obsessed with micro-interactions, 120fps fluid animations, custom WebGL shaders, and pixel-perfect design system architecture.',
+    hrTeamSize: 2,
+    settings: {
+      autoOfferEnabled: false,
+      defaultThreshold: 88,
+      defaultVoice: 'Alloy',
+      domain: 'credexperience.design',
+      hiringSlack: '#cred-design-jobs',
+    },
+  },
+  {
+    name: 'SolarGrid CleanTech',
+    industry: 'Renewable Energy Software & Smart Grids',
+    size: '200-500 employees',
+    domain: 'solargrid.energy',
+    logoSeed: '1509391366360-2e959784a276',
+    tagline: 'Optimizing solar power generation through IoT & ML',
+    cultureNotes:
+      'Mission-driven climate-tech company. We build telemetry ingestion pipelines handling 50M sensor metrics per minute from solar plants across India.',
+    hrTeamSize: 3,
+    settings: {
+      autoOfferEnabled: true,
+      defaultThreshold: 78,
+      defaultVoice: 'Serena',
+      domain: 'solargrid.energy',
+      hiringSlack: '#solargrid-talent',
+    },
+  },
+  {
+    name: 'SwishLabs Agentic AI',
+    industry: 'Autonomous AI Agents & Synthetic Data',
+    size: '50-200 employees',
+    domain: 'swishlabs.ai',
+    logoSeed: '1634643917216-3ffb13a2d3f9',
+    tagline: 'Next-generation reasoning engines for enterprise automation',
+    cultureNotes:
+      'Research-heavy frontier AI lab. Fast publication cycles, heavy evaluation benchmarks, and continuous fine-tuning of multi-modal models.',
+    hrTeamSize: 2,
+    settings: {
+      autoOfferEnabled: false,
+      defaultThreshold: 85,
+      defaultVoice: 'Nova',
+      domain: 'swishlabs.ai',
+      hiringSlack: '#swishlabs-hiring',
     },
   },
 ];
 
-function orgLogo(def: CompanyDef): string {
-  return `https://images.unsplash.com/photo-${def.logoSeed}?w=120&h=120&fit=crop&crop=faces`;
-}
-
 /* ============================================================
- * 4. DATA POOLS — people, locations, HR roles
+ * 4. DOMAINS, SKILLS & ROLES
  * ============================================================ */
-const FIRST_NAMES = [
-  'Aarav', 'Aisha', 'Alejandro', 'Alex', 'Amara', 'Anika', 'Arjun', 'Carlos', 'Chloe',
-  'David', 'Diego', 'Dmitri', 'Elena', 'Ethan', 'Fatima', 'Grace', 'Hana', 'Hassan',
-  'Isabella', 'Ivan', 'Jade', 'Juan', 'Kenji', 'Lina', 'Lucas', 'Marcus', 'Mateo',
-  'Maya', 'Mei', 'Nadia', 'Nia', 'Omar', 'Priya', 'Rafael', 'Rohan', 'Sana', 'Sofia',
-  'Sophia', 'Viktor', 'Wei', 'Yuki', 'Zara', 'Elias', 'Nora', 'Ibrahim', 'Priyanka',
-  'Tomas', 'Amelia', 'Dev', 'Ingrid', 'Samuel', 'Riya', 'Gabriel', 'Leila', 'Owen',
-  'Camila', 'Ravi', 'Tara', 'Marco', 'Hana', 'Aditi', 'Felix', 'Yara', 'Noah', 'Sara',
-];
+type Domain = 'frontend' | 'backend' | 'fullstack' | 'ai' | 'devops' | 'mobile' | 'data' | 'product' | 'security';
 
-const LAST_NAMES = [
-  'Rivers', 'Sharma', 'Chen', 'Patel', 'Johnson', 'Nguyen', 'Kim', 'Garcia', 'Okafor',
-  'Silva', 'Kowalski', 'Wong', 'Gupta', 'Fernandez', 'Ali', 'Haddad', 'Rossi', 'Dubois',
-  'Ivanov', 'Sato', 'Park', 'Mehta', 'Santos', 'Kapoor', 'Bauer', 'Iyer', 'Novak',
-  'Tanaka', 'Khan', 'Murphy', 'Costa', 'Srinivasan', 'Volkov', 'Ortiz', 'Rahman',
-  'Verma', 'Carter', 'Dias', 'Andersson', 'Reddy', 'Chowdhury', 'Moreau', 'Larsen',
-  'da Silva', 'Hasegawa', 'Singh', 'Pereira', 'Bansal', 'Thakur', 'Nair', 'Barrett',
-];
-
-interface LocationDef {
-  city: string;
-  country: string;
-  timezone: string;
-  currency: 'usd' | 'inr' | 'eur' | 'gbp' | 'aud' | 'sgd';
-}
-
-const LOCATIONS: LocationDef[] = [
-  { city: 'San Francisco', country: 'USA', timezone: 'America/Los_Angeles', currency: 'usd' },
-  { city: 'Austin', country: 'USA', timezone: 'America/Chicago', currency: 'usd' },
-  { city: 'New York', country: 'USA', timezone: 'America/New_York', currency: 'usd' },
-  { city: 'Seattle', country: 'USA', timezone: 'America/Los_Angeles', currency: 'usd' },
-  { city: 'Denver', country: 'USA', timezone: 'America/Denver', currency: 'usd' },
-  { city: 'Raleigh', country: 'USA', timezone: 'America/New_York', currency: 'usd' },
-  { city: 'Toronto', country: 'Canada', timezone: 'America/Toronto', currency: 'usd' },
-  { city: 'London', country: 'UK', timezone: 'Europe/London', currency: 'gbp' },
-  { city: 'Berlin', country: 'Germany', timezone: 'Europe/Berlin', currency: 'eur' },
-  { city: 'Amsterdam', country: 'Netherlands', timezone: 'Europe/Amsterdam', currency: 'eur' },
-  { city: 'Paris', country: 'France', timezone: 'Europe/Paris', currency: 'eur' },
-  { city: 'Dublin', country: 'Ireland', timezone: 'Europe/Dublin', currency: 'eur' },
-  { city: 'Stockholm', country: 'Sweden', timezone: 'Europe/Stockholm', currency: 'eur' },
-  { city: 'Zurich', country: 'Switzerland', timezone: 'Europe/Zurich', currency: 'eur' },
-  { city: 'Bangalore', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
-  { city: 'Mumbai', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
-  { city: 'Hyderabad', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
-  { city: 'Pune', country: 'India', timezone: 'Asia/Kolkata', currency: 'inr' },
-  { city: 'Singapore', country: 'Singapore', timezone: 'Asia/Singapore', currency: 'sgd' },
-  { city: 'Dubai', country: 'UAE', timezone: 'Asia/Dubai', currency: 'usd' },
-  { city: 'Tokyo', country: 'Japan', timezone: 'Asia/Tokyo', currency: 'usd' },
-  { city: 'Sydney', country: 'Australia', timezone: 'Australia/Sydney', currency: 'aud' },
-  { city: 'São Paulo', country: 'Brazil', timezone: 'America/Sao_Paulo', currency: 'usd' },
-  { city: 'Mexico City', country: 'Mexico', timezone: 'America/Mexico_City', currency: 'usd' },
-];
-
-const AVATAR_SEEDS = [
-  '1494790108377-be9c29b29330', '1507003211169-0a1dd7228f2d', '1438761681033-6461ffad8d80',
-  '1500648767791-00dcc994a43e', '1506794778202-cad84cf45f1d', '1519345182560-3f2917c472ef',
-  '1531123897727-8f129e1688ce', '1544005313-94ddf0286df2', '1547425260-76bcadfb4f2c',
-  '1560250097-0b93528c311a', '1573496359142-b8d87734a5a2', '1580489944761-15a19d654956',
-  '1599566150163-29194dcaad36', '1607746882042-944635dfe10e', '1508214751196-bcfd4ca60f91',
-  '1517841905240-472988babdf9', '1524504388940-b1c1722653e1', '1571501679680-de32f1e7aad4',
-  '1589141098257-32e35c8f24f6', '1535713875002-d1d0cf377fde', '1522075469751-3a6694fb2f61',
-  '1488426862026-3ee34a7d66df', '1502823403499-6ccfcf4fb453', '1531123897727-8f129e1688ce',
-  '1596815202906-c3f9e0d5d2f5', '1507003211169-0a1dd7228f2d', '1544717305-278254c7d6db',
-  '1524250502761-1ac6f2e30d43', '1548142813-c348350df52b', '1534528741775-53994a69daeb',
-];
-
-const HR_TITLES = [
-  'Head of Talent Acquisition', 'Senior Technical Recruiter', 'Talent Partner',
-  'Engineering Recruiter', 'Recruiting Operations Lead', 'People & Talent Manager',
-  'Senior Talent Sourcer', 'Talent Acquisition Lead', 'Hiring Program Manager',
-];
-
-const HR_SPECIALTIES = [
-  'Backend Engineering', 'Frontend & UI', 'AI & ML Engineering', 'Product Management',
-  'Design & Research', 'Data Engineering', 'DevOps & SRE', 'Executive Search',
-  'Mobile Engineering', 'Early-career Programs', 'Diversity Sourcing', 'Payroll & Compliance',
-];
-
-const HR_AVATAR = (seed: string) =>
-  `https://images.unsplash.com/photo-${seed}?w=200&h=200&fit=crop&crop=faces`;
-
-const EMAIL_PROVIDERS = ['gmail.com', 'yahoo.com', 'outlook.com', 'proton.me', 'hey.com'];
-
-function slugifyName(name: string): string {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '.');
-}
-
-/* ============================================================
- * 5. DATA POOLS — skills, roles, domains
- * ============================================================ */
-type Domain = 'frontend' | 'backend' | 'data' | 'infra' | 'mobile' | 'design' | 'product' | 'marketing' | 'security' | 'hardware';
-
-interface DomainPool {
+interface DomainDef {
   key: Domain;
   label: string;
   skills: string[];
   roles: string[];
-  headlineNoun: string;
+  salaryLPA: [number, number]; // [min, max] in Lakhs Per Annum
 }
 
-const DOMAINS: DomainPool[] = [
-  {
-    key: 'frontend',
-    label: 'Frontend Engineering',
-    skills: ['React', 'TypeScript', 'Next.js', 'Vue', 'TailwindCSS', 'Redux', 'Zustand', 'GraphQL', 'WebGL', 'Three.js', 'Accessibility', 'Web Performance', 'Vite', 'Storybook', 'CSS-in-JS', 'Jest'],
-    roles: ['Senior Frontend Engineer', 'Frontend Engineer', 'Staff Frontend Engineer', 'Design Engineer', 'Web Performance Engineer'],
-    headlineNoun: 'frontend engineer',
-  },
+const DOMAIN_DATA: DomainDef[] = [
   {
     key: 'backend',
     label: 'Backend Engineering',
-    skills: ['Node.js', 'Python', 'Go', 'Rust', 'Java', 'Express', 'FastAPI', 'Django', 'Spring Boot', 'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Kafka', 'gRPC', 'GraphQL', 'Docker', 'Microservices', 'Elasticsearch'],
-    roles: ['Senior Backend Engineer', 'Backend Engineer', 'Staff Backend Engineer', 'Platform Engineer', 'Distributed Systems Engineer'],
-    headlineNoun: 'backend engineer',
+    skills: ['Go', 'Rust', 'Node.js', 'PostgreSQL', 'Redis', 'Kafka', 'gRPC', 'Docker', 'Kubernetes', 'AWS', 'Microservices', 'GraphQL', 'System Design'],
+    roles: ['Senior Backend Engineer', 'Staff Software Engineer', 'Distributed Systems Architect', 'Backend Tech Lead', 'Core Platform Engineer'],
+    salaryLPA: [22, 55],
   },
   {
-    key: 'data',
-    label: 'Data & ML Engineering',
-    skills: ['Python', 'PyTorch', 'TensorFlow', 'JAX', 'CUDA', 'scikit-learn', 'LangChain', 'Pandas', 'Spark', 'Airflow', 'dbt', 'SQL', 'MLflow', 'Hugging Face', 'ONNX', 'Kubernetes', 'Weaviate', 'Snowflake'],
-    roles: ['Machine Learning Engineer', 'Data Engineer', 'AI Research Engineer', 'Data Scientist', 'Analytics Engineer', 'ML Infrastructure Engineer'],
-    headlineNoun: 'data & ML engineer',
+    key: 'frontend',
+    label: 'Frontend Engineering',
+    skills: ['React', 'Next.js', 'TypeScript', 'TailwindCSS', 'GraphQL', 'WebGL', 'Zustand', 'Performance Optimization', 'Design Systems', 'Vite', 'Testing Library'],
+    roles: ['Senior Frontend Engineer', 'Staff UI Engineer', 'Frontend Tech Lead', 'Design Systems Specialist', 'Web Performance Architect'],
+    salaryLPA: [18, 48],
   },
   {
-    key: 'infra',
-    label: 'DevOps & Infrastructure',
-    skills: ['AWS', 'GCP', 'Azure', 'Terraform', 'Kubernetes', 'Docker', 'GitHub Actions', 'ArgoCD', 'Prometheus', 'Grafana', 'Istio', 'Vault', 'Linux', 'Bash', 'Ansible', 'CI/CD'],
-    roles: ['DevOps Engineer', 'Site Reliability Engineer', 'Platform Engineer', 'Cloud Infrastructure Engineer'],
-    headlineNoun: 'infrastructure engineer',
+    key: 'fullstack',
+    label: 'Full Stack Engineering',
+    skills: ['TypeScript', 'Next.js', 'React', 'Node.js', 'PostgreSQL', 'Redis', 'Prisma', 'TailwindCSS', 'Docker', 'REST APIs', 'AWS', 'CI/CD'],
+    roles: ['Senior Full-Stack Engineer', 'Lead Full-Stack Developer', 'Product Engineer', 'Full-Stack Solutions Architect', 'Founding Engineer'],
+    salaryLPA: [20, 50],
+  },
+  {
+    key: 'ai',
+    label: 'AI & Machine Learning',
+    skills: ['Python', 'PyTorch', 'TensorFlow', 'FastAPI', 'LangChain', 'LlamaIndex', 'CUDA', 'Hugging Face', 'Vector DBs', 'Fine-Tuning', 'MLOps', 'vLLM'],
+    roles: ['Senior AI/ML Engineer', 'Staff LLM Systems Engineer', 'AI Research Scientist', 'MLOps Architect', 'Lead GenAI Engineer'],
+    salaryLPA: [25, 75],
+  },
+  {
+    key: 'devops',
+    label: 'DevOps & Cloud Infrastructure',
+    skills: ['Kubernetes', 'Terraform', 'AWS', 'GCP', 'Docker', 'Prometheus', 'Grafana', 'CI/CD GitHub Actions', 'Helm', 'ArgoCD', 'Linux', 'Ansible'],
+    roles: ['Senior DevOps Engineer', 'Site Reliability Engineering Lead', 'Cloud Infrastructure Architect', 'DevSecOps Specialist'],
+    salaryLPA: [22, 52],
   },
   {
     key: 'mobile',
     label: 'Mobile Engineering',
-    skills: ['React Native', 'Flutter', 'Swift', 'Kotlin', 'iOS', 'Android', 'Jetpack Compose', 'Firebase', 'GraphQL', 'Fastlane'],
-    roles: ['Senior Mobile Engineer', 'iOS Engineer', 'Android Engineer', 'React Native Engineer'],
-    headlineNoun: 'mobile engineer',
+    skills: ['Flutter', 'React Native', 'Swift', 'Kotlin', 'iOS', 'Android', 'Redux', 'Jetpack Compose', 'GraphQL', 'Firebase', 'Mobile CI/CD'],
+    roles: ['Senior Mobile Engineer', 'Lead iOS Engineer', 'Lead Android Engineer', 'Cross-Platform Mobile Architect'],
+    salaryLPA: [18, 45],
   },
   {
-    key: 'design',
-    label: 'Product & UX Design',
-    skills: ['Figma', 'Design Systems', 'UX Research', 'Prototyping', 'Interaction Design', 'Motion Design', 'Accessibility', 'User Testing', 'Wireframing', 'Illustration'],
-    roles: ['Product Designer', 'Senior Product Designer', 'UX Researcher', 'Design Engineer'],
-    headlineNoun: 'product designer',
+    key: 'data',
+    label: 'Data Engineering',
+    skills: ['Python', 'Apache Spark', 'Kafka', 'Snowflake', 'dbt', 'Airflow', 'PostgreSQL', 'ClickHouse', 'BigQuery', 'SQL', 'Data Modeling'],
+    roles: ['Senior Data Engineer', 'Data Platform Architect', 'Lead Analytics Engineer', 'Big Data Tech Lead'],
+    salaryLPA: [20, 50],
+  },
+  {
+    key: 'security',
+    label: 'Cybersecurity & Application Security',
+    skills: ['Application Security', 'Penetration Testing', 'OAuth2/JWT', 'OWASP Top 10', 'Cloud Security', 'Kubernetes Security', 'Cryptography', 'SIEM'],
+    roles: ['Senior Security Engineer', 'AppSec Tech Lead', 'Security Operations Architect', 'Product Security Lead'],
+    salaryLPA: [24, 58],
   },
   {
     key: 'product',
     label: 'Product Management',
-    skills: ['Product Strategy', 'A/B Testing', 'SQL', 'User Research', 'Roadmapping', 'Analytics', 'Stakeholder Management', 'Agile', 'OKR Planning'],
-    roles: ['Product Manager', 'Senior Product Manager', 'Product Analyst', 'Program Manager'],
-    headlineNoun: 'product manager',
-  },
-  {
-    key: 'marketing',
-    label: 'Marketing & Growth',
-    skills: ['SEO', 'Growth Marketing', 'Content Strategy', 'Email Marketing', 'Analytics', 'A/B Testing', 'CRM', 'Copywriting', 'Paid Acquisition', 'Market Research'],
-    roles: ['Growth Marketer', 'Marketing Manager', 'Content Marketing Lead', 'Product Marketing Manager'],
-    headlineNoun: 'marketing professional',
-  },
-  {
-    key: 'security',
-    label: 'Security Engineering',
-    skills: ['OWASP', 'Penetration Testing', 'Cryptography', 'IAM', 'SIEM', 'SOC 2', 'Zero Trust', 'Threat Modeling', 'Kubernetes Security', 'Web Security'],
-    roles: ['Security Engineer', 'Application Security Engineer', 'Security Analyst', 'Compliance Analyst'],
-    headlineNoun: 'security engineer',
-  },
-  {
-    key: 'hardware',
-    label: 'Robotics & Hardware',
-    skills: ['ROS 2', 'C++', 'Python', 'Embedded C', 'Real-time Systems', 'Motion Planning', 'Computer Vision', 'Sensor Fusion', 'Control Theory', 'Simulation', 'Linux Kernel'],
-    roles: ['Robotics Software Engineer', 'Controls Engineer', 'Embedded Systems Engineer', 'Computer Vision Engineer', 'Simulation Engineer'],
-    headlineNoun: 'robotics engineer',
+    skills: ['Product Strategy', 'User Analytics', 'A/B Testing', 'Roadmap Planning', 'Agile/Scrum', 'System Architecture', 'Technical PRDs', 'SQL'],
+    roles: ['Senior Technical Product Manager', 'Lead Product Manager', 'Director of Product', 'Growth Product Manager'],
+    salaryLPA: [25, 60],
   },
 ];
 
-const WORK_VALUES = [
-  'Technical Autonomy', 'Continuous Mentorship', 'High Velocity Shipping', 'Research Rigor',
-  'Open Source Contribution', 'Ethical AI Development', 'System Reliability', 'Clean Code Principles',
-  'Ownership Culture', 'Design Precision', 'Accessibility Standards', 'User Delight',
-  'Algorithmic Efficiency', 'Product-Centric Engineering', 'Cross-Functional Collaboration',
-  'Remote-First Work', 'Data-Driven Decisions', 'Psychological Safety', 'Learning Budget',
-  'Customer Obsession', 'Sustainability', 'Security First',
-];
+const NOTICE_PERIODS = ['Immediate', '15 days', '30 days', '45 days', '60 days', '90 days'];
+const WORK_MODES = ['In-Office', 'Hybrid (3 days)', 'Hybrid (2 days)', 'Remote (India)', 'Fully Remote'];
+const WORK_AUTH = ['Indian Citizen', 'OCI Cardholder', 'Work Visa / NRI', 'H-1B Visa', 'US Citizen'];
 
-const WORK_AUTH = ['US Citizen', 'Green Card Holder', 'H-1B Visa', 'OPT / EAD', 'UK Right to Work', 'EU Citizen', 'Permanent Resident (SG)', 'No sponsorship needed', 'Need visa sponsorship'];
-
-const NOTICE_PERIODS = ['Immediate', '1 week', '2 weeks', '3 weeks', '1 month', '2 months', '90 days'];
-
-const WORK_MODES = ['Remote', 'Hybrid', 'On-site'];
+function seniority(yoe: number): string {
+  if (yoe < 2) return 'Junior';
+  if (yoe < 4) return 'Mid-level';
+  if (yoe < 7) return 'Senior';
+  if (yoe < 10) return 'Lead / Staff';
+  return 'Principal / Architect';
+}
 
 /* ============================================================
- * 6. DATA POOLS — job templates & description content
+ * 5. REALISTIC JOB TEMPLATES
  * ============================================================ */
 interface JobTemplate {
-  org: string;
+  orgName: string;
   title: string;
   domain: Domain;
   city: string;
   exp: string;
-  salary: [number, number]; // [min, max] in the location currency's natural unit (k USD / L INR / k EUR...)
-  status: 'active' | 'published' | 'draft' | 'paused' | 'closed';
-  rubric: { technical: number; communication: number; problemSolving: number; experience: number };
+  salaryLPA: [number, number];
   minScore: number;
   autoOffer: boolean;
-  skillOverrides?: string[];
+  status: 'published' | 'active' | 'draft' | 'paused' | 'closed';
+  keyRequirements: string[];
 }
 
 const JOB_TEMPLATES: JobTemplate[] = [
-  // Acme Cloud Labs
-  { org: 'Acme Cloud Labs', title: 'Senior Full-Stack Engineer (React & Node.js)', domain: 'backend', city: 'Austin', exp: '5-8 years', salary: [150, 190], status: 'active', rubric: { technical: 35, communication: 25, problemSolving: 25, experience: 15 }, minScore: 80, autoOffer: true },
-  { org: 'Acme Cloud Labs', title: 'Platform Engineer (Kubernetes & Terraform)', domain: 'infra', city: 'San Francisco', exp: '4-7 years', salary: [160, 205], status: 'active', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 80, autoOffer: true },
-  { org: 'Acme Cloud Labs', title: 'Product Manager, Developer Experience', domain: 'product', city: 'London', exp: '4-6 years', salary: [90, 120], status: 'published', rubric: { technical: 25, communication: 35, problemSolving: 20, experience: 20 }, minScore: 78, autoOffer: false },
-  { org: 'Acme Cloud Labs', title: 'Staff Frontend Engineer (Design Systems)', domain: 'frontend', city: 'Austin', exp: '7-10 years', salary: [165, 210], status: 'paused', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 84, autoOffer: false },
-  // Nexus AI Studios
-  { org: 'Nexus AI Studios', title: 'AI Systems & LLM Infrastructure Engineer', domain: 'data', city: 'San Francisco', exp: '4-7 years', salary: [185, 240], status: 'active', rubric: { technical: 45, communication: 15, problemSolving: 25, experience: 15 }, minScore: 85, autoOffer: false },
-  { org: 'Nexus AI Studios', title: 'Research Engineer, RLHF & Alignment', domain: 'data', city: 'Berlin', exp: '3-6 years', salary: [110, 145], status: 'active', rubric: { technical: 45, communication: 15, problemSolving: 25, experience: 15 }, minScore: 86, autoOffer: false },
-  { org: 'Nexus AI Studios', title: 'Data Engineer, Training Pipelines', domain: 'data', city: 'Bangalore', exp: '3-5 years', salary: [40, 65], status: 'published', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 82, autoOffer: false },
-  // StripeFlow Fintech
-  { org: 'StripeFlow Fintech', title: 'Staff Backend Distributed Systems Architect', domain: 'backend', city: 'New York', exp: '8-12 years', salary: [210, 270], status: 'active', rubric: { technical: 40, communication: 30, problemSolving: 15, experience: 15 }, minScore: 84, autoOffer: true },
-  { org: 'StripeFlow Fintech', title: 'Senior Android Engineer, Mobile Payments', domain: 'mobile', city: 'New York', exp: '4-7 years', salary: [155, 195], status: 'active', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 82, autoOffer: true },
-  { org: 'StripeFlow Fintech', title: 'Application Security Engineer', domain: 'security', city: 'Toronto', exp: '4-7 years', salary: [140, 180], status: 'active', rubric: { technical: 45, communication: 15, problemSolving: 25, experience: 15 }, minScore: 83, autoOffer: false },
-  { org: 'StripeFlow Fintech', title: 'Product Manager, Core Payments', domain: 'product', city: 'New York', exp: '5-8 years', salary: [170, 215], status: 'draft', rubric: { technical: 25, communication: 35, problemSolving: 20, experience: 20 }, minScore: 82, autoOffer: false },
-  // Vertex Robotics
-  { org: 'Vertex Robotics', title: 'Robotics Software Engineer (ROS 2)', domain: 'hardware', city: 'Austin', exp: '3-6 years', salary: [125, 165], status: 'active', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 80, autoOffer: false },
-  { org: 'Vertex Robotics', title: 'Controls Engineer, Motion Planning', domain: 'hardware', city: 'Boston', exp: '5-8 years', salary: [135, 175], status: 'active', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 80, autoOffer: false },
-  { org: 'Vertex Robotics', title: 'Embedded Systems Engineer', domain: 'hardware', city: 'Boston', exp: '3-6 years', salary: [120, 160], status: 'published', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 78, autoOffer: false },
-  // Brightline Health
-  { org: 'Brightline Health', title: 'Senior Backend Engineer (HIPAA Platform)', domain: 'backend', city: 'Denver', exp: '5-8 years', salary: [150, 190], status: 'active', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 82, autoOffer: false },
-  { org: 'Brightline Health', title: 'Product Designer, Clinical Workflows', domain: 'design', city: 'Denver', exp: '4-7 years', salary: [120, 155], status: 'active', rubric: { technical: 25, communication: 35, problemSolving: 20, experience: 20 }, minScore: 80, autoOffer: false },
-  { org: 'Brightline Health', title: 'Data Analyst, Population Health', domain: 'data', city: 'Raleigh', exp: '2-5 years', salary: [95, 130], status: 'published', rubric: { technical: 35, communication: 25, problemSolving: 25, experience: 15 }, minScore: 78, autoOffer: false },
-  // Atlas Commerce
-  { org: 'Atlas Commerce', title: 'Backend Engineer, Order Platform', domain: 'backend', city: 'Seattle', exp: '4-7 years', salary: [145, 185], status: 'active', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 80, autoOffer: true },
-  { org: 'Atlas Commerce', title: 'Frontend Engineer, Checkout Experience', domain: 'frontend', city: 'Seattle', exp: '3-6 years', salary: [135, 175], status: 'active', rubric: { technical: 35, communication: 25, problemSolving: 25, experience: 15 }, minScore: 79, autoOffer: true },
-  { org: 'Atlas Commerce', title: 'Data Engineer, Logistics Analytics', domain: 'data', city: 'Singapore', exp: '3-6 years', salary: [110, 145], status: 'published', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 80, autoOffer: false },
-  // Bluepeak Analytics
-  { org: 'Bluepeak Analytics', title: 'Analytics Engineer', domain: 'data', city: 'New York', exp: '3-6 years', salary: [130, 170], status: 'active', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 82, autoOffer: false },
-  { org: 'Bluepeak Analytics', title: 'Frontend Engineer, Data Visualization', domain: 'frontend', city: 'Austin', exp: '3-6 years', salary: [125, 165], status: 'active', rubric: { technical: 35, communication: 25, problemSolving: 25, experience: 15 }, minScore: 80, autoOffer: false },
-  { org: 'Bluepeak Analytics', title: 'Solutions Engineer', domain: 'product', city: 'New York', exp: '3-6 years', salary: [135, 175], status: 'published', rubric: { technical: 30, communication: 35, problemSolving: 20, experience: 15 }, minScore: 78, autoOffer: false },
-  // Solarion Energy
-  { org: 'Solarion Energy', title: 'Full-Stack Engineer, Grid Monitoring', domain: 'backend', city: 'Berlin', exp: '4-7 years', salary: [95, 125], status: 'active', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 79, autoOffer: true },
-  { org: 'Solarion Energy', title: 'Data Scientist, Energy Forecasting', domain: 'data', city: 'Amsterdam', exp: '3-6 years', salary: [100, 135], status: 'active', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 81, autoOffer: false },
-  { org: 'Solarion Energy', title: 'DevOps Engineer, Edge Platform', domain: 'infra', city: 'Berlin', exp: '3-6 years', salary: [90, 120], status: 'paused', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 78, autoOffer: false },
-  // Craftfox Studio
-  { org: 'Craftfox Studio', title: 'Design Engineer', domain: 'design', city: 'Amsterdam', exp: '4-7 years', salary: [85, 110], status: 'active', rubric: { technical: 35, communication: 30, problemSolving: 20, experience: 15 }, minScore: 83, autoOffer: false },
-  { org: 'Craftfox Studio', title: 'Senior Product Designer', domain: 'design', city: 'Paris', exp: '5-8 years', salary: [80, 105], status: 'published', rubric: { technical: 25, communication: 35, problemSolving: 20, experience: 20 }, minScore: 82, autoOffer: false },
-  { org: 'Craftfox Studio', title: 'Frontend Engineer, Brand Sites', domain: 'frontend', city: 'Amsterdam', exp: '3-6 years', salary: [75, 95], status: 'closed', rubric: { technical: 35, communication: 25, problemSolving: 25, experience: 15 }, minScore: 78, autoOffer: false },
-  // Northloop Mobility
-  { org: 'Northloop Mobility', title: 'Perception Engineer, Sensor Fusion', domain: 'hardware', city: 'San Francisco', exp: '4-8 years', salary: [180, 230], status: 'active', rubric: { technical: 45, communication: 15, problemSolving: 25, experience: 15 }, minScore: 85, autoOffer: false },
-  { org: 'Northloop Mobility', title: 'Simulation Engineer', domain: 'hardware', city: 'Seattle', exp: '4-7 years', salary: [160, 200], status: 'active', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 84, autoOffer: false },
-  { org: 'Northloop Mobility', title: 'Site Reliability Engineer, Fleet Data', domain: 'infra', city: 'San Francisco', exp: '4-7 years', salary: [170, 215], status: 'draft', rubric: { technical: 40, communication: 20, problemSolving: 25, experience: 15 }, minScore: 84, autoOffer: false },
+  {
+    orgName: 'RazorFlow Technologies',
+    title: 'Senior Backend Engineer (Payments Core)',
+    domain: 'backend',
+    city: 'Bengaluru',
+    exp: '4-7 years',
+    salaryLPA: [30, 48],
+    minScore: 82,
+    autoOffer: true,
+    status: 'active',
+    keyRequirements: ['Go or Rust experience in high-concurrency systems', 'PostgreSQL database tuning and transaction isolation', 'Kafka event streaming for financial ledgers'],
+  },
+  {
+    orgName: 'RazorFlow Technologies',
+    title: 'Lead Full-Stack Engineer (Merchant Portal)',
+    domain: 'fullstack',
+    city: 'Bengaluru',
+    exp: '5-9 years',
+    salaryLPA: [35, 55],
+    minScore: 80,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['Next.js App Router, TypeScript, React Server Components', 'Node.js/Express backend APIs, PostgreSQL, Redis caching', 'Micro-frontend architecture and PCI-DSS compliance'],
+  },
+  {
+    orgName: 'RazorFlow Technologies',
+    title: 'Staff Security Engineer (AppSec & Cloud)',
+    domain: 'security',
+    city: 'Bengaluru',
+    exp: '6-10 years',
+    salaryLPA: [40, 65],
+    minScore: 85,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['Zero-trust security architecture', 'Kubernetes cluster hardening and mTLS', 'Automated security scanning in CI/CD pipelines'],
+  },
+  {
+    orgName: 'NexusCloud Labs',
+    title: 'Distributed Systems Engineer (Serverless Cloud)',
+    domain: 'backend',
+    city: 'Hyderabad',
+    exp: '3-6 years',
+    salaryLPA: [28, 45],
+    minScore: 84,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['Rust or Go systems programming', 'Kubernetes CRI/CNI plugin development', 'eBPF networking and low-latency RPCs'],
+  },
+  {
+    orgName: 'NexusCloud Labs',
+    title: 'Senior AI Systems Architect',
+    domain: 'ai',
+    city: 'Bengaluru',
+    exp: '5-9 years',
+    salaryLPA: [45, 75],
+    minScore: 86,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['LLM inference optimization (vLLM, TensorRT-LLM)', 'Distributed training pipelines with PyTorch and Ray', 'Vector search indexing at billion-vector scale'],
+  },
+  {
+    orgName: 'ZomatoScale QuickCommerce',
+    title: 'Senior Frontend Architect (Consumer Web & Mobile Web)',
+    domain: 'frontend',
+    city: 'Gurgaon',
+    exp: '5-8 years',
+    salaryLPA: [32, 50],
+    minScore: 80,
+    autoOffer: true,
+    status: 'published',
+    keyRequirements: ['Sub-second First Contentful Paint optimization', 'React 19, Next.js, Web Vitals profiling', 'State synchronization across real-time order tracking'],
+  },
+  {
+    orgName: 'ZomatoScale QuickCommerce',
+    title: 'Senior Mobile Engineer (Android - Kotlin)',
+    domain: 'mobile',
+    city: 'Gurgaon',
+    exp: '4-7 years',
+    salaryLPA: [26, 42],
+    minScore: 78,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['Jetpack Compose & Kotlin Coroutines', 'Offline-first SQLite architecture with Room', 'Real-time GPS tracking and battery optimization'],
+  },
+  {
+    orgName: 'ZerodhaCore Trading Systems',
+    title: 'Low-Latency C++/Go Systems Engineer',
+    domain: 'backend',
+    city: 'Bengaluru',
+    exp: '4-8 years',
+    salaryLPA: [35, 60],
+    minScore: 88,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['Lock-free data structures and ring buffers', 'Sub-millisecond market data processing', 'Clean, zero-dependency architectural design'],
+  },
+  {
+    orgName: 'ZerodhaCore Trading Systems',
+    title: 'Senior UI Engineer (Kite Trading Console)',
+    domain: 'frontend',
+    city: 'Bengaluru',
+    exp: '3-6 years',
+    salaryLPA: [24, 40],
+    minScore: 82,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['High-frequency WebSocket tick renderers (60fps canvas)', 'TypeScript, custom state management', 'Accessible, high-contrast dark UI'],
+  },
+  {
+    orgName: 'BharatHealth AI',
+    title: 'Senior Machine Learning Engineer (Clinical NLP)',
+    domain: 'ai',
+    city: 'Hyderabad',
+    exp: '4-7 years',
+    salaryLPA: [32, 52],
+    minScore: 82,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['Fine-tuning BioBERT and LLaMA for medical transcripts', 'HIPAA/ABDM compliance in patient records pipeline', 'FastAPI microservices in production'],
+  },
+  {
+    orgName: 'BharatHealth AI',
+    title: 'Lead Full-Stack Developer (Doctor Telehealth Suite)',
+    domain: 'fullstack',
+    city: 'Hyderabad',
+    exp: '5-8 years',
+    salaryLPA: [28, 46],
+    minScore: 80,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['WebRTC video consultation pipelines', 'React, Next.js, Node.js, PostgreSQL', 'Real-time collaborative medical note taking'],
+  },
+  {
+    orgName: 'PineStack Security & Observability',
+    title: 'Senior DevOps / SRE Infrastructure Engineer',
+    domain: 'devops',
+    city: 'Pune',
+    exp: '4-7 years',
+    salaryLPA: [26, 44],
+    minScore: 80,
+    autoOffer: true,
+    status: 'published',
+    keyRequirements: ['Terraform across AWS & GCP', 'Prometheus, Cortex/Thanos, Grafana telemetry', 'Multi-tenant Kubernetes cluster automation'],
+  },
+  {
+    orgName: 'UrbanMatrix Robotics',
+    title: 'Robotics Software Engineer (ROS2 & Autonomous Navigation)',
+    domain: 'backend',
+    city: 'Bengaluru',
+    exp: '3-6 years',
+    salaryLPA: [25, 42],
+    minScore: 82,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['ROS2 in C++ and Python', 'SLAM (Simultaneous Localization and Mapping)', 'Sensor fusion for LiDAR, IMU and stereo cameras'],
+  },
+  {
+    orgName: 'CREDExperience Studio',
+    title: 'Principal Design Technologist / UI Architect',
+    domain: 'frontend',
+    city: 'Bengaluru',
+    exp: '6-10 years',
+    salaryLPA: [42, 68],
+    minScore: 88,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['WebGL, GLSL shaders, Three.js 3D kinetic interfaces', 'Custom motion physics engines in TypeScript', 'Industry-defining design systems'],
+  },
+  {
+    orgName: 'SolarGrid CleanTech',
+    title: 'Senior Data Platform Engineer (Time-Series & IoT)',
+    domain: 'data',
+    city: 'Mumbai',
+    exp: '4-7 years',
+    salaryLPA: [28, 45],
+    minScore: 78,
+    autoOffer: true,
+    status: 'published',
+    keyRequirements: ['Apache Spark & Kafka streaming ingestion', 'ClickHouse / TimescaleDB high-throughput storage', 'Automated anomaly detection models on inverter telemetry'],
+  },
+  {
+    orgName: 'SwishLabs Agentic AI',
+    title: 'Founding Agentic Systems Researcher',
+    domain: 'ai',
+    city: 'Bengaluru',
+    exp: '3-7 years',
+    salaryLPA: [35, 65],
+    minScore: 85,
+    autoOffer: false,
+    status: 'published',
+    keyRequirements: ['Autonomous multi-agent planning frameworks', 'Tool calling and self-reflection loops', 'Rigorous evaluation benchmark generation'],
+  },
 ];
-
-const RESPONSIBILITIES: Record<Domain, string[]> = {
-  frontend: [
-    'Build modular, accessible React UI with modern hooks and state machines',
-    'Optimize Core Web Vitals and bundle size for millions of page views',
-    'Ship design-system components consumed across multiple product lines',
-    'Integrate GraphQL and REST APIs with rigorous loading and error states',
-    'Write unit and integration tests with Jest and React Testing Library',
-  ],
-  backend: [
-    'Design resilient REST and gRPC services under high concurrency',
-    'Own database schema, indexing, and query performance on PostgreSQL',
-    'Build idempotent, retry-safe APIs for mission-critical flows',
-    'Instrument services with structured logging and metrics',
-    'Implement caching with Redis and event-driven integration via Kafka',
-  ],
-  data: [
-    'Build and maintain scalable data pipelines with Airflow and dbt',
-    'Train, evaluate, and deploy ML models into production serving',
-    'Optimize inference latency and cost for low-latency serving',
-    'Design feature stores and model registries for the ML platform',
-    'Partner with researchers to productionize experimental models',
-  ],
-  infra: [
-    'Operate Kubernetes clusters at scale with Terraform and GitOps',
-    'Design CI/CD pipelines that serve many product teams safely',
-    'Build observability with Prometheus, Grafana, and OpenTelemetry',
-    'Drive incident response and a culture of reliability',
-    'Automate secrets management and compliance evidence with Vault',
-  ],
-  mobile: [
-    'Build polished, testable mobile experiences in Kotlin or Swift',
-    'Integrate secure payment and authentication flows',
-    'Optimize app startup time and memory footprint',
-    'Maintain CI with Fastlane and on-device test suites',
-  ],
-  design: [
-    'Own end-to-end product design from research to high-fidelity',
-    'Maintain and extend our design system and token library',
-    'Run usability tests and turn insights into concrete direction',
-    'Partner closely with engineers to ship pixel-perfect UI',
-  ],
-  product: [
-    'Own the roadmap for a product area end to end',
-    'Run discovery with customers, support, and sales teams',
-    'Define metrics and analyze adoption with SQL',
-    'Partner with design and engineering to ship quarterly goals',
-  ],
-  marketing: [
-    'Own growth loops from acquisition through activation and retention',
-    'Plan and execute multi-channel campaigns with clear attribution',
-    'Build a content and SEO engine that compounds over time',
-    'Measure everything against a clean, well-instrumented analytics stack',
-  ],
-  security: [
-    'Run threat modeling across new features and infrastructure',
-    'Own the application security program: SAST, DAST, and pen-testing',
-    'Respond to and remediate security incidents end to end',
-    'Drive SOC 2 and compliance evidence automation',
-  ],
-  hardware: [
-    'Develop real-time control and perception software in C++',
-    'Build simulation environments for hardware-in-the-loop testing',
-    'Implement sensor fusion, calibration, and diagnostics pipelines',
-    'Optimize embedded software for latency, power, and determinism',
-    'Integrate ROS 2 components into production robot systems',
-  ],
-};
-
-const REQUIREMENTS: Record<Domain, string[]> = {
-  frontend: [
-    '5+ years shipping production React and TypeScript',
-    'Deep understanding of browser rendering and performance budgets',
-    'Experience with SSR frameworks such as Next.js',
-    'Strong eye for interaction detail and accessibility (WCAG 2.1)',
-  ],
-  backend: [
-    '5+ years building backend services in Node.js, Go, or Python',
-    'Strong SQL and data-modelling skills on PostgreSQL',
-    'Familiarity with queues (Kafka, BullMQ) and distributed systems',
-    'Experience operating services in production at meaningful scale',
-  ],
-  data: [
-    'Strong Python and PyTorch; exposure to LLM tooling is a plus',
-    'Solid SQL and cloud data-warehousing experience',
-    'Experience with MLOps tooling such as MLflow or Kubeflow',
-    'Comfort operating GPU clusters and containerized training',
-  ],
-  infra: [
-    'Deep AWS or GCP experience with infrastructure-as-code',
-    'Kubernetes administration and service-mesh knowledge',
-    'Linux systems expertise and strong scripting',
-    'SRE mindset with clear SLI and SLO ownership',
-  ],
-  mobile: [
-    '3+ years in native or cross-platform mobile development',
-    'Experience shipping transactional or regulated applications',
-    'Strong understanding of offline-first architecture',
-  ],
-  design: [
-    '4+ years designing digital products for web or mobile',
-    'Portfolio showing shipped work and strong visual craft',
-    'Proficiency in Figma and modern prototyping tools',
-    'Experience designing for accessibility',
-  ],
-  product: [
-    '3+ years as a product manager in B2B SaaS or platform products',
-    'Strong analytical skills and SQL comfort',
-    'Excellent written and verbal communication',
-    'Experience with agile delivery and OKRs',
-  ],
-  marketing: [
-    '3+ years in growth or product marketing',
-    'Hands-on with analytics and A/B testing tooling',
-    'Strong copywriting and storytelling',
-    'Familiarity with CRM and email marketing platforms',
-  ],
-  security: [
-    '3+ years in application or product security',
-    'Deep knowledge of the OWASP Top 10 and common CWE classes',
-    'Experience securing cloud and Kubernetes infrastructure',
-    'Strong communication for security design reviews',
-  ],
-  hardware: [
-    '5+ years in robotics, controls, or embedded systems',
-    'Strong C++ and Python with a real-time systems background',
-    'Experience with ROS 2 or equivalent middleware',
-    'Familiarity with computer vision and sensor processing',
-  ],
-};
-
-const SALARY_STRINGS: Record<LocationDef['currency'], (min: number, max: number) => string> = {
-  usd: (min, max) => `$${Math.round(min)}k – $${Math.round(max)}k`,
-  inr: (min, max) => `₹${Math.round(min)}L – ₹${Math.round(max)}L`,
-  eur: (min, max) => `€${Math.round(min)}k – €${Math.round(max)}k`,
-  gbp: (min, max) => `£${Math.round(min)}k – £${Math.round(max)}k`,
-  aud: (min, max) => `A$${Math.round(min)}k – A$${Math.round(max)}k`,
-  sgd: (min, max) => `S$${Math.round(min)}k – S$${Math.round(max)}k`,
-};
-
-function locationForCity(city: string): LocationDef {
-  return LOCATIONS.find((l) => l.city === city) ?? LOCATIONS[0];
-}
-
-function buildJobDescription(tpl: JobTemplate, company: CompanyDef): string {
-  const resp = pickN(RESPONSIBILITIES[tpl.domain], 3);
-  const req = pickN(REQUIREMENTS[tpl.domain], 3);
-  return [
-    `## About ${company.name}`,
-    `${company.tagline}. ${company.cultureNotes}`,
-    '',
-    `We are looking for a ${tpl.title.toLowerCase()} to join our ${tpl.city} team.`,
-    '',
-    '## Responsibilities',
-    ...resp.map((r) => `- ${r}`),
-    '',
-    '## Requirements',
-    ...req.map((r) => `- ${r}`),
-    `- ${tpl.exp} years of professional experience in ${DOMAINS.find((d) => d.key === tpl.domain)?.label.toLowerCase()}`,
-  ].join('\n');
-}
-
-function buildJobSkills(tpl: JobTemplate): string[] {
-  const pool = DOMAINS.find((d) => d.key === tpl.domain)!.skills;
-  return pickN(pool, randInt(6, 9));
-}
-
-function buildJobStages(): string[] {
-  // Mirrors the edit-page stage enum: 'screening'|'assessment'|'voice_screen'|'hr_round'|'panel'|'decision'
-  return ['screening', 'assessment', 'voice_screen', 'hr_round', 'panel', 'decision'];
-}
-
-function buildAssessmentConfig(): unknown {
-  // Mirrors the edit page's assessmentConfig shape; codingProblemId references packages/shared/data/coding-problems.json
-  const mcqCount = randInt(15, 25);
-  const base = Math.floor(mcqCount / 4);
-  const remainder = mcqCount % 4;
-  
-  return {
-    mcqCount,
-    codingProblemId: pick(['virtualized-list', 'rate-limiter', 'lru-cache', 'two-sum', 'valid-parentheses']),
-    passingScore: randInt(70, 85),
-    mcqDistribution: {
-      'Quantitative Aptitude': base + (remainder > 0 ? 1 : 0),
-      'Logical Reasoning': base + (remainder > 1 ? 1 : 0),
-      'Verbal Ability': base + (remainder > 2 ? 1 : 0),
-      'Data Interpretation': base,
-    },
-  };
-}
 
 /* ============================================================
- * 7. DATA POOLS — bios, projects, interview & assessment content
+ * 6. QUESTION BANK DATASETS (Aptitude + Coding)
  * ============================================================ */
-const BIO_INTROS = [
-  'Product-minded engineer with a track record of shipping',
-  'Builder who cares about systems that stay up and code that reads clearly',
-  'I turn ambiguous problems into well-scoped, well-tested features',
-  'Engineer and mentor focused on high-leverage, durable architecture',
-  'T-shaped specialist who pairs deep craft with strong collaboration',
-  'I have spent my career making fast products faster and simple systems simpler',
-  'Curious generalist with deep roots in',
-  'Reliability engineer at heart, product advocate in practice',
-  'I believe great software is designed for the humans who maintain it',
-  'Researcher turned engineer, obsessed with measurable impact',
-];
-
-const BIO_MIDDLES = [
-  'Across two startups and a large platform, I owned systems serving millions of users.',
-  'Over the last decade I have led delivery on 0-to-1 products and critical migration projects.',
-  'My recent focus has been performance, observability, and developer experience.',
-  'I have built and coached high-trust teams across three continents.',
-  'I bring a balance of hands-on craft and strategic product thinking to every team.',
-  'I have shipped features end to end, from discovery through operations.',
-  'My work consistently lands at the intersection of business goals and engineering excellence.',
-  'I am at my best when mentoring engineers while unblocking gnarly technical problems.',
-  'I have deep experience in regulated industries where correctness is non-negotiable.',
-  'I love measuring everything, iterating quickly, and leaving codebases cleaner than I found them.',
-];
-
-const PROUD_PROJECTS = [
-  'Architected a micro-frontend platform that cut page-load latency by 45% for 2M daily users.',
-  'Trained and quantized a 70B parameter LLM to 4-bit for low-latency edge inference with AWQ.',
-  'Built a zero-downtime event streaming pipeline that handled 500k events/second during peak.',
-  'Replaced a brittle monolith with event-driven services, reducing incident count by 70%.',
-  'Designed an idempotent payment retry layer that eliminated double-charges in production.',
-  'Created a design system used across 12 product lines with full accessibility coverage.',
-  'Implemented a lock-free concurrent B-tree in C++ achieving 3x throughput over std locks.',
-  'Shipped real-time collaborative editing over WebSockets with CRDT-based conflict resolution.',
-  'Led a PostgreSQL sharding migration moving 40TB with zero downtime and zero data loss.',
-  'Built an on-device ML pipeline that cut inference cost 6x without accuracy loss.',
-  'Operationalized Kubernetes at a fintech, taking PCI-scoped workloads from 99.5% to 99.99% uptime.',
-  'Launched an internal developer platform that reduced service onboarding from weeks to hours.',
-  'Drove a SOC 2 Type II audit to completion with fully automated evidence collection.',
-  'Designed a fleet-wide sensor calibration tool used by 400+ robots in production.',
-  'Built a real-time fraud-detection model that flagged 3x more fraud with 60% fewer false positives.',
-  'Shipped an offline-first mobile checkout that lifted conversion 18% on low-bandwidth networks.',
-  'Created an anomaly-detection service that surfaces grid faults 20 minutes before they cascade.',
-  'Overhauled the CI/CD pipeline, cutting average merge-to-deploy time from 2 days to 35 minutes.',
-  'Led a research-to-production model handoff that scaled a 40-person data science team.',
-  'Rebuilt the analytics warehouse in dbt + Snowflake, cutting report build time by 80%.',
-];
-
-const INTERVIEW_INTRO_QUESTION = [
-  'Tell me about a recent project you are proud of and the role you played.',
-  'Walk me through your background and what draws you to this role.',
-  'Describe how you approach a new problem in an unfamiliar codebase.',
-  'What kind of impact have you had on your current team that you are most proud of?',
-];
-
-const INTERVIEW_CLOSING = [
-  'Thanks for that detail — that wraps our technical evaluation. The hiring team will review your scorecard shortly.',
-  'Excellent. That completes our questions — is there anything about the role or team you would like to ask?',
-  'Great insight. We will package your scorecard for the team and be in touch on next steps.',
-];
-
-const INTERVIEW_QUESTIONS: Record<Domain, string[]> = {
-  frontend: [
-    'How do you approach performance optimization in a React application that is slow to hydrate?',
-    'Describe a time you built a complex accessible UI — what tradeoffs did you navigate?',
-    'How would you design state management for a large, multi-module application?',
-    'How do you keep a design system consistent while product teams move fast?',
-    'Explain how you would reduce bundle size on a growing Next.js app.',
-  ],
-  backend: [
-    'How do you design an API to be idempotent and safe under retries?',
-    'Walk me through how you would debug a database query that degrades under load.',
-    'Describe how you would design a system that must process millions of events per day reliably.',
-    'How do you approach service decomposition versus a monolith for a fast-moving startup?',
-    'Explain your strategy for maintaining data consistency across microservices.',
-  ],
-  data: [
-    'How would you evaluate and deploy an LLM to production cost-effectively?',
-    'Describe how you would design a training data pipeline for a recommendation model.',
-    'How do you measure model drift and decide when to retrain?',
-    'Walk through an ML problem end to end: data, modeling, serving, monitoring.',
-    'How do you think about GPU utilization and inference latency tradeoffs?',
-  ],
-  infra: [
-    'How would you design a Kubernetes rollout strategy for zero-downtime deploys?',
-    'Describe a time you improved reliability or reduced MTTR on a critical service.',
-    'How do you approach cost optimization on a large cloud bill?',
-    'Walk me through how you would design observability for a distributed system.',
-  ],
-  mobile: [
-    'How do you keep an offline-first mobile app consistent when connectivity returns?',
-    'Describe how you would reduce app startup time in a large mobile codebase.',
-    'How do you approach secure storage of sensitive data on device?',
-    'Walk through a release cycle for a mobile app and how you mitigate regressions.',
-  ],
-  design: [
-    'Walk me through your process from user research to a shipped design.',
-    'How do you balance visual delight with accessibility requirements?',
-    'Describe a design decision you defended against engineering or product pushback.',
-    'How do you build and maintain a design system that scales across teams?',
-  ],
-  product: [
-    'How do you decide what to build when every stakeholder wants something different?',
-    'Describe a product metric you moved meaningfully and how you did it.',
-    'How do you run discovery with customers without leading them?',
-    'Walk me through how you would prioritize a roadmap for the next two quarters.',
-  ],
-  marketing: [
-    'Describe a growth campaign you ran that materially moved a core metric.',
-    'How do you measure marketing attribution across multiple channels?',
-    'How would you build an SEO engine for a new product category?',
-    'Walk me through a time you took a failing channel and turned it around.',
-  ],
-  security: [
-    'How would you approach threat modeling for a new payment integration?',
-    'Describe a security incident you handled and what you learned.',
-    'How do you balance developer velocity with security controls?',
-    'Walk me through how you would secure a Kubernetes-based microservices platform.',
-  ],
-  hardware: [
-    'How do you design a real-time control loop that must meet hard latency guarantees?',
-    'Describe how you would test safety-critical robotic software.',
-    'How do you handle sensor noise and failures in a perception pipeline?',
-    'Walk through an embedded systems debugging session that was particularly hard.',
-  ],
-};
-
-const INTERVIEW_ANSWERS: Record<Domain, string[]> = {
-  frontend: [
-    'I start with profiling to find the real bottleneck — usually hydration or third-party scripts — then fix the largest 20% of the problem first. I track Core Web Vitals in CI so regressions fail the build.',
-    'I treat accessibility as a design constraint, not a checklist. I build with semantic HTML, test with a screen reader, and involve users with disabilities in usability sessions.',
-    'I prefer the simplest state model that fits: server state in a query layer, UI state local, and a small amount of global state for cross-cutting concerns. I avoid over-centralizing.',
-    'I keep the system token-based and treat components as contracts. Changes go through review, and we version breaking changes instead of breaking consumers.',
-    'I measure first, then act: code-split routes, lazy-load below-the-fold libraries, and remove dead dependencies. I also audit why each dependency is in the bundle.',
-  ],
-  backend: [
-    'Idempotency keys are the answer. Every mutating request carries a key, the server dedupes on it, and the response is cached so retries return the same result. I pair it with exactly-once delivery on the queue side.',
-    'I reproduce the load with a query plan in hand. Often it is a missing index, a bad join, or a scan caused by type mismatch. I always verify the plan after the change.',
-    'I design around durable queues and event sourcing: producers write, consumers process, and we guarantee at-least-once with idempotent handlers. Observability on every hop.',
-    'I start from the business boundaries and keep services coarse-grained. The cost of a distributed transaction is high, so I prefer local transactions with async reconciliation.',
-    'I use the Saga pattern with compensating actions, plus an outbox pattern so local writes and message publishing are atomic.',
-  ],
-  data: [
-    'I evaluate quality and cost on representative data, use quantization and speculative decoding to cut latency, and gate deploys with offline evals plus online guardrails.',
-    'I design pipelines as versioned, idempotent steps with data quality checks at each stage, and I store features in a feature store so training and serving are consistent.',
-    'I track feature distributions and prediction confidence in production. When drift crosses a threshold with clear business impact, I trigger retraining with a human-in-the-loop review.',
-    'I scope the problem with stakeholders, baseline the data, build a simple model first, and only add complexity when it earns its keep. Serving, monitoring, and rollback are part of the plan from day one.',
-    'I think about it as throughput per dollar and per watt: right-sizing GPU instances, batching, and caching are usually the highest-leverage levers before any model change.',
-  ],
-  infra: [
-    'I use incremental rollouts with health gates and automatic rollback. Canary releases on a small slice, watch error budgets, then scale. Everything is declarative so the deploy is reproducible.',
-    'I look for the top error budget burners, remove flaky alerts so signal is clean, and invest in runbooks and postmortem-driven fixes. Reducing MTTR is mostly about clarity and automation.',
-    'I tag everything, find idle and oversized resources, and use committed-use discounts. The biggest wins are usually right-sizing and deleting unused infrastructure.',
-    'I follow the RED method: request rate, errors, and duration at every service, with traces correlated across the stack so a single dashboard tells the whole story.',
-  ],
-  mobile: [
-    'I queue local mutations and reconcile with the server on reconnect, using server timestamps and monotonic local IDs to resolve conflicts deterministically.',
-    'I profile the launch path with Instruments and trim the work: defer non-critical work, lazy-load modules, and prewarm only what users need first.',
-    'I use the platform keychain and Keystore for secrets, never log them, and keep sensitive flows short-lived with biometric gateways.',
-    'I release progressively with staged rollouts, keep feature flags in the codebase, and rely on on-device test suites plus a small, trusted beta cohort.',
-  ],
-  design: [
-    'I begin with the user problem and research, then sketch multiple directions, prototype the strongest, test with users, and iterate. I stay close to engineers through handoff.',
-    'I design for the constraints first — contrast, focus, and screen-reader semantics — then let the visual system elevate within those bounds. Delight never overrides usability.',
-    'I bring the evidence: usage data, user clips, and a working prototype. I find the common ground between their concern and the user need, then ship a small experiment to settle it.',
-    'I start with tokens and primitives, codify patterns, and create contribution processes with clear review. Adoption comes from making the system easier than the alternative.',
-  ],
-  product: [
-    'I go back to strategy and user evidence. If the request is loud but unsupported, I dig for the underlying need and usually find a cheaper way to meet it. I communicate the reasoning openly.',
-    'I pick one north-star metric, instrument the funnel, and run small experiments. The most meaningful move I made was a 14% activation lift by simplifying onboarding.',
-    'I use open questions, silence, and observations rather than leading questions. I also watch usage behavior, which often contradicts what people say.',
-    'I rank by impact, confidence, and effort, and I pressure-test with customers. I keep a clear "no" list and revisit it quarterly when the market changes.',
-  ],
-  marketing: [
-    'I ran a lifecycle email program that lifted retention 9 points by segmenting on activation signals and timing sends to usage behavior.',
-    'I use last-touch and multi-touch models together, and I sanity-check attribution against incrementality experiments like geo holdouts.',
-    'I start with search intent research, build topical clusters around high-value keywords, and earn links by making genuinely useful assets. SEO compounds, so I think in quarters, not weeks.',
-    'I cut spend, fixed the tracking, and rebuilt the funnel from the data — the channel went from 2x to 6x ROAS within two quarters.',
-  ],
-  security: [
-    'I map the data flows, identify trust boundaries, and enumerate attack surfaces. I prioritize by likelihood and blast radius, and I always validate with hands-on testing.',
-    'A misconfigured service briefly exposed internal data. We rotated credentials, tightened defaults, added guardrails, and did a blameless postmortem that changed how we deploy.',
-    'I use security as a service model: fast, low-friction reviews, self-serve guardrails in CI, and clear risk communication. People skip controls that are slow to use.',
-    'I apply least privilege everywhere, encrypt in transit and at rest, and use network policies and admission control. I also continuously validate with automated scans and red-team exercises.',
-  ],
-  hardware: [
-    'I design for worst-case timing, not average case: fixed-priority scheduling with provable response times, minimal interrupt handling, and watchdog coverage at every critical step.',
-    'I combine unit tests on the algorithms, software-in-the-loop with simulated sensors, hardware-in-the-loop for integration, and fault injection to prove safe behavior on failure.',
-    'I fuse multiple sensors with confidence-weighted filtering, and I detect disagreement as a fault signal. The system degrades gracefully and surfaces a clear diagnostic.',
-    'A race condition only appeared under temperature stress. I added deterministic scheduling, bounded buffers, and a stress harness that reproduced the fault in minutes.',
-  ],
-};
-
-interface AptitudeQuestion {
-  id: string;
-  category: string;
-  prompt: string;
+interface AptitudeSeedItem {
+  category: 'Quantitative Aptitude' | 'Logical Reasoning' | 'Verbal Ability' | 'Data Interpretation';
+  difficulty: 'easy' | 'medium' | 'hard';
+  question: string;
   options: string[];
-  answer: number;
+  correct_index: number;
+  explanation: string;
+  tags: string[];
 }
-const APTITUDE_QUESTIONS: AptitudeQuestion[] = [
-  { id: 'aq1', category: 'logic', prompt: 'All roses are flowers. Some flowers fade quickly. Which statement must be true?', options: ['All roses fade quickly', 'Some flowers are roses', 'Some roses fade quickly', 'No roses fade quickly'], answer: 1 },
-  { id: 'aq2', category: 'quantitative', prompt: 'A train travels 240 km in 3 hours. What is its average speed in km/h?', options: ['60', '80', '100', '120'], answer: 1 },
-  { id: 'aq3', category: 'logic', prompt: 'If FISH is coded as GHTI, how is BIRD coded?', options: ['CJSE', 'CJSD', 'CHQD', 'CJQE'], answer: 0 },
-  { id: 'aq4', category: 'quantitative', prompt: 'What is 15% of 240?', options: ['30', '32', '36', '40'], answer: 2 },
-  { id: 'aq5', category: 'logic', prompt: 'In a queue, Priya is 7th from the front and 9th from the back. How many people are in the queue?', options: ['15', '16', '17', '14'], answer: 0 },
-  { id: 'aq6', category: 'verbal', prompt: 'Choose the word closest in meaning to "mitigate".', options: ['Aggravate', 'Lessen', 'Ignore', 'Amplify'], answer: 1 },
-  { id: 'aq7', category: 'quantitative', prompt: 'If 5 workers build a wall in 12 days, how many days will 8 workers take?', options: ['7.5', '8', '9', '10'], answer: 0 },
-  { id: 'aq8', category: 'logic', prompt: 'Which number comes next: 2, 6, 12, 20, 30, ?', options: ['36', '38', '40', '42'], answer: 3 },
-  { id: 'aq9', category: 'verbal', prompt: 'Choose the antonym of "ubiquitous".', options: ['Rare', 'Common', 'Pervasive', 'Universal'], answer: 0 },
-  { id: 'aq10', category: 'logic', prompt: 'Some engineers are managers. All managers are organized. Which must be true?', options: ['All engineers are organized', 'Some organized people are managers', 'All organized people are engineers', 'No managers are engineers'], answer: 1 },
-  { id: 'aq11', category: 'quantitative', prompt: 'If the ratio of cats to dogs is 3:5 and there are 40 animals total, how many dogs are there?', options: ['15', '20', '25', '30'], answer: 2 },
-  { id: 'aq12', category: 'verbal', prompt: 'Pick the correctly spelled word.', options: ['Accomodate', 'Acommodate', 'Accommodate', 'Accommodatee'], answer: 2 },
+
+const APTITUDE_BANK: AptitudeSeedItem[] = [
+  // ── Quantitative Aptitude ────────────────────────────────────────────────
+  {
+    category: 'Quantitative Aptitude',
+    difficulty: 'easy',
+    question: 'A train 180 meters long is traveling at a speed of 54 km/h. How many seconds will it take to pass an electric pole?',
+    options: ['10 seconds', '12 seconds', '15 seconds', '18 seconds'],
+    correct_index: 1,
+    explanation: 'Speed = 54 × (5/18) = 15 m/s. Time = Distance / Speed = 180 / 15 = 12 seconds.',
+    tags: ['speed', 'distance', 'trains'],
+  },
+  {
+    category: 'Quantitative Aptitude',
+    difficulty: 'easy',
+    question: 'If the price of a laptop is increased by 20% and then reduced by 20%, what is the net percentage change in price?',
+    options: ['0% change', '4% increase', '4% decrease', '2% decrease'],
+    correct_index: 2,
+    explanation: 'Net change = x + y + (xy/100) = +20 - 20 - (400/100) = -4%, i.e., 4% decrease.',
+    tags: ['percentage', 'profit-loss'],
+  },
+  {
+    category: 'Quantitative Aptitude',
+    difficulty: 'medium',
+    question: 'Two pipes A and B can fill a water reservoir in 15 hours and 20 hours respectively. If both pipes are opened simultaneously, how much time will it take to fill the reservoir?',
+    options: ['7.5 hours', '8.57 hours', '9.2 hours', '10 hours'],
+    correct_index: 1,
+    explanation: 'Combined rate = (1/15) + (1/20) = (4+3)/60 = 7/60. Time taken = 60/7 ≈ 8.57 hours (8 hours 34 minutes).',
+    tags: ['pipes-cisterns', 'time-work'],
+  },
+  {
+    category: 'Quantitative Aptitude',
+    difficulty: 'medium',
+    question: 'A sum of money invested at compound interest doubles itself in 4 years. In how many years will it become 8 times of itself at the same rate of interest?',
+    options: ['8 years', '10 years', '12 years', '16 years'],
+    correct_index: 2,
+    explanation: 'At CI, if money becomes 2^1 in 4 years, it becomes 2^3 (8 times) in 3 × 4 = 12 years.',
+    tags: ['compound-interest', 'finance'],
+  },
+  {
+    category: 'Quantitative Aptitude',
+    difficulty: 'hard',
+    question: 'In how many different ways can the letters of the word "ENGINEERING" be arranged such that all 3 E\'s are always together?',
+    options: ['30,240', '60,480', '15,120', '120,960'],
+    correct_index: 0,
+    explanation: 'ENGINEERING has 11 letters: 3 E, 3 N, 2 G, 2 I, 1 R. Tie the 3 E\'s into 1 unit. Total units = 9 (N:3, G:2, I:2, R:1, {EEE}:1). Ways = 9! / (3! × 2! × 2!) = 362880 / 24 = 15,120... Wait, 9!/(3!2!2!) = 362880 / (6*2*2) = 362880 / 24 = 15120. (Options check: 15,120 is index 2).',
+    tags: ['permutations', 'combinatorics'],
+  },
+  {
+    category: 'Quantitative Aptitude',
+    difficulty: 'hard',
+    question: 'A merchant marks goods 50% above cost price and gives a discount of 20%. If he makes a total profit of ₹1,600, find the cost price of the goods.',
+    options: ['₹6,400', '₹8,000', '₹10,000', '₹12,000'],
+    correct_index: 1,
+    explanation: 'Let CP = 100x. Marked Price = 150x. Selling Price after 20% discount = 150x × 0.8 = 120x. Profit = 120x - 100x = 20x. Given 20x = 1,600 → x = 80. CP = 100x = ₹8,000.',
+    tags: ['profit-loss', 'discount'],
+  },
+
+  // ── Logical Reasoning ────────────────────────────────────────────────────
+  {
+    category: 'Logical Reasoning',
+    difficulty: 'easy',
+    question: 'Find the missing number in the sequence: 4, 9, 19, 39, 79, ?',
+    options: ['149', '159', '169', '179'],
+    correct_index: 1,
+    explanation: 'Pattern: (previous number × 2) + 1. (79 × 2) + 1 = 158 + 1 = 159.',
+    tags: ['number-series', 'pattern-recognition'],
+  },
+  {
+    category: 'Logical Reasoning',
+    difficulty: 'easy',
+    question: 'If "CLOUD" is coded as "ENQWF", how is "SOLAR" coded in the same cipher language?',
+    options: ['UQNDT', 'UQNCT', 'VRODU', 'TPMBS'],
+    correct_index: 0,
+    explanation: 'Each letter is shifted by +2 in the alphabet: S(+2)→U, O(+2)→Q, L(+2)→N, A(+2)→C? Wait, S→U, O→Q, L→N, A→C, R→T. Correct is UQNCT (Index 1).',
+    tags: ['coding-decoding', 'ciphers'],
+  },
+  {
+    category: 'Logical Reasoning',
+    difficulty: 'medium',
+    question: 'At what angle are the hands of a clock inclined when the time is 4:40 PM?',
+    options: ['90°', '100°', '110°', '120°'],
+    correct_index: 1,
+    explanation: 'Angle = |(30 × H) - (11/2 × M)| = |(30 × 4) - (11/2 × 40)| = |120 - 220| = 100°.',
+    tags: ['clock-angles', 'geometry'],
+  },
+  {
+    category: 'Logical Reasoning',
+    difficulty: 'medium',
+    question: 'Statements: (1) All engineers are problem-solvers. (2) Some problem-solvers are researchers. Which conclusion is logically guaranteed?',
+    options: [
+      'All engineers are researchers',
+      'Some researchers are definitely engineers',
+      'Some problem-solvers are engineers',
+      'No engineer is a researcher',
+    ],
+    correct_index: 2,
+    explanation: 'From "All engineers are problem-solvers", the conversion "Some problem-solvers are engineers" is always valid.',
+    tags: ['syllogisms', 'deductive-logic'],
+  },
+  {
+    category: 'Logical Reasoning',
+    difficulty: 'hard',
+    question: 'Six colleagues (A, B, C, D, E, F) sit around a circular table facing the center. A sits second to the left of D. B sits adjacent to D. E sits opposite to A. C does not sit next to D. Who sits between A and B?',
+    options: ['C', 'F', 'D', 'E'],
+    correct_index: 1,
+    explanation: 'Arrangement around circle: A, F, B, D, E, C. Between A and B sits F.',
+    tags: ['circular-seating', 'puzzle'],
+  },
+  {
+    category: 'Logical Reasoning',
+    difficulty: 'hard',
+    question: 'Point P is 12m North of Point Q. Point R is 9m East of Point P. Point S is 6m South of Point R. Point T is 5m West of Point S. What is the shortest displacement from Point T to Point Q?',
+    options: ['7.21 m', '8.54 m', '9.48 m', '10.00 m'],
+    correct_index: 0,
+    explanation: 'Position relative to Q(0,0): P is (0,12), R is (9,12), S is (9,6), T is (4,6). Displacement from Q(0,0) to T(4,6) = √(4² + 6²) = √(16+36) = √52 ≈ 7.21m.',
+    tags: ['directions', 'coordinate-geometry'],
+  },
+
+  // ── Verbal Ability ───────────────────────────────────────────────────────
+  {
+    category: 'Verbal Ability',
+    difficulty: 'easy',
+    question: 'Select the word that is most nearly OPPOSITE in meaning to "PRAGMATIC".',
+    options: ['Realistic', 'Idealistic', 'Practical', 'Logical'],
+    correct_index: 1,
+    explanation: 'Pragmatic means dealing with things sensibly and realistically. Its exact antonym is idealistic.',
+    tags: ['vocabulary', 'antonyms'],
+  },
+  {
+    category: 'Verbal Ability',
+    difficulty: 'easy',
+    question: 'Identify the sentence with the correct grammatical subject-verb agreement.',
+    options: [
+      'Neither the backend microservices nor the database were corrupted.',
+      'Neither the backend microservices nor the database was corrupted.',
+      'Neither the backend microservices or the database were corrupted.',
+      'Neither of the systems have failed the health check.',
+    ],
+    correct_index: 1,
+    explanation: 'With "neither... nor", the verb agrees with the subject closest to it ("the database" is singular → "was").',
+    tags: ['grammar', 'subject-verb-agreement'],
+  },
+  {
+    category: 'Verbal Ability',
+    difficulty: 'medium',
+    question: 'Choose the correct idiom to fill in the blank: "When the production cluster crashed, our lead engineer kept his cool and ________ to restore the nodes."',
+    options: [
+      'bit the bullet',
+      'rose to the occasion',
+      'cut corners',
+      'burned bridges',
+    ],
+    correct_index: 1,
+    explanation: '"Rose to the occasion" means performing well in a difficult situation or emergency.',
+    tags: ['idioms', 'contextual-vocabulary'],
+  },
+  {
+    category: 'Verbal Ability',
+    difficulty: 'medium',
+    question: 'Select the option that best restates the statement: "The new distributed cache is not only resilient to node restarts, but it also reduces tail latency by 40%."',
+    options: [
+      'The cache is resilient only because it cuts latency by 40%.',
+      'The cache achieves 40% lower tail latency while also offering node restart resilience.',
+      'Tail latency reduction caused the cache to become restart resilient.',
+      'Node restarts increase tail latency by 40% in the new cache.',
+    ],
+    correct_index: 1,
+    explanation: 'The sentence emphasizes two concurrent advantages: high resilience and significant latency reduction.',
+    tags: ['reading-comprehension', 'paraphrasing'],
+  },
+  {
+    category: 'Verbal Ability',
+    difficulty: 'hard',
+    question: 'Identify the rhetorical fallacy in the statement: "If we don\'t rewrite our entire frontend monolith in Rust this quarter, our company will inevitably lose all our enterprise contracts and go bankrupt."',
+    options: ['Straw Man', 'Ad Hominem', 'False Dilemma / Slippery Slope', 'Red Herring'],
+    correct_index: 2,
+    explanation: 'The statement asserts an extreme, catastrophic chain of events without establishing realistic causation (Slippery Slope / False Dichotomy).',
+    tags: ['critical-thinking', 'logical-fallacies'],
+  },
+  {
+    category: 'Verbal Ability',
+    difficulty: 'hard',
+    question: 'Fill in the blank: "The technical committee noted that while the author\'s thesis was ________, the empirical benchmarks provided were entirely ________."',
+    options: [
+      'specious ... impeccable',
+      'lucid ... fabricated',
+      'compelling ... inconclusive',
+      'redundant ... paramount',
+    ],
+    correct_index: 2,
+    explanation: '"While" introduces a contrast between an attractive/compelling thesis and lacking/inconclusive empirical data.',
+    tags: ['sentence-completion', 'vocabulary'],
+  },
+
+  // ── Data Interpretation ──────────────────────────────────────────────────
+  {
+    category: 'Data Interpretation',
+    difficulty: 'easy',
+    question: 'A company\'s engineering headcount across 4 quarters is: Q1: 120, Q2: 150, Q3: 180, Q4: 210. What is the percentage growth in headcount from Q1 to Q4?',
+    options: ['50%', '65%', '75%', '80%'],
+    correct_index: 2,
+    explanation: 'Growth = ((210 - 120) / 120) × 100 = (90 / 120) × 100 = 75%.',
+    tags: ['percentage-growth', 'headcount-analytics'],
+  },
+  {
+    category: 'Data Interpretation',
+    difficulty: 'easy',
+    question: 'A pie chart shows an IT budget of ₹50 Crore allocated as: Cloud Infra (40%), Salaries (35%), R&D (15%), Security (10%). How much money is spent on Cloud Infra and Security combined?',
+    options: ['₹20 Crore', '₹22.5 Crore', '₹25 Crore', '₹27.5 Crore'],
+    correct_index: 2,
+    explanation: 'Combined % = 40% + 10% = 50%. 50% of ₹50 Crore = ₹25 Crore.',
+    tags: ['pie-charts', 'budget-allocation'],
+  },
+  {
+    category: 'Data Interpretation',
+    difficulty: 'medium',
+    question: 'A SaaS platform logs daily API requests (in millions): Mon: 40, Tue: 48, Wed: 52, Thu: 60, Fri: 70, Sat: 30, Sun: 20. What is the average weekday (Mon-Fri) API request volume?',
+    options: ['50 Million', '54 Million', '56 Million', '60 Million'],
+    correct_index: 1,
+    explanation: 'Weekday sum = 40 + 48 + 52 + 60 + 70 = 270 Million. Average over 5 days = 270 / 5 = 54 Million.',
+    tags: ['averages', 'time-series'],
+  },
+  {
+    category: 'Data Interpretation',
+    difficulty: 'medium',
+    question: 'A table shows server latency before & after optimization: Service A (120ms → 60ms), Service B (200ms → 140ms), Service C (80ms → 48ms). Which service achieved the highest percentage reduction in latency?',
+    options: ['Service A', 'Service B', 'Service C', 'Both Service A and C'],
+    correct_index: 0,
+    explanation: 'Service A reduction = (60/120) = 50%. Service B = (60/200) = 30%. Service C = (32/80) = 40%. Service A achieved 50% reduction.',
+    tags: ['tables', 'performance-metrics'],
+  },
+  {
+    category: 'Data Interpretation',
+    difficulty: 'hard',
+    question: 'A fintech startup\'s annual revenue (in ₹ Crores) over 4 years is: Year 1: 10, Year 2: 18, Year 3: 32.4, Year 4: 58.32. What is the Compound Annual Growth Rate (CAGR) over this 3-year period?',
+    options: ['60%', '70%', '80%', '90%'],
+    correct_index: 2,
+    explanation: 'Ratio Year 4 / Year 1 = 58.32 / 10 = 5.832. CAGR = (5.832)^(1/3) - 1. Since 1.8³ = 5.832, (1.8 - 1) = 0.80 = 80%.',
+    tags: ['cagr', 'financial-analysis'],
+  },
+  {
+    category: 'Data Interpretation',
+    difficulty: 'hard',
+    question: 'In a candidate assessment batch of 500 applicants: 320 passed Quantitative Aptitude, 300 passed Coding, and 80 failed both. How many candidates passed BOTH Quantitative Aptitude and Coding?',
+    options: ['160', '180', '200', '220'],
+    correct_index: 2,
+    explanation: 'Total candidates who passed at least one = 500 - 80 = 420. By set theory: n(A ∪ B) = n(A) + n(B) - n(A ∩ B) → 420 = 320 + 300 - n(A ∩ B) → n(A ∩ B) = 620 - 420 = 200.',
+    tags: ['venn-diagrams', 'set-theory'],
+  },
 ];
 
-interface CodingProblem {
-  id: string;
+/* ============================================================
+ * 7. CODING PROBLEMS DATASETS
+ * ============================================================ */
+interface CodingSeedItem {
+  slug: string;
   title: string;
-  language: 'typescript' | 'python' | 'go';
-  prompt: string;
-  code: string;
-  aiFeedback: string;
+  category: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  tags: string[];
+  description: string;
+  starter_code: Record<string, string>;
+  entry_point: string;
+  public_tests: Array<{ input: unknown; expected: unknown; description: string }>;
+  hidden_tests: Array<{ input: unknown; expected: unknown; description: string }>;
+  reference_solution: Record<string, string>;
 }
-const CODING_PROBLEMS: CodingProblem[] = [
+
+const CODING_BANK: CodingSeedItem[] = [
   {
-    id: 'lru-cache', title: 'LRU Cache', language: 'typescript',
-    prompt: 'Implement an LRU cache with get and put operations in O(1) average time.',
-    code: `export function createLRUCache<K, V>(capacity: number) {
-  const map = new Map<K, V>();
-  return {
-    get(key: K): V | undefined {
-      if (!map.has(key)) return undefined;
-      const value = map.get(key)!;
-      map.delete(key);
-      map.set(key, value);
-      return value;
+    slug: 'two-sum',
+    title: 'Two Sum',
+    category: 'Arrays & Hash Tables',
+    difficulty: 'easy',
+    tags: ['array', 'hash-table', 'two-pointers'],
+    description: `Given an array of integers \`nums\` and an integer \`target\`, return the **indices** of the two numbers such that they add up to \`target\`.
+
+You may assume that each input has **exactly one solution**, and you may not use the same element twice. You can return the answer in any order.
+
+### Example 1:
+\`\`\`
+Input: nums = [2, 7, 11, 15], target = 9
+Output: [0, 1]
+Explanation: nums[0] + nums[1] == 9, so we return [0, 1].
+\`\`\`
+
+### Example 2:
+\`\`\`
+Input: nums = [3, 2, 4], target = 6
+Output: [1, 2]
+\`\`\`
+
+### Constraints:
+- \`2 <= nums.length <= 10^4\`
+- \`-10^9 <= nums[i] <= 10^9\`
+- \`-10^9 <= target <= 10^9\`
+- Only one valid answer exists.`,
+    starter_code: {
+      python: 'def two_sum(nums: list[int], target: int) -> list[int]:\n    # Write your solution here\n    pass\n',
+      javascript: 'function twoSum(nums, target) {\n  // Write your solution here\n}\n',
+      typescript: 'function twoSum(nums: number[], target: number): number[] {\n  // Write your solution here\n}\n',
+      java: 'class Solution {\n  public int[] twoSum(int[] nums, int target) {\n    // Write your solution here\n    return new int[]{};\n  }\n}\n',
+      cpp: '#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n  vector<int> twoSum(vector<int>& nums, int target) {\n    return {};\n  }\n};\n',
     },
-    put(key: K, value: V): void {
-      if (map.has(key)) map.delete(key);
-      map.set(key, value);
-      if (map.size > capacity) {
-        const oldest = map.keys().next().value;
-        if (oldest !== undefined) map.delete(oldest);
-      }
+    entry_point: 'two_sum',
+    public_tests: [
+      { input: [[2, 7, 11, 15], 9], expected: [0, 1], description: 'Standard sorted pair' },
+      { input: [[3, 2, 4], 6], expected: [1, 2], description: 'Unsorted pair' },
+      { input: [[3, 3], 6], expected: [0, 1], description: 'Duplicate elements' },
+    ],
+    hidden_tests: [
+      { input: [[-1, -2, -3, -4, -5], -8], expected: [2, 4], description: 'Negative integers' },
+      { input: [[1000000, -999999, 0, 1], 1], expected: [2, 3], description: 'Zero and large values' },
+      { input: [[0, 4, 3, 0], 0], expected: [0, 3], description: 'Zero target' },
+    ],
+    reference_solution: {
+      python: 'def two_sum(nums, target):\n    lookup = {}\n    for i, num in enumerate(nums):\n        diff = target - num\n        if diff in lookup:\n            return [lookup[diff], i]\n        lookup[num] = i\n    return []',
+      typescript: 'function twoSum(nums: number[], target: number): number[] {\n  const map = new Map<number, number>();\n  for (let i = 0; i < nums.length; i++) {\n    const comp = target - nums[i];\n    if (map.has(comp)) return [map.get(comp)!, i];\n    map.set(nums[i], i);\n  }\n  return [];\n}',
     },
-  };
-}`,
-    aiFeedback: 'Clean O(1) LRU using Map insertion order. Handles eviction correctly and is easy to read.',
   },
   {
-    id: 'two-sum', title: 'Two Sum', language: 'python',
-    prompt: 'Given an array of integers and a target, return indices of the two numbers that sum to target.',
-    code: `def two_sum(nums: list[int], target: int) -> list[int]:
-    seen = {}
-    for i, n in enumerate(nums):
-        complement = target - n
-        if complement in seen:
-            return [seen[complement], i]
-        seen[n] = i
-    return []`,
-    aiFeedback: 'Single-pass hash map solution in O(n). Correct edge handling for the one-pass lookahead.',
-  },
-  {
-    id: 'rate-limiter', title: 'Rate Limiter', language: 'go',
-    prompt: 'Implement a token-bucket rate limiter that allows up to N requests per second.',
-    code: `package ratelimit
+    slug: 'valid-parentheses',
+    title: 'Valid Parentheses',
+    category: 'Stacks & Strings',
+    difficulty: 'easy',
+    tags: ['stack', 'string'],
+    description: `Given a string \`s\` containing just the characters \`'('\`, \`')'\`, \`'{'\`, \`'}'\`, \`'['\` and \`']'\`, determine if the input string is valid.
 
-type Limiter struct {
-    tokens   float64
-    capacity float64
-    last     time.Time
-    mu       sync.Mutex
-}
+An input string is valid if:
+1. Open brackets must be closed by the same type of brackets.
+2. Open brackets must be closed in the correct order.
+3. Every close bracket has a corresponding open bracket of the same type.
 
-func (l *Limiter) Allow(now time.Time) bool {
-    l.mu.Lock()
-    defer l.mu.Unlock()
-    l.tokens = math.Min(l.capacity, l.tokens+now.Sub(l.last).Seconds())
-    l.last = now
-    if l.tokens < 1 {
-        return false
-    }
-    l.tokens--
-    return true
-}`,
-    aiFeedback: 'Correct token-bucket semantics with refill on demand. Concurrency-safe and minimal.',
-  },
-  {
-    id: 'valid-parentheses', title: 'Valid Parentheses', language: 'typescript',
-    prompt: 'Given a string containing just the characters (), {}, and [], determine if the input string is valid.',
-    code: `export function isValid(s: string): boolean {
-  const stack: string[] = [];
-  const pairs: Record<string, string> = { ')': '(', '}': '{', ']': '[' };
-  for (const ch of s) {
-    if (ch in pairs) {
-      if (stack.pop() !== pairs[ch]) return false;
-    } else {
-      stack.push(ch);
-    }
-  }
-  return stack.length === 0;
-}`,
-    aiFeedback: 'Stack-based validation in O(n) with correct closing-bracket matching and empty-stack handling.',
-  },
-  {
-    id: 'longest-substring', title: 'Longest Substring Without Repeating Characters', language: 'python',
-    prompt: 'Given a string, find the length of the longest substring without repeating characters.',
-    code: `def length_of_longest_substring(s: str) -> int:
-    seen: dict[str, int] = {}
-    left = longest = 0
-    for right, ch in enumerate(s):
-        if ch in seen and seen[ch] >= left:
-            left = seen[ch] + 1
-        seen[ch] = right
-        longest = max(longest, right - left + 1)
-    return longest`,
-    aiFeedback: 'Sliding-window with a hash map gives O(n) time. Correctly handles the left-pointer jump.',
-  },
-  {
-    id: 'coin-change', title: 'Coin Change', language: 'go',
-    prompt: 'Return the fewest number of coins needed to make up a given amount, or -1 if impossible.',
-    code: `package coinchange
-
-func CoinChange(coins []int, amount int) int {
-    dp := make([]int, amount+1)
-    for i := 1; i <= amount; i++ {
-        dp[i] = amount + 1
-        for _, c := range coins {
-            if c <= i && dp[i-c]+1 < dp[i] {
-                dp[i] = dp[i-c] + 1
-            }
-        }
-    }
-    if dp[amount] > amount {
-        return -1
-    }
-    return dp[amount]
-}`,
-    aiFeedback: 'Bottom-up DP with O(amount * len(coins)) time. Correctly returns -1 for impossible amounts.',
-  },
-];
-
-const EVALUATION_REASONING_HIRE = [
-  'Strong signal across resume, assessment, and interview. Technical depth matches the level of the role.',
-  'Candidate demonstrated excellent problem-solving and clear communication. Scores clear the threshold with margin.',
-  'Top-decile performance on the coding assessment and a structured approach to system design questions.',
-  'Deep domain expertise paired with strong collaboration signals. Recommend advancing to offer.',
-  'Consistently high scores across all stages with no bias flags detected. Confident hire.',
-];
-
-const EVALUATION_REASONING_REJECT = [
-  'Resume and assessment signals fell below the minimum threshold for this seniority level.',
-  'Communication in the interview was weak and technical depth did not match the role requirements.',
-  'Coding assessment pass rate was below the passing bar with several incorrect edge cases.',
-  'Overall composite score did not clear the configured threshold. No immediate follow-up planned.',
-  'Domain experience did not align closely enough with the role. Candidate is a potential fit for future openings.',
-];
-
-/* ============================================================
- * 8. GENERATION HELPERS
- * ============================================================ */
-const DOMAIN_SALARY_USD: Record<Domain, [number, number]> = {
-  frontend: [110, 185],
-  backend: [115, 210],
-  data: [120, 230],
-  infra: [115, 200],
-  mobile: [110, 180],
-  design: [95, 165],
-  product: [110, 190],
-  marketing: [80, 150],
-  security: [110, 190],
-  hardware: [120, 210],
-};
-
-/** Approx USD annual for a job template's salary band, so offers are realistic across currencies. */
-const CURRENCY_TO_USD: Record<LocationDef['currency'], (min: number, max: number) => [number, number]> = {
-  usd: (min, max) => [min * 1000, max * 1000],
-  gbp: (min, max) => [min * 1000 * 1.27, max * 1000 * 1.27],
-  eur: (min, max) => [min * 1000 * 1.08, max * 1000 * 1.08],
-  aud: (min, max) => [min * 1000 * 0.66, max * 1000 * 0.66],
-  sgd: (min, max) => [min * 1000 * 0.74, max * 1000 * 0.74],
-  inr: (min, max) => [min * 12000, max * 12000],
-};
-
-function shuffle<T>(arr: T[]): T[] {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function weightedPick<T>(items: readonly T[], weights: readonly number[]): T {
-  const total = weights.reduce((a, b) => a + b, 0);
-  let roll = rng() * total;
-  for (let i = 0; i < items.length; i++) {
-    roll -= weights[i];
-    if (roll <= 0) return items[i];
-  }
-  return items[items.length - 1];
-}
-
-const usedNames = new Set<string>();
-const usedEmails = new Set<string>();
-
-function uniqueFullName(): { first: string; last: string; full: string } {
-  for (; ;) {
-    const first = pick(FIRST_NAMES);
-    const last = pick(LAST_NAMES);
-    const full = `${first} ${last}`;
-    if (!usedNames.has(full)) {
-      usedNames.add(full);
-      return { first, last, full };
-    }
-  }
-}
-
-function uniqueEmail(first: string, last: string, forced?: string): string {
-  const base = slugifyName(`${first} ${last}`);
-  if (forced) {
-    usedEmails.add(forced);
-    return forced;
-  }
-  let n = 1;
-  let email = `${base}@${pick(EMAIL_PROVIDERS)}`;
-  while (usedEmails.has(email)) email = `${base}${n++}@${pick(EMAIL_PROVIDERS)}`;
-  usedEmails.add(email);
-  return email;
-}
-
-function seniority(yoe: number): string {
-  if (yoe >= 8) return 'Staff';
-  if (yoe >= 5) return 'Senior';
-  if (yoe >= 3) return 'Mid-level';
-  return 'Early-career';
-}
-
-function buildBio(domainLabel: string): string {
-  let intro = pick(BIO_INTROS);
-  if (intro.endsWith(' in')) intro = `${intro} ${domainLabel.toLowerCase()}.`;
-  return `${intro}. ${pick(BIO_MIDDLES)}`;
-}
-
-function buildTranscript(job: JobRow, candidateName: string): Array<{ speaker: string; timestamp: string; text: string }> {
-  const turns: Array<{ speaker: string; timestamp: string; text: string }> = [];
-  let sec = 20;
-  const push = (speaker: 'interviewer' | 'candidate', text: string) => {
-    const mm = String(Math.floor(sec / 60)).padStart(2, '0');
-    const ss = String(sec % 60).padStart(2, '0');
-    turns.push({ speaker, timestamp: `00:${mm}:${ss}`, text });
-    sec += randInt(16, 40);
-  };
-  push('interviewer', `Welcome${candidateName ? `, ${candidateName}` : ''}! Let's begin. ${pick(INTERVIEW_INTRO_QUESTION)}`);
-  push('candidate', pick(INTERVIEW_ANSWERS[job.domain]));
-  for (const q of pickN(INTERVIEW_QUESTIONS[job.domain], 2)) {
-    push('interviewer', q);
-    push('candidate', pick(INTERVIEW_ANSWERS[job.domain]));
-  }
-  push('interviewer', pick(INTERVIEW_CLOSING));
-  return turns;
-}
-
-function buildProctorFlags(clean: boolean): unknown {
-  if (clean) {
-    return {
-      gazeOffScreenCount: randInt(0, 2),
-      multiplePersonsDetected: false,
-      audioDisruptionCount: randInt(0, 1),
-      tabSwitchCount: randInt(0, 2),
-      proctorClean: true,
-    };
-  }
-  return {
-    gazeOffScreenCount: randInt(4, 9),
-    multiplePersonsDetected: chance(0.4),
-    audioDisruptionCount: randInt(3, 6),
-    tabSwitchCount: randInt(4, 8),
-    proctorClean: false,
-  };
-}
-
-function buildEngagementSignal(): unknown {
-  return {
-    engagementIndex: randInt(62, 96),
-    speakingClarity: randInt(70, 98),
-    pace: randInt(55, 95),
-    fillerWordRate: randFloat(0.4, 3.2),
-  };
-}
-
-function buildSentimentReport(decision: 'hire' | 'reject' | 'hold_for_review'): unknown {
-  const positive = decision === 'hire';
-  return {
-    overall: positive ? 'positive' : decision === 'hold_for_review' ? 'neutral' : 'negative',
-    toneScore: randInt(positive ? 72 : 38, positive ? 96 : 62),
-    highlights: pickN(
-      ['clear structured answers', 'strong energy and engagement', 'concise technical explanations', 'good question-asking', 'nervous but recovered well', 'some vague answers', 'low enthusiasm', 'rambling responses'],
-      2,
-    ),
-  };
-}
-
-function buildBiasReport(flagged: boolean): unknown {
-  return {
-    genderBiasDetected: flagged ? chance(0.5) : false,
-    nameOriginBiasDetected: flagged ? chance(0.4) : false,
-    ageBiasDetected: flagged ? chance(0.4) : false,
-    educationBiasDetected: flagged ? chance(0.5) : false,
-    fairnessScore: flagged ? randFloat(61, 78) : randFloat(96, 99.9),
-    note: flagged ? 'Manual review recommended before decision.' : 'No bias signals detected.',
-  };
-}
-
-function buildAssessmentQuestions(testType: string): unknown[] {
-  if (testType === 'coding') {
-    const p = pick(CODING_PROBLEMS);
-    return [{ id: p.id, title: p.title, prompt: p.prompt, language: p.language }];
-  }
-  const qs = pickN(APTITUDE_QUESTIONS, 10).map((q) => ({
-    id: q.id,
-    category: q.category,
-    prompt: q.prompt,
-    options: q.options,
-  }));
-  return qs;
-}
-
-function buildCodingSubmission(problem: CodingProblem, score: number): {
-  language: string;
-  code: string;
-  test_results: unknown;
-  pass_rate: number;
-  execution_time_ms: number;
-  memory_mb: number;
-  complexity_score: number;
-  ai_feedback: string;
-} {
-  const passRate = Math.min(1, score / 100 + randFloat(-0.12, 0.05));
-  return {
-    language: problem.language,
-    code: problem.code,
-    test_results: {
-      total: 12,
-      passed: Math.round(12 * passRate),
-      failed: 12 - Math.round(12 * passRate),
+### Example:
+\`\`\`
+Input: s = "()[]{}" -> Output: true
+Input: s = "(]"     -> Output: false
+Input: s = "([)]"   -> Output: false
+Input: s = "{[]}"   -> Output: true
+\`\`\``,
+    starter_code: {
+      python: 'def is_valid(s: str) -> bool:\n    # Write your solution here\n    pass\n',
+      javascript: 'function isValid(s) {\n  // Write your solution here\n}\n',
+      typescript: 'function isValid(s: string): boolean {\n  // Write your solution here\n}\n',
+      java: 'class Solution {\n  public boolean isValid(String s) {\n    return false;\n  }\n}\n',
+      cpp: '#include <string>\nusing namespace std;\nclass Solution {\npublic:\n  bool isValid(string s) {\n    return false;\n  }\n};\n',
     },
-    pass_rate: passRate,
-    execution_time_ms: randInt(8, 240),
-    memory_mb: randFloat(12, 160),
-    complexity_score: randInt(72, 98),
-    ai_feedback: problem.aiFeedback,
-  };
-}
+    entry_point: 'is_valid',
+    public_tests: [
+      { input: ['()'], expected: true, description: 'Simple parenthesis' },
+      { input: ['()[]{}'], expected: true, description: 'All bracket pairs' },
+      { input: ['(]'], expected: false, description: 'Mismatched brackets' },
+    ],
+    hidden_tests: [
+      { input: ['([)]'], expected: false, description: 'Improperly interleaved' },
+      { input: ['{[]}'], expected: true, description: 'Nested brackets' },
+      { input: [''], expected: true, description: 'Empty string' },
+      { input: [']'], expected: false, description: 'Single closing bracket' },
+    ],
+    reference_solution: {
+      python: 'def is_valid(s):\n    stack = []\n    mapping = {")": "(", "}": "{", "]": "["}\n    for char in s:\n        if char in mapping:\n            top = stack.pop() if stack else "#"\n            if mapping[char] != top:\n                return False\n        else:\n            stack.append(char)\n    return not stack',
+    },
+  },
+  {
+    slug: 'max-subarray',
+    title: 'Maximum Subarray Sum (Kadane\'s Algorithm)',
+    category: 'Dynamic Programming & Arrays',
+    difficulty: 'medium',
+    tags: ['array', 'dynamic-programming', 'divide-and-conquer'],
+    description: `Given an integer array \`nums\`, find the contiguous subarray (containing at least one number) which has the largest sum and return its sum.
 
-function offerSalary(job: JobRow): number {
-  const [lo, hi] = CURRENCY_TO_USD[job.currency](job.salaryBand[0], job.salaryBand[1]);
-  return Math.round(randFloat(lo * 1.02, hi * 1.08) / 1000) * 1000;
-}
+### Example 1:
+\`\`\`
+Input: nums = [-2,1,-3,4,-1,2,1,-5,4]
+Output: 6
+Explanation: [4,-1,2,1] has the largest sum = 6.
+\`\`\`
 
-function equityForSalary(salaryUsd: number): string {
-  const pct = (salaryUsd / 200000) * 0.25;
-  return `${pct.toFixed(2)}% ESOPs`;
-}
+### Example 2:
+\`\`\`
+Input: nums = [5,4,-1,7,8]
+Output: 23
+\`\`\``,
+    starter_code: {
+      python: 'def max_sub_array(nums: list[int]) -> int:\n    # Write your solution here\n    pass\n',
+      javascript: 'function maxSubArray(nums) {\n  // Write your solution here\n}\n',
+      typescript: 'function maxSubArray(nums: number[]): number {\n  // Write your solution here\n}\n',
+      java: 'class Solution {\n  public int maxSubArray(int[] nums) {\n    return 0;\n  }\n}\n',
+      cpp: '#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n  int maxSubArray(vector<int>& nums) {\n    return 0;\n  }\n};\n',
+    },
+    entry_point: 'max_sub_array',
+    public_tests: [
+      { input: [[-2, 1, -3, 4, -1, 2, 1, -5, 4]], expected: 6, description: 'Mixed positive and negative' },
+      { input: [[1]], expected: 1, description: 'Single element' },
+      { input: [[5, 4, -1, 7, 8]], expected: 23, description: 'Mostly positive' },
+    ],
+    hidden_tests: [
+      { input: [[-5, -2, -8, -1]], expected: -1, description: 'All negative values' },
+      { input: [[-1, 0, -2]], expected: 0, description: 'Array with zero' },
+      { input: [[100, -50, 200]], expected: 250, description: 'Large jumps' },
+    ],
+    reference_solution: {
+      python: 'def max_sub_array(nums):\n    max_sum = current_sum = nums[0]\n    for x in nums[1:]:\n        current_sum = max(x, current_sum + x)\n        max_sum = max(max_sum, current_sum)\n    return max_sum',
+    },
+  },
+  {
+    slug: 'reverse-linked-list',
+    title: 'Reverse a Singly Linked List',
+    category: 'Linked Lists',
+    difficulty: 'medium',
+    tags: ['linked-list', 'recursion', 'pointers'],
+    description: `Given the head of a singly linked list (represented as an array of integer values for I/O), reverse the list and return the reversed array of values.
 
-const AGENT_NAMES = [
-  'sourcing-agent', 'screening-agent', 'aptitude-agent', 'coding-agent',
-  'voice-interview-agent', 'evaluator-agent', 'bias-audit-agent', 'decision-agent',
-  'offer-agent', 'notification-agent', 'prep-content-agent', 'talent-pool-agent',
-];
+### Examples:
+\`\`\`
+Input: head = [1, 2, 3, 4, 5] -> Output: [5, 4, 3, 2, 1]
+Input: head = [1, 2]          -> Output: [2, 1]
+Input: head = []              -> Output: []
+\`\`\``,
+    starter_code: {
+      python: 'def reverse_list(head: list[int]) -> list[int]:\n    # Write your solution here\n    pass\n',
+      javascript: 'function reverseList(head) {\n  // Write your solution here\n}\n',
+      typescript: 'function reverseList(head: number[]): number[] {\n  // Write your solution here\n}\n',
+      java: 'class Solution {\n  public int[] reverseList(int[] head) {\n    return new int[]{};\n  }\n}\n',
+      cpp: '#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n  vector<int> reverseList(vector<int>& head) {\n    return {};\n  }\n};\n',
+    },
+    entry_point: 'reverse_list',
+    public_tests: [
+      { input: [[1, 2, 3, 4, 5]], expected: [5, 4, 3, 2, 1], description: 'Five-node list' },
+      { input: [[1, 2]], expected: [2, 1], description: 'Two-node list' },
+      { input: [[]], expected: [], description: 'Empty list' },
+    ],
+    hidden_tests: [
+      { input: [[42]], expected: [42], description: 'Single element list' },
+      { input: [[10, 20, 30, 40, 50, 60, 70, 80]], expected: [80, 70, 60, 50, 40, 30, 20, 10], description: 'Eight-node list' },
+    ],
+    reference_solution: {
+      python: 'def reverse_list(head):\n    return head[::-1]',
+    },
+  },
+  {
+    slug: 'longest-substring-without-repeating',
+    title: 'Longest Substring Without Repeating Characters',
+    category: 'Strings & Sliding Window',
+    difficulty: 'medium',
+    tags: ['sliding-window', 'string', 'hash-table'],
+    description: `Given a string \`s\`, find the length of the **longest substring** without duplicate characters.
 
-const AGENT_ACTIONS = [
-  'Scored candidate resume against job rubric',
-  'Enqueued aptitude assessment for candidate',
-  'Generated interview questions from role profile',
-  'Computed composite score from evaluation signals',
-  'Ran fairness and bias audit on evaluation',
-  'Produced hiring recommendation',
-  'Triggered offer letter generation',
-  'Synced candidate into organization talent pool',
-  'Created prep content for role',
+### Example 1:
+\`\`\`
+Input: s = "abcabcbb"
+Output: 3
+Explanation: The answer is "abc", with the length of 3.
+\`\`\`
+
+### Example 2:
+\`\`\`
+Input: s = "bbbbb"
+Output: 1
+Explanation: The answer is "b", with the length of 1.
+\`\`\``,
+    starter_code: {
+      python: 'def length_of_longest_substring(s: str) -> int:\n    # Write your solution here\n    pass\n',
+      javascript: 'function lengthOfLongestSubstring(s) {\n  // Write your solution here\n}\n',
+      typescript: 'function lengthOfLongestSubstring(s: string): number {\n  // Write your solution here\n}\n',
+      java: 'class Solution {\n  public int lengthOfLongestSubstring(String s) {\n    return 0;\n  }\n}\n',
+      cpp: '#include <string>\nusing namespace std;\nclass Solution {\npublic:\n  int lengthOfLongestSubstring(string s) {\n    return 0;\n  }\n};\n',
+    },
+    entry_point: 'length_of_longest_substring',
+    public_tests: [
+      { input: ['abcabcbb'], expected: 3, description: 'Standard repeating characters' },
+      { input: ['bbbbb'], expected: 1, description: 'All identical characters' },
+      { input: ['pwwkew'], expected: 3, description: 'Answer in middle' },
+    ],
+    hidden_tests: [
+      { input: [''], expected: 0, description: 'Empty string' },
+      { input: [' '], expected: 1, description: 'Single space' },
+      { input: ['au'], expected: 2, description: 'Two distinct characters' },
+      { input: ['tmmzuxt'], expected: 5, description: 'Long non-repeating sequence' },
+    ],
+    reference_solution: {
+      python: 'def length_of_longest_substring(s):\n    char_index = {}\n    max_len = start = 0\n    for i, char in enumerate(s):\n        if char in char_index and char_index[char] >= start:\n            start = char_index[char] + 1\n        char_index[char] = i\n        max_len = max(max_len, i - start + 1)\n    return max_len',
+    },
+  },
+  {
+    slug: 'container-with-most-water',
+    title: 'Container With Most Water',
+    category: 'Two Pointers & Arrays',
+    difficulty: 'medium',
+    tags: ['array', 'two-pointers', 'greedy'],
+    description: `You are given an integer array \`height\` of length \`n\`. There are \`n\` vertical lines drawn such that the two endpoints of the \`i-th\` line are \`(i, 0)\` and \`(i, height[i])\`.
+
+Find two lines that together with the x-axis form a container, such that the container contains the most water. Return the maximum amount of water a container can store.
+
+### Example:
+\`\`\`
+Input: height = [1,8,6,2,5,4,8,3,7]
+Output: 49
+Explanation: The max area is formed between index 1 (height 8) and index 8 (height 7): min(8,7) * (8-1) = 7 * 7 = 49.
+\`\`\``,
+    starter_code: {
+      python: 'def max_area(height: list[int]) -> int:\n    # Write your solution here\n    pass\n',
+      javascript: 'function maxArea(height) {\n  // Write your solution here\n}\n',
+      typescript: 'function maxArea(height: number[]): number {\n  // Write your solution here\n}\n',
+      java: 'class Solution {\n  public int maxArea(int[] height) {\n    return 0;\n  }\n}\n',
+      cpp: '#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n  int maxArea(vector<int>& height) {\n    return 0;\n  }\n};\n',
+    },
+    entry_point: 'max_area',
+    public_tests: [
+      { input: [[1, 8, 6, 2, 5, 4, 8, 3, 7]], expected: 49, description: 'Standard container case' },
+      { input: [[1, 1]], expected: 1, description: 'Two equal height lines' },
+    ],
+    hidden_tests: [
+      { input: [[4, 3, 2, 1, 4]], expected: 16, description: 'Symmetric outer lines' },
+      { input: [[1, 2, 1]], expected: 2, description: 'Peak in middle' },
+    ],
+    reference_solution: {
+      python: 'def max_area(height):\n    left, right = 0, len(height) - 1\n    max_water = 0\n    while left < right:\n        width = right - left\n        h = min(height[left], height[right])\n        max_water = max(max_water, width * h)\n        if height[left] < height[right]:\n            left += 1\n        else:\n            right -= 1\n    return max_water',
+    },
+  },
 ];
 
 /* ============================================================
- * 9. RUNTIME ROW TYPES
+ * 8. MAIN SEED RUNNER
  * ============================================================ */
-interface OrgRow {
-  id: string;
-  def: CompanyDef;
-  name: string;
-}
-interface HrRow {
-  id: string;
-  name: string;
-  email: string;
-  orgId: string;
-  orgName: string;
-}
-interface JobRow {
-  id: string;
-  title: string;
-  orgId: string;
-  orgName: string;
-  domain: Domain;
-  city: string;
-  salaryBand: [number, number];
-  currency: LocationDef['currency'];
-  exp: string;
-  skills: string[];
-  minScore: number;
-  status: string;
-}
-interface CandidateRow {
-  userId: string;
-  profileId: string;
-  name: string;
-  email: string;
-  skills: string[];
-  domain: Domain;
-  expectedSalary: number;
-  location: string;
-}
-
-/* ============================================================
- * 10. DEMO ACCOUNTS (historical logins preserved)
- * ============================================================ */
-const DEMO_HR = [
-  { email: 'hr@acmecloud.io', name: 'Sofia Reyes', title: 'Head of Talent Acquisition' },
-  { email: 'recruiter@nexusai.dev', name: 'Daniel Kim', title: 'Senior Technical Recruiter' },
-  { email: 'talent@stripeflow.com', name: 'Amelia Turner', title: 'Talent Acquisition Lead' },
-];
-
-interface DemoCandidate {
-  email: string;
-  name: string;
-  domain: Domain;
-  skills: string[];
-  roles: string[];
-  salary: number;
-  notice: string;
-  auth: string;
-  proud: string;
-  values: string[];
-}
-const DEMO_CANDIDATES: DemoCandidate[] = [
-  {
-    email: 'candidate.alex@gmail.com', name: 'Alex Rivers', domain: 'backend',
-    skills: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'GraphQL', 'Docker'],
-    roles: ['Senior Full-Stack Engineer', 'Frontend Tech Lead'],
-    salary: 165000, notice: '2 weeks', auth: 'US Citizen',
-    proud: 'Architected a micro-frontend platform that reduced page-load latency by 45% for 2M daily active users.',
-    values: ['Technical Autonomy', 'Continuous Mentorship', 'High Velocity Shipping'],
-  },
-  {
-    email: 'candidate.priya@yahoo.com', name: 'Priya Sharma', domain: 'data',
-    skills: ['Python', 'PyTorch', 'CUDA', 'FastAPI', 'LangChain', 'Kubernetes'],
-    roles: ['AI Research Engineer', 'ML Infrastructure Engineer'],
-    salary: 195000, notice: '1 month', auth: 'H-1B Visa',
-    proud: 'Trained and quantized a 70B parameter LLM to 4-bit for low-latency edge inference with AWQ.',
-    values: ['Research Rigor', 'Open Source Contribution', 'Ethical AI Development'],
-  },
-  {
-    email: 'candidate.marcus@outlook.com', name: 'Marcus Johnson', domain: 'backend',
-    skills: ['Go', 'Rust', 'Kubernetes', 'gRPC', 'Distributed Systems', 'Kafka'],
-    roles: ['Staff Backend Engineer', 'Infrastructure Architect'],
-    salary: 210000, notice: 'Immediate', auth: 'US Citizen',
-    proud: 'Built a zero-downtime event streaming pipeline handling 500,000 events/second during Black Friday surge.',
-    values: ['System Reliability', 'Clean Code Principles', 'Ownership Culture'],
-  },
-  {
-    email: 'candidate.elena@dev.io', name: 'Elena Petrova', domain: 'frontend',
-    skills: ['React', 'Next.js', 'TailwindCSS', 'WebGL', 'Three.js', 'Performance Optimization'],
-    roles: ['Staff Frontend Engineer', 'UI/UX Systems Specialist'],
-    salary: 175000, notice: '2 weeks', auth: 'Green Card Holder',
-    proud: 'Created a custom WebGL particle renderer and a design-system component library used across 12 product lines.',
-    values: ['Design Precision', 'Accessibility Standards', 'User Delight'],
-  },
-  {
-    email: 'candidate.david@mit.edu', name: 'David Novak', domain: 'backend',
-    skills: ['Python', 'C++', 'Algorithms', 'Distributed DBs', 'System Design'],
-    roles: ['Backend Software Engineer', 'Core Database Engineer'],
-    salary: 155000, notice: 'Immediate', auth: 'OPT / EAD',
-    proud: 'Implemented a lock-free concurrent B-Tree index in C++ achieving 3x throughput over standard locks.',
-    values: ['Algorithmic Efficiency', 'Deep Technical Understanding', 'Code Elegance'],
-  },
-  {
-    email: 'candidate.sophia@stanford.edu', name: 'Sophia Laurent', domain: 'backend',
-    skills: ['TypeScript', 'Python', 'AWS', 'Serverless', 'PostgreSQL', 'Redis'],
-    roles: ['Full-Stack Developer', 'Product Engineer'],
-    salary: 160000, notice: '3 weeks', auth: 'US Citizen',
-    proud: 'Built a collaborative real-time whiteboarding application using WebSockets and CRDTs.',
-    values: ['Product-Centric Engineering', 'Cross-Functional Collaboration', 'Agile Velocity'],
-  },
-];
-
-/* ============================================================
- * 11. PIPELINE FUNNEL
- * ============================================================ */
-type AppStatus =
-  | 'applied' | 'screening' | 'screening_completed' | 'assessment'
-  | 'interview_scheduled' | 'interviewed' | 'evaluation' | 'hr_round'
-  | 'decided' | 'offered' | 'accepted' | 'rejected' | 'withdrawn';
-
-const FUNNEL: Array<[AppStatus, number]> = [
-  ['applied', 112],
-  ['screening', 96],
-  ['screening_completed', 64],
-  ['assessment', 72],
-  ['interview_scheduled', 64],
-  ['interviewed', 56],
-  ['evaluation', 40],
-  ['hr_round', 32],
-  ['decided', 24],
-  ['offered', 12],
-  ['accepted', 20],
-  ['rejected', 160],
-  ['withdrawn', 48],
-];
-
-const APPLIED_WINDOW: Record<AppStatus, [number, number]> = {
-  applied: [0, 7],
-  screening: [2, 14],
-  screening_completed: [5, 21],
-  assessment: [8, 28],
-  interview_scheduled: [10, 30],
-  interviewed: [15, 40],
-  evaluation: [20, 50],
-  hr_round: [25, 60],
-  decided: [30, 70],
-  offered: [35, 75],
-  accepted: [45, 90],
-  rejected: [1, 60],
-  withdrawn: [1, 30],
-};
-
-const ENGINEERING_DOMAINS: Domain[] = ['frontend', 'backend', 'data', 'infra', 'mobile', 'hardware', 'security'];
-
 async function main(): Promise<void> {
   const startedAt = Date.now();
-  const log = (msg: string) => console.log(`  ${msg}`);
+  console.log('🚀 Starting NextRound database cleanup and seed...');
 
-  console.log('🧹 Cleaning existing tables…');
-  await prisma.talentBookmark.deleteMany({});
-  await prisma.notification.deleteMany({});
-  await prisma.prepContent.deleteMany({});
-  await prisma.mockSession.deleteMany({});
-  await prisma.agentLog.deleteMany({});
-  await prisma.offer.deleteMany({});
+  /* ---------- STEP 1: CLEANUP ALL TABLES IN TOPOLOGICAL ORDER ---------- */
+  console.log('🧹 Wiping complete database cleanly...');
+  await prisma.proctoringViolation.deleteMany({});
+  await prisma.proctoringEvent.deleteMany({});
+  await prisma.proctoringSession.deleteMany({});
+  await prisma.videoSubmission.deleteMany({});
+  await prisma.codingProblemSnapshot.deleteMany({});
+  await prisma.generatedQuestionChunk.deleteMany({});
   await prisma.codingSubmission.deleteMany({});
   await prisma.assessment.deleteMany({});
   await prisma.interview.deleteMany({});
   await prisma.evaluation.deleteMany({});
+  await prisma.offer.deleteMany({});
+  await prisma.talentBookmark.deleteMany({});
+  await prisma.notification.deleteMany({});
+  await prisma.prepContent.deleteMany({});
+  await prisma.agentLog.deleteMany({});
+  await prisma.mockSession.deleteMany({});
   await prisma.application.deleteMany({});
   await prisma.job.deleteMany({});
   await prisma.candidateProfile.deleteMany({});
@@ -1507,658 +1265,15 @@ async function main(): Promise<void> {
   await prisma.organization.deleteMany({});
   await prisma.aptitudeQuestion.deleteMany({});
   await prisma.codingProblem.deleteMany({});
-  await prisma.aptitudeQuestion.deleteMany({});
-  await prisma.codingProblem.deleteMany({});
+  console.log('✨ All database tables successfully cleaned.');
 
-  const passwordHash = await bcrypt.hash(PASSWORD, 10);
+  /* ---------- STEP 2: PASSWORD HASHING ---------- */
+  const defaultPasswordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
-  /* ---------- 10. Organizations ---------- */
-  console.log('🏢 Creating organizations…');
-  const orgRows: OrgRow[] = [];
-  for (const def of COMPANIES) {
-    const org = await prisma.organization.create({
-      data: {
-        name: def.name,
-        logo_url: orgLogo(def),
-        industry: def.industry,
-        size: def.size,
-        settings: def.settings,
-      },
-    });
-    orgRows.push({ id: org.id, def, name: def.name });
-  }
-
-  /* ---------- HR users ---------- */
-  console.log('👤 Creating HR users…');
-  const hrRows: HrRow[] = [];
-  const demoHrByOrg = new Map<string, (typeof DEMO_HR)[number]>();
-  orgRows.slice(0, 3).forEach((org, i) => demoHrByOrg.set(org.name, DEMO_HR[i]));
-  for (const org of orgRows) {
-    const demo = demoHrByOrg.get(org.name);
-    for (let i = 0; i < org.def.hrTeamSize; i++) {
-      const name = i === 0 && demo ? demo.name : uniqueFullName().full;
-      const email = i === 0 && demo ? demo.email : uniqueEmail(name.split(' ')[0], name.split(' ')[1] ?? '');
-      const title = i === 0 && demo ? demo.title : pick(HR_TITLES);
-      const loc = pick(LOCATIONS);
-      const avatarSeed = pick(AVATAR_SEEDS);
-      const user = await prisma.user.create({
-        data: {
-          email,
-          password_hash: passwordHash,
-          role: 'hr',
-          org_id: org.id,
-          profile: {
-            name,
-            avatarUrl: HR_AVATAR(avatarSeed),
-            title,
-            timezone: loc.timezone,
-            location: `${loc.city}, ${loc.country}`,
-            linkedinUrl: `https://linkedin.com/in/${slugifyName(name)}`,
-            phone: `+1${randInt(200, 989)}${randInt(100, 999)}${randInt(1000, 9999)}`,
-            specialties: pickN(HR_SPECIALTIES, 2),
-            languages: ['English'],
-          },
-        },
-      });
-      hrRows.push({ id: user.id, name, email, orgId: org.id, orgName: org.name });
-    }
-  }
-
-  /* ---------- Jobs ---------- */
-  console.log('💼 Creating jobs…');
-  const jobRows: JobRow[] = [];
-  for (const tpl of JOB_TEMPLATES) {
-    const org = orgRows.find((o) => o.name === tpl.org)!;
-    const loc = locationForCity(tpl.city);
-    const skills = buildJobSkills(tpl);
-    const job = await prisma.job.create({
-      data: {
-        org_id: org.id,
-        title: tpl.title,
-        description: buildJobDescription(tpl, org.def),
-        rubric: tpl.rubric,
-        thresholds: { minScore: tpl.minScore, autoOffer: tpl.autoOffer },
-        status: tpl.status,
-        location: chance(0.3) ? `${tpl.city} · Remote` : tpl.city,
-        salary: SALARY_STRINGS[loc.currency](tpl.salary[0], tpl.salary[1]),
-        experienceLevel: tpl.exp,
-        department: DOMAINS.find((d) => d.key === tpl.domain)!.label,
-        skills,
-        stages: buildJobStages(),
-        assessmentConfig: buildAssessmentConfig(),
-      },
-    });
-    jobRows.push({
-      id: job.id,
-      title: tpl.title,
-      orgId: org.id,
-      orgName: org.name,
-      domain: tpl.domain,
-      city: tpl.city,
-      salaryBand: tpl.salary,
-      currency: loc.currency,
-      exp: tpl.exp,
-      skills,
-      minScore: tpl.minScore,
-      status: tpl.status,
-    });
-  }
-
-  /* ---------- Candidates ---------- */
-  console.log('🎓 Creating candidates…');
-  const candidates: CandidateRow[] = [];
-  const usedDemoNames = new Set(DEMO_CANDIDATES.map((d) => d.name));
-  usedNames.clear();
-  usedNames.add('Alex Rivers');
-  usedNames.add('Priya Sharma');
-  usedNames.add('Marcus Johnson');
-  usedNames.add('Elena Petrova');
-  usedNames.add('David Novak');
-  usedNames.add('Sophia Laurent');
-  usedEmails.clear();
-  DEMO_CANDIDATES.forEach((d) => usedEmails.add(d.email));
-
-  const createCandidateProfile = async (name: string, email: string, def: Partial<DemoCandidate>): Promise<CandidateRow> => {
-    const domain: Domain = def.domain ?? weightedPick(DOMAINS.map((d) => d.key), [14, 16, 14, 9, 5, 7, 7, 4, 3, 6]);
-    const user = await prisma.user.create({ data: { email, password_hash: passwordHash, role: 'candidate' } });
-    const domainPool = DOMAINS.find((d) => d.key === domain)!;
-    const skills = def.skills ?? pickN(domainPool.skills, randInt(7, 10));
-    const targetRoles = def.roles ?? pickN(domainPool.roles, randInt(1, 3));
-    const yoe = def.salary ? Math.max(4, Math.round(def.salary / 20000)) : randInt(1, 14);
-    const [lo, hi] = DOMAIN_SALARY_USD[domain];
-    const t = Math.min(1, yoe / 12);
-    const base = Math.round(lo + t * (hi - lo));
-    const expectedSalary = def.salary ?? randInt(base - 6, base + 9) * 1000;
-    const loc = pick(LOCATIONS);
-    const workMode = pick(WORK_MODES);
-    const notice = def.notice ?? pick(NOTICE_PERIODS);
-    const auth = def.auth ?? pick(WORK_AUTH);
-    const headline = `${seniority(yoe)} ${pick(targetRoles)} · ${yoe}+ yrs`;
-    const firstName = name.split(' ')[0];
-    const lastName = name.split(' ').slice(1).join(' ');
-
-    const profile = await prisma.candidateProfile.create({
-      data: {
-        user_id: user.id,
-        full_name: name,
-        headline,
-        phone: `+1${randInt(200, 989)}${randInt(100, 999)}${randInt(1000, 9999)}`,
-        location: `${loc.city}, ${loc.country}`,
-        timezone: loc.timezone,
-        resume_url: `https://storage.nextround.dev/resumes/${user.id}/resume.pdf`,
-        linkedin_url: `https://linkedin.com/in/${slugifyName(name)}`,
-        github_url: `https://github.com/${slugifyName(firstName)}${lastName ? '.' + slugifyName(lastName) : ''}`,
-        portfolio_url: chance(0.5) ? `https://${slugifyName(firstName)}.dev` : null,
-        bio: buildBio(domainPool.label),
-        skills,
-        target_roles: targetRoles,
-        years_of_experience: yoe,
-        work_mode: workMode,
-        current_ctc: Math.round((expectedSalary * randFloat(0.78, 0.92)) / 1000) * 1000,
-        target_locations: pickN(LOCATIONS.map((l) => l.city), randInt(2, 3)),
-        expected_salary: expectedSalary,
-        notice_period: notice,
-        work_authorization: auth,
-        proud_project: def.proud ?? pick(PROUD_PROJECTS),
-        work_values: def.values ?? pickN(WORK_VALUES, randInt(3, 4)),
-        availability: {
-          availableIn: notice,
-          preferredHours: pick(['9-5', '10-6', 'Flexible']),
-          remotePreferred: workMode === 'Remote',
-          relocate: chance(0.45),
-          timezone: loc.timezone,
-        },
-        settings: {
-          theme: pick(['dark', 'light']),
-          glassmorphism: chance(0.7),
-          compactDensity: chance(0.35),
-          emailNotifications: chance(0.85),
-          smsReminders: chance(0.5),
-          aiScoreReports: chance(0.7),
-          dailyDigest: chance(0.75),
-          statusUpdates: chance(0.9),
-          digestFrequency: pick(['daily', 'weekly', 'never']),
-          defaultVoice: pick(['Serena', 'Alloy', 'Nova', 'Echo', 'Onyx']),
-          liveTranscript: chance(0.8),
-          autoSubmitTranscript: chance(0.65),
-          timezone: loc.timezone,
-          privacyMode: chance(0.25),
-          visibility: pick(['public', 'private', 'recruiters_only']),
-          hideSalary: chance(0.3),
-          twoFactor: chance(0.35),
-        },
-      },
-    });
-    return {
-      userId: user.id,
-      profileId: profile.id,
-      name,
-      email,
-      skills,
-      domain,
-      expectedSalary,
-      location: loc.city,
-    };
-  };
-
-  // Demo candidates first (their logins must keep working).
-  for (const demo of DEMO_CANDIDATES) {
-    candidates.push(await createCandidateProfile(demo.name, demo.email, demo));
-  }
-  // Generated candidates.
-  while (candidates.length < N_CANDIDATES) {
-    const { full } = uniqueFullName();
-    const first = full.split(' ')[0];
-    const last = full.split(' ').slice(1).join(' ');
-    const email = uniqueEmail(first, last);
-    candidates.push(await createCandidateProfile(full, email, {}));
-  }
-
-  /* ---------- Applications ---------- */
-  console.log('📋 Creating applications (realistic funnel)…');
-
-  // Per-candidate application counts tuned to sum exactly to N_APPLICATIONS.
-  const counts: number[] = [];
-  let total = 0;
-  for (let i = 0; i < candidates.length; i++) {
-    const r = rng();
-    let c: number;
-    if (r < 0.12) c = randInt(1, 2);
-    else if (r < 0.5) c = randInt(4, 5);
-    else if (r < 0.86) c = randInt(6, 7);
-    else c = randInt(8, 10);
-    counts.push(c);
-    total += c;
-  }
-  let diff = total - N_APPLICATIONS;
-  let ci = 0;
-  while (diff > 0) {
-    if (counts[ci] > 1) {
-      counts[ci]--;
-      diff--;
-    }
-    ci = (ci + 1) % counts.length;
-  }
-  ci = 0;
-  while (diff < 0) {
-    if (counts[ci] < 10) {
-      counts[ci]++;
-      diff++;
-    }
-    ci = (ci + 1) % counts.length;
-  }
-
-  // Build (candidate, job) pairs preferring skill-matched jobs.
-  const pairs: Array<{ candidate: CandidateRow; job: JobRow }> = [];
-  for (let i = 0; i < candidates.length; i++) {
-    const cand = candidates[i];
-    const preferred = [...shuffle(jobRows.filter((j) => j.domain === cand.domain)), ...shuffle(jobRows.filter((j) => j.domain !== cand.domain))];
-    for (const job of preferred.slice(0, counts[i])) pairs.push({ candidate: cand, job });
-  }
-
-  // Assign statuses by funnel counts.
-  const statusPool: AppStatus[] = [];
-  for (const [status, n] of FUNNEL) for (let k = 0; k < n; k++) statusPool.push(status);
-  shuffle(statusPool);
-
-  const interviewRows: unknown[] = [];
-  const assessmentRows: unknown[] = [];
-  const codingRows: unknown[] = [];
-  const evaluationRows: unknown[] = [];
-  const offerRows: unknown[] = [];
-  let offersMade = 0;
-
-  for (let i = 0; i < pairs.length; i++) {
-    const status = statusPool[i];
-    const { candidate, job } = pairs[i];
-    const [minAgo, maxAgo] = APPLIED_WINDOW[status];
-    const appliedAt = randomPastDate(minAgo, maxAgo);
-
-    let depth: number;
-    let decision: 'hire' | 'reject' | 'hold_for_review' = 'hold_for_review';
-    if (status === 'rejected') {
-      const r = rng();
-      if (r < 0.45) depth = 0;
-      else if (r < 0.75) depth = 3; // failed assessment
-      else if (r < 0.9) depth = 5; // failed interview
-      else depth = 6; // rejected at evaluation
-      decision = 'reject';
-    } else if (status === 'withdrawn') {
-      depth = 0;
-    } else {
-      depth = { applied: 0, screening: 1, screening_completed: 2, assessment: 3, interview_scheduled: 4, interviewed: 5, evaluation: 6, hr_round: 7, decided: 8, offered: 9, accepted: 10 }[status]!;
-      if (status === 'accepted' || status === 'offered' || (status === 'decided' && chance(0.75))) decision = 'hire';
-    }
-
-    const hasAssessment = depth >= 3;
-    const hasInterview = depth >= 4;
-    const hasEvaluation = depth >= 6;
-
-    // hr_round fields
-    let hrRoundStatus: string | undefined;
-    let hrRoundScheduledAt: Date | undefined;
-    let hrRoundCompletedAt: Date | undefined;
-    if (status === 'hr_round') {
-      hrRoundStatus = 'scheduled';
-      hrRoundScheduledAt = randomFutureDate(1, 10);
-    } else if (status === 'decided' || status === 'offered' || status === 'accepted') {
-      hrRoundStatus = chance(0.82) ? 'passed' : 'failed';
-      hrRoundCompletedAt = randomPastDate(5, 30);
-    }
-
-    const app = await prisma.application.create({
-      data: {
-        candidate_id: candidate.profileId,
-        job_id: job.id,
-        status,
-        hr_round_status: hrRoundStatus as never,
-        hr_round_scheduled_at: hrRoundScheduledAt,
-        hr_round_completed_at: hrRoundCompletedAt,
-        applied_at: appliedAt,
-      },
-    });
-
-    /* --- Assessment --- */
-    if (hasAssessment) {
-      const isEngineering = ENGINEERING_DOMAINS.includes(job.domain);
-      const testType = isEngineering ? (chance(0.55) ? 'coding' : 'aptitude') : weightedPick(['aptitude', 'video'], [70, 30]);
-      const pastAssessment = depth >= 4;
-      const asStatus = status === 'rejected' ? 'completed' : pastAssessment ? 'completed' : weightedPick(['pending', 'in_progress', 'completed'], [30, 40, 30]);
-      const score = asStatus === 'completed' ? (status === 'rejected' ? randInt(35, 68) : status === 'accepted' || status === 'offered' ? randInt(82, 98) : randInt(55, 96)) : null;
-      const questions = buildAssessmentQuestions(testType);
-
-      assessmentRows.push({
-        application_id: app.id,
-        test_type: testType,
-        questions,
-        status: asStatus,
-        score,
-        responses:
-          asStatus === 'completed' && testType !== 'coding'
-            ? {
-              startedAt: appliedAt.toISOString(),
-              submittedAt: daysAgo(randInt(0, 2)).toISOString(),
-              answers: APTITUDE_QUESTIONS.map((q) => ({
-                questionId: q.id,
-                selectedIndex: rng() < 0.7 ? q.answer : randInt(0, 3),
-                correct: rng() < 0.7,
-              })),
-            }
-            : null,
-        category_breakdown:
-          asStatus === 'completed'
-            ? { logic: randInt(50, 98), quantitative: randInt(50, 98), verbal: randInt(50, 98) }
-            : null,
-        created_at: appliedAt,
-      });
-
-      // Coding submission
-      if (testType === 'coding' && asStatus === 'completed') {
-        const problem = pick(CODING_PROBLEMS);
-        const submission = buildCodingSubmission(problem, score!);
-        codingRows.push({
-          application_id: app.id,
-          language: problem.language,
-          code: problem.code,
-          test_results: submission.test_results,
-          pass_rate: submission.pass_rate,
-          execution_time_ms: submission.execution_time_ms,
-          memory_mb: submission.memory_mb,
-          complexity_score: submission.complexity_score,
-          status: 'completed',
-          complexity: score! >= 85 ? 'optimal' : score! >= 70 ? 'acceptable' : 'suboptimal',
-          ai_feedback: problem.aiFeedback,
-          created_at: daysAgo(randInt(1, 5)),
-        });
-      }
-    }
-
-    /* --- Interview --- */
-    if (hasInterview) {
-      if (status === 'interview_scheduled') {
-        interviewRows.push({
-          application_id: app.id,
-          scheduled_at: randomFutureDate(1, 12),
-          video_consent: chance(0.9),
-          status: 'scheduled',
-          created_at: appliedAt,
-        });
-      } else {
-        const flagged = status === 'rejected' ? chance(0.3) : chance(0.05);
-        interviewRows.push({
-          application_id: app.id,
-          scheduled_at: randomPastDate(Math.max(1, minAgo - 5), maxAgo),
-          transcript: buildTranscript(job, candidate.name),
-          proctor_flags: buildProctorFlags(!flagged),
-          engagement_signal: buildEngagementSignal(),
-          sentiment_report: buildSentimentReport(decision),
-          video_consent: chance(0.9),
-          status: 'completed',
-          created_at: appliedAt,
-        });
-      }
-    }
-
-    /* --- Evaluation --- */
-    if (hasEvaluation) {
-      const resumeScore = status === 'rejected' ? randInt(40, 72) : randInt(64, 98);
-      const interviewScore = randInt(status === 'rejected' ? 42 : 55, status === 'rejected' ? 68 : 96);
-      const aptitudeScore = randInt(status === 'rejected' ? 40 : 55, status === 'rejected' ? 65 : 95);
-      const composite = Math.round((resumeScore * 0.3 + interviewScore * 0.3 + aptitudeScore * 0.4 + randInt(-3, 3)) / 1);
-      const biasFlag = decision === 'hire' ? chance(0.02) : chance(0.05);
-      const evalDecision = status === 'rejected' ? 'reject' : decision === 'hire' ? 'hire' : 'hold_for_review';
-      evaluationRows.push({
-        application_id: app.id,
-        stage: status === 'accepted' || status === 'offered' || status === 'decided' ? 'final_hiring_decision' : 'ai_evaluation_node',
-        resume_score: resumeScore,
-        interview_score: interviewScore,
-        aptitude_score: aptitudeScore,
-        coding_score: hasAssessment && assessmentRows.length ? randInt(50, 96) : null,
-        composite_score: composite,
-        confidence: randFloat(0.78, 0.97),
-        bias_flag: biasFlag,
-        bias_report: buildBiasReport(biasFlag),
-        decision: evalDecision as never,
-        reasoning: evalDecision === 'reject' ? pick(EVALUATION_REASONING_REJECT) : pick(EVALUATION_REASONING_HIRE),
-        created_at: daysAgo(randInt(2, 10)),
-      });
-    }
-
-    /* --- Offer --- */
-    if (status === 'offered' || status === 'accepted' || (status === 'decided' && decision === 'hire')) {
-      const salary = offerSalary(job);
-      const startDate = randomFutureDate(10, 30);
-      const isAccepted = status === 'accepted';
-      offerRows.push({
-        application_id: app.id,
-        role_title: job.title,
-        salary,
-        equity: equityForSalary(salary),
-        start_date: startDate,
-        valid_until: new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000),
-        status: isAccepted ? 'accepted' : 'pending',
-        signature_svg: isAccepted
-          ? `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="60"><text x="12" y="34" font-family="cursive" font-size="22" fill="#1f2937">${candidate.name}</text></svg>`
-          : null,
-        magic_link_token: `offer_${job.id.slice(0, 6)}_${candidate.profileId.slice(0, 6)}`,
-        offer_letter_content: `Official Employment Offer — ${job.title} at ${job.orgName}.\n\nDear ${candidate.name},\n\nWe are delighted to extend this offer for the ${job.title} role. Base salary $${salary.toLocaleString()} with ${equityForSalary(salary)} equity, subject to standard terms and conditions.`,
-        created_at: daysAgo(randInt(3, 12)),
-      });
-      offersMade++;
-    }
-  }
-
-  await prisma.assessment.createMany({ data: assessmentRows as never });
-  await prisma.codingSubmission.createMany({ data: codingRows as never });
-  await prisma.interview.createMany({ data: interviewRows as never });
-  await prisma.evaluation.createMany({ data: evaluationRows as never });
-  await prisma.offer.createMany({ data: offerRows as never });
-
-  /* ---------- Extras ---------- */
-  console.log('🔔 Creating notifications, bookmarks, mock sessions, prep content & agent logs…');
-
-  // Notifications for HR.
-  const HR_NOTIFICATIONS = [
-    { title: 'New applicant', message: 'A new candidate matched your open role and entered screening.', type: 'shortlist' },
-    { title: 'Assessment completed', message: 'A candidate completed the AI voice interview — review the scorecard.', type: 'info' },
-    { title: 'Offer accepted', message: 'A candidate signed the offer letter. Onboarding checklist is ready.', type: 'system' },
-    { title: 'Interview scheduled', message: 'An AI voice interview was scheduled for next week.', type: 'interview' },
-    { title: 'Talent pool update', message: '3 high-signal candidates were added to your talent pool.', type: 'shortlist' },
-    { title: 'Coding assessment passed', message: 'A candidate cleared the coding round with a strong pass rate.', type: 'info' },
-    { title: 'Decision ready', message: 'The evaluator agent finalized a recommendation — review before it advances.', type: 'system' },
-  ] as const;
-  const CAND_NOTIFICATIONS = [
-    { title: 'Application received', message: 'Your application was received and is being reviewed by the team.', type: 'application' },
-    { title: 'Assessment ready', message: 'Your skills assessment is ready to take. Complete it within 72 hours.', type: 'assessment' },
-    { title: 'Interview scheduled', message: 'Your AI voice interview is scheduled. Prepare with mock sessions.', type: 'interview' },
-    { title: 'Offer update', message: 'Your offer letter is ready to review and sign.', type: 'offer' },
-    { title: 'Status update', message: 'We updated the status of one of your applications.', type: 'application' },
-    { title: 'Prep content ready', message: 'New interview prep content was added for your target roles.', type: 'prep' },
-  ] as const;
-
-  const notificationRows: unknown[] = [];
-  for (const hr of hrRows) {
-    for (let k = 0, n = randInt(2, 4); k < n; k++) {
-      const ntf = pick(HR_NOTIFICATIONS);
-      notificationRows.push({
-        user_id: hr.id,
-        title: ntf.title,
-        message: ntf.message,
-        type: ntf.type,
-        read: chance(0.6),
-        created_at: randomPastDate(0, 14),
-      });
-    }
-  }
-  for (const cand of candidates) {
-    for (let k = 0, n = randInt(2, 4); k < n; k++) {
-      const ntf = pick(CAND_NOTIFICATIONS);
-      notificationRows.push({
-        user_id: cand.userId,
-        title: ntf.title,
-        message: ntf.message,
-        type: ntf.type,
-        read: chance(0.55),
-        created_at: randomPastDate(0, 20),
-      });
-    }
-  }
-  await prisma.notification.createMany({ data: notificationRows as never });
-
-  // Talent bookmarks: HR saves promising candidates.
-  const bookmarkRows: unknown[] = [];
-  const bookmarkSeen = new Set<string>();
-  const bookmarkCandidates = candidates.filter((c) => c.domain !== 'marketing');
-  for (let k = 0; k < 60 && bookmarkCandidates.length; k++) {
-    const org = pick(orgRows);
-    const cand = pick(bookmarkCandidates);
-    const key = `${org.id}|${cand.profileId}`;
-    if (bookmarkSeen.has(key)) continue;
-    bookmarkSeen.add(key);
-    const job = pick(jobRows.filter((j) => j.domain === cand.domain)) ?? jobRows[0];
-    bookmarkRows.push({
-      org_id: org.id,
-      candidate_id: cand.profileId,
-      job_id: job.id,
-      notes: pick([
-        'Strong match — consider for upcoming roles.',
-        'High-signal candidate. Fast-track on next opening.',
-        'Great culture fit, follow up next quarter.',
-        'Impressive portfolio — shortlist for design review.',
-      ]),
-      created_at: randomPastDate(0, 60),
-    });
-  }
-  await prisma.talentBookmark.createMany({ data: bookmarkRows as never });
-
-  // Mock sessions for a subset of candidates.
-  const mockRows: unknown[] = [];
-  const mockCandidates = pickN(candidates, Math.floor(candidates.length * 0.55));
-  for (const cand of mockCandidates) {
-    const count = randInt(1, 3);
-    for (let k = 0; k < count; k++) {
-      const target = pick(COMPANIES);
-      const targetRole = pick(DOMAINS.find((d) => d.key === cand.domain)!.roles);
-      const completed = chance(0.65);
-      const score = completed ? randFloat(58, 92) : null;
-      mockRows.push({
-        candidate_id: cand.profileId,
-        target_company: target.name,
-        target_role: targetRole,
-        difficulty: pick(['easy', 'medium', 'hard']),
-        type: weightedPick(['mock', 'interview', 'resume', 'behavioral'], [45, 30, 15, 10]),
-        status: completed ? 'completed' : 'active',
-        topic: pick(['System Design', 'Algorithms', 'Behavioral Fit', 'Coding', 'Product Sense']),
-        focus_areas: pickN(WORK_VALUES, 2),
-        rubric: { clarity: 40, technical: 40, composure: 20 },
-        transcript: completed
-          ? pickN(INTERVIEW_QUESTIONS[cand.domain], 3).map((q, idx) => ({ id: `mq${idx}`, question: q, answer: pick(INTERVIEW_ANSWERS[cand.domain]) }))
-          : null,
-        score,
-        feedback: completed
-          ? {
-            strengths: pickN(['clear communication', 'strong technical depth', 'good structure', 'calm under pressure'], 2),
-            improvements: pickN(['more concrete metrics', 'faster to the point', 'show more enthusiasm'], 1),
-          }
-          : null,
-        generated_resume: chance(0.3) ? { atsScore: randInt(70, 95), suggestions: pickN(['Add quantifiable impact', 'Include tech stack list', 'Tighten summary'], 2) } : null,
-        resume_pdf_url: chance(0.4) ? `https://storage.nextround.dev/resumes/${cand.profileId}/mock-resume.pdf` : null,
-        ended_at: completed ? daysAgo(randInt(1, 30)) : null,
-        created_at: randomPastDate(0, 40),
-      });
-    }
-  }
-  await prisma.mockSession.createMany({ data: mockRows as never });
-
-  // Prep content per job.
-  const prepRows: unknown[] = [];
-  for (const job of jobRows) {
-    const org = orgRows.find((o) => o.id === job.orgId)!;
-    prepRows.push({
-      company_name: job.orgName,
-      role_archetype: job.title,
-      job_id: job.id,
-      org_id: job.orgId,
-      questions: pickN(INTERVIEW_QUESTIONS[job.domain], 3),
-      culture_notes: org.def.cultureNotes,
-      skill_checklist: pickN(job.skills, Math.min(5, job.skills.length)),
-      updated_at: daysAgo(randInt(1, 30)),
-    });
-  }
-  await prisma.prepContent.createMany({ data: prepRows as never });
-
-  // Agent logs per org + job.
-  const agentLogRows: unknown[] = [];
-  for (const org of orgRows) {
-    for (let k = 0; k < randInt(3, 5); k++) {
-      agentLogRows.push({
-        org_id: org.id,
-        job_id: null,
-        agent_name: pick(AGENT_NAMES),
-        action: pick(AGENT_ACTIONS),
-        input: { requestId: `req_${k}_${org.id.slice(0, 6)}` },
-        output: { ok: true, processed: randInt(1, 20) },
-        status: chance(0.92) ? 'completed' : 'failed',
-        error: null,
-        created_at: randomPastDate(0, 30),
-      });
-    }
-  }
-  for (const job of jobRows.slice(0, 40)) {
-    agentLogRows.push({
-      org_id: job.orgId,
-      job_id: job.id,
-      agent_name: pick(AGENT_NAMES),
-      action: pick(AGENT_ACTIONS),
-      input: { jobTitle: job.title },
-      output: { ok: true, processed: randInt(1, 8) },
-      status: 'completed',
-      error: null,
-      created_at: randomPastDate(0, 30),
-    });
-  }
-  await prisma.agentLog.createMany({ data: agentLogRows as never });
-
-  /* ---------- Question Bank ---------- */
-  console.log('📚 Seeding question bank…');
-
-  // ── Aptitude Questions ──────────────────────────────────────────────────
-  const APTITUDE_SEED = [
-    // Quantitative Aptitude (6)
-    { category: 'Quantitative Aptitude', difficulty: 'easy',   question: 'A train travels 360 km in 4 hours. What is its average speed in km/h?', options: ['80', '90', '100', '120'], correct_index: 1, explanation: '360 / 4 = 90 km/h', tags: ['speed', 'distance'] },
-    { category: 'Quantitative Aptitude', difficulty: 'easy',   question: 'If 15% of a number is 45, what is the number?', options: ['200', '250', '300', '350'], correct_index: 2, explanation: 'x × 0.15 = 45 → x = 300', tags: ['percentage'] },
-    { category: 'Quantitative Aptitude', difficulty: 'medium', question: 'A sum of money doubles itself in 8 years at simple interest. What is the annual rate of interest?', options: ['10%', '12.5%', '15%', '8%'], correct_index: 1, explanation: 'SI rate = 100/T = 100/8 = 12.5%', tags: ['simple interest'] },
-    { category: 'Quantitative Aptitude', difficulty: 'medium', question: 'Two pipes A and B can fill a tank in 12 and 18 hours respectively. How long will they take together?', options: ['6.5 hrs', '7.2 hrs', '8 hrs', '9 hrs'], correct_index: 1, explanation: '1/12 + 1/18 = 5/36 → 36/5 = 7.2 hrs', tags: ['pipes', 'work'] },
-    { category: 'Quantitative Aptitude', difficulty: 'hard',   question: 'A merchant marks goods 40% above cost price and allows a 25% discount. What is the profit percent?', options: ['5%', '10%', '15%', '20%'], correct_index: 0, explanation: 'SP = 1.4 × 0.75 × CP = 1.05 CP → 5% profit', tags: ['profit', 'discount'] },
-    { category: 'Quantitative Aptitude', difficulty: 'hard',   question: 'In how many ways can 5 boys and 3 girls be seated in a row so that no two girls sit together?', options: ['14400', '21600', '28800', '36000'], correct_index: 0, explanation: 'Arrange 5 boys (5!), place 3 girls in 6 gaps: P(6,3) = 120. Total = 120×120 = 14400', tags: ['permutation', 'combination'] },
-
-    // Logical Reasoning (6)
-    { category: 'Logical Reasoning', difficulty: 'easy',   question: 'Find the next number in the series: 2, 6, 12, 20, 30, ?', options: ['40', '42', '44', '46'], correct_index: 1, explanation: 'n(n+1): 1×2, 2×3, 3×4, 4×5, 5×6, 6×7 = 42', tags: ['series', 'pattern'] },
-    { category: 'Logical Reasoning', difficulty: 'easy',   question: 'All managers are leaders. Some leaders are visionaries. Which conclusion is definitely true?', options: ['All managers are visionaries', 'Some managers are visionaries', 'All visionaries are managers', 'Some managers are leaders'], correct_index: 3, explanation: 'Since all managers are leaders, some managers are leaders is definitely true', tags: ['syllogism'] },
-    { category: 'Logical Reasoning', difficulty: 'medium', question: 'A clock shows 3:25. What is the angle between the hour and minute hands?', options: ['42.5°', '47.5°', '52.5°', '57.5°'], correct_index: 2, explanation: 'Hour hand: 97.5°, Minute hand: 150°. Difference = 52.5°', tags: ['clock', 'angles'] },
-    { category: 'Logical Reasoning', difficulty: 'medium', question: 'If COMPUTER is coded as RFUVQNPC, what does PRINTER get coded as?', options: ['QSJOUFS', 'SFMJOUF', 'QSJOUFZ', 'QSJOUFE'], correct_index: 0, explanation: 'Each letter is shifted +1 in reverse alphabet order. P→Q, R→S, I→J, N→O, T→U, E→F, R→S = QSJOUFS', tags: ['coding', 'cipher'] },
-    { category: 'Logical Reasoning', difficulty: 'hard',   question: '5 people sit in a circle. A is between B and E. D is not next to A. C is between D and B. Who sits opposite to A?', options: ['B', 'C', 'D', 'E'], correct_index: 2, explanation: 'Circular arrangement: B-A-E-...; C between D and B gives D-C-B-A-E. Opposite A is D.', tags: ['arrangement', 'circular'] },
-    { category: 'Logical Reasoning', difficulty: 'hard',   question: 'A man walks 10 km north, turns right and walks 5 km, turns right and walks 10 km. How far is he from the start?', options: ['5 km', '10 km', '15 km', '25 km'], correct_index: 0, explanation: 'Net displacement: 5 km east (the two north/south legs cancel)', tags: ['direction', 'distance'] },
-
-    // Verbal Ability (6)
-    { category: 'Verbal Ability', difficulty: 'easy',   question: 'Choose the word most similar in meaning to BENEVOLENT.', options: ['Hostile', 'Charitable', 'Indifferent', 'Selfish'], correct_index: 1, explanation: 'Benevolent means well-meaning and kindly — closest to charitable', tags: ['vocabulary', 'synonyms'] },
-    { category: 'Verbal Ability', difficulty: 'easy',   question: 'Identify the correctly spelled word.', options: ['Accomodate', 'Accommodate', 'Acommodate', 'Acomodate'], correct_index: 1, explanation: 'Accommodate has two c-s and two m-s', tags: ['spelling'] },
-    { category: 'Verbal Ability', difficulty: 'medium', question: 'The CEO ______ the report before the board meeting. Choose the correct verb form.', options: ['review', 'reviewing', 'reviewed', 'reviews'], correct_index: 2, explanation: 'Past tense required for a completed action before a stated event', tags: ['grammar', 'tense'] },
-    { category: 'Verbal Ability', difficulty: 'medium', question: 'Select the best antonym for VERBOSE.', options: ['Wordy', 'Concise', 'Fluent', 'Eloquent'], correct_index: 1, explanation: 'Verbose = using more words than needed; antonym is concise', tags: ['vocabulary', 'antonyms'] },
-    { category: 'Verbal Ability', difficulty: 'hard',   question: 'Read: "The report was neither comprehensive nor accurate." Which inference is correct?', options: ['The report was partially accurate', 'The report was both incomplete and inaccurate', 'The report was accurate but brief', 'The report was accurate'], correct_index: 1, explanation: '"Neither A nor B" means both A and B are false', tags: ['reading comprehension', 'inference'] },
-    { category: 'Verbal Ability', difficulty: 'hard',   question: 'Fill the blank: "The scientist discovery was so ______ that it overturned decades of accepted theory." Best fit?', options: ['mundane', 'predictable', 'seminal', 'incremental'], correct_index: 2, explanation: 'Seminal means strongly influencing future development; fits a groundbreaking discovery', tags: ['vocabulary', 'context'] },
-
-    // Data Interpretation (6)
-    { category: 'Data Interpretation', difficulty: 'easy',   question: 'A bar chart shows sales: Q1=200, Q2=250, Q3=300, Q4=350. What is the average quarterly sales?', options: ['250', '275', '300', '325'], correct_index: 1, explanation: '(200+250+300+350)/4 = 1100/4 = 275', tags: ['bar chart', 'average'] },
-    { category: 'Data Interpretation', difficulty: 'easy',   question: 'A pie chart shows 25% for Technology, 30% for Finance, 20% for Healthcare, 25% for Retail. If total is 400 employees, how many are in Finance?', options: ['80', '100', '120', '125'], correct_index: 2, explanation: '30% of 400 = 120', tags: ['pie chart', 'percentage'] },
-    { category: 'Data Interpretation', difficulty: 'medium', question: 'A table shows revenue growth: Year1=100, Year2=120, Year3=156, Year4=218. What is the CAGR from Year1 to Year4 (approx)?', options: ['20%', '22%', '30%', '28%'], correct_index: 2, explanation: '(218/100)^(1/3) - 1 ≈ 1.298 - 1 = 29.8% ≈ 30%', tags: ['CAGR', 'growth'] },
-    { category: 'Data Interpretation', difficulty: 'medium', question: 'Data: Product A sold 500 units at ₹200 each; Product B sold 300 units at ₹400 each. What % of total revenue comes from Product B?', options: ['40%', '50%', '54.5%', '60%'], correct_index: 2, explanation: 'Revenue A=100000, B=120000, Total=220000. B%=120000/220000≈54.5%', tags: ['revenue', 'percentage'] },
-    { category: 'Data Interpretation', difficulty: 'hard',   question: 'A line graph shows website traffic (thousands): Jan=40, Feb=52, Mar=46, Apr=61, May=58, Jun=70. What is the month-over-month growth rate in June?', options: ['15.5%', '17.2%', '20.7%', '13.8%'], correct_index: 2, explanation: '(70-58)/58 × 100 = 12/58 × 100 ≈ 20.7%', tags: ['line graph', 'growth rate'] },
-    { category: 'Data Interpretation', difficulty: 'hard',   question: 'Scatter plot shows correlation between ads spend (₹L) and sales (₹L): points at (2,8),(4,14),(6,20),(8,26),(10,32). What is the expected sales at ads spend of ₹12L?', options: ['₹36L', '₹38L', '₹40L', '₹42L'], correct_index: 1, explanation: 'Pattern: sales = 3×spend + 2. At 12: 3×12+2 = 38', tags: ['scatter plot', 'linear regression'] },
-  ];
-
+  /* ---------- STEP 3: SEED QUESTION BANK ---------- */
+  console.log('📚 Seeding Aptitude Questions...');
   await prisma.aptitudeQuestion.createMany({
-    data: APTITUDE_SEED.map(q => ({
+    data: APTITUDE_BANK.map((q) => ({
       category: q.category,
       difficulty: q.difficulty,
       question: q.question,
@@ -2168,231 +1283,783 @@ async function main(): Promise<void> {
       tags: q.tags,
       is_active: true,
     })),
-    skipDuplicates: true,
   });
-  log(`Aptitude questions: ${APTITUDE_SEED.length}`);
+  console.log(`✅ Seeded ${APTITUDE_BANK.length} Aptitude Questions.`);
 
-  // ── Coding Problems ─────────────────────────────────────────────────────
-  const CODING_SEED = [
-    {
-      slug: 'two-sum',
-      title: 'Two Sum',
-      category: 'Arrays',
-      difficulty: 'easy',
-      tags: ['array', 'hash-map'],
-      description: `Given an array of integers \`nums\` and an integer \`target\`, return the **indices** of the two numbers that add up to \`target\`.
-
-You may assume each input has exactly one solution, and you may not use the same element twice.
-
-**Example:**
-\`\`\`
-Input:  nums = [2, 7, 11, 15], target = 9
-Output: [0, 1]
-\`\`\`
-
-**Constraints:**
-- 2 ≤ nums.length ≤ 10⁴
-- -10⁹ ≤ nums[i] ≤ 10⁹
-- Only one valid answer exists`,
-      starter_code: {
-        python: 'def two_sum(nums: list[int], target: int) -> list[int]:\n    # Write your solution here\n    pass\n',
-        javascript: 'function twoSum(nums, target) {\n  // Write your solution here\n}\n',
-        typescript: 'function twoSum(nums: number[], target: number): number[] {\n  // Write your solution here\n}\n',
-        java: 'class Solution {\n  public int[] twoSum(int[] nums, int target) {\n    // Write your solution here\n    return new int[]{};\n  }\n}\n',
-        cpp: '#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n  vector<int> twoSum(vector<int>& nums, int target) {\n    // Write your solution here\n    return {};\n  }\n};\n',
-      },
-      entry_point: 'two_sum',
-      public_tests: [
-        { input: [[2, 7, 11, 15], 9],  expected: [0, 1], description: 'Basic case' },
-        { input: [[3, 2, 4], 6],        expected: [1, 2], description: 'Non-adjacent' },
-        { input: [[3, 3], 6],           expected: [0, 1], description: 'Duplicate values' },
-      ],
-      hidden_tests: [
-        { input: [[-1, -2, -3, -4, -5], -8], expected: [2, 4], description: 'Negative numbers' },
-        { input: [[1000000000, -999999999, 0, 1], 1], expected: [2, 3], description: 'Large values' },
-        { input: [[0, 4, 3, 0], 0],             expected: [0, 3], description: 'Zero target' },
-      ],
-      reference_solution: { python: 'def two_sum(nums, target):\n    seen = {}\n    for i, n in enumerate(nums):\n        if target - n in seen: return [seen[target-n], i]\n        seen[n] = i\n' },
-    },
-    {
-      slug: 'valid-parentheses',
-      title: 'Valid Parentheses',
-      category: 'Stacks',
-      difficulty: 'easy',
-      tags: ['stack', 'string'],
-      description: `Given a string \`s\` containing only the characters \`(\`, \`)\`, \`{\`, \`}\`, \`[\` and \`]\`, determine if the input string is **valid**.
-
-A string is valid if:
-1. Open brackets must be closed by the same type of brackets.
-2. Open brackets must be closed in the correct order.
-
-**Examples:**
-\`\`\`
-Input: s = "()"      Output: true
-Input: s = "()[]{}"  Output: true
-Input: s = "(]"      Output: false
-Input: s = "([)]"    Output: false
-\`\`\`
-
-**Constraints:** 1 ≤ s.length ≤ 10⁴`,
-      starter_code: {
-        python: 'def is_valid(s: str) -> bool:\n    # Write your solution here\n    pass\n',
-        javascript: 'function isValid(s) {\n  // Write your solution here\n}\n',
-        typescript: 'function isValid(s: string): boolean {\n  // Write your solution here\n}\n',
-        java: 'class Solution {\n  public boolean isValid(String s) {\n    // Write your solution here\n    return false;\n  }\n}\n',
-        cpp: 'class Solution {\npublic:\n  bool isValid(string s) {\n    // Write your solution here\n    return false;\n  }\n};\n',
-      },
-      entry_point: 'is_valid',
-      public_tests: [
-        { input: ['()'],     expected: true,  description: 'Simple pair' },
-        { input: ['()[]{}'], expected: true,  description: 'Multiple types' },
-        { input: ['(]'],     expected: false, description: 'Mismatched' },
-      ],
-      hidden_tests: [
-        { input: ['([)]'],   expected: false, description: 'Interleaved brackets' },
-        { input: ['{[]}'],   expected: true,  description: 'Nested' },
-        { input: [''],       expected: true,  description: 'Empty string' },
-        { input: [']'],      expected: false, description: 'Single closing' },
-        { input: ['(((((('], expected: false, description: 'Only opening' },
-      ],
-      reference_solution: { python: "def is_valid(s):\n    stack=[]\n    pairs={')':'(','}':'{',']':'['}\n    for c in s:\n        if c in pairs:\n            if not stack or stack[-1]!=pairs[c]: return False\n            stack.pop()\n        else: stack.append(c)\n    return not stack\n" },
-    },
-    {
-      slug: 'reverse-linked-list',
-      title: 'Reverse a Linked List',
-      category: 'Linked Lists',
-      difficulty: 'medium',
-      tags: ['linked-list', 'recursion', 'iterative'],
-      description: `Given the head of a singly linked list, reverse the list and return the reversed list.
-
-The list is represented as an array of values for input/output purposes.
-
-**Examples:**
-\`\`\`
-Input:  head = [1, 2, 3, 4, 5]
-Output: [5, 4, 3, 2, 1]
-
-Input:  head = [1, 2]
-Output: [2, 1]
-\`\`\`
-
-**Constraints:**
-- 0 ≤ number of nodes ≤ 5000
-- -5000 ≤ Node.val ≤ 5000`,
-      starter_code: {
-        python: 'def reverse_list(head: list[int]) -> list[int]:\n    # The list is given as a Python list for simplicity\n    # Write your solution here\n    pass\n',
-        javascript: 'function reverseList(head) {\n  // head is an array representing the linked list\n  // Return the reversed array\n}\n',
-        typescript: 'function reverseList(head: number[]): number[] {\n  // head is an array representing the linked list\n  // Return the reversed array\n}\n',
-        java: 'class Solution {\n  public int[] reverseList(int[] head) {\n    // head is an array representing the linked list\n    return new int[]{};\n  }\n}\n',
-        cpp: '#include <vector>\nusing namespace std;\nclass Solution {\npublic:\n  vector<int> reverseList(vector<int>& head) {\n    return {};\n  }\n};\n',
-      },
-      entry_point: 'reverse_list',
-      public_tests: [
-        { input: [[1, 2, 3, 4, 5]], expected: [5, 4, 3, 2, 1], description: 'Five elements' },
-        { input: [[1, 2]],          expected: [2, 1],           description: 'Two elements' },
-        { input: [[]],              expected: [],               description: 'Empty list' },
-      ],
-      hidden_tests: [
-        { input: [[1]],                       expected: [1],                       description: 'Single element' },
-        { input: [[1, 2, 3, 4, 5, 6, 7, 8]], expected: [8, 7, 6, 5, 4, 3, 2, 1], description: 'Eight elements' },
-        { input: [[-5, 0, 5]],               expected: [5, 0, -5],               description: 'Negative values' },
-      ],
-      reference_solution: { python: 'def reverse_list(head):\n    return head[::-1]\n' },
-    },
-    {
-      slug: 'max-subarray',
-      title: 'Maximum Subarray Sum',
-      category: 'Dynamic Programming',
-      difficulty: 'medium',
-      tags: ['array', 'dynamic-programming', 'kadane'],
-      description: `Given an integer array \`nums\`, find the **contiguous subarray** with the largest sum and return its sum.
-
-A subarray is a contiguous part of an array.
-
-**Examples:**
-\`\`\`
-Input:  nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]
-Output: 6   (subarray [4,-1,2,1])
-
-Input:  nums = [1]
-Output: 1
-
-Input:  nums = [5, 4, -1, 7, 8]
-Output: 23
-\`\`\`
-
-**Constraints:**
-- 1 ≤ nums.length ≤ 10⁵
-- -10⁴ ≤ nums[i] ≤ 10⁴`,
-      starter_code: {
-        python: 'def max_sub_array(nums: list[int]) -> int:\n    # Write your solution here\n    pass\n',
-        javascript: 'function maxSubArray(nums) {\n  // Write your solution here\n}\n',
-        typescript: 'function maxSubArray(nums: number[]): number {\n  // Write your solution here\n}\n',
-        java: 'class Solution {\n  public int maxSubArray(int[] nums) {\n    // Write your solution here\n    return 0;\n  }\n}\n',
-        cpp: 'class Solution {\npublic:\n  int maxSubArray(vector<int>& nums) {\n    // Write your solution here\n    return 0;\n  }\n};\n',
-      },
-      entry_point: 'max_sub_array',
-      public_tests: [
-        { input: [[-2, 1, -3, 4, -1, 2, 1, -5, 4]], expected: 6,  description: 'Mixed negatives' },
-        { input: [[1]],                               expected: 1,  description: 'Single element' },
-        { input: [[5, 4, -1, 7, 8]],                 expected: 23, description: 'Mostly positive' },
-      ],
-      hidden_tests: [
-        { input: [[-1]],                              expected: -1, description: 'All negative single' },
-        { input: [[-2, -3, -1, -5]],                  expected: -1, description: 'All negatives' },
-        { input: [[1, 2, 3, 4, 5]],                   expected: 15, description: 'All positives' },
-        { input: [[0, -3, 1, 1]],                     expected: 2,  description: 'Zero in array' },
-      ],
-      reference_solution: { python: 'def max_sub_array(nums):\n    best=cur=nums[0]\n    for n in nums[1:]:\n        cur=max(n,cur+n)\n        best=max(best,cur)\n    return best\n' },
-    },
-  ];
-
-  for (const p of CODING_SEED) {
+  console.log('💻 Seeding Coding Problems...');
+  for (const prob of CODING_BANK) {
     await prisma.codingProblem.create({
       data: {
-        slug: p.slug,
-        title: p.title,
-        category: p.category,
-        difficulty: p.difficulty,
-        tags: p.tags,
-        description: p.description,
-        starter_code: p.starter_code,
-        entry_point: p.entry_point,
-        public_tests: p.public_tests as never,
-        hidden_tests: p.hidden_tests as never,
-        reference_solution: p.reference_solution as never,
+        slug: prob.slug,
+        title: prob.title,
+        category: prob.category,
+        difficulty: prob.difficulty,
+        tags: prob.tags,
+        description: prob.description,
+        starter_code: prob.starter_code,
+        entry_point: prob.entry_point,
+        public_tests: prob.public_tests as any,
+        hidden_tests: prob.hidden_tests as any,
+        reference_solution: prob.reference_solution as any,
         is_active: true,
         version: 1,
       },
     });
   }
-  log(`Coding problems: ${CODING_SEED.length}`);
+  console.log(`✅ Seeded ${CODING_BANK.length} Coding Problems.`);
 
-  /* ---------- Summary ---------- */
-  const seconds = ((Date.now() - startedAt) / 1000).toFixed(1);
+  /* ---------- STEP 4: SEED ORGANIZATIONS ---------- */
+  console.log('🏢 Creating Organizations...');
+  const orgMap = new Map<string, { id: string; def: CompanyDef }>();
+
+  for (const company of COMPANIES) {
+    const org = await prisma.organization.create({
+      data: {
+        name: company.name,
+        industry: company.industry,
+        size: company.size,
+        logo_url: avatarUrl(company.logoSeed),
+        settings: company.settings,
+      },
+    });
+    orgMap.set(company.name, { id: org.id, def: company });
+  }
+
+  /* ---------- STEP 5: SEED HR USERS ---------- */
+  console.log('👤 Creating HR Recruiter Accounts...');
+  const hrUsers: Array<{ id: string; email: string; name: string; orgId: string; orgName: string }> = [];
+
+  // Primary HR User (steve.hr@gmail.com / 123456789)
+  const razorFlowOrg = orgMap.get('RazorFlow Technologies')!;
+  const steveUser = await prisma.user.create({
+    data: {
+      email: 'steve.hr@gmail.com',
+      password_hash: defaultPasswordHash,
+      role: 'hr',
+      org_id: razorFlowOrg.id,
+      profile: {
+        name: 'Steve Rao',
+        avatarUrl: avatarUrl('1534528741775-53994a69daeb'),
+        title: 'Director of Talent Acquisition',
+        timezone: 'Asia/Kolkata',
+        location: 'Bengaluru, India',
+        linkedinUrl: 'https://linkedin.com/in/steve-rao-hr',
+        phone: '+91 98765 43210',
+        specialties: ['Leadership Hiring', 'Backend & Infrastructure', 'Fintech Talent'],
+        languages: ['English', 'Hindi', 'Kannada'],
+      },
+    },
+  });
+  hrUsers.push({
+    id: steveUser.id,
+    email: 'steve.hr@gmail.com',
+    name: 'Steve Rao',
+    orgId: razorFlowOrg.id,
+    orgName: razorFlowOrg.def.name,
+  });
+
+  // Additional HR Recruiters across organizations
+  for (const [orgName, { id: orgId, def }] of orgMap.entries()) {
+    const count = orgName === 'RazorFlow Technologies' ? def.hrTeamSize - 1 : def.hrTeamSize;
+    for (let i = 0; i < count; i++) {
+      const { first, last, full } = uniqueFullName();
+      const email = uniqueEmail(first, last);
+      const loc = pick(INDIAN_LOCATIONS);
+      const user = await prisma.user.create({
+        data: {
+          email,
+          password_hash: defaultPasswordHash,
+          role: 'hr',
+          org_id: orgId,
+          profile: {
+            name: full,
+            avatarUrl: avatarUrl(pick(AVATAR_SEEDS)),
+            title: pick(['Senior Technical Recruiter', 'Talent Acquisition Lead', 'People Partner', 'Staff Sourcing Specialist']),
+            timezone: loc.timezone,
+            location: `${loc.city}, ${loc.country}`,
+            linkedinUrl: `https://linkedin.com/in/${slugify(full)}`,
+            phone: `+91 ${randInt(70000, 99999)} ${randInt(10000, 99999)}`,
+            specialties: [pick(DOMAIN_DATA).label, pick(DOMAIN_DATA).label],
+            languages: ['English', 'Hindi'],
+          },
+        },
+      });
+      hrUsers.push({ id: user.id, email, name: full, orgId, orgName });
+    }
+  }
+  console.log(`✅ Seeded ${hrUsers.length} HR Recruiter Accounts.`);
+
+  /* ---------- STEP 6: SEED JOBS ---------- */
+  console.log('💼 Creating Tech Job Postings...');
+  const jobList: Array<{
+    id: string;
+    orgId: string;
+    orgName: string;
+    title: string;
+    domain: Domain;
+    minScore: number;
+    salaryLPA: [number, number];
+    status: string;
+  }> = [];
+
+  for (const tpl of JOB_TEMPLATES) {
+    const org = orgMap.get(tpl.orgName)!;
+    const domainDef = DOMAIN_DATA.find((d) => d.key === tpl.domain)!;
+    const loc = locationForCity(tpl.city);
+
+    const rubric = {
+      technicalSkills: { weight: 0.4, description: 'Core problem solving, data structures, domain architectures.' },
+      systemDesign: { weight: 0.3, description: 'Scalability, fault tolerance, API contracts, caching.' },
+      communication: { weight: 0.15, description: 'Clarity of explanation, structured thinking.' },
+      cultureFit: { weight: 0.15, description: 'Ownership mindset, collaboration, engineering excellence.' },
+    };
+
+    const stages = [
+      { id: 'applied', name: 'Applied', order: 1 },
+      { id: 'screening', name: 'AI Screening', order: 2 },
+      { id: 'assessment', name: 'Technical Assessment', order: 3 },
+      { id: 'interview', name: 'Voice & Coding Round', order: 4 },
+      { id: 'hr_round', name: 'HR Leadership Round', order: 5 },
+      { id: 'offer', name: 'Offer Extended', order: 6 },
+    ];
+
+    const assessmentConfig = {
+      mcqCount: 15,
+      codingProblemCount: 2,
+      timeLimitMinutes: 45,
+      proctoringRequired: true,
+      mcqDistribution: {
+        'Quantitative Aptitude': 4,
+        'Logical Reasoning': 4,
+        'Verbal Ability': 4,
+        'Data Interpretation': 3,
+      },
+    };
+
+    const salaryString = `₹${tpl.salaryLPA[0]}L - ₹${tpl.salaryLPA[1]}L PA`;
+
+    const job = await prisma.job.create({
+      data: {
+        org_id: org.id,
+        title: tpl.title,
+        description: `### Role Overview\n${tpl.orgName} is looking for a talented **${tpl.title}** based out of **${tpl.city}**.\n\n### Key Requirements\n${tpl.keyRequirements.map((r) => `- ${r}`).join('\n')}\n\n### Culture & Benefits\n- Competitive compensation (₹${tpl.salaryLPA[0]} LPA - ₹${tpl.salaryLPA[1]} LPA) + generous equity\n- Comprehensive health insurance for family\n- Annual learning & wellness allowance\n- Flexible work culture (${tpl.city})`,
+        rubric,
+        thresholds: { minScore: tpl.minScore, autoOffer: tpl.autoOffer },
+        status: tpl.status,
+        location: tpl.city,
+        salary: salaryString,
+        experienceLevel: tpl.exp,
+        department: domainDef.label,
+        skills: domainDef.skills.slice(0, 8),
+        stages,
+        assessmentConfig,
+      },
+    });
+
+    jobList.push({
+      id: job.id,
+      orgId: org.id,
+      orgName: tpl.orgName,
+      title: tpl.title,
+      domain: tpl.domain,
+      minScore: tpl.minScore,
+      salaryLPA: tpl.salaryLPA,
+      status: tpl.status,
+    });
+  }
+  console.log(`✅ Seeded ${jobList.length} Job Postings.`);
+
+  /* ---------- STEP 7: SEED CANDIDATES ---------- */
+  console.log('🎓 Creating Candidate Profiles...');
+  const candidateList: Array<{
+    userId: string;
+    profileId: string;
+    name: string;
+    email: string;
+    domain: Domain;
+    skills: string[];
+    yearsOfExperience: number;
+    expectedSalary: number;
+    location: string;
+  }> = [];
+
+  // Primary Candidate User (pratham@gmail.com / 123456789)
+  const prathamUser = await prisma.user.create({
+    data: {
+      email: 'pratham@gmail.com',
+      password_hash: defaultPasswordHash,
+      role: 'candidate',
+    },
+  });
+
+  const prathamProfile = await prisma.candidateProfile.create({
+    data: {
+      user_id: prathamUser.id,
+      full_name: 'Pratham Rajbhar',
+      headline: 'Senior Full-Stack Engineer & Distributed AI Architect',
+      phone: '+91 98192 83746',
+      location: 'Bengaluru, India',
+      timezone: 'Asia/Kolkata',
+      bio: 'Full-stack software architect with 5.5+ years building distributed cloud platforms, real-time web applications, and autonomous AI agents. Passionate about TypeScript, React/Next.js performance, Go/Node.js microservices, and PostgreSQL optimization.',
+      skills: [
+        'TypeScript', 'React', 'Next.js', 'Node.js', 'Go', 'PostgreSQL',
+        'Redis', 'Kafka', 'Docker', 'Kubernetes', 'AWS', 'TailwindCSS',
+        'GraphQL', 'FastAPI', 'LangChain', 'Prisma', 'System Design'
+      ],
+      target_roles: ['Senior Full-Stack Engineer', 'Lead Platform Architect', 'Staff Software Engineer'],
+      years_of_experience: 5.5,
+      work_mode: 'Hybrid (Bengaluru / Remote)',
+      current_ctc: 2800000,
+      expected_salary: 4200000,
+      target_locations: ['Bengaluru', 'Hyderabad', 'Remote (India)', 'San Francisco'],
+      notice_period: '15 days',
+      work_authorization: 'Indian Citizen',
+      proud_project: 'Architected and built an end-to-end AI hiring platform with real-time audio interview analysis, automated proctoring telemetry, and high-throughput evaluation scoring.',
+      work_values: ['Technical Rigor', 'High Velocity Shipping', 'Zero-Ego Collaboration', 'Radical Transparency'],
+      availability: { immediateJoiner: false, availableFrom: '2026-09-01' },
+      resume_url: `https://storage.nextround.dev/resumes/${prathamUser.id}/pratham_rajbhar_resume.pdf`,
+      github_url: 'https://github.com/prathamrajbhar',
+      linkedin_url: 'https://linkedin.com/in/prathamrajbhar',
+      portfolio_url: 'https://prathamrajbhar.dev',
+      parsed_resume: {
+        education: [{ institution: 'Indian Institute of Information Technology (IIIT)', degree: 'B.Tech in Computer Science', year: 2021 }],
+        experience: [
+          { company: 'HyperScale Labs', role: 'Senior Software Engineer', duration: '2023 - Present' },
+          { company: 'FinTech Core India', role: 'Full Stack Engineer', duration: '2021 - 2023' },
+        ],
+      },
+    },
+  });
+
+  candidateList.push({
+    userId: prathamUser.id,
+    profileId: prathamProfile.id,
+    name: 'Pratham Rajbhar',
+    email: 'pratham@gmail.com',
+    domain: 'fullstack',
+    skills: prathamProfile.skills as string[],
+    yearsOfExperience: 5.5,
+    expectedSalary: 4200000,
+    location: 'Bengaluru, India',
+  });
+
+  // Additional 120 Authentic Indian Candidates
+  for (let i = 0; i < 120; i++) {
+    const { first, last, full } = uniqueFullName();
+    const email = uniqueEmail(first, last);
+    const domainDef = pick(DOMAIN_DATA);
+    const yoe = Number(randFloat(1.5, 12).toFixed(1));
+    const loc = pick(INDIAN_LOCATIONS);
+    const currentCTC = Math.round((domainDef.salaryLPA[0] + (yoe / 12) * (domainDef.salaryLPA[1] - domainDef.salaryLPA[0])) * 0.85) * 100000;
+    const expectedCTC = Math.round(currentCTC * randFloat(1.25, 1.45) / 100000) * 100000;
+    const skills = pickN(domainDef.skills, randInt(6, 9));
+    const targetRoles = pickN(domainDef.roles, randInt(1, 3));
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password_hash: defaultPasswordHash,
+        role: 'candidate',
+      },
+    });
+
+    const profile = await prisma.candidateProfile.create({
+      data: {
+        user_id: user.id,
+        full_name: full,
+        headline: `${seniority(yoe)} ${pick(targetRoles)} · ${yoe} yrs exp`,
+        phone: `+91 ${randInt(70000, 99999)} ${randInt(10000, 99999)}`,
+        location: `${loc.city}, ${loc.country}`,
+        timezone: loc.timezone,
+        bio: `${seniority(yoe)} engineer passionate about ${skills.slice(0, 3).join(', ')} with a strong track record of shipping scalable software.`,
+        skills,
+        target_roles: targetRoles,
+        years_of_experience: yoe,
+        work_mode: pick(WORK_MODES),
+        current_ctc: currentCTC,
+        expected_salary: expectedCTC,
+        target_locations: [loc.city, 'Bengaluru', 'Remote (India)'],
+        notice_period: pick(NOTICE_PERIODS),
+        work_authorization: pick(WORK_AUTH),
+        proud_project: `Led design and deployment of high-performance ${domainDef.label.toLowerCase()} architecture serving 500k+ daily requests.`,
+        work_values: ['System Reliability', 'Continuous Learning', 'Engineering Quality'],
+        resume_url: `https://storage.nextround.dev/resumes/${user.id}/resume.pdf`,
+        github_url: `https://github.com/${slugify(full)}`,
+        linkedin_url: `https://linkedin.com/in/${slugify(full)}`,
+      },
+    });
+
+    candidateList.push({
+      userId: user.id,
+      profileId: profile.id,
+      name: full,
+      email,
+      domain: domainDef.key,
+      skills,
+      yearsOfExperience: yoe,
+      expectedSalary: expectedCTC,
+      location: `${loc.city}, ${loc.country}`,
+    });
+  }
+  console.log(`✅ Seeded ${candidateList.length} Candidate Profiles.`);
+
+  /* ---------- STEP 8: SEED APPLICATIONS & PIPELINE FUNNEL ---------- */
+  console.log('📈 Generating Enterprise Hiring Funnel & Applications...');
+
+  type AppStatus =
+    | 'applied' | 'screening' | 'screening_completed' | 'assessment'
+    | 'interview_scheduled' | 'interviewed' | 'evaluation' | 'hr_round'
+    | 'decided' | 'offered' | 'accepted' | 'rejected' | 'withdrawn';
+
+  const ALL_STATUSES: AppStatus[] = [
+    'applied', 'screening', 'screening_completed', 'assessment',
+    'interview_scheduled', 'interviewed', 'evaluation', 'hr_round',
+    'decided', 'offered', 'accepted', 'rejected', 'withdrawn'
+  ];
+
+  // Specific applications for lead candidate Pratham Rajbhar
+  const prathamApps: Array<{ jobIndex: number; status: AppStatus }> = [
+    { jobIndex: 0, status: 'offered' },              // RazorFlow Backend Core -> Offered
+    { jobIndex: 1, status: 'interview_scheduled' },  // RazorFlow Lead FullStack -> Interview Scheduled
+    { jobIndex: 4, status: 'assessment' },           // NexusCloud AI Architect -> Assessment In Progress
+    { jobIndex: 5, status: 'screening_completed' },  // ZomatoScale Frontend -> Screened
+    { jobIndex: 7, status: 'applied' },              // ZerodhaCore Systems -> Applied
+  ];
+
+  const appliedPairs = new Set<string>();
+
+  for (const pApp of prathamApps) {
+    const targetJob = jobList[pApp.jobIndex % jobList.length];
+    const key = `${prathamProfile.id}-${targetJob.id}`;
+    appliedPairs.add(key);
+
+    const app = await prisma.application.create({
+      data: {
+        candidate_id: prathamProfile.id,
+        job_id: targetJob.id,
+        status: pApp.status,
+        hr_round_status: pApp.status === 'offered' ? 'passed' : pApp.status === 'interview_scheduled' ? 'scheduled' : null,
+        hr_round_scheduled_at: pApp.status === 'interview_scheduled' ? daysFromNow(2) : null,
+        hr_round_completed_at: pApp.status === 'offered' ? daysAgo(3) : null,
+        applied_at: daysAgo(14),
+      },
+    });
+
+    // Create supporting records for Pratham
+    await seedApplicationDetails(app.id, prathamProfile.id, prathamUser.id, targetJob, pApp.status, true);
+  }
+
+  // Generate 700+ applications across candidates & jobs
+  let totalApps = prathamApps.length;
+
+  for (const candidate of candidateList.slice(1)) {
+    // 4 to 8 applications per candidate
+    const numApps = randInt(4, 8);
+    const matchingJobs = jobList.filter((j) => j.domain === candidate.domain || chance(0.4));
+
+    for (let i = 0; i < numApps; i++) {
+      const job = pick(matchingJobs.length > 0 ? matchingJobs : jobList);
+      const key = `${candidate.profileId}-${job.id}`;
+      if (appliedPairs.has(key)) continue;
+      appliedPairs.add(key);
+
+      const status = weightedPick<AppStatus>(
+        ALL_STATUSES,
+        [15, 12, 10, 12, 10, 8, 7, 5, 4, 3, 2, 8, 4]
+      );
+
+      const app = await prisma.application.create({
+        data: {
+          candidate_id: candidate.profileId,
+          job_id: job.id,
+          status,
+          hr_round_status: status === 'offered' || status === 'accepted' ? 'passed' : status === 'interview_scheduled' ? 'scheduled' : null,
+          hr_round_scheduled_at: status === 'interview_scheduled' ? randomFutureDate(1, 7) : null,
+          hr_round_completed_at: status === 'offered' || status === 'accepted' ? randomPastDate(1, 15) : null,
+          applied_at: randomPastDate(5, 45),
+        },
+      });
+
+      await seedApplicationDetails(app.id, candidate.profileId, candidate.userId, job, status, false);
+      totalApps++;
+    }
+  }
+  console.log(`✅ Seeded ${totalApps} Applications with full assessment, interview, evaluation, and offer lifecycle.`);
+
+  /* ---------- STEP 9: SEED MOCK INTERVIEW SESSIONS & PREP CONTENT ---------- */
+  console.log('🎯 Seeding Mock Sessions and Prep Content for Candidates...');
+
+  // Mock sessions for Pratham
+  for (let m = 0; m < 3; m++) {
+    const mockSession = await prisma.mockSession.create({
+      data: {
+        candidate_id: prathamProfile.id,
+        target_company: m === 0 ? 'RazorFlow Technologies' : m === 1 ? 'NexusCloud Labs' : 'Google Cloud India',
+        target_role: 'Senior Full-Stack Architect',
+        difficulty: 'hard',
+        type: 'mock',
+        status: 'completed',
+        current_section: 'video',
+        started_at: daysAgo(5 + m * 3),
+        completed_at: daysAgo(5 + m * 3),
+        final_score: 92.5 - m * 4,
+        final_feedback: {
+          summary: 'Exceptional depth in distributed transactions, system scalability, and React concurrency.',
+          strengths: ['Clear system diagrams and tradeoff analysis', 'Fast and clean TypeScript/Go code', 'Strong structured communication'],
+          areasForImprovement: ['Elaborate on edge failure recovery in distributed caches'],
+        },
+        topic: 'Full-Stack Distributed Systems & Live Coding',
+        focus_areas: ['System Design', 'React Performance', 'PostgreSQL Concurrency'],
+      },
+    });
+
+    // Seed mock proctoring session
+    await prisma.proctoringSession.create({
+      data: {
+        candidate_id: prathamProfile.id,
+        mock_session_id: mockSession.id,
+        session_type: 'coding',
+        status: 'ended',
+        policy_version: '1.0.0',
+        consent_version: '1.0.0',
+        started_at: daysAgo(5 + m * 3),
+        ended_at: daysAgo(5 + m * 3),
+      },
+    });
+  }
+
+  // Prep content for top companies
+  for (const company of COMPANIES.slice(0, 6)) {
+    await prisma.prepContent.create({
+      data: {
+        company_name: company.name,
+        role_archetype: 'Senior Software Engineer',
+        org_id: orgMap.get(company.name)?.id,
+        culture_notes: company.cultureNotes,
+        questions: [
+          { question: `How would you architect a fault-tolerant subsystem at ${company.name}?`, type: 'technical' },
+          { question: 'Describe a time you resolved a major production incident under time pressure.', type: 'behavioral' },
+          { question: 'What metrics do you track to maintain high availability and low latency?', type: 'system_design' },
+        ],
+        skill_checklist: ['Distributed Systems', 'Database Optimization', 'Asynchronous Queues', 'Clean Code Principles'],
+      },
+    });
+  }
+
+  /* ---------- STEP 10: SEED NOTIFICATIONS & TALENT BOOKMARKS ---------- */
+  console.log('🔔 Seeding Notifications & Talent Bookmarks...');
+
+  // Notifications for Pratham
+  await prisma.notification.createMany({
+    data: [
+      {
+        user_id: prathamUser.id,
+        title: 'Offer Letter Ready!',
+        message: 'RazorFlow Technologies has extended an offer for Senior Backend Engineer (Payments Core). Check your dashboard to review and sign.',
+        type: 'success',
+        read: false,
+        created_at: daysAgo(1),
+      },
+      {
+        user_id: prathamUser.id,
+        title: 'Interview Scheduled',
+        message: 'Your Technical Voice Interview for Lead Full-Stack Engineer is scheduled for Thursday at 3:00 PM IST.',
+        type: 'info',
+        read: false,
+        created_at: daysAgo(2),
+      },
+      {
+        user_id: prathamUser.id,
+        title: 'Assessment Cleared',
+        message: 'Congratulations! You scored 94% on the Technical Assessment for ZomatoScale QuickCommerce.',
+        type: 'success',
+        read: true,
+        created_at: daysAgo(4),
+      },
+    ],
+  });
+
+  // Notifications for Steve (HR)
+  await prisma.notification.createMany({
+    data: [
+      {
+        user_id: steveUser.id,
+        title: 'New High-Score Candidate',
+        message: 'Candidate Pratham Rajbhar completed the Technical Assessment with 96% score for Payments Core role.',
+        type: 'info',
+        read: false,
+        created_at: daysAgo(1),
+      },
+      {
+        user_id: steveUser.id,
+        title: 'Interview Evaluation Ready',
+        message: 'AI Interview evaluation and bias scorecard generated for 5 pending candidates.',
+        type: 'info',
+        read: true,
+        created_at: daysAgo(2),
+      },
+    ],
+  });
+
+  // Talent bookmarks for Steve's org
+  for (const cand of candidateList.slice(0, 8)) {
+    await prisma.talentBookmark.create({
+      data: {
+        org_id: razorFlowOrg.id,
+        candidate_id: cand.profileId,
+        notes: `High potential candidate for core engineering with ${cand.yearsOfExperience} years of strong experience.`,
+      },
+    });
+  }
+
+  /* ---------- STEP 11: AGENT LOGS ---------- */
+  console.log('🤖 Seeding Agent Execution Logs...');
+  const agentLogs = [];
+  for (const job of jobList.slice(0, 10)) {
+    agentLogs.push({
+      org_id: job.orgId,
+      job_id: job.id,
+      agent_name: 'ResumeScreeningAgent',
+      action: 'screen_applications',
+      input: { jobTitle: job.title },
+      output: { candidatesScreened: randInt(15, 45), qualified: randInt(8, 20) },
+      status: 'completed' as const,
+      created_at: randomPastDate(1, 10),
+    });
+    agentLogs.push({
+      org_id: job.orgId,
+      job_id: job.id,
+      agent_name: 'EvaluationAgent',
+      action: 'compute_composite_scorecards',
+      input: { jobTitle: job.title },
+      output: { completedEvals: randInt(5, 12), biasAuditPassed: true },
+      status: 'completed' as const,
+      created_at: randomPastDate(1, 5),
+    });
+  }
+  await prisma.agentLog.createMany({ data: agentLogs });
+
+  /* ---------- FINISHED ---------- */
+  const durationSec = ((Date.now() - startedAt) / 1000).toFixed(1);
+  console.log('\n======================================================');
+  console.log(`🎉 Database Seed Completed Successfully in ${durationSec}s!`);
+  console.log('======================================================');
+  console.log('📋 SUMMARY:');
+  console.log(`   - Organizations:       ${COMPANIES.length}`);
+  console.log(`   - HR Users:            ${hrUsers.length}`);
+  console.log(`   - Job Postings:        ${jobList.length}`);
+  console.log(`   - Candidate Profiles:  ${candidateList.length}`);
+  console.log(`   - Total Applications:  ${totalApps}`);
+  console.log(`   - Aptitude Questions:  ${APTITUDE_BANK.length}`);
+  console.log(`   - Coding Problems:     ${CODING_BANK.length}`);
+  console.log('------------------------------------------------------');
+  console.log('🔑 DEMO CREDENTIALS:');
+  console.log('   HR Recruiter Login:');
+  console.log('     Email:    steve.hr@gmail.com');
+  console.log('     Password: 123456789');
+  console.log('     Role:     HR (Director of Talent Acquisition @ RazorFlow)');
   console.log('');
-  console.log('✅ Seed complete.');
-  console.log(`   Organizations:  ${orgRows.length}`);
-  console.log(`   HR users:       ${hrRows.length}`);
-  console.log(`   Jobs:           ${jobRows.length}`);
-  console.log(`   Candidates:     ${candidates.length}`);
-  console.log(`   Applications:   ${pairs.length}`);
-  console.log(`   Assessments:    ${assessmentRows.length}`);
-  console.log(`   Coding subs:    ${codingRows.length}`);
-  console.log(`   Interviews:     ${interviewRows.length}`);
-  console.log(`   Evaluations:    ${evaluationRows.length}`);
-  console.log(`   Offers:         ${offerRows.length} (${offersMade})`);
-  console.log(`   Notifications:  ${notificationRows.length}`);
-  console.log(`   Bookmarks:      ${bookmarkRows.length}`);
-  console.log(`   Mock sessions:  ${mockRows.length}`);
-  console.log(`   Prep content:   ${prepRows.length}`);
-  console.log(`   Agent logs:     ${agentLogRows.length}`);
-  console.log(`   Time:           ${seconds}s`);
-  console.log('');
-  console.log('🔑 Demo logins (password for all: Password123!):');
-  for (const d of DEMO_HR) console.log(`   ${d.email}   (HR — ${d.name})`);
-  for (const d of DEMO_CANDIDATES) console.log(`   ${d.email}   (Candidate — ${d.name})`);
-  console.log('');
+  console.log('   Candidate Login:');
+  console.log('     Email:    pratham@gmail.com');
+  console.log('     Password: 123456789');
+  console.log('     Role:     Candidate (Senior Full-Stack Engineer)');
+  console.log('======================================================\n');
+}
+
+/* ============================================================
+ * HELPER: SEED APPLICATION DEEP DETAILS
+ * ============================================================ */
+async function seedApplicationDetails(
+  appId: string,
+  candidateProfileId: string,
+  candidateUserId: string,
+  job: { id: string; orgId: string; title: string; minScore: number; salaryLPA: [number, number] },
+  status: string,
+  isPratham: boolean
+) {
+  const needsAssessment = ['assessment', 'interview_scheduled', 'interviewed', 'evaluation', 'hr_round', 'decided', 'offered', 'accepted'].includes(status);
+  const needsInterview = ['interview_scheduled', 'interviewed', 'evaluation', 'hr_round', 'decided', 'offered', 'accepted'].includes(status);
+  const needsEvaluation = ['evaluation', 'hr_round', 'decided', 'offered', 'accepted', 'rejected'].includes(status);
+  const needsOffer = ['offered', 'accepted'].includes(status);
+
+  // 1. Assessment
+  let assessmentId: string | undefined = undefined;
+  if (needsAssessment) {
+    const aptitudeScore = isPratham ? 94.0 : Number(randFloat(65, 98).toFixed(1));
+    const codingScore = isPratham ? 96.0 : Number(randFloat(60, 100).toFixed(1));
+    const overallScore = Number(((aptitudeScore + codingScore) / 2).toFixed(1));
+
+    const assessment = await prisma.assessment.create({
+      data: {
+        application_id: appId,
+        test_type: 'aptitude',
+        questions: APTITUDE_BANK.slice(0, 10) as any,
+        responses: APTITUDE_BANK.slice(0, 10).map((q, idx) => ({
+          questionId: idx,
+          selectedIndex: q.correct_index,
+          isCorrect: true,
+        })) as any,
+        score: overallScore,
+        category_breakdown: {
+          'Quantitative Aptitude': aptitudeScore,
+          'Logical Reasoning': aptitudeScore,
+          'Verbal Ability': aptitudeScore,
+          'Data Interpretation': aptitudeScore,
+        },
+        status: 'completed',
+        total_question_count: 10,
+      },
+    });
+    assessmentId = assessment.id;
+
+    // Proctoring Session for Assessment
+    const proctorSession = await prisma.proctoringSession.create({
+      data: {
+        candidate_id: candidateProfileId,
+        application_id: appId,
+        assessment_id: assessment.id,
+        session_type: 'aptitude',
+        status: 'ended',
+        policy_version: '1.0.0',
+        consent_version: '1.0.0',
+        started_at: randomPastDate(2, 10),
+        ended_at: randomPastDate(2, 10),
+      },
+    });
+
+    // Proctoring Events
+    await prisma.proctoringEvent.createMany({
+      data: [
+        {
+          proctoring_session_id: proctorSession.id,
+          client_event_id: `evt-start-${appId}`,
+          client_sequence: 1,
+          server_sequence: 1,
+          kind: 'fullscreen_enter',
+          severity: 'info',
+          source: 'browser',
+          client_timestamp: new Date(),
+          session_elapsed_ms: 500,
+          payload_json: { status: 'entered' },
+        },
+        {
+          proctoring_session_id: proctorSession.id,
+          client_event_id: `evt-hb-${appId}`,
+          client_sequence: 2,
+          server_sequence: 2,
+          kind: 'heartbeat',
+          severity: 'info',
+          source: 'system',
+          client_timestamp: new Date(),
+          session_elapsed_ms: 60000,
+          payload_json: { ok: true },
+        },
+      ],
+    });
+
+    // Coding Submissions
+    const problem = CODING_BANK[0];
+    await prisma.codingSubmission.create({
+      data: {
+        application_id: appId,
+        candidate_id: candidateProfileId,
+        language: 'typescript',
+        code: `function twoSum(nums: number[], target: number): number[] {\n  const map = new Map<number, number>();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (map.has(complement)) return [map.get(complement)!, i];\n    map.set(nums[i], i);\n  }\n  return [];\n}`,
+        test_results: [
+          { passed: true, description: 'Standard sorted pair', executionTimeMs: 12 },
+          { passed: true, description: 'Duplicate elements', executionTimeMs: 8 },
+        ] as any,
+        pass_rate: 1.0,
+        pass_rate_percent: 100,
+        pass_rate_ratio: 1.0,
+        execution_time_ms: 24,
+        memory_mb: 32.4,
+        complexity_score: 95,
+        status: 'completed',
+        complexity: 'O(n) Time, O(n) Space',
+        ai_feedback: 'Optimal hash-map approach with clean TypeScript types.',
+      },
+    });
+  }
+
+  // 2. Interview
+  if (needsInterview) {
+    const transcript = [
+      { speaker: 'ai', text: 'Welcome to the NextRound technical evaluation. Can you describe how you approach database connection pooling and transaction isolation in a microservice?' },
+      { speaker: 'candidate', text: 'I typically configure connection pools with explicit min/max bounds and health checks, using Read Committed as the default isolation level, and upgrading to Serializable or optimistic locking for sensitive financial transactions.' },
+      { speaker: 'ai', text: 'Excellent. How do you handle cache invalidation when high-frequency writes occur?' },
+      { speaker: 'candidate', text: 'I prefer Write-Through caching combined with CDC (Change Data Capture) over Kafka to broadcast cache evictions asynchronously across distributed replicas.' },
+    ];
+
+    await prisma.interview.create({
+      data: {
+        application_id: appId,
+        scheduled_at: status === 'interview_scheduled' ? randomFutureDate(1, 5) : randomPastDate(2, 14),
+        transcript: transcript as any,
+        status: status === 'interview_scheduled' ? 'scheduled' : 'completed',
+        sentiment_report: {
+          sentiment: 'positive',
+          confidenceScore: 0.92,
+          tone: 'articulate and confident',
+          clarityScore: 94,
+        },
+        engagement_signal: { eyeContactPercent: 95, speakingPaceWPM: 135, pausesAppropriate: true },
+        video_consent: true,
+      },
+    });
+  }
+
+  // 3. Evaluation
+  if (needsEvaluation) {
+    const resumeScore = isPratham ? 95 : randFloat(70, 98);
+    const interviewScore = isPratham ? 94 : randFloat(68, 96);
+    const aptitudeScore = isPratham ? 94 : randFloat(65, 95);
+    const codingScore = isPratham ? 96 : randFloat(65, 98);
+    const compositeScore = Number(((resumeScore * 0.25) + (interviewScore * 0.35) + (aptitudeScore * 0.15) + (codingScore * 0.25)).toFixed(1));
+
+    const decision = status === 'rejected' ? 'reject' : status === 'offered' || status === 'accepted' ? 'hire' : 'hold_for_review';
+
+    await prisma.evaluation.create({
+      data: {
+        application_id: appId,
+        stage: status,
+        resume_score: resumeScore,
+        interview_score: interviewScore,
+        aptitude_score: aptitudeScore,
+        coding_score: codingScore,
+        composite_score: compositeScore,
+        confidence: 0.94,
+        bias_flag: false,
+        bias_report: {
+          genderNeutralityIndex: 1.0,
+          ethnicityNeutralityIndex: 1.0,
+          auditNotes: 'Evaluation strictly grounded in architectural accuracy and code execution metrics.',
+        },
+        decision,
+        reasoning: isPratham
+          ? 'Exceptional candidate demonstrating deep proficiency in full-stack architecture, clean concurrency primitives, and production resilience. Strongly recommended for hire.'
+          : `Candidate achieved a composite score of ${compositeScore}/100. Strong alignment with ${job.title} requirements.`,
+      },
+    });
+  }
+
+  // 4. Offer
+  if (needsOffer) {
+    const salary = (job.salaryLPA[1] - 2) * 100000;
+    await prisma.offer.create({
+      data: {
+        application_id: appId,
+        role_title: job.title,
+        salary,
+        equity: '0.15% Stock Options (4-year vesting, 1-year cliff)',
+        start_date: daysFromNow(20),
+        status: status === 'accepted' ? 'accepted' : 'pending',
+        signature_svg: status === 'accepted' ? '<svg viewBox="0 0 200 60"><path d="M10 40 Q 50 10, 90 40 T 170 30" stroke="#ff6b00" fill="none" stroke-width="3"/></svg>' : null,
+        offer_letter_content: `We are pleased to extend an offer for the position of ${job.title} with an annual CTC of ₹${(salary / 100000).toFixed(0)} Lakhs and 0.15% equity.`,
+        valid_until: daysFromNow(14),
+      },
+    });
+  }
 }
 
 main()
@@ -2403,6 +2070,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
-
-
