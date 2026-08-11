@@ -1728,6 +1728,95 @@ async function main(): Promise<void> {
     });
   }
 
+  // Seed Resume Builder sessions for Pratham to display real completed resumes
+  console.log('📄 Seeding completed Resume Builder history for Pratham...');
+  const resumeDetails = {
+    name: 'Pratham Rajbhar',
+    title: 'Senior Full-Stack Engineer & Distributed AI Architect',
+    email: 'pratham@gmail.com',
+    phone: '+91 98192 83746',
+    location: 'Bengaluru, India',
+    linkedin: 'linkedin.com/in/prathamrajbhar',
+    github: 'github.com/prathamrajbhar',
+    portfolio: 'prathamrajbhar.dev',
+    summary: 'Full-stack software architect with 5.5+ years building distributed cloud platforms, real-time web applications, and autonomous AI agents. Expertise in TypeScript, Next.js, Go/Node.js, PostgreSQL optimization, and high-performance WebGL interfaces.',
+    skills: ['TypeScript', 'Next.js', 'React', 'Node.js', 'Go', 'PostgreSQL', 'Redis', 'Kafka', 'Docker', 'Kubernetes', 'AWS', 'System Design'],
+    experience: [
+      {
+        role: 'Senior Full-Stack Engineer',
+        company: 'RazorFlow Technologies',
+        period: '2024 - Present',
+        location: 'Bengaluru, India',
+        highlights: [
+          'Architected real-time merchant onboarding system handling 2M+ active global transactions.',
+          'Reduced page-load latency by 45% using React Server Components and fine-grained caching.',
+          'Built distributed event streaming pipeline using Kafka and Go microservices for fast reconciliations.'
+        ]
+      },
+      {
+        role: 'Software Engineer II',
+        company: 'NexusCloud Labs',
+        period: '2021 - 2024',
+        location: 'Hyderabad, India',
+        highlights: [
+          'Led team of 4 engineers to design multi-tenant GPU serverless container platforms.',
+          'Optimized database indices and connection pooling, reducing query latencies by 35% on PostgreSQL.',
+          'Authored custom WebGL component library for real-time cluster visualization.'
+        ]
+      }
+    ],
+    projects: [
+      {
+        title: 'NextRound Interview Platform',
+        techStack: ['Next.js', 'TypeScript', 'FastAPI', 'PostgreSQL'],
+        description: 'An end-to-end AI hiring platform featuring proctoring telemetry, automated voice interviews, and code execution runners.',
+        impact: 'Empowered recruiting teams to reduce screening cycles from 3 weeks to under 4 hours.'
+      }
+    ],
+    education: [
+      {
+        degree: 'Bachelor of Technology in Computer Science',
+        institution: 'Indian Institute of Information Technology (IIIT)',
+        year: '2021',
+        gpa: '9.1/10'
+      }
+    ]
+  };
+
+  await prisma.mockSession.create({
+    data: {
+      candidate_id: prathamProfile.id,
+      target_company: 'RazorFlow Technologies',
+      target_role: 'Senior Full-Stack Engineer',
+      difficulty: 'hard',
+      type: 'resume_builder',
+      status: 'completed',
+      started_at: daysAgo(2),
+      completed_at: daysAgo(2),
+      final_score: 95.0,
+      generated_resume: resumeDetails as any,
+    },
+  });
+
+  await prisma.mockSession.create({
+    data: {
+      candidate_id: prathamProfile.id,
+      target_company: 'NexusCloud Labs',
+      target_role: 'Senior AI Systems Architect',
+      difficulty: 'hard',
+      type: 'resume_builder',
+      status: 'completed',
+      started_at: daysAgo(6),
+      completed_at: daysAgo(6),
+      final_score: 92.0,
+      generated_resume: {
+        ...resumeDetails,
+        title: 'Senior AI Systems Architect',
+        target_company: 'NexusCloud Labs',
+      } as any,
+    },
+  });
+
   // Prep content for top companies
   for (const company of COMPANIES.slice(0, 6)) {
     await prisma.prepContent.create({
