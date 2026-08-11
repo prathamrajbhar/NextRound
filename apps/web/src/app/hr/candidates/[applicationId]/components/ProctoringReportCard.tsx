@@ -107,8 +107,6 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
         return 'Telemetry Gap / Reconnects';
       case 'media_track_disabled':
         return 'Media Track Interruption';
-      case 'screenshare_disabled':
-        return 'Screen Sharing Disabled';
       default:
         return code.replace(/_/g, ' ');
     }
