@@ -55,9 +55,11 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
   // Audio level animation during mic test
   useEffect(() => {
     let animationFrameId: number;
+    let localStream: MediaStream | null = null;
     if (micTesting) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then((stream) => {
+          localStream = stream;
           const audioContext = new AudioContext();
           const analyser = audioContext.createAnalyser();
           const microphone = audioContext.createMediaStreamSource(stream);
@@ -81,6 +83,9 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
     }
     return () => {
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (localStream) {
+        localStream.getTracks().forEach((track) => track.stop());
+      }
       setAudioLevel(0);
     };
   }, [micTesting]);

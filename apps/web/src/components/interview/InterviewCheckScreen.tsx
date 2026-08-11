@@ -298,6 +298,21 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
 
   const launch = () => {
     if (!bypassed && !(consentFullscreen && consentCameraMic && consentAudioAnalysis && consentFaceDetection)) return;
+    
+    // Stop microphone check stream and visualizer immediately to avoid leakage
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    analyserRef.current = null;
+    audioCtxRef.current?.close().catch(() => {});
+    audioCtxRef.current = null;
+    setMicLevel(0);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+
     if (!bypassed && document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {});
     }

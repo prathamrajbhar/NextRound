@@ -61,9 +61,11 @@ function MockInterviewSetupForm() {
     let analyser: AnalyserNode | null = null;
     let microphone: MediaStreamAudioSourceNode | null = null;
     let rafId: number | null = null;
+    let localStream: MediaStream | null = null;
 
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then((stream) => {
+        localStream = stream;
         audioContext = new AudioContext();
         analyser = audioContext.createAnalyser();
         microphone = audioContext.createMediaStreamSource(stream);
@@ -95,6 +97,9 @@ function MockInterviewSetupForm() {
       if (rafId) cancelAnimationFrame(rafId);
       if (microphone) microphone.disconnect();
       if (audioContext) audioContext.close();
+      if (localStream) {
+        localStream.getTracks().forEach((track) => track.stop());
+      }
     };
   }, [micActive]);
 

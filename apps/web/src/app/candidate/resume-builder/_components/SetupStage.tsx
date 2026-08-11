@@ -57,10 +57,12 @@ export function SetupStage({
     let analyser: AnalyserNode | null = null;
     let microphone: MediaStreamAudioSourceNode | null = null;
     let rafId: number | null = null;
+    let localStream: MediaStream | null = null;
 
     if (micTesting) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then((stream) => {
+          localStream = stream;
           audioContext = new AudioContext();
           analyser = audioContext.createAnalyser();
           microphone = audioContext.createMediaStreamSource(stream);
@@ -88,6 +90,9 @@ export function SetupStage({
       if (rafId) cancelAnimationFrame(rafId);
       if (microphone) microphone.disconnect();
       if (audioContext) audioContext.close();
+      if (localStream) {
+        localStream.getTracks().forEach((track) => track.stop());
+      }
       setAudioLevel(0);
     };
   }, [micTesting]);
