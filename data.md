@@ -128,7 +128,7 @@ Source: `packages/database/prisma/schema.prisma`
 | status | Enum | pending/in_progress/completed/expired |
 | created_at | DateTime | Created date |
  
-## AptitudeQuestion *(static bank)*
+## AptitudeQuestion
 | Field | Type | Description |
 |---|---|---|
 | id | UUID | Primary key |
@@ -139,7 +139,7 @@ Source: `packages/database/prisma/schema.prisma`
 | correct_index | Int | Correct answer (server-only) |
 | is_active | Boolean | In use? |
  
-## CodingProblem *(static bank)*
+## CodingProblem
 | Field | Type | Description |
 |---|---|---|
 | id | UUID | Primary key |
