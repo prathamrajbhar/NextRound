@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { siteConfig } from '@/lib/config';
+import { playAudio, stopAudio, unlockAudio, replayLastAudio as replayAudioManager } from '@/lib/audioManager';
 
 export interface ConversationTurn {
   role: 'ai' | 'candidate';
@@ -96,9 +97,6 @@ export function useResumeVoiceSession({
   const turnIndexRef = useRef(0);
   const stageRef = useRef('intro');
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const lastAudioUrlRef = useRef<string | null>(null);
-  const lastTextRef = useRef<string>('');
 
   // Keep refs in sync
   useEffect(() => {
@@ -113,32 +111,10 @@ export function useResumeVoiceSession({
     stageRef.current = stage;
   }, [stage]);
 
-  // Unlock web audio on user interaction
-  const unlockAudio = useCallback(() => {
-    try {
-      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      if (AudioCtx) {
-        const ctx = new AudioCtx();
-        ctx.resume().then(() => ctx.close()).catch(() => {});
-      }
-      if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
   // Clean up speech synthesis & recognition & audio on unmount
   useEffect(() => {
     return () => {
-      if (typeof window !== 'undefined') {
-        window.speechSynthesis?.cancel();
-      }
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
+      stopAudio();
       const recognition = recognitionRef.current;
       if (recognition) {
         try {
@@ -152,109 +128,19 @@ export function useResumeVoiceSession({
 
   // Text-To-Speech function with neural audio support
   const speakText = useCallback((text: string, audioUrl?: string, callback?: () => void) => {
-    lastTextRef.current = text;
-    if (audioUrl) {
-      lastAudioUrlRef.current = audioUrl;
-    }
-
-    // Cancel any active audio playback
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-
     setAiState('speaking');
-
-    // 1. If neural audio URL is provided, play it on the pre-unlocked object
-    if (audioUrl) {
-      try {
-        const playableUrl = dataUriToBlobUrl(audioUrl);
-        
-        if (!audioRef.current) {
-          audioRef.current = new Audio();
-        }
-        const audio = audioRef.current;
-        audio.src = playableUrl;
-        audio.volume = 1.0;
-
-        audio.onended = () => {
-          setAiState('listening');
-          if (callback) callback();
-        };
-
-        audio.onerror = (e) => {
-          console.warn('Neural audio playback failed, falling back to speech synthesis:', e);
-          fallbackSynthesis(text, callback);
-        };
-
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            console.warn('Autoplay prevented neural audio, falling back to speech synthesis:', err);
-            fallbackSynthesis(text, callback);
-          });
-        }
-        return;
-      } catch (err) {
-        console.warn('Audio construction failed, falling back:', err);
-      }
-    }
-
-    // 2. Fallback to Web Speech API
-    fallbackSynthesis(text, callback);
+    playAudio(text, audioUrl, () => {
+      setAiState('listening');
+      if (callback) callback();
+    });
   }, []);
 
-  const fallbackSynthesis = (text: string, callback?: () => void) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      setAiState('listening');
-      if (callback) callback();
-      return;
-    }
-
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      const voices = window.speechSynthesis.getVoices();
-      const targetVoice = voices.find(
-        (v) =>
-          v.lang.startsWith('en') &&
-          (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Microsoft'))
-      );
-      if (targetVoice) utterance.voice = targetVoice;
-      
-      utterance.rate = 1.0;
-      utterance.pitch = 1.0;
-      utterance.volume = 1.0;
-
-      utterance.onend = () => {
-        setAiState('listening');
-        if (callback) callback();
-      };
-
-      utterance.onerror = (_e) => {
-        console.warn('SpeechSynthesis error:', _e);
-        setAiState('listening');
-        if (callback) callback();
-      };
-
-      if (window.speechSynthesis.paused) {
-        window.speechSynthesis.resume();
-      }
-
-      window.speechSynthesis.speak(utterance);
-    } catch {
-      setAiState('listening');
-      if (callback) callback();
-    }
-  };
-
   const replayLastAudio = useCallback(() => {
-    if (lastTextRef.current) {
-      speakText(lastTextRef.current, lastAudioUrlRef.current || undefined);
-    }
-  }, [speakText]);
+    setAiState('speaking');
+    replayAudioManager(() => {
+      setAiState('listening');
+    });
+  }, []);
 
   // Speech-To-Text Stop function
   const stopSpeechRecognition = useCallback(() => {
@@ -428,16 +314,6 @@ export function useResumeVoiceSession({
 
   // Initialize call
   const startCall = useCallback(async () => {
-    // Synchronously create and play/pause silent tick to unlock the Audio element inside the user gesture
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
-    }
-    const audio = audioRef.current;
-    audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP//';
-    audio.play().then(() => {
-      audio.pause();
-    }).catch(() => {});
-
     unlockAudio();
     setError(null);
     setConversationHistory([]);
@@ -485,10 +361,7 @@ export function useResumeVoiceSession({
   // End call early (manual click)
   const endCall = useCallback(async () => {
     if (!sessionId) return;
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    window.speechSynthesis?.cancel();
+    stopAudio();
     await handleFinalize(sessionId, conversationHistoryRef.current);
   }, [sessionId, handleFinalize]);
 
