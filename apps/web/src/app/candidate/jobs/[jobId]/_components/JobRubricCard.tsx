@@ -4,11 +4,31 @@ import React from 'react';
 import { Award } from '@/lib/lucide-google-icons';
 
 interface JobRubricCardProps {
-  rubric: Record<string, { weight: number; description: string }>;
+  rubric: Record<string, { weight: number; description: string }> | {
+    technical: number;
+    communication: number;
+    problemSolving: number;
+    experience: number;
+  };
 }
 
 export function JobRubricCard({ rubric }: JobRubricCardProps) {
   if (!rubric || typeof rubric !== 'object') return null;
+
+  let displayRubric: Record<string, { weight: number; description: string }> = {};
+
+  const keys = Object.keys(rubric);
+  if (keys.length > 0 && typeof rubric[keys[0] as keyof typeof rubric] === 'number') {
+    const r = rubric as { technical: number; communication: number; problemSolving: number; experience: number };
+    displayRubric = {
+      technicalSkills: { weight: r.technical || 0, description: 'Coding correctness, logic efficiency, and database query modeling.' },
+      communication: { weight: r.communication || 0, description: 'Verbal articulation, speech pacing, logic structure, and vocabulary.' },
+      systemDesign: { weight: r.problemSolving || 0, description: 'High-level architecture, scalability planning, and fault tolerance.' },
+      cultureFit: { weight: r.experience || 0, description: 'Work experience history, behavioral STAR answers, and cultural alignment.' }
+    };
+  } else {
+    displayRubric = rubric as Record<string, { weight: number; description: string }>;
+  }
 
   const getTitle = (key: string) => {
     switch (key) {
@@ -49,7 +69,7 @@ export function JobRubricCard({ rubric }: JobRubricCardProps) {
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {Object.entries(rubric).map(([key, val]) => {
+        {Object.entries(displayRubric).map(([key, val]) => {
           if (!val || typeof val !== 'object') return null;
           const { weight, description } = val;
           const pct = Math.round(weight * 100);

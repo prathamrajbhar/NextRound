@@ -23,6 +23,25 @@ export interface GeneratedResumeData {
     highlights?: string[];
   }>;
   skills?: string[];
+  linkedin?: string;
+  github?: string;
+  portfolio?: string;
+  projects?: Array<{
+    title?: string;
+    name?: string;
+    techStack?: string[];
+    tech_stack?: string[];
+    description?: string;
+    impact?: string;
+  }>;
+  education?: Array<{
+    degree?: string;
+    institution?: string;
+    year?: string;
+    dates?: string;
+    gpa?: string;
+  }>;
+  certifications?: string[];
 }
 
 export interface ResumeItem {

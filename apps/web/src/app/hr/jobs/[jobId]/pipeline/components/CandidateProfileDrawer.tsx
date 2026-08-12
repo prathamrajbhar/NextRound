@@ -357,10 +357,10 @@ export default function CandidateProfileDrawer({
               <span>Resume PDF</span>
             </button>
             <Link
-              href={`/hr/candidates/${app.id}`}
+              href={`/hr/candidates/${app.id}/scoring`}
               className="px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold flex items-center gap-1.5 transition-all border border-slate-200 dark:border-slate-700 shadow-2xs"
             >
-              <span>Full Report</span>
+              <span>Scoring Report</span>
               <ExternalLink className="h-3.5 w-3.5" />
             </Link>
           </div>
