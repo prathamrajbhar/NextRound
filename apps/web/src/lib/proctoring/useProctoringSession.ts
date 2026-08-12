@@ -33,6 +33,14 @@ export function useProctoringSession({
   const [proctoringClient, setProctoringClient] = useState<ProctoringClient | null>(null);
   const clientRef = useRef<ProctoringClient | null>(null);
 
+  const onViolationDetectedRef = useRef(onViolationDetected);
+  const onDisqualifiedRef = useRef(onDisqualified);
+
+  useEffect(() => {
+    onViolationDetectedRef.current = onViolationDetected;
+    onDisqualifiedRef.current = onDisqualified;
+  }, [onViolationDetected, onDisqualified]);
+
   useEffect(() => {
     if (!sessionId || !candidateId) return;
 
@@ -57,12 +65,12 @@ export function useProctoringSession({
             const next = prev + 1;
             setShowWarningModal(true);
             if (next >= 3) {
-              onDisqualified?.();
+              onDisqualifiedRef.current?.();
             }
             return next;
           });
         }
-        onViolationDetected?.(kind);
+        onViolationDetectedRef.current?.(kind);
       },
     });
 
@@ -85,8 +93,6 @@ export function useProctoringSession({
     assessmentId,
     policyVersion,
     consentVersion,
-    onViolationDetected,
-    onDisqualified,
   ]);
 
   const handleResumeFullscreen = () => {
