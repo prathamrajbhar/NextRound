@@ -198,7 +198,7 @@ export async function listOrgApplications(orgId: string, jobId?: string) {
 
 /** GET /:id — single application with the Scheduler Agent's real slot proposals. */
 export async function getApplication(appId: string, user: AppUserCtx) {
-  const application = await prisma.application.findUnique({
+  let application = await prisma.application.findUnique({
     where: { id: appId },
     include: {
       job: {
@@ -220,12 +220,46 @@ export async function getApplication(appId: string, user: AppUserCtx) {
   });
 
   if (!application) {
+    const candidateProfile = await prisma.candidateProfile.findUnique({
+      where: { id: appId },
+      include: {
+        user: { select: { id: true, email: true } },
+      },
+    });
+
+    if (candidateProfile) {
+      application = {
+        id: candidateProfile.id,
+        candidate_id: candidateProfile.id,
+        job_id: '',
+        status: 'applied',
+        hr_round_status: null,
+        hr_round_scheduled_at: null,
+        hr_round_completed_at: null,
+        applied_at: candidateProfile.created_at,
+        candidate: candidateProfile,
+        job: {
+          id: '',
+          title: 'Talent Pool Profile',
+          org_id: user.orgId || '',
+          organization: { id: user.orgId || '', name: 'Talent Pool', logo_url: null },
+        },
+        evaluations: [],
+        interview: null,
+        assessments: [],
+        coding_submissions: [],
+        offer: null,
+      } as any;
+    }
+  }
+
+  if (!application) {
     throw notFound('Application not found');
   }
 
   // Multi-tenant RBAC check
   if (user.role === 'hr') {
-    if (!user.orgId || application.job.org_id !== user.orgId) {
+    if (application.job_id && (!user.orgId || application.job.org_id !== user.orgId)) {
       throw forbidden('Forbidden: Access denied to application');
     }
   } else if (user.role === 'candidate') {
