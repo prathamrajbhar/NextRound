@@ -46,7 +46,8 @@ type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
 const SpeechRecognitionClass =
   typeof window !== 'undefined'
     ? ((window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).SpeechRecognition ||
-       (window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition);
+       (window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition)
+    : null;
 function dataUriToBlobUrl(dataUri: string): string {
   try {
     if (!dataUri.startsWith('data:')) return dataUri;
