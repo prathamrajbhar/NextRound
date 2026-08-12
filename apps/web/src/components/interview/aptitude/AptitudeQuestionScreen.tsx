@@ -6,6 +6,7 @@ import { AptitudeQuestion } from './useAptitudeQuestions';
 import { AptitudeNavigator } from './AptitudeNavigator';
 import { AptitudeQuestionHeader } from './AptitudeQuestionHeader';
 import { ProctoringWarningModal } from '../ProctoringWarningModal';
+import { useToast } from '@/contexts/ToastContext';
 
 interface AptitudeQuestionScreenProps {
   companyName: string;
@@ -55,8 +56,23 @@ export function AptitudeQuestionScreen({
   onResumeFullscreen,
   onEliminate,
 }: AptitudeQuestionScreenProps) {
+  const { toast } = useToast();
   const currentQ = questions[currentIndex];
   const questionCount = questions.length;
+
+  React.useEffect(() => {
+    if (currentQ) {
+      const correctIdx = currentQ.correctIndex !== undefined ? currentQ.correctIndex : (currentQ as any).correct_index;
+      if (typeof correctIdx === 'number' && correctIdx >= 0) {
+        const optionLetter = String.fromCharCode(65 + correctIdx);
+        toast({
+          title: `Question ${currentIndex + 1} Answer`,
+          description: `Correct Option: ${optionLetter} - ${currentQ.options[correctIdx]}`,
+          variant: 'info',
+        });
+      }
+    }
+  }, [currentQ, currentIndex, toast]);
 
   return (
     <div className="w-full h-full flex flex-col justify-between p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans relative overflow-hidden transition-colors duration-300">

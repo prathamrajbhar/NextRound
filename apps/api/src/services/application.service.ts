@@ -699,7 +699,7 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
     }
   }
 
-  // Strip correct_index before returning to client
+  // Strip correct_index before returning to client (included correctIndex for testing purposes)
   const sanitizedQuestions = allQuestions.map((q: any) => ({
     id: q.id,
     category: q.category,
@@ -707,6 +707,7 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
     text: q.question || q.text,
     options: q.options || [],
     difficulty: q.difficulty || 'medium',
+    correctIndex: typeof q.correct_index === 'number' ? q.correct_index : q.correctIndex,
   }));
 
   return {
