@@ -300,6 +300,17 @@ export function serializeApplication(app: Rec, options?: { scheduledSlots?: stri
     audioUrl: interview?.audio_url || undefined,
     proctorFlags: serializeInterview(interview)?.proctorFlags,
     engagementSignal: serializeInterview(interview)?.engagementSignal,
+    assessments: Array.isArray(app.assessments)
+      ? app.assessments.map((a: any) => ({
+          id: a.id,
+          applicationId: a.application_id || '',
+          assessmentName: a.test_type === 'aptitude' ? 'Aptitude Assessment' : 'Coding Assessment',
+          category: a.test_type === 'aptitude' ? 'aptitude' : 'coding',
+          status: a.status === 'in_progress' ? 'in_progress' : a.status === 'completed' ? 'completed' : 'not_started',
+          completedDate: a.created_at ? new Date(a.created_at).toISOString() : undefined,
+          overallScore: typeof a.score === 'number' ? a.score : undefined,
+        }))
+      : undefined,
     scheduledSlots:
       options?.scheduledSlots && options.scheduledSlots.length > 0 ? options.scheduledSlots : undefined,
   };
