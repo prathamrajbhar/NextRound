@@ -111,6 +111,17 @@ export function useResumeVoiceSession({
     stageRef.current = stage;
   }, [stage]);
 
+  const candidateSpeechTextRef = useRef('');
+  const aiStateRef = useRef<'speaking' | 'listening' | 'evaluating'>('speaking');
+
+  useEffect(() => {
+    candidateSpeechTextRef.current = candidateSpeechText;
+  }, [candidateSpeechText]);
+
+  useEffect(() => {
+    aiStateRef.current = aiState;
+  }, [aiState]);
+
   // Clean up speech synthesis & recognition & audio on unmount
   useEffect(() => {
     return () => {
@@ -178,14 +189,19 @@ export function useResumeVoiceSession({
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interimTranscript = '';
       let finalTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
+        const transcript = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
         }
       }
-      if (finalTranscript) {
-        setCandidateSpeechText(finalTranscript);
+      const displayTranscript = finalTranscript || interimTranscript;
+      if (displayTranscript) {
+        setCandidateSpeechText(displayTranscript);
       }
     };
 
@@ -202,7 +218,20 @@ export function useResumeVoiceSession({
     };
 
     recognition.onend = () => {
-      // End callback
+      // Auto-submit the voice response if we have accumulated transcript text during listening stage
+      if (aiStateRef.current === 'listening') {
+        const spokenText = candidateSpeechTextRef.current;
+        if (spokenText && spokenText.trim().length > 1) {
+          submitResponse(spokenText);
+        } else {
+          // Restart recognition to keep listening if they didn't speak anything yet
+          try {
+            recognitionRef.current?.start();
+          } catch {
+            // ignore
+          }
+        }
+      }
     };
 
     try {
@@ -210,7 +239,7 @@ export function useResumeVoiceSession({
     } catch (e) {
       console.error('Failed to start SpeechRecognition:', e);
     }
-  }, [micActive]);
+  }, [micActive, submitResponse]);
 
   // Finalize call
   const handleFinalize = useCallback(
