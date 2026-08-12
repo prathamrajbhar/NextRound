@@ -169,9 +169,9 @@ export function GeneralSettingsTab({
 
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Anonymize Demographic Resumes</span>
+                <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Anonymize Candidate Resumes</span>
                 <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium block">
-                  Hide candidate names and locations for Double-Pass Bias Norm Compliance
+                  Hide candidate names and personal contact details during early review
                 </span>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">

@@ -3,7 +3,6 @@
 import React from 'react';
 import {
   Video,
-  Camera,
   Activity,
   Volume2,
   Sparkles,
@@ -23,7 +22,6 @@ interface ConsoleHeaderProps {
   phase?: string;
   isAnalyzing: boolean;
   aiSpeaking: boolean;
-  isRecording: boolean;
   proctorTelemetry?: ProctorTelemetry;
   timeLabel: string;
   showTranscriptToggle: boolean;
@@ -34,7 +32,6 @@ interface ConsoleHeaderProps {
 
 function getStatusBadge(
   mode: InterviewConsoleMode,
-  isRecording: boolean,
   isAnalyzing: boolean,
   aiSpeaking: boolean
 ): { text: string; bg: string; dot: string; icon: React.ReactNode } {
@@ -44,14 +41,6 @@ function getStatusBadge(
       bg: 'bg-emerald-950/80 border-emerald-700/60 text-emerald-300',
       dot: 'bg-emerald-400 animate-pulse',
       icon: <Video className="h-3.5 w-3.5 text-emerald-400" />,
-    };
-  }
-  if (mode === 'video-screening') {
-    return {
-      text: isRecording ? 'Recording Response...' : 'Video Screening Console',
-      bg: isRecording ? 'bg-rose-950/80 border-rose-700/60 text-rose-300' : 'bg-slate-900/90 border-slate-700 text-slate-300',
-      dot: isRecording ? 'bg-rose-500 animate-ping' : 'bg-brand-500',
-      icon: <Camera className="h-3.5 w-3.5 text-rose-400" />,
     };
   }
   if (isAnalyzing) {
@@ -89,7 +78,6 @@ export function ConsoleHeader({
   phase,
   isAnalyzing,
   aiSpeaking,
-  isRecording,
   proctorTelemetry,
   timeLabel,
   showTranscriptToggle,
@@ -97,7 +85,7 @@ export function ConsoleHeader({
   onToggleTranscript,
   onToggleFullscreen,
 }: ConsoleHeaderProps) {
-  const status = getStatusBadge(mode, isRecording, isAnalyzing, aiSpeaking);
+  const status = getStatusBadge(mode, isAnalyzing, aiSpeaking);
 
   return (
     <header className="h-16 border-b border-slate-200 dark:border-slate-800/80 bg-white/90 dark:bg-slate-950/90 px-4 sm:px-6 flex items-center justify-between z-30 flex-shrink-0 backdrop-blur-md shadow-sm dark:shadow-lg">

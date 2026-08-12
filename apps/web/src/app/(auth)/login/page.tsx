@@ -30,7 +30,7 @@ const BENEFITS: AuthBenefit[] = [
   },
   {
     icon: Activity,
-    title: 'Live, bias-audited scorecards',
+    title: 'Live multi-stage scorecards',
     description: 'Follow structured evaluations in real time as every candidate progresses.',
   },
   {
@@ -88,7 +88,7 @@ export default function LoginPage() {
           Your hiring pipeline, <span className="text-orange-400">in one place.</span>
         </>
       }
-      sub="Sourcing, AI screening, voice interviews and bias-audited decisions — all managed from a single workspace."
+      sub="Sourcing, AI screening, voice interviews and automated decisions — all managed from a single workspace."
       benefits={BENEFITS}
     >
       <div className="space-y-6">

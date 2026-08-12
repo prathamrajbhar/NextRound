@@ -110,27 +110,6 @@ export const CodingResultSchema = z
   })
   .passthrough();
 
-/** PATCH /applications/:id/video-transcript */
-export const VideoTranscriptSchema = z
-  .object({
-    transcript: z.unknown().optional(),
-    key_points: z.array(z.unknown()).optional(),
-    video_url: z.string().optional(),
-  })
-  .passthrough();
-
-/** POST /applications/:id/video-screening-result */
-export const VideoScreeningResultSchema = z
-  .object({
-    submitted: nullable(z.boolean()),
-    score: nullable(z.number()),
-    passed: nullable(z.boolean()),
-    feedback: nullable(z.string()),
-    key_strengths: z.array(z.string()).optional(),
-    weaknesses: z.array(z.string()).optional(),
-  })
-  .passthrough();
-
 /** PATCH /interviews/:id/result */
 export const InterviewResultSchema = z
   .object({
@@ -157,7 +136,6 @@ export const FinalEvaluationSchema = z
     application_id: nullable(z.string()),
     composite_score: nullable(z.number()),
     confidence: nullable(z.number()),
-    bias_report: z.unknown().optional(),
     reasoning: nullable(z.string()),
   })
   .passthrough();

@@ -220,26 +220,6 @@ applicationRouter.get(
   })
 );
 
-// GET /api/v1/applications/:id/assessment/video-prompts - Fetch video screening prompts
-applicationRouter.get(
-  '/:id/assessment/video-prompts',
-  authenticate,
-  requireRole('candidate'),
-  asyncHandler(async (req, res) => {
-    ok(res, await applicationService.getVideoPrompts(req.params.id as string, req.user!.userId));
-  })
-);
-
-// POST /api/v1/applications/:id/assessment/video - Submit recorded video screening answer
-applicationRouter.post(
-  '/:id/assessment/video',
-  authenticate,
-  requireRole('candidate'),
-  asyncHandler(async (req, res) => {
-    ok(res, await applicationService.submitVideo(req.params.id as string, req.user!.userId, req.body));
-  })
-);
-
 // POST /api/v1/applications/:id/reschedule - Reschedule interview request
 // NOTE: legacy top-level message shape (no data envelope) preserved as-is.
 applicationRouter.post(

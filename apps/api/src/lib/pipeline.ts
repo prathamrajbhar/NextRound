@@ -36,16 +36,15 @@ function boolFlag(cfg: Record<string, unknown>, key: string, fallback: boolean):
 
 /**
  * Enabled assessment modalities are driven by Job config toggles
- * (aptitude_enabled / coding_enabled / video_screening_enabled).
+ * (aptitude_enabled / coding_enabled).
  * Missing flags default to enabled so the pipeline always moves forward.
  */
-function enabledModalities(job: JobLike): { aptitude: boolean; coding: boolean; video: boolean } {
+function enabledModalities(job: JobLike): { aptitude: boolean; coding: boolean } {
   const cfg = isObject(job.assessmentConfig) ? job.assessmentConfig : {};
   const thr = isObject(job.thresholds) ? job.thresholds : {};
   return {
     aptitude: boolFlag(cfg, 'aptitude_enabled', true) || boolFlag(thr, 'aptitude_enabled', false),
     coding: boolFlag(cfg, 'coding_enabled', true) || boolFlag(thr, 'coding_enabled', false),
-    video: boolFlag(cfg, 'video_screening_enabled', true) || boolFlag(thr, 'video_screening_enabled', false),
   };
 }
 
@@ -131,15 +130,10 @@ export async function advanceAssessmentStage(applicationId: string): Promise<str
 
   const aptitudeDone = evalRow != null && typeof evalRow.aptitude_score === 'number';
   const codingDone = evalRow != null && typeof evalRow.coding_score === 'number';
-  const videoDone =
-    evalRow != null &&
-    isObject(evalRow.bias_report) &&
-    typeof evalRow.bias_report.video_score === 'number';
 
   const allDone =
     (enabled.aptitude ? aptitudeDone : true) &&
-    (enabled.coding ? codingDone : true) &&
-    (enabled.video ? videoDone : true);
+    (enabled.coding ? codingDone : true);
 
   if (!allDone) return null;
 

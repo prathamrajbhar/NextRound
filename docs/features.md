@@ -22,7 +22,7 @@ End-to-end feature reference for NextRound's AI hiring pipeline, candidate porta
 **Config-driven fields on `Job`:**
 - `rubric` (JSON): dimension names, weights (must sum to 100)
 - `thresholds` (JSON): minimum passing score per stage, auto-offer threshold
-- Pipeline toggles: `aptitude_enabled`, `coding_enabled`, `video_screening_enabled`, `auto_offer`
+- Pipeline toggles: `aptitude_enabled`, `coding_enabled`, `auto_offer`
 
 ---
 
@@ -151,20 +151,6 @@ The Interviewer Agent replaces static question scripts with a fully adaptive dia
 
 **DB records modified:** `CodingSubmission` (code, language, test_results, pass_rate), `Assessment`, `AgentLog`
 
-### 6.3 Video Screening Console
-**Route:** `/candidate/applications/:applicationId/video-screening`
-
-- Asynchronous video prompt responses — candidates record video answers to 2–4 prompt questions on their own schedule.
-- Camera preview, recording controls, and auto-transcription of recorded responses.
-- MediaPipe proctoring HUD active during recording.
-- Recorded video is uploaded to storage service. Auto-transcription is used for downstream evaluation.
-
-**Queue:** `assessment-queue` (video transcript scoring)
-
-**Internal callback:** `PATCH /api/v1/internal/applications/:id/video-screening-result`
-
-**DB records modified:** `Assessment` (video transcript, score), `AgentLog`
-
 ---
 
 ## 7. Evaluator Agent
@@ -191,7 +177,7 @@ The Interviewer Agent replaces static question scripts with a fully adaptive dia
 **Surface:** HR — `/hr/interview/:applicationId` | Candidate — `/candidate/hr-round/:applicationId`
 
 **What it does:**
-- After all automated AI assessment stages pass the job's configured thresholds (aptitude, coding, video screening, voice interview), a live 1:1 video call is scheduled between the candidate and an HR representative.
+- After all automated AI assessment stages pass the job's configured thresholds (aptitude, coding, voice interview), a live 1:1 video call is scheduled between the candidate and an HR representative.
 - No AI agent participates in or scores this round. It is purely a human interaction.
 - The candidate joins a WebRTC waiting room with a hardware pre-check (camera preview, mic volume meter) before the HR representative admits them.
 - HR conducts the video call and submits a Pass or Fail decision via the evaluation form in the HR Video Call Console.

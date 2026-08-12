@@ -2288,8 +2288,6 @@ export const EvaluationScalarFieldEnum = {
   coding_score: 'coding_score',
   composite_score: 'composite_score',
   confidence: 'confidence',
-  bias_flag: 'bias_flag',
-  bias_report: 'bias_report',
   decision: 'decision',
   reasoning: 'reasoning',
   created_at: 'created_at'
@@ -2812,13 +2810,6 @@ export type ListEnumHrRoundStatusFieldRefInput<$PrismaModel> = FieldRefInputType
 
 
 /**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
-    
-
-
-/**
  * Reference to a field of type 'EvaluationDecision'
  */
 export type EnumEvaluationDecisionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EvaluationDecision'>
@@ -2829,6 +2820,13 @@ export type EnumEvaluationDecisionFieldRefInput<$PrismaModel> = FieldRefInputTyp
  * Reference to a field of type 'EvaluationDecision[]'
  */
 export type ListEnumEvaluationDecisionFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'EvaluationDecision[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 

@@ -8,7 +8,6 @@ import { uploadFile } from '../../lib/storage';
 import { serializeApplicationList, serializeJobList, serializeOffer } from '../../lib/serializers';
 import { extractTextFromBuffer, parseResumeWithGemini, generateFieldWithGemini } from '../../services/resume-parser.service';
 import { syncCandidateSocialProfiles } from '../../services/social-sync.service';
-import { enqueueVideoScreening } from '../../lib/queues/video-screening.queue';
 import { advanceAssessmentStage } from '../../lib/pipeline';
 
 export const candidateRouter = Router();
@@ -583,116 +582,6 @@ candidateRouter.get(
       return res.json({
         success: true,
         data: onboardingRecord,
-      });
-    } catch (err) {
-      return next(err);
-    }
-  }
-);
-
-// GET /api/v1/candidate/applications/:id/video-screening - Fetch async video screening details
-candidateRouter.get(
-  '/applications/:id/video-screening',
-  authenticate,
-  requireRole('candidate'),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const appId = req.params.id as string;
-
-      const application = await prisma.application.findUnique({
-        where: { id: appId },
-        include: {
-          candidate: { include: { user: true } },
-          job: true,
-        },
-      });
-
-      if (!application || application.candidate.user_id !== req.user!.userId) {
-        return res.status(404).json({ success: false, error: 'Application not found' });
-      }
-
-      if (application.status === 'applied') {
-        return res.status(404).json({ success: false, error: 'Video screening is not active for this application stage' });
-      }
-
-      const candidateName = application.candidate.user.email.split('@')[0];
-      const deadline = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-      const screeningData = {
-        id: `scr-${application.id}`,
-        applicationId: application.id,
-        candidateName,
-        jobTitle: application.job.title,
-        status: 'invited' as const,
-        invitedDate: application.applied_at.toISOString().split('T')[0],
-        deadline,
-        responses: [
-          {
-            questionId: 'q1',
-            questionText: 'Walk us through your most complex backend or frontend architectural design decision.',
-            timeLimitSeconds: 180,
-          },
-          {
-            questionId: 'q2',
-            questionText: 'How do you prioritize trade-offs between rapid shipping velocity and codebase maintainability?',
-            timeLimitSeconds: 120,
-          },
-          {
-            questionId: 'q3',
-            questionText: 'Describe a situation where an system outage occurred and how you managed resolution.',
-            timeLimitSeconds: 180,
-          },
-        ],
-      };
-
-      return res.json({
-        success: true,
-        data: screeningData,
-      });
-    } catch (err) {
-      return next(err);
-    }
-  }
-);
-
-// POST /api/v1/candidate/applications/:id/video-screening/submit - Submit async video screening responses
-candidateRouter.post(
-  '/applications/:id/video-screening/submit',
-  authenticate,
-  requireRole('candidate'),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const appId = req.params.id as string;
-      const { responses } = req.body;
-
-      const application = await prisma.application.findUnique({
-        where: { id: appId },
-        include: { candidate: true },
-      });
-
-      if (!application || application.candidate.user_id !== req.user!.userId) {
-        return res.status(404).json({ success: false, error: 'Application not found' });
-      }
-
-      // Enqueue the AI scoring job so a real transcript + score are produced.
-      // The internal video-screening-result callback records the score and
-      // advances the assessment stage once all enabled modalities pass.
-      enqueueVideoScreening(appId, responses).catch((err) =>
-        console.error(`Failed to enqueue video screening scoring for application ${appId}:`, err)
-      );
-
-      await prisma.application.update({
-        where: { id: appId },
-        data: { status: 'screening_completed' },
-      });
-
-      await advanceAssessmentStage(appId).catch((err) =>
-        console.error(`Failed to advance assessment stage for application ${appId}:`, err)
-      );
-
-      return res.json({
-        success: true,
-        data: { message: 'Video screening submitted successfully', responsesCount: responses?.length || 0 },
       });
     } catch (err) {
       return next(err);

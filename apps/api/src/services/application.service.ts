@@ -895,56 +895,8 @@ export async function getCodingSubmission(submissionId: string) {
 }
 
 // ---------------------------------------------------------------------------
-// Video screening & reschedule
+// Reschedule
 // ---------------------------------------------------------------------------
-
-const VIDEO_PROMPTS = [
-  'Introduce yourself and briefly describe your engineering background.',
-  'Describe a complex technical challenge you solved recently and how you approached it.',
-  'How do you handle disagreement with senior team members on system design or architecture?',
-];
-
-/** GET /:id/assessment/video-prompts — fetch video screening prompts. */
-export async function getVideoPrompts(appId: string, userId: string) {
-  const app = await getAppForCandidate(appId, userId);
-  if (!app || app.candidate.user_id !== userId) {
-    throw forbidden('Forbidden: Access denied');
-  }
-
-  return { prompts: VIDEO_PROMPTS };
-}
-
-/** POST /:id/assessment/video — submit recorded video screening answer. */
-export async function submitVideo(
-  appId: string,
-  userId: string,
-  body: { video_url?: string; duration_seconds?: number }
-) {
-  const app = await getAppForCandidate(appId, userId);
-  if (!app || app.candidate.user_id !== userId) {
-    throw forbidden('Forbidden: Access denied');
-  }
-
-  const { video_url, duration_seconds } = body;
-
-  const evaluation = await prisma.evaluation.upsert({
-    where: { application_id: appId },
-    create: {
-      application_id: appId,
-      stage: 'video_screening',
-      reasoning: 'Video response submitted and queued for transcription.',
-      bias_flag: false,
-      bias_report: { video_url, duration_seconds },
-    },
-    update: {
-      stage: 'video_screening',
-      reasoning: 'Video response submitted and queued for transcription.',
-      bias_report: { video_url, duration_seconds },
-    },
-  });
-
-  return { evaluation, message: 'Video uploaded successfully. Transcription queued.' };
-}
 
 /** POST /:id/reschedule — request interview reschedule. */
 export async function requestReschedule(appId: string, userId: string) {

@@ -95,7 +95,7 @@ export default function HrTalentPoolPage() {
           <div className="space-y-1">
             <h4 className="text-xs font-black text-purple-900 dark:text-purple-200 uppercase tracking-wide">AI Sourcing Scout Insights</h4>
             <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed font-semibold max-w-2xl">
-              Found <strong>3 candidates</strong> exceeding a 90% technical logic match rate with active pipeline slots. Origin bias audits have successfully run across all parsed profiles.
+              Found <strong>3 candidates</strong> exceeding a 90% technical logic match rate with active pipeline slots. Profile scoring and semantic matching completed.
             </p>
           </div>
         </div>

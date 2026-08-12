@@ -1,6 +1,6 @@
 # NextRound — Product Requirements Document
 
-NextRound (HireOS) is an AI-native recruitment marketplace where companies post jobs and candidates maintain one reusable profile to apply across any participating company. Autonomous AI agents run the entire hiring pipeline — sourcing, resume screening, aptitude testing, coding assessment, voice interviewing, video screening, decision making, offer extension, and onboarding — with zero required human intervention. HR managers access a pre-vetted shortlist and evaluation transcripts after the pipeline completes.
+NextRound (HireOS) is an AI-native recruitment marketplace where companies post jobs and candidates maintain one reusable profile to apply across any participating company. Autonomous AI agents run the entire hiring pipeline — sourcing, resume screening, aptitude testing, coding assessment, voice interviewing, decision making, offer extension, and onboarding — with zero required human intervention. HR managers access a pre-vetted shortlist and evaluation transcripts after the pipeline completes.
 
 
 ---
@@ -58,13 +58,13 @@ NextRound is a **two-sided AI talent marketplace**:
 - Creates one platform-wide profile: resume, skills, target compensation, work authorization, proud projects, and work values.
 - Uses the **AI Voice Resume Builder** (`/candidate/resume-builder`) to complete a 15-minute voice interview with an AI agent, automatically generating an ATS-compliant resume with quantified bullet points and a PDF download — no manual writing required.
 - Applies to jobs across multiple companies without re-entering application details.
-- Completes automated scheduling, AI voice interviews, coding sandboxes, aptitude assessments, video screening, and the final Human HR Round video call.
+- Completes automated scheduling, AI voice interviews, coding sandboxes, aptitude assessments, and the final Human HR Round video call.
 - Receives automated offer letters with a digital signature pad or feedback-rich rejection emails.
 - Uses the **Mock Interview Console** and **Company Prep Library** for independent skill development before and after applying.
 
 ### C. Compliance Auditor / Platform Admin
 
-- Reviews aggregate bias audit logs across all organizations and score distribution trends.
+- Reviews aggregate pipeline health metrics and score distribution trends across all organizations.
 - Verifies that computer vision proctoring signals from `Interview.proctor_flags` are not present in Decision Agent scoring inputs.
 - Accesses platform-wide `AgentLog` streams for pipeline health monitoring and failure inspection.
 - Manages platform-level user data requests (GDPR soft deletes, data purge verification).
@@ -146,7 +146,6 @@ Candidates always use the platform for free. Monetization is purely on the emplo
 **Deliverables:**
 - Aptitude Test Console (4 cognitive categories, real-time timer)
 - Coding Sandbox Console (Monaco editor, multi-language, isolated test execution)
-- Video Screening Console (async video prompts + auto-transcription)
 - Evaluator Agent (LLM-as-judge composite scoring)
 - Decision Agent (threshold matching, auto-offer/rejection, Nodemailer delivery)
 - Digital Offer Letter with signature canvas and onboarding checklist
@@ -157,7 +156,6 @@ Candidates always use the platform for free. Monetization is purely on the emplo
 ### Phase 5 — Analytics & Polish
 **Deliverables:**
 - Analytics Agent: weekly funnel metrics, time-to-hire trends
-
 - PDF report generation and export
 - Sentiment + Stress Analyser dashboard
 - Candidate progress tracking and skill improvement charts
@@ -182,7 +180,7 @@ Candidates always use the platform for free. Monetization is purely on the emplo
 
 ## 10. Success Criteria
 
-1. A candidate application advances from submission → sourcing → screening → aptitude → coding → video screening → voice interview → decision → offer letter with **zero human interventions**.
+1. A candidate application advances from submission → sourcing → screening → aptitude → coding → voice interview → decision → offer letter with **zero human interventions**.
 
 2. Multi-tenant isolation verified: Organization A cannot query any resource belonging to Organization B.
 3. A single `CandidateProfile` applies to multiple job postings across different companies using 1-click apply.

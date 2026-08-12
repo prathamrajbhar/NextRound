@@ -36,8 +36,8 @@ const BENEFITS: AuthBenefit[] = [
   },
   {
     icon: Scale,
-    title: 'Bias-audited decisions',
-    description: 'Every evaluation is normalized and explained — fair, defensible shortlists.',
+    title: 'Objective rubric decisions',
+    description: 'Every evaluation is normalized and explained — clear, defensible shortlists.',
   },
   {
     icon: AudioLines,

@@ -10,7 +10,6 @@ from workers.screening_worker import process_screening_job
 from workers.scheduling_worker import process_scheduling_job
 from workers.aptitude_worker import process_aptitude_job
 from workers.coding_worker import process_coding_job
-from workers.video_screening_worker import process_video_screening_job
 from workers.interview_worker import process_interview_job
 from workers.evaluator_worker import process_evaluator_job
 from workers.decision_worker import process_decision_job
@@ -35,7 +34,6 @@ QUEUE_HANDLERS: Dict[str, JobHandler] = {
     "scheduling": process_scheduling_job,
     "assessment": process_aptitude_job,
     "coding": process_coding_job,
-    "video-screening": process_video_screening_job,
     "mock": process_mock_job,
     "prep": process_prep_job,
     "resume-builder": process_resume_builder_job,
@@ -55,10 +53,7 @@ SOURCING_ACTIONS: Dict[str, JobHandler] = {
     "prep-generate": process_prep_job,
 }
 
-# Queues the worker manager polls. The Express API defines two additional queues
-# without an AI worker — "offer" (offer letters are drafted by the decision
-# agent) and "bias-audit" (bias auditing runs inside the evaluator/decision
-# agents) — so they are intentionally excluded here.
+# Queues the worker manager polls.
 AGENT_QUEUES = list(QUEUE_HANDLERS) + ["sourcing"]
 
 

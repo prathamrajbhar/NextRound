@@ -200,8 +200,6 @@ export const EvaluationScalarFieldEnum = {
   coding_score: 'coding_score',
   composite_score: 'composite_score',
   confidence: 'confidence',
-  bias_flag: 'bias_flag',
-  bias_report: 'bias_report',
   decision: 'decision',
   reasoning: 'reasoning',
   created_at: 'created_at'

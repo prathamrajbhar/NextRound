@@ -138,8 +138,6 @@ All endpoints are served by `apps/api` (Express.js 5.2.1) and prefixed with `/ap
 | POST | `/applications/:id/assessment` | Candidate Own | Submit aptitude test answers. Enqueues assessment worker. |
 | GET | `/applications/:id/take-home` | Candidate Own | Fetch coding problem specs, starter code, and test cases. |
 | POST | `/applications/:id/take-home` | Candidate Own | Submit code solution. Body: `{ language, code }`. Enqueues coding worker. |
-| GET | `/applications/:id/video-screening` | Candidate Own | Fetch video screening prompts and recording rules. |
-| POST | `/applications/:id/video-screening` | Candidate Own | Upload recorded video response (multipart). |
 
 ---
 
@@ -226,7 +224,6 @@ Secured endpoints callable exclusively by the Python AI service via `X-Internal-
 | PATCH | `/internal/interviews/:id/complete` | Save final transcript, audio storage URL, proctor flags, engagement telemetry. |
 | PATCH | `/internal/applications/:id/assessment-result` | Save aptitude category score breakdown. |
 | PATCH | `/internal/applications/:id/coding-result` | Save code pass rate, execution timing, memory, complexity score. |
-| PATCH | `/internal/applications/:id/video-screening-result` | Save video transcript and screening score. |
 | PATCH | `/internal/evaluations/:id` | Save composite score and confidence level. |
 | PATCH | `/internal/evaluations/:id/decision` | Write final decision and drafted offer/rejection email body. |
 | POST | `/internal/analytics/:orgId/weekly-report` | Save aggregated weekly hiring metrics. |

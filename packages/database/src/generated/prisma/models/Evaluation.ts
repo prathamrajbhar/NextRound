@@ -54,7 +54,6 @@ export type EvaluationMinAggregateOutputType = {
   coding_score: number | null
   composite_score: number | null
   confidence: number | null
-  bias_flag: boolean | null
   decision: $Enums.EvaluationDecision | null
   reasoning: string | null
   created_at: Date | null
@@ -70,7 +69,6 @@ export type EvaluationMaxAggregateOutputType = {
   coding_score: number | null
   composite_score: number | null
   confidence: number | null
-  bias_flag: boolean | null
   decision: $Enums.EvaluationDecision | null
   reasoning: string | null
   created_at: Date | null
@@ -86,8 +84,6 @@ export type EvaluationCountAggregateOutputType = {
   coding_score: number
   composite_score: number
   confidence: number
-  bias_flag: number
-  bias_report: number
   decision: number
   reasoning: number
   created_at: number
@@ -123,7 +119,6 @@ export type EvaluationMinAggregateInputType = {
   coding_score?: true
   composite_score?: true
   confidence?: true
-  bias_flag?: true
   decision?: true
   reasoning?: true
   created_at?: true
@@ -139,7 +134,6 @@ export type EvaluationMaxAggregateInputType = {
   coding_score?: true
   composite_score?: true
   confidence?: true
-  bias_flag?: true
   decision?: true
   reasoning?: true
   created_at?: true
@@ -155,8 +149,6 @@ export type EvaluationCountAggregateInputType = {
   coding_score?: true
   composite_score?: true
   confidence?: true
-  bias_flag?: true
-  bias_report?: true
   decision?: true
   reasoning?: true
   created_at?: true
@@ -259,8 +251,6 @@ export type EvaluationGroupByOutputType = {
   coding_score: number | null
   composite_score: number | null
   confidence: number | null
-  bias_flag: boolean
-  bias_report: runtime.JsonValue | null
   decision: $Enums.EvaluationDecision | null
   reasoning: string | null
   created_at: Date
@@ -299,8 +289,6 @@ export type EvaluationWhereInput = {
   coding_score?: Prisma.FloatNullableFilter<"Evaluation"> | number | null
   composite_score?: Prisma.FloatNullableFilter<"Evaluation"> | number | null
   confidence?: Prisma.FloatNullableFilter<"Evaluation"> | number | null
-  bias_flag?: Prisma.BoolFilter<"Evaluation"> | boolean
-  bias_report?: Prisma.JsonNullableFilter<"Evaluation">
   decision?: Prisma.EnumEvaluationDecisionNullableFilter<"Evaluation"> | $Enums.EvaluationDecision | null
   reasoning?: Prisma.StringNullableFilter<"Evaluation"> | string | null
   created_at?: Prisma.DateTimeFilter<"Evaluation"> | Date | string
@@ -317,8 +305,6 @@ export type EvaluationOrderByWithRelationInput = {
   coding_score?: Prisma.SortOrderInput | Prisma.SortOrder
   composite_score?: Prisma.SortOrderInput | Prisma.SortOrder
   confidence?: Prisma.SortOrderInput | Prisma.SortOrder
-  bias_flag?: Prisma.SortOrder
-  bias_report?: Prisma.SortOrderInput | Prisma.SortOrder
   decision?: Prisma.SortOrderInput | Prisma.SortOrder
   reasoning?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -338,8 +324,6 @@ export type EvaluationWhereUniqueInput = Prisma.AtLeast<{
   coding_score?: Prisma.FloatNullableFilter<"Evaluation"> | number | null
   composite_score?: Prisma.FloatNullableFilter<"Evaluation"> | number | null
   confidence?: Prisma.FloatNullableFilter<"Evaluation"> | number | null
-  bias_flag?: Prisma.BoolFilter<"Evaluation"> | boolean
-  bias_report?: Prisma.JsonNullableFilter<"Evaluation">
   decision?: Prisma.EnumEvaluationDecisionNullableFilter<"Evaluation"> | $Enums.EvaluationDecision | null
   reasoning?: Prisma.StringNullableFilter<"Evaluation"> | string | null
   created_at?: Prisma.DateTimeFilter<"Evaluation"> | Date | string
@@ -356,8 +340,6 @@ export type EvaluationOrderByWithAggregationInput = {
   coding_score?: Prisma.SortOrderInput | Prisma.SortOrder
   composite_score?: Prisma.SortOrderInput | Prisma.SortOrder
   confidence?: Prisma.SortOrderInput | Prisma.SortOrder
-  bias_flag?: Prisma.SortOrder
-  bias_report?: Prisma.SortOrderInput | Prisma.SortOrder
   decision?: Prisma.SortOrderInput | Prisma.SortOrder
   reasoning?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -381,8 +363,6 @@ export type EvaluationScalarWhereWithAggregatesInput = {
   coding_score?: Prisma.FloatNullableWithAggregatesFilter<"Evaluation"> | number | null
   composite_score?: Prisma.FloatNullableWithAggregatesFilter<"Evaluation"> | number | null
   confidence?: Prisma.FloatNullableWithAggregatesFilter<"Evaluation"> | number | null
-  bias_flag?: Prisma.BoolWithAggregatesFilter<"Evaluation"> | boolean
-  bias_report?: Prisma.JsonNullableWithAggregatesFilter<"Evaluation">
   decision?: Prisma.EnumEvaluationDecisionNullableWithAggregatesFilter<"Evaluation"> | $Enums.EvaluationDecision | null
   reasoning?: Prisma.StringNullableWithAggregatesFilter<"Evaluation"> | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"Evaluation"> | Date | string
@@ -397,8 +377,6 @@ export type EvaluationCreateInput = {
   coding_score?: number | null
   composite_score?: number | null
   confidence?: number | null
-  bias_flag?: boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: $Enums.EvaluationDecision | null
   reasoning?: string | null
   created_at?: Date | string
@@ -415,8 +393,6 @@ export type EvaluationUncheckedCreateInput = {
   coding_score?: number | null
   composite_score?: number | null
   confidence?: number | null
-  bias_flag?: boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: $Enums.EvaluationDecision | null
   reasoning?: string | null
   created_at?: Date | string
@@ -431,8 +407,6 @@ export type EvaluationUpdateInput = {
   coding_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   composite_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  bias_flag?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: Prisma.NullableEnumEvaluationDecisionFieldUpdateOperationsInput | $Enums.EvaluationDecision | null
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -449,8 +423,6 @@ export type EvaluationUncheckedUpdateInput = {
   coding_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   composite_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  bias_flag?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: Prisma.NullableEnumEvaluationDecisionFieldUpdateOperationsInput | $Enums.EvaluationDecision | null
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -466,8 +438,6 @@ export type EvaluationCreateManyInput = {
   coding_score?: number | null
   composite_score?: number | null
   confidence?: number | null
-  bias_flag?: boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: $Enums.EvaluationDecision | null
   reasoning?: string | null
   created_at?: Date | string
@@ -482,8 +452,6 @@ export type EvaluationUpdateManyMutationInput = {
   coding_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   composite_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  bias_flag?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: Prisma.NullableEnumEvaluationDecisionFieldUpdateOperationsInput | $Enums.EvaluationDecision | null
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -499,8 +467,6 @@ export type EvaluationUncheckedUpdateManyInput = {
   coding_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   composite_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  bias_flag?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: Prisma.NullableEnumEvaluationDecisionFieldUpdateOperationsInput | $Enums.EvaluationDecision | null
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -526,8 +492,6 @@ export type EvaluationCountOrderByAggregateInput = {
   coding_score?: Prisma.SortOrder
   composite_score?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
-  bias_flag?: Prisma.SortOrder
-  bias_report?: Prisma.SortOrder
   decision?: Prisma.SortOrder
   reasoning?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -552,7 +516,6 @@ export type EvaluationMaxOrderByAggregateInput = {
   coding_score?: Prisma.SortOrder
   composite_score?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
-  bias_flag?: Prisma.SortOrder
   decision?: Prisma.SortOrder
   reasoning?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -568,7 +531,6 @@ export type EvaluationMinOrderByAggregateInput = {
   coding_score?: Prisma.SortOrder
   composite_score?: Prisma.SortOrder
   confidence?: Prisma.SortOrder
-  bias_flag?: Prisma.SortOrder
   decision?: Prisma.SortOrder
   reasoning?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
@@ -625,10 +587,6 @@ export type EvaluationUncheckedUpdateManyWithoutApplicationNestedInput = {
   deleteMany?: Prisma.EvaluationScalarWhereInput | Prisma.EvaluationScalarWhereInput[]
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type NullableEnumEvaluationDecisionFieldUpdateOperationsInput = {
   set?: $Enums.EvaluationDecision | null
 }
@@ -642,8 +600,6 @@ export type EvaluationCreateWithoutApplicationInput = {
   coding_score?: number | null
   composite_score?: number | null
   confidence?: number | null
-  bias_flag?: boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: $Enums.EvaluationDecision | null
   reasoning?: string | null
   created_at?: Date | string
@@ -658,8 +614,6 @@ export type EvaluationUncheckedCreateWithoutApplicationInput = {
   coding_score?: number | null
   composite_score?: number | null
   confidence?: number | null
-  bias_flag?: boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: $Enums.EvaluationDecision | null
   reasoning?: string | null
   created_at?: Date | string
@@ -704,8 +658,6 @@ export type EvaluationScalarWhereInput = {
   coding_score?: Prisma.FloatNullableFilter<"Evaluation"> | number | null
   composite_score?: Prisma.FloatNullableFilter<"Evaluation"> | number | null
   confidence?: Prisma.FloatNullableFilter<"Evaluation"> | number | null
-  bias_flag?: Prisma.BoolFilter<"Evaluation"> | boolean
-  bias_report?: Prisma.JsonNullableFilter<"Evaluation">
   decision?: Prisma.EnumEvaluationDecisionNullableFilter<"Evaluation"> | $Enums.EvaluationDecision | null
   reasoning?: Prisma.StringNullableFilter<"Evaluation"> | string | null
   created_at?: Prisma.DateTimeFilter<"Evaluation"> | Date | string
@@ -720,8 +672,6 @@ export type EvaluationCreateManyApplicationInput = {
   coding_score?: number | null
   composite_score?: number | null
   confidence?: number | null
-  bias_flag?: boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: $Enums.EvaluationDecision | null
   reasoning?: string | null
   created_at?: Date | string
@@ -736,8 +686,6 @@ export type EvaluationUpdateWithoutApplicationInput = {
   coding_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   composite_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  bias_flag?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: Prisma.NullableEnumEvaluationDecisionFieldUpdateOperationsInput | $Enums.EvaluationDecision | null
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -752,8 +700,6 @@ export type EvaluationUncheckedUpdateWithoutApplicationInput = {
   coding_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   composite_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  bias_flag?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: Prisma.NullableEnumEvaluationDecisionFieldUpdateOperationsInput | $Enums.EvaluationDecision | null
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -768,8 +714,6 @@ export type EvaluationUncheckedUpdateManyWithoutApplicationInput = {
   coding_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   composite_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   confidence?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
-  bias_flag?: Prisma.BoolFieldUpdateOperationsInput | boolean
-  bias_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   decision?: Prisma.NullableEnumEvaluationDecisionFieldUpdateOperationsInput | $Enums.EvaluationDecision | null
   reasoning?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -787,8 +731,6 @@ export type EvaluationSelect<ExtArgs extends runtime.Types.Extensions.InternalAr
   coding_score?: boolean
   composite_score?: boolean
   confidence?: boolean
-  bias_flag?: boolean
-  bias_report?: boolean
   decision?: boolean
   reasoning?: boolean
   created_at?: boolean
@@ -805,8 +747,6 @@ export type EvaluationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ex
   coding_score?: boolean
   composite_score?: boolean
   confidence?: boolean
-  bias_flag?: boolean
-  bias_report?: boolean
   decision?: boolean
   reasoning?: boolean
   created_at?: boolean
@@ -823,8 +763,6 @@ export type EvaluationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ex
   coding_score?: boolean
   composite_score?: boolean
   confidence?: boolean
-  bias_flag?: boolean
-  bias_report?: boolean
   decision?: boolean
   reasoning?: boolean
   created_at?: boolean
@@ -841,14 +779,12 @@ export type EvaluationSelectScalar = {
   coding_score?: boolean
   composite_score?: boolean
   confidence?: boolean
-  bias_flag?: boolean
-  bias_report?: boolean
   decision?: boolean
   reasoning?: boolean
   created_at?: boolean
 }
 
-export type EvaluationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "application_id" | "stage" | "resume_score" | "interview_score" | "aptitude_score" | "coding_score" | "composite_score" | "confidence" | "bias_flag" | "bias_report" | "decision" | "reasoning" | "created_at", ExtArgs["result"]["evaluation"]>
+export type EvaluationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "application_id" | "stage" | "resume_score" | "interview_score" | "aptitude_score" | "coding_score" | "composite_score" | "confidence" | "decision" | "reasoning" | "created_at", ExtArgs["result"]["evaluation"]>
 export type EvaluationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   application?: boolean | Prisma.ApplicationDefaultArgs<ExtArgs>
 }
@@ -874,8 +810,6 @@ export type $EvaluationPayload<ExtArgs extends runtime.Types.Extensions.Internal
     coding_score: number | null
     composite_score: number | null
     confidence: number | null
-    bias_flag: boolean
-    bias_report: runtime.JsonValue | null
     decision: $Enums.EvaluationDecision | null
     reasoning: string | null
     created_at: Date
@@ -1312,8 +1246,6 @@ export interface EvaluationFieldRefs {
   readonly coding_score: Prisma.FieldRef<"Evaluation", 'Float'>
   readonly composite_score: Prisma.FieldRef<"Evaluation", 'Float'>
   readonly confidence: Prisma.FieldRef<"Evaluation", 'Float'>
-  readonly bias_flag: Prisma.FieldRef<"Evaluation", 'Boolean'>
-  readonly bias_report: Prisma.FieldRef<"Evaluation", 'Json'>
   readonly decision: Prisma.FieldRef<"Evaluation", 'EvaluationDecision'>
   readonly reasoning: Prisma.FieldRef<"Evaluation", 'String'>
   readonly created_at: Prisma.FieldRef<"Evaluation", 'DateTime'>

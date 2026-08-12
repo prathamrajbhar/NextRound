@@ -228,8 +228,6 @@ model Evaluation {
   coding_score    Float?
   composite_score Float?
   confidence      Float?
-  bias_flag       Boolean             @default(false)
-  bias_report     Json?
   decision        EvaluationDecision?
   reasoning       String?             @db.Text
   created_at      DateTime            @default(now())

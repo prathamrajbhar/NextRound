@@ -120,7 +120,6 @@ export interface Evaluation {
   application_id: string;
   composite_score: number;
   confidence: number;
-  bias_report?: Record<string, unknown>;
   decision: DecisionType;
   created_at: string;
 }
@@ -204,11 +203,6 @@ export interface HRDashboardData {
 export interface HRAnalyticsData {
   weeklyFunnel: Array<{ week: string; applied: number; screened: number; interviewed: number; offered: number }>;
   stageConversionRates: Record<string, number>;
-  biasReportSummary: {
-    totalAudited: number;
-    biasFlagsTriggered: number;
-    cleanRatePercent: number;
-  };
 }
 
 export interface CandidateDashboardData {
@@ -257,11 +251,9 @@ export interface HRAnalyticsOverviewDTO {
     activeJobs: number;
     avgTimeToHireDays: number;
     offerAcceptanceRatePercent: number;
-    biasCleanRatePercent: number;
   };
   weeklyFunnel: Array<{ week: string; applied: number; screened: number; interviewed: number; offered: number }>;
   stageConversionRates: Record<string, number>;
-  biasStabilityTrend: Array<{ week: string; totalAudited: number; flagsTriggered: number; cleanRatePercent: number }>;
   dropoffAnalysis: Array<{ stage: string; dropCount: number; percentage: number }>;
 }
 

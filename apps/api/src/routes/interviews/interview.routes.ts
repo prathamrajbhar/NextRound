@@ -340,7 +340,6 @@ interviewRouter.post('/hr/:applicationId/result', requireRole('hr'), async (req:
         stage: 'hr_round',
         decision: decision === 'pass' ? 'hire' : 'reject',
         reasoning: notes || `HR Video Round completed with decision: ${decision}`,
-        bias_flag: false,
       },
       update: {
         stage: 'hr_round',

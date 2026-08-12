@@ -82,7 +82,7 @@ All HR routes require `role = "hr"`. Data is scoped to `org_id` derived from JWT
 
 ### C3. Job Editor (`/hr/jobs/new`, `/hr/jobs/:jobId/edit`)
 **Purpose:** AI-assisted job description composition and rubric configuration.
-**Components:** Rich Text Editor, AI Assist Suggestion Drawer (auto-extracted skills and rubric weights), Rubric Dimension Weight Sliders (must sum to 100), Threshold Inputs (per stage), Pipeline Toggle Switches (aptitude_enabled, coding_enabled, video_screening_enabled, auto_offer), Save Draft / Publish Buttons.
+**Components:** Rich Text Editor, AI Assist Suggestion Drawer (auto-extracted skills and rubric weights), Rubric Dimension Weight Sliders (must sum to 100), Threshold Inputs (per stage), Pipeline Toggle Switches (aptitude_enabled, coding_enabled, auto_offer), Save Draft / Publish Buttons.
 
 ### C4. Pipeline Kanban (`/hr/jobs/:jobId/pipeline`)
 **Purpose:** Visual board tracking candidates across all pipeline stages.
@@ -164,27 +164,23 @@ All candidate routes require `role = "candidate"`. Data scoped to authenticated 
 **Components:** CandidateSidebar, Problem Description Panel, Monaco/CodeMirror Code Editor, Language Selector, Test Case Console (stdout, stderr, expected vs. actual), "Run Tests" Button, "Submit" Button, Pass Rate display.
 **Implementation:** `src/components/interview/CodingAssessmentConsole.tsx`
 
-### D7. Video Screening Console (`/candidate/applications/:applicationId/video-screening`)
-**Purpose:** Asynchronous video prompt recording and submission.
-**Components:** CandidateSidebar, Webcam Preview Box, Prompt Question Card, Recording Controls (Start, Pause, Re-record), Recording Progress Timer, Transcript Preview, Submit Button.
-
-### D8. Candidate HR Round Room (`/candidate/hr-round/:applicationId`)
+### D7. Candidate HR Round Room (`/candidate/hr-round/:applicationId`)
 **Purpose:** Pre-call waiting room and live 1:1 WebRTC video call with HR.
 **Components:** CandidateSidebar, Hardware Pre-Check Modal (camera preview, mic volume meter), Scheduled Call Time Indicator, "Join Call" Button, Live WebRTC Video Viewport, Call Controls (Mute Mic, Toggle Video, Leave Call).
 
-### D9. Offer Letter Console (`/candidate/applications/:applicationId/offer`)
+### D8. Offer Letter Console (`/candidate/applications/:applicationId/offer`)
 **Purpose:** Interactive offer review and digital acceptance.
 **Components:** CandidateSidebar, Offer Summary Card (Role, Salary, Equity, Start Date, Benefits), PDF Viewer, Digital Signature Canvas, Accept Button, Decline Button, Offer Expiry Countdown.
 
-### D10. Onboarding Checklist (`/candidate/applications/:applicationId/onboarding`)
+### D9. Onboarding Checklist (`/candidate/applications/:applicationId/onboarding`)
 **Purpose:** Post-offer document submission portal.
 **Components:** CandidateSidebar, Task Checklist (checkboxes per task), Document Upload Cards (drag-and-drop), Emergency Contact Form, Background Check Authorization checkbox, Overall Progress Bar.
 
-### D11. Candidate Profile (`/candidate/profile`)
+### D10. Candidate Profile (`/candidate/profile`)
 **Purpose:** Manage universal platform profile.
 **Components:** CandidateSidebar, Resume Uploader (replaces current resume), Skill Chips Editor (add/remove skills), GitHub/LinkedIn URL Inputs, Target Salary/Role Inputs, Work Authorization Select, Profile Completeness Progress Indicator.
 
-### D12. Mock Interview Setup (`/candidate/mock/new`)
+### D11. Mock Interview Setup (`/candidate/mock/new`)
 **Purpose:** Launch a practice interview session.
 **Components:** CandidateSidebar, Target Company Autocomplete, Target Role Selector, Seniority Level Dropdown, Difficulty Dropdown, "Start Mock Interview" Button.
 

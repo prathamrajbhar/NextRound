@@ -43,7 +43,7 @@ export default function AboutPage() {
 
             <div className="p-3.5 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs backdrop-blur-md glass-panel">
               <span className="block text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 font-display">99.2%</span>
-              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Bias Compliance</span>
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Rubric Accuracy</span>
             </div>
 
             <div className="p-3.5 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs backdrop-blur-md glass-panel">
@@ -68,7 +68,7 @@ export default function AboutPage() {
             </div>
             <ul className="space-y-2 text-xs font-semibold text-rose-800 dark:text-rose-300 pt-2 border-t border-rose-200/60 dark:border-rose-900/40">
               <li className="flex items-center gap-2">❌ Slow 14-day screening cycles</li>
-              <li className="flex items-center gap-2">❌ Unconscious resume bias</li>
+              <li className="flex items-center gap-2">❌ Inconsistent human scoring</li>
               <li className="flex items-center gap-2">❌ Schedule coordination delays</li>
             </ul>
           </div>
@@ -86,7 +86,7 @@ export default function AboutPage() {
             </div>
             <ul className="space-y-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300 pt-2 border-t border-emerald-200/60 dark:border-emerald-900/40">
               <li className="flex items-center gap-2">✓ 42-hour time-to-hire turnaround</li>
-              <li className="flex items-center gap-2">✓ Anonymized double-pass bias audit</li>
+              <li className="flex items-center gap-2">✓ Objective rubric-based scoring</li>
               <li className="flex items-center gap-2">✓ Automated voice &amp; coding grading</li>
             </ul>
           </div>
@@ -148,10 +148,10 @@ export default function AboutPage() {
                 <span className="h-6 w-6 rounded-full bg-purple-100 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 text-xs font-extrabold flex items-center justify-center border border-purple-200 dark:border-purple-800">
                   4
                 </span>
-                <h4 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Double-Pass Bias Audit Log</h4>
+                <h4 className="text-sm font-extrabold text-slate-900 dark:text-slate-100">Structured Decision Rubrics</h4>
               </div>
               <p className="text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-                Every candidate scorecard is audited by a secondary verification pass to verify zero demographic variance before final shortlist decisions.
+                Every candidate scorecard is evaluated against configurable dimension weights for consistent, objective shortlist recommendations.
               </p>
             </div>
           </div>

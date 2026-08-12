@@ -12,8 +12,6 @@ import {
   ConfirmedSlotSchema,
   AssessmentResultSchema,
   CodingResultSchema,
-  VideoTranscriptSchema,
-  VideoScreeningResultSchema,
   InterviewResultSchema,
   FinalEvaluationSchema,
   DecisionSchema,
@@ -149,26 +147,6 @@ internalRouter.patch(
   validate(CodingResultSchema),
   asyncHandler(async (req, res) => {
     const data = await internalService.recordCodingResult(req.params.id as string, req.body);
-    ok(res, data);
-  })
-);
-
-// 13. PATCH /applications/:id/video-transcript
-internalRouter.patch(
-  '/applications/:id/video-transcript',
-  validate(VideoTranscriptSchema),
-  asyncHandler(async (req, res) => {
-    const data = await internalService.recordVideoTranscript(req.params.id as string, req.body);
-    ok(res, data);
-  })
-);
-
-// 13b. POST /applications/:id/video-screening-result
-internalRouter.post(
-  '/applications/:id/video-screening-result',
-  validate(VideoScreeningResultSchema),
-  asyncHandler(async (req, res) => {
-    const data = await internalService.recordVideoScreeningResult(req.params.id as string, req.body);
     ok(res, data);
   })
 );

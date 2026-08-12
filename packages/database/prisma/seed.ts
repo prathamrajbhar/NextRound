@@ -1882,7 +1882,7 @@ async function main(): Promise<void> {
       {
         user_id: steveUser.id,
         title: 'Interview Evaluation Ready',
-        message: 'AI Interview evaluation and bias scorecard generated for 5 pending candidates.',
+        message: 'AI Interview evaluation scorecard generated for 5 pending candidates.',
         type: 'info',
         read: true,
         created_at: daysAgo(2),
@@ -1921,7 +1921,7 @@ async function main(): Promise<void> {
       agent_name: 'EvaluationAgent',
       action: 'compute_composite_scorecards',
       input: { jobTitle: job.title },
-      output: { completedEvals: randInt(5, 12), biasAuditPassed: true },
+      output: { completedEvals: randInt(5, 12) },
       status: 'completed' as const,
       created_at: randomPastDate(1, 5),
     });
@@ -2118,12 +2118,6 @@ async function seedApplicationDetails(
         coding_score: codingScore,
         composite_score: compositeScore,
         confidence: 0.94,
-        bias_flag: false,
-        bias_report: {
-          genderNeutralityIndex: 1.0,
-          ethnicityNeutralityIndex: 1.0,
-          auditNotes: 'Evaluation strictly grounded in architectural accuracy and code execution metrics.',
-        },
         decision,
         reasoning: isPratham
           ? 'Exceptional candidate demonstrating deep proficiency in full-stack architecture, clean concurrency primitives, and production resilience. Strongly recommended for hire.'

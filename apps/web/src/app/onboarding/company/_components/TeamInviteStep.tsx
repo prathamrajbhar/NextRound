@@ -28,7 +28,7 @@ export function TeamInviteStep({ form, addInvite, removeInvite }: CompanyStepPro
           <ul className="text-[10px] text-slate-400 mt-1.5 space-y-1 leading-relaxed">
             <li>· Post your first job with a custom AI rubric</li>
             <li>· Run automated screening, assessments &amp; voice interviews</li>
-            <li>· Review bias-audited scorecards and offer decisions</li>
+            <li>· Review candidate scorecards and offer decisions</li>
           </ul>
         </div>
       </div>

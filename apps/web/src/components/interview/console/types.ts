@@ -5,19 +5,12 @@ export type InterviewConsoleMode =
   | 'ai-voice'
   | 'mock-practice'
   | 'hr-candidate'
-  | 'hr-recruiter'
-  | 'video-screening';
+  | 'hr-recruiter';
 
 export interface ProctorTelemetry {
   faceCount: number | null;
   gazeCentered: boolean | null;
   engagementIndex: number | null;
-}
-
-export interface ScreeningQuestion {
-  questionId: string;
-  questionText: string;
-  timeLimitSeconds: number;
 }
 
 export interface UnifiedInterviewConsoleProps {
@@ -43,10 +36,6 @@ export interface UnifiedInterviewConsoleProps {
   onResumeFullscreen?: () => void;
   onEliminate?: () => void;
   proctoringClient?: ProctoringClient | null;
-
-  // Video screening questions (for video-screening mode)
-  screeningQuestions?: ScreeningQuestion[];
-  onSubmitScreening?: (responses: Record<string, { duration: number; attempts: number }>) => void;
 
   // HR Recruiter Evaluation Form (for hr-recruiter mode)
   onCompleteHRRound?: (result: 'pass' | 'fail', notes: string) => void;

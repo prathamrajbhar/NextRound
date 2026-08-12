@@ -452,6 +452,10 @@ export type InterviewUncheckedUpdateOneWithoutApplicationNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.InterviewUpdateToOneWithWhereWithoutApplicationInput, Prisma.InterviewUpdateWithoutApplicationInput>, Prisma.InterviewUncheckedUpdateWithoutApplicationInput>
 }
 
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
 export type EnumInterviewStatusFieldUpdateOperationsInput = {
   set?: $Enums.InterviewStatus
 }

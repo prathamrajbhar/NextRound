@@ -38,7 +38,6 @@ export const JOB_NAMES = {
   scheduling: 'schedule_negotiation',
   assessment: 'score_aptitude',
   coding: 'evaluate_coding',
-  videoScreening: 'score_video_screening',
   mock: 'mock_evaluate',
   prep: 'prep_generate',
   resumeBuilder: 'resume_builder_generate',
@@ -50,7 +49,6 @@ export const QUEUE_NAMES = [
   'screening',
   'interview',
   'evaluator',
-  'bias-audit',
   'decision',
   'offer',
   'mock',
@@ -59,7 +57,6 @@ export const QUEUE_NAMES = [
   'scheduling',
   'assessment',
   'coding',
-  'video-screening',
   'analytics',
 ] as const;
 
@@ -85,5 +82,4 @@ export const resumeBuilderQueue = getQueue('resume-builder');
 export const schedulingQueue = getQueue('scheduling');
 export const assessmentQueue = getQueue('assessment');
 export const codingQueue = getQueue('coding');
-export const videoScreeningQueue = getQueue('video-screening');
 export const analyticsQueue = getQueue('analytics');

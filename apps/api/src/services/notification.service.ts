@@ -48,7 +48,7 @@ class NotificationService {
     userId: string,
     title: string,
     message: string,
-    type: 'info' | 'success' | 'warning' | 'error' | 'bias_alert' | 'interview_invite' | 'offer' = 'info'
+    type: 'info' | 'success' | 'warning' | 'error' | 'interview_invite' | 'offer' = 'info'
   ) {
     try {
       const notification = await prisma.notification.create({
@@ -85,7 +85,7 @@ class NotificationService {
     orgId: string,
     title: string,
     message: string,
-    type: 'info' | 'success' | 'warning' | 'error' | 'bias_alert' = 'info'
+    type: 'info' | 'success' | 'warning' | 'error' = 'info'
   ) {
     try {
       const users = await prisma.user.findMany({

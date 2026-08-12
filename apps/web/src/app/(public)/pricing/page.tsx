@@ -30,7 +30,7 @@ export default function PricingPage() {
         'Automated AI resume screening',
         'Interactive AI voice interview room',
         'Standard candidate scorecards & transcripts',
-        'Demographic bias norm audit log',
+        'Automated scoring rubrics',
       ],
       buttonText: 'Get Started Free',
       href: '/signup',
@@ -48,7 +48,7 @@ export default function PricingPage() {
         'Custom evaluation rubrics & question generator',
         'Online MCQ & LeetCode-style coding tests',
         'Priority AI Voice interviewer (3 persona voices)',
-        'Double-pass bias norm compliance audit',
+        'Composite scorecard evaluation metrics',
         'Candidate PDF dossier export',
       ],
       buttonText: 'Start 14-Day Free Trial',
@@ -90,7 +90,7 @@ export default function PricingPage() {
     },
     {
       question: 'How is candidate privacy protected?',
-      answer: 'All candidate data and interview recordings are strictly encrypted. Our Double-Pass Bias Audit anonymizes demographics to guarantee fair evaluation.',
+      answer: 'All candidate data and interview recordings are strictly encrypted with secure storage and strict role-based access control.',
     },
   ];
 

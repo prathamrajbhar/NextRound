@@ -154,11 +154,6 @@ Return ONLY a JSON object matching:
       composite_score: result.compositeScore,
       reasoning: result.reasoning,
       decision: result.status === 'rejected' ? 'reject' : 'hire',
-      bias_flag: false,
-      bias_report: {
-        gap_analysis: result.gapAnalysis,
-        semantic_match_score: result.semanticMatchScore,
-      },
     },
     update: {
       stage: 'screening',
@@ -166,10 +161,6 @@ Return ONLY a JSON object matching:
       composite_score: result.compositeScore,
       reasoning: result.reasoning,
       decision: result.status === 'rejected' ? 'reject' : 'hire',
-      bias_report: {
-        gap_analysis: result.gapAnalysis,
-        semantic_match_score: result.semanticMatchScore,
-      },
     },
   });
 

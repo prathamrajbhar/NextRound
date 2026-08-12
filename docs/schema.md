@@ -383,7 +383,6 @@ model PrepContent {
   ],
   "aptitude_enabled": true,
   "coding_enabled": true,
-  "video_screening_enabled": false,
   "auto_offer": false,
   "question_count": 8
 }

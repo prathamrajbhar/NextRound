@@ -151,8 +151,6 @@ interface EvalLike {
   coding_score?: number | null;
   composite_score?: number | null;
   confidence?: number | null;
-  bias_flag?: boolean | null;
-  bias_report?: unknown;
   decision?: string | null;
   reasoning?: string | null;
 }
@@ -177,22 +175,6 @@ function serializeScores(e: EvalLike | undefined): Rec | undefined {
     problemSolving: Math.round(plainNum(e.aptitude_score, 0)),
     experience: Math.round(plainNum(e.coding_score, 0)),
     confidence: e.confidence != null ? Math.round(e.confidence * 100) : 0,
-  };
-}
-
-function serializeBiasReport(e: EvalLike | undefined): Rec | undefined {
-  if (!e || !isObject(e.bias_report)) return undefined;
-  const br = e.bias_report;
-  return {
-    overallScore: typeof br.fairnessScore === 'number' ? br.fairnessScore : 99,
-    flaggedPhrases: Array.isArray(br.flaggedPhrases) ? br.flaggedPhrases : [],
-    genderBiasCheck: typeof br.genderBiasDetected === 'boolean' && br.genderBiasDetected ? 'Flagged' : 'Clean',
-    originBiasCheck:
-      typeof br.nameOriginBiasDetected === 'boolean' && br.nameOriginBiasDetected ? 'Flagged' : 'Clean',
-    explanation:
-      typeof br.explanation === 'string'
-        ? br.explanation
-        : 'Bias audit completed with no concerning patterns detected.',
   };
 }
 
@@ -312,7 +294,6 @@ export function serializeApplication(app: Rec, options?: { scheduledSlots?: stri
     skills: asStringArray(candidate?.skills),
     targetRoles: asStringArray(candidate?.target_roles),
     scores: serializeScores(evalFirst),
-    biasReport: serializeBiasReport(evalFirst),
     decision,
     reasoning: typeof evalFirst?.reasoning === 'string' ? evalFirst.reasoning : undefined,
     transcript: serializeTranscript(interview),

@@ -40,7 +40,6 @@ analyticsRouter.get(
           status: true,
           applied_at: true,
           hr_round_completed_at: true,
-          evaluations: { select: { bias_flag: true } },
         },
       });
 
@@ -110,20 +109,6 @@ analyticsRouter.get(
             )
           : 0;
 
-      // Bias Clean Rate calculation
-      let totalAudited = 0;
-      let biasFlags = 0;
-      applications.forEach((app) => {
-        if (app.evaluations && app.evaluations.length > 0) {
-          totalAudited++;
-          if (app.evaluations.some((e) => e.bias_flag)) {
-            biasFlags++;
-          }
-        }
-      });
-      const biasCleanRatePercent =
-        totalAudited > 0 ? Math.round(((totalAudited - biasFlags) / totalAudited) * 100) : 100;
-
       // Calculate actual weekly metrics based on applied_at timestamps
       const now = new Date();
       const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
@@ -140,13 +125,6 @@ analyticsRouter.get(
         { week: 'Week 2', applied: 0, screened: 0, interviewed: 0, offered: 0 },
         { week: 'Week 3', applied: 0, screened: 0, interviewed: 0, offered: 0 },
         { week: 'Week 4', applied: 0, screened: 0, interviewed: 0, offered: 0 },
-      ];
-
-      const weeklyAudits = [
-        { week: 'W1', totalAudited: 0, flagsTriggered: 0 },
-        { week: 'W2', totalAudited: 0, flagsTriggered: 0 },
-        { week: 'W3', totalAudited: 0, flagsTriggered: 0 },
-        { week: 'W4', totalAudited: 0, flagsTriggered: 0 },
       ];
 
       applications.forEach((app) => {
@@ -177,25 +155,9 @@ analyticsRouter.get(
         if (['offered', 'accepted'].includes(app.status)) {
           weeklyCounts[bucket].offered++;
         }
-
-        if (app.evaluations && app.evaluations.length > 0) {
-          weeklyAudits[bucket].totalAudited++;
-          if (app.evaluations.some((e) => e.bias_flag)) {
-            weeklyAudits[bucket].flagsTriggered++;
-          }
-        }
       });
 
       const weeklyFunnel = weeklyCounts;
-      const biasStabilityTrend = weeklyAudits.map((item) => ({
-        week: item.week,
-        totalAudited: item.totalAudited,
-        flagsTriggered: item.flagsTriggered,
-        cleanRatePercent:
-          item.totalAudited > 0
-            ? Math.round(((item.totalAudited - item.flagsTriggered) / item.totalAudited) * 100)
-            : 100,
-      }));
 
       // Dropoff Analysis
       const dropoffAnalysis = [
@@ -212,11 +174,9 @@ analyticsRouter.get(
             activeJobs: activeJobsCount,
             avgTimeToHireDays,
             offerAcceptanceRatePercent: stageConversionRates.offerAcceptanceRate,
-            biasCleanRatePercent,
           },
           weeklyFunnel,
           stageConversionRates,
-          biasStabilityTrend,
           dropoffAnalysis,
         },
       });

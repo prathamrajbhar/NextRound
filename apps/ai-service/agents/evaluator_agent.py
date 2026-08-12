@@ -201,7 +201,7 @@ async def run_evaluator_agent(
     proctor_telemetry: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
-    Execute Evaluator & Bias Audit Agent workflow.
+    Execute Evaluator Agent workflow.
     Guarantees zero-leakage scoring isolation assertion.
     """
     initial_state: EvaluatorState = {

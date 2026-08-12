@@ -128,10 +128,6 @@ export async function recordScreeningResult(applicationId: string, body: Record<
       reasoning:
         (reasoning as string) || (gap_analysis ? JSON.stringify(gap_analysis) : 'Screening completed'),
       decision: updatedApp.status === 'rejected' ? 'reject' : 'hire',
-      bias_flag: false,
-      bias_report: gap_analysis
-        ? ({ gap_analysis, semantic_match_score } as Prisma.InputJsonValue)
-        : undefined,
     },
     update: {
       stage: 'screening',
@@ -140,9 +136,6 @@ export async function recordScreeningResult(applicationId: string, body: Record<
       reasoning:
         (reasoning as string) || (gap_analysis ? JSON.stringify(gap_analysis) : undefined),
       decision: updatedApp.status === 'rejected' ? 'reject' : 'hire',
-      bias_report: gap_analysis
-        ? ({ gap_analysis, semantic_match_score } as Prisma.InputJsonValue)
-        : undefined,
     },
   });
 
@@ -206,15 +199,12 @@ export async function recordAssessmentResult(applicationId: string, body: Record
       aptitude_score: typeof score === 'number' ? score : null,
       reasoning: (feedback as string) || `Aptitude assessment completed. Score: ${score}%`,
       decision: passed ? 'hire' : 'reject',
-      bias_flag: false,
-      bias_report: { category_scores, total_questions, correct_answers } as Prisma.InputJsonValue,
     },
     update: {
       stage: 'assessment',
       aptitude_score: typeof score === 'number' ? score : undefined,
       reasoning: (feedback as string) || `Aptitude assessment completed. Score: ${score}%`,
       decision: passed ? 'hire' : 'reject',
-      bias_report: { category_scores, total_questions, correct_answers } as Prisma.InputJsonValue,
     },
   });
 
@@ -308,8 +298,6 @@ export async function recordCodingResult(applicationId: string, body: Record<str
         (feedback as string) ||
         `Coding evaluation completed. Complexity: ${(complexity_analysis as any)?.time_complexity || 'unknown'}`,
       decision: passed ? 'hire' : 'reject',
-      bias_flag: false,
-      bias_report: { pass_rate, complexity_analysis, execution_time_ms, memory_kb } as Prisma.InputJsonValue,
     },
     update: {
       stage: 'coding',
@@ -318,7 +306,6 @@ export async function recordCodingResult(applicationId: string, body: Record<str
         (feedback as string) ||
         `Coding evaluation completed. Complexity: ${(complexity_analysis as any)?.time_complexity || 'unknown'}`,
       decision: passed ? 'hire' : 'reject',
-      bias_report: { pass_rate, complexity_analysis, execution_time_ms, memory_kb } as Prisma.InputJsonValue,
     },
   });
 
@@ -327,87 +314,6 @@ export async function recordCodingResult(applicationId: string, body: Record<str
       console.error(`advanceAssessmentStage failed for application ${id}:`, err)
     );
   }
-
-  return { application: updatedApp, evaluation };
-}
-
-/** PATCH /applications/:id/video-transcript */
-export async function recordVideoTranscript(applicationId: string, body: Record<string, unknown>) {
-  const id = applicationId;
-  const { transcript, key_points, video_url } = body;
-
-  const app = await prisma.application.findUnique({ where: { id } });
-  if (!app) {
-    throw notFound('Application not found');
-  }
-
-  const evaluation = await prisma.evaluation.upsert({
-    where: { application_id: id },
-    create: {
-      application_id: id,
-      stage: 'video_screening',
-      reasoning: (transcript as string) || 'Video transcript processed',
-      bias_flag: false,
-      bias_report: { key_points, video_url } as Prisma.InputJsonValue,
-    },
-    update: {
-      reasoning: (transcript as string) || undefined,
-      bias_report: { key_points, video_url } as Prisma.InputJsonValue,
-    },
-  });
-
-  return { evaluation };
-}
-
-/** POST /applications/:id/video-screening-result */
-export async function recordVideoScreeningResult(
-  applicationId: string,
-  body: Record<string, unknown>
-) {
-  const id = applicationId;
-  const { submitted, score, passed, feedback, key_strengths, weaknesses } = body;
-
-  const app = await prisma.application.findUnique({ where: { id } });
-  if (!app) {
-    throw notFound('Application not found');
-  }
-
-  const videoReport = {
-    video_score: typeof score === 'number' ? score : null,
-    video_feedback: (feedback as string) || 'Video screening submitted',
-    key_strengths: Array.isArray(key_strengths) ? key_strengths : [],
-    weaknesses: Array.isArray(weaknesses) ? weaknesses : [],
-  };
-
-  const evaluation = await prisma.evaluation.upsert({
-    where: { application_id: id },
-    create: {
-      application_id: id,
-      stage: 'video_screening',
-      reasoning: (feedback as string) || 'Video screening submitted',
-      bias_flag: false,
-      bias_report: videoReport,
-    },
-    update: {
-      stage: 'video_screening',
-      reasoning: (feedback as string) || undefined,
-      bias_report: videoReport,
-    },
-  });
-
-  // Never regress a passed/advanced application. Fail -> reject, otherwise
-  // stay in the assessment phase and advance once all enabled modalities pass.
-  let updatedStatus: ApplicationStatus | null = null;
-  if (passed === false) {
-    updatedStatus = 'rejected';
-  } else if (submitted) {
-    const advanced = await advanceAssessmentStage(id);
-    updatedStatus = (advanced as ApplicationStatus | null) ?? 'screening_completed';
-  }
-
-  const updatedApp = updatedStatus
-    ? await prisma.application.update({ where: { id }, data: { status: updatedStatus } })
-    : app;
 
   return { application: updatedApp, evaluation };
 }
@@ -490,8 +396,6 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
           ? `Voice interview evaluation completed. Score: ${scoreNum}%`
           : 'Voice interview evaluation completed.'),
       decision: scoreNum != null ? (scoreNum >= 70 ? 'hire' : 'reject') : null,
-      bias_flag: false,
-      bias_report: { scores, feedback } as Prisma.InputJsonValue,
     },
     update: {
       stage: 'interview',
@@ -504,7 +408,6 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
           ? `Voice interview evaluation completed. Score: ${scoreNum}%`
           : 'Voice interview evaluation completed.'),
       decision: scoreNum != null ? (scoreNum >= 70 ? 'hire' : 'reject') : null,
-      bias_report: { scores, feedback } as Prisma.InputJsonValue,
     },
   });
 
@@ -625,15 +528,11 @@ export async function recordScheduleSlots(interviewId: string, body: Record<stri
 
 /** PATCH /evaluations/:id */
 export async function recordFinalEvaluation(body: Record<string, unknown>) {
-  const { application_id, composite_score, confidence, bias_report, reasoning } = body;
+  const { application_id, composite_score, confidence, reasoning } = body;
 
   const existing = application_id
     ? await prisma.evaluation.findFirst({ where: { application_id: application_id as string } })
     : null;
-
-  const biasFlag = Boolean(
-    (bias_report as any) && (bias_report as any).severity && (bias_report as any).severity !== 'low'
-  );
 
   const evaluation = existing
     ? await prisma.evaluation.update({
@@ -643,8 +542,6 @@ export async function recordFinalEvaluation(body: Record<string, unknown>) {
           confidence: typeof confidence === 'number' ? confidence : undefined,
           stage: 'final_evaluation',
           reasoning: (reasoning as string) || undefined,
-          bias_flag: biasFlag,
-          bias_report: bias_report || undefined,
         },
       })
     : await prisma.evaluation.create({
@@ -654,8 +551,6 @@ export async function recordFinalEvaluation(body: Record<string, unknown>) {
           confidence: typeof confidence === 'number' ? confidence : 1.0,
           stage: 'final_evaluation',
           reasoning: (reasoning as string) || 'Evaluation completed by Evaluator Agent',
-          bias_flag: biasFlag,
-          bias_report: (bias_report ?? {}) as Prisma.InputJsonValue,
         },
       });
 

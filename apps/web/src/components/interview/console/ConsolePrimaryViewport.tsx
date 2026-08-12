@@ -1,10 +1,7 @@
-'use client';
-
 import React from 'react';
-import { Bot, Camera, PhoneOff, Play, CheckCircle2, User } from '@/lib/lucide-google-icons';
+import { Bot, User } from '@/lib/lucide-google-icons';
 import { Message } from '@/hooks/useInterviewSession';
-import { InterviewConsoleMode, ScreeningQuestion } from './types';
-import { formatSeconds } from './format';
+import { InterviewConsoleMode } from './types';
 
 interface ConsolePrimaryViewportProps {
   mode: InterviewConsoleMode;
@@ -13,21 +10,13 @@ interface ConsolePrimaryViewportProps {
   micActive: boolean;
   micLevel: number;
   lastMessage?: Message;
-  screeningQuestions: ScreeningQuestion[];
-  screeningIdx: number;
-  isRecording: boolean;
-  recordingTimer: number;
-  attempts: number;
-  onScreeningRecordToggle: () => void;
-  onNextScreeningQuestion: () => void;
   candidateName: string;
   companyName: string;
 }
 
 /**
  * Left viewport of the interview console. Renders the AI voice orb (ai-voice /
- * mock-practice), the video-screening question + recording controls, or the
- * human HR video placeholder.
+ * mock-practice) or the human HR video placeholder.
  */
 export function ConsolePrimaryViewport({
   mode,
@@ -36,13 +25,6 @@ export function ConsolePrimaryViewport({
   micActive,
   micLevel,
   lastMessage,
-  screeningQuestions,
-  screeningIdx,
-  isRecording,
-  recordingTimer,
-  attempts,
-  onScreeningRecordToggle,
-  onNextScreeningQuestion,
   candidateName,
   companyName,
 }: ConsolePrimaryViewportProps) {
@@ -88,50 +70,6 @@ export function ConsolePrimaryViewport({
             <p className="text-xs text-slate-400 font-medium leading-relaxed">
               {lastMessage ? lastMessage.content : 'Welcome! The interview session has initialized. Speak clearly into your microphone.'}
             </p>
-          </div>
-        </div>
-      ) : mode === 'video-screening' ? (
-        <div className="p-6 space-y-5 text-center max-w-md">
-          <div className="h-12 w-12 rounded-2xl bg-brand-500/10 border border-brand-500/30 flex items-center justify-center mx-auto text-brand-400 shadow-md">
-            <Camera className="h-6 w-6" />
-          </div>
-          <div className="space-y-2">
-            <span className="text-[10px] font-black uppercase tracking-wider text-brand-400 bg-brand-950 border border-brand-800 px-2.5 py-1 rounded-full">
-              Question {screeningIdx + 1} of {screeningQuestions.length}
-            </span>
-            <h2 className="text-lg font-black text-white font-display pt-1">
-              {screeningQuestions[screeningIdx]?.questionText}
-            </h2>
-          </div>
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2 text-xs font-semibold">
-            <div className="flex justify-between text-slate-400">
-              <span>Recording Timer:</span>
-              <span className="text-rose-400 font-mono font-bold">{formatSeconds(recordingTimer)}</span>
-            </div>
-            <div className="flex justify-between text-slate-400">
-              <span>Attempt Count:</span>
-              <span className="text-slate-200">{attempts} / 3</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 justify-center pt-2">
-            <button
-              type="button"
-              onClick={onScreeningRecordToggle}
-              className={`px-5 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 shadow-md cursor-pointer ${
-                isRecording ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-brand-600 hover:bg-brand-500 text-white'
-              }`}
-            >
-              {isRecording ? <PhoneOff className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-              <span>{isRecording ? 'Stop Recording' : 'Start Recording'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={onNextScreeningQuestion}
-              className="px-5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-black flex items-center gap-1.5 cursor-pointer border border-slate-700"
-            >
-              <span>Next Question</span>
-              <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-            </button>
           </div>
         </div>
       ) : (

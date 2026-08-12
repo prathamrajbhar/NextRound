@@ -91,7 +91,6 @@
 | aptitude_score | Float | Aptitude score |
 | coding_score | Float | Coding score |
 | composite_score | Float | Overall score |
-| bias_flag | Boolean | Bias detected? |
 | decision | Enum | hire/reject/hold_for_review |
 | reasoning | Text | Decision explanation |
 | created_at | DateTime | Created date |
