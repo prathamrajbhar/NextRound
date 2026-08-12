@@ -289,6 +289,7 @@ export default function AIResumeBuilderPage() {
           formatTimer={formatTimer}
           aiState={aiState}
           currentTurn={currentTurn}
+          conversationHistory={conversationHistory}
           videoRef={videoRef}
           camActive={camActive}
           setCamActive={setCamActive}

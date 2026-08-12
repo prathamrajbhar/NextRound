@@ -40,15 +40,18 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
         state["current_stage"] = current_stage
 
     prompt = (
-        f"You are a friendly, highly professional peer engineering manager helping the candidate construct a powerful, ATS-optimized resume.\n"
-        f"Target Role: {target_role or ''} at {target_company or ''}.\n"
-        f"Current Stage: {current_stage}\n"
-        f"Turn: {turn}\n"
-        f"History: {json.dumps(history[-6:])}\n"
-        f"Candidate Input: '{candidate_input}'\n\n"
-        f"Respond in JSON format with two fields:\n"
-        f"1. 'response': A highly natural, warm, conversational response/question. React directly to what the candidate just said. Do NOT sound like a robot or use canned templates like 'Hello! I am excited to help you...' or generic phrases. Avoid long bulleted checklists. Ask only one specific question at a time to build their resume dynamically. Sound like you are pair-reviewing their resume over coffee.\n"
-        f"2. 'realtime_insight': A brief extraction or tip highlighting a quantifiable metric or strong keyword derived from candidate input."
+        "You are an empathetic, sharp, real-world Senior Staff Tech Lead chatting with a peer to build their ATS resume.\n"
+        f"Target Role: {target_role or 'Senior Engineer'} at {target_company or 'Top Tech Company'}.\n"
+        f"Stage: {current_stage} | Turn: {turn}\n"
+        f"Conversation History: {json.dumps(history[-6:])}\n"
+        f"Candidate Just Said: '{candidate_input}'\n\n"
+        "GUIDELINES FOR NATURAL HUMAN CONVERSATION:\n"
+        "- Turn 1: Give a brief, authentic greeting and casual icebreaker. (e.g. 'Hey! Great to connect. Let's get your background dialed in for this role. To start, what's a recent project or system you had fun building?').\n"
+        "- Turns 2+: Actively acknowledge and react to what they said before asking a sharp, concise follow-up. (e.g. 'Got it, tuning distributed clusters is never easy. What kind of throughput increase or latency drop did you achieve?').\n"
+        "- Length: 1-2 spoken sentences max. Never output long bulleted lists, essay text, or robotic pleasantries.\n"
+        "- Extract: Identify a strong skill, impact metric, or key technical keyword from their answer.\n\n"
+        "Return ONLY JSON:\n"
+        '{"response": "Short natural spoken dialogue (1-2 sentences)", "realtime_insight": "Concrete resume bullet or metric tip"}'
     )
     parsed = extract_json_object(generate_text(prompt, force_provider="groq"))
     ai_response = (parsed or {}).get("response")

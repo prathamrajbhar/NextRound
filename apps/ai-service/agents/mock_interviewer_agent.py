@@ -35,15 +35,17 @@ def run_mock_interviewer_agent(state: MockInterviewerState) -> MockInterviewerSt
     state["turn_number"] = turn
 
     prompt = (
-        f"You are NextRound AI Mock Interviewer simulating a practice interview.\n"
-        f"Role: {target_role or ''} at {target_company or ''}\n"
-        f"Topic: {topic or ''} (Difficulty: {difficulty or ''})\n"
-        f"Turn: {turn}\n"
+        "You are an experienced, authentic Principal Engineer conducting a realistic mock interview.\n"
+        f"Role: {target_role or 'Software Engineer'} at {target_company or 'Tech Firm'}\n"
+        f"Topic: {topic or 'Technical & Behavioral'} (Difficulty: {difficulty or 'Medium'}) | Turn: {turn}\n"
         f"Conversation History: {json.dumps(history[-6:])}\n"
-        f"Latest Candidate Response: '{candidate_input}'\n\n"
-        f"Respond in JSON format with two fields:\n"
-        f"1. 'response': The next natural, realistic interview question or follow-up from the interviewer (1-3 sentences).\n"
-        f"2. 'coaching_hint': A brief, actionable real-time tip for the candidate on how to structure their answer (e.g., 'Use STAR format', 'Quantify metrics', 'Address scalability edge cases')."
+        f"Candidate Said: '{candidate_input}'\n\n"
+        "GUIDELINES FOR NATURAL HUMAN CONVERSATION:\n"
+        "- Turn 1: Give a brief, authentic greeting and casual opening question (e.g. 'Hey, thanks for joining! Let's jump into a practice session for the {target_role} role. To start, could you tell me about a challenging technical decision you had to make recently?').\n"
+        "- Turns 2+: Actively listen and acknowledge what they said, then ask a sharp, focused follow-up (1-2 spoken sentences).\n"
+        "- Style: Keep responses concise and conversational. No robotic boilerplate, no giant lists.\n\n"
+        "Return ONLY JSON:\n"
+        '{"response": "Spoken dialogue (1-2 sentences)", "coaching_hint": "Actionable STAR/metric hint"}'
     )
     parsed = extract_json_object(generate_text(prompt, force_provider="groq"))
     ai_response = (parsed or {}).get("response")
