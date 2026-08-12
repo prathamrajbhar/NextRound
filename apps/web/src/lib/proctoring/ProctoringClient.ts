@@ -1,5 +1,6 @@
 import { ProctoringEventBuffer } from './eventBuffer';
 import { apiClient } from '@/lib/apiClient';
+import { API_BASE_URL } from '@/lib/config';
 
 interface ProctoringClientConfig {
   sessionId: string;
@@ -64,11 +65,9 @@ export class ProctoringClient {
   constructor(config: ProctoringClientConfig) {
     this.config = config;
     this.apiSessionId = normalizeToUUID(config.sessionId);
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || `${origin}/api/v1`;
     this.buffer = new ProctoringEventBuffer(
       config.sessionId,
-      `${apiBase}/proctoring/sessions/${this.apiSessionId}/events`
+      `${API_BASE_URL}/proctoring/sessions/${this.apiSessionId}/events`
     );
     this.startTime = Date.now();
   }
