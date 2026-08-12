@@ -190,7 +190,12 @@ export function useResumeVoiceSession({
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.error('SpeechRecognition error:', event.error);
+      console.warn('SpeechRecognition error:', event.error);
+      if (event.error === 'network') {
+        setError('Speech-to-text connection lost. You can type your response instead!');
+      } else if (event.error === 'not-allowed') {
+        setError('Microphone permission denied. Please allow access or type your response.');
+      }
     };
 
     recognition.onend = () => {
