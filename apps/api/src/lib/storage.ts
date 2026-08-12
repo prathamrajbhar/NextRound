@@ -2,9 +2,19 @@ import fs from 'fs';
 import path from 'path';
 
 const uploadDirName = process.env.UPLOAD_DIR || 'uploads';
-export const UPLOAD_ROOT_DIR = path.isAbsolute(uploadDirName)
+let resolvedDir = path.isAbsolute(uploadDirName)
   ? uploadDirName
   : path.resolve(process.cwd(), uploadDirName);
+
+// Monorepo workaround: if running inside apps/api under turbo dev, resolve to workspace root uploads folder
+if (!path.isAbsolute(uploadDirName) && process.cwd().endsWith('apps/api')) {
+  const rootUploads = path.resolve(process.cwd(), '../..', uploadDirName);
+  if (fs.existsSync(rootUploads) || fs.existsSync(path.resolve(process.cwd(), '../..', 'package.json'))) {
+    resolvedDir = rootUploads;
+  }
+}
+
+export const UPLOAD_ROOT_DIR = resolvedDir;
 
 export const SUB_DIRECTORIES = ['resumes', 'audio', 'video', 'offers', 'misc'];
 
