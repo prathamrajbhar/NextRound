@@ -25,6 +25,17 @@ const generateUUID = () => {
   });
 };
 
+/**
+ * Strips any non-UUID prefix (e.g. 'session-') from a session identifier so the
+ * value always satisfies the API's `z.string().uuid()` validator and resolves
+ * correctly in event-batch route paths.
+ */
+const normalizeToUUID = (id: string): string => {
+  const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  const match = UUID_RE.exec(id);
+  return match ? match[0] : id;
+};
+
 export class ProctoringClient {
   private config: ProctoringClientConfig;
   private buffer: ProctoringEventBuffer;
@@ -32,6 +43,8 @@ export class ProctoringClient {
   private startTime: number;
   private isPaused = false;
   private activeTracks: MediaStreamTrack[] = [];
+  /** Normalized pure UUID derived from config.sessionId — safe for API routes. */
+  private apiSessionId: string;
   
   // Sound Analysis properties
   private audioContext: AudioContext | null = null;
@@ -50,11 +63,12 @@ export class ProctoringClient {
 
   constructor(config: ProctoringClientConfig) {
     this.config = config;
+    this.apiSessionId = normalizeToUUID(config.sessionId);
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const apiBase = process.env.NEXT_PUBLIC_API_URL || `${origin}/api/v1`;
     this.buffer = new ProctoringEventBuffer(
       config.sessionId,
-      `${apiBase}/proctoring/sessions/${config.sessionId}/events`
+      `${apiBase}/proctoring/sessions/${this.apiSessionId}/events`
     );
     this.startTime = Date.now();
   }
@@ -62,9 +76,8 @@ export class ProctoringClient {
   async start() {
     this.startTime = Date.now();
     try {
-      // Create session on server
       await apiClient.post('/proctoring/sessions', {
-        id: this.config.sessionId,
+        id: this.apiSessionId,
         candidate_id: this.config.candidateId,
         session_type: this.config.sessionType,
         application_id: this.config.applicationId,
@@ -443,7 +456,7 @@ export class ProctoringClient {
     if (this.isPaused) return;
     this.logEvent('heartbeat', 'info', 'system');
     try {
-      await apiClient.post(`/proctoring/sessions/${this.config.sessionId}/heartbeat`);
+      await apiClient.post(`/proctoring/sessions/${this.apiSessionId}/heartbeat`);
     } catch (err) {
       console.warn('[ProctoringClient] Heartbeat check failed:', err);
     }
@@ -454,7 +467,7 @@ export class ProctoringClient {
     this.isPaused = true;
     this.logEvent('session_paused', 'info', 'system');
     try {
-      await apiClient.post(`/proctoring/sessions/${this.config.sessionId}/pause`);
+      await apiClient.post(`/proctoring/sessions/${this.apiSessionId}/pause`);
     } catch (err) {
       console.error('[ProctoringClient] Server pause failed:', err);
     }
@@ -465,7 +478,7 @@ export class ProctoringClient {
     this.isPaused = false;
     this.logEvent('session_resumed', 'info', 'system');
     try {
-      await apiClient.post(`/proctoring/sessions/${this.config.sessionId}/resume`);
+      await apiClient.post(`/proctoring/sessions/${this.apiSessionId}/resume`);
     } catch (err) {
       console.error('[ProctoringClient] Server resume failed:', err);
     }
@@ -493,7 +506,7 @@ export class ProctoringClient {
     // Flush event buffer to server synchronously before ending session
     await this.buffer.flush();
     try {
-      await apiClient.post(`/proctoring/sessions/${this.config.sessionId}/end`);
+      await apiClient.post(`/proctoring/sessions/${this.apiSessionId}/end`);
     } catch (err) {
       console.error('[ProctoringClient] Server end failed:', err);
     }
