@@ -159,6 +159,10 @@ export async function recordScreeningResult(applicationId: string, body: Record<
     await ensureInterviewAndSchedule(id).catch((err) =>
       console.error(`Failed to create interview/schedule for application ${id}:`, err)
     );
+    // If the assessment stage is disabled, automatically advance to Interview stage
+    await advanceAssessmentStage(id).catch((err) =>
+      console.error(`advanceAssessmentStage failed during screening completion for ${id}:`, err)
+    );
   }
 
   return { application: updatedApp, evaluation };

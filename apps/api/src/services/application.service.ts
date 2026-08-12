@@ -4,6 +4,7 @@ import { enqueueScreening } from '../lib/queues/screening.queue';
 import { enqueueScheduling } from '../lib/queues/scheduling.queue';
 import { enqueueAssessment } from '../lib/queues/assessment.queue';
 import { emailService } from './email.service';
+import { advanceAssessmentStage } from '../lib/pipeline';
 import { evaluateApplicationScreening } from './screening-evaluator.service';
 import {
   selectAptitudeQuestions,
@@ -255,6 +256,20 @@ export async function getApplication(appId: string, user: AppUserCtx) {
         : undefined;
     if (output && Array.isArray(output.slots)) {
       scheduledSlots = output.slots.filter((s): s is string => typeof s === 'string');
+    }
+  }
+
+  // If the application is currently in assessment/screening_completed stage, but the
+  // job config has disabled the assessment stage, automatically advance the candidate
+  // to the next appropriate stage (interview).
+  if (
+    (application.status === 'screening_completed' || application.status === 'assessment') &&
+    application.job?.stages &&
+    !application.job.stages.includes('assessment')
+  ) {
+    const nextStatus = await advanceAssessmentStage(application.id);
+    if (nextStatus) {
+      application.status = nextStatus as any;
     }
   }
 

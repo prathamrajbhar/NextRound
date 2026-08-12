@@ -165,25 +165,25 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       date: app.appliedDate,
       done: true,
     },
-    {
+    (!job?.stages || job.stages.includes('screening')) && {
       name: 'Screened',
       desc: 'AI Screening Agent completed parsing and qualification matching.',
       date: isScreenedDone ? app.appliedDate : '',
       done: isScreenedDone,
     },
-    {
+    (!job?.stages || job.stages.includes('assessment')) && {
       name: 'Assessment',
       desc: 'Completed Aptitude Test & Coding Assessment module.',
       date: isAssessmentDone ? assessments[0]?.completedDate || app.appliedDate : '',
       done: isAssessmentDone,
     },
-    {
+    (!job?.stages || job.stages.includes('voice_screen')) && {
       name: 'Interview',
       desc: 'Completed voice conversational session with Interviewer Agent.',
       date: isInterviewDone ? app.appliedDate : '',
       done: isInterviewDone,
     },
-    {
+    (!job?.stages || job.stages.includes('panel') || job.stages.includes('hr_round')) && {
       name: 'HR Round',
       desc: 'Live 1:1 human video call evaluation with HR representative.',
       date: isHrRoundDone
@@ -197,7 +197,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       date: isDecisionDone ? app.appliedDate : '',
       done: isDecisionDone,
     },
-  ];
+  ].filter(Boolean) as { name: string; desc: string; date: string; done: boolean }[];
 
   const toneClass: Record<string, string> = {
     emerald:
@@ -221,7 +221,8 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
   // Each step is only included if its prerequisite stage is complete.
   const allNextSteps = [
     // 1. AI Screening (only if still in applied/screening)
-    (app.status === 'applied' || app.status === 'screening') && {
+    (app.status === 'applied' || app.status === 'screening') &&
+    (!job?.stages || job.stages.includes('screening')) && {
       icon: Sparkles,
       label: 'AI Resume Screening',
       desc: 'Your application has been received. Click to run AI qualification matching.',
@@ -232,7 +233,8 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
     },
 
     // 2. Aptitude Assessment (only after screening_completed or in assessment stage)
-    (app.status === 'screening_completed' || app.status === 'assessment') && {
+    (app.status === 'screening_completed' || app.status === 'assessment') &&
+    (!job?.stages || job.stages.includes('assessment')) && {
       icon: ClipboardCheck,
       label: 'Aptitude Assessment',
       desc:
