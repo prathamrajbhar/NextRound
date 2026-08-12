@@ -652,12 +652,14 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
 
   let allQuestions: any[] = [];
 
-  // Only reuse stored questions if the assessment is already completed (submitted).
-  // For pending/in_progress sessions always re-draw fresh random questions so
-  // candidates never see the same set on repeated loads.
+  // Reuse stored completed questions ONLY if the count still matches the
+  // current HR-configured distribution. If HR changed the config (e.g., from
+  // 20 questions to 4), always re-draw so the new rules take effect.
   const isCompleted = assessment?.status === 'completed';
+  const storedCount = Array.isArray(assessment?.questions) ? (assessment!.questions as any[]).length : 0;
+  const countMatchesConfig = storedCount === totalCount;
 
-  if (isCompleted && Array.isArray(assessment!.questions) && (assessment!.questions as any[]).length > 0) {
+  if (isCompleted && countMatchesConfig && storedCount > 0) {
     allQuestions = assessment!.questions as any[];
   } else {
     const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
@@ -667,7 +669,7 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
     if (assessment) {
       assessment = await prisma.assessment.update({
         where: { id: assessment.id },
-        data: { questions: allQuestions as any, total_question_count: allQuestions.length, status: 'pending' },
+        data: { questions: allQuestions as any, total_question_count: allQuestions.length, status: 'pending', responses: [] },
       });
     } else {
       assessment = await prisma.assessment.create({

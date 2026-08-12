@@ -327,15 +327,24 @@ export async function getAssessmentData(applicationId: string, testType: string)
   });
 
   // Surface the job's configured pass threshold so the AI worker can honor
-  // per-job scoring config instead of a hardcoded 70%. Best-effort lookup.
+  // per-job scoring config. The HR sets passingScore inside assessmentConfig
+  // (Online Test panel). thresholds.minScore is the hiring shortlist threshold —
+  // a different concept. Prefer assessmentConfig.passingScore.
   let minScore: number | null = null;
   try {
     const app = await prisma.application.findUnique({
       where: { id },
-      select: { job: { select: { thresholds: true } } },
+      select: { job: { select: { thresholds: true, assessmentConfig: true } } },
     });
+    const assessmentConfig = (app?.job?.assessmentConfig ?? {}) as { passingScore?: number };
     const thresholds = (app?.job?.thresholds ?? {}) as { minScore?: number };
-    minScore = typeof thresholds.minScore === 'number' ? thresholds.minScore : null;
+    // Prefer HR-configured aptitude passing score; fall back to job-level minScore
+    minScore =
+      typeof assessmentConfig.passingScore === 'number'
+        ? assessmentConfig.passingScore
+        : typeof thresholds.minScore === 'number'
+        ? thresholds.minScore
+        : null;
   } catch {
     minScore = null;
   }
