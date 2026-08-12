@@ -23,5 +23,8 @@
     "concurrently": "^10.0.4",
     "turbo": "^2.10.9",
     "typescript": "npm:@typescript/typescript6@^6.0.2"
+  },
+  "prisma": {
+    "schema": "packages/database/prisma/schema.prisma"
   }
 }
