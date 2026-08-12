@@ -1425,7 +1425,7 @@ async function main(): Promise<void> {
       data: {
         org_id: org.id,
         title: tpl.title,
-        description: `### Role Overview\n${tpl.orgName} is looking for a talented **${tpl.title}** based out of **${tpl.city}**.\n\n### Key Requirements\n${tpl.keyRequirements.map((r) => `- ${r}`).join('\n')}\n\n### Culture & Benefits\n- Competitive compensation (₹${tpl.salaryLPA[0]} LPA - ₹${tpl.salaryLPA[1]} LPA) + generous equity\n- Comprehensive health insurance for family\n- Annual learning & wellness allowance\n- Flexible work culture (${tpl.city})`,
+        description: `## About the Role\n\n${tpl.orgName} is looking for a talented **${tpl.title}** based out of **${tpl.city}**.\n\n## Required Skills\n\n${tpl.keyRequirements.map((r) => `- ${r}`).join('\n')}\n\n## What We Offer\n\n- Competitive compensation (₹${tpl.salaryLPA[0]} LPA - ₹${tpl.salaryLPA[1]} LPA) + generous equity\n- Comprehensive health insurance for family\n- Annual learning & wellness allowance\n- Flexible work culture (${tpl.city})`,
         rubric,
         thresholds: { minScore: tpl.minScore, autoOffer: tpl.autoOffer },
         status: tpl.status,
