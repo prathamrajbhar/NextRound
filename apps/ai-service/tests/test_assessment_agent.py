@@ -66,3 +66,31 @@ async def test_assessment_agent_scoring_with_selected_option_index():
     assert result["total_questions"] == 2
     assert result["passed"] is False
     print("✓ test_assessment_agent_scoring_with_selected_option_index passed")
+
+
+@pytest.mark.asyncio
+async def test_assessment_agent_scoring_with_correct_index_property():
+    """Verify that scoring handles the 'correct_index' DB column style key in stored questions."""
+    stored_questions = [
+        {"id": "q1", "category": "Math", "correct_index": 2},
+        {"id": "q2", "category": "Logic", "correct_index": 1},
+    ]
+
+    # Both correct
+    answers = [
+        {"questionId": "q1", "selectedOption": 2},
+        {"questionId": "q2", "selectedOption": 1},
+    ]
+
+    result = await run_assessment_agent(
+        application_id="test_app_3",
+        answers=answers,
+        stored_questions=stored_questions,
+        min_score=60.0
+    )
+
+    assert result["score"] == 100.0
+    assert result["correct_answers"] == 2
+    assert result["total_questions"] == 2
+    assert result["passed"] is True
+    print("✓ test_assessment_agent_scoring_with_correct_index_property passed")

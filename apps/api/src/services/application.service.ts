@@ -729,7 +729,7 @@ export async function submitAptitude(
     orderBy: { created_at: 'desc' },
   });
   const storedQuestions = Array.isArray(storedAssessment?.questions)
-    ? (storedAssessment!.questions as Array<{ id?: string; correctIndex?: unknown }>)
+    ? (storedAssessment!.questions as Array<{ id?: string; correctIndex?: unknown; correct_index?: unknown }>)
     : [];
   const answersArr = Array.isArray(answers)
     ? (answers as Array<{ questionId?: string; selectedOption?: unknown }>)
@@ -738,9 +738,10 @@ export async function submitAptitude(
   let correctCount = 0;
   let totalScored = 0;
   for (const q of storedQuestions) {
-    if (typeof q.correctIndex !== 'number') continue;
+    const correctIdx = q.correctIndex !== undefined ? q.correctIndex : q.correct_index;
+    if (typeof correctIdx !== 'number') continue;
     totalScored++;
-    if (answerMap.get(q.id) === q.correctIndex) correctCount++;
+    if (answerMap.get(q.id) === correctIdx) correctCount++;
   }
   const computedScore = totalScored > 0 ? Math.round((correctCount / totalScored) * 100) : null;
 

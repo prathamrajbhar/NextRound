@@ -42,8 +42,9 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
         for q in stored_q:
             q_id = str(q.get("id") or "")
             if q_id:
+                correct_idx = q.get("correctIndex") if q.get("correctIndex") is not None else q.get("correct_index")
                 answer_key[q_id] = {
-                    "correctIndex": _to_int(q.get("correctIndex"), -1),
+                    "correctIndex": _to_int(correct_idx, -1),
                     "category": q.get("category"),
                 }
 
