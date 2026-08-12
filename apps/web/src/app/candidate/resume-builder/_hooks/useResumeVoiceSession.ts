@@ -160,7 +160,6 @@ export function useResumeVoiceSession({
     // Cancel any active audio playback
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current = null;
     }
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -168,16 +167,19 @@ export function useResumeVoiceSession({
 
     setAiState('speaking');
 
-    // 1. If neural audio URL is provided, play it
+    // 1. If neural audio URL is provided, play it on the pre-unlocked object
     if (audioUrl) {
       try {
         const playableUrl = dataUriToBlobUrl(audioUrl);
-        const audio = new Audio(playableUrl);
-        audioRef.current = audio;
+        
+        if (!audioRef.current) {
+          audioRef.current = new Audio();
+        }
+        const audio = audioRef.current;
+        audio.src = playableUrl;
         audio.volume = 1.0;
 
         audio.onended = () => {
-          audioRef.current = null;
           setAiState('listening');
           if (callback) callback();
         };
@@ -426,6 +428,16 @@ export function useResumeVoiceSession({
 
   // Initialize call
   const startCall = useCallback(async () => {
+    // Synchronously create and play/pause silent tick to unlock the Audio element inside the user gesture
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+    }
+    const audio = audioRef.current;
+    audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP//';
+    audio.play().then(() => {
+      audio.pause();
+    }).catch(() => {});
+
     unlockAudio();
     setError(null);
     setConversationHistory([]);
