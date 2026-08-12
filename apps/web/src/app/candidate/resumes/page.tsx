@@ -15,6 +15,7 @@ import {
 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
 import { EditResumeModal, GeneratedResumeData } from './_components/EditResumeModal';
+import { Modal } from '@/components/ui';
 
 interface ResumeHistoryItem {
   id: string;
@@ -33,6 +34,7 @@ export default function CandidateResumesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [primaryId, setPrimaryId] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<ResumeHistoryItem | null>(null);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
@@ -238,8 +240,11 @@ export default function CandidateResumesPage() {
     setHistory(history.map(h => h.id === updatedItem.id ? { ...h, ...updatedItem } : h));
   };
 
-  const handleDeleteResume = async (id: string) => {
-    if (!window.confirm('Are you sure you want to permanently delete this resume?')) return;
+  const handleDeleteResume = (id: string) => {
+    setDeleteConfirmationId(id);
+  };
+
+  const performDelete = async (id: string) => {
     try {
       await apiClient.delete(`/resume-builder/${id}`);
       setHistory(prev => prev.filter(h => h.id !== id));
@@ -447,6 +452,42 @@ export default function CandidateResumesPage() {
         resumeItem={editingItem}
         onSave={handleSaveEditedResume}
       />
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={Boolean(deleteConfirmationId)}
+        onClose={() => setDeleteConfirmationId(null)}
+        title="Delete Resume"
+        description="This action cannot be undone. Are you sure you want to permanently delete this resume?"
+        size="sm"
+        footer={
+          <div className="flex items-center justify-end gap-2 w-full">
+            <button
+              type="button"
+              onClick={() => setDeleteConfirmationId(null)}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-350 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-all cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (deleteConfirmationId) {
+                  await performDelete(deleteConfirmationId);
+                  setDeleteConfirmationId(null);
+                }
+              }}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-500 transition-all cursor-pointer shadow-sm"
+            >
+              Delete Permanently
+            </button>
+          </div>
+        }
+      >
+        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+          Deleting this resume will permanently remove it from your resume vault. You will lose all ATS scoring details and the PDF download copy.
+        </p>
+      </Modal>
 
     </div>
   );
