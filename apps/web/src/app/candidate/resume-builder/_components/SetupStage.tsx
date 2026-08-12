@@ -123,7 +123,7 @@ export function SetupStage({
         <div className="flex items-center gap-3">
           <Link
             href="/candidate/resumes"
-            className="px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-750 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 backdrop-blur-md flex items-center gap-2 dark:hover:bg-slate-850 transition-all cursor-pointer shadow-sm dark:text-slate-200 font-extrabold text-xs"
+            className="px-3.5 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 backdrop-blur-md flex items-center gap-2 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm dark:text-slate-200 font-extrabold text-xs"
           >
             <FileText className="h-4 w-4 text-orange-500 dark:text-orange-400" />
             <span>Past Resumes Vault</span>
@@ -316,7 +316,7 @@ export function SetupStage({
         <div className="space-y-1 text-center sm:text-left">
           <div className="flex items-center gap-2 justify-center sm:justify-start">
             <span className="text-xs font-black text-slate-800 dark:text-white">Ready to Build Your ATS Resume?</span>
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-250 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400">
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400">
               15-Min Dynamic Session
             </span>
           </div>

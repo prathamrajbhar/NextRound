@@ -11,21 +11,21 @@ export function CandidateQuickPrepHub() {
       description: 'Practice DS & Algorithms with AI live evaluation',
       icon: Code,
       color: 'emerald',
-      bgClass: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-250 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
+      bgClass: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400',
     },
     {
       title: 'System Design & Architecture',
       description: 'Practice high-level design & distributed systems',
       icon: Cpu,
       color: 'cyan',
-      bgClass: 'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-250 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400',
+      bgClass: 'bg-cyan-50 dark:bg-cyan-500/10 border-cyan-200 dark:border-cyan-500/20 text-cyan-600 dark:text-cyan-400',
     },
     {
       title: 'HR & Behavioral Assessment',
       description: 'Practice STAR technique answers & communication',
       icon: MessageSquare,
       color: 'purple',
-      bgClass: 'bg-purple-50 dark:bg-purple-500/10 border-purple-250 dark:border-purple-500/20 text-purple-600 dark:text-purple-400',
+      bgClass: 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/20 text-purple-600 dark:text-purple-400',
     },
   ];
 
@@ -57,7 +57,7 @@ export function CandidateQuickPrepHub() {
             <Link
               key={track.title}
               href="/candidate/mock/new"
-              className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-700/60 hover:border-slate-350 dark:hover:border-slate-600 transition-all flex flex-col justify-between group cursor-pointer"
+              className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/60 hover:border-slate-350 dark:hover:border-slate-600 transition-all flex flex-col justify-between group cursor-pointer"
             >
               <div className="space-y-3">
                 <div className={`h-10 w-10 rounded-xl ${track.bgClass} border flex items-center justify-center group-hover:scale-105 transition-transform`}>

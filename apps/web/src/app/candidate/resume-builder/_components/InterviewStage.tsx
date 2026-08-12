@@ -374,8 +374,8 @@ export function InterviewStage({
           onClick={() => setMicActive(!micActive)}
           className={`p-2.5 rounded-full border transition-all cursor-pointer ${
             micActive
-              ? 'bg-slate-250 border-slate-350 dark:bg-slate-850 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-250 dark:hover:bg-slate-800'
-              : 'bg-rose-500/10 border-rose-500/20 text-rose-550 dark:text-rose-400 animate-pulse'
+              ? 'bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
+              : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400 animate-pulse'
           }`}
           title={micActive ? 'Mute Microphone' : 'Unmute Microphone'}
         >
@@ -388,8 +388,8 @@ export function InterviewStage({
           onClick={() => setCamActive(!camActive)}
           className={`p-2.5 rounded-full border transition-all cursor-pointer ${
             camActive
-              ? 'bg-slate-250 border-slate-350 dark:bg-slate-850 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-250 dark:hover:bg-slate-800'
-              : 'bg-rose-500/10 border-rose-500/20 text-rose-550 dark:text-rose-400'
+              ? 'bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-700'
+              : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
           }`}
           title={camActive ? 'Turn Off Camera' : 'Turn On Camera'}
         >

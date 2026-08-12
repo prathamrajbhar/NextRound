@@ -285,7 +285,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
                 >
                   <CompanyLogo name={simJob.orgName} logoUrl={simJob.orgLogo} size="sm" />
                   <div className="min-w-0 flex-1">
-                    <h4 className="text-xs font-bold text-slate-850 dark:text-slate-100 truncate">{simJob.title}</h4>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">{simJob.title}</h4>
                     <span className="text-[10px] font-bold text-brand-600 dark:text-orange-400 block">{simJob.orgName}</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
