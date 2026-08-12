@@ -65,10 +65,6 @@ export function UnifiedAssessmentSession({
     isAnalyzing,
     startSession,
     submitAnswer,
-    wrapUp,
-    strikeCount,
-    showWarningModal,
-    onResumeFullscreen,
     onEliminate,
   } = useInterviewSession({
     company: targetCompany,
@@ -89,7 +85,6 @@ export function UnifiedAssessmentSession({
     handleResumeFullscreen: proctorResumeFS,
     handleEnd: proctorEnd,
     suppressViolations,
-    trackMediaStream,
     proctoringClient,
   } = useProctoringSession({
     sessionId,
