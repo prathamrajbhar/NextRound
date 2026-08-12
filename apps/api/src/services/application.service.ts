@@ -652,8 +652,13 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
 
   let allQuestions: any[] = [];
 
-  if (assessment && Array.isArray(assessment.questions) && (assessment.questions as any[]).length === totalCount) {
-    allQuestions = assessment.questions as any[];
+  // Only reuse stored questions if the assessment is already completed (submitted).
+  // For pending/in_progress sessions always re-draw fresh random questions so
+  // candidates never see the same set on repeated loads.
+  const isCompleted = assessment?.status === 'completed';
+
+  if (isCompleted && Array.isArray(assessment!.questions) && (assessment!.questions as any[]).length > 0) {
+    allQuestions = assessment!.questions as any[];
   } else {
     const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
     const selected = await selectAptitudeQuestions({ distribution });

@@ -257,10 +257,6 @@ mockRouter.get(
         where: { session_id: session.id, test_type: 'aptitude' },
       });
 
-      let allQuestions: any[] = Array.isArray(assessment?.questions)
-        ? (assessment!.questions as any[])
-        : [];
-
       // Find matching job with assessmentConfig
       const job = await prisma.job.findFirst({
         where: {
@@ -278,9 +274,15 @@ mockRouter.get(
         ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
         : 16;
 
-      if (allQuestions.length !== totalCount) {
-        const rawDiff  = normalizeDifficulty(session.difficulty);
+      // Only reuse stored questions if the assessment is already completed.
+      // For pending/in_progress sessions always re-draw fresh random questions.
+      const isCompleted = assessment?.status === 'completed';
+      let allQuestions: any[] = [];
 
+      if (isCompleted && Array.isArray(assessment?.questions) && (assessment!.questions as any[]).length > 0) {
+        allQuestions = assessment!.questions as any[];
+      } else {
+        const rawDiff = normalizeDifficulty(session.difficulty);
         const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
         const selected = await selectAptitudeQuestions({
           distribution,
