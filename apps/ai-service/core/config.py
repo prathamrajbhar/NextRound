@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     internal_service_secret: str = "internal_secret_key_change_in_production"
     express_api_base_url: str = "http://localhost:4000/api/v1"
     redis_url: str = "redis://localhost:6379"
+    llm_provider: str = "gemini" # Options: "gemini", "groq", "ollama"
     gemini_api_key: str = ""
     groq_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"

@@ -21,6 +21,9 @@ logger = logging.getLogger("llm_service")
 _client: Optional[Any] = None
 _client_initialized = False
 
+_groq_client: Optional[Any] = None
+_groq_client_initialized = False
+
 
 def get_client() -> Optional[Any]:
     """Return a lazily-initialized Google GenAI client, or None if unavailable."""
@@ -37,6 +40,23 @@ def get_client() -> Optional[Any]:
         logger.warning(f"Failed to initialize GenAI client: {e}")
         _client = None
     return _client
+
+
+def get_groq_client() -> Optional[Any]:
+    """Return a lazily-initialized Groq client, or None if unavailable."""
+    global _groq_client, _groq_client_initialized
+    if _groq_client_initialized:
+        return _groq_client
+    _groq_client_initialized = True
+    if not settings.groq_api_key:
+        return None
+    try:
+        from groq import Groq
+        _groq_client = Groq(api_key=settings.groq_api_key)
+    except Exception as e:
+        logger.warning(f"Failed to initialize Groq client: {e}")
+        _groq_client = None
+    return _groq_client
 
 
 def _generate_text_ollama(prompt: str) -> Optional[str]:
@@ -65,27 +85,80 @@ def _generate_text_ollama(prompt: str) -> Optional[str]:
         return None
 
 
-def generate_text(prompt: str) -> Optional[str]:
-    """Generate a text completion from the configured model.
+def _generate_text_groq(prompt: str) -> Optional[str]:
+    """Generate text using Groq API."""
+    client = get_groq_client()
+    if not client or not prompt:
+        return None
+    try:
+        logger.info(f"Attempting Groq generation using model {settings.groq_model}...")
+        completion = client.chat.completions.create(
+            messages=[{"role": "user", "content": prompt}],
+            model=settings.groq_model,
+            temperature=0.2,
+        )
+        text = completion.choices[0].message.content
+        return text.strip() if text else None
+    except Exception as e:
+        logger.error(f"Groq generate_content failed: {e}")
+        return None
 
-    First tries Gemini. If Gemini is not configured or fails, immediately
-    switches to Ollama without retries or static fallback logic.
+
+def generate_text(prompt: str) -> Optional[str]:
+    """Generate a text completion from the configured provider/model.
+
+    Honors settings.llm_provider ("gemini", "groq", or "ollama").
+    If the preferred provider fails or is not configured, it gracefully falls back
+    to other configured providers in order of preference.
     """
     if not prompt:
         return None
 
-    client = get_client()
-    if client:
-        try:
-            response = client.models.generate_content(model=settings.gemini_model, contents=prompt)
-            text = getattr(response, "text", None)
-            if text and text.strip():
-                return text.strip()
-        except Exception as e:
-            logger.error(f"Gemini generate_content failed: {e}")
+    provider = settings.llm_provider.lower()
+    
+    # 1. Try preferred provider first
+    if provider == "groq":
+        res = _generate_text_groq(prompt)
+        if res:
+            return res
+    elif provider == "gemini":
+        client = get_client()
+        if client:
+            try:
+                response = client.models.generate_content(model=settings.gemini_model, contents=prompt)
+                text = getattr(response, "text", None)
+                if text and text.strip():
+                    return text.strip()
+            except Exception as e:
+                logger.error(f"Gemini generate_content failed: {e}")
+    elif provider == "ollama":
+        res = _generate_text_ollama(prompt)
+        if res:
+            return res
 
-    # Fallback directly to Ollama
-    return _generate_text_ollama(prompt)
+    # 2. Fallbacks
+    if provider != "gemini":
+        client = get_client()
+        if client:
+            try:
+                response = client.models.generate_content(model=settings.gemini_model, contents=prompt)
+                text = getattr(response, "text", None)
+                if text and text.strip():
+                    return text.strip()
+            except Exception as e:
+                logger.error(f"Gemini generate_content failed: {e}")
+
+    if provider != "groq":
+        res = _generate_text_groq(prompt)
+        if res:
+            return res
+
+    if provider != "ollama":
+        res = _generate_text_ollama(prompt)
+        if res:
+            return res
+
+    return None
 
 
 def extract_json_object(text: str) -> Optional[dict]:
