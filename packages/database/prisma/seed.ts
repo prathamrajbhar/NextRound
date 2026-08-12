@@ -1245,7 +1245,6 @@ async function main(): Promise<void> {
   await prisma.proctoringViolation.deleteMany({});
   await prisma.proctoringEvent.deleteMany({});
   await prisma.proctoringSession.deleteMany({});
-  await prisma.videoSubmission.deleteMany({});
   await prisma.codingProblemSnapshot.deleteMany({});
   await prisma.generatedQuestionChunk.deleteMany({});
   await prisma.codingSubmission.deleteMany({});

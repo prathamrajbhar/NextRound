@@ -63,7 +63,6 @@ enum InterviewStatus {
 enum AssessmentType {
   aptitude
   coding
-  video
 }
 
 enum AssessmentStatus {
@@ -246,7 +245,6 @@ model Interview {
   proctor_flags     Json?
   engagement_signal Json?
   sentiment_report  Json?
-  video_consent     Boolean         @default(false)
   status            InterviewStatus @default(scheduled)
   created_at        DateTime        @default(now())
 
@@ -417,29 +415,6 @@ model CodingProblemSnapshot {
   @@index([assessment_id])
 }
 
-model VideoSubmission {
-  id               String    @id @default(uuid())
-  session_id       String
-  candidate_id     String
-  prompt_id        String?
-  prompt_index     Int       @default(0)
-  video_url        String
-  duration_seconds Int       @default(0)
-  status           String    @default("queued")
-  transcript       String?   @db.Text
-  score            Float?
-  feedback         Json?
-  idempotency_key  String?   @unique
-  created_at       DateTime  @default(now())
-  completed_at     DateTime?
-
-  mock_session MockSession @relation(fields: [session_id], references: [id], onDelete: Cascade)
-
-  @@index([session_id])
-  @@index([candidate_id])
-  @@index([status])
-}
-
 model Offer {
   id                   String      @id @default(uuid())
   application_id       String      @unique
@@ -501,7 +476,6 @@ model MockSession {
   topic            String?
   focus_areas      Json?
   rubric           Json?
-  video_prompts    Json?
   transcript       Json?
   score            Float?
   feedback         Json?
@@ -513,7 +487,6 @@ model MockSession {
   candidate         CandidateProfile      @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
   assessments       Assessment[]
   coding_snapshots  CodingProblemSnapshot[]
-  video_submissions VideoSubmission[]
   proctoring_sessions ProctoringSession[]
 
   @@index([candidate_id])
@@ -579,7 +552,7 @@ model ProctoringSession {
   assessment_id     String?
   application_id    String?
   mock_session_id   String?
-  session_type      String    // "aptitude" | "coding" | "video" | "interview"
+  session_type      String    // "aptitude" | "coding" | "interview"
   status            String    // "active" | "paused" | "ended"
   policy_version    String
   consent_version   String
