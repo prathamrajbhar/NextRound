@@ -77,74 +77,74 @@ export function InterviewStage({
   }, [conversationHistory, candidateSpeechText]);
 
   // Calculate dynamic scale for user voice visualization
-  const soundScale = micActive ? 1 + (micLevel / 100) * 0.45 : 1;
+  const soundScale = micActive ? 1 + (micLevel / 100) * 0.5 : 1;
 
   return (
-    <div className="relative w-full h-[calc(100vh-6.5rem)] rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800/90 bg-white/50 dark:bg-slate-950/70 backdrop-blur-2xl text-slate-900 dark:text-white shadow-2xl flex flex-col justify-between p-5 sm:p-6 font-sans">
+    <div className="relative w-full h-[calc(100vh-6rem)] rounded-3xl overflow-hidden border border-slate-800/40 bg-slate-950 text-white shadow-2xl flex flex-col justify-between p-6 sm:p-8 font-sans">
       
-      {/* Background Ambient Aura */}
-      <div className="absolute -top-32 left-1/4 w-96 h-96 bg-brand-500/10 dark:bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 right-1/4 w-96 h-96 bg-amber-500/10 dark:bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      {/* Background Ambient Mesh Gradients */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
 
       {/* Voice / Network Error Banner */}
       {voiceError && (
-        <div className="absolute top-20 left-6 right-6 z-50 p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex items-center justify-center gap-2 text-xs font-bold text-rose-600 dark:text-rose-400 shadow-lg backdrop-blur-md">
+        <div className="absolute top-20 left-8 right-8 z-50 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center gap-2 text-xs font-bold text-rose-400 shadow-[0_8px_32px_rgba(244,63,94,0.15)] backdrop-blur-lg">
           <span>⚠️ {voiceError}</span>
         </div>
       )}
 
-      {/* Top Header / Stage Status */}
-      <div className="flex items-center justify-between z-20 border-b border-slate-200/80 dark:border-slate-800/80 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-500 dark:from-orange-500 dark:to-amber-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 dark:shadow-orange-500/20 flex-shrink-0">
-            <Bot className="h-5.5 w-5.5" />
+      {/* Top Header Navigation */}
+      <div className="flex items-center justify-between z-20 border-b border-white/5 pb-5">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-2xl bg-gradient-to-tr from-orange-500 via-amber-500 to-yellow-400 flex items-center justify-center text-white shadow-[0_0_20px_rgba(249,115,22,0.3)] flex-shrink-0">
+            <Bot className="h-6.5 w-6.5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold tracking-tight font-display">
+            <div className="flex items-center gap-2.5">
+              <span className="text-base font-extrabold tracking-tight font-display bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
                 AI Resume Builder Call
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3" /> Live
+              <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase text-emerald-400 bg-emerald-950/40 border border-emerald-800/50 flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping" /> Live
               </span>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
+            <p className="text-[11px] text-slate-400 font-semibold mt-0.5">
               {targetRole} • {experienceLevel}
             </p>
           </div>
         </div>
 
         {/* Live Call Duration Countdown */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100/80 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 font-mono text-xs font-black text-slate-800 dark:text-slate-200 shadow-xs">
-          <Clock className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 animate-pulse" />
+        <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-slate-900/60 border border-slate-800 font-mono text-sm font-black text-slate-200 shadow-md">
+          <Clock className="h-4 w-4 text-emerald-400" />
           <span>{formatTimer(timeRemaining)}</span>
         </div>
       </div>
 
-      {/* Main Content Workspace Split */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 my-4 flex-1 min-h-0 relative z-10">
+      {/* Main Workspace Split Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 my-5 flex-1 min-h-0 relative z-10">
         
-        {/* Left Section: Active Call Viewport (Avatar Orb or Web Camera) */}
-        <div className="lg:col-span-7 rounded-2xl border border-slate-200/85 dark:border-slate-800/85 bg-white/70 dark:bg-slate-900/50 p-5 flex flex-col justify-between shadow-xs overflow-hidden">
+        {/* Left Call Viewport */}
+        <div className="lg:col-span-7 rounded-2xl border border-white/5 bg-slate-900/30 backdrop-blur-md p-6 flex flex-col justify-between shadow-inner">
           
-          {/* Active Call Status Indicator */}
+          {/* Active Call Status */}
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[9px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/80 border border-slate-800/80 text-[10px] font-black uppercase tracking-wider text-slate-400">
               <span className={`h-1.5 w-1.5 rounded-full ${aiState === 'speaking' ? 'bg-orange-500 animate-pulse' : aiState === 'evaluating' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
-              {aiState === 'speaking' ? 'AI Assistant Speaking' : aiState === 'evaluating' ? 'AI Reviewing Response' : 'Listening to Candidate'}
+              {aiState === 'speaking' ? 'AI Lead Speaking' : aiState === 'evaluating' ? 'AI Reviewing Response' : 'Listening to Candidate'}
             </div>
 
-            {/* Custom Mini Equalizer Graphic */}
-            <div className="flex items-center gap-1 h-3.5">
+            {/* Custom Interactive Wave Equalizer */}
+            <div className="flex items-center gap-1 h-4">
               {[40, 75, 55, 90, 60, 95, 45, 80].map((h, i) => (
                 <div
                   key={i}
                   className={`w-0.5 rounded-full transition-all duration-150 ${
                     aiState === 'speaking'
                       ? 'bg-orange-500 animate-pulse'
-                      : micActive && micLevel > 15
+                      : micActive && micLevel > 10
                       ? 'bg-emerald-500 animate-pulse'
-                      : 'bg-slate-300 dark:bg-slate-800'
+                      : 'bg-slate-800'
                   }`}
                   style={{
                     height:
@@ -152,18 +152,17 @@ export function InterviewStage({
                         ? `${h}%`
                         : micActive
                         ? `${(h * micLevel) / 100}%`
-                        : '25%',
+                        : '20%',
                   }}
                 />
               ))}
             </div>
           </div>
 
-          {/* Interactive Screen Viewport */}
-          <div className="flex-1 flex items-center justify-center my-4 relative">
+          {/* Interactive Core Visualizer */}
+          <div className="flex-1 flex items-center justify-center my-6 relative">
             {camActive ? (
-              /* Premium Camera Viewport */
-              <div className="relative w-full h-full max-h-[300px] overflow-hidden rounded-2xl bg-slate-950 border border-slate-800 shadow-lg">
+              <div className="relative w-full h-full max-h-[280px] overflow-hidden rounded-2xl bg-slate-950 border border-white/5 shadow-2xl">
                 <video
                   ref={videoRef}
                   autoPlay
@@ -172,76 +171,74 @@ export function InterviewStage({
                   className="h-full w-full object-cover transform -scale-x-100"
                 />
                 
-                {/* Audio Wave overlay inside camera feed */}
                 {micActive && (
-                  <div className="absolute bottom-4 right-4 flex items-center gap-1 bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800 text-[10px] font-black text-emerald-400">
+                  <div className="absolute bottom-4 right-4 flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-black text-emerald-400 shadow-md">
                     <Mic className="h-3.5 w-3.5 animate-pulse" />
-                    <span>User Audio active</span>
+                    <span>Mic Live</span>
                   </div>
                 )}
               </div>
             ) : (
-              /* Siri/Gemini Live style Pulsing Audio Sphere */
+              /* Siri/Gemini style Concentric Audio Sphere Visualizer */
               <div className="relative flex flex-col items-center justify-center">
-                
-                {/* Background glow waves */}
                 <div
-                  className="absolute h-40 w-40 sm:h-48 sm:w-48 rounded-full bg-brand-500/10 dark:bg-orange-500/10 border border-brand-500/20 dark:border-orange-500/20 transition-transform duration-100 ease-out"
-                  style={{ transform: `scale(${soundScale * 1.25})` }}
+                  className="absolute h-44 w-44 sm:h-56 sm:w-56 rounded-full bg-orange-500/5 border border-orange-500/10 transition-transform duration-100 ease-out"
+                  style={{ transform: `scale(${soundScale * 1.3})` }}
                 />
                 <div
-                  className="absolute h-28 w-28 sm:h-36 sm:w-36 rounded-full bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 transition-transform duration-100 ease-out"
-                  style={{ transform: `scale(${soundScale * 1.1})` }}
+                  className="absolute h-32 w-32 sm:h-44 sm:w-44 rounded-full bg-amber-500/10 border border-amber-500/15 transition-transform duration-100 ease-out"
+                  style={{ transform: `scale(${soundScale * 1.15})` }}
+                />
+                <div
+                  className="absolute h-24 w-24 sm:h-32 sm:w-32 rounded-full bg-yellow-500/10 border border-yellow-500/20 transition-transform duration-100 ease-out"
+                  style={{ transform: `scale(${soundScale})` }}
                 />
 
-                {/* Core animated orb */}
                 <div
-                  className={`relative h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-gradient-to-tr from-brand-600 via-amber-500 to-orange-500 flex items-center justify-center text-white shadow-xl shadow-brand-500/25 dark:shadow-orange-500/25 transition-all duration-300 ${
-                    aiState === 'speaking' ? 'animate-pulse scale-105' : ''
+                  className={`relative h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-gradient-to-tr from-orange-500 via-amber-500 to-yellow-400 flex items-center justify-center text-white shadow-[0_0_30px_rgba(249,115,22,0.4)] transition-all duration-300 ${
+                    aiState === 'speaking' ? 'scale-105 shadow-[0_0_40px_rgba(249,115,22,0.6)]' : ''
                   }`}
                 >
-                  <Bot className="h-9 w-9" />
+                  <Bot className="h-10 w-10" />
                 </div>
 
-                {/* Subtitle status label */}
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-4">
-                  {aiState === 'speaking' ? 'Assistant Speaking' : 'Listening...'}
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500 mt-5">
+                  {aiState === 'speaking' ? 'AI Lead Speaking' : 'Listening...'}
                 </span>
               </div>
             )}
           </div>
 
-          {/* Active dialogue transcript box */}
-          <div className="space-y-2">
-            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 shadow-xs space-y-1.5">
+          {/* Subtitle Dialogue & Insights overlay */}
+          <div className="space-y-3">
+            <div className="p-4 rounded-xl bg-slate-950/60 border border-white/5 shadow-md space-y-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-brand-600 dark:text-orange-400">
-                  <Sparkles className="h-3 w-3" />
+                <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-orange-400">
+                  <Sparkles className="h-3.5 w-3.5" />
                   <span>Interviewer Dialogue</span>
                 </div>
                 {onReplayAudio && (
                   <button
                     type="button"
                     onClick={onReplayAudio}
-                    className="flex items-center gap-1 text-[9px] font-extrabold text-slate-500 hover:text-orange-500 dark:text-slate-400 dark:hover:text-orange-400 transition-colors cursor-pointer px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800"
-                    title="Replay Voice"
+                    className="flex items-center gap-1 text-[9px] font-extrabold text-slate-400 hover:text-orange-400 transition-colors cursor-pointer px-2.5 py-1 rounded-lg bg-slate-900 border border-white/5"
                   >
-                    <Volume2 className="h-3 w-3" />
+                    <Volume2 className="h-3.5 w-3.5" />
                     <span>Play Audio</span>
                   </button>
                 )}
               </div>
-              <p className="text-xs sm:text-[13px] font-bold text-slate-800 dark:text-slate-100 leading-relaxed font-display">
+              <p className="text-sm font-bold text-slate-100 leading-relaxed font-display">
                 &ldquo;{currentTurn.aiMessage}&rdquo;
               </p>
             </div>
 
             {realtimeInsight && (
-              <div className="p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/20 text-center animate-in fade-in duration-200">
-                <span className="text-[9px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400 block">
+              <div className="p-3 rounded-xl bg-amber-500/5 border border-amber-500/10 text-center animate-in fade-in duration-200">
+                <span className="text-[9px] font-black uppercase tracking-wider text-amber-400 block">
                   ✦ Resume builder extraction advice
                 </span>
-                <p className="text-[10px] font-bold text-amber-700 dark:text-amber-300 leading-relaxed mt-0.5">
+                <p className="text-[10.5px] font-bold text-amber-300/90 leading-relaxed mt-1">
                   {realtimeInsight}
                 </p>
               </div>
@@ -250,14 +247,14 @@ export function InterviewStage({
 
         </div>
 
-        {/* Right Section: Compact Dialogue Stream & Unified Input Form (5 cols) */}
-        <div className="lg:col-span-5 rounded-2xl border border-slate-200/85 dark:border-slate-800/85 bg-white/70 dark:bg-slate-900/50 p-4 flex flex-col justify-between shadow-xs overflow-hidden">
+        {/* Right Section: Compact Dialogue Stream & Unified Input Form */}
+        <div className="lg:col-span-5 rounded-2xl border border-white/5 bg-slate-900/30 backdrop-blur-md p-4 flex flex-col justify-between shadow-inner overflow-hidden">
           
-          <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 pb-2 mb-3">
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-200 font-display">
+          <div className="flex items-center justify-between border-b border-white/5 pb-2 mb-3">
+            <span className="text-xs font-bold text-slate-300 font-display">
               Conversation History
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold text-slate-500 bg-slate-100 dark:bg-slate-850">
+            <span className="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold text-slate-400 bg-slate-900 border border-white/5">
               {conversationHistory.length} turns
             </span>
           </div>
@@ -265,35 +262,35 @@ export function InterviewStage({
           {/* Messages list */}
           <div
             ref={chatScrollRef}
-            className="flex-1 w-full overflow-y-auto space-y-3.5 pr-1.5 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-850"
-            style={{ maxHeight: 'calc(100vh - 21.5rem)' }}
+            className="flex-1 w-full overflow-y-auto space-y-4 pr-1.5 scrollbar-thin scrollbar-thumb-slate-800"
+            style={{ maxHeight: 'calc(100vh - 22.5rem)' }}
           >
             {conversationHistory.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-1.5 text-slate-400">
-                <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-slate-850 flex items-center justify-center text-slate-400">
+              <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-2 text-slate-500">
+                <div className="h-10 w-10 rounded-xl bg-slate-950/60 border border-white/5 flex items-center justify-center text-slate-400 shadow-md">
                   <User className="h-5 w-5" />
                 </div>
-                <p className="text-[10px] font-bold text-slate-500">
-                  Conversation started. Speak to begin!
+                <p className="text-[10px] font-bold">
+                  Connection established. Speak to begin!
                 </p>
               </div>
             ) : (
               conversationHistory.map((turn, index) => (
                 <div
                   key={index}
-                  className={`flex flex-col ${turn.role === 'candidate' ? 'items-end' : 'items-start'} space-y-0.5 animate-in fade-in duration-200`}
+                  className={`flex flex-col ${turn.role === 'candidate' ? 'items-end' : 'items-start'} space-y-1 animate-in fade-in duration-200`}
                 >
-                  <div className="flex items-center gap-1 text-[8px] font-extrabold text-slate-400 uppercase tracking-wider">
+                  <div className="flex items-center gap-1.5 text-[8.5px] font-extrabold text-slate-500 uppercase tracking-wider">
                     <span>{turn.role === 'candidate' ? 'You' : 'AI Lead'}</span>
                     <span>•</span>
                     <span>{turn.timestamp || 'Just now'}</span>
                   </div>
 
                   <div
-                    className={`max-w-[90%] p-3 rounded-2xl text-[11px] leading-relaxed ${
+                    className={`max-w-[85%] p-3.5 rounded-2xl text-[11.5px] leading-relaxed shadow-lg ${
                       turn.role === 'candidate'
-                        ? 'bg-brand-600 dark:bg-orange-600 text-white rounded-tr-xs font-semibold shadow-xs'
-                        : 'bg-slate-100 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 text-slate-800 dark:text-slate-100 rounded-tl-xs font-bold shadow-xs'
+                        ? 'bg-orange-600 text-white rounded-tr-xs font-semibold'
+                        : 'bg-slate-950/70 border border-white/5 text-slate-100 rounded-tl-xs font-semibold'
                     }`}
                   >
                     {turn.content}
@@ -304,12 +301,12 @@ export function InterviewStage({
 
             {/* Real-time live speech transcript buffer */}
             {candidateSpeechText && (
-              <div className="flex flex-col items-end space-y-0.5 animate-in fade-in duration-100">
-                <div className="flex items-center gap-1 text-[8px] font-black text-orange-500 uppercase tracking-wider">
-                  <span className="h-1 w-1 rounded-full bg-orange-500 animate-ping" />
+              <div className="flex flex-col items-end space-y-1 animate-in fade-in duration-100">
+                <div className="flex items-center gap-1 text-[8.5px] font-black text-orange-400 uppercase tracking-wider">
+                  <span className="h-1 w-1 rounded-full bg-orange-400 animate-ping" />
                   <span>Speaking...</span>
                 </div>
-                <div className="max-w-[90%] p-3 rounded-2xl bg-orange-500/15 border border-orange-500/25 text-[11px] font-semibold text-orange-950 dark:text-orange-100 rounded-tr-xs shadow-xs">
+                <div className="max-w-[85%] p-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-[11.5px] font-semibold text-orange-100 rounded-tr-xs shadow-md">
                   {candidateSpeechText}
                 </div>
               </div>
@@ -327,17 +324,17 @@ export function InterviewStage({
                   setTextInput('');
                 }
               }}
-              className="relative flex items-center gap-2 pt-3 border-t border-slate-200/80 dark:border-slate-800/80 mt-2"
+              className="relative flex items-center gap-2 pt-3 border-t border-white/5 mt-3 animate-in slide-in-from-bottom duration-300"
             >
               <div className="relative flex-1 flex items-center">
-                {/* Microfone toggler inside the input field */}
+                {/* Microphone toggler inside the input field */}
                 <button
                   type="button"
                   onClick={() => setMicActive(!micActive)}
-                  className={`absolute left-3 p-1 rounded-lg transition-all cursor-pointer z-20 ${
+                  className={`absolute left-3 p-1.5 rounded-lg transition-all cursor-pointer z-20 ${
                     micActive
-                      ? 'text-emerald-500 hover:bg-emerald-500/10'
-                      : 'text-rose-500 hover:bg-rose-500/10'
+                      ? 'text-emerald-400 hover:bg-emerald-500/10 shadow-[0_0_15px_rgba(52,211,153,0.15)] bg-emerald-950/30'
+                      : 'text-rose-400 hover:bg-rose-500/10'
                   }`}
                   title={micActive ? 'Mute Microphone' : 'Unmute Microphone'}
                 >
@@ -350,14 +347,14 @@ export function InterviewStage({
                   onChange={(e) => setTextInput(e.target.value)}
                   placeholder={aiState === 'listening' ? "Type your response..." : "Please wait for AI..."}
                   disabled={aiState !== 'listening'}
-                  className="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-xs rounded-xl focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:focus:border-orange-500 text-slate-900 dark:text-white placeholder-slate-400 disabled:opacity-50"
+                  className="w-full pl-11 pr-10 py-3 bg-slate-950/90 border border-white/5 text-xs rounded-xl focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 text-white placeholder-slate-500 disabled:opacity-40 shadow-inner"
                 />
 
                 {/* Submit Send Button inside the input field */}
                 <button
                   type="submit"
                   disabled={aiState !== 'listening' || !textInput.trim()}
-                  className="absolute right-2 p-1.5 rounded-lg text-slate-400 hover:text-orange-500 disabled:opacity-30 disabled:hover:text-slate-400 transition-all cursor-pointer"
+                  className="absolute right-2 p-1.5 rounded-lg text-slate-400 hover:text-orange-500 disabled:opacity-20 disabled:hover:text-slate-400 transition-all cursor-pointer"
                 >
                   <Send className="h-4 w-4" />
                 </button>
@@ -369,7 +366,7 @@ export function InterviewStage({
       </div>
 
       {/* Floating Bottom Control Actions Pill */}
-      <div className="mx-auto z-30 px-6 py-2.5 rounded-full border border-slate-200/90 dark:border-slate-800/90 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-xl flex items-center gap-4 select-none">
+      <div className="mx-auto z-30 px-6 py-2.5 rounded-full border border-white/10 bg-slate-900/90 backdrop-blur-xl shadow-2xl flex items-center gap-4 select-none">
         
         {/* Toggle Microphone */}
         <button
@@ -377,8 +374,8 @@ export function InterviewStage({
           onClick={() => setMicActive(!micActive)}
           className={`p-2.5 rounded-full border transition-all cursor-pointer ${
             micActive
-              ? 'bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-slate-750 text-slate-800 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-750'
-              : 'bg-rose-500/10 border-rose-500/25 text-rose-500 dark:text-rose-400 animate-pulse'
+              ? 'bg-slate-850 border-white/10 text-white hover:bg-slate-800'
+              : 'bg-rose-500/10 border-rose-500/20 text-rose-400 animate-pulse'
           }`}
           title={micActive ? 'Mute Microphone' : 'Unmute Microphone'}
         >
@@ -391,21 +388,21 @@ export function InterviewStage({
           onClick={() => setCamActive(!camActive)}
           className={`p-2.5 rounded-full border transition-all cursor-pointer ${
             camActive
-              ? 'bg-slate-100 border-slate-200 dark:bg-slate-800 dark:border-slate-750 text-slate-800 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-750'
-              : 'bg-rose-500/10 border-rose-500/25 text-rose-500 dark:text-rose-400'
+              ? 'bg-slate-850 border-white/10 text-white hover:bg-slate-800'
+              : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
           }`}
           title={camActive ? 'Turn Off Camera' : 'Turn On Camera'}
         >
           {camActive ? <Video className="h-4.5 w-4.5" /> : <VideoOff className="h-4.5 w-4.5" />}
         </button>
 
-        <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
+        <div className="h-4 w-px bg-white/10 mx-1" />
 
         {/* Complete & Build Resume */}
         <button
           type="button"
           onClick={onEndCall}
-          className="px-5 py-2 rounded-full bg-gradient-to-r from-brand-600 to-amber-600 dark:from-orange-600 dark:to-amber-600 hover:scale-[1.01] text-white text-[11px] font-black shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+          className="px-6 py-2 rounded-full bg-gradient-to-r from-orange-600 to-amber-600 hover:scale-[1.02] text-white text-[11px] font-black shadow-[0_0_20px_rgba(249,115,22,0.35)] transition-all cursor-pointer flex items-center gap-1.5"
         >
           <PhoneOff className="h-3.5 w-3.5" />
           <span>Finish &amp; Build Resume</span>
