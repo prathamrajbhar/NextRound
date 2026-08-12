@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { apiClient } from '@/lib/apiClient';
 
 interface UseWebRTCCallProps {
   applicationId: string;
@@ -13,7 +14,6 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
   const [connectionState, setConnectionState] = useState<RTCPeerConnectionState>('new');
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
-  const channelRef = useRef<BroadcastChannel | null>(null);
   const makingOfferRef = useRef(false);
   const ignoreOfferRef = useRef(false);
 
@@ -24,9 +24,17 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       return;
     }
 
-    // 1. Initialize BroadcastChannel for real-time local signaling
-    const channel = new BroadcastChannel(`hr_call_${applicationId}`);
-    channelRef.current = channel;
+    // 1. Setup API signal helpers
+    const postSignal = async (msg: any) => {
+      try {
+        await apiClient.post(`/interviews/${applicationId}/signal`, {
+          sender: mode === 'hr-candidate' ? 'candidate' : 'recruiter',
+          message: msg,
+        });
+      } catch (err) {
+        console.error('[WebRTC] Failed to post signal:', err);
+      }
+    };
 
     // 2. Initialize RTCPeerConnection with public STUN servers
     const configuration: RTCConfiguration = {
@@ -46,7 +54,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
         makingOfferRef.current = true;
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        channel.postMessage({
+        await postSignal({
           type: 'description',
           description: pc.localDescription
             ? { type: pc.localDescription.type, sdp: pc.localDescription.sdp }
@@ -60,7 +68,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
     };
 
     pc.onicecandidate = ({ candidate }) => {
-      channel.postMessage({
+      postSignal({
         type: 'candidate',
         candidate: candidate
           ? {
@@ -89,7 +97,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
     };
 
     // 7. Perfect Negotiation: Handle incoming signaling messages
-    channel.onmessage = async ({ data }) => {
+    const handleIncomingSignal = async (data: any) => {
       try {
         const { type, description, candidate } = data;
 
@@ -107,7 +115,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
           if (description.type === 'offer') {
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            channel.postMessage({
+            await postSignal({
               type: 'description',
               description: pc.localDescription
                 ? { type: pc.localDescription.type, sdp: pc.localDescription.sdp }
@@ -129,7 +137,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
               makingOfferRef.current = true;
               const offer = await pc.createOffer({ iceRestart: true });
               await pc.setLocalDescription(offer);
-              channel.postMessage({
+              await postSignal({
                 type: 'description',
                 description: pc.localDescription
                   ? { type: pc.localDescription.type, sdp: pc.localDescription.sdp }
@@ -142,7 +150,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
             }
           } else if (polite && type === 'ready') {
             // Polite peer (Candidate) replies to 'ready' to nudge the impolite peer to initiate
-            channel.postMessage({ type: 'ready_reply' });
+            await postSignal({ type: 'ready_reply' });
           }
         }
       } catch (err) {
@@ -150,12 +158,38 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     };
 
-    // 8. Broadcast ready state to the other peer immediately upon initialization
-    channel.postMessage({ type: 'ready' });
+    // 8. Start signaling polling interval
+    let lastPolledTime = new Date(Date.now() - 5000);
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await apiClient.get<any>(
+          `/interviews/${applicationId}/signals?since=${lastPolledTime.toISOString()}`
+        );
+        if (res && Array.isArray(res.data)) {
+          for (const signal of res.data) {
+            // Only process signals from the OTHER peer
+            const isSelf = signal.sender === (mode === 'hr-candidate' ? 'candidate' : 'recruiter');
+            if (!isSelf) {
+              await handleIncomingSignal(signal.message);
+            }
+          }
+          if (res.data.length > 0) {
+            // Update lastPolledTime to the timestamp of the last message processed
+            const maxTime = new Date(res.data[res.data.length - 1].created_at);
+            lastPolledTime = maxTime;
+          }
+        }
+      } catch (err) {
+        console.error('[WebRTC] Error polling signals:', err);
+      }
+    }, 1200);
+
+    // 9. Broadcast ready state immediately upon initialization
+    postSignal({ type: 'ready' });
 
     return () => {
       pc.close();
-      channel.close();
+      clearInterval(pollInterval);
       setRemoteStream(null);
       setConnectionState('new');
     };

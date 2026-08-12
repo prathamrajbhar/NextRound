@@ -72,7 +72,8 @@ export const ModelName = {
   TalentBookmark: 'TalentBookmark',
   ProctoringSession: 'ProctoringSession',
   ProctoringEvent: 'ProctoringEvent',
-  ProctoringViolation: 'ProctoringViolation'
+  ProctoringViolation: 'ProctoringViolation',
+  WebRTCSignal: 'WebRTCSignal'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -516,6 +517,17 @@ export const ProctoringViolationScalarFieldEnum = {
 } as const
 
 export type ProctoringViolationScalarFieldEnum = (typeof ProctoringViolationScalarFieldEnum)[keyof typeof ProctoringViolationScalarFieldEnum]
+
+
+export const WebRTCSignalScalarFieldEnum = {
+  id: 'id',
+  application_id: 'application_id',
+  sender: 'sender',
+  message: 'message',
+  created_at: 'created_at'
+} as const
+
+export type WebRTCSignalScalarFieldEnum = (typeof WebRTCSignalScalarFieldEnum)[keyof typeof WebRTCSignalScalarFieldEnum]
 
 
 export const SortOrder = {

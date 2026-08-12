@@ -9,6 +9,8 @@ import {
   recordConsent,
   recordProctoringFlag,
   saveHrResult,
+  sendSignal,
+  getSignals,
 } from './interview.controller';
 
 export const interviewRouter = Router();
@@ -24,3 +26,5 @@ interviewRouter.post('/:id/end', endInterview);
 interviewRouter.patch('/:id/proctoring', recordProctoringFlag);
 interviewRouter.get('/:id/transcript', getTranscript);
 interviewRouter.post('/hr/:applicationId/result', requireRole('hr'), saveHrResult);
+interviewRouter.post('/:id/signal', sendSignal);
+interviewRouter.get('/:id/signals', getSignals);

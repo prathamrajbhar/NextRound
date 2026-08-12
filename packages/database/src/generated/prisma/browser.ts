@@ -127,3 +127,8 @@ export type ProctoringEvent = Prisma.ProctoringEventModel
  * 
  */
 export type ProctoringViolation = Prisma.ProctoringViolationModel
+/**
+ * Model WebRTCSignal
+ * 
+ */
+export type WebRTCSignal = Prisma.WebRTCSignalModel

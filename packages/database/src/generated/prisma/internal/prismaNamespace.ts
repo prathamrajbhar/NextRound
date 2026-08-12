@@ -418,7 +418,8 @@ export const ModelName = {
   TalentBookmark: 'TalentBookmark',
   ProctoringSession: 'ProctoringSession',
   ProctoringEvent: 'ProctoringEvent',
-  ProctoringViolation: 'ProctoringViolation'
+  ProctoringViolation: 'ProctoringViolation',
+  WebRTCSignal: 'WebRTCSignal'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -434,7 +435,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "aptitudeQuestion" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark" | "proctoringSession" | "proctoringEvent" | "proctoringViolation"
+    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "aptitudeQuestion" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark" | "proctoringSession" | "proctoringEvent" | "proctoringViolation" | "webRTCSignal"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -2066,6 +2067,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    WebRTCSignal: {
+      payload: Prisma.$WebRTCSignalPayload<ExtArgs>
+      fields: Prisma.WebRTCSignalFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.WebRTCSignalFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebRTCSignalPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.WebRTCSignalFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebRTCSignalPayload>
+        }
+        findFirst: {
+          args: Prisma.WebRTCSignalFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebRTCSignalPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.WebRTCSignalFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebRTCSignalPayload>
+        }
+        findMany: {
+          args: Prisma.WebRTCSignalFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebRTCSignalPayload>[]
+        }
+        create: {
+          args: Prisma.WebRTCSignalCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebRTCSignalPayload>
+        }
+        createMany: {
+          args: Prisma.WebRTCSignalCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.WebRTCSignalCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebRTCSignalPayload>[]
+        }
+        delete: {
+          args: Prisma.WebRTCSignalDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebRTCSignalPayload>
+        }
+        update: {
+          args: Prisma.WebRTCSignalUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebRTCSignalPayload>
+        }
+        deleteMany: {
+          args: Prisma.WebRTCSignalDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.WebRTCSignalUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.WebRTCSignalUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebRTCSignalPayload>[]
+        }
+        upsert: {
+          args: Prisma.WebRTCSignalUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$WebRTCSignalPayload>
+        }
+        aggregate: {
+          args: Prisma.WebRTCSignalAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateWebRTCSignal>
+        }
+        groupBy: {
+          args: Prisma.WebRTCSignalGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WebRTCSignalGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.WebRTCSignalCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.WebRTCSignalCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -2532,6 +2607,17 @@ export const ProctoringViolationScalarFieldEnum = {
 export type ProctoringViolationScalarFieldEnum = (typeof ProctoringViolationScalarFieldEnum)[keyof typeof ProctoringViolationScalarFieldEnum]
 
 
+export const WebRTCSignalScalarFieldEnum = {
+  id: 'id',
+  application_id: 'application_id',
+  sender: 'sender',
+  message: 'message',
+  created_at: 'created_at'
+} as const
+
+export type WebRTCSignalScalarFieldEnum = (typeof WebRTCSignalScalarFieldEnum)[keyof typeof WebRTCSignalScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -2975,6 +3061,7 @@ export type GlobalOmitConfig = {
   proctoringSession?: Prisma.ProctoringSessionOmit
   proctoringEvent?: Prisma.ProctoringEventOmit
   proctoringViolation?: Prisma.ProctoringViolationOmit
+  webRTCSignal?: Prisma.WebRTCSignalOmit
 }
 
 /* Types for Logging */

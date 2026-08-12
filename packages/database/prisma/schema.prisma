@@ -616,3 +616,13 @@ model ProctoringViolation {
   @@unique([proctoring_session_id, rule_code])
   @@index([proctoring_session_id])
 }
+
+model WebRTCSignal {
+  id             String   @id @default(uuid())
+  application_id String
+  sender         String   // "candidate" or "recruiter"
+  message        Json
+  created_at     DateTime @default(now())
+
+  @@index([application_id])
+}
