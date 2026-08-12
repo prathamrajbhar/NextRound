@@ -393,6 +393,7 @@ interface JobTemplate {
   autoOffer: boolean;
   status: 'published' | 'active' | 'draft' | 'paused' | 'closed';
   keyRequirements: string[];
+  description: string;
 }
 
 const JOB_TEMPLATES: JobTemplate[] = [
@@ -407,6 +408,26 @@ const JOB_TEMPLATES: JobTemplate[] = [
     autoOffer: true,
     status: 'active',
     keyRequirements: ['Go or Rust experience in high-concurrency systems', 'PostgreSQL database tuning and transaction isolation', 'Kafka event streaming for financial ledgers'],
+    description: `## About the Role
+RazorFlow is seeking a Senior Backend Engineer for our core Payments Infrastructure team. In this role, you will design, implement, and maintain high-throughput transactional APIs that process millions of requests daily. You will work on optimizing database isolation levels, preventing race conditions during ledger updates, and engineering robust retry mechanisms for payment gateways.
+
+## Key Responsibilities
+* Architect and implement scalable APIs in Go/Rust to support new payment methods.
+* Optimize database locks and transaction strategies on PostgreSQL to handle concurrent transactions.
+* Build low-latency event processing systems using Kafka for real-time ledger updates.
+* Collaborate with security teams to enforce strict PCI-DSS compliance standards.
+
+## Required Skills
+* 5+ years of software development experience with Go, Rust, or C++.
+* Expert-level understanding of PostgreSQL, query tuning, and connection pooling.
+* Deep knowledge of distributed message brokers, specifically Apache Kafka or RabbitMQ.
+* Experience with distributed tracing, logging, and system observability tools.
+
+## What We Offer
+- Competitive salary (₹30 LPA - ₹48 LPA) + generous equity options.
+- Hybrid working environment in our state-of-the-art Bengaluru office.
+- Comprehensive health insurance cover for employee and family.
+- Annual learning and professional development budget.`,
   },
   {
     orgName: 'RazorFlow Technologies',
@@ -419,6 +440,25 @@ const JOB_TEMPLATES: JobTemplate[] = [
     autoOffer: false,
     status: 'active',
     keyRequirements: ['Next.js App Router, TypeScript, React Server Components', 'Node.js/Express backend APIs, PostgreSQL, Redis caching', 'Micro-frontend architecture and PCI-DSS compliance'],
+    description: `## About the Role
+We are looking for a Lead Full-Stack Engineer to own the Next-Gen Merchant Portal. This platform is the primary interface for thousands of merchants using RazorFlow. You will lead the transition to a micro-frontend architecture, optimize core web vitals, and bridge the gap between frontend experiences and backend microservices.
+
+## Key Responsibilities
+* Lead the engineering of the merchant dashboard using Next.js App Router and TypeScript.
+* Design and implement high-performance GraphQL and REST APIs in Node.js/Express.
+* Optimize web performance to achieve sub-second page loads and improve SEO scores.
+* Mentor junior engineers and champion clean code, TDD, and modular architecture.
+
+## Required Skills
+* 6+ years of full-stack development experience, with deep expertise in React/Next.js.
+* Proficient in TypeScript, CSS/Tailwind, and modern state-management libraries (Zustand/Redux).
+* Strong backend skills with Node.js, Express, and relational databases.
+* Familiarity with Docker, CI/CD pipelines, and cloud deployment strategies.
+
+## What We Offer
+- Salary range of ₹35 LPA - ₹55 LPA with equity incentives.
+- Standard health benefits, flexible remote-work options.
+- Collaborative, high-velocity engineering culture.`,
   },
   {
     orgName: 'RazorFlow Technologies',
@@ -431,6 +471,25 @@ const JOB_TEMPLATES: JobTemplate[] = [
     autoOffer: false,
     status: 'active',
     keyRequirements: ['Zero-trust security architecture', 'Kubernetes cluster hardening and mTLS', 'Automated security scanning in CI/CD pipelines'],
+    description: `## About the Role
+As a Staff Security Engineer, you will define the security posture for the entire RazorFlow platform. You will build secure defaults, design zero-trust networks, and automate vulnerability detection within our CI/CD pipelines. This is a high-impact leadership role reporting directly to the Head of Engineering.
+
+## Key Responsibilities
+* Architect and maintain zero-trust network boundaries across multiple Kubernetes clusters.
+* Perform threat modeling, code audits, and vulnerability reviews of core payment services.
+* Design and implement secure secrets management using HashiCorp Vault.
+* Set up automated SAST/DAST checks and compliance monitoring in Jenkins/GitHub Actions.
+
+## Required Skills
+* 7+ years of dedicated AppSec or Cloud Security engineering experience.
+* Expert knowledge of Kubernetes security runtime hardening and service meshes (Istio/mTLS).
+* Proficiency in scripting and automation (Python, Go, or Bash).
+* Industry certifications such as OSCP, CISSP, or CKS are highly regarded.
+
+## What We Offer
+- Premier compensation package of ₹40 LPA - ₹65 LPA.
+- Executive healthcare benefits, wellness initiatives.
+- Sponsorship for security conferences and professional training.`,
   },
   {
     orgName: 'NexusCloud Labs',
@@ -443,6 +502,25 @@ const JOB_TEMPLATES: JobTemplate[] = [
     autoOffer: false,
     status: 'active',
     keyRequirements: ['Rust or Go systems programming', 'Kubernetes CRI/CNI plugin development', 'eBPF networking and low-latency RPCs'],
+    description: `## About the Role
+NexusCloud is building a serverless container runtime for high-performance computing workloads. As a Distributed Systems Engineer, you will help design our control plane, write custom network plugins, and optimize container start-up times to the millisecond.
+
+## Key Responsibilities
+* Build and scale low-latency container orchestration agents in Go/Rust.
+* Develop custom Kubernetes CNI and CSI plugins for optimal resource management.
+* Implement eBPF-based kernel networking hooks to trace and route inter-pod packets.
+* Optimize host-level memory virtualization and CPU isolation strategies.
+
+## Required Skills
+* 4+ years of low-level systems programming experience in Go, C, or Rust.
+* Deep understanding of Linux kernel internals, namespaces, cgroups, and virtualization.
+* Experience contributing to upstream open-source projects like Kubernetes, containerd, or Envoy.
+* Solid grasp of distributed consensus algorithms (Raft, Paxos).
+
+## What We Offer
+- Annual package of ₹28 LPA - ₹45 LPA + equity.
+- Flexible work options out of our modern Hyderabad hub.
+- High-end developer workstation setup (M3 Max or Linux Workstation).`,
   },
   {
     orgName: 'NexusCloud Labs',
@@ -455,6 +533,25 @@ const JOB_TEMPLATES: JobTemplate[] = [
     autoOffer: false,
     status: 'active',
     keyRequirements: ['LLM inference optimization (vLLM, TensorRT-LLM)', 'Distributed training pipelines with PyTorch and Ray', 'Vector search indexing at billion-vector scale'],
+    description: `## About the Role
+We are seeking a Senior AI Systems Architect to design our large-scale GPU cluster orchestration layer. You will work on accelerating LLM inference speeds, optimizing memory bandwidth during multi-node GPU training, and building scalable model-serving APIs.
+
+## Key Responsibilities
+* Design model-serving infrastructure using vLLM, TensorRT-LLM, and Triton Inference Server.
+* Build and scale distributed LLM fine-tuning pipelines using PyTorch and Ray.
+* Implement low-latency vector indexing solutions with Milvus, Qdrant, or Pinecone.
+* Collaborate with hardware teams to maximize GPU utilization and minimize scheduling overhead.
+
+## Required Skills
+* 5+ years of experience in ML Systems, High-Performance Computing, or MLOps.
+* Proficient in Python, C++, PyTorch, and deep learning framework internals.
+* Expert knowledge of GPU architectures, CUDA programming, and NCCL networking.
+* Experience with cloud orchestration tools (Kubernetes, Terraform).
+
+## What We Offer
+- Highly competitive package of ₹45 LPA - ₹75 LPA.
+- Performance-based bonuses and significant equity.
+- Access to cutting-edge GPU clusters for testing and research.`,
   },
   {
     orgName: 'ZomatoScale QuickCommerce',
@@ -467,6 +564,25 @@ const JOB_TEMPLATES: JobTemplate[] = [
     autoOffer: true,
     status: 'active',
     keyRequirements: ['Sub-second First Contentful Paint optimization', 'React 19, Next.js, Web Vitals profiling', 'State synchronization across real-time order tracking'],
+    description: `## About the Role
+ZomatoScale is building the fastest delivery experience in India. We are looking for a Senior Frontend Architect to optimize our consumer web and mobile web apps. You will own the bundle size budget, configure advanced caching strategies, and build smooth, real-time tracking dashboards that render beautifully even on low-end mobile devices.
+
+## Key Responsibilities
+* Lead the architecture of our React 19 / Next.js web application for maximum speed.
+* Optimize bundle sizes, code-splitting strategies, and core web vitals (LCP, FID, CLS).
+* Implement real-time WebSockets integration for live delivery tracking and countdowns.
+* Collaborate with UX designers to build highly responsive, motion-heavy interfaces.
+
+## Required Skills
+* 6+ years of frontend expertise with React, TypeScript, and modern JS build tools (Vite/Webpack).
+* Deep understanding of browser rendering paths, layout reflows, and performance profiling.
+* Experience building progressive web applications (PWAs) and mobile-optimized layouts.
+* Strong aesthetic sense and dedication to user experience details.
+
+## What We Offer
+- Excellent salary (₹32 LPA - ₹50 LPA) + quick commerce delivery credits.
+- Gurgaon-based role with standard health and wellness benefits.
+- Vibrant, fast-paced work culture with immediate product feedback loops.`,
   },
   {
     orgName: 'Google Cloud India',
@@ -479,6 +595,25 @@ const JOB_TEMPLATES: JobTemplate[] = [
     autoOffer: false,
     status: 'active',
     keyRequirements: ['Upstream Kubernetes contributions', 'Golang systems programming', 'Linux kernel namespace isolation and cgroups'],
+    description: `## About the Role
+Google Cloud India is seeking a Cloud Infrastructure Engineer for our Kubernetes Core development team. You will work directly on contributing code to upstream Kubernetes, design managed services (GKE) features, and help enterprise customers optimize their cluster operations.
+
+## Key Responsibilities
+* Develop, test, and maintain features for core GKE and upstream Kubernetes repositories.
+* Write robust control loop controllers in Go and optimize API server responsiveness.
+* Debug complex host-level networking, storage, and container runtime issues.
+* Author technical whitepapers and mentor community contributors.
+
+## Required Skills
+* 5+ years of system engineering experience, with strong proficiency in Go.
+* Proven track record of upstream contributions to Kubernetes or related CNCF projects.
+* Deep knowledge of Linux systems programming, networking stack, and container runtimes.
+* Excellent technical writing and open-source communication skills.
+
+## What We Offer
+- Competitive package (₹35 LPA - ₹60 LPA) with top-tier benefits.
+- Global collaboration opportunities across Google offices.
+- Generous learning allowances and matching charity contributions.`,
   },
 ];
 
@@ -1425,7 +1560,7 @@ async function main(): Promise<void> {
       data: {
         org_id: org.id,
         title: tpl.title,
-        description: `## About the Role\n\n${tpl.orgName} is looking for a talented **${tpl.title}** based out of **${tpl.city}**.\n\n## Required Skills\n\n${tpl.keyRequirements.map((r) => `- ${r}`).join('\n')}\n\n## What We Offer\n\n- Competitive compensation (₹${tpl.salaryLPA[0]} LPA - ₹${tpl.salaryLPA[1]} LPA) + generous equity\n- Comprehensive health insurance for family\n- Annual learning & wellness allowance\n- Flexible work culture (${tpl.city})`,
+        description: tpl.description,
         rubric,
         thresholds: { minScore: tpl.minScore, autoOffer: tpl.autoOffer },
         status: tpl.status,
