@@ -76,6 +76,9 @@ export function useResumeVoiceSession({
   const turnIndexRef = useRef(0);
   const stageRef = useRef('intro');
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastAudioUrlRef = useRef<string | null>(null);
+  const lastTextRef = useRef<string>('');
 
   // Keep refs in sync
   useEffect(() => {
@@ -89,10 +92,6 @@ export function useResumeVoiceSession({
   useEffect(() => {
     stageRef.current = stage;
   }, [stage]);
-
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const lastAudioUrlRef = useRef<string | null>(null);
-  const lastTextRef = useRef<string>('');
 
   // Unlock web audio on user interaction
   const unlockAudio = useCallback(() => {
