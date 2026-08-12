@@ -78,6 +78,7 @@ export function AptitudeCategoryHub({
             const score = completedCategoryScores[cat];
             const catQs = activeQuestions.filter((q) => q.category === cat);
             const questionCount = getCategoryQuestionCount ? getCategoryQuestionCount(cat) : catQs.length;
+            const hasCorrectKeys = catQs.length > 0 && catQs.every((q) => q.correctIndex !== undefined);
 
             return (
               <div
@@ -107,7 +108,7 @@ export function AptitudeCategoryHub({
 
                   {isCatCompleted && (
                     <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                      <Check className="h-3 w-3" /> Done ({score}%)
+                      <Check className="h-3 w-3" /> Done {hasCorrectKeys ? `(${score}%)` : ''}
                     </span>
                   )}
                 </div>
