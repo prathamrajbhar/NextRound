@@ -98,7 +98,7 @@ export function SetupStage({
   }, [micTesting]);
 
   return (
-    <div className="relative w-full space-y-6 animate-in fade-in duration-300 font-sans pb-4">
+    <div className="relative w-full space-y-6 animate-in fade-in duration-300 font-sans p-6 sm:p-8 rounded-3xl border border-slate-800/40 bg-slate-950 text-white shadow-2xl overflow-hidden">
       
       {/* Background Ambient Mesh Gradients */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
