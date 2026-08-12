@@ -102,6 +102,15 @@ class AgentWorkerManager:
                     job_key = f"bull:{queue_name}:{job_id}"
                     job_data_raw = await redis.hget(job_key, "data")
 
+                    # Clean up BullMQ state keys immediately to prevent stalled job re-queueing
+                    try:
+                        await redis.delete(job_key)
+                        await redis.lrem(f"bull:{queue_name}:active", 0, job_id)
+                        await redis.zrem(f"bull:{queue_name}:active", job_id)
+                        await redis.zrem(f"bull:{queue_name}:stalled", job_id)
+                    except Exception as clean_err:
+                        logger.warning(f"Error cleaning up BullMQ keys for job {job_id}: {clean_err}")
+
                     if job_data_raw:
                         payload = json.loads(job_data_raw)
                         logger.info(f"Dequeued job {job_id} from {queue_name} with action: {payload.get('action')}")
