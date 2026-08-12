@@ -64,7 +64,6 @@ export const ModelName = {
   CodingSubmission: 'CodingSubmission',
   GeneratedQuestionChunk: 'GeneratedQuestionChunk',
   CodingProblemSnapshot: 'CodingProblemSnapshot',
-  VideoSubmission: 'VideoSubmission',
   Offer: 'Offer',
   AgentLog: 'AgentLog',
   MockSession: 'MockSession',
@@ -217,7 +216,6 @@ export const InterviewScalarFieldEnum = {
   proctor_flags: 'proctor_flags',
   engagement_signal: 'engagement_signal',
   sentiment_report: 'sentiment_report',
-  video_consent: 'video_consent',
   status: 'status',
   created_at: 'created_at'
 } as const
@@ -360,26 +358,6 @@ export const CodingProblemSnapshotScalarFieldEnum = {
 export type CodingProblemSnapshotScalarFieldEnum = (typeof CodingProblemSnapshotScalarFieldEnum)[keyof typeof CodingProblemSnapshotScalarFieldEnum]
 
 
-export const VideoSubmissionScalarFieldEnum = {
-  id: 'id',
-  session_id: 'session_id',
-  candidate_id: 'candidate_id',
-  prompt_id: 'prompt_id',
-  prompt_index: 'prompt_index',
-  video_url: 'video_url',
-  duration_seconds: 'duration_seconds',
-  status: 'status',
-  transcript: 'transcript',
-  score: 'score',
-  feedback: 'feedback',
-  idempotency_key: 'idempotency_key',
-  created_at: 'created_at',
-  completed_at: 'completed_at'
-} as const
-
-export type VideoSubmissionScalarFieldEnum = (typeof VideoSubmissionScalarFieldEnum)[keyof typeof VideoSubmissionScalarFieldEnum]
-
-
 export const OfferScalarFieldEnum = {
   id: 'id',
   application_id: 'application_id',
@@ -431,7 +409,6 @@ export const MockSessionScalarFieldEnum = {
   topic: 'topic',
   focus_areas: 'focus_areas',
   rubric: 'rubric',
-  video_prompts: 'video_prompts',
   transcript: 'transcript',
   score: 'score',
   feedback: 'feedback',

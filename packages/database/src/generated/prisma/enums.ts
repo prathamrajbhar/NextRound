@@ -79,8 +79,7 @@ export type InterviewStatus = (typeof InterviewStatus)[keyof typeof InterviewSta
 
 export const AssessmentType = {
   aptitude: 'aptitude',
-  coding: 'coding',
-  video: 'video'
+  coding: 'coding'
 } as const
 
 export type AssessmentType = (typeof AssessmentType)[keyof typeof AssessmentType]

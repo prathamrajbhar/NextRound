@@ -150,11 +150,11 @@ export default function AIResumeBuilderPage() {
     simulatedUserAnswer: '',
   };
 
-  // Local webcam feed (video-only); released when unmounted
-  useLocalMediaStream({
+  // Local webcam and microphone analysis feed; released when unmounted
+  const { micLevel } = useLocalMediaStream({
     videoRef,
     camActive,
-    micActive: false, // Mic is managed by SpeechRecognition in hook
+    micActive: micActive,
     enabled: stage === 'interview',
   });
 
@@ -296,6 +296,7 @@ export default function AIResumeBuilderPage() {
           setCamActive={setCamActive}
           micActive={micActive}
           setMicActive={toggleMic}
+          micLevel={micActive ? micLevel : 0}
           candidateSpeechText={candidateSpeechText}
           realtimeInsight={realtimeInsight}
           voiceError={voiceError}

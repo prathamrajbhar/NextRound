@@ -410,7 +410,6 @@ export const ModelName = {
   CodingSubmission: 'CodingSubmission',
   GeneratedQuestionChunk: 'GeneratedQuestionChunk',
   CodingProblemSnapshot: 'CodingProblemSnapshot',
-  VideoSubmission: 'VideoSubmission',
   Offer: 'Offer',
   AgentLog: 'AgentLog',
   MockSession: 'MockSession',
@@ -435,7 +434,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "aptitudeQuestion" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "videoSubmission" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark" | "proctoringSession" | "proctoringEvent" | "proctoringViolation"
+    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "aptitudeQuestion" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark" | "proctoringSession" | "proctoringEvent" | "proctoringViolation"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1401,80 +1400,6 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
-    VideoSubmission: {
-      payload: Prisma.$VideoSubmissionPayload<ExtArgs>
-      fields: Prisma.VideoSubmissionFieldRefs
-      operations: {
-        findUnique: {
-          args: Prisma.VideoSubmissionFindUniqueArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload> | null
-        }
-        findUniqueOrThrow: {
-          args: Prisma.VideoSubmissionFindUniqueOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
-        }
-        findFirst: {
-          args: Prisma.VideoSubmissionFindFirstArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload> | null
-        }
-        findFirstOrThrow: {
-          args: Prisma.VideoSubmissionFindFirstOrThrowArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
-        }
-        findMany: {
-          args: Prisma.VideoSubmissionFindManyArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>[]
-        }
-        create: {
-          args: Prisma.VideoSubmissionCreateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
-        }
-        createMany: {
-          args: Prisma.VideoSubmissionCreateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        createManyAndReturn: {
-          args: Prisma.VideoSubmissionCreateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>[]
-        }
-        delete: {
-          args: Prisma.VideoSubmissionDeleteArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
-        }
-        update: {
-          args: Prisma.VideoSubmissionUpdateArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
-        }
-        deleteMany: {
-          args: Prisma.VideoSubmissionDeleteManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateMany: {
-          args: Prisma.VideoSubmissionUpdateManyArgs<ExtArgs>
-          result: BatchPayload
-        }
-        updateManyAndReturn: {
-          args: Prisma.VideoSubmissionUpdateManyAndReturnArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>[]
-        }
-        upsert: {
-          args: Prisma.VideoSubmissionUpsertArgs<ExtArgs>
-          result: runtime.Types.Utils.PayloadToResult<Prisma.$VideoSubmissionPayload>
-        }
-        aggregate: {
-          args: Prisma.VideoSubmissionAggregateArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.AggregateVideoSubmission>
-        }
-        groupBy: {
-          args: Prisma.VideoSubmissionGroupByArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.VideoSubmissionGroupByOutputType>[]
-        }
-        count: {
-          args: Prisma.VideoSubmissionCountArgs<ExtArgs>
-          result: runtime.Types.Utils.Optional<Prisma.VideoSubmissionCountAggregateOutputType> | number
-        }
-      }
-    }
     Offer: {
       payload: Prisma.$OfferPayload<ExtArgs>
       fields: Prisma.OfferFieldRefs
@@ -2305,7 +2230,6 @@ export const InterviewScalarFieldEnum = {
   proctor_flags: 'proctor_flags',
   engagement_signal: 'engagement_signal',
   sentiment_report: 'sentiment_report',
-  video_consent: 'video_consent',
   status: 'status',
   created_at: 'created_at'
 } as const
@@ -2448,26 +2372,6 @@ export const CodingProblemSnapshotScalarFieldEnum = {
 export type CodingProblemSnapshotScalarFieldEnum = (typeof CodingProblemSnapshotScalarFieldEnum)[keyof typeof CodingProblemSnapshotScalarFieldEnum]
 
 
-export const VideoSubmissionScalarFieldEnum = {
-  id: 'id',
-  session_id: 'session_id',
-  candidate_id: 'candidate_id',
-  prompt_id: 'prompt_id',
-  prompt_index: 'prompt_index',
-  video_url: 'video_url',
-  duration_seconds: 'duration_seconds',
-  status: 'status',
-  transcript: 'transcript',
-  score: 'score',
-  feedback: 'feedback',
-  idempotency_key: 'idempotency_key',
-  created_at: 'created_at',
-  completed_at: 'completed_at'
-} as const
-
-export type VideoSubmissionScalarFieldEnum = (typeof VideoSubmissionScalarFieldEnum)[keyof typeof VideoSubmissionScalarFieldEnum]
-
-
 export const OfferScalarFieldEnum = {
   id: 'id',
   application_id: 'application_id',
@@ -2519,7 +2423,6 @@ export const MockSessionScalarFieldEnum = {
   topic: 'topic',
   focus_areas: 'focus_areas',
   rubric: 'rubric',
-  video_prompts: 'video_prompts',
   transcript: 'transcript',
   score: 'score',
   feedback: 'feedback',
@@ -2824,13 +2727,6 @@ export type ListEnumEvaluationDecisionFieldRefInput<$PrismaModel> = FieldRefInpu
 
 
 /**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
-    
-
-
-/**
  * Reference to a field of type 'InterviewStatus'
  */
 export type EnumInterviewStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'InterviewStatus'>
@@ -2869,6 +2765,13 @@ export type EnumAssessmentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<
  * Reference to a field of type 'AssessmentStatus[]'
  */
 export type ListEnumAssessmentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AssessmentStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -3063,7 +2966,6 @@ export type GlobalOmitConfig = {
   codingSubmission?: Prisma.CodingSubmissionOmit
   generatedQuestionChunk?: Prisma.GeneratedQuestionChunkOmit
   codingProblemSnapshot?: Prisma.CodingProblemSnapshotOmit
-  videoSubmission?: Prisma.VideoSubmissionOmit
   offer?: Prisma.OfferOmit
   agentLog?: Prisma.AgentLogOmit
   mockSession?: Prisma.MockSessionOmit

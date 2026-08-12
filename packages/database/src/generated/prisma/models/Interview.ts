@@ -29,7 +29,6 @@ export type InterviewMinAggregateOutputType = {
   application_id: string | null
   scheduled_at: Date | null
   audio_url: string | null
-  video_consent: boolean | null
   status: $Enums.InterviewStatus | null
   created_at: Date | null
 }
@@ -39,7 +38,6 @@ export type InterviewMaxAggregateOutputType = {
   application_id: string | null
   scheduled_at: Date | null
   audio_url: string | null
-  video_consent: boolean | null
   status: $Enums.InterviewStatus | null
   created_at: Date | null
 }
@@ -53,7 +51,6 @@ export type InterviewCountAggregateOutputType = {
   proctor_flags: number
   engagement_signal: number
   sentiment_report: number
-  video_consent: number
   status: number
   created_at: number
   _all: number
@@ -65,7 +62,6 @@ export type InterviewMinAggregateInputType = {
   application_id?: true
   scheduled_at?: true
   audio_url?: true
-  video_consent?: true
   status?: true
   created_at?: true
 }
@@ -75,7 +71,6 @@ export type InterviewMaxAggregateInputType = {
   application_id?: true
   scheduled_at?: true
   audio_url?: true
-  video_consent?: true
   status?: true
   created_at?: true
 }
@@ -89,7 +84,6 @@ export type InterviewCountAggregateInputType = {
   proctor_flags?: true
   engagement_signal?: true
   sentiment_report?: true
-  video_consent?: true
   status?: true
   created_at?: true
   _all?: true
@@ -176,7 +170,6 @@ export type InterviewGroupByOutputType = {
   proctor_flags: runtime.JsonValue | null
   engagement_signal: runtime.JsonValue | null
   sentiment_report: runtime.JsonValue | null
-  video_consent: boolean
   status: $Enums.InterviewStatus
   created_at: Date
   _count: InterviewCountAggregateOutputType | null
@@ -211,7 +204,6 @@ export type InterviewWhereInput = {
   proctor_flags?: Prisma.JsonNullableFilter<"Interview">
   engagement_signal?: Prisma.JsonNullableFilter<"Interview">
   sentiment_report?: Prisma.JsonNullableFilter<"Interview">
-  video_consent?: Prisma.BoolFilter<"Interview"> | boolean
   status?: Prisma.EnumInterviewStatusFilter<"Interview"> | $Enums.InterviewStatus
   created_at?: Prisma.DateTimeFilter<"Interview"> | Date | string
   application?: Prisma.XOR<Prisma.ApplicationScalarRelationFilter, Prisma.ApplicationWhereInput>
@@ -226,7 +218,6 @@ export type InterviewOrderByWithRelationInput = {
   proctor_flags?: Prisma.SortOrderInput | Prisma.SortOrder
   engagement_signal?: Prisma.SortOrderInput | Prisma.SortOrder
   sentiment_report?: Prisma.SortOrderInput | Prisma.SortOrder
-  video_consent?: Prisma.SortOrder
   status?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   application?: Prisma.ApplicationOrderByWithRelationInput
@@ -244,7 +235,6 @@ export type InterviewWhereUniqueInput = Prisma.AtLeast<{
   proctor_flags?: Prisma.JsonNullableFilter<"Interview">
   engagement_signal?: Prisma.JsonNullableFilter<"Interview">
   sentiment_report?: Prisma.JsonNullableFilter<"Interview">
-  video_consent?: Prisma.BoolFilter<"Interview"> | boolean
   status?: Prisma.EnumInterviewStatusFilter<"Interview"> | $Enums.InterviewStatus
   created_at?: Prisma.DateTimeFilter<"Interview"> | Date | string
   application?: Prisma.XOR<Prisma.ApplicationScalarRelationFilter, Prisma.ApplicationWhereInput>
@@ -259,7 +249,6 @@ export type InterviewOrderByWithAggregationInput = {
   proctor_flags?: Prisma.SortOrderInput | Prisma.SortOrder
   engagement_signal?: Prisma.SortOrderInput | Prisma.SortOrder
   sentiment_report?: Prisma.SortOrderInput | Prisma.SortOrder
-  video_consent?: Prisma.SortOrder
   status?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   _count?: Prisma.InterviewCountOrderByAggregateInput
@@ -279,7 +268,6 @@ export type InterviewScalarWhereWithAggregatesInput = {
   proctor_flags?: Prisma.JsonNullableWithAggregatesFilter<"Interview">
   engagement_signal?: Prisma.JsonNullableWithAggregatesFilter<"Interview">
   sentiment_report?: Prisma.JsonNullableWithAggregatesFilter<"Interview">
-  video_consent?: Prisma.BoolWithAggregatesFilter<"Interview"> | boolean
   status?: Prisma.EnumInterviewStatusWithAggregatesFilter<"Interview"> | $Enums.InterviewStatus
   created_at?: Prisma.DateTimeWithAggregatesFilter<"Interview"> | Date | string
 }
@@ -292,7 +280,6 @@ export type InterviewCreateInput = {
   proctor_flags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   engagement_signal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sentiment_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  video_consent?: boolean
   status?: $Enums.InterviewStatus
   created_at?: Date | string
   application: Prisma.ApplicationCreateNestedOneWithoutInterviewInput
@@ -307,7 +294,6 @@ export type InterviewUncheckedCreateInput = {
   proctor_flags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   engagement_signal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sentiment_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  video_consent?: boolean
   status?: $Enums.InterviewStatus
   created_at?: Date | string
 }
@@ -320,7 +306,6 @@ export type InterviewUpdateInput = {
   proctor_flags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   engagement_signal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sentiment_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  video_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumInterviewStatusFieldUpdateOperationsInput | $Enums.InterviewStatus
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   application?: Prisma.ApplicationUpdateOneRequiredWithoutInterviewNestedInput
@@ -335,7 +320,6 @@ export type InterviewUncheckedUpdateInput = {
   proctor_flags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   engagement_signal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sentiment_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  video_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumInterviewStatusFieldUpdateOperationsInput | $Enums.InterviewStatus
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -349,7 +333,6 @@ export type InterviewCreateManyInput = {
   proctor_flags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   engagement_signal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sentiment_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  video_consent?: boolean
   status?: $Enums.InterviewStatus
   created_at?: Date | string
 }
@@ -362,7 +345,6 @@ export type InterviewUpdateManyMutationInput = {
   proctor_flags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   engagement_signal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sentiment_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  video_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumInterviewStatusFieldUpdateOperationsInput | $Enums.InterviewStatus
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -376,7 +358,6 @@ export type InterviewUncheckedUpdateManyInput = {
   proctor_flags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   engagement_signal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sentiment_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  video_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumInterviewStatusFieldUpdateOperationsInput | $Enums.InterviewStatus
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -395,7 +376,6 @@ export type InterviewCountOrderByAggregateInput = {
   proctor_flags?: Prisma.SortOrder
   engagement_signal?: Prisma.SortOrder
   sentiment_report?: Prisma.SortOrder
-  video_consent?: Prisma.SortOrder
   status?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
@@ -405,7 +385,6 @@ export type InterviewMaxOrderByAggregateInput = {
   application_id?: Prisma.SortOrder
   scheduled_at?: Prisma.SortOrder
   audio_url?: Prisma.SortOrder
-  video_consent?: Prisma.SortOrder
   status?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
@@ -415,7 +394,6 @@ export type InterviewMinOrderByAggregateInput = {
   application_id?: Prisma.SortOrder
   scheduled_at?: Prisma.SortOrder
   audio_url?: Prisma.SortOrder
-  video_consent?: Prisma.SortOrder
   status?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
@@ -452,10 +430,6 @@ export type InterviewUncheckedUpdateOneWithoutApplicationNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.InterviewUpdateToOneWithWhereWithoutApplicationInput, Prisma.InterviewUpdateWithoutApplicationInput>, Prisma.InterviewUncheckedUpdateWithoutApplicationInput>
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type EnumInterviewStatusFieldUpdateOperationsInput = {
   set?: $Enums.InterviewStatus
 }
@@ -468,7 +442,6 @@ export type InterviewCreateWithoutApplicationInput = {
   proctor_flags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   engagement_signal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sentiment_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  video_consent?: boolean
   status?: $Enums.InterviewStatus
   created_at?: Date | string
 }
@@ -481,7 +454,6 @@ export type InterviewUncheckedCreateWithoutApplicationInput = {
   proctor_flags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   engagement_signal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sentiment_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  video_consent?: boolean
   status?: $Enums.InterviewStatus
   created_at?: Date | string
 }
@@ -510,7 +482,6 @@ export type InterviewUpdateWithoutApplicationInput = {
   proctor_flags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   engagement_signal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sentiment_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  video_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumInterviewStatusFieldUpdateOperationsInput | $Enums.InterviewStatus
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -523,7 +494,6 @@ export type InterviewUncheckedUpdateWithoutApplicationInput = {
   proctor_flags?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   engagement_signal?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   sentiment_report?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
-  video_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
   status?: Prisma.EnumInterviewStatusFieldUpdateOperationsInput | $Enums.InterviewStatus
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -539,7 +509,6 @@ export type InterviewSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   proctor_flags?: boolean
   engagement_signal?: boolean
   sentiment_report?: boolean
-  video_consent?: boolean
   status?: boolean
   created_at?: boolean
   application?: boolean | Prisma.ApplicationDefaultArgs<ExtArgs>
@@ -554,7 +523,6 @@ export type InterviewSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   proctor_flags?: boolean
   engagement_signal?: boolean
   sentiment_report?: boolean
-  video_consent?: boolean
   status?: boolean
   created_at?: boolean
   application?: boolean | Prisma.ApplicationDefaultArgs<ExtArgs>
@@ -569,7 +537,6 @@ export type InterviewSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   proctor_flags?: boolean
   engagement_signal?: boolean
   sentiment_report?: boolean
-  video_consent?: boolean
   status?: boolean
   created_at?: boolean
   application?: boolean | Prisma.ApplicationDefaultArgs<ExtArgs>
@@ -584,12 +551,11 @@ export type InterviewSelectScalar = {
   proctor_flags?: boolean
   engagement_signal?: boolean
   sentiment_report?: boolean
-  video_consent?: boolean
   status?: boolean
   created_at?: boolean
 }
 
-export type InterviewOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "application_id" | "scheduled_at" | "transcript" | "audio_url" | "proctor_flags" | "engagement_signal" | "sentiment_report" | "video_consent" | "status" | "created_at", ExtArgs["result"]["interview"]>
+export type InterviewOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "application_id" | "scheduled_at" | "transcript" | "audio_url" | "proctor_flags" | "engagement_signal" | "sentiment_report" | "status" | "created_at", ExtArgs["result"]["interview"]>
 export type InterviewInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   application?: boolean | Prisma.ApplicationDefaultArgs<ExtArgs>
 }
@@ -614,7 +580,6 @@ export type $InterviewPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     proctor_flags: runtime.JsonValue | null
     engagement_signal: runtime.JsonValue | null
     sentiment_report: runtime.JsonValue | null
-    video_consent: boolean
     status: $Enums.InterviewStatus
     created_at: Date
   }, ExtArgs["result"]["interview"]>
@@ -1049,7 +1014,6 @@ export interface InterviewFieldRefs {
   readonly proctor_flags: Prisma.FieldRef<"Interview", 'Json'>
   readonly engagement_signal: Prisma.FieldRef<"Interview", 'Json'>
   readonly sentiment_report: Prisma.FieldRef<"Interview", 'Json'>
-  readonly video_consent: Prisma.FieldRef<"Interview", 'Boolean'>
   readonly status: Prisma.FieldRef<"Interview", 'InterviewStatus'>
   readonly created_at: Prisma.FieldRef<"Interview", 'DateTime'>
 }
