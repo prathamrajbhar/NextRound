@@ -84,6 +84,12 @@ export default function HrLayout({
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
+  const isInterviewRoom = pathname.includes('/hr/interview');
+
+  if (isInterviewRoom) {
+    return <div className="w-screen h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-hidden font-sans">{children}</div>;
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50/50 dark:bg-slate-950/60 relative transition-colors duration-300">
       {/* Backdrop overlay for mobile */}
