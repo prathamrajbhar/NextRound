@@ -45,7 +45,7 @@ def run_mock_interviewer_agent(state: MockInterviewerState) -> MockInterviewerSt
         f"1. 'response': The next natural, realistic interview question or follow-up from the interviewer (1-3 sentences).\n"
         f"2. 'coaching_hint': A brief, actionable real-time tip for the candidate on how to structure their answer (e.g., 'Use STAR format', 'Quantify metrics', 'Address scalability edge cases')."
     )
-    parsed = extract_json_object(generate_text(prompt))
+    parsed = extract_json_object(generate_text(prompt, force_provider="groq"))
     ai_response = (parsed or {}).get("response")
     hint = (parsed or {}).get("coaching_hint") if parsed else None
 

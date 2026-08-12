@@ -50,7 +50,7 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
         f"1. 'response': A highly natural, warm, conversational response/question. React directly to what the candidate just said. Do NOT sound like a robot or use canned templates like 'Hello! I am excited to help you...' or generic phrases. Avoid long bulleted checklists. Ask only one specific question at a time to build their resume dynamically. Sound like you are pair-reviewing their resume over coffee.\n"
         f"2. 'realtime_insight': A brief extraction or tip highlighting a quantifiable metric or strong keyword derived from candidate input."
     )
-    parsed = extract_json_object(generate_text(prompt))
+    parsed = extract_json_object(generate_text(prompt, force_provider="groq"))
     ai_response = (parsed or {}).get("response")
     insight = (parsed or {}).get("realtime_insight") if parsed else None
 

@@ -179,6 +179,7 @@ class MockRespondRequest(BaseModel):
     targetCompany: Optional[str] = None
     turnNumber: int = 0
     conversationHistory: List[Dict[str, Any]] = Field(default_factory=list)
+    voice: Optional[str] = "en-US-ChristopherNeural"
 
 
 class MockRespondResponse(BaseModel):
@@ -186,6 +187,7 @@ class MockRespondResponse(BaseModel):
     coachingHint: Optional[str] = None
     turnNumber: int
     isComplete: bool = False
+    audioUrl: Optional[str] = None
 
 
 class ResumeBuilderRespondRequest(BaseModel):
@@ -196,6 +198,7 @@ class ResumeBuilderRespondRequest(BaseModel):
     stage: Optional[str] = None
     turnNumber: int = 0
     conversationHistory: List[Dict[str, Any]] = Field(default_factory=list)
+    voice: Optional[str] = "en-US-ChristopherNeural"
 
 
 class ResumeBuilderRespondResponse(BaseModel):
@@ -204,6 +207,7 @@ class ResumeBuilderRespondResponse(BaseModel):
     stage: str
     turnNumber: int
     isComplete: bool = False
+    audioUrl: Optional[str] = None
 
 
 mock_voice_router = APIRouter(prefix="/api/v1/ai", tags=["candidate-voice-ai"])
@@ -227,11 +231,15 @@ async def generate_mock_response(request: MockRespondRequest):
     text = output.get("latest_ai_response")
     if not text:
         raise HTTPException(status_code=503, detail="Mock interviewer LLM returned no response. Try again in a moment.")
+    
+    audio_url = await generate_tts_audio_base64(text, voice=request.voice or "en-US-ChristopherNeural")
+
     return MockRespondResponse(
         text=text,
         coachingHint=output.get("coaching_hint"),
         turnNumber=output.get("turn_number", request.turnNumber + 1),
         isComplete=output.get("is_complete", False),
+        audioUrl=audio_url,
     )
 
 
@@ -252,11 +260,15 @@ async def generate_resume_builder_response(request: ResumeBuilderRespondRequest)
     text = output.get("latest_ai_response")
     if not text:
         raise HTTPException(status_code=503, detail="Resume builder LLM returned no response. Try again in a moment.")
+    
+    audio_url = await generate_tts_audio_base64(text, voice=request.voice or "en-US-ChristopherNeural")
+
     return ResumeBuilderRespondResponse(
         text=text,
         realtimeInsight=output.get("realtime_insight"),
         stage=output.get("current_stage") or request.stage or "",
         turnNumber=output.get("turn_number", request.turnNumber + 1),
         isComplete=output.get("is_complete", False),
+        audioUrl=audio_url,
     )
 

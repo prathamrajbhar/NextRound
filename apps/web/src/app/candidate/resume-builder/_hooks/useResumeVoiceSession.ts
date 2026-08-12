@@ -90,11 +90,17 @@ export function useResumeVoiceSession({
     stageRef.current = stage;
   }, [stage]);
 
-  // Clean up speech synthesis & recognition on unmount
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Clean up speech synthesis & recognition & audio on unmount
   useEffect(() => {
     return () => {
       if (typeof window !== 'undefined') {
         window.speechSynthesis?.cancel();
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
       const recognition = recognitionRef.current;
       if (recognition) {
@@ -107,20 +113,47 @@ export function useResumeVoiceSession({
     };
   }, []);
 
-  // Text-To-Speech function
-  const speakText = useCallback((text: string, callback?: () => void) => {
+  // Text-To-Speech function with neural audio support
+  const speakText = useCallback((text: string, audioUrl?: string, callback?: () => void) => {
+    // Cancel any active audio playback
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    if (typeof window !== 'undefined') {
+      window.speechSynthesis?.cancel();
+    }
+
+    setAiState('speaking');
+
+    // If neural audio URL is provided, play it
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      audio.onended = () => {
+        if (callback) callback();
+      };
+      audio.onerror = (e) => {
+        console.error('Audio playback failed, falling back to speech synthesis:', e);
+        fallbackSynthesis(text, callback);
+      };
+      audio.play().catch((err) => {
+        console.error('Audio play call failed, falling back:', err);
+        fallbackSynthesis(text, callback);
+      });
+      return;
+    }
+
+    fallbackSynthesis(text, callback);
+  }, []);
+
+  const fallbackSynthesis = (text: string, callback?: () => void) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) {
       if (callback) callback();
       return;
     }
 
-    // Cancel any active speech
-    window.speechSynthesis.cancel();
-    setAiState('speaking');
-
     const utterance = new SpeechSynthesisUtterance(text);
-    
-    // Choose a nice English voice if available
     const voices = window.speechSynthesis.getVoices();
     const targetVoice = voices.find(
       (v) =>
@@ -142,7 +175,7 @@ export function useResumeVoiceSession({
     };
 
     window.speechSynthesis.speak(utterance);
-  }, []);
+  };
 
   // Speech-To-Text Stop function
   const stopSpeechRecognition = useCallback(() => {
@@ -275,6 +308,7 @@ export function useResumeVoiceSession({
           turnNumber: number;
           isComplete: boolean;
           realtimeInsight?: string;
+          audioUrl?: string;
         };
         
         const updatedHistory = [
@@ -294,11 +328,11 @@ export function useResumeVoiceSession({
 
         if (data.isComplete) {
           setAiState('speaking');
-          speakText(data.text, () => {
+          speakText(data.text, data.audioUrl, () => {
             handleFinalize(currentSessionId, updatedHistory);
           });
         } else {
-          speakText(data.text, () => {
+          speakText(data.text, data.audioUrl, () => {
             setAiState('listening');
             startSpeechRecognition();
           });
@@ -361,6 +395,9 @@ export function useResumeVoiceSession({
   // End call early (manual click)
   const endCall = useCallback(async () => {
     if (!sessionId) return;
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
     window.speechSynthesis?.cancel();
     await handleFinalize(sessionId, conversationHistoryRef.current);
   }, [sessionId, handleFinalize]);

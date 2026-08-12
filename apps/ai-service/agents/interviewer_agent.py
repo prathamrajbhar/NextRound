@@ -69,7 +69,7 @@ def evaluate_last_answer_node(state: InterviewerState) -> InterviewerState:
         f"Candidate Answer: {candidate_ans}\n\n"
         f"Return JSON format: {{\"score\": float (0-100), \"shallow\": bool, \"evasive\": bool, \"feedback\": str}}"
     )
-    eval_data = extract_json_object(generate_text(prompt))
+    eval_data = extract_json_object(generate_text(prompt, force_provider="groq"))
     if eval_data:
         is_shallow = eval_data.get("shallow", is_shallow)
         is_evasive = eval_data.get("evasive", is_evasive)
@@ -139,7 +139,7 @@ def generate_question_node(state: InterviewerState) -> InterviewerState:
         f"Recent Conversation History: {json.dumps(history[-4:])}\n\n"
         f"Ask ONE concise, engaging spoken interview question appropriate for the {current_stage} stage, referencing candidate's actual experience or projects if available. Keep it under 2 sentences."
     )
-    question_text = generate_text(prompt)
+    question_text = generate_text(prompt, force_provider="groq")
     if not question_text:
         raise RuntimeError("Interviewer LLM returned no question for this turn.")
 
@@ -163,7 +163,7 @@ def generate_follow_up_node(state: InterviewerState) -> InterviewerState:
         f"Candidate Answer: '{candidate_ans}'\n\n"
         f"Generate a polite, sharp 1-sentence follow-up probing deeper into technical execution or specific metrics."
     )
-    follow_up_text = generate_text(prompt)
+    follow_up_text = generate_text(prompt, force_provider="groq")
     if not follow_up_text:
         raise RuntimeError("Interviewer LLM returned no follow-up question.")
 
@@ -202,7 +202,7 @@ def close_interview_node(state: InterviewerState) -> InterviewerState:
         "Say goodbye to the candidate in 1-2 sentences, thank them for their time, "
         "and tell them their results are being prepared. Do not invent scores."
     )
-    closing_text = generate_text(prompt)
+    closing_text = generate_text(prompt, force_provider="groq")
     if not closing_text:
         raise RuntimeError("Interviewer LLM returned no closing message.")
 
@@ -250,7 +250,7 @@ def _gemini_score_transcript(history: Any, job_title: str) -> Optional[Dict[str,
         'Return JSON: {"technical_depth": float, "communication": float, "problem_solving": float, '
         '"overall_score": float, "summary_feedback": str}'
     )
-    return extract_json_object(generate_text(prompt))
+    return extract_json_object(generate_text(prompt, force_provider="groq"))
 
 
 def finalize_scores_node(state: InterviewerState) -> InterviewerState:
