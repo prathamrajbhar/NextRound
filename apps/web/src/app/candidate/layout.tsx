@@ -86,7 +86,8 @@ export default function CandidateLayout({
 
   const isAssessmentRoom = Boolean(
     ((pathname.includes('/candidate/mock/') && pathname.split('/').length >= 4 && !['new', 'history'].includes(pathname.split('/')[3])) ||
-    pathname.includes('/assessment')) &&
+    pathname.includes('/assessment') ||
+    pathname.includes('/hr-round')) &&
     !pathname.endsWith('/feedback')
   );
 
