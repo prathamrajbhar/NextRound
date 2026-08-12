@@ -60,7 +60,7 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
         q_id = ans.get("questionId")
         # selectedOptionIndex may arrive as a string from the client — normalize
         # to int so it compares against the (also normalized) correctIndex.
-        selected = _to_int(ans.get("selectedOptionIndex"), -1)
+        selected = _to_int(ans.get("selectedOption") if ans.get("selectedOption") is not None else ans.get("selectedOptionIndex"), -1)
         # The category is taken from the answer, then the stored question. When
         # neither provides one, the question is bucketed as "Uncategorized" — a
         # category is never fabricated.
