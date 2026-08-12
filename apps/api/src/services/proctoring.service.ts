@@ -145,6 +145,7 @@ export async function logProctoringEvents(sessionId: string, events: EventInput[
 
   await prisma.proctoringEvent.createMany({
     data: dataToInsert,
+    skipDuplicates: true,
   });
 
   return { count: newEvents.length };

@@ -27,7 +27,12 @@ export function useAssessmentCompletion({ sessionId, applicationId, messages }: 
       }
     }
 
-    if (sessionId && sessionId !== 'new' && sessionId !== 'practice') {
+    // Only call the mock session end route when this is actually a mock session.
+    // When applicationId is set this is a real application assessment — the
+    // aptitude submit route already handles persistence, no session end needed.
+    const isMockSession = !applicationId && sessionId && sessionId !== 'new' && sessionId !== 'practice';
+
+    if (isMockSession) {
       try {
         await apiClient.post(`/mock/sessions/${sessionId}/end`, {
           score,

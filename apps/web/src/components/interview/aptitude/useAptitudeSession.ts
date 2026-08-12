@@ -59,6 +59,9 @@ export function useAptitudeSession({
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [strikeCount, setStrikeCount] = useState(0);
+  // True while we intentionally exit fullscreen (on category submit / final submit)
+  // so the proctoring listener doesn't count it as a violation.
+  const isIntentionalExitRef = useRef(false);
 
   // Normalize & sort active questions sequentially by category
   const activeQuestions = useMemo(() => {
@@ -184,6 +187,8 @@ export function useAptitudeSession({
       return nextScores;
     });
 
+    // Mark exit as intentional so the proctoring listener ignores this event
+    isIntentionalExitRef.current = true;
     // Exit fullscreen & return to hub screen
     if (document.fullscreenElement) {
       try {
@@ -192,6 +197,7 @@ export function useAptitudeSession({
         console.error('Failed to exit fullscreen:', err);
       }
     }
+    isIntentionalExitRef.current = false;
 
     setSelectedCategory(null);
     setIsStarted(false);
@@ -202,6 +208,8 @@ export function useAptitudeSession({
     if (disableProctoring || submitted || !isStarted || !selectedCategory) return;
 
     const handleProctoringViolation = () => {
+      // Ignore intentional exits (e.g. returning to hub between categories)
+      if (isIntentionalExitRef.current) return;
       if (document.hidden || !document.fullscreenElement) {
         setStrikeCount((prev) => {
           const next = prev + 1;
