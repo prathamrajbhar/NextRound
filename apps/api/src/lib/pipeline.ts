@@ -44,7 +44,7 @@ function enabledModalities(job: JobLike): { aptitude: boolean; coding: boolean }
   const thr = isObject(job.thresholds) ? job.thresholds : {};
   return {
     aptitude: boolFlag(cfg, 'aptitude_enabled', true) || boolFlag(thr, 'aptitude_enabled', false),
-    coding: boolFlag(cfg, 'coding_enabled', true) || boolFlag(thr, 'coding_enabled', false),
+    coding: boolFlag(cfg, 'coding_enabled', false) || boolFlag(thr, 'coding_enabled', false),
   };
 }
 
@@ -137,8 +137,22 @@ export async function advanceAssessmentStage(applicationId: string): Promise<str
 
   if (!allDone) return null;
 
-  const { interviewId } = await ensureInterviewAndSchedule(applicationId);
-  const next = interviewId ? 'interview_scheduled' : 'screening_completed';
-  await prisma.application.update({ where: { id: applicationId }, data: { status: next } });
-  return next;
+  // Check if AI Voice Call (voice_screen) is enabled in the job stages
+  const jobStages = Array.isArray(app.job?.stages) ? (app.job.stages as string[]) : [];
+  const voiceScreenEnabled = jobStages.includes('voice_screen');
+
+  if (voiceScreenEnabled) {
+    const { interviewId } = await ensureInterviewAndSchedule(applicationId);
+    const next = interviewId ? 'interview_scheduled' : 'screening_completed';
+    await prisma.application.update({ where: { id: applicationId }, data: { status: next } });
+    return next;
+  } else {
+    // If AI Voice Call is disabled, advance directly to HR Round stage (hr_round)
+    const next = 'hr_round';
+    await prisma.application.update({
+      where: { id: applicationId },
+      data: { status: next, hr_round_status: 'pending' },
+    });
+    return next;
+  }
 }

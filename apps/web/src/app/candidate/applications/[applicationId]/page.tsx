@@ -279,7 +279,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
   // Once a step is marked completed, the next one becomes active.
   const completedBadges = ['Completed', 'Graded'];
   const firstIncomplete = allNextSteps.find((s) => !completedBadges.includes(s.badge));
-  const nextSteps = firstIncomplete ? [firstIncomplete] : allNextSteps.slice(-1);
+  const nextSteps = firstIncomplete ? [firstIncomplete] : [];
 
   const matchPercent = app.scores?.composite;
 

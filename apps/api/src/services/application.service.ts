@@ -261,14 +261,9 @@ export async function getApplication(appId: string, user: AppUserCtx) {
     }
   }
 
-  // If the application is currently in assessment/screening_completed stage, but the
-  // job config has disabled the assessment stage, automatically advance the candidate
-  // to the next appropriate stage (interview).
-  if (
-    (application.status === 'screening_completed' || application.status === 'assessment') &&
-    application.job?.stages &&
-    !application.job.stages.includes('assessment')
-  ) {
+  // If the application is currently in assessment/screening_completed stage, check if we
+  // can advance the candidate to the next appropriate stage (interview or HR round).
+  if (application.status === 'screening_completed' || application.status === 'assessment') {
     const nextStatus = await advanceAssessmentStage(application.id);
     if (nextStatus) {
       application.status = nextStatus as any;
