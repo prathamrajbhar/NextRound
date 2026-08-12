@@ -122,6 +122,8 @@ export function useResumeVoiceSession({
     aiStateRef.current = aiState;
   }, [aiState]);
 
+  const submitResponseRef = useRef<((text: string) => Promise<void>) | null>(null);
+
   // Clean up speech synthesis & recognition & audio on unmount
   useEffect(() => {
     return () => {
@@ -222,7 +224,7 @@ export function useResumeVoiceSession({
       if (aiStateRef.current === 'listening') {
         const spokenText = candidateSpeechTextRef.current;
         if (spokenText && spokenText.trim().length > 1) {
-          submitResponse(spokenText);
+          submitResponseRef.current?.(spokenText);
         } else {
           // Restart recognition to keep listening if they didn't speak anything yet
           try {
@@ -239,7 +241,7 @@ export function useResumeVoiceSession({
     } catch (e) {
       console.error('Failed to start SpeechRecognition:', e);
     }
-  }, [micActive, submitResponse]);
+  }, [micActive]);
 
   // Finalize call
   const handleFinalize = useCallback(
@@ -388,6 +390,10 @@ export function useResumeVoiceSession({
     },
     [aiState, sessionId, turnIndex, stage, getAIResponse]
   );
+
+  useEffect(() => {
+    submitResponseRef.current = submitResponse;
+  }, [submitResponse]);
 
   // Submit voice response directly
   const submitVoiceResponse = useCallback(() => {
