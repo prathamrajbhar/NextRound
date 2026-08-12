@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { Application } from '@/types';
-import { useInterviewSession } from '@/hooks/useInterviewSession';
 import UnifiedInterviewConsole from '@/components/interview/UnifiedInterviewConsole';
 import {
   Mic,
@@ -24,38 +23,13 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
   const [app, setApp] = useState<Application | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [joined, setJoined] = useState(false);
+  const [micActive, setMicActive] = useState(true);
+  const [camActive, setCamActive] = useState(true);
+  const [callDuration, setCallDuration] = useState(0);
+  const [joinError, setJoinError] = useState<string | null>(null);
 
   const companyName = app?.orgName || 'Interview';
   const jobTitle = app?.jobTitle || 'Candidate Interview';
-
-  const {
-    phase,
-    messages,
-    timeRemaining,
-    micActive,
-    camActive,
-    isAnalyzing,
-    proctorTelemetry,
-    startSession,
-    submitAnswer,
-    wrapUp,
-    toggleMic,
-    toggleCam,
-  } = useInterviewSession({
-    company: companyName,
-    role: jobTitle,
-    difficulty: 'senior',
-    interviewId: applicationId,
-    storageKey: `candidateHrRound_${applicationId}`,
-    onComplete: () => {
-      router.push(`/candidate/applications/${applicationId}`);
-    },
-  });
-
-  const handleJoinCall = () => {
-    startSession();
-    setJoined(true);
-  };
 
   useEffect(() => {
     async function fetchApp() {
@@ -73,6 +47,34 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     }
     fetchApp();
   }, [applicationId]);
+
+  // Call timer effect
+  useEffect(() => {
+    if (!joined) return;
+    const interval = setInterval(() => {
+      setCallDuration((prev) => prev + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [joined]);
+
+  const toggleMic = () => setMicActive((p) => !p);
+  const toggleCam = () => setCamActive((p) => !p);
+
+  const handleJoinCall = async () => {
+    setJoinError(null);
+    try {
+      await apiClient.post(`/interviews/${applicationId}/consent`, {
+        videoConsent: camActive,
+        audioConsent: micActive,
+      });
+      await apiClient.post(`/interviews/${applicationId}/session-token`);
+      setJoined(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to join studio room.';
+      setJoinError(msg);
+      console.error('Failed to join HR call session:', err);
+    }
+  };
 
   if (loadError) {
     return (
@@ -143,7 +145,7 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
                 <span>All Vetting Stages Completed</span>
               </div>
               <p className="text-[11px] text-slate-400 leading-relaxed font-medium">
-                Your HR representative and evaluation AI are ready to start your live studio video call.
+                Your HR representative is ready to start your live studio video call.
               </p>
             </div>
 
@@ -178,6 +180,12 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
               </div>
             </div>
 
+            {joinError && (
+              <div className="p-3.5 rounded-2xl bg-rose-950/60 border border-rose-800 text-xs text-rose-300 font-bold text-center">
+                Error: {joinError}
+              </div>
+            )}
+
             {/* Join Call CTA Button */}
             <button
               type="button"
@@ -196,16 +204,15 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
   /* Active Studio Video Call Room View */
   return (
     <UnifiedInterviewConsole
+      applicationId={applicationId}
       mode="hr-candidate"
       companyName={companyName}
       jobTitle={jobTitle}
-      timeRemaining={timeRemaining}
-      messages={messages}
-      phase={phase}
-      isAnalyzing={isAnalyzing}
-      proctorTelemetry={proctorTelemetry}
-      onSubmitAnswer={submitAnswer}
-      onEndSession={wrapUp}
+      candidateName={app.candidateName}
+      callDuration={callDuration}
+      onEndSession={() => {
+        router.push(`/candidate/applications/${applicationId}`);
+      }}
     />
   );
 }

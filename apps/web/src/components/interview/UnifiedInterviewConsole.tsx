@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocalMediaStream } from '@/hooks/useLocalMediaStream';
+import { useWebRTCCall } from '@/hooks/useWebRTCCall';
 import {
   InterviewConsoleMode,
   UnifiedInterviewConsoleProps,
@@ -24,6 +25,7 @@ export type { InterviewConsoleMode, UnifiedInterviewConsoleProps };
  * sub-component in ./console.
  */
 export function UnifiedInterviewConsole({
+  applicationId,
   mode,
   companyName = 'Company',
   jobTitle = 'Candidate Position',
@@ -60,7 +62,7 @@ export function UnifiedInterviewConsole({
 
   // Local webcam/mic stream lifecycle — owns the getUserMedia stream and stops all tracks
   // on unmount, pagehide, and when the session ends (via handleEndSession).
-  const { stopLocalStream, hasCamPermission, micLevel } = useLocalMediaStream({
+  const { stopLocalStream, hasCamPermission, micLevel, localStream } = useLocalMediaStream({
     videoRef,
     camActive,
     micActive,
@@ -69,6 +71,12 @@ export function UnifiedInterviewConsole({
         proctoringClient.trackMediaStream(stream);
       }
     },
+  });
+
+  const { remoteStream, connectionState } = useWebRTCCall({
+    applicationId: applicationId || '',
+    mode,
+    localStream,
   });
 
   // Auto-scroll transcript drawer
@@ -141,6 +149,9 @@ export function UnifiedInterviewConsole({
           lastMessage={lastMsg}
           candidateName={candidateName}
           companyName={companyName}
+          remoteStream={remoteStream}
+          connectionState={connectionState}
+          localStream={localStream}
         />
 
         {/* Right Viewport: Candidate Local Camera Feed OR Recruiter Evaluation Form */}

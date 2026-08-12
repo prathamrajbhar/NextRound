@@ -14,6 +14,7 @@ export interface ProctorTelemetry {
 }
 
 export interface UnifiedInterviewConsoleProps {
+  applicationId?: string;
   mode: InterviewConsoleMode;
   companyName: string;
   jobTitle: string;

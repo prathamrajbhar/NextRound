@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Bot, User } from '@/lib/lucide-google-icons';
 import { Message } from '@/hooks/useInterviewSession';
 import { InterviewConsoleMode } from './types';
@@ -12,11 +12,14 @@ interface ConsolePrimaryViewportProps {
   lastMessage?: Message;
   candidateName: string;
   companyName: string;
+  remoteStream?: MediaStream | null;
+  connectionState?: RTCPeerConnectionState;
+  localStream?: MediaStream | null;
 }
 
 /**
  * Left viewport of the interview console. Renders the AI voice orb (ai-voice /
- * mock-practice) or the human HR video placeholder.
+ * mock-practice) or the human HR video viewport (supporting real WebRTC stream).
  */
 export function ConsolePrimaryViewport({
   mode,
@@ -27,10 +30,46 @@ export function ConsolePrimaryViewport({
   lastMessage,
   candidateName,
   companyName,
+  remoteStream,
+  connectionState = 'new',
+  localStream,
 }: ConsolePrimaryViewportProps) {
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const localVideoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream || null;
+    }
+  }, [remoteStream]);
+
+  useEffect(() => {
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = localStream || null;
+    }
+  }, [localStream]);
+
+  const isVideoCall = mode === 'hr-candidate' || mode === 'hr-recruiter';
+  const hasRemoteTracks = remoteStream && remoteStream.getVideoTracks().some(t => t.readyState === 'live');
+
+  // Connection text status
+  let callStatusText = 'Waiting for peer to join...';
+  if (connectionState === 'connecting') {
+    callStatusText = 'Establishing secure 1:1 WebRTC tunnel...';
+  } else if (connectionState === 'connected') {
+    callStatusText = hasRemoteTracks ? 'Live Encrypted Video Connected' : 'Resolving video tracks...';
+  } else if (connectionState === 'disconnected' || connectionState === 'failed') {
+    callStatusText = 'Connection interrupted. Reconnecting...';
+  } else {
+    callStatusText =
+      mode === 'hr-recruiter'
+        ? `Waiting for ${candidateName} to join...`
+        : `Waiting for ${companyName} HR Representative...`;
+  }
+
   return (
     <div className="relative rounded-3xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 overflow-hidden flex flex-col items-center justify-center shadow-lg dark:shadow-2xl backdrop-blur-md">
-      {mode === 'ai-voice' || mode === 'mock-practice' ? (
+      {!isVideoCall ? (
         <div className="flex flex-col items-center justify-center space-y-6 p-6 text-center">
           <div className="relative">
             <div
@@ -73,17 +112,58 @@ export function ConsolePrimaryViewport({
           </div>
         </div>
       ) : (
-        // Human HR Video Stream
-        <div className="w-full h-full flex flex-col items-center justify-center p-6 text-center space-y-3">
-          <div className="h-20 w-20 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-slate-300">
-            <User className="h-10 w-10" />
+        // Human 1:1 Video Stream Viewport
+        <div className="relative w-full h-full bg-slate-950 flex flex-col items-center justify-center overflow-hidden">
+          {connectionState === 'connected' && hasRemoteTracks ? (
+            <video
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            // Placeholder user avatar when connection is not established or resolving tracks
+            <div className="flex flex-col items-center justify-center p-6 text-center space-y-4 select-none">
+              <div className="h-24 w-24 rounded-full bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-slate-400 shadow-inner relative">
+                <User className="h-12 w-12" />
+                <span className="absolute inset-0 rounded-full border border-brand-500/20 animate-ping duration-1000" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-sm font-extrabold text-white font-display">
+                  {mode === 'hr-recruiter' ? candidateName : `${companyName} HR Representative`}
+                </h3>
+                <div className="flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-extrabold text-slate-400 tracking-wide uppercase">
+                  <span className={`h-1.5 w-1.5 rounded-full ${connectionState === 'connected' ? 'bg-amber-400 animate-pulse' : connectionState === 'connecting' ? 'bg-indigo-400 animate-ping' : 'bg-slate-600'}`} />
+                  <span>{callStatusText}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Top-Right Label Badge */}
+          <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800/80 text-[10px] font-extrabold text-slate-300 flex items-center gap-1.5 backdrop-blur-md shadow-lg">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span>{mode === 'hr-recruiter' ? 'Remote Candidate Feed' : 'Hiring Manager'}</span>
           </div>
-          <h3 className="text-sm font-extrabold text-white font-display">
-            {mode === 'hr-recruiter' ? candidateName : `${companyName} HR Representative`}
-          </h3>
-          <p className="text-xs text-slate-400 font-medium">Encrypted WebRTC 1:1 Video Stream Connected</p>
+
+          {/* Floating local Picture-in-Picture window for Recruiter */}
+          {mode === 'hr-recruiter' && localStream && (
+            <div className="absolute bottom-4 right-4 w-32 h-44 sm:w-40 sm:h-56 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl z-30 transition-all duration-300 group hover:scale-105">
+              <video
+                ref={localVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover transform -scale-x-100"
+              />
+              <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-slate-950/80 text-[8px] font-extrabold text-slate-400">
+                You
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
+

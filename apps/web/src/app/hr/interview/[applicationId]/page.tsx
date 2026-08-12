@@ -13,6 +13,7 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
   const [app, setApp] = useState<Application | null>(null);
   const [callDuration, setCallDuration] = useState(0);
   const [callEnded, setCallEnded] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchApp() {
@@ -36,31 +37,19 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
   }, [callEnded]);
 
   const handleCompleteHRRound = async (result: 'pass' | 'fail', notes: string) => {
+    setSubmitError(null);
     try {
       await apiClient.post(`/interviews/hr/${applicationId}/result`, {
         decision: result,
         notes: notes || 'Completed 1:1 human video call evaluation.',
       });
-    } catch {
-      // API fallback
+      setCallEnded(true);
+      router.push(`/hr/candidates/${applicationId}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to finalize evaluation result.';
+      setSubmitError(msg);
+      console.error('Error finalizing HR round:', err);
     }
-
-    if (app) {
-      const updatedApp = {
-        ...app,
-        stage: 'Decision' as const,
-        status: 'decided' as const,
-        hrRoundStatus: result === 'pass' ? ('PASSED' as const) : ('FAILED' as const),
-        hrRoundCompletedAt: new Date().toISOString(),
-        decision: result === 'pass' ? ('hire' as const) : ('reject' as const),
-        reasoning: `Human HR Round completed. Result: ${result.toUpperCase()}. Notes: "${notes || 'Completed 1:1 human video call evaluation.'}"`,
-      };
-
-      localStorage.setItem(`hrRoundResult_${app.id}`, JSON.stringify(updatedApp));
-    }
-
-    setCallEnded(true);
-    router.push(`/hr/candidates/${applicationId}`);
   };
 
   if (!app) {
@@ -72,17 +61,35 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
   }
 
   return (
-    <UnifiedInterviewConsole
-      mode="hr-recruiter"
-      companyName={app.orgName}
-      jobTitle={app.jobTitle}
-      candidateName={app.candidateName}
-      callDuration={callDuration}
-      onEndSession={() => {
-        setCallEnded(true);
-        router.push(`/hr/candidates/${applicationId}`);
-      }}
-      onCompleteHRRound={handleCompleteHRRound}
-    />
+    <div className="relative w-screen h-screen">
+      {submitError && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 bg-rose-950/95 border border-rose-800 text-rose-200 px-5 py-3 rounded-2xl text-xs font-extrabold shadow-2xl flex items-center gap-3 backdrop-blur-md animate-in fade-in slide-in-from-top-4 duration-300">
+          <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+          <span>Error: {submitError}</span>
+          <button
+            type="button"
+            onClick={() => setSubmitError(null)}
+            className="text-rose-400 hover:text-white font-black text-sm ml-2 cursor-pointer transition-colors"
+          >
+            &times;
+          </button>
+        </div>
+      )}
+
+      <UnifiedInterviewConsole
+        applicationId={applicationId}
+        mode="hr-recruiter"
+        companyName={app.orgName}
+        jobTitle={app.jobTitle}
+        candidateName={app.candidateName}
+        callDuration={callDuration}
+        onEndSession={() => {
+          setCallEnded(true);
+          router.push(`/hr/candidates/${applicationId}`);
+        }}
+        onCompleteHRRound={handleCompleteHRRound}
+      />
+    </div>
   );
 }
+

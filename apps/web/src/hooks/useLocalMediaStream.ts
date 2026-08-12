@@ -33,6 +33,7 @@ export function useLocalMediaStream({
 
   const [hasCamPermission, setHasCamPermission] = useState<boolean | null>(null);
   const [micLevel, setMicLevel] = useState<number>(45);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
 
   const stopLocalStream = useCallback(() => {
     // Invalidate any in-flight getUserMedia so it self-stops when it resolves.
@@ -54,6 +55,7 @@ export function useLocalMediaStream({
     if (stream) {
       stream.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
+      setLocalStream(null);
     }
 
     if (videoRef.current) {
@@ -87,6 +89,7 @@ export function useLocalMediaStream({
         }
 
         streamRef.current = stream;
+        setLocalStream(stream);
         setHasCamPermission(true);
         onStreamCreated?.(stream);
 
@@ -133,7 +136,7 @@ export function useLocalMediaStream({
     return () => {
       stopLocalStream();
     };
-  }, [camActive, micActive, enabled, stopLocalStream, videoRef]);
+  }, [camActive, micActive, enabled, stopLocalStream, videoRef, onStreamCreated]);
 
   // Belt-and-suspenders for tab close / back-forward (bfcache), where React unmount cleanup does
   // not reliably fire. NOT visibilitychange — briefly switching tabs must keep the feed alive.
@@ -143,5 +146,5 @@ export function useLocalMediaStream({
     return () => window.removeEventListener('pagehide', onPageHide);
   }, [stopLocalStream]);
 
-  return { stopLocalStream, hasCamPermission, micLevel };
+  return { stopLocalStream, hasCamPermission, micLevel, localStream };
 }
