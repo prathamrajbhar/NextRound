@@ -123,9 +123,12 @@ talentPoolRouter.get(
       });
       const bookmarkMap = new Map(bookmarks.map((b) => [b.candidate_id, b.id]));
 
-      // Map each candidate to their most recent application so the UI can
+      // Map each candidate to their most recent application in this organization so the UI can
       // link to the candidate dossier (which is keyed by application id).
       const applications = await prisma.application.findMany({
+        where: {
+          job: { org_id: orgId },
+        },
         select: { id: true, candidate_id: true, applied_at: true },
         orderBy: { applied_at: 'desc' },
       });
@@ -184,6 +187,11 @@ talentPoolRouter.get(
             FROM "CandidateProfile" cp
             JOIN "User" u ON u.id = cp.user_id
             WHERE cp.resume_embedding IS NOT NULL
+              AND cp.id IN (
+                SELECT candidate_id FROM "Application" a
+                JOIN "Job" j ON j.id = a.job_id
+                WHERE j.org_id = ${orgId}
+              )
             ORDER BY cp.resume_embedding <=> ${vectorStr}::vector ASC
             LIMIT 50
           `;
@@ -210,6 +218,15 @@ talentPoolRouter.get(
         // No honest semantic ranking available (no query, ai-service down, or
         // hash-fallback embedding). Return recent candidates, score null.
         const candidates = await prisma.candidateProfile.findMany({
+          where: {
+            applications: {
+              some: {
+                job: {
+                  org_id: orgId,
+                },
+              },
+            },
+          },
           include: {
             user: {
               select: { id: true, email: true, created_at: true },
