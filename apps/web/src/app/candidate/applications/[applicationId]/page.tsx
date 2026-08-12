@@ -24,6 +24,7 @@ import {
   CheckCircle2,
   AlertCircle,
   RefreshCw,
+  XCircle,
 } from '@/lib/lucide-google-icons';
 import { ApplicationHeaderBanner } from './_components/ApplicationHeaderBanner';
 import { StagePipelineTimeline } from './_components/StagePipelineTimeline';
@@ -537,27 +538,41 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
                   </p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Click below to execute or re-evaluate your candidate profile using the Gemini AI screening agent:
-                  </p>
-                  <button
-                    onClick={handleRunScreening}
-                    disabled={runningScreening}
-                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-extrabold py-3 text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
-                  >
-                    {runningScreening ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin text-white" />
-                        <span>AI Agent Parsing Profile...</span>
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="h-4 w-4" />
-                        <span>Run / Re-check AI Screening</span>
-                      </>
-                    )}
-                  </button>
+                <div className="space-y-4">
+                  {app.status === 'rejected' && (
+                    <div className="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 space-y-2 text-rose-900 dark:text-rose-200">
+                      <div className="flex items-center gap-2 font-extrabold text-rose-700 dark:text-rose-400">
+                        <XCircle className="h-5 w-5" />
+                        <span>Screening Rejected</span>
+                      </div>
+                      <p className="text-[11px] leading-relaxed text-rose-800 dark:text-rose-300 font-medium whitespace-pre-wrap">
+                        {app.reasoning || 'The AI Screening Agent evaluated your profile and determined it does not meet the minimum requirements for this role at this time.'}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      Click below to execute or re-evaluate your candidate profile using the Gemini AI screening agent:
+                    </p>
+                    <button
+                      onClick={handleRunScreening}
+                      disabled={runningScreening}
+                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-extrabold py-3 text-xs shadow-md transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {runningScreening ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin text-white" />
+                          <span>AI Agent Parsing Profile...</span>
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-4 w-4" />
+                          <span>Run / Re-check AI Screening</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
