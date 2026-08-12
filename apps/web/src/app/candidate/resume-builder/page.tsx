@@ -128,6 +128,7 @@ export default function AIResumeBuilderPage() {
     error: voiceError,
     startCall,
     submitResponse,
+    replayLastAudio,
     endCall,
   } = useResumeVoiceSession({
     targetRole,
@@ -298,6 +299,7 @@ export default function AIResumeBuilderPage() {
           candidateSpeechText={candidateSpeechText}
           realtimeInsight={realtimeInsight}
           voiceError={voiceError}
+          onReplayAudio={replayLastAudio}
           onSubmitResponse={submitResponse}
           onEndCall={handleEndCall}
         />

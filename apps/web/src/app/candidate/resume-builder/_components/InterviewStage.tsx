@@ -40,6 +40,7 @@ interface InterviewStageProps {
   candidateSpeechText: string;
   realtimeInsight?: string | null;
   voiceError?: string | null;
+  onReplayAudio?: () => void;
   onSubmitResponse?: (text: string) => void;
   onEndCall: () => void;
 }
@@ -60,6 +61,7 @@ export function InterviewStage({
   candidateSpeechText,
   realtimeInsight,
   voiceError,
+  onReplayAudio,
   onSubmitResponse,
   onEndCall,
 }: InterviewStageProps) {
@@ -161,10 +163,23 @@ export function InterviewStage({
 
           {/* Active Question & Extraction Highlight */}
           <div className="space-y-3">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs space-y-1">
-              <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-brand-600 dark:text-orange-400">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Interviewer Dialogue</span>
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider text-brand-600 dark:text-orange-400">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Interviewer Dialogue</span>
+                </div>
+                {onReplayAudio && (
+                  <button
+                    type="button"
+                    onClick={onReplayAudio}
+                    className="flex items-center gap-1 text-[10px] font-bold text-slate-500 hover:text-orange-500 dark:text-slate-400 dark:hover:text-orange-400 transition-colors cursor-pointer px-2 py-0.5 rounded-lg bg-slate-200/50 dark:bg-slate-800/60"
+                    title="Replay Voice"
+                  >
+                    <Volume2 className="h-3.5 w-3.5" />
+                    <span>Play Audio</span>
+                  </button>
+                )}
               </div>
               <p className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 leading-relaxed font-display">
                 &ldquo;{currentTurn.aiMessage}&rdquo;

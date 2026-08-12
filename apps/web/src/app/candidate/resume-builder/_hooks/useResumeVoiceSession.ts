@@ -91,6 +91,24 @@ export function useResumeVoiceSession({
   }, [stage]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastAudioUrlRef = useRef<string | null>(null);
+  const lastTextRef = useRef<string>('');
+
+  // Unlock web audio on user interaction
+  const unlockAudio = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        ctx.resume().then(() => ctx.close()).catch(() => {});
+      }
+      if (typeof window !== 'undefined' && window.speechSynthesis && window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // Clean up speech synthesis & recognition & audio on unmount
   useEffect(() => {
@@ -115,67 +133,106 @@ export function useResumeVoiceSession({
 
   // Text-To-Speech function with neural audio support
   const speakText = useCallback((text: string, audioUrl?: string, callback?: () => void) => {
+    lastTextRef.current = text;
+    if (audioUrl) {
+      lastAudioUrlRef.current = audioUrl;
+    }
+
     // Cancel any active audio playback
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current = null;
     }
-    if (typeof window !== 'undefined') {
-      window.speechSynthesis?.cancel();
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
     }
 
     setAiState('speaking');
 
-    // If neural audio URL is provided, play it
+    // 1. If neural audio URL is provided, play it
     if (audioUrl) {
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-      audio.onended = () => {
-        if (callback) callback();
-      };
-      audio.onerror = (e) => {
-        console.error('Audio playback failed, falling back to speech synthesis:', e);
-        fallbackSynthesis(text, callback);
-      };
-      audio.play().catch((err) => {
-        console.error('Audio play call failed, falling back:', err);
-        fallbackSynthesis(text, callback);
-      });
-      return;
+      try {
+        const audio = new Audio(audioUrl);
+        audioRef.current = audio;
+        audio.volume = 1.0;
+
+        audio.onended = () => {
+          audioRef.current = null;
+          setAiState('listening');
+          if (callback) callback();
+        };
+
+        audio.onerror = (e) => {
+          console.warn('Neural audio playback failed, falling back to speech synthesis:', e);
+          fallbackSynthesis(text, callback);
+        };
+
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            console.warn('Autoplay prevented neural audio, falling back to speech synthesis:', err);
+            fallbackSynthesis(text, callback);
+          });
+        }
+        return;
+      } catch (err) {
+        console.warn('Audio construction failed, falling back:', err);
+      }
     }
 
+    // 2. Fallback to Web Speech API
     fallbackSynthesis(text, callback);
   }, []);
 
   const fallbackSynthesis = (text: string, callback?: () => void) => {
     if (typeof window === 'undefined' || !window.speechSynthesis) {
+      setAiState('listening');
       if (callback) callback();
       return;
     }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    const voices = window.speechSynthesis.getVoices();
-    const targetVoice = voices.find(
-      (v) =>
-        v.lang.startsWith('en') &&
-        (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Microsoft'))
-    );
-    if (targetVoice) utterance.voice = targetVoice;
-    
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voices = window.speechSynthesis.getVoices();
+      const targetVoice = voices.find(
+        (v) =>
+          v.lang.startsWith('en') &&
+          (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Microsoft'))
+      );
+      if (targetVoice) utterance.voice = targetVoice;
+      
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
 
-    utterance.onend = () => {
+      utterance.onend = () => {
+        setAiState('listening');
+        if (callback) callback();
+      };
+
+      utterance.onerror = (_e) => {
+        console.warn('SpeechSynthesis error:', _e);
+        setAiState('listening');
+        if (callback) callback();
+      };
+
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      setAiState('listening');
       if (callback) callback();
-    };
-
-    utterance.onerror = (_e) => {
-      console.error('SpeechSynthesis error:', _e);
-      if (callback) callback();
-    };
-
-    window.speechSynthesis.speak(utterance);
+    }
   };
+
+  const replayLastAudio = useCallback(() => {
+    if (lastTextRef.current) {
+      speakText(lastTextRef.current, lastAudioUrlRef.current || undefined);
+    }
+  }, [speakText]);
 
   // Speech-To-Text Stop function
   const stopSpeechRecognition = useCallback(() => {
@@ -349,6 +406,7 @@ export function useResumeVoiceSession({
 
   // Initialize call
   const startCall = useCallback(async () => {
+    unlockAudio();
     setError(null);
     setConversationHistory([]);
     setTurnIndex(0);
@@ -431,6 +489,7 @@ export function useResumeVoiceSession({
     startCall,
     submitResponse,
     submitVoiceResponse,
+    replayLastAudio,
     endCall,
   };
 }
