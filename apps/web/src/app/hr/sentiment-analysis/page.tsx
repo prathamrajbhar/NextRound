@@ -30,11 +30,11 @@ export default function SentimentAnalysisPage() {
     async function loadSentimentProfiles() {
       try {
         setLoading(true);
-        const res = await apiClient.get<{ success: boolean; data: { profiles: CandidateSentimentProfile[] } }>('/hr/sentiment');
-        if (res?.success && Array.isArray(res.data?.profiles)) {
-          setProfiles(res.data.profiles);
-          if (res.data.profiles.length > 0) {
-            setSelectedCandidateId(res.data.profiles[0].id);
+        const res = await apiClient.get<{ profiles: CandidateSentimentProfile[] }>('/hr/sentiment');
+        if (res && Array.isArray(res.profiles)) {
+          setProfiles(res.profiles);
+          if (res.profiles.length > 0) {
+            setSelectedCandidateId(res.profiles[0].id);
           }
         } else {
           setProfiles([]);
