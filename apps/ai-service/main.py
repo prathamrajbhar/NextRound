@@ -26,11 +26,21 @@ async def lifespan(app: FastAPI):
     await worker_manager.stop_workers()
     await close_redis_client()
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(
     title="NextRound AI Service",
     description="FastAPI & LangGraph AI Service for NextRound / HireOS",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(voice_router)
