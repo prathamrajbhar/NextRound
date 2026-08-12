@@ -76,6 +76,22 @@ class AgentWorkerManager:
             task = asyncio.create_task(self.poll_queue(queue_name))
             self.tasks.append(task)
 
+    async def _acknowledge_and_clean_job(self, redis, queue_name: str, job_id: str):
+        """Acknowledge a dequeued BullMQ job by cleaning up its Redis tracking keys.
+        
+        Since the Python service consumes queue items directly from Redis lists, we must
+        immediately clear the job hash and state structures. This prevents Node.js BullMQ
+        stalled-job checkers from thinking the worker died and re-enqueueing the job.
+        """
+        job_key = f"bull:{queue_name}:{job_id}"
+        try:
+            await redis.delete(job_key)
+            await redis.lrem(f"bull:{queue_name}:active", 0, job_id)
+            await redis.zrem(f"bull:{queue_name}:active", job_id)
+            await redis.zrem(f"bull:{queue_name}:stalled", job_id)
+        except Exception as err:
+            logger.warning(f"Failed to clean up BullMQ metadata keys for job {job_id}: {err}")
+
     async def poll_queue(self, queue_name: str):
         logger.info(f"Worker listening on BullMQ queue: {queue_name}")
         while self.running:
@@ -86,13 +102,10 @@ class AgentWorkerManager:
                     continue
 
                 # Poll BullMQ wait list or custom job queue
-                # BullMQ queue list key: bull:<queue_name>:wait
                 job_id = await redis.rpop(f"bull:{queue_name}:wait")
 
                 if not job_id:
-                    # BullMQ stores priority jobs in a ZSET (bull:<queue>:prioritized)
-                    # instead of the wait list. Dequeue them too so priority enqueues
-                    # (evaluator, decision) are never silently stalled.
+                    # Dequeue priority jobs from ZSET so priority enqueues are never stalled
                     prioritized = await redis.zpopmin(f"bull:{queue_name}:prioritized")
                     if prioritized:
                         job_id = prioritized[0][0]
@@ -102,14 +115,8 @@ class AgentWorkerManager:
                     job_key = f"bull:{queue_name}:{job_id}"
                     job_data_raw = await redis.hget(job_key, "data")
 
-                    # Clean up BullMQ state keys immediately to prevent stalled job re-queueing
-                    try:
-                        await redis.delete(job_key)
-                        await redis.lrem(f"bull:{queue_name}:active", 0, job_id)
-                        await redis.zrem(f"bull:{queue_name}:active", job_id)
-                        await redis.zrem(f"bull:{queue_name}:stalled", job_id)
-                    except Exception as clean_err:
-                        logger.warning(f"Error cleaning up BullMQ keys for job {job_id}: {clean_err}")
+                    # Acknowledge the job and clean queue states to avoid stalled checker retries
+                    await self._acknowledge_and_clean_job(redis, queue_name, job_id)
 
                     if job_data_raw:
                         payload = json.loads(job_data_raw)
