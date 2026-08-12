@@ -145,9 +145,9 @@ export function ConsolePrimaryViewport({
             <span>{mode === 'hr-recruiter' ? 'Remote Candidate Feed' : 'Hiring Manager'}</span>
           </div>
 
-          {/* Floating local Picture-in-Picture window for Recruiter */}
-          {mode === 'hr-recruiter' && localStream && (
-            <div className="absolute bottom-4 right-4 w-32 h-44 sm:w-40 sm:h-56 rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 shadow-2xl z-30 transition-all duration-300 group hover:scale-105">
+          {/* Floating local Picture-in-Picture window for Recruiter or Candidate */}
+          {isVideoCall && localStream && (
+            <div className="absolute bottom-4 right-4 w-32 h-44 sm:w-40 sm:h-56 rounded-2xl overflow-hidden border border-slate-200/20 dark:border-slate-800 bg-slate-950 shadow-2xl z-30 transition-all duration-300 group hover:scale-105">
               <video
                 ref={localVideoRef}
                 autoPlay

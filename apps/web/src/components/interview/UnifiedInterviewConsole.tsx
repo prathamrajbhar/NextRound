@@ -137,8 +137,10 @@ export function UnifiedInterviewConsole({
         onToggleFullscreen={toggleFullscreen}
       />
 
-      {/* Main Dual-View Body */}
-      <main className="flex-1 p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-4 min-h-0 relative z-20 overflow-hidden">
+      {/* Main View Body */}
+      <main className={`flex-1 p-3 sm:p-4 min-h-0 relative z-20 overflow-hidden grid gap-4 ${
+        mode === 'hr-candidate' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'
+      }`}>
         {/* Left Viewport: Primary Feed (AI Voice Orb OR Remote Video Feed) */}
         <ConsolePrimaryViewport
           mode={mode}
@@ -154,19 +156,21 @@ export function UnifiedInterviewConsole({
           localStream={localStream}
         />
 
-        {/* Right Viewport: Candidate Local Camera Feed OR Recruiter Evaluation Form */}
-        <ConsoleSecondaryViewport
-          mode={mode}
-          candidateName={candidateName}
-          camActive={camActive}
-          hasCamPermission={hasCamPermission}
-          videoRef={videoRef}
-          hrNotes={hrNotes}
-          hrDecision={hrDecision}
-          onHrNotesChange={setHrNotes}
-          onHrDecisionChange={setHrDecision}
-          onCompleteHRRound={onCompleteHRRound}
-        />
+        {/* Right Viewport: Recruiter Evaluation Form (only shown in recruiter mode) */}
+        {mode !== 'hr-candidate' && (
+          <ConsoleSecondaryViewport
+            mode={mode}
+            candidateName={candidateName}
+            camActive={camActive}
+            hasCamPermission={hasCamPermission}
+            videoRef={videoRef}
+            hrNotes={hrNotes}
+            hrDecision={hrDecision}
+            onHrNotesChange={setHrNotes}
+            onHrDecisionChange={setHrDecision}
+            onCompleteHRRound={onCompleteHRRound}
+          />
+        )}
       </main>
 
       {/* Subtitle & Live Transcript Drawer Overlay */}
