@@ -122,7 +122,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
               throw err;
             }
           }
-        } else if (type === 'ready') {
+        } else if (type === 'ready' || type === 'ready_reply') {
           // If the candidate joins or reconnects, the impolite peer (Recruiter) initiates renegotiation
           if (!polite && pc.signalingState === 'stable') {
             try {
@@ -140,6 +140,9 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
             } finally {
               makingOfferRef.current = false;
             }
+          } else if (polite && type === 'ready') {
+            // Polite peer (Candidate) replies to 'ready' to nudge the impolite peer to initiate
+            channel.postMessage({ type: 'ready_reply' });
           }
         }
       } catch (err) {
