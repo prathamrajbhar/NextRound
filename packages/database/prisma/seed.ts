@@ -19,7 +19,7 @@
 import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcryptjs';
-import { PrismaClient } from '../src/generated/prisma/client';
+import { PrismaClient, Prisma } from '../src/generated/prisma/client';
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -2333,7 +2333,7 @@ async function seedApplicationDetails(
         test_type: 'aptitude',
         questions: APTITUDE_BANK.slice(0, 10) as any,
         responses: isPending
-          ? null
+          ? Prisma.DbNull
           : (APTITUDE_BANK.slice(0, 10).map((q, idx) => ({
               questionId: idx,
               selectedIndex: q.correct_index,
@@ -2341,7 +2341,7 @@ async function seedApplicationDetails(
             })) as any),
         score: isPending ? null : overallScore,
         category_breakdown: isPending
-          ? null
+          ? Prisma.DbNull
           : {
               'Quantitative Aptitude': aptitudeScore,
               'Logical Reasoning': aptitudeScore,
