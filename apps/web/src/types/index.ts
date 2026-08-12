@@ -101,6 +101,10 @@ export interface Application {
   engagementSignal?: { eyeContact: number; speakingRate: string; confidenceScore: number };
   scheduledSlots?: string[];
   confirmedSlot?: string;
+  yearsOfExperience?: number;
+  location?: string;
+  noticePeriod?: string;
+  expectedSalary?: number;
 }
 
 export interface MockSession {

@@ -197,6 +197,24 @@ export default function HrCandidateProfilePage({ params }: { params: Promise<{ a
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Applied Role</span>
                 <span className="text-slate-800 dark:text-slate-200 block mt-0.5">{job?.title || app.jobTitle}</span>
               </div>
+              {app.location && (
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Preferred Location</span>
+                  <span className="text-slate-800 dark:text-slate-200 block mt-0.5">{app.location}</span>
+                </div>
+              )}
+              {app.noticePeriod && (
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Notice Period</span>
+                  <span className="text-slate-800 dark:text-slate-200 block mt-0.5">{app.noticePeriod}</span>
+                </div>
+              )}
+              {app.expectedSalary && (
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 block uppercase">Expected Salary</span>
+                  <span className="text-slate-800 dark:text-slate-200 block mt-0.5">${app.expectedSalary.toLocaleString()}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

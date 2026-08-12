@@ -84,19 +84,27 @@ export function CandidateHeader({ app }: CandidateHeaderProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Total Experience</span>
-          <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mt-1 block">N/A</span>
+          <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mt-1 block">
+            {typeof app.yearsOfExperience === 'number' ? `${app.yearsOfExperience} yrs` : 'N/A'}
+          </span>
         </div>
         <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Location</span>
-          <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mt-1 block truncate">N/A</span>
+          <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 mt-1 block truncate">
+            {app.location || 'N/A'}
+          </span>
         </div>
         <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Notice Period</span>
-          <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">N/A</span>
+          <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 mt-1 block">
+            {app.noticePeriod || 'N/A'}
+          </span>
         </div>
         <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Expected Comp</span>
-          <span className="text-sm font-extrabold text-brand-600 dark:text-orange-400 mt-1 block">N/A</span>
+          <span className="text-sm font-extrabold text-brand-600 dark:text-orange-400 mt-1 block">
+            {typeof app.expectedSalary === 'number' ? `$${app.expectedSalary.toLocaleString()}` : 'N/A'}
+          </span>
         </div>
       </div>
     </>
