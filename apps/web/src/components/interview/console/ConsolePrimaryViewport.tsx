@@ -1,7 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Bot, User } from '@/lib/lucide-google-icons';
-import { Message } from '@/hooks/useInterviewSession';
-import { InterviewConsoleMode } from './types';
+import { Message, InterviewConsoleMode } from './types';
 
 interface ConsolePrimaryViewportProps {
   mode: InterviewConsoleMode;

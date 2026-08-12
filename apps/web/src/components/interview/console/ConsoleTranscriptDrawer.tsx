@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { MessageSquare, X } from '@/lib/lucide-google-icons';
-import { Message } from '@/hooks/useInterviewSession';
+import { Message } from './types';
 
 interface ConsoleTranscriptDrawerProps {
   messages: Message[];

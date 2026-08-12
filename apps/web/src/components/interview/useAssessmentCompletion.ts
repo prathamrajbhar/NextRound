@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
-import { Message } from '@/hooks/useInterviewSession';
+import { Message } from '@/components/interview/console/types';
 
 interface UseAssessmentCompletionOptions {
   sessionId: string;

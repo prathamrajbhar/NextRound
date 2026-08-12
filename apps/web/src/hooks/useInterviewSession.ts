@@ -5,15 +5,9 @@ import { getTopicsForRoleAndCompany } from '@/lib/interviewTopics';
 import { evaluateInterview } from '@/lib/interviewScorer';
 import { apiClient } from '@/lib/apiClient';
 import { siteConfig } from '@/lib/config';
+import type { Message, InterviewPhase } from '@/components/interview/console/types';
 
-export interface Message {
-  id: string;
-  role: 'ai' | 'candidate';
-  content: string;
-  timestamp: string;
-}
-
-export type InterviewPhase = 'Introduction' | 'Core Vetting' | 'Deep-Dive' | 'Wrap-up';
+export type { Message, InterviewPhase };
 
 interface UseInterviewSessionProps {
   company: string;
