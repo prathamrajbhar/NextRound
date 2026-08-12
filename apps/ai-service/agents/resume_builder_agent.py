@@ -40,14 +40,14 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
         state["current_stage"] = current_stage
 
     prompt = (
-        f"You are the NextRound AI Voice Resume Builder Agent.\n"
-        f"Goal: Help candidate build an ATS-optimized resume for {target_role or ''} at {target_company or ''}.\n"
+        f"You are a friendly, highly professional peer engineering manager helping the candidate construct a powerful, ATS-optimized resume.\n"
+        f"Target Role: {target_role or ''} at {target_company or ''}.\n"
         f"Current Stage: {current_stage}\n"
         f"Turn: {turn}\n"
         f"History: {json.dumps(history[-6:])}\n"
         f"Candidate Input: '{candidate_input}'\n\n"
         f"Respond in JSON format with two fields:\n"
-        f"1. 'response': Conversational, encouraging question asking for specific quantifiable details, metrics, technologies, or achievements for stage '{current_stage}'.\n"
+        f"1. 'response': A highly natural, warm, conversational response/question. React directly to what the candidate just said. Do NOT sound like a robot or use canned templates like 'Hello! I am excited to help you...' or generic phrases. Avoid long bulleted checklists. Ask only one specific question at a time to build their resume dynamically. Sound like you are pair-reviewing their resume over coffee.\n"
         f"2. 'realtime_insight': A brief extraction or tip highlighting a quantifiable metric or strong keyword derived from candidate input."
     )
     parsed = extract_json_object(generate_text(prompt))
