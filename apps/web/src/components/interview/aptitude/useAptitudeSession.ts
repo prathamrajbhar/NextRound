@@ -113,8 +113,12 @@ export function useAptitudeSession({
   // Active questions for the currently selected category section
   const activeCategoryQuestions = useMemo(() => {
     if (!selectedCategory) return [];
-    return activeQuestions.filter((q) => q.category === selectedCategory);
-  }, [activeQuestions, selectedCategory]);
+    const filtered = activeQuestions.filter((q) => q.category === selectedCategory);
+    if (mcqDistribution && typeof mcqDistribution[selectedCategory] === 'number') {
+      return filtered.slice(0, mcqDistribution[selectedCategory]);
+    }
+    return filtered;
+  }, [activeQuestions, selectedCategory, mcqDistribution]);
 
   // Prefetch the next batch as the candidate nears the end of the loaded set
   useEffect(() => {
