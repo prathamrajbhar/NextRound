@@ -28,8 +28,7 @@ export function useAssessmentDetails({ sessionId, applicationId, company, role }
   useEffect(() => {
     async function fetchData() {
       try {
-        const isJobAptitudeSession = sessionId.startsWith('session-');
-        if (!isJobAptitudeSession && sessionId !== 'new' && sessionId !== 'practice') {
+        if (!applicationId && sessionId && sessionId !== 'new' && sessionId !== 'practice') {
           const res = await apiClient.get<{ session: MockSession }>(`/mock/sessions/${sessionId}`).catch(() => null);
           if (res?.session) setSession(res.session);
         }
