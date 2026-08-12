@@ -82,7 +82,7 @@ def _generate_text_ollama(prompt: str) -> Optional[str]:
         return text.strip() if text else None
     except Exception as e:
         logger.error(f"Ollama generate_content failed: {e}")
-        return None
+        raise
 
 
 def _generate_text_groq(prompt: str) -> Optional[str]:
@@ -101,7 +101,7 @@ def _generate_text_groq(prompt: str) -> Optional[str]:
         return text.strip() if text else None
     except Exception as e:
         logger.error(f"Groq generate_content failed: {e}")
-        return None
+        raise
 
 
 def generate_text(prompt: str, force_provider: Optional[str] = None) -> Optional[str]:
