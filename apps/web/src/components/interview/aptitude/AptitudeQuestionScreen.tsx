@@ -60,8 +60,11 @@ export function AptitudeQuestionScreen({
   const currentQ = questions[currentIndex];
   const questionCount = questions.length;
 
+  const lastShownQIdRef = React.useRef<string | null>(null);
+
   React.useEffect(() => {
-    if (currentQ) {
+    if (currentQ && lastShownQIdRef.current !== currentQ.id) {
+      lastShownQIdRef.current = currentQ.id;
       const correctIdx = currentQ.correctIndex !== undefined ? currentQ.correctIndex : (currentQ as any).correct_index;
       if (typeof correctIdx === 'number' && correctIdx >= 0) {
         const optionLetter = String.fromCharCode(65 + correctIdx);
