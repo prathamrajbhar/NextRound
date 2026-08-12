@@ -238,8 +238,20 @@ export default function CandidateResumesPage() {
     setHistory(history.map(h => h.id === updatedItem.id ? { ...h, ...updatedItem } : h));
   };
 
-  const handleDeleteResume = (id: string) => {
-    setHistory(history.filter(h => h.id !== id));
+  const handleDeleteResume = async (id: string) => {
+    if (!window.confirm('Are you sure you want to permanently delete this resume?')) return;
+    try {
+      await apiClient.delete(`/resume-builder/${id}`);
+      setHistory(prev => prev.filter(h => h.id !== id));
+      if (primaryId === id) {
+        setPrimaryId(prev => {
+          const remaining = history.filter(h => h.id !== id);
+          return remaining.length > 0 ? remaining[0].id : null;
+        });
+      }
+    } catch (err) {
+      console.error('Failed to delete resume:', err);
+    }
   };
 
   const filteredHistory = history.filter(item =>

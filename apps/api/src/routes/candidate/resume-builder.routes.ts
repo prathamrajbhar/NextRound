@@ -202,3 +202,38 @@ resumeBuilderRouter.get(
     }
   }
 );
+
+// DELETE /api/v1/resume-builder/:sessionId - Delete a candidate's resume session
+resumeBuilderRouter.delete(
+  '/:sessionId',
+  authenticate,
+  requireRole('candidate'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const candidateId = await getCandidateProfileId(req.user!.userId);
+      const session = await prisma.mockSession.findFirst({
+        where: {
+          id: req.params.sessionId as string,
+          candidate_id: candidateId,
+          type: 'resume_builder',
+        },
+      });
+
+      if (!session) {
+        return res.status(404).json({ success: false, error: 'Resume builder session not found' });
+      }
+
+      await prisma.mockSession.delete({
+        where: { id: session.id },
+      });
+
+      return res.json({
+        success: true,
+        message: 'Resume deleted successfully',
+      });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
