@@ -133,13 +133,7 @@ export function useAptitudeSession({
   // Final Overall Submission
   const handleFinalSubmit = useCallback(async () => {
     setIsSubmitting(true);
-    let totalCorrect = 0;
-    activeQuestions.forEach((q) => {
-      if (q.correctIndex !== undefined && answers[q.id] === q.correctIndex) {
-        totalCorrect++;
-      }
-    });
-    let percentage = activeQuestions.length > 0 ? Math.round((totalCorrect / activeQuestions.length) * 100) : 0;
+    let percentage = 0;
 
     if (applicationId) {
       try {
@@ -158,6 +152,16 @@ export function useAptitudeSession({
       } catch (err) {
         console.error('Failed to submit aptitude assessment:', err);
       }
+    } else {
+      // Practice/mock mode: score locally using correctIndex if available
+      let totalCorrect = 0;
+      activeQuestions.forEach((q) => {
+        const correctIdx = q.correctIndex !== undefined ? q.correctIndex : (q as any).correct_index;
+        if (correctIdx !== undefined && answers[q.id] === correctIdx) {
+          totalCorrect++;
+        }
+      });
+      percentage = activeQuestions.length > 0 ? Math.round((totalCorrect / activeQuestions.length) * 100) : 0;
     }
 
     setFinalScore(percentage);

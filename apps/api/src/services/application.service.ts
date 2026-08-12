@@ -749,6 +749,8 @@ export async function submitAptitude(
   for (const q of storedQuestions) {
     const correctIdx = q.correctIndex !== undefined ? q.correctIndex : q.correct_index;
     if (typeof correctIdx !== 'number') continue;
+    // Only score questions the candidate actually answered
+    if (!answerMap.has(q.id)) continue;
     totalScored++;
     if (answerMap.get(q.id) === correctIdx) correctCount++;
   }

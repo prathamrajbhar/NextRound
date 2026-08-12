@@ -187,7 +187,8 @@ applicationRouter.post(
   requireRole('candidate'),
   asyncHandler(async (req, res) => {
     const data = await applicationService.submitAptitude(req.params.id as string, req.user!.userId, req.body);
-    res.json({ success: true, ...data });
+    // Wrap in data envelope so apiClient.post() can return res.score correctly
+    res.json({ success: true, data });
   })
 );
 
