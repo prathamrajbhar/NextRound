@@ -104,59 +104,36 @@ def _generate_text_groq(prompt: str) -> Optional[str]:
         return None
 
 
-def generate_text(prompt: str) -> Optional[str]:
+def generate_text(prompt: str, force_provider: Optional[str] = None) -> Optional[str]:
     """Generate a text completion from the configured provider/model.
 
     Honors settings.llm_provider ("gemini", "groq", or "ollama").
-    If the preferred provider fails or is not configured, it gracefully falls back
-    to other configured providers in order of preference.
+    If the preferred provider fails or is not configured, it propagates the failure
+    without any fallback or static retry logic.
     """
     if not prompt:
         return None
 
-    provider = settings.llm_provider.lower()
+    provider = (force_provider or settings.llm_provider).lower()
     
-    # 1. Try preferred provider first
     if provider == "groq":
-        res = _generate_text_groq(prompt)
-        if res:
-            return res
+        return _generate_text_groq(prompt)
+        
     elif provider == "gemini":
         client = get_client()
-        if client:
-            try:
-                response = client.models.generate_content(model=settings.gemini_model, contents=prompt)
-                text = getattr(response, "text", None)
-                if text and text.strip():
-                    return text.strip()
-            except Exception as e:
-                logger.error(f"Gemini generate_content failed: {e}")
+        if not client:
+            logger.error("Gemini API key is not configured.")
+            return None
+        try:
+            response = client.models.generate_content(model=settings.gemini_model, contents=prompt)
+            text = getattr(response, "text", None)
+            return text.strip() if text else None
+        except Exception as e:
+            logger.error(f"Gemini generate_content failed: {e}")
+            raise
+
     elif provider == "ollama":
-        res = _generate_text_ollama(prompt)
-        if res:
-            return res
-
-    # 2. Fallbacks
-    if provider != "gemini":
-        client = get_client()
-        if client:
-            try:
-                response = client.models.generate_content(model=settings.gemini_model, contents=prompt)
-                text = getattr(response, "text", None)
-                if text and text.strip():
-                    return text.strip()
-            except Exception as e:
-                logger.error(f"Gemini generate_content failed: {e}")
-
-    if provider != "groq":
-        res = _generate_text_groq(prompt)
-        if res:
-            return res
-
-    if provider != "ollama":
-        res = _generate_text_ollama(prompt)
-        if res:
-            return res
+        return _generate_text_ollama(prompt)
 
     return None
 
