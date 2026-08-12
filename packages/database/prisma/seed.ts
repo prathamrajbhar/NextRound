@@ -1698,7 +1698,7 @@ async function main(): Promise<void> {
         difficulty: 'hard',
         type: 'mock',
         status: 'completed',
-        current_section: 'video',
+        current_section: 'interview',
         started_at: daysAgo(5 + m * 3),
         completed_at: daysAgo(5 + m * 3),
         final_score: 92.5 - m * 4,
@@ -2092,7 +2092,6 @@ async function seedApplicationDetails(
           clarityScore: 94,
         },
         engagement_signal: { eyeContactPercent: 95, speakingPaceWPM: 135, pausesAppropriate: true },
-        video_consent: true,
       },
     });
   }
