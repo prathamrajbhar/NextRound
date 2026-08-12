@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { apiClient } from '@/lib/apiClient';
-import { Sparkles, CheckCircle2, HelpCircle, Lightbulb } from '@/lib/lucide-google-icons';
+import { Sparkles, CheckCircle2, Lightbulb } from '@/lib/lucide-google-icons';
 
 interface PrepQuestion {
   category?: string;
@@ -67,7 +67,7 @@ export function JobPrepSection({ jobId, companyName }: JobPrepSectionProps) {
       ? prep.skill_checklist
       : [];
 
-  const hasPrepData = rawQuestions.length > 0 || cultureNotes.length > 0 || skillChecklist.length > 0;
+  const hasPrepData = cultureNotes.length > 0 || skillChecklist.length > 0;
 
   if (!loading && !hasPrepData) {
     return null;
@@ -96,37 +96,6 @@ export function JobPrepSection({ jobId, companyName }: JobPrepSectionProps) {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Dynamic Questions */}
-          {rawQuestions.length > 0 && (
-            <div className="space-y-3">
-              <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                <HelpCircle className="h-4 w-4 text-brand-600 dark:text-orange-400" />
-                Targeted AI Questions
-              </h3>
-              <div className="space-y-3">
-                {rawQuestions.map((q, idx) => (
-                  <div
-                    key={idx}
-                    className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 space-y-2 text-xs"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider bg-brand-100 dark:bg-orange-950 text-brand-700 dark:text-orange-300">
-                        {q.dimension || q.category || 'Interview Focus'}
-                      </span>
-                    </div>
-                    <p className="font-extrabold text-slate-900 dark:text-slate-100 font-display leading-relaxed">
-                      {q.question}
-                    </p>
-                    {q.rationale && (
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium italic">
-                        Insight: {q.rationale}
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Dynamic Culture & Skills */}
           {(cultureNotes.length > 0 || skillChecklist.length > 0) && (
