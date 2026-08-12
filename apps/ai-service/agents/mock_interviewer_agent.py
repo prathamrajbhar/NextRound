@@ -47,7 +47,7 @@ def run_mock_interviewer_agent(state: MockInterviewerState) -> MockInterviewerSt
         "Return ONLY JSON:\n"
         '{"response": "Spoken dialogue (1-2 sentences)", "coaching_hint": "Actionable STAR/metric hint"}'
     )
-    parsed = extract_json_object(generate_text(prompt, force_provider="groq"))
+    parsed = extract_json_object(generate_text(prompt))
     ai_response = (parsed or {}).get("response")
     hint = (parsed or {}).get("coaching_hint") if parsed else None
 

@@ -53,7 +53,7 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
         "Return ONLY JSON:\n"
         '{"response": "Short natural spoken dialogue (1-2 sentences)", "realtime_insight": "Concrete resume bullet or metric tip"}'
     )
-    parsed = extract_json_object(generate_text(prompt, force_provider="groq"))
+    parsed = extract_json_object(generate_text(prompt))
     ai_response = (parsed or {}).get("response")
     insight = (parsed or {}).get("realtime_insight") if parsed else None
 
