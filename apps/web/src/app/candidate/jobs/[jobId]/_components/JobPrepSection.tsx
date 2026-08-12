@@ -55,9 +55,17 @@ export function JobPrepSection({ jobId, companyName }: JobPrepSectionProps) {
     fetchPrep();
   }, [jobId]);
 
-  const rawQuestions = prep?.questions || [];
-  const cultureNotes = prep?.cultureNotes || prep?.culture_notes || [];
-  const skillChecklist = prep?.skillChecklist || prep?.skill_checklist || [];
+  const rawQuestions = Array.isArray(prep?.questions) ? prep.questions : [];
+  const cultureNotes = Array.isArray(prep?.cultureNotes)
+    ? prep.cultureNotes
+    : Array.isArray(prep?.culture_notes)
+      ? prep.culture_notes
+      : [];
+  const skillChecklist = Array.isArray(prep?.skillChecklist)
+    ? prep.skillChecklist
+    : Array.isArray(prep?.skill_checklist)
+      ? prep.skill_checklist
+      : [];
 
   const hasPrepData = rawQuestions.length > 0 || cultureNotes.length > 0 || skillChecklist.length > 0;
 
