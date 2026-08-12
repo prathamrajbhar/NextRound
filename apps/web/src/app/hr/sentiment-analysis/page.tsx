@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { CandidateSentimentProfile } from '@/types';
@@ -18,15 +18,36 @@ import {
   Volume2,
   Loader2,
 } from '@/lib/lucide-google-icons';
+import { apiClient } from '@/lib/apiClient';
 
 export default function SentimentAnalysisPage() {
-  // The /hr/sentiment backend reports the feature as unavailable until the
-  // audio-prosody ML pipeline ships, so no candidate profiles are loaded here.
-  // An honest empty state is rendered instead of fabricated demo profiles.
-  const [profiles] = useState<CandidateSentimentProfile[]>([]);
-  const [loading] = useState(false);
+  const [profiles, setProfiles] = useState<CandidateSentimentProfile[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>('');
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadSentimentProfiles() {
+      try {
+        setLoading(true);
+        const res = await apiClient.get<{ success: boolean; data: { profiles: CandidateSentimentProfile[] } }>('/hr/sentiment');
+        if (res?.success && Array.isArray(res.data?.profiles)) {
+          setProfiles(res.data.profiles);
+          if (res.data.profiles.length > 0) {
+            setSelectedCandidateId(res.data.profiles[0].id);
+          }
+        } else {
+          setProfiles([]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch sentiment profiles:', err);
+        setProfiles([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSentimentProfiles();
+  }, []);
 
   if (loading) {
     return (
@@ -41,7 +62,7 @@ export default function SentimentAnalysisPage() {
   if (!currentProfile) {
     return (
       <div className="text-center py-16 text-xs text-slate-400">
-        Sentiment analysis is not available yet. The audio-prosody ML pipeline is still being built, so no candidate sentiment data exists.
+        No completed candidate sessions exist yet with vocal sentiment and stress analysis data.
       </div>
     );
   }
