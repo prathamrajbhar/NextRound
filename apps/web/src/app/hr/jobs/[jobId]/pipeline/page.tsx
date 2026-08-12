@@ -188,7 +188,6 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
         app={selectedCandidate}
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        onAdvanceStage={handleAdvanceCandidateStage}
       />
 
       {/* Threshold settings Modal */}

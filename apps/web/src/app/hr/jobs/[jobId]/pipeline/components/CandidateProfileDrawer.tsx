@@ -23,14 +23,12 @@ interface CandidateProfileDrawerProps {
   app: Application | null;
   isOpen: boolean;
   onClose: () => void;
-  onAdvanceStage?: (appId: string) => void;
 }
 
 export default function CandidateProfileDrawer({
   app,
   isOpen,
   onClose,
-  onAdvanceStage,
 }: CandidateProfileDrawerProps) {
   const [activeTab, setActiveTab] = useState<'resume' | 'scorecard' | 'transcript'>('resume');
 
@@ -348,7 +346,7 @@ export default function CandidateProfileDrawer({
         </div>
 
         {/* Drawer Footer Actions */}
-        <div className="p-4 md:p-5 bg-slate-50/90 dark:bg-[#0b0f19] border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-between gap-3 flex-shrink-0">
+        <div className="p-4 md:p-5 bg-slate-50/90 dark:bg-[#0b0f19] border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-end gap-3 flex-shrink-0">
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -366,20 +364,6 @@ export default function CandidateProfileDrawer({
               <ExternalLink className="h-3.5 w-3.5" />
             </Link>
           </div>
-
-          {onAdvanceStage && (
-            <button
-              type="button"
-              onClick={() => {
-                onAdvanceStage(app.id);
-                onClose();
-              }}
-              className="px-5 py-2.5 rounded-xl bg-emerald-600 dark:bg-emerald-600 hover:bg-emerald-700 dark:hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
-            >
-              <span>Advance Stage</span>
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          )}
         </div>
       </div>
     </div>
