@@ -46,7 +46,12 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
         makingOfferRef.current = true;
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        channel.postMessage({ type: 'description', description: pc.localDescription });
+        channel.postMessage({
+          type: 'description',
+          description: pc.localDescription
+            ? { type: pc.localDescription.type, sdp: pc.localDescription.sdp }
+            : null,
+        });
       } catch (err) {
         console.error('[WebRTC] Error during negotiation offer creation:', err);
       } finally {
@@ -54,9 +59,18 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     };
 
-    // 4. Perfect Negotiation: Exchange ICE candidates
     pc.onicecandidate = ({ candidate }) => {
-      channel.postMessage({ type: 'candidate', candidate });
+      channel.postMessage({
+        type: 'candidate',
+        candidate: candidate
+          ? {
+              candidate: candidate.candidate,
+              sdpMid: candidate.sdpMid,
+              sdpMLineIndex: candidate.sdpMLineIndex,
+              usernameFragment: candidate.usernameFragment,
+            }
+          : null,
+      });
     };
 
     // 5. Track Remote Video Stream
@@ -93,7 +107,12 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
           if (description.type === 'offer') {
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            channel.postMessage({ type: 'description', description: pc.localDescription });
+            channel.postMessage({
+              type: 'description',
+              description: pc.localDescription
+                ? { type: pc.localDescription.type, sdp: pc.localDescription.sdp }
+                : null,
+            });
           }
         } else if (candidate) {
           try {
@@ -110,7 +129,12 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
               makingOfferRef.current = true;
               const offer = await pc.createOffer({ iceRestart: true });
               await pc.setLocalDescription(offer);
-              channel.postMessage({ type: 'description', description: pc.localDescription });
+              channel.postMessage({
+                type: 'description',
+                description: pc.localDescription
+                  ? { type: pc.localDescription.type, sdp: pc.localDescription.sdp }
+                  : null,
+              });
             } catch (err) {
               console.error('[WebRTC] Error initiating renegotiation offer:', err);
             } finally {
