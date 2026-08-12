@@ -13,7 +13,6 @@ import {
   Check,
   ShieldCheck,
   Layers,
-  Zap,
 } from '@/lib/lucide-google-icons';
 
 interface SetupStageProps {
@@ -33,6 +32,7 @@ const PRESET_ROLES = [
 ];
 
 const EXPERIENCE_OPTIONS = [
+  { id: 'Fresher (0-2 Years)', label: 'Fresher / Entry-Level', sub: '0–2 Yrs Exp' },
   { id: 'Mid-Level (2-5 Years)', label: 'Mid-Level', sub: '2–5 Yrs Exp' },
   { id: 'Senior (5+ Years)', label: 'Senior Specialist', sub: '5–8 Yrs Exp' },
   { id: 'Staff / Lead (8+ Years)', label: 'Staff / Tech Lead', sub: '8+ Yrs Exp' },
@@ -51,7 +51,7 @@ export function SetupStage({
   const [micTesting, setMicTesting] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
 
-  // Real microphone level monitoring (no fake random values)
+  // Real microphone level monitoring
   useEffect(() => {
     let audioContext: AudioContext | null = null;
     let analyser: AnalyserNode | null = null;
@@ -98,19 +98,23 @@ export function SetupStage({
   }, [micTesting]);
 
   return (
-    <div className="w-full space-y-6 animate-in fade-in duration-300 font-sans pb-4">
+    <div className="relative w-full space-y-6 animate-in fade-in duration-300 font-sans pb-4">
       
-      {/* SaaS Top Studio Header Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
+      {/* Background Ambient Mesh Gradients */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
+
+      {/* Header Bar */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/5 pb-4 z-10 relative">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold text-brand-600 dark:text-orange-400 bg-brand-50 dark:bg-orange-950/80 border border-brand-200/60 dark:border-orange-900/60 mb-1.5">
-            <Sparkles className="h-3 w-3 text-brand-500 dark:text-orange-400" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold text-orange-400 bg-orange-950/40 border border-orange-900/50 mb-1.5">
+            <Sparkles className="h-3 w-3 text-orange-400" />
             <span>AI RESUME STUDIO • ADAPTIVE VOICE GENERATOR</span>
           </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-display">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight font-display bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
             Build Your ATS Resume via Dynamic Voice Q&amp;A
           </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
+          <p className="text-xs text-slate-400 font-semibold mt-1">
             Our AI interviewer asks dynamic adaptive questions based on your background to extract metrics and build your ATS resume.
           </p>
         </div>
@@ -119,38 +123,38 @@ export function SetupStage({
         <div className="flex items-center gap-3">
           <Link
             href="/candidate/resumes"
-            className="px-3.5 py-2 rounded-2xl bg-white/60 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 backdrop-blur-md glass-panel flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm text-slate-800 dark:text-slate-200 font-extrabold text-xs"
+            className="px-3.5 py-2 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-md flex items-center gap-2 hover:bg-slate-850 transition-all cursor-pointer shadow-sm text-slate-200 font-extrabold text-xs"
           >
-            <FileText className="h-4 w-4 text-brand-500 dark:text-orange-400" />
+            <FileText className="h-4 w-4 text-orange-400" />
             <span>Past Resumes Vault</span>
           </Link>
 
-          <div className="px-3.5 py-1.5 rounded-2xl bg-white/40 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 backdrop-blur-md glass-panel flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-emerald-500" />
+          <div className="px-3.5 py-1.5 rounded-2xl bg-slate-900/40 border border-white/5 backdrop-blur-md flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-emerald-400" />
             <div className="flex flex-col text-left">
-              <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase">ATS Compatibility</span>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">98.4% Match Rate</span>
+              <span className="text-[10px] font-extrabold text-slate-500 uppercase">ATS Compatibility</span>
+              <span className="text-xs font-bold text-slate-200">98.4% Match Rate</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main SaaS Workspace Grid (3 Cols, Full-Width) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+      {/* Main Configuration Panel Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start z-10 relative">
         
-        {/* Left Column: Target Role & Experience Configuration (2 Cols) */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Left Side: Setup config forms (8 cols) */}
+        <div className="lg:col-span-8 space-y-6">
           
-          {/* Target Role Card */}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
-            <h2 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
-              <Target className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
+          {/* Target Role configuration */}
+          <div className="rounded-2xl border border-white/5 bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-5">
+            <h2 className="text-xs font-extrabold text-white flex items-center gap-2 border-b border-white/5 pb-3">
+              <Target className="h-4.5 w-4.5 text-orange-400" />
               Target Position &amp; Role Focus
             </h2>
 
-            {/* Target Job Position Input */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+            {/* Target Job Title Input */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
                 Target Job Title
               </label>
               <input
@@ -158,13 +162,13 @@ export function SetupStage({
                 value={targetRole}
                 onChange={(e) => setTargetRole(e.target.value)}
                 placeholder="Enter job position (e.g. Senior Full Stack Engineer)..."
-                className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
+                className="w-full px-4 py-2.5 text-xs rounded-xl border border-white/5 bg-slate-950/80 text-white placeholder-slate-500 font-semibold focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 shadow-inner"
               />
             </div>
 
-            {/* Quick Position Preset Chips */}
-            <div className="space-y-1.5 pt-1">
-              <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Popular Positions</span>
+            {/* Position presets */}
+            <div className="space-y-2">
+              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Popular Positions</span>
               <div className="flex flex-wrap gap-2">
                 {PRESET_ROLES.map((role) => {
                   const isSelected = targetRole === role;
@@ -175,8 +179,8 @@ export function SetupStage({
                       onClick={() => setTargetRole(role)}
                       className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer flex items-center gap-1.5 ${
                         isSelected
-                          ? 'bg-brand-600 dark:bg-orange-600 text-white shadow-sm'
-                          : 'bg-slate-100/80 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-200/60'
+                          ? 'bg-orange-600 text-white shadow-md'
+                          : 'bg-slate-950/70 border border-white/5 text-slate-300 hover:bg-slate-900'
                       }`}
                     >
                       {isSelected && <Check className="h-3 w-3" />}
@@ -188,19 +192,19 @@ export function SetupStage({
             </div>
           </div>
 
-          {/* Seniority & Industry Focus Card */}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
-            <h2 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
-              <Layers className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
+          {/* Seniority & Domain configuration */}
+          <div className="rounded-2xl border border-white/5 bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-5">
+            <h2 className="text-xs font-extrabold text-white flex items-center gap-2 border-b border-white/5 pb-3">
+              <Layers className="h-4.5 w-4.5 text-orange-400" />
               Seniority &amp; Domain Focus
             </h2>
 
-            {/* Seniority Cards */}
+            {/* Target Experience Level */}
             <div className="space-y-2">
-              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
                 Target Experience Level
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 {EXPERIENCE_OPTIONS.map((exp) => {
                   const selected = experienceLevel === exp.id;
                   return (
@@ -208,26 +212,26 @@ export function SetupStage({
                       key={exp.id}
                       type="button"
                       onClick={() => setExperienceLevel(exp.id)}
-                      className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between h-20 ${
+                      className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between h-20 ${
                         selected
-                          ? 'border-brand-500 dark:border-orange-500 bg-brand-500/10 dark:bg-orange-500/10 ring-2 ring-brand-500/30'
-                          : 'border-slate-200/80 dark:border-slate-800 bg-white/40 dark:bg-slate-800/40 hover:border-slate-300 dark:hover:border-slate-700'
+                          ? 'border-orange-500 bg-orange-500/10 shadow-[0_0_15px_rgba(249,115,22,0.15)]'
+                          : 'border-white/5 bg-slate-950/80 hover:border-slate-800'
                       }`}
                     >
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100">{exp.label}</span>
-                        {selected && <CheckCircle2 className="h-4 w-4 text-brand-500 dark:text-orange-400" />}
+                      <div className="flex justify-between items-center w-full">
+                        <span className="text-xs font-extrabold text-slate-200">{exp.label}</span>
+                        {selected && <CheckCircle2 className="h-3.5 w-3.5 text-orange-400" />}
                       </div>
-                      <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{exp.sub}</span>
+                      <span className="text-[9px] font-semibold text-slate-500">{exp.sub}</span>
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Domain Focus */}
-            <div className="space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-800">
-              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+            {/* Domain focus */}
+            <div className="space-y-2 pt-3 border-t border-white/5">
+              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block">
                 Domain Industry Focus
               </label>
               <div className="flex flex-wrap gap-2">
@@ -238,8 +242,8 @@ export function SetupStage({
                     onClick={() => setSelectedIndustry(domain)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
                       selectedIndustry === domain
-                        ? 'bg-slate-900 dark:bg-slate-700 text-white shadow-sm'
-                        : 'bg-slate-100/80 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                        ? 'bg-slate-950 border border-orange-500 text-orange-400'
+                        : 'bg-slate-950/70 border border-white/5 text-slate-300 hover:bg-slate-900'
                     }`}
                   >
                     {domain}
@@ -251,88 +255,42 @@ export function SetupStage({
 
         </div>
 
-        {/* Right Column: Dynamic AI Capabilities & Hardware Diagnostic (1 Col) */}
-        <div className="space-y-6">
+        {/* Right Side: Microphone diagnostic tool (4 cols) */}
+        <div className="lg:col-span-4 space-y-6">
           
-          {/* Dynamic AI Adaptive Engine Card */}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
-            <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
-              <Zap className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
-              Dynamic AI Voice Engine
-            </h3>
-
-            <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-2xl bg-white/60 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 space-y-1">
-                <div className="font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-brand-500 dark:text-orange-400" />
-                  Real-time Adaptive Q&amp;A
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Questions are generated dynamically in real-time based on your spoken project details and answers.
-                </p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-white/60 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 space-y-1">
-                <div className="font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                  <FileText className="h-3.5 w-3.5 text-emerald-500" />
-                  Live Resume Extraction
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                  Technical skills, scale metrics, and achievements are automatically structured into bullet points.
-                </p>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-white/60 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 space-y-1">
-                <div className="font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5 text-sky-500" />
-                  Instant ATS PDF Export
-                </div>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                  On completion, download a fully formatted, ATS-compliant PDF resume ready for job applications.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Microphone Pre-Check */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 space-y-3">
-            <div className="flex items-center justify-between">
+          {/* Microfone Pre-check and Diagnostic */}
+          <div className="rounded-2xl border border-white/5 bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-4">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
               <div className="flex items-center gap-2">
-                <Mic className={`h-4 w-4 ${micTesting ? 'text-emerald-500' : 'text-slate-400 dark:text-slate-500'}`} />
-                <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">Microphone Pre-Check</span>
-                {micTesting && (
-                  <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    Live
-                  </span>
-                )}
+                <Mic className={`h-4 w-4 ${micTesting ? 'text-emerald-400' : 'text-slate-500'}`} />
+                <span className="text-xs font-extrabold text-white">Microphone Pre-Check</span>
               </div>
               <button
                 type="button"
                 onClick={() => setMicTesting(!micTesting)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold border transition-colors cursor-pointer ${
                   micTesting
-                    ? 'border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40'
-                    : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    ? 'border-red-900 bg-red-950/40 text-red-400'
+                    : 'border-white/5 bg-slate-950 text-slate-300 hover:bg-slate-900'
                 }`}
               >
                 {micTesting ? 'Stop' : 'Test Mic'}
               </button>
             </div>
 
-            {/* Waveform bars */}
-            <div className="h-10 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-3 flex items-end gap-[3px] overflow-hidden">
-              {[...Array(20)].map((_, i) => {
+            {/* Visual sound waveform bars */}
+            <div className="h-12 rounded-xl bg-slate-950 border border-white/5 px-4 flex items-end gap-[3px] overflow-hidden">
+              {[...Array(18)].map((_, i) => {
                 const barHeight = micTesting
-                  ? Math.min(100, Math.max(8, audioLevel + Math.abs(Math.sin(i * 1.1)) * Math.min(audioLevel * 0.5, 25)))
+                  ? Math.min(100, Math.max(10, audioLevel + Math.abs(Math.sin(i * 1.2)) * Math.min(audioLevel * 0.4, 25)))
                   : 12;
                 return (
                   <div
                     key={i}
                     className={`flex-1 rounded-sm transition-all duration-75 ${
                       micTesting && audioLevel > 5
-                        ? 'bg-emerald-500 dark:bg-emerald-400'
-                        : 'bg-slate-300 dark:bg-slate-600'
+                        ? 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.3)]'
+                        : 'bg-slate-800'
                     }`}
                     style={{ height: `${barHeight}%` }}
                   />
@@ -340,12 +298,12 @@ export function SetupStage({
               })}
             </div>
 
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-[10px] font-semibold text-slate-400 leading-relaxed">
               {micTesting
                 ? audioLevel > 5
                   ? 'Signal detected — your microphone is working.'
                   : 'Listening… speak to test your microphone.'
-                : 'Test your microphone before starting the session.'}
+                : 'Test your microphone hardware before starting the call.'}
             </p>
           </div>
 
@@ -353,28 +311,28 @@ export function SetupStage({
 
       </div>
 
-      {/* SaaS Launch Action Banner (Full-Width) */}
-      <div className="rounded-3xl border border-brand-200/60 dark:border-orange-900/60 bg-gradient-to-r from-brand-500/10 via-amber-500/10 to-orange-500/10 p-6 shadow-lg backdrop-blur-md glass-panel flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* Launcher Action Footer Bar */}
+      <div className="rounded-2xl border border-white/5 bg-slate-900/30 backdrop-blur-md p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 z-10 relative">
         <div className="space-y-1 text-center sm:text-left">
           <div className="flex items-center gap-2 justify-center sm:justify-start">
-            <span className="text-xs font-black text-slate-900 dark:text-slate-100">Ready to Build Your ATS Resume?</span>
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-900 text-emerald-600 dark:text-emerald-400">
+            <span className="text-xs font-black text-white">Ready to Build Your ATS Resume?</span>
+            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-950/40 border border-emerald-800 text-emerald-400">
               15-Min Dynamic Session
             </span>
           </div>
-          <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-            Targeting <strong className="text-brand-600 dark:text-orange-400">{targetRole}</strong> • {experienceLevel}
+          <p className="text-[10.5px] text-slate-400 font-medium">
+            Targeting <strong className="text-orange-400">{targetRole}</strong> • {experienceLevel}
           </p>
         </div>
 
         <button
           type="button"
           onClick={onStartCall}
-          className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white text-xs font-extrabold shadow-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2.5"
+          className="w-full sm:w-auto px-8 py-3 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-extrabold shadow-[0_0_20px_rgba(249,115,22,0.3)] transition-all transform hover:scale-[1.02] active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
         >
-          <Video className="h-4.5 w-4.5" />
+          <Video className="h-4 w-4" />
           <span>Start Voice Resume Call</span>
-          <ArrowRight className="h-4.5 w-4.5" />
+          <ArrowRight className="h-4 w-4" />
         </button>
       </div>
 
