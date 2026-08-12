@@ -37,7 +37,7 @@ export function useAptitudeSession({
   onComplete,
   disableProctoring = false,
 }: UseAptitudeSessionOptions) {
-  const { questions: fetchedQuestions, isLoading, isPrefetching, prefetchNextBatch, fetchError } = useAptitudeQuestions({
+  const { questions: fetchedQuestions, mcqDistribution, isLoading, isPrefetching, prefetchNextBatch, fetchError } = useAptitudeQuestions({
     applicationId,
     sessionId,
     role,
@@ -86,6 +86,10 @@ export function useAptitudeSession({
   // If we have actual questions loaded, use those counts
   // Otherwise estimate from standard distribution
   const getCategoryQuestionCount = useCallback((category: string): number => {
+    if (mcqDistribution && typeof mcqDistribution[category] === 'number') {
+      return mcqDistribution[category];
+    }
+
     const actualQuestions = activeQuestions.filter(q => q.category === category);
     if (actualQuestions.length > 0) {
       return actualQuestions.length;
@@ -104,7 +108,7 @@ export function useAptitudeSession({
     const remainder = totalQuestions % 4;
     const categoryIndex = (STANDARD_CATEGORIES as readonly string[]).indexOf(category);
     return base + (categoryIndex >= 0 && categoryIndex < remainder ? 1 : 0);
-  }, [activeQuestions]);
+  }, [activeQuestions, mcqDistribution]);
 
   // Active questions for the currently selected category section
   const activeCategoryQuestions = useMemo(() => {

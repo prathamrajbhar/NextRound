@@ -73,6 +73,7 @@ export function useAptitudeQuestions({
   company,
 }: UseAptitudeQuestionsOptions) {
   const [questions, setQuestions] = useState<AptitudeQuestion[]>([]);
+  const [mcqDistribution, setMcqDistribution] = useState<Record<string, number> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   // isPrefetching kept for API compatibility with useAptitudeSession
@@ -91,12 +92,15 @@ export function useAptitudeQuestions({
           ? `/applications/${applicationId}/assessment/aptitude`
           : `/mock/sessions/${sessionId || 'practice'}/aptitude?role=${encodeURIComponent(role)}&company=${encodeURIComponent(company)}`;
 
-        const res = await apiClient.get<{ questions: RawApiQuestion[] }>(endpoint);
+        const res = await apiClient.get<{ questions: RawApiQuestion[]; mcqDistribution?: Record<string, number> }>(endpoint);
 
         if (cancelled) return;
 
         if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
           setQuestions(res.questions.map(normalizeQuestion));
+          if (res.mcqDistribution) {
+            setMcqDistribution(res.mcqDistribution);
+          }
         } else {
           setFetchError('No questions returned from server.');
           setQuestions([]);
@@ -124,5 +128,5 @@ export function useAptitudeQuestions({
   // No-op: questions are fully loaded in one shot from the DB
   const prefetchNextBatch = useCallback(async () => {}, []);
 
-  return { questions, isLoading, isPrefetching, prefetchNextBatch, fetchError };
+  return { questions, mcqDistribution, isLoading, isPrefetching, prefetchNextBatch, fetchError };
 }

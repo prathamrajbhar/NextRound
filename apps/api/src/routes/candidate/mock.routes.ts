@@ -319,7 +319,18 @@ mockRouter.get(
         correctIndex: typeof q.correct_index === 'number' ? q.correct_index : undefined,
       }));
 
-      return res.json({ success: true, data: { questions } });
+      return res.json({
+        success: true,
+        data: {
+          questions,
+          mcqDistribution: mcqDistribution || {
+            'Quantitative Aptitude': 5,
+            'Logical Reasoning': 5,
+            'Verbal Ability': 5,
+            'Data Interpretation': 5,
+          },
+        },
+      });
     } catch (err) {
       return next(err);
     }

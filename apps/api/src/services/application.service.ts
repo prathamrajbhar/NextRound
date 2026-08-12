@@ -692,7 +692,16 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
     difficulty: q.difficulty || 'medium',
   }));
 
-  return { assessmentId: assessment?.id, questions: sanitizedQuestions };
+  return {
+    assessmentId: assessment?.id,
+    questions: sanitizedQuestions,
+    mcqDistribution: mcqDistribution || {
+      'Quantitative Aptitude': 5,
+      'Logical Reasoning': 5,
+      'Verbal Ability': 5,
+      'Data Interpretation': 5,
+    },
+  };
 }
 
 /** POST /:id/assessment/aptitude — submit aptitude answers. */
