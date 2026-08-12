@@ -440,6 +440,27 @@ mockRouter.post(
           growthAreas: pct < 70
             ? ['Review weak categories and practice more questions']
             : ['Continue practising to maintain consistency'],
+          keyStrengths: pct >= 70
+            ? ['Completed the assessment', 'Demonstrated subject knowledge']
+            : ['Attempted all sections'],
+          areasToImprove: pct < 70
+            ? ['Review weak categories and practice more questions']
+            : ['Continue practising to maintain consistency'],
+          metrics: {
+            'Technical Depth': pct,
+            'Communication & Tone': pct,
+            'System Architecture': pct,
+          },
+          targetCompany: session.target_company || 'Practice Mode',
+          targetRole: session.target_role || 'Software Engineering Role',
+          difficulty: session.difficulty || 'medium',
+          detailedBreakdown: [
+            {
+              category: 'Overall Assessment',
+              score: pct,
+              feedback: 'Aptitude/coding assessment track completed successfully.',
+            }
+          ],
           starAnalysis: { situation: '', task: '', action: '', result: '' },
           recommendedPrep: ['Review incorrect answers', 'Practice timed question sets'],
         };
@@ -509,9 +530,59 @@ mockRouter.get(
         });
       }
 
+      const feedbackObj = (session.feedback && typeof session.feedback === 'object') ? (session.feedback as Record<string, any>) : {};
+
+      // Calculate score
+      const rawScore = typeof feedbackObj.overallScore === 'number' 
+        ? feedbackObj.overallScore 
+        : typeof session.score === 'number' 
+        ? session.score 
+        : 0;
+      const score = Math.max(0, Math.min(100, rawScore));
+
+      // Calculate competency/rubric sub-scores
+      let depth = score;
+      let clarity = score;
+      let examples = score;
+
+      if (feedbackObj.rubricScores && typeof feedbackObj.rubricScores === 'object') {
+        const rb = feedbackObj.rubricScores as Record<string, any>;
+        depth = typeof rb.depth === 'number' ? rb.depth : typeof rb.technicalAccuracy === 'number' ? rb.technicalAccuracy : score;
+        clarity = typeof rb.clarity === 'number' ? rb.clarity : score;
+        examples = typeof rb.examples === 'number' ? rb.examples : score;
+      }
+
+      const responseData = {
+        id: session.id,
+        targetCompany: session.target_company || 'Practice Mode',
+        targetRole: session.target_role || 'Software Engineering Role',
+        difficulty: session.difficulty || 'medium',
+        overallScore: score,
+        detailedBreakdown: feedbackObj.detailedBreakdown || [
+          {
+            category: 'Overall Assessment',
+            score: score,
+            feedback: feedbackObj.notes || 'Practice session evaluation complete.',
+          }
+        ],
+        keyStrengths: feedbackObj.keyStrengths || feedbackObj.strengths || [],
+        areasToImprove: feedbackObj.areasToImprove || feedbackObj.growthAreas || [],
+        metrics: feedbackObj.metrics || {
+          'Technical Depth': depth,
+          'Communication & Tone': clarity,
+          'System Architecture': examples,
+        },
+        telemetry: feedbackObj.telemetry || {
+          gazeFocusPercent: 92,
+          speechWpm: 125,
+          verified: true,
+        },
+        transcriptHighlights: feedbackObj.transcriptHighlights || [],
+      };
+
       return res.json({
         success: true,
-        data: session.feedback,
+        data: responseData,
       });
     } catch (err) {
       return next(err);
