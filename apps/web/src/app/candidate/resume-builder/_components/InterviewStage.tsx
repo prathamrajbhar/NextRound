@@ -77,7 +77,7 @@ export function InterviewStage({
   }, [conversationHistory, candidateSpeechText]);
 
   // Calculate dynamic scale for user voice visualization
-  const soundScale = micActive ? 1 + (micLevel / 100) * 0.4 : 1;
+  const soundScale = micActive ? 1 + (micLevel / 100) * 0.45 : 1;
 
   return (
     <div className="relative w-full h-[calc(100vh-6.5rem)] rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800/90 bg-white/50 dark:bg-slate-950/70 backdrop-blur-2xl text-slate-900 dark:text-white shadow-2xl flex flex-col justify-between p-5 sm:p-6 font-sans">
@@ -143,7 +143,7 @@ export function InterviewStage({
                     aiState === 'speaking'
                       ? 'bg-orange-500 animate-pulse'
                       : micActive && micLevel > 15
-                      ? 'bg-emerald-500'
+                      ? 'bg-emerald-500 animate-pulse'
                       : 'bg-slate-300 dark:bg-slate-800'
                   }`}
                   style={{
@@ -250,7 +250,7 @@ export function InterviewStage({
 
         </div>
 
-        {/* Right Section: Compact Dialogue Stream & Typing Fallback Input (5 cols) */}
+        {/* Right Section: Compact Dialogue Stream & Unified Input Form (5 cols) */}
         <div className="lg:col-span-5 rounded-2xl border border-slate-200/85 dark:border-slate-800/85 bg-white/70 dark:bg-slate-900/50 p-4 flex flex-col justify-between shadow-xs overflow-hidden">
           
           <div className="flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800/80 pb-2 mb-3">
@@ -316,7 +316,7 @@ export function InterviewStage({
             )}
           </div>
 
-          {/* Typing fallback form */}
+          {/* Unified Input box form with microphone control directly inside */}
           {onSubmitResponse && (
             <form
               onSubmit={(e) => {
@@ -327,23 +327,41 @@ export function InterviewStage({
                   setTextInput('');
                 }
               }}
-              className="flex items-center gap-2 pt-2 border-t border-slate-200/80 dark:border-slate-800/80 mt-2"
+              className="relative flex items-center gap-2 pt-3 border-t border-slate-200/80 dark:border-slate-800/80 mt-2"
             >
-              <input
-                type="text"
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                placeholder={aiState === 'listening' ? "Or type your response..." : "Please wait for AI..."}
-                disabled={aiState !== 'listening'}
-                className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-850 text-xs rounded-xl focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:focus:border-orange-500 text-slate-900 dark:text-white placeholder-slate-400 disabled:opacity-50"
-              />
-              <button
-                type="submit"
-                disabled={aiState !== 'listening' || !textInput.trim()}
-                className="px-3 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 dark:bg-orange-600 dark:hover:bg-orange-500 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center cursor-pointer transition-all shadow-xs"
-              >
-                <Send className="h-3.5 w-3.5" />
-              </button>
+              <div className="relative flex-1 flex items-center">
+                {/* Microfone toggler inside the input field */}
+                <button
+                  type="button"
+                  onClick={() => setMicActive(!micActive)}
+                  className={`absolute left-3 p-1 rounded-lg transition-all cursor-pointer z-20 ${
+                    micActive
+                      ? 'text-emerald-500 hover:bg-emerald-500/10'
+                      : 'text-rose-500 hover:bg-rose-500/10'
+                  }`}
+                  title={micActive ? 'Mute Microphone' : 'Unmute Microphone'}
+                >
+                  {micActive ? <Mic className="h-4.5 w-4.5" /> : <MicOff className="h-4.5 w-4.5" />}
+                </button>
+
+                <input
+                  type="text"
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  placeholder={aiState === 'listening' ? "Type your response..." : "Please wait for AI..."}
+                  disabled={aiState !== 'listening'}
+                  className="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-xs rounded-xl focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:focus:border-orange-500 text-slate-900 dark:text-white placeholder-slate-400 disabled:opacity-50"
+                />
+
+                {/* Submit Send Button inside the input field */}
+                <button
+                  type="submit"
+                  disabled={aiState !== 'listening' || !textInput.trim()}
+                  className="absolute right-2 p-1.5 rounded-lg text-slate-400 hover:text-orange-500 disabled:opacity-30 disabled:hover:text-slate-400 transition-all cursor-pointer"
+                >
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
             </form>
           )}
         </div>
