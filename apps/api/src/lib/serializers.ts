@@ -297,6 +297,14 @@ export function serializeApplication(app: Rec, options?: { scheduledSlots?: stri
     location: typeof candidate?.location === 'string' ? candidate.location : undefined,
     noticePeriod: typeof candidate?.notice_period === 'string' ? candidate.notice_period : undefined,
     expectedSalary: typeof candidate?.expected_salary === 'number' ? candidate.expected_salary : undefined,
+    workExperience: (isObject(candidate?.parsed_resume) && Array.isArray((candidate.parsed_resume as Rec).experience))
+      ? ((candidate.parsed_resume as Rec).experience as any[]).map((exp) => ({
+          company: typeof exp.company === 'string' ? exp.company : '',
+          role: typeof exp.role === 'string' ? exp.role : '',
+          duration: typeof exp.duration === 'string' ? exp.duration : '',
+          description: typeof exp.description === 'string' ? exp.description : '',
+        }))
+      : undefined,
     scores: serializeScores(evalFirst),
     decision,
     reasoning: typeof evalFirst?.reasoning === 'string' ? evalFirst.reasoning : undefined,

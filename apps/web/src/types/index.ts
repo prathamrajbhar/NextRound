@@ -105,6 +105,7 @@ export interface Application {
   location?: string;
   noticePeriod?: string;
   expectedSalary?: number;
+  workExperience?: { company: string; role: string; duration: string; description?: string }[];
 }
 
 export interface MockSession {
