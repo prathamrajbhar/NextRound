@@ -12,7 +12,7 @@ function CandidateAssessmentContent({ params }: { params: Promise<{ applicationI
 
   return (
     <UnifiedAssessmentSession
-      sessionId={`session-${applicationId}`}
+      sessionId={applicationId}
       applicationId={applicationId}
       track={track}
     />

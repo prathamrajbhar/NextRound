@@ -83,28 +83,9 @@ export function useInterviewSession({
     return () => clearInterval(pTimer);
   }, [stage, interviewId]);
 
-  // Anti-Cheat proctoring listeners for fullscreen and visibility changes
-  useEffect(() => {
-    if (stage !== 'session') return;
-
-    const handleProctoringViolation = () => {
-      if (document.hidden || !document.fullscreenElement) {
-        setStrikeCount((prev) => {
-          const next = prev + 1;
-          setShowWarningModal(true);
-          return next;
-        });
-      }
-    };
-
-    document.addEventListener('fullscreenchange', handleProctoringViolation);
-    document.addEventListener('visibilitychange', handleProctoringViolation);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleProctoringViolation);
-      document.removeEventListener('visibilitychange', handleProctoringViolation);
-    };
-  }, [stage]);
+  // Note: Proctoring telemetry and anti-cheat policies are handled centrally
+  // by ProctoringClient via useProctoringSession. Duplicate local listeners
+  // are omitted here to prevent false strikes on intentional fullscreen exits.
 
   const startSession = async () => {
     setStage('session');

@@ -88,6 +88,7 @@ export function UnifiedAssessmentSession({
     showWarningModal: proctorShowWarning,
     handleResumeFullscreen: proctorResumeFS,
     handleEnd: proctorEnd,
+    suppressViolations,
     trackMediaStream,
     proctoringClient,
   } = useProctoringSession({
@@ -108,6 +109,14 @@ export function UnifiedAssessmentSession({
   });
 
   const handleCompleteWithProctor = async (score?: number) => {
+    suppressViolations(true);
+    if (typeof document !== 'undefined' && document.fullscreenElement) {
+      try {
+        await document.exitFullscreen();
+      } catch {
+        // Safe ignore
+      }
+    }
     try {
       await proctorEnd();
     } catch (err) {
@@ -120,12 +129,7 @@ export function UnifiedAssessmentSession({
 
   const handleLaunchNextRound = () => {
     if (!pendingNextRound) return;
-    if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error('Failed to enter fullscreen:', err);
-      });
-    }
-
+    suppressViolations(false);
     setComprehensiveStep(pendingNextRound.nextStep);
     setPendingNextRound(null);
   };

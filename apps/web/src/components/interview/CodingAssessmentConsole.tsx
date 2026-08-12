@@ -58,12 +58,12 @@ export default function CodingAssessmentConsole({
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
 
-  // Anti-Cheat proctoring listeners for coding round (runs only after starting)
+  // Anti-Cheat: only watch tab visibility if no centralized proctoringClient is active
   useEffect(() => {
     if (proctoringClient || !problem || submitted || !isStarted) return;
 
-    const handleProctoringViolation = () => {
-      if (document.hidden || !document.fullscreenElement) {
+    const handleVisibilityViolation = () => {
+      if (document.hidden) {
         setStrikeCount((prev) => {
           const next = prev + 1;
           setShowWarningModal(true);
@@ -72,13 +72,8 @@ export default function CodingAssessmentConsole({
       }
     };
 
-    document.addEventListener('fullscreenchange', handleProctoringViolation);
-    document.addEventListener('visibilitychange', handleProctoringViolation);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleProctoringViolation);
-      document.removeEventListener('visibilitychange', handleProctoringViolation);
-    };
+    document.addEventListener('visibilitychange', handleVisibilityViolation);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityViolation);
   }, [proctoringClient, problem, submitted, isStarted]);
 
   const handleStartCodingRound = () => {
@@ -162,6 +157,10 @@ export default function CodingAssessmentConsole({
       setFinalPassRate(res.pass_rate_percent || 0);
       setComplexityFeedback(res.ai_feedback || res.complexity || 'O(N) Optimization evaluated.');
       setSubmitted(true);
+      setShowWarningModal(false);
+      if (typeof document !== 'undefined' && document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
     } catch (err: unknown) {
       setOutputLogs([`[Submission Error] ${(err as Error).message || 'Failed to submit solution'}`]);
       setActiveBottomTab('results');
@@ -237,7 +236,7 @@ export default function CodingAssessmentConsole({
 
       {/* Fullscreen Proctoring Warning Modal */}
       <ProctoringWarningModal
-        isOpen={displayShowWarning}
+        isOpen={displayShowWarning && !submitted}
         strikeCount={displayStrikeCount}
         onResumeFullscreen={displayResumeFullscreen}
         onEliminate={handleEliminateCandidate}

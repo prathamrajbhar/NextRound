@@ -43,6 +43,8 @@ export class ProctoringClient {
   private heartbeatIntervalId: ReturnType<typeof setInterval> | null = null;
   private startTime: number;
   private isPaused = false;
+  private isEnded = false;
+  private suppressViolations = false;
   private activeTracks: MediaStreamTrack[] = [];
   /** Normalized pure UUID derived from config.sessionId — safe for API routes. */
   private apiSessionId: string;
@@ -413,7 +415,12 @@ export class ProctoringClient {
     }
   }
 
+  public setSuppressViolations(suppress: boolean) {
+    this.suppressViolations = suppress;
+  }
+
   private handleVisibilityChange = () => {
+    if (this.isEnded || this.isPaused || this.suppressViolations) return;
     const isHidden = document.hidden;
     const kind = isHidden ? 'tab_hidden' : 'tab_visible';
     const severity = isHidden ? 'warning' : 'info';
@@ -424,6 +431,7 @@ export class ProctoringClient {
   };
 
   private handleFullscreenChange = () => {
+    if (this.isEnded || this.isPaused || this.suppressViolations) return;
     const isFS = !!document.fullscreenElement;
     const kind = isFS ? 'fullscreen_enter' : 'fullscreen_exit';
     const severity = isFS ? 'info' : 'warning';
@@ -434,19 +442,23 @@ export class ProctoringClient {
   };
 
   private handleFocus = () => {
+    if (this.isEnded || this.isPaused || this.suppressViolations) return;
     this.logEvent('window_focus', 'info', 'browser');
   };
 
   private handleBlur = () => {
+    if (this.isEnded || this.isPaused || this.suppressViolations) return;
     this.logEvent('window_blur', 'warning', 'browser');
     this.config.onViolation('window_blur');
   };
 
   private handleOnline = () => {
+    if (this.isEnded) return;
     this.logEvent('network_reconnected', 'info', 'system');
   };
 
   private handleOffline = () => {
+    if (this.isEnded || this.suppressViolations) return;
     this.logEvent('network_disconnected', 'high', 'system');
     this.config.onViolation('network_disconnected');
   };
@@ -484,6 +496,8 @@ export class ProctoringClient {
   }
 
   async end() {
+    this.isEnded = true;
+    this.suppressViolations = true;
     this.removeEventListeners();
     if (this.heartbeatIntervalId) {
       clearInterval(this.heartbeatIntervalId);
@@ -531,6 +545,8 @@ export class ProctoringClient {
   };
 
   stop() {
+    this.isEnded = true;
+    this.suppressViolations = true;
     this.removeEventListeners();
     if (this.heartbeatIntervalId) {
       clearInterval(this.heartbeatIntervalId);

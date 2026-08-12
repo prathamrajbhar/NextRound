@@ -36,6 +36,8 @@ export function useProctoringSession({
   const onViolationDetectedRef = useRef(onViolationDetected);
   const onDisqualifiedRef = useRef(onDisqualified);
 
+  const isEndedRef = useRef(false);
+
   useEffect(() => {
     onViolationDetectedRef.current = onViolationDetected;
     onDisqualifiedRef.current = onDisqualified;
@@ -43,6 +45,7 @@ export function useProctoringSession({
 
   useEffect(() => {
     if (!sessionId || !candidateId) return;
+    isEndedRef.current = false;
 
     const client = new ProctoringClient({
       sessionId,
@@ -54,6 +57,7 @@ export function useProctoringSession({
       policyVersion,
       consentVersion,
       onViolation: (kind) => {
+        if (isEndedRef.current) return;
         // Tab hidden, fullscreen exit, and window blur trigger strikes
         if (
           kind === 'tab_hidden' ||
@@ -80,6 +84,7 @@ export function useProctoringSession({
     setProctoringClient(client);
 
     return () => {
+      isEndedRef.current = true;
       client.stop();
       clientRef.current = null;
       setProctoringClient(null);
@@ -122,8 +127,19 @@ export function useProctoringSession({
   };
 
   const handleEnd = async () => {
+    isEndedRef.current = true;
+    setShowWarningModal(false);
     if (clientRef.current) {
       await clientRef.current.end();
+    }
+  };
+
+  const suppressViolations = (suppress: boolean) => {
+    if (clientRef.current) {
+      clientRef.current.setSuppressViolations(suppress);
+    }
+    if (suppress) {
+      setShowWarningModal(false);
     }
   };
 
@@ -140,6 +156,7 @@ export function useProctoringSession({
     handlePause,
     handleResume,
     handleEnd,
+    suppressViolations,
     trackMediaStream,
     proctoringClient,
   };

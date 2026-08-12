@@ -59,9 +59,7 @@ export function useAptitudeSession({
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [strikeCount, setStrikeCount] = useState(0);
-  // True while we intentionally exit fullscreen (on category submit / final submit)
-  // so the proctoring listener doesn't count it as a violation.
-  const isIntentionalExitRef = useRef(false);
+
 
   // Normalize & sort active questions sequentially by category
   const activeQuestions = useMemo(() => {
@@ -176,57 +174,33 @@ export function useAptitudeSession({
 
     setCompletedCategoryScores((prev) => {
       const nextScores = { ...prev, [selectedCategory]: catScore };
-
-      // Auto submit full assessment if all categories are now completed
+      // Auto-submit when all categories are done
       const allDone = availableCategories.every((cat) => nextScores[cat] !== undefined);
-      if (allDone) {
-        setTimeout(() => {
-          handleFinalSubmit();
-        }, 100);
-      }
+      if (allDone) setTimeout(() => handleFinalSubmit(), 100);
       return nextScores;
     });
-
-    // Mark exit as intentional so the proctoring listener ignores this event
-    isIntentionalExitRef.current = true;
-    // Exit fullscreen & return to hub screen
-    if (document.fullscreenElement) {
-      try {
-        await document.exitFullscreen();
-      } catch (err) {
-        console.error('Failed to exit fullscreen:', err);
-      }
-    }
-    isIntentionalExitRef.current = false;
 
     setSelectedCategory(null);
     setIsStarted(false);
   }, [selectedCategory, activeCategoryQuestions, answers, availableCategories, handleFinalSubmit]);
 
-  // Anti-Cheat proctoring listeners
+  // Anti-Cheat: only watch tab visibility (fullscreen is managed by the
+  // external ProctoringClient when proctoring is active).
   useEffect(() => {
     if (disableProctoring || submitted || !isStarted || !selectedCategory) return;
 
-    const handleProctoringViolation = () => {
-      // Ignore intentional exits (e.g. returning to hub between categories)
-      if (isIntentionalExitRef.current) return;
-      if (document.hidden || !document.fullscreenElement) {
+    const handleVisibilityViolation = () => {
+      if (document.hidden) {
         setStrikeCount((prev) => {
-          const next = prev + 1;
           setShowWarningModal(true);
-          return next;
+          return prev + 1;
         });
       }
     };
 
-    document.addEventListener('fullscreenchange', handleProctoringViolation);
-    document.addEventListener('visibilitychange', handleProctoringViolation);
-
-    return () => {
-      document.removeEventListener('fullscreenchange', handleProctoringViolation);
-      document.removeEventListener('visibilitychange', handleProctoringViolation);
-    };
-  }, [submitted, isStarted, selectedCategory]);
+    document.addEventListener('visibilitychange', handleVisibilityViolation);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityViolation);
+  }, [disableProctoring, submitted, isStarted, selectedCategory]);
 
   // Reset per-question timer on question change
   useEffect(() => {
@@ -304,12 +278,6 @@ export function useAptitudeSession({
     setCurrentIndex(0);
     setQuestionTimeLeft(QUESTION_TIME_LIMIT);
     questionTimeLeftRef.current = QUESTION_TIME_LIMIT;
-
-    if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error('Failed to enter fullscreen:', err);
-      });
-    }
     setIsStarted(true);
   };
 

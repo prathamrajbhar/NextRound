@@ -90,6 +90,12 @@ export default function AptitudeTestConsole({
   const displayResumeFullscreen = onResumeFullscreen !== undefined ? onResumeFullscreen : localResumeFS;
 
   // SUBMITTED STATE
+  React.useEffect(() => {
+    if (submitted && typeof document !== 'undefined' && document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, [submitted]);
+
   if (submitted) {
     const isEliminated = displayStrikeCount >= MAX_STRIKES;
     return (
