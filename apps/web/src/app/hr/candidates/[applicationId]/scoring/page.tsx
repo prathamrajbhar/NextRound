@@ -174,22 +174,24 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
 
         {/* Right Column: Decision controls */}
         <div className="space-y-6">
-          <div className="rounded-3xl border border-brand-200/80 dark:border-orange-800/80 bg-brand-50/40 dark:bg-orange-950/40 p-6 shadow-md backdrop-blur-md glass-panel text-center space-y-3">
-            <div className="flex items-center justify-center gap-2 text-brand-700 dark:text-orange-300 font-extrabold text-xs uppercase tracking-wider font-display">
-              <Video className="h-4 w-4 text-brand-600 dark:text-orange-400" />
-              <span>Human HR Round Console</span>
+          {app.stage?.toLowerCase() === 'hr round' && (
+            <div className="rounded-3xl border border-brand-200/80 dark:border-orange-800/80 bg-brand-50/40 dark:bg-orange-950/40 p-6 shadow-md backdrop-blur-md glass-panel text-center space-y-3">
+              <div className="flex items-center justify-center gap-2 text-brand-700 dark:text-orange-300 font-extrabold text-xs uppercase tracking-wider font-display">
+                <Video className="h-4 w-4 text-brand-600 dark:text-orange-400" />
+                <span>Human HR Round Console</span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                Launch live 1:1 WebRTC video call room with candidate and evaluate cultural fit.
+              </p>
+              <Link
+                href={`/hr/interview/${app.id}`}
+                className="w-full py-2.5 rounded-xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02]"
+              >
+                <Video className="h-4 w-4" />
+                <span>Start HR Video Call</span>
+              </Link>
             </div>
-            <p className="text-[11px] text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-              Launch live 1:1 WebRTC video call room with candidate and evaluate cultural fit.
-            </p>
-            <Link
-              href={`/hr/interview/${app.id}`}
-              className="w-full py-2.5 rounded-xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02]"
-            >
-              <Video className="h-4 w-4" />
-              <span>Start HR Video Call</span>
-            </Link>
-          </div>
+          )}
 
           <DecisionControl
             appId={app.id}
