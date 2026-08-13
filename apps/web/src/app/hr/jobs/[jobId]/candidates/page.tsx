@@ -4,9 +4,10 @@ import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 import { Job, Application } from '@/types';
-import { ChevronRight, Search, Users, Loader2 } from '@/lib/lucide-google-icons';
+import { ChevronRight, Search, Users } from '@/lib/lucide-google-icons';
 import Image from 'next/image';
 import { getApplicationStatusBadgeClasses, formatApplicationStatus } from '@/lib/applicationStatus';
+import { TableSkeleton, PageHeaderSkeleton, Skeleton } from '@/components/ui';
 
 export default function HrJobCandidatesList({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
@@ -50,8 +51,10 @@ export default function HrJobCandidatesList({ params }: { params: Promise<{ jobI
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-600 dark:text-orange-400" />
+      <div className="space-y-6 animate-in fade-in duration-200">
+        <Skeleton className="h-4 w-56 rounded" />
+        <PageHeaderSkeleton />
+        <TableSkeleton rows={5} cols={4} />
       </div>
     );
   }

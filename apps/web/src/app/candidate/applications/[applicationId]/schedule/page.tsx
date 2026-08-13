@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { Application } from '@/types';
 import { Calendar, Clock, ChevronRight, Check } from 'lucide-react';
+import { ApplicationDetailSkeleton } from '@/components/ui';
 
 // Render a scheduler slot (a real ISO UTC datetime from the API) as a readable
 // UTC string. If a value is somehow not parseable, show the raw value rather
@@ -48,7 +49,7 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
   const effectiveSelected = selectedSlot ?? slots[0];
 
   if (loading) {
-    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading schedule options...</div>;
+    return <ApplicationDetailSkeleton />;
   }
 
   if (!app) {

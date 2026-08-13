@@ -3,6 +3,7 @@
 import React, { use, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { UnifiedAssessmentSession } from '@/components/interview/UnifiedAssessmentSession';
+import { CandidateDashboardSkeleton } from '@/app/candidate/dashboard/_components/CandidateDashboardSkeleton';
 
 function CandidateAssessmentContent({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
@@ -23,8 +24,8 @@ export default function CandidateAssessmentPage({ params }: { params: Promise<{ 
   return (
     <Suspense
       fallback={
-        <div className="text-center text-xs font-semibold text-slate-450 p-8">
-          Loading assessment console...
+        <div className="max-w-5xl mx-auto px-4 py-10">
+          <CandidateDashboardSkeleton />
         </div>
       }
     >

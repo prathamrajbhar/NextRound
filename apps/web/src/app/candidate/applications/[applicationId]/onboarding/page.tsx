@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 import { OnboardingRecord } from '@/types';
 import { ChevronRight, UserPlus } from 'lucide-react';
+import { ApplicationDetailSkeleton } from '@/components/ui';
 
 export default function CandidateOnboardingPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
@@ -28,7 +29,7 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
   }, [applicationId]);
 
   if (loading) {
-    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading onboarding details...</div>;
+    return <ApplicationDetailSkeleton />;
   }
 
   if (!onboard) {

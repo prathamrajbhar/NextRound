@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 import { Job } from '@/types';
-import { Plus, Search, ChevronRight, Briefcase, Loader2, Trash2 } from '@/lib/lucide-google-icons';
+import { Plus, Search, ChevronRight, Briefcase, Trash2, Loader2 } from '@/lib/lucide-google-icons';
 import { getJobStatusBadgeClasses } from '@/lib/jobStatus';
+import { TableSkeleton } from '@/components/ui';
 
 function formatDate(dateStr: string) {
   if (!dateStr) return 'Recently';
@@ -139,9 +140,7 @@ export default function HrJobsList() {
 
       {/* Table grid */}
       {loading ? (
-        <div className="flex items-center justify-center min-h-[300px]">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-600 dark:text-orange-400" />
-        </div>
+        <TableSkeleton rows={5} cols={4} />
       ) : filteredJobs.length > 0 ? (
         <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 shadow-md backdrop-blur-md glass-panel overflow-hidden">
           <div className="overflow-x-auto">

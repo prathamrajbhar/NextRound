@@ -203,6 +203,13 @@
   --purple-500: var(--brand-400);
   --purple-600: var(--brand-500);
   --purple-700: var(--brand-600);
+
+  /* Skeleton loader surface tokens */
+  --skeleton-base: rgba(203, 213, 225, 0.55);
+  --skeleton-mid: rgba(226, 232, 240, 0.85);
+  --skeleton-high: rgba(248, 250, 252, 0.95);
+  --skeleton-border: rgba(100, 116, 139, 0.18);
+  --skeleton-sheen: rgba(255, 255, 255, 0.65);
 }
 
 /* =========================================
@@ -215,6 +222,13 @@
   --text-body: #cbd5e1;
   --text-muted: #94a3b8;
   --border-color: rgba(255, 255, 255, 0.08);
+
+  /* Skeleton loader surface tokens (dark) */
+  --skeleton-base: rgba(30, 41, 59, 0.6);
+  --skeleton-mid: rgba(51, 65, 85, 0.75);
+  --skeleton-high: rgba(71, 85, 105, 0.85);
+  --skeleton-border: rgba(148, 163, 184, 0.16);
+  --skeleton-sheen: rgba(255, 255, 255, 0.1);
 }
 
 body {
@@ -510,9 +524,53 @@ aside {
   }
 }
 
-@keyframes shimmer {
+/* Premium skeleton surface: dimensional base + hairline border + sheen sweep */
+.skeleton-shimmer {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    var(--skeleton-base) 0%,
+    var(--skeleton-mid) 45%,
+    var(--skeleton-high) 60%,
+    var(--skeleton-mid) 100%
+  );
+  border: 1px solid var(--skeleton-border);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.dark .skeleton-shimmer {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+.skeleton-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  transform: translateX(-160%) skewX(-18deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--skeleton-sheen),
+    transparent
+  );
+  animation: skeleton-sweep 2.1s ease-in-out infinite;
+}
+
+@keyframes skeleton-sweep {
+  0% {
+    transform: translateX(-160%) skewX(-18deg);
+  }
+
   100% {
-    transform: translateX(100%);
+    transform: translateX(420%) skewX(-18deg);
   }
 }
 
@@ -564,10 +622,6 @@ aside {
   animation: slide-in-right 250ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.anim-shimmer {
-  animation: shimmer 1.6s ease-in-out infinite;
-}
-
 .anim-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
@@ -613,11 +667,11 @@ aside {
   .anim-fade-in,
   .anim-zoom-in,
   .anim-slide-in-right,
-  .anim-shimmer,
   .anim-pulse-glow,
   .anim-fade-up,
   .animate-drift,
-  .animate-drift-slow {
+  .animate-drift-slow,
+  .skeleton-shimmer::after {
     animation: none !important;
   }
 }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Bell, ArrowUpRight, Sparkles, Scale, Mic, Send, AlertTriangle, CheckCheck, Trash2, Check, Clock } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import { Notification } from '@/types';
-import { CardSkeleton } from '@/components/ui/Skeleton';
+import { NotificationsListSkeleton } from '@/components/ui';
 
 type FilterKey = 'all' | 'unread';
 
@@ -174,10 +174,7 @@ export default function HrNotificationsPage() {
 
       {/* Activity Feed Table */}
       {loading ? (
-        <div className="space-y-2">
-          <CardSkeleton />
-          <CardSkeleton />
-        </div>
+        <NotificationsListSkeleton count={6} />
       ) : (
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-sm overflow-hidden">
           {visible.length > 0 ? (

@@ -3,6 +3,7 @@
 import React, { use, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { UnifiedAssessmentSession } from '@/components/interview/UnifiedAssessmentSession';
+import { CandidateDashboardSkeleton } from '@/app/candidate/dashboard/_components/CandidateDashboardSkeleton';
 
 function MockSessionContent({ params }: { params: Promise<{ sessionId: string }> }) {
   const searchParams = useSearchParams();
@@ -28,8 +29,8 @@ export default function MockSessionRoom({ params }: { params: Promise<{ sessionI
   return (
     <Suspense
       fallback={
-        <div className="text-center text-xs font-semibold text-slate-400 dark:text-slate-500 p-8">
-          Loading assessment room...
+        <div className="max-w-5xl mx-auto px-4 py-10">
+          <CandidateDashboardSkeleton />
         </div>
       }
     >

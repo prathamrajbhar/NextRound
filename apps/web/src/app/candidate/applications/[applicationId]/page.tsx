@@ -29,6 +29,7 @@ import {
 import { ApplicationHeaderBanner } from './_components/ApplicationHeaderBanner';
 import { StagePipelineTimeline } from './_components/StagePipelineTimeline';
 import { CandidateScorecard } from './_components/CandidateScorecard';
+import { ApplicationDetailSkeleton } from '@/components/ui';
 
 export default function CandidateApplicationDetailPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
@@ -98,7 +99,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
   }, [applicationId]);
 
   if (loading) {
-    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading application details...</div>;
+    return <ApplicationDetailSkeleton />;
   }
 
   if (!app) {

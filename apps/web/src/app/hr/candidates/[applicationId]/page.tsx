@@ -9,12 +9,12 @@ import {
   Download,
   FileText,
   ArrowLeft,
-  Loader2,
   User,
   CheckCircle2,
   Award,
 } from '@/lib/lucide-google-icons';
 import { CandidateHeader } from './components/CandidateHeader';
+import { CandidateDetailSkeleton } from '@/components/ui';
 
 export default function HrCandidateProfilePage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
@@ -45,11 +45,7 @@ export default function HrCandidateProfilePage({ params }: { params: Promise<{ a
   }, [applicationId]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-600 dark:text-orange-400" />
-      </div>
-    );
+    return <CandidateDetailSkeleton />;
   }
 
   if (!app) {

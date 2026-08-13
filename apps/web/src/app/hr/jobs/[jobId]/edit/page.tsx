@@ -6,7 +6,7 @@ import { apiClient } from '@/lib/apiClient';
 import { Job } from '@/types';
 import { Sliders, Briefcase, ArrowLeft, Building2, MapPin, IndianRupee, Layers, Loader2 } from '@/lib/lucide-google-icons';
 import Link from 'next/link';
-import { Autocomplete } from '@/components/ui';
+import { Autocomplete, FormCardSkeleton, PageHeaderSkeleton } from '@/components/ui';
 import { SUGGESTED_ROLES } from '@/lib/suggestedOptions';
 import PipelineConfigCard from '../../new/components/PipelineConfigCard';
 
@@ -137,8 +137,12 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-600 dark:text-orange-400" />
+      <div className="space-y-6 animate-in fade-in duration-200">
+        <PageHeaderSkeleton />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <FormCardSkeleton rows={4} />
+          <FormCardSkeleton rows={3} />
+        </div>
       </div>
     );
   }

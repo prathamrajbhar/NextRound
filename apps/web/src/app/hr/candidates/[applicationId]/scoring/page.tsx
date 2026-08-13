@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Video,
   ArrowLeft,
-  Loader2,
   User,
 } from '@/lib/lucide-google-icons';
 import SkillsScorecard from '../components/SkillsScorecard';
@@ -16,6 +15,7 @@ import DecisionControl from '../components/DecisionControl';
 import { CandidateHeader } from '../components/CandidateHeader';
 import { AssessmentScorecard } from '../components/AssessmentScorecard';
 import { ProctoringReportCard, type ProctoringReport } from '../components/ProctoringReportCard';
+import { CandidateDetailSkeleton } from '@/components/ui';
 
 interface VoiceData {
   status?: 'pending_evaluation' | 'pending_review' | 'completed';
@@ -90,11 +90,7 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
   }, [applicationId]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-600 dark:text-orange-400" />
-      </div>
-    );
+    return <CandidateDetailSkeleton />;
   }
 
   if (!app) {

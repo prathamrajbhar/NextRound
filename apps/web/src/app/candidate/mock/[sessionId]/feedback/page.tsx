@@ -19,7 +19,7 @@ import {
   Clock,
   TrendingUp,
 } from '@/lib/lucide-google-icons';
-import { CompanyLogo } from '@/components/ui';
+import { CompanyLogo, ApplicationDetailSkeleton } from '@/components/ui';
 
 interface FeedbackData {
   id?: string;
@@ -83,12 +83,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
   const growthAreas = feedbackData?.areasToImprove || [];
 
   if (loading) {
-    return (
-      <div className="p-8 text-center space-y-3">
-        <div className="h-10 w-10 mx-auto rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
-        <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Loading interview feedback...</p>
-      </div>
-    );
+    return <ApplicationDetailSkeleton />;
   }
 
   if (!feedbackData) {

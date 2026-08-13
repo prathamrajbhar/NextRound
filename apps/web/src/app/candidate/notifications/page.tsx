@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
-import { Bell, CheckCircle2, Sparkles, Bot, ShieldCheck, ArrowUpRight, CheckCheck, Trash2, Check, Clock, Loader2 } from '@/lib/lucide-google-icons';
+import { NotificationsListSkeleton, Skeleton } from '@/components/ui';
+import { Bell, CheckCircle2, Sparkles, Bot, ShieldCheck, ArrowUpRight, CheckCheck, Trash2, Check, Clock } from '@/lib/lucide-google-icons';
 
 interface CandidateNotification {
   id: string;
@@ -101,9 +102,12 @@ export default function CandidateNotificationsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12 text-slate-500 font-semibold gap-2">
-        <Loader2 className="h-5 w-5 animate-spin text-brand-500" />
-        <span>Loading notifications...</span>
+      <div className="space-y-6 max-w-5xl mx-auto pb-16 animate-in fade-in duration-200">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-2xl" />
+          <Skeleton className="h-7 w-44 rounded-lg" />
+        </div>
+        <NotificationsListSkeleton count={6} />
       </div>
     );
   }

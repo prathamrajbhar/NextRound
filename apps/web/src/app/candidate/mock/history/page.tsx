@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/apiClient';
 import { MockSession } from '@/types';
 import { ChevronRight, TrendingUp } from 'lucide-react';
 import { getCompanyDomain } from '@/utils/logo';
+import { MockHistorySkeleton, Skeleton } from '@/components/ui';
 
 export default function MockHistoryPage() {
   const [loading, setLoading] = useState(true);
@@ -28,7 +29,15 @@ export default function MockHistoryPage() {
     fetchSessions();
   }, []);
   if (loading) {
-    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading practice history...</div>;
+    return (
+      <div className="space-y-6 animate-in fade-in duration-200">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-56 rounded-lg" />
+          <Skeleton className="h-4 w-80 max-w-full rounded-md" />
+        </div>
+        <MockHistorySkeleton count={4} />
+      </div>
+    );
   }
 
   return (

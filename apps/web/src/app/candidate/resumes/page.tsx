@@ -6,7 +6,6 @@ import {
   FileText,
   Download,
   Sparkles,
-  Loader2,
   Search,
   Plus,
   Star,
@@ -15,7 +14,7 @@ import {
 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
 import { EditResumeModal, GeneratedResumeData } from './_components/EditResumeModal';
-import { Modal } from '@/components/ui';
+import { Modal, ResumesListSkeleton } from '@/components/ui';
 
 interface ResumeHistoryItem {
   id: string;
@@ -309,10 +308,7 @@ export default function CandidateResumesPage() {
 
       {/* Main Resumes Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-20 text-slate-400 gap-2 text-xs font-semibold">
-          <Loader2 className="h-5 w-5 animate-spin text-brand-500" />
-          <span>Loading resume vault...</span>
-        </div>
+        <ResumesListSkeleton count={6} />
       ) : filteredHistory.length === 0 ? (
         <div className="text-center py-16 p-8 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 space-y-3">
           <FileText className="h-10 w-10 mx-auto text-slate-300 dark:text-slate-700" />

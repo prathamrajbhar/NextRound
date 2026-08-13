@@ -21,6 +21,7 @@ import { JobHeaderCard } from './_components/JobHeaderCard';
 import { JobRubricCard } from './_components/JobRubricCard';
 import { JobPrepArenaCard } from './_components/JobPrepArenaCard';
 import { JobPrepSection } from './_components/JobPrepSection';
+import { JobDetailSkeleton } from '@/components/ui';
 
 export default function CandidateJobDetailPage({ params }: { params: Promise<{ jobId: string }> }) {
   const { jobId } = use(params);
@@ -92,7 +93,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
   };
 
   if (loading) {
-    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading job details...</div>;
+    return <JobDetailSkeleton />;
   }
 
   if (!job) {

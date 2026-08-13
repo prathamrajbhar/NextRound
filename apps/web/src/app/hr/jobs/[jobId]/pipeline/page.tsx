@@ -3,7 +3,7 @@
 import React, { useState, useEffect, use } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { Job, Application } from '@/types';
-import { Loader2 } from '@/lib/lucide-google-icons';
+import { PipelineBoardSkeleton } from '@/components/ui';
 
 // Subcomponents
 import PipelineHeader from './components/PipelineHeader';
@@ -81,11 +81,7 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
   }, [jobId]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-600 dark:text-orange-400" />
-      </div>
-    );
+    return <PipelineBoardSkeleton />;
   }
 
   if (!job) {

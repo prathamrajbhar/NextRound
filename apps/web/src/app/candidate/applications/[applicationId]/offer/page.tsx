@@ -10,6 +10,7 @@ import { OfferActionSidebar } from './components/OfferActionSidebar';
 import { OfferDocumentModal } from './components/OfferDocumentModal';
 import { ActionModals } from './components/ActionModals';
 import { CheckCircle2, XCircle } from 'lucide-react';
+import { ApplicationDetailSkeleton } from '@/components/ui';
 
 export default function CandidateOfferPage({
   params,
@@ -66,7 +67,7 @@ export default function CandidateOfferPage({
   };
 
   if (loading) {
-    return <div className="p-8 text-slate-500 font-semibold text-center animate-pulse">Loading offer details...</div>;
+    return <ApplicationDetailSkeleton />;
   }
 
   if (!offer) {

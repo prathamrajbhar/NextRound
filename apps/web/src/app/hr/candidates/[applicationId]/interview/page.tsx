@@ -4,7 +4,8 @@ import React, { useState, use, useEffect } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 import { Application } from '@/types';
-import { ChevronRight, Play, Pause, Download, Loader2 } from '@/lib/lucide-google-icons';
+import { ChevronRight, Play, Pause, Download } from '@/lib/lucide-google-icons';
+import { CandidateDetailSkeleton } from '@/components/ui';
 
 export default function HrInterviewReplayPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
@@ -62,11 +63,7 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
   }, [applicationId]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-      </div>
-    );
+    return <CandidateDetailSkeleton />;
   }
 
   if (!app) {

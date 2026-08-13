@@ -10,12 +10,12 @@ import {
   Sparkles,
   ArrowUpRight,
   CheckCircle2,
-  Loader2,
 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
 import { Job } from '@/types';
 import { AnalyticsKpiCards } from './_components/AnalyticsKpiCards';
 import { StageBreakdownChart } from './_components/StageBreakdownChart';
+import { AnalyticsGridSkeleton } from '@/components/ui';
 
 interface HRAnalyticsData {
   totalCandidatesProcessed: number;
@@ -151,12 +151,7 @@ export default function HrAnalyticsDashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12 text-slate-500 font-semibold gap-2">
-        <Loader2 className="h-5 w-5 animate-spin text-brand-500" />
-        <span>Loading analytics...</span>
-      </div>
-    );
+    return <AnalyticsGridSkeleton />;
   }
 
   return (
