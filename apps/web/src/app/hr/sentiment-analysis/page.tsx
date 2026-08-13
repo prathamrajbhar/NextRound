@@ -311,6 +311,8 @@ export default function SentimentAnalysisPage() {
                         ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
                         : item.emotionLabel === 'Hesitant'
                         ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                        : item.emotionLabel === 'Neutral'
+                        ? 'bg-slate-800 text-slate-350 border border-slate-700'
                         : 'bg-rose-950 text-rose-300 border border-rose-800'
                     }`}>
                       {item.emotionLabel}
@@ -381,6 +383,8 @@ export default function SentimentAnalysisPage() {
                       ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                       : t.emotion === 'Hesitant'
                       ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                      : t.emotion === 'Neutral'
+                      ? 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300'
                       : 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
                   }`}>
                     {t.emotion}
