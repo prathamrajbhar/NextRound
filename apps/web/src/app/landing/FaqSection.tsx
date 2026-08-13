@@ -13,16 +13,16 @@ export function FaqSection() {
 
   const faqs: FaqItem[] = [
     {
-      question: "How does HireOS verify candidate identity and prevent cheating?",
-      answer: "We use client-side tracking to monitor tab switches, background audio disruptions, and face presence. Proctoring alerts are saved for HR review and do not automatically impact candidate scores.",
+      question: "Do I need to schedule any calls with candidates?",
+      answer: "No, candidates can start the interview call at any time on their own schedule. There is no need for back-and-forth email scheduling.",
     },
     {
-      question: "How does the AI grading engine ensure unbiased evaluations?",
-      answer: "Evaluations are based strictly on pre-defined rubrics. The AI evaluates text transcripts and conceptual answers, completely ignoring personal identifiers like location, university names, or voice tone.",
+      question: "How does the AI evaluate candidates?",
+      answer: "The AI recruiter evaluates responses strictly based on the evaluation guidelines you set up beforehand. It grades their answers objectively based on content and skills, protecting against hiring bias.",
     },
     {
-      question: "Is candidate data secure and isolated?",
-      answer: "Yes. HireOS uses multi-tenant data boundaries. Candidate resumes, transcripts, and scores are encrypted and accessible only to authorized managers.",
+      question: "Can I review the actual call recordings?",
+      answer: "Yes. For every interview, you receive the full audio recording, complete word-for-word text transcripts, and high-level bullet summaries.",
     },
   ];
 
@@ -35,7 +35,7 @@ export function FaqSection() {
         <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
           Frequently Asked Questions
         </h2>
-        <p className="mt-3 text-slate-500 dark:text-slate-400 text-xs sm:text-sm">
+        <p className="mt-3 text-slate-500 dark:text-slate-400 text-xs sm:text-sm font-medium">
           Everything you need to know about our voice screening assessments.
         </p>
       </div>
@@ -54,9 +54,9 @@ export function FaqSection() {
               >
                 <span>{faq.question}</span>
                 {isOpen ? (
-                  <ChevronUp className="h-4.5 w-4.5 text-slate-400 dark:text-slate-550" />
+                  <ChevronUp className="h-4.5 w-4.5 text-slate-400 dark:text-slate-500" />
                 ) : (
-                  <ChevronDown className="h-4.5 w-4.5 text-slate-400 dark:text-slate-550" />
+                  <ChevronDown className="h-4.5 w-4.5 text-slate-400 dark:text-slate-500" />
                 )}
               </button>
 

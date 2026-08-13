@@ -9,22 +9,22 @@ export function WorkflowSection() {
   const employerSteps = [
     {
       number: '01',
-      title: 'Configure Job Criteria',
-      description: 'Define role requirements. The system automatically sets up evaluation rubrics and checklists.',
+      title: 'Configure Questions',
+      description: 'Set up the interview questions you want to ask, or choose from our pre-made templates.',
       icon: Brain,
       colorClass: 'text-brand-600 bg-brand-50/80 dark:text-brand-400 dark:bg-brand-950/30 border-brand-100 dark:border-brand-900/40',
     },
     {
       number: '02',
-      title: 'Conversational Voice Call',
-      description: 'Candidates start their voice assessment. Our AI recruiter interviews candidates and transcribes answers.',
+      title: 'Candidates Call',
+      description: 'Candidates trigger the automated voice call on their own schedule and record their answers.',
       icon: Cpu,
       colorClass: 'text-orange-600 bg-orange-50/80 dark:text-orange-400 dark:bg-orange-950/30 border-orange-100 dark:border-orange-900/40',
     },
     {
       number: '03',
-      title: 'Shortlist & Decision',
-      description: 'Review objective candidate scorecards and detailed transcripts to advance top applicants.',
+      title: 'Review Results',
+      description: 'Browse automated transcripts, summaries, and objective scorecards in your HR dashboard.',
       icon: ShieldCheck,
       colorClass: 'text-emerald-650 bg-emerald-50/80 dark:text-emerald-400 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/40',
     },
@@ -34,7 +34,7 @@ export function WorkflowSection() {
     {
       number: '01',
       title: 'Build Profile',
-      description: 'Upload your resume. The system extracts your skills and technical experience to build your profile.',
+      description: 'Upload your resume. The system extracts your skills and experience to build your profile.',
       icon: User,
       colorClass: 'text-emerald-650 bg-emerald-50/80 dark:text-emerald-400 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/40',
     },
@@ -66,8 +66,8 @@ export function WorkflowSection() {
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
             How HireOS works
           </h2>
-          <p className="mt-2 text-slate-500 dark:text-slate-400 text-xs sm:text-sm leading-relaxed max-w-xl">
-            Streamlined screening process designed to save time for hiring teams and candidates alike.
+          <p className="mt-2 text-slate-500 dark:text-slate-400 text-xs sm:text-sm leading-relaxed max-w-xl font-medium">
+            A simple, automated screening process designed to save time for hiring teams and candidates alike.
           </p>
         </div>
 
@@ -106,7 +106,7 @@ export function WorkflowSection() {
               className="rounded-3xl border border-white/60 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/60 backdrop-blur-md shadow-xs p-6 relative group transition-all hover:scale-[1.01]"
             >
               {/* Step Sequence Number */}
-              <span className="absolute top-4 right-5 text-3xl font-black text-slate-200 dark:text-slate-800 group-hover:text-brand-105 dark:group-hover:text-slate-700 transition-colors select-none">
+              <span className="absolute top-4 right-5 text-3xl font-black text-slate-200 dark:text-slate-800 group-hover:text-brand-100 dark:group-hover:text-slate-700 transition-colors select-none">
                 {step.number}
               </span>
 
