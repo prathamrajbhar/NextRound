@@ -4,17 +4,14 @@ import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { requireOrgScope, rejectOrgIdParam } from '../../middleware/orgScope';
 import { serializeApplicationList } from '../../lib/serializers';
-import { deriveSalary } from '../../lib/offer-terms';
-import { upsertOffer } from '../../services/offer.service';
-import { emailService } from '../../services/email.service';
 
-export const hrRouter = Router();
+export const hrDashboardRouter = Router();
 
 // Org scoping is JWT-derived; never accept a client-supplied org_id.
-hrRouter.use(rejectOrgIdParam);
+hrDashboardRouter.use(rejectOrgIdParam);
 
 // GET /api/v1/hr/dashboard - Aggregated HR KPI metrics & active job pipeline status
-hrRouter.get(
+hrDashboardRouter.get(
   '/dashboard',
   authenticate,
   requireRole('hr'),
@@ -180,154 +177,3 @@ hrRouter.get(
     }
   }
 );
-
-// GET /api/v1/hr/hold-queue - Fetch applications on hold for manual HR review
-hrRouter.get(
-  '/hold-queue',
-  authenticate,
-  requireRole('hr'),
-  requireOrgScope,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const orgId = req.user!.orgId!;
-
-      const items = await prisma.application.findMany({
-        where: {
-          job: { org_id: orgId },
-          evaluations: {
-            some: {
-              decision: 'hold_for_review',
-            },
-          },
-        },
-        include: {
-          job: { select: { id: true, title: true } },
-          candidate: {
-            include: {
-              user: { select: { id: true, email: true } },
-            },
-          },
-          evaluations: true,
-        },
-        orderBy: { applied_at: 'desc' },
-      });
-
-      return res.json({
-        success: true,
-        data: { holdQueue: items },
-      });
-    } catch (err) {
-      return next(err);
-    }
-  }
-);
-
-// PATCH /api/v1/hr/evaluations/:id/hr-override - HR manual decision override
-hrRouter.patch(
-  '/evaluations/:id/hr-override',
-  authenticate,
-  requireRole('hr'),
-  requireOrgScope,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const orgId = req.user!.orgId!;
-      const evalId = req.params.id as string;
-      const { decision, notes } = req.body; // 'hire' | 'reject'
-
-      if (!decision || !['hire', 'reject'].includes(decision)) {
-        return res.status(400).json({ success: false, error: 'decision must be hire or reject' });
-      }
-
-      const evaluation = await prisma.evaluation.findUnique({
-        where: { id: evalId },
-        include: {
-          application: {
-            include: {
-              job: true,
-              candidate: { include: { user: true } },
-            },
-          },
-        },
-      });
-
-      if (!evaluation) {
-        return res.status(404).json({ success: false, error: 'Evaluation not found' });
-      }
-
-      if (evaluation.application.job.org_id !== orgId) {
-        return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
-      }
-
-      // Update evaluation with HR override
-      const updatedEvaluation = await prisma.evaluation.update({
-        where: { id: evalId },
-        data: {
-          decision: decision === 'hire' ? 'hire' : 'reject',
-          reasoning: notes ? `HR Override: ${notes}` : `HR Override applied: ${decision}`,
-        },
-      });
-
-      const appId = evaluation.application_id;
-      const nextStatus = decision === 'hire' ? 'offered' : 'rejected';
-
-      // Derive offer terms from the Job BEFORE mutating state so a job with no
-      // salary never leaves an 'offered' application without an honest offer.
-      const job = evaluation.application.job;
-      const offerSalary = decision === 'hire' ? deriveSalary(job.salary) : null;
-
-      if (decision === 'hire' && offerSalary === null) {
-        return res.status(422).json({
-          success: false,
-          error: `Cannot generate an offer for "${job.title}": the job has no salary configured. Add a salary to the job before generating an offer.`,
-        });
-      }
-
-      await prisma.application.update({
-        where: { id: appId },
-        data: { status: nextStatus },
-      });
-
-      if (decision === 'hire') {
-        const { offer, isNew } = await upsertOffer({
-          applicationId: appId,
-          job,
-          salary: offerSalary as number,
-          offerLetterContent: `Official Job Offer for ${job.title} (Approved by HR Override)`,
-        });
-
-        // Only email the candidate when a brand-new offer was created (token freshly generated)
-        if (isNew) {
-          const candidateName = evaluation.application.candidate.user.email.split('@')[0];
-          await emailService.sendOfferEmail(
-            evaluation.application.candidate.user.email,
-            candidateName,
-            job.title,
-            { salary: offer.salary, equity: offer.equity ?? undefined, magicLinkToken: offer.magic_link_token! }
-          );
-        }
-
-        return res.json({
-          success: true,
-          data: { evaluation: updatedEvaluation, offer, status: 'offered' },
-        });
-      } else {
-        const candidateName = evaluation.application.candidate.user.email.split('@')[0];
-        await emailService.sendConstructiveRejection(
-          evaluation.application.candidate.user.email,
-          candidateName,
-          evaluation.application.job.title,
-          ['System Design', 'Algorithmic Efficiency'],
-          notes || 'Thank you for interviewing with us. Following our HR review, we are unable to proceed at this time.'
-        );
-
-        return res.json({
-          success: true,
-          data: { evaluation: updatedEvaluation, status: 'rejected' },
-        });
-      }
-    } catch (err) {
-      return next(err);
-    }
-  }
-);
-

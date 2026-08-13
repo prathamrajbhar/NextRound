@@ -6,7 +6,7 @@ from services.llm_service import generate_text, extract_json_array, extract_json
 
 logger = logging.getLogger("screening_agent")
 
-from core.langgraph import LANGGRAPH_AVAILABLE, StateGraph, END
+from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
 class GapAnalysis(BaseModel):

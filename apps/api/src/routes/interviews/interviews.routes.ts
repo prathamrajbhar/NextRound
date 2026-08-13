@@ -11,7 +11,7 @@ import {
   saveHrResult,
   sendSignal,
   getSignals,
-} from './interview.controller';
+} from './interviews.controller';
 
 export const interviewRouter = Router();
 

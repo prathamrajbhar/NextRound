@@ -3,7 +3,7 @@ from typing import Dict, Any, TypedDict, List
 
 logger = logging.getLogger("assessment_agent")
 
-from core.langgraph import LANGGRAPH_AVAILABLE, StateGraph, END
+from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
 def _to_int(value, default: int = 0) -> int:

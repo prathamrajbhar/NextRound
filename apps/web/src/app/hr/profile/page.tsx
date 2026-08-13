@@ -18,7 +18,7 @@ import {
   Sparkles
 } from '@/lib/lucide-google-icons';
 import { Autocomplete } from '@/components/ui';
-import { SUGGESTED_COMPANIES, SUGGESTED_ROLES } from '@/lib/constants';
+import { SUGGESTED_COMPANIES, SUGGESTED_ROLES } from '@/lib/suggestedOptions';
 
 import { useAuthContext } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/apiClient';

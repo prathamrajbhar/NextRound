@@ -3,10 +3,10 @@ import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
 import { notificationService } from '../../services/notification.service';
 
-export const notificationRouter = Router();
+export const notificationsRouter = Router();
 
 // GET /api/v1/notifications/stream - Real-time SSE Live Notifications Stream
-notificationRouter.get(
+notificationsRouter.get(
   '/stream',
   authenticate,
   (req: Request, res: Response) => {
@@ -22,7 +22,7 @@ notificationRouter.get(
 );
 
 // GET /api/v1/notifications - Fetch authenticated user's notifications
-notificationRouter.get(
+notificationsRouter.get(
   '/',
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
@@ -53,7 +53,7 @@ notificationRouter.get(
 );
 
 // PATCH /api/v1/notifications/:id/read - Mark single notification as read
-notificationRouter.patch(
+notificationsRouter.patch(
   '/:id/read',
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
@@ -85,7 +85,7 @@ notificationRouter.patch(
 );
 
 // POST /api/v1/notifications/read-all - Mark all user notifications as read
-notificationRouter.post(
+notificationsRouter.post(
   '/read-all',
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
@@ -108,7 +108,7 @@ notificationRouter.post(
 );
 
 // DELETE /api/v1/notifications/:id - Delete a single notification
-notificationRouter.delete(
+notificationsRouter.delete(
   '/:id',
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
@@ -137,7 +137,7 @@ notificationRouter.delete(
 );
 
 // DELETE /api/v1/notifications - Delete all read notifications for user
-notificationRouter.delete(
+notificationsRouter.delete(
   '/',
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {

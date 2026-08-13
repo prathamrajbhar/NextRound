@@ -1,4 +1,4 @@
-import { fetchApi, clearApiCache } from './api';
+import { fetchApi, clearApiCache } from './api-fetcher';
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const result = await fetchApi<T>(endpoint, options);

@@ -22,7 +22,7 @@ export function evaluateInterview({
 }): ScoreResults {
   // Honest pending state: no real evaluator scorecard is available to this
   // function. Scores are produced server-side by the Interviewer/Evaluator agent
-  // (see apps/api/src/routes/interviews/interview.routes.ts POST /:id/end, which
+  // (see apps/api/src/routes/interviews/interviews.routes.ts POST /:id/end, which
   // enqueues the evaluation job) and must NOT be fabricated on the client.
   const answeredCount = transcriptData.filter((t) => t.answer.trim().length > 0).length;
 

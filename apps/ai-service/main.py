@@ -4,7 +4,8 @@ from fastapi import FastAPI
 from core.config import settings
 from core.redis_client import get_redis_client, close_redis_client
 from workers.agent_workers import worker_manager
-from routes.voice_routes import voice_router, mock_voice_router
+from routes.voice_routes import voice_router
+from routes.mock_voice_routes import mock_voice_router
 from routes.prep_routes import prep_router
 from routes.analytics_routes import analytics_router
 from routes.embedding_routes import embedding_router

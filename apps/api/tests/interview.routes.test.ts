@@ -5,7 +5,7 @@ import {
   HrResultBodySchema,
   ProctoringFlagBodySchema,
 } from '../src/validators/interview.schemas';
-import { computeCompositeScore } from '../src/routes/interviews/interview.helpers';
+import { computeCompositeScore } from '../src/routes/interviews/interviews.helpers';
 
 // ---------------------------------------------------------------------------
 // Schema validation tests

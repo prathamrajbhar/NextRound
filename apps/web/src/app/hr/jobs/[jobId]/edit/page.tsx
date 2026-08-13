@@ -7,7 +7,7 @@ import { Job } from '@/types';
 import { Sliders, Briefcase, ArrowLeft, Building2, MapPin, IndianRupee, Layers, Loader2 } from '@/lib/lucide-google-icons';
 import Link from 'next/link';
 import { Autocomplete } from '@/components/ui';
-import { SUGGESTED_ROLES } from '@/lib/constants';
+import { SUGGESTED_ROLES } from '@/lib/suggestedOptions';
 import PipelineConfigCard from '../../new/components/PipelineConfigCard';
 
 export default function HrEditJobPage({ params }: { params: Promise<{ jobId: string }> }) {

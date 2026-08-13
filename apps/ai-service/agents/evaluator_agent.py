@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 logger = logging.getLogger("evaluator_agent")
 
-from core.langgraph import LANGGRAPH_AVAILABLE, StateGraph, END
+from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
 class ScoringIsolationError(Exception):

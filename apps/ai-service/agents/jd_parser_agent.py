@@ -6,7 +6,7 @@ from services.llm_service import generate_text, extract_json_array
 logger = logging.getLogger("jd_parser_agent")
 
 # Try importing LangGraph
-from core.langgraph import LANGGRAPH_AVAILABLE, StateGraph, END
+from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
 class RubricWeights(BaseModel):

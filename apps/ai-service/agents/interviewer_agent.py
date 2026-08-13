@@ -6,7 +6,7 @@ from services.llm_service import generate_text, extract_json_object
 
 logger = logging.getLogger("interviewer_agent")
 
-from core.langgraph import LANGGRAPH_AVAILABLE, StateGraph, END
+from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
 # ML_BYPASS: voice streaming pipeline — upgrade to streaming Gemini tokens to Piper/XTTS-v2

@@ -13,7 +13,7 @@ import {
   computeCompositeScore,
   findInterviewByRef,
   loadIceServers,
-} from './interview.helpers';
+} from './interviews.helpers';
 
 // ---------------------------------------------------------------------------
 // POST /:id/consent

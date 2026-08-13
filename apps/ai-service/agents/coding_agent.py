@@ -5,7 +5,7 @@ from services.llm_service import generate_text, extract_json_object
 
 logger = logging.getLogger("coding_agent")
 
-from core.langgraph import LANGGRAPH_AVAILABLE, StateGraph, END
+from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
 class CodingState(TypedDict, total=False):

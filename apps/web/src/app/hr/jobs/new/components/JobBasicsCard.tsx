@@ -3,7 +3,7 @@
 import React from 'react';
 import { Briefcase } from 'lucide-react';
 import { Autocomplete } from '@/components/ui';
-import { SUGGESTED_ROLES } from '@/lib/constants';
+import { SUGGESTED_ROLES } from '@/lib/suggestedOptions';
 
 interface JobBasicsProps {
   title: string;
