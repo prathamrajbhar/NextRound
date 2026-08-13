@@ -46,7 +46,7 @@ export default function PublicNavbar() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-lg font-black tracking-tight text-slate-900 dark:text-slate-100 font-display">
-                  Next<span className="text-brand-600 dark:text-orange-400">Round</span>
+                  Hire<span className="text-brand-600 dark:text-orange-400">OS</span>
                 </span>
               </div>
             </Link>

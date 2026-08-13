@@ -66,7 +66,7 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
             />
           </div>
           <span className="font-extrabold text-lg tracking-tight text-slate-800 dark:text-slate-100">
-            Next<span className="text-success-600 dark:text-emerald-400 bg-gradient-to-r from-success-600 to-brand-600 dark:from-emerald-400 dark:to-orange-400 bg-clip-text text-transparent">Round</span>
+            Hire<span className="text-success-600 dark:text-emerald-400 bg-gradient-to-r from-success-600 to-brand-600 dark:from-emerald-400 dark:to-orange-400 bg-clip-text text-transparent">OS</span>
           </span>
         </Link>
         <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-extrabold tracking-widest uppercase block mt-1 ml-11 select-none">

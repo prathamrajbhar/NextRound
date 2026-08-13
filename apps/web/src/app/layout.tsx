@@ -24,8 +24,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "NextRound — AI-Native Recruitment Marketplace",
-  description: "Build hiring pipelines, run voice AI interviews, and get structured recruitment shortlists with NextRound.",
+  title: "HireOS — AI-Native Recruitment Marketplace",
+  description: "Build hiring pipelines, run voice AI interviews, and get structured recruitment shortlists with HireOS.",
   icons: {
     icon: [
       { url: '/logo.png', type: 'image/png' },

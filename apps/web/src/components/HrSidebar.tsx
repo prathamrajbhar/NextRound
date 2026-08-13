@@ -61,7 +61,7 @@ export default function HrSidebar({ avatar = '/avatar-boy.jpg', name = 'HR User'
             />
           </div>
           <span className="font-extrabold text-lg tracking-tight text-slate-800 dark:text-slate-100">
-            Next<span className="text-brand-600 dark:text-orange-400 bg-gradient-to-r from-brand-600 to-success-600 dark:from-orange-400 dark:to-emerald-400 bg-clip-text text-transparent">Round</span>
+            Hire<span className="text-brand-600 dark:text-orange-400 bg-gradient-to-r from-brand-600 to-success-600 dark:from-orange-400 dark:to-emerald-400 bg-clip-text text-transparent">OS</span>
           </span>
         </Link>
         <span className="text-[10px] text-orange-600 dark:text-orange-400 font-extrabold tracking-widest uppercase block mt-1 ml-11 select-none">

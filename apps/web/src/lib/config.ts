@@ -7,7 +7,7 @@ export const siteConfig = {
     process.env.NEXT_PUBLIC_API_BASE_URL ||
     process.env.NEXT_PUBLIC_API_URL ||
     'http://localhost:4000/api/v1',
-  appName: 'NextRound / HireOS',
+  appName: 'HireOS',
   appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   aiServiceUrl: process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8000',
 };
