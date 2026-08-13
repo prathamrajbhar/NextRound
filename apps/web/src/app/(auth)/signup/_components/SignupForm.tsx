@@ -106,13 +106,13 @@ export default function SignupForm({ initialRole }: SignupFormProps) {
       eyebrow="AI-Native Recruitment Platform"
       headline={
         <>
-          From application to offer, <span className="bg-gradient-to-r from-brand-500 to-indigo-500 dark:from-emerald-450 dark:to-orange-400 bg-clip-text text-transparent">zero human steps.</span>
+          From application to offer, <span className="text-orange-400">zero human steps.</span>
         </>
       }
-      sub="Post a role and AI agents source, screen, interview and score candidates — with free mock prep for every applicant."
+      sub="Post a role and AI agents source, screen, interview and score candidates — with free mock-interview prep for every applicant."
       benefits={BENEFITS}
     >
-      <div className="space-y-5 text-left">
+      <div className="space-y-5">
         <div className="space-y-1">
           <h2 className="font-display text-xl font-black tracking-tight text-white">Create your account</h2>
           <p className="text-xs font-medium text-slate-400">Choose your account type to get started.</p>
@@ -128,11 +128,10 @@ export default function SignupForm({ initialRole }: SignupFormProps) {
                 setFormError('');
               }}
               aria-pressed={role === option.value}
-              className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-extrabold transition-all ${
-                role === option.value
-                  ? 'bg-brand-600 dark:bg-orange-600 text-white shadow-md shadow-brand-600/10'
+              className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-extrabold transition-all ${role === option.value
+                  ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/25'
                   : 'text-slate-400 hover:text-white'
-              }`}
+                }`}
             >
               <option.icon className="h-4 w-4" />
               {option.label}
@@ -141,7 +140,7 @@ export default function SignupForm({ initialRole }: SignupFormProps) {
         </div>
 
         {formError && (
-          <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-950/40 p-3.5 text-xs font-semibold text-rose-300 leading-relaxed">
+          <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-950/40 p-3 text-xs font-semibold text-rose-300">
             {formError}
           </div>
         )}
@@ -230,7 +229,7 @@ export default function SignupForm({ initialRole }: SignupFormProps) {
           <button
             type="submit"
             disabled={loading}
-            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-sm font-extrabold text-white shadow-lg shadow-brand-600/10 dark:shadow-orange-650/20 transition-all hover:scale-[1.01] active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 text-sm font-extrabold text-white shadow-lg shadow-orange-600/25 transition-all hover:bg-orange-500 hover:shadow-orange-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? (
               <>
@@ -245,8 +244,8 @@ export default function SignupForm({ initialRole }: SignupFormProps) {
             )}
           </button>
 
-          <p className="text-center text-xs text-slate-500 leading-relaxed font-medium">
-            By continuing you agree to the HireOS terms of service and privacy policy.
+          <p className="text-center text-[11px] text-slate-500">
+            By continuing you agree to the NextRound terms of service and privacy policy.
           </p>
         </form>
 
@@ -254,7 +253,7 @@ export default function SignupForm({ initialRole }: SignupFormProps) {
           Already have an account?{' '}
           <Link
             href="/login"
-            className="inline-flex items-center gap-1 font-extrabold text-brand-500 dark:text-orange-400 transition-colors hover:text-brand-400 dark:hover:text-orange-355"
+            className="inline-flex items-center gap-1 font-extrabold text-orange-400 transition-colors hover:text-orange-300"
           >
             Sign in
             <ArrowRight className="h-3.5 w-3.5" />
