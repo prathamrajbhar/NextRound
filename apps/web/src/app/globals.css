@@ -145,8 +145,8 @@
 :root {
   --background: #ffffff;
   /* Premium white background */
-  --foreground: #0f172a;
-  /* Dark slate headings for high contrast */
+  --foreground: #1e293b;
+  /* Softer dark slate headings instead of aggressive dark black */
   --text-body: #334155;
   /* Slate 700 body text for high readability */
   --text-muted: #64748b;
@@ -155,7 +155,6 @@
   /* Subtle dark border for white canvas contrast */
   --primary: var(--brand-600);
   --success-color: var(--success-600);
-
   /* Centralized Color Scheme Design Tokens (Orange, Green, White Theme) */
   --brand-50: #fff7ed;
   --brand-100: #ffedd5;
@@ -249,11 +248,19 @@ body {
   :where(h1, h2, h3, h4, h5, h6) {
     color: var(--foreground);
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 600;
     letter-spacing: -0.025em;
     /* Cleaner, modern tight tracking */
     line-height: 1.25;
   }
+}
+
+/* Override aggressive font weight utility classes to soften look */
+.font-black {
+  font-weight: 700 !important;
+}
+.font-extrabold {
+  font-weight: 600 !important;
 }
 
 /* Premium Light Glassmorphism Panels (Adjusted for white background) */
