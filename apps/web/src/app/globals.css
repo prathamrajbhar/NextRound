@@ -719,14 +719,6 @@ aside {
   z-index: 9999;
 }
 
-.dark::view-transition-old(root) {
-  z-index: 9999;
-}
-
-.dark::view-transition-new(root) {
-  z-index: 1;
-}
-
 /* Temporarily disable transitions on all elements during theme change to prevent stuttering */
 html.view-transitioning *,
 html.view-transitioning *::before,

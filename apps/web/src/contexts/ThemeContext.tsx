@@ -67,16 +67,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const toggleTheme = (event?: React.MouseEvent | MouseEvent) => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
 
-    const isAppearanceTransition =
-      typeof document !== 'undefined' &&
-      'startViewTransition' in document &&
-      !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    if (!isAppearanceTransition) {
-      applyTheme(nextTheme);
-      return;
-    }
-
     const x = event?.clientX ?? window.innerWidth / 2;
     const y = event?.clientY ?? window.innerHeight / 2;
     const endRadius = Math.hypot(
@@ -96,17 +86,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         `circle(${endRadius}px at ${x}px ${y}px)`,
       ];
 
-      const isDark = theme === 'dark';
       document.documentElement.animate(
         {
-          clipPath: isDark ? [...clipPath].reverse() : clipPath,
+          clipPath: clipPath,
         },
         {
           duration: 450,
           easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-          pseudoElement: isDark
-            ? '::view-transition-old(root)'
-            : '::view-transition-new(root)',
+          pseudoElement: '::view-transition-new(root)',
         }
       );
     });
