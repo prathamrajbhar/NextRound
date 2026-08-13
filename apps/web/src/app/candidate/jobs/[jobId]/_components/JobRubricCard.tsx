@@ -72,7 +72,7 @@ export function JobRubricCard({ rubric }: JobRubricCardProps) {
         {Object.entries(displayRubric).map(([key, val]) => {
           if (!val || typeof val !== 'object') return null;
           const { weight, description } = val;
-          const pct = Math.round(weight * 100);
+          const pct = weight <= 1 ? Math.round(weight * 100) : Math.round(weight);
           const color = getColor(key);
           return (
             <div key={key} className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
