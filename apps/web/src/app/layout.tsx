@@ -1,21 +1,16 @@
 
 import type { Metadata } from "next";
-import { Outfit, Inter, Geist_Mono } from "next/font/google";
+import { Google_Sans_Flex, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const googleSans = Google_Sans_Flex({
+  variable: "--font-google-sans",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800", "900"],
-});
-
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  adjustFontFallback: false,
 });
 
 const geistMono = Geist_Mono({
@@ -60,7 +55,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`dark ${outfit.variable} ${inter.variable} ${geistMono.variable} h-full antialiased`}
+      className={`dark ${googleSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
