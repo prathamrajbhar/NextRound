@@ -80,21 +80,19 @@ export default function LandingPage() {
           <div className="inline-flex p-1 rounded-full bg-white/35 dark:bg-slate-800/50 border border-white/60 dark:border-slate-700/60 mt-6 select-none backdrop-blur-md">
             <button
               onClick={() => setActiveAudience('companies')}
-              className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                activeAudience === 'companies'
+              className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${activeAudience === 'companies'
                   ? 'bg-indigo-500/90 dark:bg-orange-500/90 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
+                }`}
             >
               For Employers
             </button>
             <button
               onClick={() => setActiveAudience('candidates')}
-              className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                activeAudience === 'candidates'
+              className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${activeAudience === 'candidates'
                   ? 'bg-indigo-500/90 dark:bg-orange-500/90 text-white shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
+                }`}
             >
               For Candidates
             </button>
