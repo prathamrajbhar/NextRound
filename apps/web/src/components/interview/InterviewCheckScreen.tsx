@@ -482,13 +482,13 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
                 </button>
               </>
             ) : (
-              <div className="p-4 rounded-2xl border border-blue-800/40 bg-blue-950/20 text-blue-300 space-y-3">
+              <div className="p-4 rounded-2xl border border-sky-800/40 bg-sky-950/20 text-sky-300 space-y-3">
                 <p className="text-xs leading-relaxed font-semibold">
                   <strong>Alternative Integrity Flow Enabled:</strong> Proctoring telemetry analysis will be deactivated for this session. Manual HR identity check and post-assessment verification will be performed instead.
                 </p>
                 <button
                   onClick={launch}
-                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                  className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer"
                 >
                   Start Assessment (Bypassed)
                 </button>

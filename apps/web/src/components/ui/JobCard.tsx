@@ -84,7 +84,7 @@ export function JobCard({
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-bold text-slate-900 dark:text-slate-200 truncate flex items-center gap-1">
                   {orgName}
-                  <CheckCircle2 className="h-3.5 w-3.5 text-blue-500 fill-blue-500/10 inline-block flex-shrink-0" />
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 fill-emerald-500/10 inline-block flex-shrink-0" />
                 </span>
 
                 {hasApplied && (

@@ -43,7 +43,7 @@ export function ApplicationHeaderBanner({ app, jobLogo, matchPercent }: Applicat
           <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-600 dark:text-slate-400">
             <span className="font-bold text-brand-600 dark:text-orange-400 flex items-center gap-1">
               {app.orgName}
-              <ShieldCheck className="h-3.5 w-3.5 text-blue-500 fill-blue-500/10" />
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500 fill-emerald-500/10" />
             </span>
             <span className="text-slate-300 dark:text-slate-700">•</span>
             <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">

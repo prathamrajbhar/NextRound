@@ -33,7 +33,7 @@ export function JobHeaderCard({ job, applied, onApply, skills, submitting = fals
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold text-brand-600 dark:text-orange-400 flex items-center gap-1">
                 {job.orgName}
-                <CheckCircle2 className="h-3.5 w-3.5 text-blue-500 fill-blue-500/10" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 fill-emerald-500/10" />
               </span>
               <span className="h-1 w-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
               <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-900/60 uppercase">

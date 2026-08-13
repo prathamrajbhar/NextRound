@@ -248,8 +248,8 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
               {[
                 { name: 'Technical Architecture', score: technicalScore, color: 'bg-emerald-500' },
-                { name: 'Communication & Pacing', score: commScore, color: 'bg-indigo-500' },
-                { name: 'System Architecture', score: sysScore, color: 'bg-purple-500' },
+                { name: 'Communication & Pacing', score: commScore, color: 'bg-brand-500' },
+                { name: 'System Architecture', score: sysScore, color: 'bg-sky-500' },
               ].map((c) => (
                 <div key={c.name} className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
                   <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">

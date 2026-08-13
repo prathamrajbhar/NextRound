@@ -43,8 +43,8 @@ export function JobRubricCard({ rubric }: JobRubricCardProps) {
   const getColor = (key: string) => {
     switch (key) {
       case 'technicalSkills': return { text: 'text-brand-600 dark:text-orange-400', bar: 'bg-brand-500 dark:bg-orange-500' };
-      case 'systemDesign': return { text: 'text-blue-600 dark:text-blue-400', bar: 'bg-blue-500 dark:bg-blue-400' };
-      case 'communication': return { text: 'text-purple-600 dark:text-purple-400', bar: 'bg-purple-500 dark:bg-purple-400' };
+      case 'systemDesign': return { text: 'text-sky-600 dark:text-sky-400', bar: 'bg-sky-500 dark:bg-sky-500' };
+      case 'communication': return { text: 'text-amber-600 dark:text-amber-400', bar: 'bg-amber-500 dark:bg-amber-500' };
       case 'cultureFit': return { text: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-emerald-500 dark:bg-emerald-400' };
       default: return { text: 'text-slate-600 dark:text-slate-400', bar: 'bg-slate-500 dark:bg-slate-400' };
     }

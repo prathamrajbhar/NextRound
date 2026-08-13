@@ -227,7 +227,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-3.5 shadow-sm">
         <div className="flex items-center justify-between">
           <label className={labelCls} htmlFor="portfolio-url">
-            <ExternalLink className="h-4 w-4 text-purple-400 inline mr-1.5" />
+            <ExternalLink className="h-4 w-4 text-orange-400 inline mr-1.5" />
             Portfolio / Personal Website
           </label>
           {portfolioSynced && (
@@ -249,7 +249,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
             type="button"
             onClick={handleSyncPortfolio}
             disabled={syncingPortfolio || !form.portfolioUrl.trim()}
-            className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md shrink-0 cursor-pointer disabled:cursor-not-allowed"
+            className="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md shrink-0 cursor-pointer disabled:cursor-not-allowed"
           >
             {syncingPortfolio ? (
               <>
