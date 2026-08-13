@@ -25,7 +25,7 @@ import { proctoringRouter } from './proctoring/proctoring.routes';
 
 export const apiRouter = Router();
 
-// Domain-driven API v1 Route Mounts
+
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/organizations', organizationRouter);
 apiRouter.use('/jobs', jobRouter);

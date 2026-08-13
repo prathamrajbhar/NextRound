@@ -20,9 +20,9 @@ async def process_prep_job(job_data: dict) -> bool:
     2. Generate questions (targeting 20+ total across dimensions), culture notes, and skill checklist via Gemini API.
     3. Call back Express internal endpoint /internal/prep/generate.
     """
-    # The Express prep route enqueues the job context under extraData
-    # ({ orgId, jobTitle, jobDescription }); jobId is top-level. Read both so a
-    # legacy flat payload keeps working without a migration.
+
+
+
     extra = job_data.get("extraData") or {}
     job_id = job_data.get("jobId") or extra.get("jobId")
     if not job_id:
@@ -42,12 +42,12 @@ async def process_prep_job(job_data: dict) -> bool:
 
     logger.info(f"Processing prep content generation for job {job_id}")
 
-    # Resolve the REAL job title + organization name from the job record. The
-    # worker never defaults to fabricated placeholders ("Tech Corp" /
-    # "Software Engineer"): when the job is missing or has no org name, the job
-    # is skipped with an honest error instead of generating made-up content.
-    # Values explicitly supplied in the payload (legacy flat prep queue) are
-    # used only as a fallback — they are real caller inputs, never defaults.
+
+
+
+
+
+
     job_title = payload_title
     company_name = payload_company
     try:

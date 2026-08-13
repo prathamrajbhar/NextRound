@@ -7,8 +7,8 @@ export function SavingsCalculator() {
   const [monthlyHires, setMonthlyHires] = useState(5);
   const [hourlyRate, setHourlyRate] = useState(45);
 
-  // Math equations for recruiters
-  // Average hours spent per screening process = 8 hours per candidate hire
+  
+  
   const hoursSavedPerHire = 8; 
   const totalHoursSaved = monthlyHires * hoursSavedPerHire;
   const totalMoneySaved = totalHoursSaved * hourlyRate;
@@ -16,7 +16,7 @@ export function SavingsCalculator() {
   return (
     <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-24 w-full text-left">
       <div className="rounded-3xl border border-white/60 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/60 backdrop-blur-md p-8 md:p-12 shadow-sm grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-        {/* Left column: Adjustable Sliders */}
+        {}
         <div className="space-y-6">
           <div>
             <span className="text-xs font-black text-brand-600 dark:text-emerald-450 uppercase tracking-widest block">
@@ -31,7 +31,7 @@ export function SavingsCalculator() {
           </div>
 
           <div className="space-y-5 pt-4">
-            {/* Slider 1: Monthly hires */}
+            {}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs font-extrabold text-slate-700 dark:text-slate-350">
                 <span>Monthly Hires</span>
@@ -49,7 +49,7 @@ export function SavingsCalculator() {
               />
             </div>
 
-            {/* Slider 2: Recruiter hourly rate */}
+            {}
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs font-extrabold text-slate-700 dark:text-slate-350">
                 <span>Recruiter Hourly Rate</span>
@@ -69,9 +69,9 @@ export function SavingsCalculator() {
           </div>
         </div>
 
-        {/* Right column: Results display */}
+        {}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Result 1: Cost saved */}
+          {}
           <div className="p-6 rounded-2xl border border-white/60 dark:border-slate-800 bg-white/50 dark:bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[140px]">
             <div className="h-8 w-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-650 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
               <DollarSign className="h-4.5 w-4.5" />
@@ -86,7 +86,7 @@ export function SavingsCalculator() {
             </div>
           </div>
 
-          {/* Result 2: Hours saved */}
+          {}
           <div className="p-6 rounded-2xl border border-white/60 dark:border-slate-800 bg-white/50 dark:bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[140px]">
             <div className="h-8 w-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center text-indigo-650 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/40">
               <Clock className="h-4.5 w-4.5" />
@@ -101,7 +101,7 @@ export function SavingsCalculator() {
             </div>
           </div>
 
-          {/* Result 3: ROI Banner (col-span 2) */}
+          {}
           <div className="sm:col-span-2 p-5 rounded-2xl border border-brand-200 bg-brand-50/20 dark:border-orange-900/40 dark:bg-orange-950/10 flex items-center gap-3.5">
             <TrendingUp className="h-5 w-5 text-brand-600 dark:text-orange-400 flex-shrink-0" />
             <div className="text-xs">

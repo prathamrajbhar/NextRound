@@ -44,7 +44,7 @@ sentimentRouter.get(
         return res.status(400).json({ success: false, error: 'User does not belong to an organization' });
       }
 
-      // Fetch completed interviews for the recruiter's organization
+      
       const interviews = await prisma.interview.findMany({
         where: {
           status: 'completed',
@@ -72,7 +72,7 @@ sentimentRouter.get(
         const candidate = app.candidate;
         const candidateName = candidate.full_name || candidate.user.email.split('@')[0] || 'Candidate';
         
-        // Parse sentiment report or generate stable default
+        
         const report = interview.sentiment_report && typeof interview.sentiment_report === 'object'
           ? (interview.sentiment_report as any)
           : null;
@@ -93,7 +93,7 @@ sentimentRouter.get(
         const journeyGraph: any[] = [];
         const transcriptWithSentiment: any[] = [];
 
-        // Build journey and turns from transcript turns
+        
         let turnId = 1;
         let lastTimeStr = '00:00';
         
@@ -107,7 +107,7 @@ sentimentRouter.get(
           const speakerScore = typeof turn.score === 'number' ? turn.score : 75;
           const currentTopic = typeof turn.topic === 'string' && turn.topic ? turn.topic : 'General Technical';
 
-          // Format timestamps (e.g. 00:30, 01:00...)
+          
           const seconds = index * 30;
           const mins = Math.floor(seconds / 60);
           const secs = seconds % 60;
@@ -116,11 +116,11 @@ sentimentRouter.get(
             lastTimeStr = timeStr;
           }
 
-          // Determine emotion
+          
           const emotion: 'Confident' | 'Neutral' | 'Hesitant' | 'Stressed' | 'Enthusiastic' =
             speakerScore > 85 ? 'Confident' : speakerScore < 50 ? 'Hesitant' : 'Neutral';
 
-          // Add transcript turn
+          
           transcriptWithSentiment.push({
             id: turnId++,
             timestamp: timeStr,
@@ -140,7 +140,7 @@ sentimentRouter.get(
             } : undefined,
           });
 
-          // Add to journey graph if it's candidate's turn and topic is not yet populated
+          
           if (isCandidate && !journeyGraph.some(item => item.topic === currentTopic)) {
             journeyGraph.push({
               time: lastTimeStr,
@@ -154,7 +154,7 @@ sentimentRouter.get(
           }
         });
 
-        // Ensure journey graph is not empty
+        
         if (journeyGraph.length === 0) {
           journeyGraph.push({
             time: '00:00',
@@ -225,7 +225,7 @@ sentimentRouter.get(
         return res.status(400).json({ success: false, error: 'User does not belong to an organization' });
       }
 
-      // Fetch the specific completed interview
+      
       const interview = await prisma.interview.findFirst({
         where: {
           id: req.params.interviewId as string,
@@ -252,7 +252,7 @@ sentimentRouter.get(
         return res.status(404).json({ success: false, error: 'Interview sentiment data not found' });
       }
 
-      // Map single interview using same serialization logic
+      
       const app = interview.application;
       const candidate = app.candidate;
       const candidateName = candidate.full_name || candidate.user.email.split('@')[0] || 'Candidate';

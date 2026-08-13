@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     environment: str = "development"
     internal_service_secret: str = "internal_secret_key_change_in_production"
-    express_api_base_url: str = "http://localhost:4000/api/v1"
+    api_base_url: str = "http://localhost:4000/api/v1"
     redis_url: str = "redis://localhost:6379"
     llm_provider: str = "gemini"
     gemini_api_key: str = ""

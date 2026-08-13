@@ -1,21 +1,21 @@
 import { z } from 'zod';
 
-/**
- * Request schemas for the server-to-server internal webhook boundary
- * (`/api/v1/internal/*`). Payloads are produced by the Python AI workers, which
- * mix snake_case and camelCase and may omit optional keys entirely (their
- * `.get(...)` calls default to `None` → JSON null).
- *
- * Schemas are therefore intentionally loose: every field is nullable + optional
- * and the object is `.passthrough()`, so a worker that omits or nulls a field
- * never breaks ingestion. They document the contract, type the validated body,
- * and only reject genuinely malformed payloads (e.g. a string where the worker
- * promised a number).
- */
+
+
+
+
+
+
+
+
+
+
+
+
 
 const nullable = <T extends z.ZodTypeAny>(schema: T) => schema.nullable().optional();
 
-/** PATCH /jobs/:id/ai-assist-result */
+
 export const AiAssistResultSchema = z
   .object({
     description: nullable(z.string()),
@@ -26,7 +26,7 @@ export const AiAssistResultSchema = z
   })
   .passthrough();
 
-/** PATCH /applications/:id/screening-result */
+
 export const ScreeningResultSchema = z
   .object({
     status: nullable(z.enum(['screening_completed', 'rejected'])),
@@ -39,21 +39,21 @@ export const ScreeningResultSchema = z
   })
   .passthrough();
 
-/** POST /sourcing/:jobId/candidates */
+
 export const SourcedCandidatesSchema = z
   .object({
     candidates: z.array(z.unknown()).optional(),
   })
   .passthrough();
 
-/** PATCH /candidate/:id/embedding */
+
 export const CandidateEmbeddingSchema = z
   .object({
     embedding: z.array(z.number()).length(768).optional(),
   })
   .passthrough();
 
-/** POST /agent-logs */
+
 export const AgentLogCreateSchema = z
   .object({
     job_id: nullable(z.string()),
@@ -67,7 +67,7 @@ export const AgentLogCreateSchema = z
   })
   .passthrough();
 
-/** POST /interviews/:id/schedule-slots */
+
 export const ScheduleSlotsSchema = z
   .object({
     slots: z.array(z.unknown()).optional(),
@@ -75,7 +75,7 @@ export const ScheduleSlotsSchema = z
   })
   .passthrough();
 
-/** PATCH /interviews/:id/confirmed-slot */
+
 export const ConfirmedSlotSchema = z
   .object({
     scheduled_at: nullable(z.string()),
@@ -83,7 +83,7 @@ export const ConfirmedSlotSchema = z
   })
   .passthrough();
 
-/** PATCH /applications/:id/assessment-result */
+
 export const AssessmentResultSchema = z
   .object({
     score: nullable(z.number()),
@@ -96,7 +96,7 @@ export const AssessmentResultSchema = z
   })
   .passthrough();
 
-/** PATCH /applications/:id/coding-result */
+
 export const CodingResultSchema = z
   .object({
     submissionId: nullable(z.string()),
@@ -110,7 +110,7 @@ export const CodingResultSchema = z
   })
   .passthrough();
 
-/** PATCH /interviews/:id/result */
+
 export const InterviewResultSchema = z
   .object({
     transcript: z.unknown().optional(),
@@ -130,7 +130,7 @@ export const InterviewResultSchema = z
   })
   .passthrough();
 
-/** PATCH /evaluations/:id */
+
 export const FinalEvaluationSchema = z
   .object({
     application_id: nullable(z.string()),
@@ -140,7 +140,7 @@ export const FinalEvaluationSchema = z
   })
   .passthrough();
 
-/** PATCH /evaluations/:id/decision */
+
 export const DecisionSchema = z
   .object({
     application_id: nullable(z.string()),
@@ -152,7 +152,7 @@ export const DecisionSchema = z
   })
   .passthrough();
 
-/** POST /offers */
+
 export const InternalOfferCreateSchema = z
   .object({
     application_id: nullable(z.string()),
@@ -164,7 +164,7 @@ export const InternalOfferCreateSchema = z
   })
   .passthrough();
 
-/** PATCH /mock/sessions/:id/feedback */
+
 export const MockFeedbackSchema = z
   .object({
     score: nullable(z.number()),
@@ -173,7 +173,7 @@ export const MockFeedbackSchema = z
   })
   .passthrough();
 
-/** PATCH /resume-builder/:sessionId/result */
+
 export const ResumeBuilderResultSchema = z
   .object({
     generatedResume: z.unknown().optional(),
@@ -182,7 +182,7 @@ export const ResumeBuilderResultSchema = z
   })
   .passthrough();
 
-/** POST /prep/generate */
+
 export const PrepGenerateSchema = z
   .object({
     companyName: nullable(z.string()),
@@ -195,14 +195,14 @@ export const PrepGenerateSchema = z
   })
   .passthrough();
 
-/** GET /analytics/raw (query) */
+
 export const AnalyticsRawQuerySchema = z
   .object({
     org_id: z.string().optional(),
   })
   .passthrough();
 
-/** POST /analytics/reports */
+
 export const AnalyticsReportSchema = z
   .object({
     org_id: nullable(z.string()),
@@ -212,7 +212,7 @@ export const AnalyticsReportSchema = z
   })
   .passthrough();
 
-/** PATCH /interviews/:id/sentiment */
+
 export const InterviewSentimentSchema = z
   .object({
     sentiment_report: z.unknown().optional(),

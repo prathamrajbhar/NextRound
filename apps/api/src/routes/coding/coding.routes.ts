@@ -10,7 +10,7 @@ import crypto from 'crypto';
 
 export const codingRouter = Router();
 
-// GET /api/v1/coding/problem - Serve a random DB coding problem (mock/standalone practice)
+
 codingRouter.get('/problem', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const difficulty = (req.query.difficulty as 'easy' | 'medium' | 'hard') || undefined;
@@ -18,7 +18,7 @@ codingRouter.get('/problem', authenticate, async (req: Request, res: Response, n
 
     const problem = await selectCodingProblem({ difficulty, category });
 
-    // Strip hidden tests before sending to client
+    
     const sanitized = {
       ...problem,
       testCases: problem.testCases.filter(tc => !tc.hidden),
@@ -30,7 +30,7 @@ codingRouter.get('/problem', authenticate, async (req: Request, res: Response, n
   }
 });
 
-// POST /api/v1/coding/execute - Enqueue candidate code execution against server-side problem
+
 codingRouter.post('/execute', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validated = CodingExecutionRequestSchema.parse(req.body);
@@ -58,7 +58,7 @@ codingRouter.post('/execute', authenticate, async (req: Request, res: Response, 
   }
 });
 
-// POST /api/v1/coding/run - Run code against public test cases synchronously
+
 codingRouter.post('/run', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { code, language, problemId } = req.body;
@@ -76,7 +76,7 @@ codingRouter.post('/run', authenticate, async (req: Request, res: Response, next
 
     const publicTests = (problem.public_tests as any[]) || [];
     
-    // Execute using sandbox execution runner
+    
     const summary = executeCodingSubmission(code, language, publicTests, problem.entry_point || 'solution');
 
     const testResults = summary.results.map((res) => ({
@@ -98,7 +98,7 @@ codingRouter.post('/run', authenticate, async (req: Request, res: Response, next
   }
 });
 
-// POST /api/v1/coding/submit - Submit final code solution graded against all test cases
+
 codingRouter.post('/submit', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { code, language, problemId, applicationId } = req.body;
@@ -118,7 +118,7 @@ codingRouter.post('/submit', authenticate, async (req: Request, res: Response, n
     const hiddenTests = (problem.hidden_tests as any[]) || [];
     const testCases = [...publicTests, ...hiddenTests];
 
-    // Execute using sandbox execution runner
+    
     const summary = executeCodingSubmission(code, language, testCases, problem.entry_point || 'solution');
 
     const testResults = summary.results.map((res) => ({
@@ -132,7 +132,7 @@ codingRouter.post('/submit', authenticate, async (req: Request, res: Response, n
 
     const finalStatus = summary.allPassed ? 'passed' : 'failed';
 
-    // If applicationId is provided, save it as a submission in DB and update candidate coding score
+    
     if (applicationId) {
       const attemptCount = await prisma.codingSubmission.count({
         where: { application_id: applicationId },

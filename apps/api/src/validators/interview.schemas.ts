@@ -1,21 +1,21 @@
 import { z } from 'zod';
 
-// POST /:id/consent
+
 export const ConsentBodySchema = z.object({
   videoConsent: z.boolean().default(true),
   audioConsent: z.boolean().default(true),
 });
 
-// POST /:id/session-token — no body required
+
 export const SessionTokenBodySchema = z.object({}).passthrough();
 
-// POST /:id/end
+
 export const EndInterviewBodySchema = z.object({
   transcript: z.unknown().optional(),
   audio_url: z.string().url().optional().or(z.literal('').transform(() => undefined)),
 });
 
-// PATCH /:id/proctoring
+
 export const ProctoringFlagBodySchema = z.object({
   face_count: z.number().optional(),
   gaze_centered: z.boolean().optional(),
@@ -24,7 +24,7 @@ export const ProctoringFlagBodySchema = z.object({
   tab_switch_count: z.number().int().nonnegative().optional(),
 });
 
-// POST /hr/:applicationId/result
+
 export const HrResultBodySchema = z.object({
   decision: z.enum(['pass', 'fail'] as const).refine(
     (val) => val === 'pass' || val === 'fail',

@@ -9,7 +9,7 @@ interface CacheEntry {
 }
 
 const apiCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 20000; // 20 seconds TTL
+const CACHE_TTL_MS = 20000; 
 
 export function clearApiCache(endpointPattern?: string) {
   if (!endpointPattern) {
@@ -31,18 +31,18 @@ export async function fetchApi<T>(
   const method = (options.method || 'GET').toUpperCase();
   const cacheKey = `${method}:${endpoint}`;
 
-  // Invalidate cached GETs for the mutated resource only. A blanket clear would
-  // defeat the cache under frequent mutations (e.g. the 8s proctoring heartbeat).
+  
+  
   if (method !== 'GET') {
     const resource = endpoint.replace(/^\//, '').split('/')[0];
     if (resource) clearApiCache(resource);
   }
 
-  // Serve GET requests instantly from cache if valid
+  
   if (method === 'GET' && !isRetry) {
     const cached = apiCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-      // Background revalidation
+      
       fetchNetworkApi<T>(endpoint, options, isRetry).then((freshData) => {
         if (freshData.success) {
           apiCache.set(cacheKey, { data: freshData, timestamp: Date.now() });
@@ -85,8 +85,8 @@ async function fetchNetworkApi<T>(
   options: RequestInit = {},
   isRetry = false
 ): Promise<ApiEnvelope<T>> {
-  // Don't force a Content-Type on multipart bodies — the browser must set the
-  // boundary itself or the server can't parse the upload.
+  
+  
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const headers: Record<string, string> = {
     ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
@@ -103,8 +103,8 @@ async function fetchNetworkApi<T>(
     });
 
     if (res.status === 401 && !isRetry && !endpoint.includes('/auth/refresh') && !endpoint.includes('/auth/login')) {
-      // Queue concurrent 401s onto a single in-flight refresh so they retry with
-      // the fresh token instead of failing through while isRefreshing was true.
+      
+      
       if (!refreshPromise) {
         refreshPromise = refreshAccessToken().finally(() => {
           refreshPromise = null;
@@ -120,8 +120,8 @@ async function fetchNetworkApi<T>(
 
     if (contentType.includes('application/json')) {
       const data: ApiEnvelope<T> = await res.json();
-      // A non-2xx response is always a failure, even if the body happens to carry
-      // a success:true envelope. Preserve the server's error message when present.
+      
+      
       if (!res.ok) {
         return {
           success: false,

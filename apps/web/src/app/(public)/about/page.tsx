@@ -19,7 +19,7 @@ export default function AboutPage() {
       <PublicNavbar />
 
       <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12 md:py-16 flex-1 w-full animate-in fade-in duration-300">
-        {/* Hero Header */}
+        {}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 bg-brand-50 dark:bg-orange-950/80 border border-brand-200/60 dark:border-orange-900/60 px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1">
             <Sparkles className="h-3 w-3" />
@@ -34,7 +34,7 @@ export default function AboutPage() {
             NextRound helps engineering teams hire top candidates 70% faster using automated AI voice interviews, coding tests, and objective scorecards.
           </p>
 
-          {/* Quick Impact Stats */}
+          {}
           <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-8 max-w-xl mx-auto">
             <div className="p-3.5 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs backdrop-blur-md glass-panel">
               <span className="block text-lg sm:text-2xl font-black text-brand-600 dark:text-orange-400 font-display">42 Hours</span>
@@ -53,9 +53,9 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Problem vs Solution Grid */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 mb-16">
-          {/* Card 1: The Problem */}
+          {}
           <div className="rounded-3xl border border-rose-200/60 dark:border-rose-900/40 bg-rose-50/30 dark:bg-rose-950/20 p-6 md:p-8 shadow-sm backdrop-blur-md glass-panel space-y-4">
             <div className="h-10 w-10 rounded-2xl bg-rose-100 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900 flex items-center justify-center flex-shrink-0">
               <Target className="h-5 w-5" />
@@ -73,7 +73,7 @@ export default function AboutPage() {
             </ul>
           </div>
 
-          {/* Card 2: Our Solution */}
+          {}
           <div className="rounded-3xl border border-emerald-200/60 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/20 p-6 md:p-8 shadow-sm backdrop-blur-md glass-panel space-y-4">
             <div className="h-10 w-10 rounded-2xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900 flex items-center justify-center flex-shrink-0">
               <Zap className="h-5 w-5" />
@@ -92,7 +92,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* 4 Pillars Section */}
+        {}
         <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-8 shadow-md backdrop-blur-md glass-panel mb-16 space-y-6">
           <div className="flex items-center gap-2.5 border-b border-slate-200/60 dark:border-slate-800 pb-4">
             <ShieldCheck className="h-6 w-6 text-brand-600 dark:text-orange-400" />
@@ -157,7 +157,7 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* Action CTA Banner */}
+        {}
         <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-brand-950 to-slate-900 dark:from-slate-900 dark:via-orange-950 dark:to-slate-900 p-8 md:p-10 text-white text-center shadow-xl space-y-6">
           <h2 className="text-2xl md:text-3xl font-black font-display tracking-tight">
             Ready to Experience Modern AI Hiring?

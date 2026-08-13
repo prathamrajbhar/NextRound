@@ -5,13 +5,13 @@ import { useState } from 'react';
 export type WorkMode = 'Remote' | 'Hybrid' | 'Onsite';
 
 export interface CandidateForm {
-  // Step 1 — Personal & Contact
+  
   fullName: string;
   headline: string;
   phone: string;
   location: string;
   timezone: string;
-  // Step 2 — Social Media & Online Presence
+  
   resumeFile: File | null;
   rawResumeText?: string;
   parsedResume?: Record<string, unknown>;
@@ -19,11 +19,11 @@ export interface CandidateForm {
   linkedinUrl: string;
   githubUrl: string;
   portfolioUrl: string;
-  // Step 3 — Experience & Skills
+  
   yearsOfExperience: string;
   targetRoles: string[];
   skills: string[];
-  // Step 4 — Work Preferences
+  
   workMode: WorkMode;
   targetLocations: string[];
   availability: {
@@ -33,14 +33,14 @@ export interface CandidateForm {
     afternoon: boolean;
     evening: boolean;
   };
-  // Step 5 — Compensation & Eligibility
+  
   expectedSalary: string;
   expectedSalaryMin: string;
   expectedSalaryMax: string;
   currentCtc: string;
   noticePeriod: string;
   workAuthorization: string;
-  // Step 6 — Fit & Culture
+  
   proudProject: string;
   bio: string;
   workValues: string[];

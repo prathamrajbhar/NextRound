@@ -6,7 +6,7 @@ from workers.worker_base import run_agent_job
 logger = logging.getLogger("coding_worker")
 
 
-# ML_BYPASS: WASM sandbox — upgrade to Judge0 CE or Firecracker MicroVM when available
+
 async def process_coding_job(job_data: dict) -> bool:
     """
     Process coding assessment evaluation job.
@@ -27,7 +27,7 @@ async def process_coding_job(job_data: dict) -> bool:
     logger.info(f"Processing coding evaluation job for applicationId: {application_id}, problem: {problem_id}")
 
     async def run() -> dict:
-        # Run Coding Agent
+
         result = await run_coding_agent(
             application_id=application_id,
             problem_id=problem_id,
@@ -38,7 +38,7 @@ async def process_coding_job(job_data: dict) -> bool:
             entry_function=job_data.get("entryPoint", "solution"),
         )
 
-        # Patch coding evaluation result back to Express internal endpoint
+
         await callback_client.patch(
             f"internal/applications/{application_id}/coding-result",
             json={

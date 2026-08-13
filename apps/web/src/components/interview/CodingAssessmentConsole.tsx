@@ -26,11 +26,11 @@ interface CodingConsoleProps {
   onResumeFullscreen?: () => void;
 }
 
-/**
- * Coding assessment workspace. Loads the live LLM problem (useCodingProblem),
- * owns the editor/run/submit state machine, and delegates each pane to a
- * dedicated sub-component in ./coding.
- */
+
+
+
+
+
 export default function CodingAssessmentConsole({
   company = '',
   role = '',
@@ -58,7 +58,7 @@ export default function CodingAssessmentConsole({
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
 
-  // Anti-Cheat: only watch tab visibility if no centralized proctoringClient is active
+  
   useEffect(() => {
     if (proctoringClient || !problem || submitted || !isStarted) return;
 
@@ -106,10 +106,10 @@ export default function CodingAssessmentConsole({
     }
   };
 
-  // Synchronize starter code once the dynamic LLM problem loads
+  
   useEffect(() => {
     if (problem?.starterCode[language]) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      
       setCode(problem.starterCode[language]);
     }
   }, [problem, language]);
@@ -196,7 +196,7 @@ export default function CodingAssessmentConsole({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-900 text-slate-100 font-sans overflow-hidden">
-      {/* Dynamic Header */}
+      {}
       <CodingHeader
         company={company}
         role={role}
@@ -234,7 +234,7 @@ export default function CodingAssessmentConsole({
         />
       )}
 
-      {/* Fullscreen Proctoring Warning Modal */}
+      {}
       <ProctoringWarningModal
         isOpen={displayShowWarning && !submitted}
         strikeCount={displayStrikeCount}

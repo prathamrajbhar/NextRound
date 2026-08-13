@@ -22,11 +22,11 @@ interface AuthFieldProps {
 const inputCls =
   'h-11 w-full rounded-xl border border-white/10 bg-slate-950/60 pl-10 text-sm text-white placeholder:text-slate-500 transition-all focus:outline-none focus:ring-2 focus:ring-orange-400/20';
 
-/**
- * Labelled form field with a leading icon, inline error state and optional
- * right-side content (e.g. a password visibility toggle). Accessible: labels
- * the control, flags `aria-invalid` and wires the error to `aria-describedby`.
- */
+
+
+
+
+
 export default function AuthField({
   id,
   label,

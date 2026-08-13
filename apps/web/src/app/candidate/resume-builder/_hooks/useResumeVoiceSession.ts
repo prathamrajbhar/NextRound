@@ -11,7 +11,7 @@ export interface ConversationTurn {
   timestamp: string;
 }
 
-// Define explicit interfaces for Web Speech API to satisfy TypeScript's strict rules
+
 interface SpeechRecognitionEvent {
   resultIndex: number;
   results: {
@@ -72,13 +72,13 @@ export function useResumeVoiceSession({
   const [camActive, setCamActive] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Refs for tracking mutable states in async callbacks
+  
   const conversationHistoryRef = useRef<ConversationTurn[]>([]);
   const turnIndexRef = useRef(0);
   const stageRef = useRef('intro');
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
-  // Keep refs in sync
+  
   useEffect(() => {
     conversationHistoryRef.current = conversationHistory;
   }, [conversationHistory]);
@@ -104,7 +104,7 @@ export function useResumeVoiceSession({
 
   const submitResponseRef = useRef<((text: string) => Promise<void>) | null>(null);
 
-  // Clean up speech synthesis & recognition & audio on unmount
+  
   useEffect(() => {
     return () => {
       stopAudio();
@@ -113,13 +113,13 @@ export function useResumeVoiceSession({
         try {
           recognition.abort();
         } catch {
-          // ignore
+          
         }
       }
     };
   }, []);
 
-  // Text-To-Speech function with neural audio support
+  
   const speakText = useCallback((text: string, audioUrl?: string, callback?: () => void) => {
     setAiState('speaking');
     playAudio(text, audioUrl, () => {
@@ -135,19 +135,19 @@ export function useResumeVoiceSession({
     });
   }, []);
 
-  // Speech-To-Text Stop function
+  
   const stopSpeechRecognition = useCallback(() => {
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
       } catch {
-        // ignore
+        
       }
       recognitionRef.current = null;
     }
   }, []);
 
-  // Speech-To-Text Recognition configuration
+  
   const startSpeechRecognition = useCallback(() => {
     if (!SpeechRecognitionClass || !micActive) return;
 
@@ -155,7 +155,7 @@ export function useResumeVoiceSession({
       try {
         recognitionRef.current.stop();
       } catch {
-        // ignore
+        
       }
     }
 
@@ -188,7 +188,7 @@ export function useResumeVoiceSession({
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      // Filter out expected, network, and transient speech recognition errors to avoid red banners
+      
       if (event.error === 'aborted' || event.error === 'no-speech' || event.error === 'network') {
         return;
       }
@@ -200,17 +200,17 @@ export function useResumeVoiceSession({
     };
 
     recognition.onend = () => {
-      // Auto-submit the voice response if we have accumulated transcript text during listening stage
+      
       if (aiStateRef.current === 'listening') {
         const spokenText = candidateSpeechTextRef.current;
         if (spokenText && spokenText.trim().length > 1) {
           submitResponseRef.current?.(spokenText);
         } else {
-          // Restart recognition to keep listening if they didn't speak anything yet
+          
           try {
             recognitionRef.current?.start();
           } catch {
-            // ignore
+            
           }
         }
       }
@@ -223,7 +223,7 @@ export function useResumeVoiceSession({
     }
   }, [micActive]);
 
-  // Finalize call
+  
   const handleFinalize = useCallback(
     async (activeSessionId: string, finalHistory: ConversationTurn[]) => {
       stopSpeechRecognition();
@@ -243,7 +243,7 @@ export function useResumeVoiceSession({
     [stopSpeechRecognition, onComplete]
   );
 
-  // Fetch AI Response Turn from FastAPI Service
+  
   const getAIResponse = useCallback(
     async (
       candidateResponse: string,
@@ -331,7 +331,7 @@ export function useResumeVoiceSession({
     [targetRole, speakText, startSpeechRecognition, stopSpeechRecognition, handleFinalize]
   );
 
-  // Initialize call
+  
   const startCall = useCallback(async () => {
     unlockAudio();
     setError(null);
@@ -361,7 +361,7 @@ export function useResumeVoiceSession({
     }
   }, [targetRole, experienceLevel, getAIResponse]);
 
-  // Submit response (spoken or typed)
+  
   const submitResponse = useCallback(
     async (text: string) => {
       if (aiState !== 'listening' || !sessionId) return;
@@ -375,20 +375,20 @@ export function useResumeVoiceSession({
     submitResponseRef.current = submitResponse;
   }, [submitResponse]);
 
-  // Submit voice response directly
+  
   const submitVoiceResponse = useCallback(() => {
     if (aiState !== 'listening' || !candidateSpeechText.trim()) return;
     submitResponse(candidateSpeechText);
   }, [aiState, candidateSpeechText, submitResponse]);
 
-  // End call early (manual click)
+  
   const endCall = useCallback(async () => {
     if (!sessionId) return;
     stopAudio();
     await handleFinalize(sessionId, conversationHistoryRef.current);
   }, [sessionId, handleFinalize]);
 
-  // Toggle Mic status
+  
   const handleToggleMic = useCallback(() => {
     setMicActive((prev) => {
       const next = !prev;

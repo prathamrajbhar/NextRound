@@ -6,10 +6,10 @@ export interface ScoreContract {
   score: number;
 }
 
-/**
- * Updates application score in database without automatically assigning a hire/reject decision.
- * Evaluation recommendations are recorded separately for human recruiter review.
- */
+
+
+
+
 export async function updateApplicationCodingScore(
   applicationId: string,
   passRatePercent: number
@@ -21,7 +21,7 @@ export async function updateApplicationCodingScore(
     update: {
       coding_score: passRatePercent,
       stage: 'assessment_completed',
-      // Recruiter review recommendation flag (does NOT write hire/reject directly)
+      
       reasoning: `Coding assessment evaluated: ${passRatePercent}% pass rate (${passRateRatio.toFixed(2)} ratio). Pending human review.`,
     },
     create: {

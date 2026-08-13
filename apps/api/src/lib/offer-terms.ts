@@ -1,16 +1,16 @@
-/**
- * Offer terms derived from the Job record so offers reflect the actual posting
- * instead of hardcoded defaults.
- *
- * Job.salary is a display string ("$120k - $150k", "₹25L", "$150,000",
- * "₹1.3L - ₹1.8L") — take the top-of-band as an annual figure. A suffix attached
- * to each figure sets the multiplier: K = 1e3, L/lakh = 1e5, Cr/cr = 1e7.
- * Decimals (₹1.8L) are handled per-match so the lakh multiplier is never skipped.
- * Equity lives on the Job's `thresholds.equity`.
- *
- * Both helpers return `null` when a term is genuinely absent so callers never
- * emit a made-up offer.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function parseSalaryBand(jobSalary: string): number | null {
   const matches = jobSalary.match(/[\d,]+(?:\.\d+)?\s*(?:k|cr|l|lakh|lpa)?/gi);

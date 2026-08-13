@@ -2,13 +2,13 @@ import type { Job } from '@/types';
 import type { SearchableSelectOption } from '@/components/ui';
 
 export interface DerivedJobOptions {
-  /** Unique posted companies (deduped by orgId), newest first, with open-role counts. */
+  
   companies: SearchableSelectOption[];
-  /** orgId -> unique job titles posted by that company. */
+  
   rolesByOrgId: Record<string, string[]>;
 }
 
-/** Accepts the `/jobs` payload in either the flat-array or `{ jobs: [...] }` shape. */
+
 export function normalizeJobs(raw: unknown): Job[] {
   if (Array.isArray(raw)) return raw as Job[];
   if (raw && typeof raw === 'object' && 'jobs' in raw && Array.isArray((raw as { jobs: Job[] }).jobs)) {
@@ -17,7 +17,7 @@ export function normalizeJobs(raw: unknown): Job[] {
   return [];
 }
 
-/** Derives posted-company + per-company role options from live job listings. */
+
 export function deriveJobOptions(jobs: Job[]): DerivedJobOptions {
   const byOrg = new Map<string, { name: string; logoUrl: string; roles: Set<string> }>();
   for (const job of jobs) {

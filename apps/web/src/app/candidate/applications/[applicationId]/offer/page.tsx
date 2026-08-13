@@ -81,7 +81,7 @@ export default function CandidateOfferPage({
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16 animate-in fade-in duration-200">
-      {/* Executive Header Banner */}
+      {}
       <OfferHeader
         applicationId={applicationId}
         jobTitle={offer.jobTitle}
@@ -90,7 +90,7 @@ export default function CandidateOfferPage({
         totalCtc={offer.baseSalary}
       />
 
-      {/* Decision Status Toast Notification */}
+      {}
       {actionDone && (
         <div
           className={`p-4 rounded-2xl border flex items-start gap-3 shadow-sm ${
@@ -117,9 +117,9 @@ export default function CandidateOfferPage({
         </div>
       )}
 
-      {/* Unified Executive Dashboard Grid */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column: Compensation Breakdown + Contract Document Surface */}
+        {}
         <div className="lg:col-span-2 space-y-6">
           <ExecutiveRewardsGrid
             baseSalary={offer.baseSalary}
@@ -138,7 +138,7 @@ export default function CandidateOfferPage({
           />
         </div>
 
-        {/* Right Column: Sticky Action Sidebar */}
+        {}
         <div className="lg:col-span-1">
           <OfferActionSidebar
             status={offer.status}
@@ -150,7 +150,7 @@ export default function CandidateOfferPage({
         </div>
       </div>
 
-      {/* Full-Screen PDF Document Modal */}
+      {}
       <OfferDocumentModal
         isOpen={showPdfModal}
         onClose={() => setShowPdfModal(false)}
@@ -161,7 +161,7 @@ export default function CandidateOfferPage({
         joiningDate={offer.joiningDate}
       />
 
-      {/* Action Confirmation Modals */}
+      {}
       <ActionModals
         showAccept={showAcceptModal}
         showDecline={showDeclineModal}

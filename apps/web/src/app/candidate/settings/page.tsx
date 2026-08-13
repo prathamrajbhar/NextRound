@@ -35,7 +35,7 @@ export default function CandidateSettingsPage() {
       const portfolio = (p.portfolio_url as string) || localStorage.getItem('candidate_portfolio');
       const bio = (p.bio as string) || localStorage.getItem('candidate_bio');
 
-      let score = 20; // Base user account creation
+      let score = 20; 
       if (name) score += 15;
       if (email) score += 15;
       if (headline) score += 15;
@@ -70,7 +70,7 @@ export default function CandidateSettingsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 pb-12 font-sans">
-      {/* Top Header & Readiness Bar */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-widest block mb-1">
@@ -84,7 +84,7 @@ export default function CandidateSettingsPage() {
           </p>
         </div>
 
-        {/* Readiness Status or Toast Notification */}
+        {}
         <div className="flex items-center gap-3">
           {savedToast ? (
             <div className="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold flex items-center gap-1.5 animate-in zoom-in-95 duration-200 shadow-sm">
@@ -105,9 +105,9 @@ export default function CandidateSettingsPage() {
         </div>
       </div>
 
-      {/* Main Grid: Left Tab Navigation (1 Col) / Right Content (3 Cols) */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {/* Left Sidebar Navigation Tabs */}
+        {}
         <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-4 shadow-md backdrop-blur-md glass-panel flex flex-col gap-1.5 select-none">
           <button
             type="button"
@@ -175,7 +175,7 @@ export default function CandidateSettingsPage() {
           </button>
         </div>
 
-        {/* Right Content Panel */}
+        {}
         <div className="lg:col-span-3">
           {activeTab === 'profile' && <CandidateProfileTab onSave={triggerSaveNotification} />}
           {activeTab === 'notifications' && <CandidateNotificationsTab onSave={triggerSaveNotification} />}

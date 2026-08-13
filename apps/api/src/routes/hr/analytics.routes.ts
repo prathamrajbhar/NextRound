@@ -8,10 +8,10 @@ import { enqueueAnalyticsReport } from '../../lib/queues/analytics.queue';
 
 export const analyticsRouter = Router();
 
-// Org scoping is JWT-derived; never accept a client-supplied org_id.
+
 analyticsRouter.use(rejectOrgIdParam);
 
-// GET /api/v1/hr/analytics - Overview metrics, weekly funnel, conversion rates, bias trends
+
 analyticsRouter.get(
   '/',
   authenticate,
@@ -23,7 +23,7 @@ analyticsRouter.get(
         return res.status(400).json({ success: false, error: 'User does not belong to an organization' });
       }
 
-      // Fetch org jobs
+      
       const jobs = await prisma.job.findMany({
         where: { org_id: orgId },
         select: { id: true, status: true },
@@ -32,7 +32,7 @@ analyticsRouter.get(
       const jobIds = jobs.map((j) => j.id);
       const activeJobsCount = jobs.filter((j) => j.status === 'active' || j.status === 'published').length;
 
-      // Fetch applications scoped to org's jobs
+      
       const applications = await prisma.application.findMany({
         where: { job_id: { in: jobIds } },
         select: {
@@ -45,7 +45,7 @@ analyticsRouter.get(
 
       const totalApplications = applications.length;
 
-      // Calculate funnel counts
+      
       let applied = 0;
       let screened = 0;
       let interviewed = 0;
@@ -84,7 +84,7 @@ analyticsRouter.get(
         }
       });
 
-      // Calculate Stage Conversion Rates
+      
       const stageConversionRates = {
         appliedToScreened: applied > 0 ? Math.round((screened / applied) * 100) : 0,
         screenedToInterviewed: screened > 0 ? Math.round((interviewed / screened) * 100) : 0,
@@ -92,7 +92,7 @@ analyticsRouter.get(
         offerAcceptanceRate: offered > 0 ? Math.round((accepted / offered) * 100) : 0,
       };
 
-      // Calculate Average Time-To-Hire (Days from applied_at to hr_round_completed_at or accepted)
+      
       const hireTimeMsList: number[] = [];
       applications.forEach((app) => {
         if (app.hr_round_completed_at) {
@@ -109,15 +109,15 @@ analyticsRouter.get(
             )
           : 0;
 
-      // Calculate actual weekly metrics based on applied_at timestamps
+      
       const now = new Date();
       const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
       const getWeekBucket = (date: Date) => {
         const diffDays = Math.floor((now.getTime() - date.getTime()) / (24 * 60 * 60 * 1000));
-        if (diffDays <= 7) return 3; // Week 4 (most recent)
-        if (diffDays <= 14) return 2; // Week 3
-        if (diffDays <= 21) return 1; // Week 2
-        return 0; // Week 1 (oldest)
+        if (diffDays <= 7) return 3; 
+        if (diffDays <= 14) return 2; 
+        if (diffDays <= 21) return 1; 
+        return 0; 
       };
 
       const weeklyCounts = [
@@ -159,7 +159,7 @@ analyticsRouter.get(
 
       const weeklyFunnel = weeklyCounts;
 
-      // Dropoff Analysis
+      
       const dropoffAnalysis = [
         { stage: 'Screening to Interview', dropCount: Math.max(0, screened - interviewed), percentage: screened > 0 ? Math.round(((screened - interviewed) / screened) * 100) : 0 },
         { stage: 'Interview to Offer', dropCount: Math.max(0, interviewed - offered), percentage: interviewed > 0 ? Math.round(((interviewed - offered) / interviewed) * 100) : 0 },
@@ -186,7 +186,7 @@ analyticsRouter.get(
   }
 );
 
-// GET /api/v1/hr/analytics/export - Export CSV or trigger PDF report download
+
 analyticsRouter.get(
   '/export',
   authenticate,
@@ -251,9 +251,9 @@ analyticsRouter.get(
         return res.send(csvContent);
       }
 
-      // PDF format: return the latest report the Analytics Agent actually
-      // generated for this org, or queue a real generation job and report an
-      // honest 202. Never hand back a self-referencing fake download URL.
+      
+      
+      
       const latestReport = await prisma.agentLog.findFirst({
         where: { org_id: orgId, action: 'report_generated' },
         orderBy: { created_at: 'desc' },

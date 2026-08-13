@@ -72,7 +72,7 @@ def aggregate_scores_node(state: EvaluatorState) -> EvaluatorState:
     cod = _as_optional_float(state.get("coding_score"))
     inv = _as_optional_float(state.get("interview_score"))
 
-    # Standard stage weighting: 20% Screening, 20% Aptitude, 30% Coding, 30% Voice Interview
+
     composite_score = _weighted_score([(scr, 0.20), (apt, 0.20), (cod, 0.30), (inv, 0.30)])
 
     dimension_scores = {
@@ -82,7 +82,7 @@ def aggregate_scores_node(state: EvaluatorState) -> EvaluatorState:
         "foundational_readiness": _weighted_score([(scr, 0.5), (apt, 0.5)]),
     }
 
-    # Record exact inputs used for scoring for isolation auditing
+
     state["scoring_inputs_used"] = {
         "screening_score": scr,
         "aptitude_score": apt,
@@ -111,12 +111,12 @@ def validate_isolation_node(state: EvaluatorState) -> EvaluatorState:
 
     forbidden_keys = ["proctor_flags", "proctor_telemetry", "gaze_centered", "face_count", "tab_switches", "eye_contact"]
 
-    # Check 1: Inspect scoring_inputs for forbidden proctor keys or non-empty proctor signals
+
     for key in forbidden_keys:
         if key in scoring_inputs:
             raise ScoringIsolationError(f"Scoring Isolation Violation: '{key}' found in scoring inputs!")
 
-    # Check 2: Inspect LLM prompt payload for proctor keywords
+
     for key in forbidden_keys:
         if key in prompt_payload.lower():
             raise ScoringIsolationError(f"Scoring Isolation Violation: '{key}' leaked into LLM prompt payload!")
@@ -128,7 +128,7 @@ def validate_isolation_node(state: EvaluatorState) -> EvaluatorState:
 
 def compute_confidence_node(state: EvaluatorState) -> EvaluatorState:
     """Node 4: Calculate evaluation confidence rating (0.0 to 1.0) based on score variance & data completeness."""
-    # Dimension scores that were never measured are None and must not participate.
+
     dim_scores = [
         x for x in state.get("dimension_scores", {}).values()
         if isinstance(x, (int, float))
@@ -139,13 +139,13 @@ def compute_confidence_node(state: EvaluatorState) -> EvaluatorState:
         variance = sum((x - avg) ** 2 for x in dim_scores) / len(dim_scores)
         std_dev = variance ** 0.5
 
-        # Lower std dev -> higher confidence (less contradictory signals across stages)
+
         if std_dev < 10.0:
             confidence = 0.95
         elif std_dev < 20.0:
             confidence = 0.82
         else:
-            confidence = 0.65  # Triggers HR hold queue if < 0.70
+            confidence = 0.65
     else:
         confidence = 0.50
 
@@ -233,9 +233,9 @@ async def run_evaluator_agent(
         except Exception as e:
             logger.error(f"LangGraph evaluator execution failed: {e}")
 
-    # Fallback linear node execution
+
     s1 = aggregate_scores_node(initial_state)
-    s2 = validate_isolation_node(s1)  # Will raise ScoringIsolationError if violated
+    s2 = validate_isolation_node(s1)
     s3 = compute_confidence_node(s2)
     s4 = finalize_report_node(s3)
 

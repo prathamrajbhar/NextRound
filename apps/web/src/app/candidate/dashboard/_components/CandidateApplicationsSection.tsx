@@ -23,14 +23,14 @@ export function CandidateApplicationsSection({ applications }: CandidateApplicat
           </h2>
         </div>
 
-        {/* Modern Glassmorphic Empty State Card */}
+        {}
         <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/90 p-8 sm:p-10 text-center shadow-xl backdrop-blur-xl transition-colors">
-          {/* Ambient Glowing Orbs */}
+          {}
           <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
           <div className="absolute -left-12 -bottom-12 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col items-center max-w-lg mx-auto">
-            {/* Multi-ring Glowing Hero Icon */}
+            {}
             <div className="relative mb-6">
               <div className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-emerald-500/30 to-indigo-500/30 blur-md opacity-75 animate-pulse" />
               <div className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-slate-100 dark:via-slate-800 to-indigo-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-xl">
@@ -46,7 +46,7 @@ export function CandidateApplicationsSection({ applications }: CandidateApplicat
               Start your job search today or take an AI practice session to sharpen your interview readiness and get matched with top hiring teams!
             </p>
 
-            {/* Action Buttons */}
+            {}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mt-6 w-full sm:w-auto">
               <Link
                 href="/candidate/jobs"
@@ -64,7 +64,7 @@ export function CandidateApplicationsSection({ applications }: CandidateApplicat
               </Link>
             </div>
 
-            {/* 3-Step Candidate Roadmap Stepper */}
+            {}
             <div className="mt-9 pt-7 border-t border-slate-200/80 dark:border-slate-800/80 w-full text-left">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[11px] font-extrabold uppercase text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-1.5">

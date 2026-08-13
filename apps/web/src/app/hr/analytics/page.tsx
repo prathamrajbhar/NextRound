@@ -67,7 +67,7 @@ export default function HrAnalyticsDashboard() {
 
         if (analyticsRes.status === 'fulfilled' && analyticsRes.value) {
           const raw = analyticsRes.value;
-          // Transform backend weeklyFunnel into frontend funnel format if present
+          
           const funnel = Array.isArray(raw.funnel)
             ? raw.funnel
             : Array.isArray(raw.weeklyFunnel)
@@ -104,10 +104,10 @@ export default function HrAnalyticsDashboard() {
   const safeFunnel = Array.isArray(analyticsData?.funnel) ? analyticsData.funnel : INITIAL_ANALYTICS.funnel;
   const safeTrends = Array.isArray(analyticsData?.monthlyTrends) ? analyticsData.monthlyTrends : INITIAL_ANALYTICS.monthlyTrends;
 
-  // Simple funnel steps
+  
   const funnelSteps = safeFunnel.map((f) => ({ name: f.stage, count: f.count, pct: f.pct }));
 
-  // Monthly candidate numbers
+  
   const trendData = safeTrends.map((t) => ({ month: t.month, count: t.applicants, hires: t.hires }));
 
   const getSvgCoordinates = () => {
@@ -156,7 +156,7 @@ export default function HrAnalyticsDashboard() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12 font-sans">
-      {/* Page Header & Filter Controls */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-widest block mb-1">
@@ -170,9 +170,9 @@ export default function HrAnalyticsDashboard() {
           </p>
         </div>
 
-        {/* Toolbar Filters */}
+        {}
         <div className="flex items-center gap-2.5 flex-wrap">
-          {/* Timeframe Pills */}
+          {}
           <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 select-none">
             <button
               type="button"
@@ -206,7 +206,7 @@ export default function HrAnalyticsDashboard() {
             </button>
           </div>
 
-          {/* Department Filter Dropdown */}
+          {}
           <select
             value={department}
             onChange={(e) => setDepartment(e.target.value)}
@@ -218,7 +218,7 @@ export default function HrAnalyticsDashboard() {
             <option value="design">UI/UX Design</option>
           </select>
 
-          {/* Export CSV button */}
+          {}
           <button
             type="button"
             onClick={handleExportCSV}
@@ -230,17 +230,17 @@ export default function HrAnalyticsDashboard() {
         </div>
       </div>
 
-      {/* Top 4 KPI Stat Cards */}
+      {}
       <AnalyticsKpiCards data={(analyticsData as unknown as { kpis?: Record<string, number> })?.kpis} />
 
-      {/* Main Grid Section (8 Cols / 4 Cols) */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left Column (2 Cols) */}
+        {}
         <div className="lg:col-span-2 space-y-6">
-          {/* Chart 1: Hiring Stage Breakdown */}
+          {}
           <StageBreakdownChart funnelSteps={funnelSteps} />
 
-          {/* Chart 2: Monthly Applicants Evaluated */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-6">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 font-display">
@@ -253,28 +253,28 @@ export default function HrAnalyticsDashboard() {
               </span>
             </div>
 
-            {/* SVG Interactive Line Plot */}
+            {}
             <div className="relative pt-2">
               <svg className="w-full h-auto" viewBox="0 0 500 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Gridlines */}
+                {}
                 <line x1="40" y1="20" x2="460" y2="20" stroke="currentColor" className="text-slate-200/60 dark:text-slate-800" strokeWidth="1" strokeDasharray="4" />
                 <line x1="40" y1="55" x2="460" y2="55" stroke="currentColor" className="text-slate-200/60 dark:text-slate-800" strokeWidth="1" strokeDasharray="4" />
                 <line x1="40" y1="90" x2="460" y2="90" stroke="currentColor" className="text-slate-200/60 dark:text-slate-800" strokeWidth="1" strokeDasharray="4" />
                 <line x1="40" y1="125" x2="460" y2="125" stroke="currentColor" className="text-slate-200/60 dark:text-slate-800" strokeWidth="1" strokeDasharray="4" />
                 <line x1="40" y1="160" x2="460" y2="160" stroke="currentColor" className="text-slate-300 dark:text-slate-700" strokeWidth="1" />
 
-                {/* Y Axis Labels */}
+                {}
                 <text x="15" y="24" className="fill-slate-400 dark:fill-slate-500 text-[8px] font-bold font-mono">120</text>
                 <text x="15" y="94" className="fill-slate-400 dark:fill-slate-500 text-[8px] font-bold font-mono">60</text>
                 <text x="20" y="164" className="fill-slate-400 dark:fill-slate-500 text-[8px] font-bold font-mono">0</text>
 
-                {/* Area Gradient Fill */}
+                {}
                 <path d={areaPath} fill="url(#purpleAreaGrad)" />
 
-                {/* Line Path */}
+                {}
                 <path d={linePath} stroke="url(#purpleLineGrad)" strokeWidth="3.5" strokeLinecap="round" />
 
-                {/* Interactive Dots */}
+                {}
                 {points.map((p, idx) => (
                   <g
                     key={idx}
@@ -293,7 +293,7 @@ export default function HrAnalyticsDashboard() {
                   </g>
                 ))}
 
-                {/* X Axis Labels */}
+                {}
                 {points.map((p, idx) => (
                   <text
                     key={idx}
@@ -306,7 +306,7 @@ export default function HrAnalyticsDashboard() {
                   </text>
                 ))}
 
-                {/* Definitions */}
+                {}
                 <defs>
                   <linearGradient id="purpleLineGrad" x1="0" y1="0" x2="1" y2="0">
                     <stop offset="0%" stopColor="#9333ea" />
@@ -319,7 +319,7 @@ export default function HrAnalyticsDashboard() {
                 </defs>
               </svg>
 
-              {/* Tooltip Hover Card */}
+              {}
               {activeTooltip !== null && (
                 <div
                   className="absolute bg-slate-900 text-white rounded-xl p-2.5 shadow-xl text-[10px] pointer-events-none space-y-0.5 border border-slate-700 animate-in fade-in zoom-in-95 duration-100 z-10"
@@ -342,9 +342,9 @@ export default function HrAnalyticsDashboard() {
           </div>
         </div>
 
-        {/* Right Column: Dropoff Analysis & Ratings (1 Col) */}
+        {}
         <div className="space-y-6">
-          {/* Card 1: Where Candidates Drop Off */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="border-b border-slate-200/60 dark:border-slate-800 pb-2.5">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
@@ -377,7 +377,7 @@ export default function HrAnalyticsDashboard() {
             </div>
           </div>
 
-          {/* Card 2: AI Accuracy & Candidate Rating */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 font-display flex items-center gap-2">
               <Sparkles className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
@@ -423,7 +423,7 @@ export default function HrAnalyticsDashboard() {
         </div>
       </div>
 
-      {/* Bottom Section: Active Job Listings Table */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
         <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
           <div>

@@ -10,7 +10,7 @@ import { getCandidateProfileId } from '../../lib/candidate-profile';
 
 export const mockRouter = Router();
 
-// GET /api/v1/mock/topics - Get dynamic available topics
+
 mockRouter.get('/topics', async (req: Request, res: Response) => {
   const topics = [
     { id: 'system-design', name: 'System Design & Architecture', category: 'technical', icon: 'Cpu' },
@@ -23,7 +23,7 @@ mockRouter.get('/topics', async (req: Request, res: Response) => {
   return res.json({ success: true, data: { topics } });
 });
 
-// POST /api/v1/mock/sessions - Create new mock interview session
+
 mockRouter.post(
   '/sessions',
   authenticate,
@@ -72,7 +72,7 @@ mockRouter.post(
   }
 );
 
-// GET /api/v1/mock/sessions - List candidate mock sessions
+
 mockRouter.get(
   '/sessions',
   authenticate,
@@ -98,7 +98,7 @@ mockRouter.get(
   }
 );
 
-// GET /api/v1/mock/sessions/:id - Get detailed mock session
+
 mockRouter.get(
   '/sessions/:id',
   authenticate,
@@ -127,7 +127,7 @@ mockRouter.get(
   }
 );
 
-/** Normalize junior/mid/senior → easy/medium/hard for AI generators */
+
 function normalizeDifficulty(raw: string | undefined | null): string {
   const map: Record<string, string> = {
     junior: 'easy',
@@ -141,7 +141,7 @@ function normalizeDifficulty(raw: string | undefined | null): string {
   return map[(raw || '').toLowerCase()] || 'medium';
 }
 
-// GET /api/v1/mock/sessions/:id/aptitude/chunk - Serve a chunk of questions from the stored assessment
+
 mockRouter.get(
   '/sessions/:id/aptitude/chunk',
   authenticate,
@@ -159,7 +159,7 @@ mockRouter.get(
       const chunkIndex = Math.max(0, parseInt(req.query.chunkIndex as string, 10) || 0);
       const chunkSize  = Math.max(1, Math.min(10, parseInt(req.query.chunkSize as string, 10) || 4));
 
-      // Load (or create) the stored assessment for this mock session
+      
       let assessment = await prisma.assessment.findFirst({
         where: { session_id: session.id, test_type: 'aptitude' },
       });
@@ -168,7 +168,7 @@ mockRouter.get(
         ? (assessment!.questions as any[])
         : [];
 
-      // Find matching job with assessmentConfig
+      
       const job = await prisma.job.findFirst({
         where: {
           title: { equals: session.target_role, mode: 'insensitive' },
@@ -186,7 +186,7 @@ mockRouter.get(
         : 16;
 
       if (allQuestions.length !== totalCount) {
-        // Select all questions from DB and persist
+        
         const rawDiff   = normalizeDifficulty(session.difficulty);
 
         const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
@@ -216,7 +216,7 @@ mockRouter.get(
 
       const start = chunkIndex * chunkSize;
       const end   = start + chunkSize;
-      // Practice sessions expose correctIndex so candidates get immediate feedback
+      
       const chunk = allQuestions.slice(start, end).map((q: any) => ({
         id: q.id,
         category: q.category,
@@ -237,7 +237,7 @@ mockRouter.get(
   }
 );
 
-// GET /api/v1/mock/sessions/:id/aptitude - Fetch all aptitude questions for a practice session
+
 mockRouter.get(
   '/sessions/:id/aptitude',
   authenticate,
@@ -252,12 +252,12 @@ mockRouter.get(
         return res.status(404).json({ success: false, error: 'Mock session not found' });
       }
 
-      // Load or create stored assessment
+      
       let assessment = await prisma.assessment.findFirst({
         where: { session_id: session.id, test_type: 'aptitude' },
       });
 
-      // Find matching job with assessmentConfig
+      
       const job = await prisma.job.findFirst({
         where: {
           title: { equals: session.target_role, mode: 'insensitive' },
@@ -274,8 +274,8 @@ mockRouter.get(
         ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
         : 16;
 
-      // Only reuse stored questions if the assessment is already completed.
-      // For pending/in_progress sessions always re-draw fresh random questions.
+      
+      
       const isCompleted = assessment?.status === 'completed';
       let allQuestions: any[] = [];
 
@@ -308,7 +308,7 @@ mockRouter.get(
         }
       }
 
-      // Practice mode: include correctIndex for immediate feedback
+      
       const questions = allQuestions.map((q: any) => ({
         id: q.id,
         category: q.category,
@@ -337,7 +337,7 @@ mockRouter.get(
   }
 );
 
-// GET /api/v1/mock/sessions/:id/coding - Fetch coding problem for mock session
+
 mockRouter.get(
   '/sessions/:id/coding',
   authenticate,
@@ -351,7 +351,7 @@ mockRouter.get(
 
       const rawDiff = normalizeDifficulty(session?.difficulty);
 
-      // Check for existing snapshot to guarantee session immutability
+      
       const existing = await prisma.assessment.findFirst({
         where: { session_id: session?.id, test_type: 'coding' },
       });
@@ -390,7 +390,7 @@ mockRouter.get(
 );
 
 
-// POST /api/v1/mock/sessions/:id/end - End mock session & queue real evaluation
+
 mockRouter.post(
   '/sessions/:id/end',
   authenticate,
@@ -410,9 +410,9 @@ mockRouter.post(
       }
 
       const transcript = req.body.transcript;
-      // Transcript is optional for aptitude/coding tracks — they don't generate
-      // a voice transcript. Fall back to an empty array so the session still
-      // completes and feedback is derivable from the score alone.
+      
+      
+      
       const safeTranscript = Array.isArray(transcript) && transcript.length > 0 ? transcript : [];
 
       const score = typeof req.body.score === 'number' ? req.body.score : null;
@@ -427,8 +427,8 @@ mockRouter.post(
         },
       });
 
-      // For aptitude/coding tracks with no voice transcript, write basic
-      // score-derived feedback immediately so the feedback page is never stuck.
+      
+      
       if (safeTranscript.length === 0 && score !== null) {
         const pct = Math.max(0, Math.min(100, score));
         const basicFeedback = {
@@ -470,8 +470,8 @@ mockRouter.post(
         });
       }
 
-      // Only enqueue AI evaluation for voice interviews that have a real transcript.
-      // Aptitude/coding tracks write feedback synchronously above.
+      
+      
       if (safeTranscript.length > 0) {
         try {
           await enqueueMockEvaluation(
@@ -483,7 +483,7 @@ mockRouter.post(
           );
         } catch (e) {
           console.error('Failed to enqueue mock evaluation job:', e);
-          // Non-fatal for voice sessions — basic feedback is still derivable
+          
         }
       }
 
@@ -503,7 +503,7 @@ mockRouter.post(
   }
 );
 
-// GET /api/v1/mock/sessions/:id/feedback - Get mock session feedback report
+
 mockRouter.get(
   '/sessions/:id/feedback',
   authenticate,
@@ -522,7 +522,7 @@ mockRouter.get(
         return res.status(404).json({ success: false, error: 'Mock session not found' });
       }
 
-      // Only return feedback if evaluation has actually completed
+      
       if (!session.feedback || typeof session.feedback !== 'object' || Object.keys(session.feedback).length === 0) {
         return res.status(404).json({
           success: false,
@@ -532,7 +532,7 @@ mockRouter.get(
 
       const feedbackObj = (session.feedback && typeof session.feedback === 'object') ? (session.feedback as Record<string, any>) : {};
 
-      // Calculate score
+      
       const rawScore = typeof feedbackObj.overallScore === 'number' 
         ? feedbackObj.overallScore 
         : typeof session.score === 'number' 
@@ -540,7 +540,7 @@ mockRouter.get(
         : 0;
       const score = Math.max(0, Math.min(100, rawScore));
 
-      // Calculate competency/rubric sub-scores
+      
       let depth = score;
       let clarity = score;
       let examples = score;

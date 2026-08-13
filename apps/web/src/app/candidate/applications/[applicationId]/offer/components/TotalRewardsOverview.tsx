@@ -33,9 +33,9 @@ export function TotalRewardsOverview({
 
   return (
     <div className="space-y-6">
-      {/* 3 Executive Financial Metric Cards */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Base Salary Card */}
+        {}
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-sm space-y-3 relative overflow-hidden group hover:border-brand-500/40 transition-all">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 uppercase tracking-wider text-slate-800 dark:text-slate-200">
@@ -55,7 +55,7 @@ export function TotalRewardsOverview({
           </div>
         </div>
 
-        {/* Performance Bonus Card */}
+        {}
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-sm space-y-3 relative overflow-hidden group hover:border-emerald-500/40 transition-all">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 uppercase tracking-wider text-slate-800 dark:text-slate-200">
@@ -75,7 +75,7 @@ export function TotalRewardsOverview({
           </div>
         </div>
 
-        {/* Equity Card */}
+        {}
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-sm space-y-3 relative overflow-hidden group hover:border-amber-500/40 transition-all">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 uppercase tracking-wider text-slate-800 dark:text-slate-200">
@@ -96,7 +96,7 @@ export function TotalRewardsOverview({
         </div>
       </div>
 
-      {/* 4-Year Equity Vesting Schedule Visualizer */}
+      {}
       <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 shadow-xl space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-4">
           <div>
@@ -126,7 +126,7 @@ export function TotalRewardsOverview({
           </div>
         </div>
 
-        {/* Timeline Grid */}
+        {}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
           {vestingSchedule.map((item, idx) => (
             <div key={idx} className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 space-y-2">
@@ -145,7 +145,7 @@ export function TotalRewardsOverview({
         </div>
       </div>
 
-      {/* Health & Perks Matrix */}
+      {}
       <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-6 shadow-xl space-y-4">
         <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
           <ShieldCheck className="h-4.5 w-4.5 text-emerald-500" />

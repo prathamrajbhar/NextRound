@@ -6,7 +6,7 @@ import { serializeApplicationList, serializeJobList } from '../../lib/serializer
 
 export const candidateDashboardRouter = Router();
 
-// GET /api/v1/candidate/dashboard - Aggregated candidate dashboard data
+
 candidateDashboardRouter.get(
   '/dashboard',
   authenticate,
@@ -86,7 +86,7 @@ candidateDashboardRouter.get(
   }
 );
 
-// GET /api/v1/candidate/applications - Alias for candidate's own applications
+
 candidateDashboardRouter.get(
   '/applications',
   authenticate,

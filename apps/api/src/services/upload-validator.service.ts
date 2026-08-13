@@ -11,25 +11,25 @@ export interface ValidatedFile {
 
 const ALLOWED_EXTENSIONS = new Set(['.pdf', '.docx', '.doc', '.txt']);
 
-/**
- * Validates file buffer magic bytes signature to prevent upload type spoofing.
- */
+
+
+
 export function validateFileMagicBytes(buffer: Buffer): { isValid: boolean; detectedMime: string } {
   if (!buffer || buffer.length < 4) {
     return { isValid: false, detectedMime: 'unknown' };
   }
 
-  // PDF Magic Bytes: %PDF (0x25 0x50 0x44 0x46)
+  
   if (buffer[0] === 0x25 && buffer[1] === 0x50 && buffer[2] === 0x44 && buffer[3] === 0x46) {
     return { isValid: true, detectedMime: 'application/pdf' };
   }
 
-  // DOCX / ZIP Magic Bytes: PK\x03\x04 (0x50 0x4b 0x03 0x04)
+  
   if (buffer[0] === 0x50 && buffer[1] === 0x4b && buffer[2] === 0x03 && buffer[3] === 0x04) {
     return { isValid: true, detectedMime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' };
   }
 
-  // Plain text (ASCII/UTF-8 printable range)
+  
   const isAsciiText = buffer.slice(0, 100).every((byte) => byte === 9 || byte === 10 || byte === 13 || (byte >= 32 && byte <= 126));
   if (isAsciiText) {
     return { isValid: true, detectedMime: 'text/plain' };
@@ -38,9 +38,9 @@ export function validateFileMagicBytes(buffer: Buffer): { isValid: boolean; dete
   return { isValid: false, detectedMime: 'application/octet-stream' };
 }
 
-/**
- * Generates a safe storage key using UUID and validates against path traversal.
- */
+
+
+
 export function generateSafeStoragePath(originalFilename: string, uploadDir: string): ValidatedFile {
   const rawExt = path.extname(originalFilename || '').toLowerCase();
   const extension = ALLOWED_EXTENSIONS.has(rawExt) ? rawExt : '.pdf';
@@ -51,7 +51,7 @@ export function generateSafeStoragePath(originalFilename: string, uploadDir: str
   const resolvedUploadDir = path.resolve(uploadDir);
   const resolvedTargetPath = path.resolve(targetPath);
 
-  // Path Traversal Security Guard: Ensure resolved path stays strictly inside upload directory
+  
   if (!resolvedTargetPath.startsWith(resolvedUploadDir)) {
     throw new Error('Security Violation: Invalid file path traversal detected.');
   }

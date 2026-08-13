@@ -5,7 +5,7 @@ from core.config import settings
 
 logger = logging.getLogger("stt_service")
 
-# Initialize Groq client if API key is configured
+
 groq_client = None
 if settings.groq_api_key and settings.groq_api_key != "your_groq_api_key_here":
     try:
@@ -28,7 +28,7 @@ def transcribe_audio_bytes(audio_bytes: bytes, filename: str = "audio.webm") -> 
     if not audio_bytes or len(audio_bytes) == 0:
         return "", None
 
-    # 1. Primary: Groq Whisper STT API
+
     if groq_client:
         try:
             audio_file = (filename, io.BytesIO(audio_bytes))
@@ -45,8 +45,8 @@ def transcribe_audio_bytes(audio_bytes: bytes, filename: str = "audio.webm") -> 
         except Exception as e:
             logger.error(f"Groq Whisper transcription failed: {e}")
 
-    # STT unavailable/failed — never fabricate a candidate response. Returning an
-    # empty transcript keeps downstream evaluation honest instead of scoring a
-    # synthetic sentence as if the candidate spoke it.
+
+
+
     logger.warning(f"Whisper STT unavailable for {len(audio_bytes)} bytes; returning empty transcript.")
     return "", None

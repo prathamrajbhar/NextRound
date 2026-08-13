@@ -24,7 +24,7 @@ const iconSizes = {
   xl: 'h-8 w-8',
 };
 
-// Known brand SVG logos for crisp rendering without external image dependencies
+
 const brandSvgMap: Record<string, (props: { className?: string }) => React.ReactNode> = {
   swiggy: ({ className }) => (
     <svg className={cn("w-full h-full text-[#FC8019]", className)} viewBox="0 0 24 24" fill="currentColor">
@@ -70,7 +70,7 @@ const brandSvgMap: Record<string, (props: { className?: string }) => React.React
   )
 };
 
-// Deterministic color palette generator for company initials fallback
+
 const colorGradients = [
   'from-amber-500 to-orange-600 text-white',
   'from-blue-600 to-indigo-700 text-white',
@@ -102,7 +102,7 @@ export function CompanyLogo({ name, logoUrl, size = 'md', className }: CompanyLo
   const [imageError, setImageError] = useState(false);
   const normalizedName = name.toLowerCase().trim();
 
-  // Check if we have a built-in SVG for this brand
+  
   const BuiltInSvg = brandSvgMap[normalizedName];
 
   return (

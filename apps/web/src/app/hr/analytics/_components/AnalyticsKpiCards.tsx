@@ -19,7 +19,7 @@ export function AnalyticsKpiCards({ data }: AnalyticsKpiCardsProps) {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {/* Card 1: Time to Hire */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel flex items-center justify-between hover:scale-[1.01] transition-all">
         <div className="space-y-1">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
@@ -37,7 +37,7 @@ export function AnalyticsKpiCards({ data }: AnalyticsKpiCardsProps) {
         </div>
       </div>
 
-      {/* Card 2: Pass Rate */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel flex items-center justify-between hover:scale-[1.01] transition-all">
         <div className="space-y-1">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
@@ -55,7 +55,7 @@ export function AnalyticsKpiCards({ data }: AnalyticsKpiCardsProps) {
         </div>
       </div>
 
-      {/* Card 3: Active Jobs */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel flex items-center justify-between hover:scale-[1.01] transition-all">
         <div className="space-y-1">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">

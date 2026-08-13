@@ -1,4 +1,5 @@
 import https from 'https';
+import { env, envNumber } from '../lib/env';
 
 export interface SyncedSocialData {
   github?: {
@@ -42,14 +43,13 @@ export interface SyncedSocialData {
   syncedAt: string;
 }
 
-// The bytemap scraper is slow (observed latency can exceed 30s), so the timeout
-// must comfortably exceed the worst observed latency or every real sync aborts.
-// Env-driven so deployments can tune it without a code change.
-const LINKEDIN_SCRAPER_TIMEOUT_MS =
-  parseInt(process.env.LINKEDIN_SCRAPER_TIMEOUT_MS || '90000', 10) || 90000;
 
-// Certificate error codes Node's default TLS verification raises when a scraper
-// host presents a certificate it does not trust.
+
+
+const PROFILE_SCRAPER_TIMEOUT_MS = envNumber('PROFILE_SCRAPER_TIMEOUT_MS');
+
+
+
 const TLS_VERIFY_ERROR_CODES = new Set([
   'UNABLE_TO_VERIFY_LEAF_SIGNATURE',
   'DEPTH_ZERO_SELF_SIGNED_CERT',
@@ -78,28 +78,28 @@ function httpsRequestText(
       );
     });
     req.on('error', reject);
-    req.setTimeout(LINKEDIN_SCRAPER_TIMEOUT_MS, () =>
-      req.destroy(new Error(`LinkedIn scraper request timed out after ${LINKEDIN_SCRAPER_TIMEOUT_MS}ms`))
+    req.setTimeout(PROFILE_SCRAPER_TIMEOUT_MS, () =>
+      req.destroy(new Error(`LinkedIn scraper request timed out after ${PROFILE_SCRAPER_TIMEOUT_MS}ms`))
     );
     req.end();
   });
 }
 
 async function fetchLinkedInProfileRaw(username: string): Promise<{ status: number; body: string }> {
-  const base = process.env.LINKEDIN_SCRAPER_BASE_URL || 'https://social_scraper.bytemap.in';
+  const base = env('PROFILE_SCRAPER_BASE_URL');
   const url = `${base}/linkedin/${encodeURIComponent(username)}`;
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), LINKEDIN_SCRAPER_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), PROFILE_SCRAPER_TIMEOUT_MS);
 
   try {
     const res = await fetch(url, { signal: controller.signal });
     return { status: res.status, body: await res.text() };
   } catch (err) {
-    // Try plain fetch first. Only when Node's default TLS verification rejects
-    // this host do we mirror the ai-service Python LinkedIn client (httpx
-    // verify=False) and retry with verification disabled — parity for the same
-    // user-approved scraper endpoint.
+    
+    
+    
+    
     if (!isTlsVerificationError(err)) throw err;
     return httpsRequestText(url, { rejectUnauthorized: false });
   } finally {
@@ -187,7 +187,7 @@ async function syncLinkedInProfile(linkedinUrl: string): Promise<NonNullable<Syn
       status: 'not_synced',
       synced: false,
       reason: timedOut
-        ? `LinkedIn sync failed: request timed out after ${LINKEDIN_SCRAPER_TIMEOUT_MS}ms`
+        ? `LinkedIn sync failed: request timed out after ${PROFILE_SCRAPER_TIMEOUT_MS}ms`
         : `LinkedIn sync failed: ${message}`,
     };
   }
@@ -204,7 +204,7 @@ export async function syncCandidateSocialProfiles(
 
   const extractedSkillsSet = new Set<string>();
 
-  // 1. Sync GitHub Profile if URL provided
+  
   if (githubUrl && githubUrl.trim()) {
     try {
       const match = githubUrl.match(/github\.com\/([a-zA-Z0-9_-]+)/i);
@@ -218,7 +218,7 @@ export async function syncCandidateSocialProfiles(
         if (userRes.ok) {
           const userData = (await userRes.json()) as any;
 
-          // Fetch top public repos
+          
           const reposRes = await fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=12`, {
             headers: { 'User-Agent': 'NextRound-AI-App' },
           });
@@ -283,12 +283,12 @@ export async function syncCandidateSocialProfiles(
     }
   }
 
-  // 2. LinkedIn sync via the user-approved bytemap scraper
-  // (https://social_scraper.bytemap.in) — the same endpoint the ai-service
-  // sourcing agent already fetches. Real profile data is returned on success;
-  // on failure an honest not_found/not_synced state (with the real reason) is
-  // reported instead of claiming success — no fabricated profile data is ever
-  // returned.
+  
+  
+  
+  
+  
+  
   if (linkedinUrl && linkedinUrl.trim()) {
     result.linkedin = await syncLinkedInProfile(linkedinUrl.trim());
     result.linkedin.skills?.forEach((skill) => extractedSkillsSet.add(skill));

@@ -9,8 +9,8 @@ logger = logging.getLogger("coding_routes")
 
 coding_router = APIRouter(prefix="/api/v1/ai/coding", tags=["coding-sandbox"])
 
-# The execution sandbox runs Python only — accept Python variants and normalize
-# so non-Python submissions are rejected instead of silently run as Python.
+
+
 SUPPORTED_LANGUAGES = {"python", "py", "python3"}
 
 
@@ -56,15 +56,15 @@ async def execute_coding_submission(request: CodeExecutionRequest):
 
     logger.info(f"Coding Sandbox: Executing submission for problem {request.problemId}")
 
-    # If custom test cases are passed, run direct sandbox evaluation
+
     if request.testCases:
         sandbox_res = execute_code_sandbox(
             code=request.code,
             language=language,
             test_cases=request.testCases
         )
-        # Direct sandbox path: no complexity analysis is performed here, so it
-        # is reported as None (absent) rather than a canned "O(N)".
+
+
         return CodeExecutionResponse(
             success=sandbox_res.get("success", False),
             score=round(sandbox_res.get("pass_rate", 0.0) * 100.0, 1),
@@ -80,7 +80,7 @@ async def execute_coding_submission(request: CodeExecutionRequest):
             test_results=sandbox_res.get("test_results", [])
         )
 
-    # Otherwise run full Coding Agent graph
+
     output = await run_coding_agent(
         application_id=request.applicationId or "app-sandbox-eval",
         problem_id=request.problemId or "virtualized-list",

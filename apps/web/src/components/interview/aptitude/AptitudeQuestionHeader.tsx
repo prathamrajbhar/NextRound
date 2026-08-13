@@ -21,10 +21,10 @@ const formatTime = (secs: number) => {
   return `${m}:${s < 10 ? '0' : ''}${s}`;
 };
 
-/**
- * Category console header: company identity plus the per-question and overall
- * countdown timers for the active aptitude section.
- */
+
+
+
+
 export function AptitudeQuestionHeader({
   companyName,
   roleTitle,
@@ -50,9 +50,9 @@ export function AptitudeQuestionHeader({
         </div>
       </div>
 
-      {/* Timers & Proctoring Badges */}
+      {}
       <div className="flex items-center gap-3">
-        {/* 60s Question Timer Bar */}
+        {}
         <div className="px-3.5 py-1.5 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-500/40 flex items-center gap-2 shadow-xs">
           <Timer className="h-4 w-4 text-amber-600 dark:text-amber-400 animate-pulse" />
           <div className="flex flex-col text-left">
@@ -61,7 +61,7 @@ export function AptitudeQuestionHeader({
           </div>
         </div>
 
-        {/* Overall Test Clock */}
+        {}
         <div className="px-3.5 py-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center gap-2 shadow-xs">
           <Clock className="h-4 w-4 text-brand-600 dark:text-brand-400" />
           <div className="flex flex-col text-left">

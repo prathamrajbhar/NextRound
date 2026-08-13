@@ -35,16 +35,16 @@ export function BrandMark({ className = 'h-10 w-10' }: { className?: string }) {
   );
 }
 
-/**
- * Shared split-screen auth layout. A cinematic background video (`/bg.mp4`)
- * is layered behind a readability gradient, with drifting accent glows and a
- * focused glass form card on the right. Collapses to a stacked layout with a
- * compact brand header on mobile.
- */
+
+
+
+
+
+
 export default function AuthShell({ eyebrow, headline, sub, benefits, children }: AuthShellProps) {
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-slate-950">
-      {/* Cinematic background video */}
+      {}
       <video
         autoPlay
         loop
@@ -56,11 +56,11 @@ export default function AuthShell({ eyebrow, headline, sub, benefits, children }
         <source src="/bg.mp4" type="video/mp4" />
       </video>
 
-      {/* Readability overlays */}
+      {}
       <div aria-hidden className="pointer-events-none fixed inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/75 to-slate-950/60" />
       <div aria-hidden className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_at_center,transparent_25%,rgba(2,6,23,0.6)_100%)]" />
 
-      {/* Drifting accent glows */}
+      {}
       <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="animate-drift absolute -top-32 left-1/4 h-[420px] w-[420px] rounded-full bg-orange-500/15 blur-[120px] motion-reduce:animate-none" />
         <div className="animate-drift-slow absolute -bottom-32 right-[-80px] h-[380px] w-[380px] rounded-full bg-emerald-500/10 blur-[120px] motion-reduce:animate-none" />
@@ -68,7 +68,7 @@ export default function AuthShell({ eyebrow, headline, sub, benefits, children }
 
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
-          {/* Brand panel — desktop */}
+          {}
           <section className="hidden lg:flex lg:min-h-[560px] lg:flex-col lg:justify-between">
             <div className="anim-fade-up">
               <BrandMark />
@@ -112,9 +112,9 @@ export default function AuthShell({ eyebrow, headline, sub, benefits, children }
             </div>
           </section>
 
-          {/* Form panel */}
+          {}
           <section className="w-full lg:ml-auto lg:max-w-md">
-            {/* Compact brand header — mobile only */}
+            {}
             <div className="mb-8 flex flex-col items-center gap-4 text-center lg:hidden anim-fade-up">
               <BrandMark />
               <div className="space-y-2">
@@ -127,7 +127,7 @@ export default function AuthShell({ eyebrow, headline, sub, benefits, children }
               className="relative rounded-3xl border border-white/15 bg-slate-950/50 p-6 shadow-2xl shadow-slate-950/80 ring-1 ring-white/10 backdrop-blur-2xl sm:p-8 anim-zoom-in motion-reduce:animate-none"
               style={{ animationDelay: '120ms' }}
             >
-              {/* Top highlight hairline */}
+              {}
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-orange-400/70 to-transparent"

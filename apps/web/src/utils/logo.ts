@@ -24,7 +24,7 @@ export const getCompanyDomain = (name: string): string => {
     return companyDomains[normalized];
   }
   
-  // Clean special characters and spaces
+  
   const cleanName = normalized.replace(/[^a-z0-9]/g, '');
   return cleanName ? `${cleanName}.com` : 'google.com';
 };

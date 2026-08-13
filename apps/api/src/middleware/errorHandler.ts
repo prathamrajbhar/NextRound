@@ -17,10 +17,10 @@ export function errorHandler(
 
   const statusCode = (err as any).statusCode || 500;
 
-  // Structured log with request context so failures are traceable without
-  // leaking internals to the client (details stay in logs only). Expected
-  // client errors (4xx thrown as HttpError from services) are not server
-  // failures, so they stay out of the error log.
+  
+  
+  
+  
   if (statusCode >= 500) {
     console.error(
       JSON.stringify({
@@ -42,7 +42,7 @@ export function errorHandler(
   });
 }
 
-/** JSON 404 for unmatched routes — keeps the API's envelope contract instead of Express's HTML 404. */
+
 export function notFoundHandler(req: Request, res: Response) {
   res.status(404).json({
     success: false,

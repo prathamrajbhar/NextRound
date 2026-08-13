@@ -15,16 +15,16 @@ import {
   loadIceServers,
 } from './interviews.helpers';
 
-// ---------------------------------------------------------------------------
-// POST /:id/consent
-// ---------------------------------------------------------------------------
 
-/**
- * Records the candidate's video/audio consent for an interview session.
- *
- * The Interview model has no dedicated consent column; consent state is written
- * into the `engagement_signal` JSON so that no schema migration is needed.
- */
+
+
+
+
+
+
+
+
+
 export async function recordConsent(req: Request, res: Response, next: NextFunction) {
   try {
     const id = String(req.params['id']);
@@ -42,7 +42,7 @@ export async function recordConsent(req: Request, res: Response, next: NextFunct
       return res.status(404).json({ success: false, error: 'Interview session not found' });
     }
 
-    // Candidates may only update their own interview.
+    
     if (
       req.user?.role === 'candidate' &&
       interview.application.candidate.user_id !== req.user.userId
@@ -86,14 +86,14 @@ export async function recordConsent(req: Request, res: Response, next: NextFunct
   }
 }
 
-// ---------------------------------------------------------------------------
-// POST /:id/session-token
-// ---------------------------------------------------------------------------
 
-/**
- * Returns ICE server config and transitions the interview status to
- * `in_progress` if it was previously `scheduled`.
- */
+
+
+
+
+
+
+
 export async function getSessionToken(req: Request, res: Response, next: NextFunction) {
   try {
     const id = String(req.params['id']);
@@ -126,8 +126,8 @@ export async function getSessionToken(req: Request, res: Response, next: NextFun
       data: {
         interviewId: interview.id,
         applicationId: interview.application_id,
-        // No session credential is minted — the signaling channel is a
-        // same-origin BroadcastChannel; no external credential is needed.
+        
+        
         sessionToken: null,
         expiresInSeconds: null,
         iceServers: loadIceServers(),
@@ -140,14 +140,14 @@ export async function getSessionToken(req: Request, res: Response, next: NextFun
   }
 }
 
-// ---------------------------------------------------------------------------
-// POST /:id/end
-// ---------------------------------------------------------------------------
 
-/**
- * Marks the interview as completed, updates the linked application status, and
- * enqueues the AI Evaluation job with the real transcript/audio data.
- */
+
+
+
+
+
+
+
 export async function endInterview(req: Request, res: Response, next: NextFunction) {
   try {
     const id = String(req.params['id']);
@@ -171,7 +171,7 @@ export async function endInterview(req: Request, res: Response, next: NextFuncti
       where: { id: interview.id },
       data: {
         status: 'completed',
-        // Only include optional fields when they carry real values.
+        
         ...(transcript !== undefined ? { transcript: transcript as Prisma.InputJsonValue } : {}),
         ...(audio_url ? { audio_url } : {}),
       },
@@ -196,15 +196,15 @@ export async function endInterview(req: Request, res: Response, next: NextFuncti
   }
 }
 
-// ---------------------------------------------------------------------------
-// PATCH /:id/proctoring
-// ---------------------------------------------------------------------------
 
-/**
- * Appends a proctoring snapshot to the interview's `proctor_flags` JSON array.
- * Absent signals are stored as `null` (unknown) to preserve audit integrity —
- * an unmeasured value must never become a "clean" flag.
- */
+
+
+
+
+
+
+
+
 export async function recordProctoringFlag(req: Request, res: Response, next: NextFunction) {
   try {
     const id = String(req.params['id']);
@@ -258,14 +258,14 @@ export async function recordProctoringFlag(req: Request, res: Response, next: Ne
   }
 }
 
-// ---------------------------------------------------------------------------
-// GET /:id/transcript
-// ---------------------------------------------------------------------------
 
-/**
- * Returns the full interview record with evaluation, transcript, and proctoring
- * data. Access is org-scoped for HR users and ownership-scoped for candidates.
- */
+
+
+
+
+
+
+
 export async function getTranscript(req: Request, res: Response, next: NextFunction) {
   try {
     const id = String(req.params['id']);
@@ -287,7 +287,7 @@ export async function getTranscript(req: Request, res: Response, next: NextFunct
       return res.status(404).json({ success: false, error: 'Interview session not found' });
     }
 
-    // HR: enforce org isolation using the JWT-derived orgId (never client-supplied).
+    
     if (req.user?.role === 'hr') {
       if (!req.user.orgId || interview.application.job.org_id !== req.user.orgId) {
         return res
@@ -322,15 +322,15 @@ export async function getTranscript(req: Request, res: Response, next: NextFunct
   }
 }
 
-// ---------------------------------------------------------------------------
-// POST /hr/:applicationId/result
-// ---------------------------------------------------------------------------
 
-/**
- * Records the HR manager's pass/fail decision, persists it to the Evaluation
- * table, and — on a pass — enqueues the Decision Agent so that an offer or
- * hold can be generated from real composite scores.
- */
+
+
+
+
+
+
+
+
 export async function saveHrResult(req: Request, res: Response, next: NextFunction) {
   try {
     const applicationId = String(req.params['applicationId']);
@@ -349,7 +349,7 @@ export async function saveHrResult(req: Request, res: Response, next: NextFuncti
 
     const { decision, notes } = body.data;
 
-    // Enforce org isolation: the application must belong to this HR's org.
+    
     const application = await prisma.application.findFirst({
       where: { id: applicationId, job: { org_id: orgId } },
       include: { job: true },
@@ -412,9 +412,9 @@ export async function saveHrResult(req: Request, res: Response, next: NextFuncti
   }
 }
 
-/**
- * POST /:id/signal
- */
+
+
+
 export async function sendSignal(req: Request, res: Response, next: NextFunction) {
   try {
     const applicationId = String(req.params['id']);
@@ -438,9 +438,9 @@ export async function sendSignal(req: Request, res: Response, next: NextFunction
   }
 }
 
-/**
- * GET /:id/signals
- */
+
+
+
 export async function getSignals(req: Request, res: Response, next: NextFunction) {
   try {
     const applicationId = String(req.params['id']);
@@ -454,7 +454,7 @@ export async function getSignals(req: Request, res: Response, next: NextFunction
       orderBy: { created_at: 'asc' },
     });
 
-    // Background clean up of older signals to prevent DB bloating (e.g. signals older than 5 minutes)
+    
     prisma.webRTCSignal.deleteMany({
       where: {
         application_id: applicationId,

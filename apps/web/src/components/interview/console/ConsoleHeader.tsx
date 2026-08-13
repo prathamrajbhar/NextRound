@@ -67,10 +67,10 @@ function getStatusBadge(
   };
 }
 
-/**
- * Interview console header: company identity, live status badge, proctoring
- * telemetry, timer, transcript toggle, and fullscreen control.
- */
+
+
+
+
 export function ConsoleHeader({
   mode,
   companyName,
@@ -104,7 +104,7 @@ export function ConsoleHeader({
         </div>
       </div>
 
-      {/* Right Telemetry & Controls */}
+      {}
       <div className="flex items-center gap-2.5 sm:gap-3">
         {proctorTelemetry && (
           <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-emerald-600 dark:text-emerald-400 shadow-xs">

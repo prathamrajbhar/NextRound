@@ -5,15 +5,16 @@ import { requireRole } from '../../middleware/rbac';
 import { rejectOrgIdParam } from '../../middleware/orgScope';
 import { TalentBookmarkCreateSchema, TalentOutreachSchema, TalentPoolSearchSchema } from '@nextround/shared';
 import { notificationService } from '../../services/notification.service';
+import { env } from '../../lib/env';
 
 export const talentPoolRouter = Router();
 
-// Org scoping is JWT-derived; never accept a client-supplied org_id.
+
 talentPoolRouter.use(rejectOrgIdParam);
 
-// Row shape returned by the pgvector ranking query. `cosineSimilarity` is the
-// real cosine similarity (0.0-1.0) between the candidate's resume_embedding and
-// the query embedding; `skills`/`targetRoles` come back as parsed JSON arrays.
+
+
+
 interface VectorMatchRow {
   candidateId: string;
   userId: string;
@@ -55,15 +56,15 @@ function toStringList(value: unknown): string[] {
   return [];
 }
 
-/**
- * Ask the AI service for a real 768-dim semantic embedding of the search query.
- * Returns null (instead of throwing) when the service is unreachable, the HTTP
- * call fails, the response is malformed, or the embedding came from the hash
- * fallback (model label contains "Fallback") — a fallback vector is not a
- * semantic signal and must never drive matching.
- */
+
+
+
+
+
+
+
 async function generateQueryEmbedding(queryText: string): Promise<number[] | null> {
-  const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+  const aiServiceUrl = env('AI_BASE_URL');
 
   let resp: Awaited<ReturnType<typeof fetch>>;
   try {
@@ -99,9 +100,9 @@ async function generateQueryEmbedding(queryText: string): Promise<number[] | nul
   return embedding as number[];
 }
 
-// ML_BYPASS: external sourcing — integrate LinkedIn Recruiter API or scraping pipeline when ready
-// ML_BYPASS: self-hosted embeddings — upgrade to sentence-transformers/all-MiniLM-L6-v2 when API offline required
-// GET /api/v1/hr/talent-pool - Vector similarity search across CandidateProfiles using pgvector & skill matching
+
+
+
 talentPoolRouter.get(
   '/',
   authenticate,
@@ -116,15 +117,15 @@ talentPoolRouter.get(
       const parsed = TalentPoolSearchSchema.safeParse(req.query);
       const queryText = parsed.success && parsed.data.query ? parsed.data.query.toLowerCase() : '';
 
-      // Fetch org bookmarks
+      
       const bookmarks = await prisma.talentBookmark.findMany({
         where: { org_id: orgId },
         select: { id: true, candidate_id: true },
       });
       const bookmarkMap = new Map(bookmarks.map((b) => [b.candidate_id, b.id]));
 
-      // Map each candidate to their most recent application in this organization so the UI can
-      // link to the candidate dossier (which is keyed by application id).
+      
+      
       const applications = await prisma.application.findMany({
         where: {
           job: { org_id: orgId },
@@ -164,9 +165,9 @@ talentPoolRouter.get(
         };
       };
 
-      // semanticMatch is true only when a REAL semantic embedding was produced
-      // and the pgvector ranking actually ran. Otherwise similarityScore is
-      // honestly null and candidates fall back to recency order.
+      
+      
+      
       let semanticMatch = false;
       let results: TalentPoolCandidateResult[] = [];
 
@@ -215,8 +216,8 @@ talentPoolRouter.get(
       }
 
       if (!semanticMatch) {
-        // No honest semantic ranking available (no query, ai-service down, or
-        // hash-fallback embedding). Return recent candidates, score null.
+        
+        
         const candidates = await prisma.candidateProfile.findMany({
           where: {
             applications: {
@@ -257,7 +258,7 @@ talentPoolRouter.get(
   }
 );
 
-// POST /api/v1/hr/talent-pool/bookmarks - Bookmark candidate profile for org
+
 talentPoolRouter.post(
   '/bookmarks',
   authenticate,
@@ -312,7 +313,7 @@ talentPoolRouter.post(
   }
 );
 
-// GET /api/v1/hr/talent-pool/bookmarks - List bookmarked candidates for org
+
 talentPoolRouter.get(
   '/bookmarks',
   authenticate,
@@ -347,7 +348,7 @@ talentPoolRouter.get(
   }
 );
 
-// DELETE /api/v1/hr/talent-pool/bookmarks/:id - Remove bookmark
+
 talentPoolRouter.delete(
   '/bookmarks/:id',
   authenticate,
@@ -381,7 +382,7 @@ talentPoolRouter.delete(
   }
 );
 
-// POST /api/v1/hr/talent-pool/outreach - Direct personalized email outreach to candidate
+
 talentPoolRouter.post(
   '/outreach',
   authenticate,
@@ -409,7 +410,7 @@ talentPoolRouter.post(
         return res.status(404).json({ success: false, error: 'Candidate profile not found' });
       }
 
-      // Send real-time SSE notification & persistent notification to candidate
+      
       await notificationService.createNotification(
         candidate.user.id,
         `New Opportunity Outreach: ${subject}`,
@@ -432,7 +433,7 @@ talentPoolRouter.post(
   }
 );
 
-// POST /api/v1/hr/talent-pool/external-source - External Talent Sourcing via GitHub & LinkedIn scraper APIs
+
 talentPoolRouter.post(
   '/external-source',
   authenticate,
@@ -449,7 +450,7 @@ talentPoolRouter.post(
         return res.status(400).json({ success: false, error: 'At least one of github_id or linkedin_id must be provided.' });
       }
 
-      const aiServiceUrl = process.env.AI_SERVICE_URL || 'http://localhost:8000';
+      const aiServiceUrl = env('AI_BASE_URL');
       const aiResp = await fetch(`${aiServiceUrl}/api/v1/ai/sourcing/profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -16,10 +16,10 @@ interface ConsolePrimaryViewportProps {
   localStream?: MediaStream | null;
 }
 
-/**
- * Left viewport of the interview console. Renders the AI voice orb (ai-voice /
- * mock-practice) or the human HR video viewport (supporting real WebRTC stream).
- */
+
+
+
+
 export function ConsolePrimaryViewport({
   mode,
   aiSpeaking,
@@ -51,7 +51,7 @@ export function ConsolePrimaryViewport({
   const isVideoCall = mode === 'hr-candidate' || mode === 'hr-recruiter';
   const hasRemoteTracks = remoteStream && remoteStream.getVideoTracks().some(t => t.readyState === 'live');
 
-  // Connection text status
+  
   let callStatusText = 'Waiting for peer to join...';
   if (connectionState === 'connecting') {
     callStatusText = 'Establishing secure 1:1 WebRTC tunnel...';
@@ -83,7 +83,7 @@ export function ConsolePrimaryViewport({
               <Bot className={`h-16 w-16 sm:h-20 sm:w-20 ${aiSpeaking ? 'text-amber-400' : isAnalyzing ? 'text-indigo-400' : 'text-slate-400'}`} />
             </div>
 
-            {/* Animated Audio Equalizer Wave Form */}
+            {}
             <div className="flex items-center justify-center gap-1.5 mt-4 h-8">
               {[40, 70, 90, 60, 80, 50, 95, 65, 45].map((h, i) => (
                 <span
@@ -111,7 +111,7 @@ export function ConsolePrimaryViewport({
           </div>
         </div>
       ) : (
-        // Human 1:1 Video Stream Viewport
+        
         <div className="relative w-full h-full bg-slate-950 flex flex-col items-center justify-center overflow-hidden">
           {connectionState === 'connected' && hasRemoteTracks ? (
             <video
@@ -121,7 +121,7 @@ export function ConsolePrimaryViewport({
               className="w-full h-full object-cover"
             />
           ) : (
-            // Placeholder user avatar when connection is not established or resolving tracks
+            
             <div className="flex flex-col items-center justify-center p-6 text-center space-y-4 select-none">
               <div className="h-24 w-24 rounded-full bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-slate-400 shadow-inner relative">
                 <User className="h-12 w-12" />
@@ -139,13 +139,13 @@ export function ConsolePrimaryViewport({
             </div>
           )}
 
-          {/* Top-Right Label Badge */}
+          {}
           <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800/80 text-[10px] font-extrabold text-slate-300 flex items-center gap-1.5 backdrop-blur-md shadow-lg">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             <span>{mode === 'hr-recruiter' ? 'Remote Candidate Feed' : 'Hiring Manager'}</span>
           </div>
 
-          {/* Floating local Picture-in-Picture window for Recruiter or Candidate */}
+          {}
           {isVideoCall && localStream && (
             <div className="absolute bottom-4 right-4 w-32 h-44 sm:w-40 sm:h-56 rounded-2xl overflow-hidden border border-slate-200/20 dark:border-slate-800 bg-slate-950 shadow-2xl z-30 transition-all duration-300 group hover:scale-105">
               <video

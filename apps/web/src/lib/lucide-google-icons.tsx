@@ -32,7 +32,7 @@ const createMaterialIcon = (iconName: string) => {
         }
       }
 
-      // Default fallback size if no size class matches
+      
       if (!fontSize) {
         fontSize = '20px';
       }
@@ -61,7 +61,7 @@ const createMaterialIcon = (iconName: string) => {
   return Component;
 };
 
-// Map of Lucide Icon -> Google Material Symbol Outlined name
+
 export const Activity = createMaterialIcon('monitoring');
 export const AlertCircle = createMaterialIcon('info');
 export const AlertTriangle = createMaterialIcon('warning');

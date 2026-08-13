@@ -33,7 +33,7 @@ async def fetch_github_profile(github_id: str) -> Dict[str, Any]:
             recent_repos = data.get("recent_repositories", [])
             pinned_repos = data.get("pinned_repositories", [])
 
-            # Extract languages & skills from repositories
+
             repo_languages = list({r.get("language") for r in recent_repos + pinned_repos if r.get("language")})
             
             return {
@@ -125,8 +125,8 @@ async def aggregate_external_profile(
 
     gh_res, li_res = await asyncio.gather(*tasks)
 
-    # Combine profiles. name starts empty — a candidate with no discoverable
-    # name is reported as empty, never given a placeholder label.
+
+
     name = None
     headline = ""
     bio_summary = ""
@@ -139,7 +139,7 @@ async def aggregate_external_profile(
         bio_summary += f"GitHub Bio: {gh_res.get('bio')}\n"
         all_skills.update(gh_res.get("extracted_skills", []))
 
-        # Add repo summaries
+
         for r in gh_res.get("repositories", [])[:3]:
             if r.get("summary"):
                 bio_summary += f"Project {r.get('name')}: {r.get('summary')}\n"
@@ -151,14 +151,14 @@ async def aggregate_external_profile(
         bio_summary += f"LinkedIn Headline: {headline}\nAbout: {li_res.get('about')}\n"
         all_skills.update(li_res.get("extracted_skills", []))
 
-    # Generate 768-dim vector embedding for unified profile
+
     profile_text = f"Candidate: {name}. Headline: {headline}. Skills: {', '.join(all_skills)}. Bio: {bio_summary}"
     profile_vector, profile_source = embed_text_with_source(profile_text)
 
-    # Compute similarity score against job description / target role. Report the
-    # REAL cosine similarity as a 0-100 percent — no fabricated 85 baseline and no
-    # artificial floor. If no job/target text is provided, or either vector came
-    # from the hash fallback (not semantic), the score is None.
+
+
+
+
     similarity_score = None
     if job_description or target_role:
         target_text = f"{target_role}. {job_description}".strip()

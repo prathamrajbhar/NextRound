@@ -6,9 +6,9 @@ import { requireRole } from '../../middleware/rbac';
 
 export const accountRouter = Router();
 
-// Flatten the user row + stored profile JSON into the camelCase/snake_case
-// shape the HR profile page expects (name, email, role, company, linkedin_url,
-// avatar, timezone, title, specialties).
+
+
+
 function serializeHrProfile(user: {
   id: string;
   email: string;
@@ -38,7 +38,7 @@ function serializeHrProfile(user: {
   };
 }
 
-// GET /api/v1/hr/profile - Get current HR profile info
+
 accountRouter.get(
   '/hr/profile',
   authenticate,
@@ -66,7 +66,7 @@ accountRouter.get(
   }
 );
 
-// PATCH /api/v1/hr/profile - Update HR user profile info
+
 accountRouter.patch(
   '/hr/profile',
   authenticate,
@@ -85,8 +85,8 @@ accountRouter.patch(
 
       const stored = (user.profile as Record<string, unknown>) || {};
 
-      // Only update fields the client actually sent, so partial updates
-      // (e.g. just changing the avatar) never wipe other profile data.
+      
+      
       const updates: Record<string, unknown> = {};
       const bodyHas = (key: string) => Object.prototype.hasOwnProperty.call(validated, key);
       if (bodyHas('name')) updates.name = validated.name;
@@ -112,7 +112,7 @@ accountRouter.patch(
   }
 );
 
-// GET /api/v1/candidate/settings - Candidate notification and privacy settings
+
 accountRouter.get(
   '/candidate/settings',
   authenticate,
@@ -143,7 +143,7 @@ accountRouter.get(
   }
 );
 
-// PATCH /api/v1/candidate/settings - Update candidate settings
+
 accountRouter.patch(
   '/candidate/settings',
   authenticate,
@@ -152,8 +152,8 @@ accountRouter.patch(
     try {
       const validated = CandidateSettingsSchema.parse(req.body);
 
-      // Flatten a nested `{ settings: {...} }` payload (sent by the privacy tab)
-      // into the top-level key set so every tab reads/writes the same flat blob.
+      
+      
       const incoming: Record<string, unknown> = { ...validated };
       const nested = incoming.settings;
       if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
@@ -166,8 +166,8 @@ accountRouter.patch(
         select: { id: true, settings: true },
       });
 
-      // Merge with previously stored settings so saving one tab never wipes
-      // the values saved by another tab.
+      
+      
       const merged = {
         ...((existing?.settings as Record<string, unknown>) || {}),
         ...incoming,

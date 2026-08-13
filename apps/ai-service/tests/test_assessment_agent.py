@@ -16,7 +16,7 @@ async def test_assessment_agent_scoring_with_selected_option():
         {"id": "q3", "category": "Verbal", "correctIndex": 3},
     ]
 
-    # Two correct answers (q1 correct: 2, q2 correct: 0), one incorrect (q3 correct: 3, given: 1)
+
     answers = [
         {"questionId": "q1", "selectedOption": 2},
         {"questionId": "q2", "selectedOption": 0},
@@ -30,7 +30,7 @@ async def test_assessment_agent_scoring_with_selected_option():
         min_score=50.0
     )
 
-    # 2/3 correct = 66.7%
+
     assert result["score"] == 66.7
     assert result["correct_answers"] == 2
     assert result["total_questions"] == 3
@@ -47,7 +47,7 @@ async def test_assessment_agent_scoring_with_selected_option_index():
         {"id": "q2", "category": "Logic", "correctIndex": 1},
     ]
 
-    # One correct answer (q1 correct: 2), one incorrect (q2 correct: 1, given: 2)
+
     answers = [
         {"questionId": "q1", "selectedOptionIndex": 2},
         {"questionId": "q2", "selectedOptionIndex": 2},
@@ -60,7 +60,7 @@ async def test_assessment_agent_scoring_with_selected_option_index():
         min_score=60.0
     )
 
-    # 1/2 correct = 50.0%
+
     assert result["score"] == 50.0
     assert result["correct_answers"] == 1
     assert result["total_questions"] == 2
@@ -76,7 +76,7 @@ async def test_assessment_agent_scoring_with_correct_index_property():
         {"id": "q2", "category": "Logic", "correct_index": 1},
     ]
 
-    # Both correct
+
     answers = [
         {"questionId": "q1", "selectedOption": 2},
         {"questionId": "q2", "selectedOption": 1},

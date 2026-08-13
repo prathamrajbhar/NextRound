@@ -122,7 +122,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
 
   return (
     <div className="space-y-5 animate-in fade-in duration-150">
-      {/* Inline Feedback Alerts */}
+      {}
       {syncStatus && (
         <div className="flex items-center gap-2.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 py-2.5 px-4 rounded-xl border border-emerald-500/30 shadow-sm">
           <CheckCircle2 className="h-4.5 w-4.5 text-emerald-400 shrink-0" />
@@ -137,7 +137,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
         </div>
       )}
 
-      {/* GitHub Sync */}
+      {}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-3.5 shadow-sm">
         <div className="flex items-center justify-between">
           <label className={labelCls} htmlFor="github-url">
@@ -180,7 +180,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
         </div>
       </div>
 
-      {/* LinkedIn Link */}
+      {}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-3.5 shadow-sm">
         <div className="flex items-center justify-between">
           <label className={labelCls} htmlFor="linkedin-url">
@@ -223,7 +223,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
         </div>
       </div>
 
-      {/* Portfolio / Personal Website */}
+      {}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-3.5 shadow-sm">
         <div className="flex items-center justify-between">
           <label className={labelCls} htmlFor="portfolio-url">
@@ -266,7 +266,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
         </div>
       </div>
 
-      {/* High-Density Live Synced Social Data Card */}
+      {}
       {ghData && (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 space-y-4 shadow-xl">
           <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">

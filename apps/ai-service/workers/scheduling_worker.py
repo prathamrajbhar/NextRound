@@ -29,9 +29,9 @@ async def process_scheduling_job(job_data: dict) -> bool:
     availability_hours = job_data.get("availabilityHours") or None
 
     async def run() -> dict:
-        # Run Scheduler Agent. When the candidate has no real email the agent
-        # returns status "email_unavailable" with an empty formatted_email — no
-        # fabricated recipient is ever drafted.
+
+
+
         result = await run_scheduler_agent(
             application_id=application_id,
             interview_id=interview_id,
@@ -42,9 +42,9 @@ async def process_scheduling_job(job_data: dict) -> bool:
             availability_hours=availability_hours,
         )
 
-        # Post generated slots back to Express internal endpoint. Without a real
-        # interview id there is nowhere honest to post them (a fabricated id would
-        # 404), so the slots are captured in the agent audit record only.
+
+
+
         if interview_id:
             await callback_client.post(
                 f"internal/interviews/{interview_id}/schedule-slots",

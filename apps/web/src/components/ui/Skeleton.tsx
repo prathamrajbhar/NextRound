@@ -5,12 +5,12 @@ import { cn } from '@/lib/cn';
 
 export type SkeletonProps = React.HTMLAttributes<HTMLDivElement>;
 
-/** Shimmering placeholder block used instead of a blank flash while data loads. */
+
 export function Skeleton({ className, ...props }: SkeletonProps) {
   return <div className={cn('skeleton-shimmer relative overflow-hidden rounded-xl', className)} {...props} />;
 }
 
-/** Skeleton rows shaped like a Card, for grid/list loading states. */
+
 export function CardSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn('glass-card p-5 space-y-3', className)}>
@@ -27,7 +27,7 @@ export function CardSkeleton({ className }: { className?: string }) {
   );
 }
 
-/** Skeleton rows shaped like a table, for list/table loading states. */
+
 export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
   return (
     <div className="space-y-3">
@@ -42,7 +42,7 @@ export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: nu
   );
 }
 
-/** Skeleton layout for Jobs Grid. */
+
 export function JobsGridSkeleton({ count = 6 }: { count?: number }) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -62,7 +62,7 @@ export function JobsGridSkeleton({ count = 6 }: { count?: number }) {
   );
 }
 
-/** Skeleton layout for Applications List. */
+
 export function ApplicationsListSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -85,7 +85,7 @@ export function ApplicationsListSkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
-/** Skeleton layout for HR Stats Cards. */
+
 export function HrStatsSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -103,7 +103,7 @@ export function HrStatsSkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
-/** Skeleton layout for HR Analytics dashboard. */
+
 export function AnalyticsGridSkeleton() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -122,7 +122,7 @@ export function AnalyticsGridSkeleton() {
   );
 }
 
-/** Skeleton page title + subtitle. */
+
 export function PageHeaderSkeleton() {
   return (
     <div className="flex items-start gap-3.5">
@@ -135,7 +135,7 @@ export function PageHeaderSkeleton() {
   );
 }
 
-/** Skeleton form fields inside a glass panel, for profile/settings forms. */
+
 export function FormCardSkeleton({ rows = 4 }: { rows?: number }) {
   return (
     <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 p-6 md:p-8 shadow-sm backdrop-blur-md glass-panel space-y-6">
@@ -150,7 +150,7 @@ export function FormCardSkeleton({ rows = 4 }: { rows?: number }) {
   );
 }
 
-/** Skeleton list of notification rows (candidate + HR). */
+
 export function NotificationsListSkeleton({ count = 6 }: { count?: number }) {
   return (
     <div className="space-y-4">
@@ -168,7 +168,7 @@ export function NotificationsListSkeleton({ count = 6 }: { count?: number }) {
   );
 }
 
-/** Skeleton list of mock practice sessions. */
+
 export function MockHistorySkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="space-y-4">
@@ -189,7 +189,7 @@ export function MockHistorySkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
-/** Skeleton grid of resume cards. */
+
 export function ResumesListSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -211,7 +211,7 @@ export function ResumesListSkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
-/** Skeleton layout for candidate job detail page. */
+
 export function JobDetailSkeleton() {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -265,7 +265,7 @@ export function JobDetailSkeleton() {
   );
 }
 
-/** Skeleton layout for candidate application detail page. */
+
 export function ApplicationDetailSkeleton() {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -307,7 +307,7 @@ export function ApplicationDetailSkeleton() {
   );
 }
 
-/** Skeleton layout for HR candidate detail page. */
+
 export function CandidateDetailSkeleton() {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -354,7 +354,7 @@ export function CandidateDetailSkeleton() {
   );
 }
 
-/** Skeleton layout for HR hiring pipeline kanban board. */
+
 export function PipelineBoardSkeleton({ cols = 5 }: { cols?: number }) {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">

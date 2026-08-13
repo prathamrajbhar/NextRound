@@ -16,10 +16,10 @@ class GapAnalysis(BaseModel):
     feedback: str = ""
 
 
-# ML_BYPASS: video engagement ML — upgrade to fer+ or DeepFace for expression analysis (with consent)
-# ML_BYPASS: ATS ML scorer — replace with trained LambdaMART ranker on resume-outcome data
+
+
 class ScreeningOutput(BaseModel):
-    status: str  # 'screening_completed' | 'rejected'
+    status: str
     resume_score: float
     composite_score: float
     semantic_match_score: float
@@ -60,16 +60,16 @@ def parse_resume_node(state: ScreeningState) -> ScreeningState:
         skills = extract_json_array(generate_text(prompt)) or []
 
     if not skills and resume_text:
-        # Keyword-based extraction from the actual resume text — never invents
-        # skills that are not present in the resume.
+
+
         common = ["Python", "TypeScript", "JavaScript", "React", "Node.js", "SQL", "PostgreSQL", "Docker", "AWS", "GraphQL", "REST API", "Git", "System Design"]
         skills = [s for s in common if s.lower() in resume_text.lower()]
 
-    # If the resume yields no skills, the list stays empty — no fabricated
-    # default skill set is injected.
 
-    # Coerce every extracted skill to a non-empty string so downstream nodes
-    # (gap analysis, feedback generation) can safely lowercase/join them.
+
+
+
+
     skills = [str(s).strip() for s in skills if s is not None and str(s).strip()]
 
     state["parsed_skills"] = skills
@@ -109,7 +109,7 @@ def score_against_rubric_node(state: ScreeningState) -> ScreeningState:
     if not rubric:
         raise RuntimeError("Screening rubric is missing; cannot score the application.")
 
-    # Vector embedding match
+
     job_vector = embed_text(job_description)
     resume_vector = embed_resume(resume_text)
     similarity = cosine_similarity(job_vector, resume_vector)
@@ -150,7 +150,7 @@ def compute_gaps_node(state: ScreeningState) -> ScreeningState:
     skills = state.get("parsed_skills", [])
     job_desc = state.get("job_description", "").lower()
 
-    # Identify potential missing skills mentioned in JD
+
     key_jd_terms = ["system architecture", "postgresql", "redis", "bullmq", "webrtc", "docker", "kubernetes", "microservices"]
     missing = [term.title() for term in key_jd_terms if term in job_desc and term not in [s.lower() for s in skills]]
 
@@ -278,7 +278,7 @@ async def run_screening_agent(
         except Exception as e:
             logger.error(f"LangGraph execution error in Screening Agent: {e}")
 
-    # Fallback linear execution if graph invocation fails or LangGraph unavailable
+
     s1 = parse_resume_node(initial_state)
     s2 = score_against_rubric_node(s1)
     s3 = compute_gaps_node(s2)

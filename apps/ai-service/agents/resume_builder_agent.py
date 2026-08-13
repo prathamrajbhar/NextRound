@@ -32,7 +32,7 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
     history = state.get("conversation_history", [])
     candidate_input = state.get("latest_candidate_response", "").strip()
 
-    # Determine next stage
+
     stage_idx = STAGES.index(current_stage) if current_stage in STAGES else 0
     if turn % 2 == 0 and stage_idx < len(STAGES) - 1:
         stage_idx += 1
@@ -64,8 +64,8 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
     ai_response = (parsed or {}).get("response")
     insight = (parsed or {}).get("realtime_insight") if parsed else None
 
-    # A turn without real LLM output must fail — the caller raises a proper HTTP
-    # error instead of receiving canned text.
+
+
     if not ai_response:
         raise RuntimeError("Resume builder LLM returned no response for this turn.")
 

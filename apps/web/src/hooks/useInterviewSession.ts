@@ -67,7 +67,7 @@ export function useInterviewSession({
           multiple_faces_detected: null,
         });
       } catch {
-        // Background telemetry errors are non-fatal.
+        
       }
     }, 8000);
     return () => clearInterval(pTimer);
@@ -87,7 +87,7 @@ export function useInterviewSession({
         await apiClient.post(`/interviews/${interviewId}/consent`, { consent: true });
         await apiClient.post(`/interviews/${interviewId}/session-token`);
       } catch {
-        // Consent/session-token are best-effort; the interview continues.
+        
       }
     }
 
@@ -111,7 +111,7 @@ export function useInterviewSession({
   const submitAnswer = async (text: string) => {
     if (!text.trim() || isAnalyzing) return;
 
-    // eslint-disable-next-line react-hooks/purity
+    
     const currentTimestamp = Date.now();
     const timestamp = new Date(currentTimestamp).toLocaleTimeString();
     setMessages((prev) => [...prev, { id: `c-${currentTimestamp}`, role: 'candidate', content: text, timestamp }]);

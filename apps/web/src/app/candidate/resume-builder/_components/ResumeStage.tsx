@@ -31,7 +31,7 @@ export function ResumeStage({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-      {/* Left Controls */}
+      {}
       <div className="lg:col-span-4 space-y-6">
         <div className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm space-y-5">
           <div className="flex items-center justify-between">
@@ -63,7 +63,7 @@ export function ResumeStage({
           </div>
         </div>
 
-        {/* Template Selector & Toolbar */}
+        {}
         <div className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm space-y-4">
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Sliders className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Layout Theme
@@ -126,7 +126,7 @@ export function ResumeStage({
         </div>
       </div>
 
-      {/* Right Paper Resume */}
+      {}
       <div className="lg:col-span-8">
         <div className="rounded-3xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 p-8 shadow-xl space-y-6 text-slate-900 dark:text-slate-100 font-sans min-h-[750px]">
           <div className="border-b border-slate-200 dark:border-slate-800 pb-5 text-center space-y-2">

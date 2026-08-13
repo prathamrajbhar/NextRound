@@ -11,11 +11,11 @@ interface UseAssessmentDetailsOptions {
   role?: string;
 }
 
-/**
- * Resolves the display company/role/difficulty for an assessment: prefers the
- * linked Application (job context) over the MockSession record over the
- * fallback props.
- */
+
+
+
+
+
 export function useAssessmentDetails({ sessionId, applicationId, company, role }: UseAssessmentDetailsOptions) {
   const [session, setSession] = useState<Partial<MockSession>>({
     id: sessionId,

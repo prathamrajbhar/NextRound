@@ -39,7 +39,7 @@ export function EmailTemplatesTab({
         </div>
       </div>
 
-      {/* Template Selectors */}
+      {}
       <div className="flex flex-wrap gap-2">
         {[
           { id: 'interview', label: 'Interview Invitation' },
@@ -62,7 +62,7 @@ export function EmailTemplatesTab({
         ))}
       </div>
 
-      {/* Template Editor */}
+      {}
       <div className="space-y-4">
         <div>
           <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">

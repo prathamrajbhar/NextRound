@@ -16,7 +16,7 @@ const accentClass: Record<CardAccent, string> = {
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   accent?: CardAccent;
-  /** Disable the hover lift/shadow transition, e.g. for static display cards */
+  
   hoverable?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
 }
@@ -28,10 +28,10 @@ const paddingClass = {
   lg: 'p-6',
 };
 
-/**
- * Formalized version of the repeated `.glass-panel`/`.glass-card` div pattern
- * used across the app — same visual language, now a single reusable component.
- */
+
+
+
+
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, accent = 'none', hoverable = true, padding = 'md', children, ...props }, ref) => {
     return (

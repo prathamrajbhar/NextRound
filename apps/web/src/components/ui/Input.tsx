@@ -4,11 +4,11 @@ import React from 'react';
 import { cn } from '@/lib/cn';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  /** Icon rendered inside the field, left-aligned */
+  
   icon?: React.ReactNode;
-  /** Validation error message — renders red border + helper text */
+  
   error?: string;
-  /** Neutral helper text shown under the field when there's no error */
+  
   hint?: string;
   label?: string;
   wrapperClassName?: string;

@@ -14,16 +14,16 @@ import type { AppUserCtx } from '../../services/application.service';
 
 export const applicationRouter = Router();
 
-// Org scoping is JWT-derived; never accept a client-supplied org_id.
+
 applicationRouter.use(rejectOrgIdParam);
 
-/** Snapshot the authenticated user's identity for the HTTP-free service layer. */
+
 function userCtx(req: Request): AppUserCtx {
   const u = req.user!;
   return { userId: u.userId, role: u.role, orgId: u.orgId, email: u.email };
 }
 
-// POST /api/v1/applications - Candidate submit application
+
 applicationRouter.post(
   '/',
   authenticate,
@@ -34,7 +34,7 @@ applicationRouter.post(
   })
 );
 
-// GET /api/v1/applications/my - Candidate get own applications
+
 applicationRouter.get(
   '/my',
   authenticate,
@@ -48,7 +48,7 @@ applicationRouter.get(
   })
 );
 
-// GET /api/v1/applications - HR list applications (optionally filtered by ?jobId)
+
 applicationRouter.get(
   '/',
   authenticate,
@@ -60,7 +60,7 @@ applicationRouter.get(
   })
 );
 
-// GET /api/v1/applications/:id - Fetch single application details
+
 applicationRouter.get(
   '/:id',
   authenticate,
@@ -73,7 +73,7 @@ applicationRouter.get(
   })
 );
 
-// POST /api/v1/applications/:id/run-screening - Run or re-run AI screening evaluation
+
 applicationRouter.post(
   '/:id/run-screening',
   authenticate,
@@ -86,7 +86,7 @@ applicationRouter.post(
   })
 );
 
-// PATCH /api/v1/applications/:id/status - HR override stage status
+
 applicationRouter.patch(
   '/:id/status',
   authenticate,
@@ -98,7 +98,7 @@ applicationRouter.patch(
   })
 );
 
-// PATCH /api/v1/applications/:id - HR advance candidate stage (Kanban). Maps stage name to status.
+
 applicationRouter.patch(
   '/:id',
   authenticate,
@@ -114,7 +114,7 @@ applicationRouter.patch(
   })
 );
 
-// POST /api/v1/applications/:id/schedule - Schedule HR round / voice interview
+
 applicationRouter.post(
   '/:id/schedule',
   authenticate,
@@ -127,7 +127,7 @@ applicationRouter.post(
   })
 );
 
-// POST /api/v1/applications/:id/withdraw - Candidate withdraw application
+
 applicationRouter.post(
   '/:id/withdraw',
   authenticate,
@@ -137,7 +137,7 @@ applicationRouter.post(
   })
 );
 
-// GET /api/v1/applications/:id/assessment/aptitude/chunk - Fetch progressive AI aptitude chunk
+
 applicationRouter.get(
   '/:id/assessment/aptitude/chunk',
   authenticate,
@@ -155,7 +155,7 @@ applicationRouter.get(
   })
 );
 
-// POST /api/v1/applications/:id/assessment/aptitude/chunk - Submit current chunk & fetch next chunk
+
 applicationRouter.post(
   '/:id/assessment/aptitude/chunk',
   authenticate,
@@ -168,7 +168,7 @@ applicationRouter.post(
   })
 );
 
-// GET /api/v1/applications/:id/assessment/aptitude - Fetch dynamic LLM aptitude test questions
+
 applicationRouter.get(
   '/:id/assessment/aptitude',
   authenticate,
@@ -178,21 +178,21 @@ applicationRouter.get(
   })
 );
 
-// POST /api/v1/applications/:id/assessment/aptitude - Submit aptitude assessment answers
-// NOTE: keeps the legacy top-level score fields (not the data envelope) because
-// the web client reads res.score directly (AptitudeTestConsole).
+
+
+
 applicationRouter.post(
   '/:id/assessment/aptitude',
   authenticate,
   requireRole('candidate'),
   asyncHandler(async (req, res) => {
     const data = await applicationService.submitAptitude(req.params.id as string, req.user!.userId, req.body);
-    // Wrap in data envelope so apiClient.post() can return res.score correctly
+    
     res.json({ success: true, data });
   })
 );
 
-// GET /api/v1/applications/:id/assessment/coding - Fetch coding problem
+
 applicationRouter.get(
   '/:id/assessment/coding',
   authenticate,
@@ -202,7 +202,7 @@ applicationRouter.get(
   })
 );
 
-// POST /api/v1/applications/:id/assessment/coding - Submit candidate code
+
 applicationRouter.post(
   '/:id/assessment/coding',
   authenticate,
@@ -212,7 +212,7 @@ applicationRouter.post(
   })
 );
 
-// GET /api/v1/applications/:id/assessment/coding/:submissionId - Poll submission status
+
 applicationRouter.get(
   '/:id/assessment/coding/:submissionId',
   authenticate,
@@ -221,8 +221,8 @@ applicationRouter.get(
   })
 );
 
-// POST /api/v1/applications/:id/reschedule - Reschedule interview request
-// NOTE: legacy top-level message shape (no data envelope) preserved as-is.
+
+
 applicationRouter.post(
   '/:id/reschedule',
   authenticate,
@@ -233,7 +233,7 @@ applicationRouter.post(
   })
 );
 
-// GET /api/v1/applications/offer/token/:token - Get offer by magic link token
+
 applicationRouter.get(
   '/offer/token/:token',
   asyncHandler(async (req, res) => {
@@ -241,7 +241,7 @@ applicationRouter.get(
   })
 );
 
-// GET /api/v1/applications/:id/offer - Fetch application offer details
+
 applicationRouter.get(
   '/:id/offer',
   authenticate,
@@ -254,8 +254,8 @@ applicationRouter.get(
   })
 );
 
-// POST /api/v1/applications/:id/offer/sign - Digitally sign offer
-// Auth: authenticated candidate owner OR a valid magic_link_token (from the emailed link)
+
+
 applicationRouter.post(
   '/:id/offer/sign',
   optionalAuthenticate,
@@ -267,8 +267,8 @@ applicationRouter.post(
   })
 );
 
-// POST /api/v1/applications/:id/offer/decline - Candidate declines offer
-// Auth: authenticated candidate owner OR a valid magic_link_token (from the emailed link)
+
+
 applicationRouter.post(
   '/:id/offer/decline',
   optionalAuthenticate,

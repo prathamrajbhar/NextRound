@@ -9,9 +9,9 @@ interface ConsoleExitConfirmProps {
   onConfirm: () => void;
 }
 
-/**
- * Confirmation overlay shown before ending an interview session.
- */
+
+
+
 export function ConsoleExitConfirm({ isOpen, onCancel, onConfirm }: ConsoleExitConfirmProps) {
   if (!isOpen) return null;
 

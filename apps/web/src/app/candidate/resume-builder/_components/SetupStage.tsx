@@ -51,7 +51,7 @@ export function SetupStage({
   const [micTesting, setMicTesting] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
 
-  // Real microphone level monitoring
+  
   useEffect(() => {
     let audioContext: AudioContext | null = null;
     let analyser: AnalyserNode | null = null;
@@ -100,11 +100,11 @@ export function SetupStage({
   return (
     <div className="relative w-full space-y-6 animate-in fade-in duration-300 font-sans p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800/40 bg-white dark:bg-slate-950 text-slate-800 dark:text-white shadow-xl dark:shadow-2xl overflow-hidden">
       
-      {/* Background Ambient Mesh Gradients */}
+      {}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/5 dark:bg-orange-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-600/5 dark:bg-amber-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
 
-      {/* Header Bar */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 dark:border-white/5 pb-4 z-10 relative">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900/50 mb-1.5">
@@ -119,7 +119,7 @@ export function SetupStage({
           </p>
         </div>
 
-        {/* Quick Studio Stats & Past Resumes Vault Link */}
+        {}
         <div className="flex items-center gap-3">
           <Link
             href="/candidate/resumes"
@@ -139,20 +139,20 @@ export function SetupStage({
         </div>
       </div>
 
-      {/* Main Configuration Panel Layout */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start z-10 relative">
         
-        {/* Left Side: Setup config forms (8 cols) */}
+        {}
         <div className="lg:col-span-8 space-y-6">
           
-          {/* Target Role configuration */}
+          {}
           <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-5">
             <h2 className="text-xs font-extrabold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-white/5 pb-3">
               <Target className="h-4.5 w-4.5 text-orange-500 dark:text-orange-400" />
               Target Position &amp; Role Focus
             </h2>
 
-            {/* Target Job Title Input */}
+            {}
             <div className="space-y-2">
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                 Target Job Title
@@ -166,7 +166,7 @@ export function SetupStage({
               />
             </div>
 
-            {/* Position presets */}
+            {}
             <div className="space-y-2">
               <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Popular Positions</span>
               <div className="flex flex-wrap gap-2">
@@ -192,14 +192,14 @@ export function SetupStage({
             </div>
           </div>
 
-          {/* Seniority & Domain configuration */}
+          {}
           <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-5">
             <h2 className="text-xs font-extrabold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-white/5 pb-3">
               <Layers className="h-4.5 w-4.5 text-orange-500 dark:text-orange-400" />
               Seniority &amp; Domain Focus
             </h2>
 
-            {/* Target Experience Level */}
+            {}
             <div className="space-y-2">
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                 Target Experience Level
@@ -229,7 +229,7 @@ export function SetupStage({
               </div>
             </div>
 
-            {/* Domain focus */}
+            {}
             <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-white/5">
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                 Domain Industry Focus
@@ -255,10 +255,10 @@ export function SetupStage({
 
         </div>
 
-        {/* Right Side: Microphone diagnostic tool (4 cols) */}
+        {}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* Microfone Pre-check and Diagnostic */}
+          {}
           <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-3">
               <div className="flex items-center gap-2">
@@ -278,7 +278,7 @@ export function SetupStage({
               </button>
             </div>
 
-            {/* Visual sound waveform bars */}
+            {}
             <div className="h-12 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/5 px-4 flex items-end gap-[3px] overflow-hidden">
               {[...Array(18)].map((_, i) => {
                 const barHeight = micTesting
@@ -311,7 +311,7 @@ export function SetupStage({
 
       </div>
 
-      {/* Launcher Action Footer Bar */}
+      {}
       <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 z-10 relative">
         <div className="space-y-1 text-center sm:text-left">
           <div className="flex items-center gap-2 justify-center sm:justify-start">

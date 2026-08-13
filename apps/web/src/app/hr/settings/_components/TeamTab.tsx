@@ -32,7 +32,7 @@ export function TeamTab({
 }: TeamTabProps) {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Invite Recruiter Card */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
         <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           <Users className="h-4.5 w-4.5 text-indigo-600 dark:text-indigo-400" />
@@ -71,7 +71,7 @@ export function TeamTab({
         </form>
       </div>
 
-      {/* Active Team Table */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
         <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 font-display">
           Active Team Members ({team.length})

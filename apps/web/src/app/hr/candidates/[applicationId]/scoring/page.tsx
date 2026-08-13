@@ -107,7 +107,7 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 pb-12 font-sans">
-      {/* Breadcrumbs */}
+      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
           <Link href="/hr/jobs" className="hover:text-brand-600 dark:hover:text-orange-400">Jobs</Link>
@@ -133,11 +133,11 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
       <CandidateHeader app={app} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Left Column (2 Cols) */}
+        {}
         <div className="lg:col-span-2 space-y-6">
           <SkillsScorecard scores={app.scores} />
 
-          {/* AI Evaluator Reasoning */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-3">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 font-display">
               AI Agent Vetting Reasoning
@@ -151,7 +151,7 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
 
           {proctorReport && <ProctoringReportCard report={proctorReport} />}
 
-          {/* Gap Analysis */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 font-display">
               Screening Gap Analysis
@@ -162,7 +162,7 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
           </div>
         </div>
 
-        {/* Right Column: Decision controls */}
+        {}
         <div className="space-y-6">
           {app.stage?.toLowerCase() === 'hr round' && (
             <div className="rounded-3xl border border-brand-200/80 dark:border-orange-800/80 bg-brand-50/40 dark:bg-orange-950/40 p-6 shadow-md backdrop-blur-md glass-panel text-center space-y-3">
@@ -190,7 +190,7 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
             showApprovalButtons={true}
           />
 
-          {/* Voice Session Replay */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel text-center space-y-4">
             <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-display">
               Interview Session Replay
@@ -207,7 +207,7 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
               <span>Replay Voice Session</span>
             </button>
 
-            {/* Engagement Telemetry Grid */}
+            {}
             <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-200/60 dark:border-slate-800 text-left">
               <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Gaze Contact</span>

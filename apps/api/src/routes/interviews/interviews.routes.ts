@@ -15,8 +15,8 @@ import {
 
 export const interviewRouter = Router();
 
-// All routes require authentication.
-// Org scoping is always derived from the JWT — never accepted from the client.
+
+
 interviewRouter.use(authenticate);
 interviewRouter.use(rejectOrgIdParam);
 

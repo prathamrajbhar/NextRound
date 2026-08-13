@@ -9,7 +9,7 @@ logger = logging.getLogger("interviewer_agent")
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
-# ML_BYPASS: voice streaming pipeline — upgrade to streaming Gemini tokens to Piper/XTTS-v2
+
 class InterviewerState(TypedDict, total=False):
     interview_id: str
     application_id: str
@@ -19,7 +19,7 @@ class InterviewerState(TypedDict, total=False):
     job_rubric: dict
     candidate_resume: str
     conversation_history: List[Dict[str, str]]
-    current_stage: str  # 'intro' | 'technical' | 'behavioral' | 'project' | 'closing'
+    current_stage: str
     turn_number: int
     scores_so_far: Dict[str, float]
     is_complete: bool
@@ -27,7 +27,7 @@ class InterviewerState(TypedDict, total=False):
     evasion_flags: List[str]
     latest_candidate_response: str
     latest_ai_response: str
-    next_action: str  # 'follow_up' | 'generate_question' | 'advance_stage' | 'close_interview'
+    next_action: str
     final_scorecard: dict
 
 
@@ -58,7 +58,7 @@ def evaluate_last_answer_node(state: InterviewerState) -> InterviewerState:
     current_stage = state.get("current_stage", "technical")
     logger.info(f"Evaluating answer for stage {current_stage}: '{candidate_ans[:60]}...'")
 
-    # Simple heuristic + GenAI verification for shallow or evasive answer
+
     words = candidate_ans.split()
     is_shallow = len(words) < 12
     is_evasive = any(term in candidate_ans.lower() for term in ["don't know", "not sure", "skip", "pass", "no idea"])
@@ -91,19 +91,19 @@ def decide_next_action_node(state: InterviewerState) -> InterviewerState:
     follow_up_depth = state.get("follow_up_depth", 0)
     candidate_ans = state.get("latest_candidate_response", "").lower()
 
-    # If candidate wants to end (only close early after enough turns to avoid a
-    # turn-1 "goodbye" trivially ending a live interview)
+
+
     if ("goodbye" in candidate_ans or "thank you" in candidate_ans) and turn_number > 6:
         state["next_action"] = "close_interview"
         return state
 
-    # If answer was evasive/shallow and follow_up_depth < 1, do follow up
+
     evasion_flags = state.get("evasion_flags", [])
     if evasion_flags and follow_up_depth < 1 and current_stage in ["technical", "project"]:
         state["next_action"] = "follow_up"
         return state
 
-    # Stage transitions based on turn counts
+
     if current_stage == "intro" and turn_number >= 1:
         state["next_action"] = "advance_stage"
     elif current_stage == "technical" and turn_number >= 4:
@@ -271,7 +271,7 @@ def finalize_scores_node(state: InterviewerState) -> InterviewerState:
 
     llm = _gemini_score_transcript(history, state.get("job_title") or "")
     if llm:
-        # Only accept scores the model actually returned — never default 0.0.
+
         tech = round(float(llm["technical_depth"]), 1) if llm.get("technical_depth") is not None else None
         comm = round(float(llm["communication"]), 1) if llm.get("communication") is not None else None
         prob = round(float(llm["problem_solving"]), 1) if llm.get("problem_solving") is not None else None
@@ -279,8 +279,8 @@ def finalize_scores_node(state: InterviewerState) -> InterviewerState:
             composite = round(float(llm["overall_score"]), 1)
         summary_feedback = llm.get("summary_feedback")
 
-    # Fall back to real per-turn scores when the transcript-level score is
-    # missing, but only for dimensions the model actually returned.
+
+
     if tech is None and scores.get("technical") is not None:
         tech = round(float(scores["technical"]), 1)
     if comm is None and scores.get("communication") is not None:
@@ -308,7 +308,7 @@ def finalize_scores_node(state: InterviewerState) -> InterviewerState:
     return state
 
 
-# Build LangGraph StateGraph if available
+
 if LANGGRAPH_AVAILABLE:
     graph_builder = StateGraph(InterviewerState)
 
@@ -358,7 +358,7 @@ def run_interviewer_agent(state: InterviewerState) -> InterviewerState:
         except Exception as e:
             logger.error(f"LangGraph execution error: {e}. Falling back to linear execution.")
 
-    # Linear Fallback Execution
+
     state = load_context_node(state)
     if state.get("latest_candidate_response"):
         state = evaluate_last_answer_node(state)

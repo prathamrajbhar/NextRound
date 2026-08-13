@@ -98,7 +98,7 @@ export default function HrNotificationsPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-16 animate-in fade-in duration-200">
-      {/* Header Bar */}
+      {}
       <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
@@ -141,7 +141,7 @@ export default function HrNotificationsPage() {
         </div>
       </div>
 
-      {/* Streamlined Filter Bar (All / Unread Only) */}
+      {}
       <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs font-bold w-fit">
         <button
           type="button"
@@ -172,7 +172,7 @@ export default function HrNotificationsPage() {
         </button>
       </div>
 
-      {/* Activity Feed Table */}
+      {}
       {loading ? (
         <NotificationsListSkeleton count={6} />
       ) : (
@@ -193,32 +193,32 @@ export default function HrNotificationsPage() {
                     }`}
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
-                      {/* Status Pulse Dot */}
+                      {}
                       <span
                         className={`h-2 w-2 rounded-full shrink-0 ${
                           n.read ? 'bg-transparent' : 'bg-brand-500 animate-pulse'
                         }`}
                       />
 
-                      {/* Icon Badge */}
+                      {}
                       <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200/60 dark:border-slate-700/60">
                         {meta.icon}
                       </div>
 
-                      {/* Notification Text */}
+                      {}
                       <p className="truncate text-xs font-semibold leading-relaxed">
                         {n.text}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-4 shrink-0">
-                      {/* Timestamp */}
+                      {}
                       <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {n.time}
                       </span>
 
-                      {/* Action Toolbar on Hover */}
+                      {}
                       <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                         {!n.read && (
                           <button

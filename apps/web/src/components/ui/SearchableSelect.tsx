@@ -6,8 +6,8 @@ import { cn } from '@/lib/cn';
 import { CompanyLogo } from './CompanyLogo';
 
 export interface SearchableSelectOption {
-  value: string; // unique key — orgId for companies, role title for roles
-  label: string; // display string — orgName / role title
+  value: string; 
+  label: string; 
   logoUrl?: string;
   sublabel?: string;
 }

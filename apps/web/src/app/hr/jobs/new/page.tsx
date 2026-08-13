@@ -6,7 +6,7 @@ import { ChevronRight, ArrowLeft, Save, Send } from 'lucide-react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 
-// Component imports
+
 import JobBasicsCard from './components/JobBasicsCard';
 import JobDescriptionCard from './components/JobDescriptionCard';
 import AiExtractPanel from './components/AiExtractPanel';
@@ -16,7 +16,7 @@ import PipelineConfigCard from './components/PipelineConfigCard';
 export default function HrCreateJob() {
   const router = useRouter();
 
-  // Basic States
+  
   const [title, setTitle] = useState('');
   const [department, setDepartment] = useState('Engineering');
   const [locationType, setLocationType] = useState('Remote');
@@ -24,7 +24,7 @@ export default function HrCreateJob() {
   const [minSalary, setMinSalary] = useState(1300000);
   const [maxSalary, setMaxSalary] = useState(1800000);
 
-  // Description & AI assistant state
+  
   const [jd, setJd] = useState('');
   const [assisting, setAssisting] = useState(false);
   const [assisted, setAssisted] = useState(false);
@@ -33,7 +33,7 @@ export default function HrCreateJob() {
   const [softSkills, setSoftSkills] = useState<string[]>([]);
   const [cultureKeywords, setCultureKeywords] = useState<string[]>([]);
 
-  // Rubric weights state
+  
   const [rubric, setRubric] = useState({
     technical: 25,
     communication: 25,
@@ -42,7 +42,7 @@ export default function HrCreateJob() {
   });
   const [autoBalance, setAutoBalance] = useState(true);
 
-  // Pipeline configuration state
+  
   const [minScore, setMinScore] = useState(80);
   const [autoOffer, setAutoOffer] = useState(false);
   const [qCount, setQCount] = useState(5);
@@ -241,10 +241,10 @@ export default function HrCreateJob() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in duration-200">
-      {/* Top Header & Global Actions */}
+      {}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-5">
         <div>
-          {/* Breadcrumb */}
+          {}
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider mb-1">
             <Link href="/hr/jobs" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               Jobs
@@ -260,7 +260,7 @@ export default function HrCreateJob() {
           </p>
         </div>
 
-        {/* Action Controls */}
+        {}
         <div className="flex items-center gap-3">
           <Link
             href="/hr/jobs"
@@ -291,9 +291,9 @@ export default function HrCreateJob() {
         </div>
       </div>
 
-      {/* Clean 2-Column Responsive Layout */}
+      {}
       <form onSubmit={handlePublish} className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {/* Left Column - Core Basics, Description & AI Parameters */}
+        {}
         <div className="lg:col-span-2 space-y-6">
           <JobBasicsCard
             title={title}
@@ -330,7 +330,7 @@ export default function HrCreateJob() {
           />
         </div>
 
-        {/* Right Column - Rubric Weighting & Pipeline Settings */}
+        {}
         <div className="space-y-6 lg:sticky lg:top-6">
           <RubricWeightingCard
             technical={rubric.technical}

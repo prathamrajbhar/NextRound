@@ -13,10 +13,10 @@ export interface ExtractedRequirements {
   enhancedDescription?: string;
 }
 
-/**
- * Extracts technical skills, soft skills, culture keywords, and rubric weights
- * directly from raw job description text using Gemini LLM with context-aware fallback.
- */
+
+
+
+
 export async function extractRequirementsFromJd(
   description: string,
   title?: string
@@ -56,7 +56,7 @@ Return ONLY a valid JSON object matching this schema:
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
 
-        // Normalize rubric weights to guarantee sum === 100
+        
         let tech = Math.max(10, Math.min(80, Number(parsed.rubric?.technical) || 30));
         let comm = Math.max(10, Math.min(80, Number(parsed.rubric?.communication) || 20));
         let prob = Math.max(10, Math.min(80, Number(parsed.rubric?.problemSolving) || 25));
@@ -85,18 +85,18 @@ Return ONLY a valid JSON object matching this schema:
     }
   }
 
-  // Context-aware NLP Heuristic Fallback based ON THE ACTUAL INPUT TEXT
+  
   return extractNlpFallback(description, title);
 }
 
-/**
- * Context-aware NLP Fallback scanning the ACTUAL job description text
- * instead of returning hardcoded generic dummy data.
- */
+
+
+
+
 function extractNlpFallback(description: string, title?: string): ExtractedRequirements {
   const combinedText = `${title || ''} ${description}`;
 
-  // Comprehensive tech keywords library
+  
   const knownTech = [
     'React', 'TypeScript', 'JavaScript', 'Next.js', 'Node.js', 'Express', 'Python', 'PyTorch',
     'TensorFlow', 'LLM', 'LLMs', 'Generative AI', 'RAG', 'Vector Database', 'Vector DB', 'Pinecone',
@@ -115,7 +115,7 @@ function extractNlpFallback(description: string, title?: string): ExtractedRequi
     }
   });
 
-  // Extract capital tech acronyms or phrases from text (e.g. AI/ML, NLP, Prompt Engineering)
+  
   const regexPatterns = [
     /\b(AI\/ML|NLP|LLM|RAG|REST API|GraphQL|CI\/CD|UI\/UX|MLOps|DevOps)\b/gi,
     /\b(Machine Learning|Deep Learning|Artificial Intelligence|Prompt Engineering|Vector Databases)\b/gi
@@ -132,7 +132,7 @@ function extractNlpFallback(description: string, title?: string): ExtractedRequi
     }
   });
 
-  // Soft skills keywords
+  
   const softSkillCatalog = [
     'Collaboration', 'Cross-functional Collaboration', 'Problem Solving', 'Technical Leadership',
     'Stakeholder Management', 'Communication', 'Public Speaking', 'Analytical Thinking',
@@ -153,7 +153,7 @@ function extractNlpFallback(description: string, title?: string): ExtractedRequi
     }
   }
 
-  // Culture keywords
+  
   const cultureCatalog = [
     'Innovation', 'Customer Obsessed', 'High Performance', 'Metrics-Driven', 'Detail Oriented',
     'Fast Execution', 'Design Excellence', 'Continuous Learning', 'User Centricity'
@@ -169,7 +169,7 @@ function extractNlpFallback(description: string, title?: string): ExtractedRequi
     extractedCulture.push('Innovation', 'Continuous Learning', 'High Performance');
   }
 
-  // Dynamic rubric weighting
+  
   let techWeight = 30;
   if (extractedTech.length > 5) techWeight = 35;
   if (combinedText.toLowerCase().includes('ai') || combinedText.toLowerCase().includes('architecture')) techWeight = 35;

@@ -27,7 +27,7 @@ export function CompensationEligibilityStep({ form, update }: OnboardingStepProp
   const minSalNum = Number(form.expectedSalaryMin) || Number(form.expectedSalary) || 0;
   const maxSalNum = Number(form.expectedSalaryMax) || minSalNum || 0;
 
-  // Calculate percentage hike target
+  
   const minHikePercent =
     currentCtcNum > 0 && minSalNum > currentCtcNum
       ? Math.round(((minSalNum - currentCtcNum) / currentCtcNum) * 100)
@@ -46,7 +46,7 @@ export function CompensationEligibilityStep({ form, update }: OnboardingStepProp
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* 1. Current CTC Section */}
+      {}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl space-y-3">
         <label className={labelCls}>Current CTC (₹ LPA)</label>
         <div className="relative">
@@ -63,7 +63,7 @@ export function CompensationEligibilityStep({ form, update }: OnboardingStepProp
         <p className="text-xs text-slate-400 font-medium">Your current annual compensation in Lakhs Per Annum (LPA)</p>
       </div>
 
-      {/* 2. Target Salary Range Section */}
+      {}
       <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
           <div>
@@ -88,7 +88,7 @@ export function CompensationEligibilityStep({ form, update }: OnboardingStepProp
           )}
         </div>
 
-        {/* Range Dual Inputs */}
+        {}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 items-center">
           <div>
             <label className="block text-xs font-black text-slate-300 mb-1.5">Min Target (₹ LPA)</label>
@@ -131,7 +131,7 @@ export function CompensationEligibilityStep({ form, update }: OnboardingStepProp
           </div>
         </div>
 
-        {/* Quick Salary Range Presets */}
+        {}
         <div>
           <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 block mb-2">Quick Presets</span>
           <div className="flex flex-wrap gap-2">
@@ -156,7 +156,7 @@ export function CompensationEligibilityStep({ form, update }: OnboardingStepProp
         </div>
       </div>
 
-      {/* 3. Notice Period Selectable Cards */}
+      {}
       <div>
         <label className={labelCls}>Notice Period</label>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -180,7 +180,7 @@ export function CompensationEligibilityStep({ form, update }: OnboardingStepProp
         </div>
       </div>
 
-      {/* Security Privacy Guarantee */}
+      {}
       <p className="flex items-center gap-2.5 text-xs text-slate-300 font-medium rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm">
         <ShieldCheck className="h-4.5 w-4.5 text-emerald-400 shrink-0" />
         <span>Salary targets &amp; notice period are strictly private — only shared with employers you apply to.</span>

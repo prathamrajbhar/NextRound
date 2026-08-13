@@ -39,12 +39,12 @@ const variantStyles: Record<ToastVariant, { icon: React.ReactNode; className: st
   },
 };
 
-/**
- * App-wide toast notifications (per docs/screens.md §F: "Toast Notifications
- * — success/error feedback across all forms and actions"). Mount
- * <ToastProvider> once near the root layout, then call useToast().toast(...)
- * anywhere in the tree.
- */
+
+
+
+
+
+
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [mounted, setMounted] = useState(false);

@@ -33,7 +33,7 @@ export default function CandidateLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    
     setMounted(true);
     const savedAvatar = localStorage.getItem('candidate_avatar');
     const savedName = localStorage.getItem('candidate_name');
@@ -43,7 +43,7 @@ export default function CandidateLayout({
 
   const displayName = mounted ? (name || (user?.email ? user.email.split('@')[0] : 'Candidate')) : 'Candidate';
 
-  // Notification state
+  
   const [notifications, setNotifications] = useState<{ id: number; rawId?: string; text: string; time: string; read: boolean }[]>([]);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function CandidateLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50/50 dark:bg-slate-950/60 relative transition-colors duration-300">
-      {/* Backdrop overlay for mobile */}
+      {}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -105,7 +105,7 @@ export default function CandidateLayout({
         />
       )}
 
-      {/* Sidebar container */}
+      {}
       <div className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
         <CandidateSidebar avatar={avatar} name={displayName} />
@@ -114,7 +114,7 @@ export default function CandidateLayout({
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 border-b border-white/60 dark:border-slate-800/80 bg-white/20 dark:bg-slate-900/60 backdrop-blur-sm flex items-center justify-between px-4 md:px-8 relative z-30 transition-colors duration-300">
           <div className="flex items-center gap-3">
-            {/* Hamburger Menu Trigger */}
+            {}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-all cursor-pointer md:hidden flex items-center justify-center"
@@ -125,10 +125,10 @@ export default function CandidateLayout({
           </div>
 
           <div className="flex items-center gap-3 md:gap-4">
-            {/* Dark Mode Toggle Button */}
+            {}
             <ThemeToggle />
 
-            {/* Notification Bell Button (Navigates directly to Notifications Page) */}
+            {}
             <Link
               href="/candidate/notifications"
               className="relative p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-all block"
@@ -140,7 +140,7 @@ export default function CandidateLayout({
               )}
             </Link>
 
-            {/* Candidate Avatar Info */}
+            {}
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{displayName}</span>
               <Image

@@ -52,7 +52,7 @@ const ROLE_OPTIONS: { value: Role; label: string; icon: AuthBenefit['icon'] }[] 
 ];
 
 interface SignupFormProps {
-  /** Account type preselected by the landing page via /signup?role=hr|candidate. */
+  
   initialRole: Role;
 }
 

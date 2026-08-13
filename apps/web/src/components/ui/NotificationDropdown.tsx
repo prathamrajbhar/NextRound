@@ -50,7 +50,7 @@ export function NotificationDropdown({
 
   return (
     <div className="absolute right-0 mt-2.5 w-84 sm:w-96 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl p-4 z-50 animate-in fade-in zoom-in-95 duration-200 space-y-3">
-      {/* Header Toolbar */}
+      {}
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div className="flex items-center gap-2">
           <div className="p-1.5 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
@@ -97,7 +97,7 @@ export function NotificationDropdown({
         </div>
       </div>
 
-      {/* Filter Tabs */}
+      {}
       <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/60 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-xs font-bold">
         <button
           type="button"
@@ -128,7 +128,7 @@ export function NotificationDropdown({
         </button>
       </div>
 
-      {/* Notification List with Custom Scrollbar */}
+      {}
       <div className="max-h-72 overflow-y-auto space-y-2 pr-1 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
         {filteredNotifications.length > 0 ? (
           filteredNotifications.map((n) => (
@@ -157,7 +157,7 @@ export function NotificationDropdown({
                 </div>
               </div>
 
-              {/* Hover Quick Read Checkmark */}
+              {}
               <button
                 type="button"
                 onClick={(e) => {

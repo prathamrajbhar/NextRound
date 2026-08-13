@@ -44,7 +44,7 @@ export function GeneralSettingsTab({
 }: GeneralSettingsTabProps) {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Company Profile Card */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
         <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           <Building2 className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
@@ -108,7 +108,7 @@ export function GeneralSettingsTab({
         </div>
       </div>
 
-      {/* Global AI Screening Parameters Card */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
         <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           <Bot className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />

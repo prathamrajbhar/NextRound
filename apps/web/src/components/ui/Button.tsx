@@ -10,9 +10,9 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
-  /** Icon rendered before the label */
+  
   leftIcon?: React.ReactNode;
-  /** Icon rendered after the label */
+  
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
 }

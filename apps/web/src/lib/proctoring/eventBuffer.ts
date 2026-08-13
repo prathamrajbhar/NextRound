@@ -55,18 +55,18 @@ export class ProctoringEventBuffer {
         throw new Error(`Upload failed with HTTP ${response.status}: ${response.statusText}`);
       }
 
-      // Remove the successfully uploaded batch from buffer
+      
       this.buffer = this.buffer.slice(batch.length);
       this.uploading = false;
       
-      // If more events were added during the request, process them
+      
       if (this.buffer.length > 0) {
         this.triggerUpload();
       }
     } catch (err) {
       console.warn('[ProctoringEventBuffer] Event batch upload failed, will retry:', err);
       this.uploading = false;
-      // Retry in 5 seconds
+      
       setTimeout(() => this.triggerUpload(), 5000);
     }
   }

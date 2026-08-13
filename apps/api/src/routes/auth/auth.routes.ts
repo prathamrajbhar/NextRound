@@ -18,16 +18,17 @@ import {
 import { authenticate } from '../../middleware/auth';
 import { authRateLimiter, forgotPasswordRateLimiter } from '../../middleware/rateLimit';
 import { emailService } from '../../services/email.service';
+import { env } from '../../lib/env';
 
 export const authRouter = Router();
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Fail fast in production when the public app URL is unset — password reset and
-// verification links would otherwise point at the local dev origin.
-if (isProduction && !process.env.NEXT_PUBLIC_APP_URL) {
+
+
+if (isProduction && !process.env.APP_URL) {
   throw new Error(
-    'Refusing to start in production: NEXT_PUBLIC_APP_URL is required for generating password reset and verification links. Set it in the environment.'
+    'Refusing to start in production: APP_URL is required for generating password reset and verification links. Set it in the environment.'
   );
 }
 
@@ -39,21 +40,21 @@ function setAuthCookies(res: Response, payload: JwtPayload) {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
-    maxAge: 60 * 60 * 1000, // 1 hour
+    maxAge: 60 * 60 * 1000, 
   });
 
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000, 
   });
 
   res.cookie('user_role', payload.role, {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000, 
   });
 }
 
@@ -75,7 +76,7 @@ function clearAuthCookies(res: Response) {
   });
 }
 
-// POST /api/v1/auth/register
+
 authRouter.post('/register', authRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validated = RegisterSchema.parse(req.body);
@@ -147,7 +148,7 @@ authRouter.post('/register', authRateLimiter, async (req: Request, res: Response
   }
 });
 
-// POST /api/v1/auth/login
+
 authRouter.post('/login', authRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validated = LoginSchema.parse(req.body);
@@ -197,7 +198,7 @@ authRouter.post('/login', authRateLimiter, async (req: Request, res: Response, n
   }
 });
 
-// POST /api/v1/auth/logout
+
 authRouter.post('/logout', (req: Request, res: Response) => {
   clearAuthCookies(res);
   return res.json({
@@ -206,7 +207,7 @@ authRouter.post('/logout', (req: Request, res: Response) => {
   });
 });
 
-// POST /api/v1/auth/refresh
+
 authRouter.post('/refresh', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const token = req.cookies?.refresh_token || req.body?.refreshToken;
@@ -262,7 +263,7 @@ authRouter.post('/refresh', async (req: Request, res: Response, next: NextFuncti
   }
 });
 
-// GET /api/v1/auth/me
+
 authRouter.get('/me', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
@@ -298,7 +299,7 @@ authRouter.get('/me', authenticate, async (req: Request, res: Response, next: Ne
   }
 });
 
-// POST /api/v1/auth/forgot-password
+
 authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validated = ForgotPasswordSchema.parse(req.body);
@@ -310,7 +311,7 @@ authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Reque
     if (user) {
       const resetToken = crypto.randomBytes(32).toString('hex');
       const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-      const resetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+      const resetExpires = new Date(Date.now() + 60 * 60 * 1000); 
 
       await prisma.user.update({
         where: { id: user.id },
@@ -320,7 +321,7 @@ authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Reque
         },
       });
 
-      const appBaseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const appBaseUrl = env('APP_URL');
       const resetUrl = `${appBaseUrl}/reset-password/${resetToken}`;
 
       try {
@@ -346,7 +347,7 @@ authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Reque
   }
 });
 
-// POST /api/v1/auth/reset-password
+
 authRouter.post('/reset-password', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validated = ResetPasswordSchema.parse(req.body);
@@ -388,7 +389,7 @@ authRouter.post('/reset-password', async (req: Request, res: Response, next: Nex
   }
 });
 
-// PATCH /api/v1/auth/change-password
+
 authRouter.patch('/change-password', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {

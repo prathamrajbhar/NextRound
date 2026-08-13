@@ -69,7 +69,7 @@ export default function SentimentAnalysisPage() {
 
   return (
     <div className="w-full space-y-6 pb-16 animate-in fade-in duration-300">
-      {/* Breadcrumbs */}
+      {}
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 dark:text-slate-400">
         <Link href="/hr/dashboard" className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors flex items-center gap-1">
           <LayoutDashboard className="h-3.5 w-3.5" /> HR Console
@@ -82,7 +82,7 @@ export default function SentimentAnalysisPage() {
         <span className="text-slate-700 dark:text-slate-200 font-bold">Sentiment & Stress Analyser</span>
       </div>
 
-      {/* Header Banner & Candidate Selector */}
+      {}
       <div className="relative overflow-hidden rounded-3xl border border-white/60 dark:border-slate-800 bg-gradient-to-br from-white/90 via-orange-50/20 to-slate-50/50 dark:from-slate-900/90 dark:via-slate-900/80 dark:to-slate-950/90 p-6 md:p-8 shadow-md backdrop-blur-md">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-xl">
@@ -97,7 +97,7 @@ export default function SentimentAnalysisPage() {
             </p>
           </div>
 
-          {/* Candidate Dropdown Selector */}
+          {}
           <div className="flex items-center gap-3 bg-white/80 dark:bg-slate-900/80 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
             <div className="relative h-10 w-10 rounded-xl overflow-hidden border border-orange-200 dark:border-orange-800 flex-shrink-0">
               <Image
@@ -131,9 +131,9 @@ export default function SentimentAnalysisPage() {
         </div>
       </div>
 
-      {/* Candidate Overview Metric Cards */}
+      {}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Overall Stress Score Card */}
+        {}
         <div className="p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400">Stress Index</span>
@@ -159,7 +159,7 @@ export default function SentimentAnalysisPage() {
           </div>
         </div>
 
-        {/* Confidence Rating Card */}
+        {}
         <div className="p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400">Confidence Rating</span>
@@ -173,7 +173,7 @@ export default function SentimentAnalysisPage() {
           </div>
         </div>
 
-        {/* Speech Clarity Card */}
+        {}
         <div className="p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400">Speech Articulation</span>
@@ -187,7 +187,7 @@ export default function SentimentAnalysisPage() {
           </div>
         </div>
 
-        {/* Average Pause Card */}
+        {}
         <div className="p-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400">Avg Pause Cadence</span>
@@ -201,14 +201,14 @@ export default function SentimentAnalysisPage() {
         </div>
       </div>
 
-      {/* Audio Biomarker Breakdown Grid */}
+      {}
       <div className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm space-y-4">
         <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <Brain className="h-4 w-4 text-orange-600 dark:text-orange-400" /> Real-time Vocal Biomarkers Engine
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Audio Tone */}
+          {}
           <div className="p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
             <div className="flex justify-between items-center text-xs font-bold">
               <span className="text-slate-600 dark:text-slate-300">Audio Tone Harmony</span>
@@ -218,7 +218,7 @@ export default function SentimentAnalysisPage() {
             <p className="text-[10px] text-slate-400">Micro-tremor frequency: {currentProfile.biomarkers.audioTone.tremorPercent}%</p>
           </div>
 
-          {/* Speech Pace */}
+          {}
           <div className="p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
             <div className="flex justify-between items-center text-xs font-bold">
               <span className="text-slate-600 dark:text-slate-300">Speech Velocity (WPM)</span>
@@ -228,7 +228,7 @@ export default function SentimentAnalysisPage() {
             <p className="text-[10px] text-slate-400">Target Range: {currentProfile.biomarkers.speechPace.idealRange}</p>
           </div>
 
-          {/* Pitch Variation */}
+          {}
           <div className="p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
             <div className="flex justify-between items-center text-xs font-bold">
               <span className="text-slate-600 dark:text-slate-300">Pitch Micro-variance</span>
@@ -238,7 +238,7 @@ export default function SentimentAnalysisPage() {
             <p className="text-[10px] text-slate-400">Pitch stability index within normal bounds</p>
           </div>
 
-          {/* Pause Patterns */}
+          {}
           <div className="p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-800/40 space-y-2">
             <div className="flex justify-between items-center text-xs font-bold">
               <span className="text-slate-600 dark:text-slate-300">Pause Patterns</span>
@@ -250,7 +250,7 @@ export default function SentimentAnalysisPage() {
         </div>
       </div>
 
-      {/* Emotional Journey Graph Visual Timeline */}
+      {}
       <div className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
@@ -272,7 +272,7 @@ export default function SentimentAnalysisPage() {
           )}
         </div>
 
-        {/* Visual Heatmap Graph */}
+        {}
         <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 space-y-6">
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800 pb-3">
             <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
@@ -286,7 +286,7 @@ export default function SentimentAnalysisPage() {
             </span>
           </div>
 
-          {/* Timeline Nodes */}
+          {}
           <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
             {currentProfile.journeyGraph.map((item, idx) => {
               const isSelected = selectedTopic === item.topic;
@@ -343,7 +343,7 @@ export default function SentimentAnalysisPage() {
         </div>
       </div>
 
-      {/* Synchronized Transcript & HR AI Evaluation */}
+      {}
       <div className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-6 shadow-sm space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -392,7 +392,7 @@ export default function SentimentAnalysisPage() {
                 &ldquo;{t.text}&rdquo;
               </p>
 
-              {/* HR AI Assessment Callout */}
+              {}
               {t.hrInsight && (
                 <div className={`p-3 rounded-xl border flex items-start gap-3 ${
                   t.hrInsight.type === 'Nervousness'

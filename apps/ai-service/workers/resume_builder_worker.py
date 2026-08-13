@@ -7,7 +7,7 @@ from workers.worker_base import post_internal
 logger = logging.getLogger("resume_builder_worker")
 
 
-# ML_BYPASS: ATS ML scorer — replace with trained LambdaMART ranker on resume-outcome data
+
 async def process_resume_builder_job(job_data: dict) -> bool:
     """
     Process AI Voice Resume Builder job:
@@ -100,7 +100,7 @@ async def process_resume_builder_job(job_data: dict) -> bool:
         logger.error(f"LLM returned no usable resume JSON for session {session_id}. Failing without fabricated content.")
         return False
 
-    # Render PDF
+
     pdf_url = generate_resume_pdf(generated_resume)
 
     return await post_internal(

@@ -9,10 +9,10 @@ import { emailService } from '../../services/email.service';
 
 export const hrEvaluationsRouter = Router();
 
-// Org scoping is JWT-derived; never accept a client-supplied org_id.
+
 hrEvaluationsRouter.use(rejectOrgIdParam);
 
-// PATCH /api/v1/hr/evaluations/:id/hr-override - HR manual decision override
+
 hrEvaluationsRouter.patch(
   '/evaluations/:id/hr-override',
   authenticate,
@@ -22,7 +22,7 @@ hrEvaluationsRouter.patch(
     try {
       const orgId = req.user!.orgId!;
       const evalId = req.params.id as string;
-      const { decision, notes } = req.body; // 'hire' | 'reject'
+      const { decision, notes } = req.body; 
 
       if (!decision || !['hire', 'reject'].includes(decision)) {
         return res.status(400).json({ success: false, error: 'decision must be hire or reject' });
@@ -48,7 +48,7 @@ hrEvaluationsRouter.patch(
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
       }
 
-      // Update evaluation with HR override
+      
       const updatedEvaluation = await prisma.evaluation.update({
         where: { id: evalId },
         data: {
@@ -60,8 +60,8 @@ hrEvaluationsRouter.patch(
       const appId = evaluation.application_id;
       const nextStatus = decision === 'hire' ? 'offered' : 'rejected';
 
-      // Derive offer terms from the Job BEFORE mutating state so a job with no
-      // salary never leaves an 'offered' application without an honest offer.
+      
+      
       const job = evaluation.application.job;
       const offerSalary = decision === 'hire' ? deriveSalary(job.salary) : null;
 
@@ -85,7 +85,7 @@ hrEvaluationsRouter.patch(
           offerLetterContent: `Official Job Offer for ${job.title} (Approved by HR Override)`,
         });
 
-        // Only email the candidate when a brand-new offer was created (token freshly generated)
+        
         if (isNew) {
           const candidateName = evaluation.application.candidate.user.email.split('@')[0];
           await emailService.sendOfferEmail(

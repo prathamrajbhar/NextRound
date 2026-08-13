@@ -41,7 +41,7 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
           }
         }
       } catch {
-        // default
+        
       }
     }
     loadPrivacySettings();
@@ -82,7 +82,7 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {}
       <div>
         <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <ShieldCheck className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
@@ -91,7 +91,7 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
         <p className="text-xs text-slate-500 font-medium">Manage profile discoverability, salary masking, and account credentials</p>
       </div>
 
-      {/* Profile Discoverability */}
+      {}
       <div className="space-y-3">
         <label className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Profile Visibility Mode</label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -123,7 +123,7 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
         </div>
       </div>
 
-        {/* Hide salary toggle */}
+        {}
         <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
           <div>
             <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">Hide Salary Expectations</span>
@@ -144,7 +144,7 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
           </button>
         </div>
 
-      {/* Account Security & 2FA */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
           <Lock className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -178,7 +178,7 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
           </button>
         </div>
 
-        {/* Change Password */}
+        {}
         <form onSubmit={handlePasswordSubmit} className="space-y-4 pt-1">
           <div className="flex justify-between items-center">
             <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Update Account Password</span>
@@ -225,7 +225,7 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
         </form>
       </div>
 
-      {/* Save Privacy Button */}
+      {}
       <div className="flex justify-end">
         <button
           type="button"

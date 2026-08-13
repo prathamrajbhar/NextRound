@@ -23,10 +23,10 @@ class SchedulerState(TypedDict, total=False):
     slot_source: str
 
 
-# Representative times within the availability bands the company-onboarding
-# "Scheduling & Automation" step exposes (Morning 9a-12p, Afternoon 12p-5p,
-# Evening 5p-9p). Slots are emitted as real future UTC datetimes inside the
-# org's configured windows.
+
+
+
+
 BAND_TIMES = {
     "morning": (10, 0),
     "afternoon": (14, 0),

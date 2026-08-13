@@ -1,12 +1,13 @@
 import fs from 'fs';
 import path from 'path';
+import { env } from './env';
 
-const uploadDirName = process.env.UPLOAD_DIR || 'uploads';
+const uploadDirName = env('UPLOAD_DIR');
 let resolvedDir = path.isAbsolute(uploadDirName)
   ? uploadDirName
   : path.resolve(process.cwd(), uploadDirName);
 
-// Monorepo workaround: if running inside apps/api under turbo dev, resolve to workspace root uploads folder
+
 if (!path.isAbsolute(uploadDirName) && process.cwd().endsWith('apps/api')) {
   const rootUploads = path.resolve(process.cwd(), '../..', uploadDirName);
   if (fs.existsSync(rootUploads) || fs.existsSync(path.resolve(process.cwd(), '../..', 'package.json'))) {
@@ -18,9 +19,9 @@ export const UPLOAD_ROOT_DIR = resolvedDir;
 
 export const SUB_DIRECTORIES = ['resumes', 'audio', 'video', 'offers', 'misc'];
 
-/**
- * Ensures root upload directory and all subdirectories exist on disk.
- */
+
+
+
 export function ensureUploadDirsExist(): void {
   if (!fs.existsSync(UPLOAD_ROOT_DIR)) {
     fs.mkdirSync(UPLOAD_ROOT_DIR, { recursive: true });
@@ -34,13 +35,13 @@ export function ensureUploadDirsExist(): void {
   }
 }
 
-/**
- * Uploads (saves) a buffer directly to local disk.
- * @param key Relative key/path within uploads directory (e.g. "resumes/user123/12345-resume.pdf")
- * @param body File Buffer
- * @param _contentType Optional MIME type (unused for local disk)
- * @returns Relative static URL path (e.g. "/uploads/resumes/user123/12345-resume.pdf")
- */
+
+
+
+
+
+
+
 export async function uploadFile(
   key: string,
   body: Buffer,
@@ -49,7 +50,7 @@ export async function uploadFile(
   const normalizedKey = key.replace(/\\/g, '/').replace(/^\/+/, '');
   const filePath = path.join(UPLOAD_ROOT_DIR, normalizedKey);
 
-  // Ensure parent directory exists
+  
   const parentDir = path.dirname(filePath);
   if (!fs.existsSync(parentDir)) {
     await fs.promises.mkdir(parentDir, { recursive: true });
@@ -59,9 +60,9 @@ export async function uploadFile(
   return `/uploads/${normalizedKey}`;
 }
 
-/**
- * Returns accessible URL for local disk file.
- */
+
+
+
 export async function getPresignedUrl(key: string): Promise<string> {
   const normalizedKey = key.replace(/\\/g, '/').replace(/^\/+/, '');
   if (normalizedKey.startsWith('uploads/')) {
@@ -70,9 +71,9 @@ export async function getPresignedUrl(key: string): Promise<string> {
   return `/uploads/${normalizedKey}`;
 }
 
-/**
- * Deletes a file from the local uploads directory.
- */
+
+
+
 export async function deleteFile(key: string): Promise<void> {
   const normalizedKey = key.replace(/\\/g, '/').replace(/^\/+/, '');
   const filePath = path.join(UPLOAD_ROOT_DIR, normalizedKey);

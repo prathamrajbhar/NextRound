@@ -6,13 +6,14 @@ import cookieParser from 'cookie-parser';
 import { UPLOAD_ROOT_DIR } from './lib/storage';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { apiRouter } from './routes';
+import { env } from './lib/env';
 
 export const app = express();
 
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+    origin: env('APP_URL'),
     credentials: true,
   })
 );
@@ -20,10 +21,10 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Serve local static uploaded files
+
 app.use('/uploads', express.static(UPLOAD_ROOT_DIR));
 
-// Health Check Endpoint
+
 app.get('/api/v1/health', (_req, res) => {
   res.json({
     success: true,
@@ -35,14 +36,14 @@ app.get('/api/v1/health', (_req, res) => {
   });
 });
 
-// Latency ping — no auth, no overhead, just a timestamp echo
+
 app.get('/api/v1/ping', (_req, res) => {
   res.json({ pong: true, ts: Date.now() });
 });
 
-// Download speed probe — proxies 1 MB from Cloudflare's speed endpoint so the
-// browser measures real internet throughput (no CORS issues since the fetch
-// happens server-side). Falls back to a local random buffer if unreachable.
+
+
+
 app.get('/api/v1/speedtest', async (_req, res) => {
   res.setHeader('Content-Type', 'application/octet-stream');
   res.setHeader('Cache-Control', 'no-store');
@@ -53,7 +54,7 @@ app.get('/api/v1/speedtest', async (_req, res) => {
     });
     if (!upstream.ok || !upstream.body) throw new Error('upstream failed');
 
-    // Stream directly to the client — no buffering in memory
+    
     const reader = upstream.body.getReader();
     while (true) {
       const { done, value } = await reader.read();
@@ -62,7 +63,7 @@ app.get('/api/v1/speedtest', async (_req, res) => {
     }
     res.end();
   } catch {
-    // Fallback: 1 MB local random buffer (still useful for LAN latency checks)
+    
     const SIZE = 1024 * 1024;
     const buf = Buffer.allocUnsafe(SIZE);
     for (let i = 0; i < SIZE; i += 4) buf.writeUInt32BE((Math.random() * 0xffffffff) >>> 0, i);
@@ -71,10 +72,10 @@ app.get('/api/v1/speedtest', async (_req, res) => {
   }
 });
 
-// Mounted API v1 Router
+
 app.use('/api/v1', apiRouter);
 
-// JSON 404 for unmatched routes (inside /api/v1)
+
 app.use(notFoundHandler);
 
 app.use(errorHandler);

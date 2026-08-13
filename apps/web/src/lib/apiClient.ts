@@ -14,10 +14,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return result.data as T;
 }
 
-/**
- * Serialize a request body for JSON endpoints, passing multipart FormData
- * through untouched (the browser adds the boundary).
- */
+
+
+
+
 function serializeBody(body: unknown): BodyInit | undefined {
   if (body === undefined) return undefined;
   if (typeof FormData !== 'undefined' && body instanceof FormData) return body;

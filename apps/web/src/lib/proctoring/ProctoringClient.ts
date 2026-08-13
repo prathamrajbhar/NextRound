@@ -18,7 +18,7 @@ const generateUUID = () => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
-  // Simple UUID v4 fallback for unsecured contexts
+  
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
@@ -26,11 +26,11 @@ const generateUUID = () => {
   });
 };
 
-/**
- * Strips any non-UUID prefix (e.g. 'session-') from a session identifier so the
- * value always satisfies the API's `z.string().uuid()` validator and resolves
- * correctly in event-batch route paths.
- */
+
+
+
+
+
 const normalizeToUUID = (id: string): string => {
   const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
   const match = UUID_RE.exec(id);
@@ -46,10 +46,10 @@ export class ProctoringClient {
   private isEnded = false;
   private suppressViolations = false;
   private activeTracks: MediaStreamTrack[] = [];
-  /** Normalized pure UUID derived from config.sessionId — safe for API routes. */
+  
   private apiSessionId: string;
   
-  // Sound Analysis properties
+  
   private audioContext: AudioContext | null = null;
   private audioAnalyser: AnalyserNode | null = null;
   private audioIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -58,7 +58,7 @@ export class ProctoringClient {
   private voiceActivityStreak = 0;
   private silenceStreak = 0;
 
-  // Face Analysis properties
+  
   private faceVideoEl: HTMLVideoElement | null = null;
   private faceCanvasEl: HTMLCanvasElement | null = null;
   private faceIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -93,7 +93,7 @@ export class ProctoringClient {
 
     this.addEventListeners();
 
-    // Start sending heartbeat check-ins every 10 seconds
+    
     this.heartbeatIntervalId = setInterval(() => this.sendHeartbeat(), 10000);
 
     this.logEvent('session_started', 'info', 'system');
@@ -157,7 +157,7 @@ export class ProctoringClient {
     }
 
     stream.getTracks().forEach((track) => {
-      // Check if we are already tracking this specific track ID
+      
       if (this.activeTracks.some((t) => t.id === track.id)) return;
       this.activeTracks.push(track);
 
@@ -174,7 +174,7 @@ export class ProctoringClient {
         this.config.onViolation(`${track.kind}_stopped`);
       };
 
-      // Watch for mute/unmute events
+      
       track.onmute = () => {
         this.logEvent(`${track.kind}_muted`, 'warning', 'browser', {
           trackId: track.id,
@@ -190,7 +190,7 @@ export class ProctoringClient {
 
   private startAudioAnalysis(stream: MediaStream) {
     if (typeof window === 'undefined') return;
-    if (this.audioIntervalId) return; // Already analyzing audio
+    if (this.audioIntervalId) return; 
 
     try {
       const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -223,8 +223,8 @@ export class ProctoringClient {
 
         let voiceBandEnergy = 0;
         let voiceBandCount = 0;
-        const voiceStartBin = 2; // ~85Hz
-        const voiceEndBin = 35;  // ~3000Hz (speech range)
+        const voiceStartBin = 2; 
+        const voiceEndBin = 35;  
         for (let i = voiceStartBin; i <= voiceEndBin; i++) {
           voiceBandEnergy += dataArray[i];
           voiceBandCount++;
@@ -289,7 +289,7 @@ export class ProctoringClient {
 
   private startFaceAnalysis(stream: MediaStream) {
     if (typeof window === 'undefined') return;
-    if (this.faceIntervalId) return; // Already analyzing video
+    if (this.faceIntervalId) return; 
 
     try {
       this.faceVideoEl = document.createElement('video');
@@ -306,7 +306,7 @@ export class ProctoringClient {
       this.faceIntervalId = setInterval(async () => {
         if (this.isPaused || !this.faceVideoEl) return;
 
-        // Try Shape Detection API if supported
+        
         if ('FaceDetector' in window) {
           try {
             const faceDetector = new (window as typeof window & { FaceDetector: new (config?: { maxDetectedFaces?: number; fastMode?: boolean }) => { detect: (el: HTMLVideoElement) => Promise<unknown[]> } }).FaceDetector({ maxDetectedFaces: 5, fastMode: true });
@@ -315,11 +315,11 @@ export class ProctoringClient {
             this.processFaceCount(faceCount, 0.95);
             return;
           } catch {
-            // Fallback to canvas blob heuristic
+            
           }
         }
 
-        // Heuristic Canvas fallback: YCbCr skin tone + motion-contour blobs
+        
         const ctx = this.faceCanvasEl?.getContext('2d');
         if (!ctx || !this.faceVideoEl || this.faceVideoEl.paused || this.faceVideoEl.ended) return;
 
@@ -516,7 +516,7 @@ export class ProctoringClient {
       this.faceVideoEl = null;
     }
     this.logEvent('session_ended', 'info', 'system');
-    // Flush event buffer to server synchronously before ending session
+    
     await this.buffer.flush();
     try {
       await apiClient.post(`/proctoring/sessions/${this.apiSessionId}/end`);

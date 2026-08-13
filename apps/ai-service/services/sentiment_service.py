@@ -3,10 +3,10 @@ from typing import Dict, Any, List
 
 logger = logging.getLogger("sentiment_service")
 
-# ML_BYPASS: audio prosody/pitch analysis — upgrade to pyAudioAnalysis or wav2vec2 when available.
-# The real audio-prosody ML pipeline is NOT being built yet (separate model-stack decision
-# pending). This service therefore reports an explicit "unavailable" state instead of
-# fabricating plausible tones, stress levels, or biomarkers that would be persisted as if real.
+
+
+
+
 def analyze_interview_sentiment(interview_id: str, transcript: List[Dict[str, Any]]) -> Dict[str, Any]:
     """
     Analyze voice interview transcript for sentiment, emotional trajectory, and stress biomarkers.

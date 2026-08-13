@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { env } from '../lib/env';
 
 export interface EmailOptions {
   to: string;
@@ -12,7 +13,7 @@ class EmailService {
 
   constructor() {
     const host = process.env.SMTP_HOST;
-    const port = Number(process.env.SMTP_PORT) || 587;
+    const port = Number(process.env.SMTP_PORT);
     const user = process.env.SMTP_USER;
     const pass = process.env.SMTP_PASS;
 
@@ -30,7 +31,7 @@ class EmailService {
 
   public async sendEmail(options: EmailOptions): Promise<boolean> {
     try {
-      const from = process.env.SMTP_FROM || '"NextRound / HireOS" <noreply@hireos.ai>';
+      const from = process.env.SMTP_FROM;
       if (this.transporter) {
         await this.transporter.sendMail({
           from,
@@ -57,7 +58,7 @@ class EmailService {
     organizationId: string,
     invitedByEmail?: string
   ): Promise<boolean> {
-    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const appUrl = env('APP_URL');
     const inviteUrl = `${appUrl}/hr/dashboard?org=${organizationId}`;
     const subject = 'You have been invited to an organization on NextRound / HireOS';
     const html = `
@@ -194,7 +195,7 @@ class EmailService {
     jobTitle: string,
     offer: { salary: number; equity?: string; magicLinkToken: string }
   ): Promise<boolean> {
-    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const appUrl = env('APP_URL');
     const signUrl = `${appUrl}/candidate/applications/offer?token=${offer.magicLinkToken}`;
     const subject = `Official Job Offer: ${jobTitle} at NextRound / HireOS`;
     const html = `
@@ -225,7 +226,7 @@ class EmailService {
     gaps: string[],
     rejectionFeedback: string
   ): Promise<boolean> {
-    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const appUrl = env('APP_URL');
     const mockConsoleUrl = `${appUrl}/candidate/mock/new`;
     const subject = `Application Update & Feedback: ${jobTitle}`;
     const html = `
@@ -263,7 +264,7 @@ class EmailService {
     applicationId: string,
     confidence: number
   ): Promise<boolean> {
-    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const appUrl = env('APP_URL');
     const holdQueueUrl = `${appUrl}/hr/candidates?status=hold_for_review`;
     const subject = `[Action Required] Low Confidence Evaluation Hold: ${candidateName}`;
     const html = `

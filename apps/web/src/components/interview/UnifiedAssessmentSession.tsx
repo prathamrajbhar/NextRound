@@ -109,7 +109,7 @@ export function UnifiedAssessmentSession({
       try {
         await document.exitFullscreen();
       } catch {
-        // Safe ignore
+        
       }
     }
     try {

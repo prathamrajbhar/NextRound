@@ -22,10 +22,10 @@ export default function LandingPage() {
       <PublicNavbar />
 
       <main className="flex-grow flex flex-col items-center">
-        {/* Interactive Hero Simulator */}
+        {}
         <HeroSection hrHref={hrHref} candidateHref={candidateHref} isLoggedIn={isLoggedIn} />
 
-        {/* Trust & Stats Bar */}
+        {}
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-24 w-full select-none">
           <div className="rounded-3xl border border-white/60 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/60 backdrop-blur-md p-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-center shadow-xs">
             <div>
@@ -43,16 +43,16 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Product Capabilities Bento Grid */}
+        {}
         <BentoGrid />
 
-        {/* ROI savings calculator */}
+        {}
         <SavingsCalculator />
 
-        {/* Step-by-Step Experience Workflow */}
+        {}
         <WorkflowSection />
 
-        {/* FAQ Accordion */}
+        {}
         <FaqSection />
       </main>
 

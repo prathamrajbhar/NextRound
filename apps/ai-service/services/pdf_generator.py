@@ -15,7 +15,7 @@ def _esc(value: Any) -> str:
     unescaped &, <, > from LLM-generated content)."""
     return xml_escape(str(value))
 
-# Try importing reportlab
+
 REPORTLAB_AVAILABLE = False
 try:
     from reportlab.lib.pagesizes import letter
@@ -109,19 +109,19 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
 
             story = []
 
-            # Header
+
             story.append(Paragraph(_esc(name), name_style))
             contact_info = f"{_esc(email)} | {_esc(phone)} | {_esc(location)}"
             story.append(Paragraph(contact_info, contact_style))
             story.append(Spacer(1, 8))
             story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#CBD5E1'), spaceBefore=0, spaceAfter=8))
 
-            # Summary
+
             story.append(Paragraph("PROFESSIONAL SUMMARY", heading_style))
             story.append(Paragraph(_esc(summary), body_style))
             story.append(Spacer(1, 6))
 
-            # Work Experience
+
             if work_history:
                 story.append(Paragraph("WORK EXPERIENCE", heading_style))
                 for item in work_history:
@@ -134,13 +134,13 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
                         story.append(Paragraph(f"• {_esc(b)}", bullet_style))
                     story.append(Spacer(1, 4))
 
-            # Skills
+
             if skills:
                 story.append(Paragraph("CORE SKILLS &amp; TECHNOLOGIES", heading_style))
                 story.append(Paragraph(_esc(", ".join(skills)), body_style))
                 story.append(Spacer(1, 6))
 
-            # Projects
+
             if projects:
                 story.append(Paragraph("KEY PROJECTS", heading_style))
                 for proj in projects:
@@ -148,7 +148,7 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
                     pdesc = proj.get("description", "")
                     story.append(Paragraph(f"<b>{_esc(pname)}</b>: {_esc(pdesc)}", body_style))
 
-            # Education
+
             if education:
                 story.append(Paragraph("EDUCATION", heading_style))
                 for edu in education:
@@ -246,7 +246,7 @@ def generate_analytics_pdf(
         story.append(Spacer(1, 8))
         story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#CBD5E1'), spaceBefore=0, spaceAfter=8))
 
-        # Funnel table
+
         funnel_rows = [["Stage", "Candidates", "Conversion"]]
         stages = [
             ("Applied", metrics.get("applied", 0), None),
@@ -272,14 +272,14 @@ def generate_analytics_pdf(
         story.append(Paragraph("RECRUITMENT FUNNEL", heading_style))
         story.append(table)
 
-        # Time to hire (reported only when a real terminal timestamp exists)
+
         time_to_hire = metrics.get("time_to_hire_days")
         if isinstance(time_to_hire, (int, float)) and not isinstance(time_to_hire, bool):
             story.append(Paragraph(f"Average time to hire: {round(time_to_hire)} days", body_style))
         else:
             story.append(Paragraph("Average time to hire: not available (no terminal offer/acceptance timestamps recorded)", body_style))
 
-        # Narrative
+
         story.append(Paragraph("EXECUTIVE SUMMARY", heading_style))
         if narrative and narrative.strip():
             story.append(Paragraph(_esc(narrative), body_style))

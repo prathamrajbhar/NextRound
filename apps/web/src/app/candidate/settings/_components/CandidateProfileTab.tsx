@@ -51,7 +51,7 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
           if (typeof p.linkedin_url === 'string') setLinkedinUrl(p.linkedin_url);
           if (typeof p.bio === 'string') setBio(p.bio);
         } else {
-          // Fallback to local storage
+          
           const savedName = localStorage.getItem('candidate_name');
           const savedEmail = localStorage.getItem('candidate_email');
           const savedPhone = localStorage.getItem('candidate_phone');
@@ -73,7 +73,7 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
           if (savedBio) setBio(savedBio);
         }
       } catch {
-        // Keep current state
+        
       }
     }
 
@@ -114,7 +114,7 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
         bio,
       }).catch(() => null);
     } catch {
-      // Ignore API sync errors if offline
+      
     }
 
     window.dispatchEvent(new Event('profile_update'));
@@ -124,7 +124,7 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Profile Header Card */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel flex flex-col sm:flex-row items-center gap-6">
         <div className="relative group cursor-pointer">
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-500 to-amber-500 dark:from-orange-500 dark:to-amber-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-brand-500/20 dark:shadow-orange-500/20">
@@ -154,7 +154,7 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
         </div>
       </div>
 
-      {/* Main Details Form */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
           <User className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -225,7 +225,7 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
         </div>
       </div>
 
-      {/* Online Profiles & Bio */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           Links &amp; Professional Bio
@@ -280,7 +280,7 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
           />
         </div>
 
-        {/* Save CTA */}
+        {}
         <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-end">
           <button
             type="button"

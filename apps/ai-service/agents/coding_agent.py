@@ -21,8 +21,8 @@ class CodingState(TypedDict, total=False):
     execution_time_ms: float
     memory_kb: Optional[int]
     complexity: Optional[str]
-    # "llm" when complexity was determined by Gemini, "heuristic" when the
-    # static keyword-scan fallback was used, None when code was empty.
+
+
     complexity_source: Optional[str]
     passed: bool
     feedback: str
@@ -60,8 +60,8 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
     state["total_cases"] = exec_res.get("total_cases", len(test_cases))
     state["pass_rate"] = exec_res.get("pass_rate", 0.0)
     state["execution_time_ms"] = exec_res.get("execution_time_ms", 0.0)
-    # Real peak memory reported by the sandbox child (None when not measurable,
-    # e.g. a timeout or process-level error). Never substitute a fabricated KB.
+
+
     state["memory_kb"] = exec_res.get("memory_kb")
 
     if not exec_res.get("security_passed", True):
@@ -83,12 +83,12 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
     feedback = ""
 
     if code:
-        # Try cache first
+
         cached = get_cached_complexity(code)
         if cached:
             complexity, complexity_source = cached
         else:
-            # Not cached, run analysis
+
             prompt = (
                 f"Analyze the time and space complexity of this candidate python code:\n\n"
                 f"```python\n{code}\n```\n\n"
@@ -100,13 +100,13 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
                 feedback = parsed.get("summary", "")
                 if complexity:
                     complexity_source = "llm"
-                    # Cache the result
+
                     set_cached_complexity(code, complexity, complexity_source)
 
-    # Static heuristic fallback when the LLM returned nothing usable.
-    # Values are explicitly labelled "estimated (heuristic)" so callers can
-    # distinguish them from exact LLM analysis rather than treating them as
-    # authoritative measurements.
+
+
+
+
     if complexity is None and code:
         complexity_source = "heuristic"
         if "for " in code and "while " in code:
@@ -119,7 +119,7 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
             complexity = "O(1) estimated (heuristic)"
             feedback = "No iteration detected. Estimated O(1) — heuristic only."
         
-        # Cache the heuristic result too
+
         set_cached_complexity(code, complexity, complexity_source)
 
     passed = pass_rate >= 0.8

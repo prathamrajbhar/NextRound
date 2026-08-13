@@ -17,10 +17,10 @@ export interface RadarChartProps {
   className?: string;
 }
 
-/**
- * Hand-rolled SVG radar chart — no charting library dependency.
- * `values[i]` in each series must correspond to `axes[i]`, scaled 0..maxValue.
- */
+
+
+
+
 export function RadarChart({ axes, series, size = 280, maxValue = 100, className }: RadarChartProps) {
   const center = size / 2;
   const radius = size / 2 - 36;

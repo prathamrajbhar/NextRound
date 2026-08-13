@@ -49,7 +49,7 @@ export default function EditThresholdModal({
       }
     >
       <div className="space-y-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
-        {/* Min Shortlist Score */}
+        {}
         <div>
           <div className="flex justify-between mb-1.5 text-[11px]">
             <span className="text-slate-700 dark:text-slate-200">Minimum Shortlist Score</span>
@@ -68,7 +68,7 @@ export default function EditThresholdModal({
           </span>
         </div>
 
-        {/* Auto Offer Trigger */}
+        {}
         <div className="flex justify-between items-center py-2 border-t border-slate-200/60 dark:border-slate-800">
           <div>
             <span className="block text-slate-700 dark:text-slate-200">Auto-Offer Trigger</span>

@@ -5,7 +5,7 @@ from services.llm_service import generate_text, extract_json_array
 
 logger = logging.getLogger("jd_parser_agent")
 
-# Try importing LangGraph
+
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
 
@@ -76,7 +76,7 @@ def compute_rubric_node(state: JDParserState) -> JDParserState:
     """Node 3: Compute balanced rubric weights (sum = 100%) and thresholds."""
     skills = state.get("extracted_skills", [])
 
-    # Dynamic rubric adjustment based on extracted skill balance
+
     tech_weight = 35 if len(skills) > 4 else 30
     comm_weight = 20
     prob_weight = 25
@@ -129,7 +129,7 @@ def build_jd_parser_graph():
     return builder.compile()
 
 
-# Compiled agent graph instance
+
 _jd_parser_app = build_jd_parser_graph()
 
 
@@ -155,7 +155,7 @@ async def run_jd_parser_agent(job_id: str, raw_description: str) -> Dict[str, An
         except Exception as e:
             logger.error(f"LangGraph execution error in JD Parser Agent: {e}")
 
-    # Fallback linear execution if graph invocation fails or LangGraph unavailable
+
     s1 = parse_requirements_node(initial_state)
     s2 = generate_description_node(s1)
     s3 = compute_rubric_node(s2)

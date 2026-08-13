@@ -1,11 +1,11 @@
-"""Code complexity analysis caching service.
 
-Caches complexity analysis results by code hash to avoid redundant LLM calls
-when the same algorithm or solution pattern appears multiple times.
 
-This can reduce LLM calls by 10-100x when there are duplicate submissions
-or similar solutions.
-"""
+
+
+
+
+
+
 
 import hashlib
 import logging
@@ -14,9 +14,9 @@ from typing import Dict, Optional, Tuple
 
 logger = logging.getLogger("complexity_cache_service")
 
-# Format: { code_hash: (complexity, source, cached_timestamp) }
+
 _COMPLEXITY_CACHE: Dict[str, Tuple[Optional[str], Optional[str], float]] = {}
-CACHE_TTL_SECONDS = 86400  # 24 hours
+CACHE_TTL_SECONDS = 86400
 
 
 def _hash_code(code: str) -> str:
@@ -37,7 +37,7 @@ def get_cached_complexity(code: str) -> Optional[Tuple[Optional[str], Optional[s
     
     complexity, source, cached_at = _COMPLEXITY_CACHE[code_hash]
     
-    # Check if cache entry has expired
+
     if time.time() - cached_at > CACHE_TTL_SECONDS:
         logger.debug(f"Complexity cache for {code_hash} expired (TTL {CACHE_TTL_SECONDS}s)")
         del _COMPLEXITY_CACHE[code_hash]

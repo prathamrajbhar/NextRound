@@ -1,5 +1,5 @@
-// Barrel export for the hand-built UI primitive library (Tailwind + custom
-// CSS, no external component-library dependency). Import from '@/components/ui'.
+
+
 
 export { Button } from './Button';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';

@@ -80,7 +80,7 @@ export default function HrProfile() {
   }, [user]);
 
   const handleSave = async () => {
-    // Persist profile server-side, then keep localStorage as an offline fallback.
+    
     try {
       await apiClient.patch('/hr/profile', {
         name,
@@ -89,7 +89,7 @@ export default function HrProfile() {
         specialties,
       });
     } catch {
-      // fall back to local-only save if the API is unreachable
+      
     }
 
     localStorage.setItem('hr_name', name);
@@ -99,7 +99,7 @@ export default function HrProfile() {
     localStorage.setItem('hr_linkedin', linkedinUrl);
     localStorage.setItem('hr_avatar', avatar);
 
-    // Dispatch custom event to notify parent layout header
+    
     window.dispatchEvent(new Event('hr_profile_update'));
 
     setDetailsSaved(true);
@@ -147,7 +147,7 @@ export default function HrProfile() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       
-      {/* SaaS Page Header */}
+      {}
       <div className="border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest block mb-1">
           Identity Center
@@ -158,20 +158,20 @@ export default function HrProfile() {
         </p>
       </div>
 
-      {/* Main Grid Layout */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        {/* Left Column: Form & Focus Specialties */}
+        {}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* General Details */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 sm:p-8 shadow-xl backdrop-blur-md glass-panel space-y-6">
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 flex items-center gap-1.5">
               <User className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
               Recruiter Details
             </h3>
 
-            {/* Avatar Selector Section */}
+            {}
             <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-slate-200/60 dark:border-slate-800 pb-5">
               <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shadow-sm flex-shrink-0">
                 <Image src={avatar} alt="Profile Avatar" width={64} height={64} className="h-full w-full object-cover" unoptimized />
@@ -212,7 +212,7 @@ export default function HrProfile() {
               </div>
             </div>
 
-            {/* Inputs */}
+            {}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Full Name</label>
@@ -276,7 +276,7 @@ export default function HrProfile() {
               </div>
             </div>
 
-            {/* Action button */}
+            {}
             <div className="pt-4 border-t border-slate-200/60 dark:border-slate-800 flex justify-end gap-3 items-center">
               {detailsSaved && (
                 <span className="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/60 rounded-full p-1.5 flex items-center justify-center animate-in scale-in duration-200 shadow-sm">
@@ -293,7 +293,7 @@ export default function HrProfile() {
             </div>
           </div>
 
-          {/* Specialties Focus Areas */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 flex items-center gap-1.5">
               <Sparkles className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400 animate-pulse" />
@@ -331,7 +331,7 @@ export default function HrProfile() {
             </form>
           </div>
 
-          {/* Danger Zone */}
+          {}
           <div className="rounded-3xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/20 p-6 shadow-sm glass-panel space-y-4">
             <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400">
               <AlertTriangle className="h-5 w-5" />
@@ -357,10 +357,10 @@ export default function HrProfile() {
           </div>
         </div>
 
-        {/* Right Column: Verification & License */}
+        {}
         <div className="space-y-6">
           
-          {/* Completeness indicator */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel text-center">
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Workspace Integrity</span>
             <div className="relative h-24 w-24 mx-auto my-4 flex items-center justify-center">
@@ -392,7 +392,7 @@ export default function HrProfile() {
             </span>
           </div>
 
-          {/* Active Credentials Box */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h3 className="text-xs font-black text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2">Active License</h3>
             

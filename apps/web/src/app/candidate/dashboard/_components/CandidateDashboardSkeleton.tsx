@@ -6,7 +6,7 @@ import { Skeleton } from '@/components/ui/Skeleton';
 export function CandidateDashboardSkeleton() {
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Hero Banner Skeleton */}
+      {}
       <div className="glass-card p-6 md:p-8 space-y-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-2 w-full md:w-2/3">
@@ -20,7 +20,7 @@ export function CandidateDashboardSkeleton() {
         </div>
       </div>
 
-      {/* Stats Grid Skeleton */}
+      {}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="glass-card p-5 space-y-3">
@@ -35,7 +35,7 @@ export function CandidateDashboardSkeleton() {
         ))}
       </div>
 
-      {/* Content Columns Skeleton */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           <Skeleton className="h-6 w-40 rounded" />

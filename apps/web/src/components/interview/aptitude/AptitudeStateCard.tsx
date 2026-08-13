@@ -9,14 +9,14 @@ interface AptitudeStateCardProps {
   subtitle?: string;
   actionLabel?: string;
   onAction?: () => void;
-  /** Whether the icon animates as a spinner (loading) or a pulse (idle). */
+  
   spinningIcon?: boolean;
 }
 
-/**
- * Shared full-height status card for the aptitude console's non-interactive
- * states (loading questions, initializing a section).
- */
+
+
+
+
 export function AptitudeStateCard({
   icon: Icon = Brain,
   title,

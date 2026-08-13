@@ -14,11 +14,11 @@ interface NextRoundTransitionCardProps {
   onLaunch: () => void;
 }
 
-/**
- * Inter-round overlay shown between comprehensive-assessment stages: the
- * completed stage's score plus the up-next stage with a full-screen launch
- * action.
- */
+
+
+
+
+
 export function NextRoundTransitionCard({
   companyName,
   roleTitle,

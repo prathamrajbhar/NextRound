@@ -26,14 +26,14 @@ export default function ContactPage() {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
 
-  // Quick Prompt Chips
+  
   const quickPrompts = [
     'We want to test AI voice screening for 50 applicants.',
     'How do I set up automated coding tests for frontend roles?',
     'What is the pricing for enterprise multi-recruiter accounts?',
   ];
 
-  // Demo Booking Slots
+  
   const demoSlots = [
     'Tomorrow, 10:00 AM IST',
     'Tomorrow, 02:30 PM IST',
@@ -72,7 +72,7 @@ export default function ContactPage() {
       <PublicNavbar />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 md:py-16 flex-1 w-full animate-in fade-in duration-300">
-        {/* Hero Header */}
+        {}
         <div className="text-center max-w-3xl mx-auto mb-14">
           <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 bg-brand-50 dark:bg-orange-950/80 border border-brand-200/60 dark:border-orange-900/60 px-3.5 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1.5 shadow-2xs">
             <Sparkles className="h-3 w-3" />
@@ -88,9 +88,9 @@ export default function ContactPage() {
           </p>
         </div>
 
-        {/* Main Grid: Left Column Form (2 Cols) / Right Column Instant Demo Booking (1 Col) */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start max-w-6xl mx-auto mb-20">
-          {/* Left Column: Interactive Contact Form */}
+          {}
           <div className="lg:col-span-2 rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 sm:p-8 shadow-md backdrop-blur-md glass-panel space-y-6">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-4">
               <div>
@@ -151,7 +151,7 @@ export default function ContactPage() {
                   </div>
                 </div>
 
-                {/* Quick Message Suggestions */}
+                {}
                 <div className="space-y-1.5">
                   <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
                     Quick Suggestions (Click to fill)
@@ -197,9 +197,9 @@ export default function ContactPage() {
             )}
           </div>
 
-          {/* Right Column: Instant Live Demo Booking & Direct Info */}
+          {}
           <div className="space-y-6">
-            {/* Live Demo Slot Booking Card */}
+            {}
             <div className="rounded-3xl border border-brand-200/80 dark:border-orange-900/60 bg-brand-50/40 dark:bg-orange-950/20 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
               <div className="flex items-center gap-2 text-brand-600 dark:text-orange-400 border-b border-brand-200/60 dark:border-orange-900/60 pb-3">
                 <Calendar className="h-5 w-5" />
@@ -238,7 +238,7 @@ export default function ContactPage() {
               )}
             </div>
 
-            {/* Direct Contact Dossier Cards */}
+            {}
             <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
               <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-display border-b border-slate-200/60 dark:border-slate-800 pb-2">
                 Direct Contact Channels
@@ -285,7 +285,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        {/* Contact FAQ Accordion */}
+        {}
         <div className="max-w-3xl mx-auto border-t border-slate-200/60 dark:border-slate-800 pt-16">
           <div className="text-center mb-8">
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 font-display">

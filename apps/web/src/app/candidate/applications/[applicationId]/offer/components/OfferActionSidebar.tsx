@@ -22,7 +22,7 @@ export function OfferActionSidebar({
 
   return (
     <aside className="space-y-4 sticky top-6">
-      {/* Expiration Countdown Widget */}
+      {}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-sm space-y-2.5">
         <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
           <span className="flex items-center gap-1.5 uppercase tracking-wider text-[11px]">
@@ -47,7 +47,7 @@ export function OfferActionSidebar({
         </div>
       </div>
 
-      {/* Decision Buttons */}
+      {}
       {!isFinalized && (
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-sm space-y-2.5">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
@@ -73,7 +73,7 @@ export function OfferActionSidebar({
         </div>
       )}
 
-      {/* Recruiter Contact Card */}
+      {}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-sm space-y-3">
         <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
           Hiring Team

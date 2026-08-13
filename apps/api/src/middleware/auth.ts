@@ -12,11 +12,11 @@ declare global {
 export function authenticate(req: Request, res: Response, next: NextFunction) {
   let token: string | undefined;
 
-  // 1. Try httpOnly cookie
+  
   if (req.cookies && req.cookies.access_token) {
     token = req.cookies.access_token;
   }
-  // 2. Try Authorization header
+  
   else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
     token = req.headers.authorization.split(' ')[1];
   }
@@ -54,7 +54,7 @@ export function optionalAuthenticate(req: Request, _res: Response, next: NextFun
       const decoded = verifyAccessToken(token);
       req.user = decoded;
     } catch (err) {
-      // Ignore invalid token for optional auth routes
+      
     }
   }
   return next();

@@ -14,14 +14,14 @@ import {
 import { CompanyLogo } from '@/components/ui';
 import { siteConfig } from '@/lib/config';
 
-/* ─── types ──────────────────────────────────────────────────────────── */
+
 
 type StepKey = 'mic' | 'camera' | 'connection';
 type StepStatus = 'idle' | 'checking' | 'pass' | 'fail';
 
 interface StepState {
   status: StepStatus;
-  label: string;   // device label or speed string
+  label: string;   
   error: string;
 }
 
@@ -32,9 +32,9 @@ interface Props {
   onJoin: (bypassed?: boolean) => void;
 }
 
-/* ─── helpers ────────────────────────────────────────────────────────── */
 
-/** Query permission without throwing — returns null when unsupported. */
+
+
 async function queryPerm(name: string): Promise<PermissionState | null> {
   try {
     if (!navigator?.permissions?.query) return null;
@@ -45,45 +45,45 @@ async function queryPerm(name: string): Promise<PermissionState | null> {
   }
 }
 
-/** Derive the base origin of the Express API (strips /api/v1 suffix). */
+
 function apiOrigin(): string {
   return siteConfig.apiBaseUrl.replace(/\/api\/v1\/?$/, '');
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   COMPONENT
-═══════════════════════════════════════════════════════════════════════ */
+
+
+
 
 export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
-  /* Each step has independent status + label + error */
+  
   const [steps, setSteps] = useState<Record<StepKey, StepState>>({
     mic:        { status: 'idle', label: '', error: '' },
     camera:     { status: 'idle', label: '', error: '' },
     connection: { status: 'idle', label: '', error: '' },
   });
 
-  /* Live mic input level (0–100) while the audio stream is open */
+  
   const [micLevel, setMicLevel] = useState(0);
 
-  /* Connection numbers filled after the check completes */
+  
   const [connResult, setConnResult] = useState<{
     downloadMbps: number;
     latencyMs: number;
     quality: 'Excellent' | 'Good' | 'Fair' | 'Poor';
   } | null>(null);
 
-  /* All three steps passed → show launch panel */
+  
   const [allPassed, setAllPassed] = useState(false);
   const [consentAll, setConsentAll] = useState(false);
   const [bypassed, setBypassed] = useState(false);
 
-  /* Audio resources */
+  
   const streamRef   = useRef<MediaStream | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const rafRef      = useRef<number | null>(null);
 
-  /* ── cleanup on unmount ──────────────────────────────────────────── */
+  
   useEffect(() => {
     return () => {
       if (rafRef.current)      cancelAnimationFrame(rafRef.current);
@@ -92,7 +92,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     };
   }, []);
 
-  /* ── helpers ─────────────────────────────────────────────────────── */
+  
 
   const setStep = useCallback((key: StepKey, patch: Partial<StepState>) => {
     setSteps(prev => ({ ...prev, [key]: { ...prev[key], ...patch } }));
@@ -116,7 +116,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
       };
       tick();
     } catch {
-      /* AudioContext not available — non-fatal */
+      
     }
   }, []);
 
@@ -128,7 +128,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     setMicLevel(0);
   }, []);
 
-  /* ── individual checks ───────────────────────────────────────────── */
+  
 
   const checkMic = useCallback(async (): Promise<boolean> => {
     setStep('mic', { status: 'checking', error: '' });
@@ -143,7 +143,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     }
 
     try {
-      // Stop any previous stream first
+      
       streamRef.current?.getTracks().forEach(t => t.stop());
       stopMicMeter();
 
@@ -181,7 +181,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       const cfg    = stream.getVideoTracks()[0]?.getSettings() ?? {};
-      stream.getTracks().forEach(t => t.stop()); // release immediately — we don't need preview
+      stream.getTracks().forEach(t => t.stop()); 
 
       const label = `${cfg.width ?? '?'}×${cfg.height ?? '?'} @ ${Math.round(cfg.frameRate ?? 0)} fps`;
       setStep('camera', { status: 'pass', label, error: '' });
@@ -204,7 +204,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
 
     const origin = apiOrigin();
 
-    /* --- latency: 3 pings to /api/v1/ping, take median --- */
+    
     const getLatency = async (): Promise<number> => {
       const samples: number[] = [];
       for (let i = 0; i < 3; i++) {
@@ -214,7 +214,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
         try {
           await fetch(`${origin}/api/v1/ping`, { cache: 'no-store', signal: ctrl.signal });
           samples.push(Date.now() - t0);
-        } catch { /* timed out or unreachable */ }
+        } catch {  }
         finally { clearTimeout(tid); }
         if (i < 2) await new Promise(r => setTimeout(r, 60));
       }
@@ -223,9 +223,9 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
       return samples[Math.floor(samples.length / 2)];
     };
 
-    /* --- download: proxy 1 MB through /api/v1/speedtest (Cloudflare fetched server-side) --- */
+    
     const getDownload = async (): Promise<number> => {
-      const BYTES = 1024 * 1024; // 1 MB — matches server proxy payload
+      const BYTES = 1024 * 1024; 
       const ctrl  = new AbortController();
       const tid   = setTimeout(() => ctrl.abort(), 20000);
       try {
@@ -244,7 +244,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
 
     const [latencyMs, downloadMbps] = await Promise.all([getLatency(), getDownload()]);
 
-    /* Server unreachable — both probes failed */
+    
     if (latencyMs === 9999 && downloadMbps === 0) {
       setStep('connection', {
         status: 'fail',
@@ -268,7 +268,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     return true;
   }, [setStep]);
 
-  /* ── run all checks sequentially ────────────────────────────────── */
+  
 
   const runAll = useCallback(async (from: StepKey = 'mic') => {
     const order: StepKey[] = ['mic', 'camera', 'connection'];
@@ -281,22 +281,22 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     for (let i = order.indexOf(from); i < order.length; i++) {
       const key = order[i];
       const ok  = await runners[key]();
-      if (!ok) return; // stop on first failure — user will retry that step
-      await new Promise(r => setTimeout(r, 300)); // brief pause between steps
+      if (!ok) return; 
+      await new Promise(r => setTimeout(r, 300)); 
     }
     setAllPassed(true);
   }, [checkMic, checkCamera, checkConnection]);
 
-  /* Auto-run on mount */
-  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
-  useEffect(() => { runAll(); }, []);
+  
+  
+  useEffect(() => { runAll(); }, [runAll]);
 
-  /* ── launch ──────────────────────────────────────────────────────── */
+  
 
   const launch = () => {
     if (!bypassed && !consentAll) return;
     
-    // Stop microphone check stream and visualizer immediately to avoid leakage
+    
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
@@ -316,11 +316,11 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     onJoin(bypassed);
   };
 
-  /* ─────────────────────────────────────────────────────────────────
-     RENDER
-  ───────────────────────────────────────────────────────────────── */
+  
 
-  /* Which step is actively running right now (for the animated icon) */
+
+
+  
   const activeStep = (['mic', 'camera', 'connection'] as StepKey[]).find(
     k => steps[k].status === 'checking'
   );
@@ -343,7 +343,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     <div className="fixed inset-0 bg-slate-950 flex flex-col items-center justify-center font-sans overflow-y-auto">
       <div className="flex flex-col items-center gap-6 w-full max-w-sm px-6 py-10">
 
-        {/* ── Shield / company header ─────────────────────────────── */}
+        {}
         <div className="flex flex-col items-center gap-3">
           <div className={`h-14 w-14 rounded-full flex items-center justify-center transition-colors duration-300 ${
             allPassed
@@ -364,10 +364,10 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
           </div>
         </div>
 
-        {/* ── Step cards ─────────────────────────────────────────── */}
+        {}
         <div className="w-full space-y-3">
 
-          {/* Microphone */}
+          {}
           <StepCard
             icon={steps.mic.status === 'fail' ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             title="MICROPHONE"
@@ -376,7 +376,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
             error={steps.mic.error}
             onRetry={() => runAll('mic')}
           >
-            {/* Live mic level bar shown while mic is checking or passed */}
+            {}
             {(steps.mic.status === 'checking' || steps.mic.status === 'pass') && (
               <div className="mt-2 space-y-1">
                 <div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden">
@@ -392,7 +392,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
             )}
           </StepCard>
 
-          {/* Camera */}
+          {}
           <StepCard
             icon={steps.camera.status === 'fail' ? <VideoOff className="h-4 w-4" /> : <Video className="h-4 w-4" />}
             title="CAMERA"
@@ -402,7 +402,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
             onRetry={() => runAll('camera')}
           />
 
-          {/* Connection */}
+          {}
           <StepCard
             icon={steps.connection.status === 'fail' ? <WifiOff className="h-4 w-4" /> : <Wifi className="h-4 w-4" />}
             title="CONNECTION"
@@ -416,7 +416,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
               </span>
             ) : undefined}
           >
-            {/* Speed metrics grid */}
+            {}
             {connResult && (
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <SpeedMetric
@@ -439,7 +439,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
               </div>
             )}
 
-            {/* Skeleton while checking */}
+            {}
             {steps.connection.status === 'checking' && (
               <div className="mt-3 grid grid-cols-2 gap-3">
                 <SkeletonMetric label="DOWNLOAD" />
@@ -449,7 +449,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
           </StepCard>
         </div>
 
-        {/* ── Consent + launch (only after all pass) ─────────────── */}
+        {}
         {allPassed && (
           <div className="w-full space-y-4 pt-1 animate-in fade-in duration-300">
             {!bypassed ? (
@@ -513,9 +513,9 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════
-   SUB-COMPONENTS
-═══════════════════════════════════════════════════════════════════════ */
+
+
+
 
 interface StepCardProps {
   icon: React.ReactNode;
@@ -544,7 +544,7 @@ function StepCard({ icon, title, status, label, error, onRetry, qualityBadge, ch
   return (
     <div className={`rounded-2xl border bg-slate-900 px-4 py-3 transition-colors duration-300 ${borderClass}`}>
       <div className="flex items-center justify-between gap-3">
-        {/* Left: icon + title + label */}
+        {}
         <div className="flex items-center gap-2.5 min-w-0">
           <span className={`flex-shrink-0 transition-colors duration-300 ${iconColor}`}>
             {icon}
@@ -562,7 +562,7 @@ function StepCard({ icon, title, status, label, error, onRetry, qualityBadge, ch
           </div>
         </div>
 
-        {/* Right: status indicator */}
+        {}
         <div className="flex items-center gap-2 flex-shrink-0">
           {qualityBadge}
           {status === 'checking' && (
@@ -586,7 +586,7 @@ function StepCard({ icon, title, status, label, error, onRetry, qualityBadge, ch
         </div>
       </div>
 
-      {/* Expandable content (mic meter, speed grid, etc.) */}
+      {}
       {children}
     </div>
   );

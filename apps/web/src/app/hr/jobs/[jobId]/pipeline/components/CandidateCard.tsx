@@ -23,7 +23,7 @@ export default function CandidateCard({ app, onSelectCandidate }: CandidateCardP
       onClick={handleClick}
       className="rounded-2xl border border-white/60 dark:border-slate-800 bg-white/55 dark:bg-slate-900/60 p-4 shadow-sm hover:shadow-md transition-all glass-panel relative group hover:border-brand-300 dark:hover:border-orange-500/50 cursor-pointer select-none"
     >
-      {/* Header Info */}
+      {}
       <div className="flex items-start gap-3">
         {app.candidateAvatar ? (
           <Image
@@ -48,7 +48,7 @@ export default function CandidateCard({ app, onSelectCandidate }: CandidateCardP
           </span>
         </div>
 
-        {/* Composite Score */}
+        {}
         {app.scores && (
           <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200/60 dark:border-emerald-900/60 flex-shrink-0 shadow-2xs">
             {app.scores.composite}%
@@ -57,11 +57,11 @@ export default function CandidateCard({ app, onSelectCandidate }: CandidateCardP
       </div>
 
 
-      {/* Scorecard breakdown mini-bars */}
+      {}
       {app.scores && (
         <div className="mt-3 space-y-2 border-t border-slate-200/60 dark:border-slate-800 pt-3">
           <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[9px] font-bold text-slate-500 dark:text-slate-400">
-            {/* Tech */}
+            {}
             <div className="space-y-0.5">
               <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Tech</span>
@@ -72,7 +72,7 @@ export default function CandidateCard({ app, onSelectCandidate }: CandidateCardP
               </div>
             </div>
 
-            {/* Comm */}
+            {}
             <div className="space-y-0.5">
               <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Comm</span>
@@ -83,7 +83,7 @@ export default function CandidateCard({ app, onSelectCandidate }: CandidateCardP
               </div>
             </div>
 
-            {/* Logic */}
+            {}
             <div className="space-y-0.5">
               <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Logic</span>
@@ -94,7 +94,7 @@ export default function CandidateCard({ app, onSelectCandidate }: CandidateCardP
               </div>
             </div>
 
-            {/* Experience */}
+            {}
             <div className="space-y-0.5">
               <div className="flex justify-between text-slate-600 dark:text-slate-400">
                 <span>Exp</span>
@@ -108,7 +108,7 @@ export default function CandidateCard({ app, onSelectCandidate }: CandidateCardP
         </div>
       )}
 
-      {/* Applied Time & Action Button */}
+      {}
       <div className="mt-3.5 pt-2.5 border-t border-slate-200/60 dark:border-slate-800 flex justify-between items-center text-[10px] font-extrabold">
         <span className="text-slate-500 dark:text-slate-400 font-semibold flex items-center gap-1">
           <Clock className="h-3 w-3 text-slate-400" />

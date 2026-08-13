@@ -94,7 +94,7 @@ async def generate_interview_response(request: InterviewRespondRequest):
     """Generate next interviewer turn using LangGraph Interviewer Agent & synthesize audio."""
     logger.info(f"Voice: Generating turn response for interview {request.interviewId}, stage {request.stage}")
 
-    # Build InterviewerState input
+
     state: InterviewerState = {
         "interview_id": request.interviewId,
         "application_id": request.applicationId or request.interviewId,
@@ -106,7 +106,7 @@ async def generate_interview_response(request: InterviewRespondRequest):
         "candidate_resume": request.candidateResume,
     }
 
-    # Execute LangGraph agent
+
     output_state = await asyncio.to_thread(run_interviewer_agent, state)
 
     ai_text = output_state.get("latest_ai_response")
@@ -116,7 +116,7 @@ async def generate_interview_response(request: InterviewRespondRequest):
     is_complete = bool(output_state.get("is_complete", False))
     scorecard = output_state.get("final_scorecard")
 
-    # Generate synthesized neural TTS audio URL
+
     audio_url = await generate_tts_audio_base64(ai_text, voice=request.voice or "en-US-ChristopherNeural")
 
     return InterviewRespondResponse(

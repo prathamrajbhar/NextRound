@@ -6,10 +6,10 @@ import { requireOrgScope, rejectOrgIdParam } from '../../middleware/orgScope';
 
 export const hrHoldQueueRouter = Router();
 
-// Org scoping is JWT-derived; never accept a client-supplied org_id.
+
 hrHoldQueueRouter.use(rejectOrgIdParam);
 
-// GET /api/v1/hr/hold-queue - Fetch applications on hold for manual HR review
+
 hrHoldQueueRouter.get(
   '/hold-queue',
   authenticate,

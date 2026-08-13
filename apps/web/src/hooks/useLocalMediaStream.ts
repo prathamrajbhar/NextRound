@@ -6,19 +6,19 @@ interface UseLocalMediaStreamOptions {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   camActive: boolean;
   micActive: boolean;
-  /** Set to false to fully release the stream (e.g. gate acquisition on a stage). Default true. */
+  
   enabled?: boolean;
   onStreamCreated?: (stream: MediaStream) => void;
 }
 
-/**
- * Owns the local getUserMedia stream lifecycle with an async-generation guard.
- *
- * Fixes the StrictMode / fast-toggle race where a stale in-flight getUserMedia resolves
- * after the effect cleanup and leaks the camera/mic (the browser indicator stays on after
- * an interview ends). Any stale resolve self-stops its tracks; the live stream lives in a
- * ref so unmount cleanup, the `pagehide` handler, and `stopLocalStream()` can always stop it.
- */
+
+
+
+
+
+
+
+
 export function useLocalMediaStream({
   videoRef,
   camActive,
@@ -41,7 +41,7 @@ export function useLocalMediaStream({
   }, [onStreamCreated]);
 
   const stopLocalStream = useCallback(() => {
-    // Invalidate any in-flight getUserMedia so it self-stops when it resolves.
+    
     setupGenerationRef.current += 1;
 
     if (rafRef.current !== null) {
@@ -87,7 +87,7 @@ export function useLocalMediaStream({
           audio: micActive,
         });
 
-        // Stale: a newer setup ran (toggle), or stopLocalStream() fired (cleanup/pagehide/unmount).
+        
         if (gen !== setupGenerationRef.current) {
           stream.getTracks().forEach((track) => track.stop());
           return;
@@ -128,7 +128,7 @@ export function useLocalMediaStream({
               rafRef.current = requestAnimationFrame(updateLevel);
             }
           } catch {
-            // Audio context fallback
+            
           }
         }
       } catch {
@@ -143,8 +143,8 @@ export function useLocalMediaStream({
     };
   }, [camActive, micActive, enabled, stopLocalStream, videoRef]);
 
-  // Belt-and-suspenders for tab close / back-forward (bfcache), where React unmount cleanup does
-  // not reliably fire. NOT visibilitychange — briefly switching tabs must keep the feed alive.
+  
+  
   useEffect(() => {
     const onPageHide = () => stopLocalStream();
     window.addEventListener('pagehide', onPageHide);

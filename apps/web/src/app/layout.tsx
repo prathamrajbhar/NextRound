@@ -65,7 +65,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       </head>
       <body className="min-h-full flex flex-col bg-slate-950 text-slate-100 font-sans selection:bg-orange-500 selection:text-white relative">
-        {/* Decorative Background Blobs */}
+        {}
         <div className="blob-container">
           <div className="blob blob-1"></div>
           <div className="blob blob-2"></div>
@@ -75,7 +75,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <ToastProvider>
-              {/* Page Content */}
+              {}
               <main className="flex-grow flex flex-col">{children}</main>
             </ToastProvider>
           </AuthProvider>

@@ -1,4 +1,4 @@
-// Standard API Envelope
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -11,7 +11,7 @@ export interface ApiError {
   details?: unknown;
 }
 
-// Core Entity Types
+
 export interface Job {
   id: string;
   orgId: string;
@@ -139,7 +139,7 @@ export interface Notification {
   read: boolean;
 }
 
-// Extended Pipeline & Feature Types
+
 export interface OfferNegotiationMessage {
   id: string;
   author: 'candidate' | 'hr';
@@ -348,7 +348,7 @@ export interface OnboardingRecord {
   jobTitle: string;
   orgName: string;
   startDate: string;
-  // Null when no buddy/manager has been assigned yet (honest "not assigned").
+  
   buddyName: string | null;
   managerName: string | null;
   progressPercent: number;

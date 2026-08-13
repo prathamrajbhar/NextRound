@@ -80,25 +80,25 @@ export default function CandidateDashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {/* Hero Banner */}
+      {}
       <CandidateDashboardHero candidateName={candidateName} totalAppsCount={safeApps.length} />
 
-      {/* Performance & Metric Cards */}
+      {}
       <CandidateStatsCards
         totalApplications={safeApps.length}
         scheduledInterviewsCount={scheduledInterviews.length}
         latestMockScore={latestMockScore}
       />
 
-      {/* Main Grid Section */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {/* Left 2 Cols: Active Applications */}
+        {}
         <div className="lg:col-span-2 space-y-8">
           <CandidateApplicationsSection applications={safeApps} />
           <CandidateQuickPrepHub />
         </div>
 
-        {/* Right 1 Col: Jobs Recommendations */}
+        {}
         <div>
           <CandidateJobsSection jobs={safeJobs} />
         </div>

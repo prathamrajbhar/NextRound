@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 
-// Mock database and other globals if needed
+
 vi.mock('@nextround/database', () => ({
   prisma: {
     codingProblem: {

@@ -20,7 +20,7 @@ export default function PipelineHeader({
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4 font-sans">
       <div>
-        {/* Breadcrumb navigation */}
+        {}
         <div className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1">
           <Link href="/hr/jobs" className="hover:text-brand-600 dark:hover:text-orange-400 transition-colors">
             All Jobs
@@ -42,9 +42,9 @@ export default function PipelineHeader({
         </div>
       </div>
 
-      {/* Action Toolbar */}
+      {}
       <div className="flex items-center gap-2.5 flex-wrap">
-        {/* Back to All Jobs button */}
+        {}
         <Link
           href="/hr/jobs"
           className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shadow-2xs cursor-pointer"
@@ -53,7 +53,7 @@ export default function PipelineHeader({
           <span>Back to All Jobs</span>
         </Link>
 
-        {/* Auto-Pipeline Toggle */}
+        {}
         <button
           type="button"
           onClick={() => setPipelineActive(!pipelineActive)}
@@ -67,7 +67,7 @@ export default function PipelineHeader({
           <span>{pipelineActive ? 'Auto-Pipeline: Active' : 'Auto-Pipeline: Paused'}</span>
         </button>
 
-        {/* Gating & Passing Thresholds Settings */}
+        {}
         <button
           type="button"
           onClick={onOpenSettings}

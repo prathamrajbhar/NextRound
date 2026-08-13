@@ -44,7 +44,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
   useEffect(() => {
     let pollTimer: ReturnType<typeof setTimeout> | null = null;
     let attempts = 0;
-    const MAX_ATTEMPTS = 20; // poll up to ~60s
+    const MAX_ATTEMPTS = 20; 
 
     async function fetchFeedback() {
       try {
@@ -53,18 +53,18 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
         if (res) {
           setFeedbackData(res);
           setLoading(false);
-          return; // done
+          return; 
         }
       } catch {
-        // 404 means feedback not ready yet — keep polling
+        
       }
 
       attempts++;
       if (attempts < MAX_ATTEMPTS) {
-        setLoading(false); // show "calculating" state while polling
+        setLoading(false); 
         pollTimer = setTimeout(fetchFeedback, 3000);
       } else {
-        setLoading(false); // give up after MAX_ATTEMPTS
+        setLoading(false); 
       }
     }
 
@@ -114,7 +114,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
 
   return (
     <div className="w-full space-y-6 pb-12 animate-in fade-in duration-300">
-      {/* Breadcrumbs */}
+      {}
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 dark:text-slate-400">
         <Link href="/candidate/dashboard" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
           Dashboard
@@ -127,7 +127,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
         <span className="text-slate-700 dark:text-slate-200 font-bold">Report</span>
       </div>
 
-      {/* Hero Scorecard Banner */}
+      {}
       <div className="relative overflow-hidden rounded-3xl border border-white/60 dark:border-slate-800 bg-gradient-to-br from-white/80 via-white/50 to-slate-50/50 dark:from-slate-900/90 dark:via-slate-900/70 dark:to-slate-950/90 p-6 md:p-8 shadow-md backdrop-blur-md glass-panel flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex gap-4 items-center">
           <CompanyLogo name={targetCompany} size="lg" className="shadow-md flex-shrink-0" />
@@ -164,11 +164,11 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
         </div>
       </div>
 
-      {/* Main 2-Column Balanced Grid */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column (8 Cols): Executive Feedback, Strengths, Competencies & Transcript */}
+        {}
         <div className="lg:col-span-8 space-y-6">
-          {/* Coaching Summary Card */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
@@ -184,7 +184,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
               &ldquo;{feedback}&rdquo;
             </p>
 
-            {/* Key Strengths & Growth Grid */}
+            {}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div className="p-4 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/60 space-y-2.5">
                 <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs">
@@ -228,7 +228,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
             </div>
           </div>
 
-          {/* Competency Scorecard Panel */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
@@ -266,7 +266,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
             </div>
           </div>
 
-          {/* Annotated Interview Transcript Card */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
@@ -317,9 +317,9 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
           </div>
         </div>
 
-        {/* Right Column (4 Cols): Category Metrics & Telemetry */}
+        {}
         <div className="lg:col-span-4 space-y-6">
-          {/* Eye Gaze & Telemetry Panel */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
@@ -366,7 +366,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
             </div>
           </div>
 
-          {/* Action CTAs */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel space-y-3">
             <Link
               href="/candidate/mock/new"

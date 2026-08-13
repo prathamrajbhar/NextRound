@@ -37,7 +37,7 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
 
     answer_key = {}
 
-    # If dynamic stored questions exist for session, use them first
+
     if stored_q and isinstance(stored_q, list):
         for q in stored_q:
             q_id = str(q.get("id") or "")
@@ -48,7 +48,7 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
                     "category": q.get("category"),
                 }
 
-    # Dynamic fallback generator is disabled
+
     if not answer_key:
         raise ValueError("Aptitude evaluation requires stored_questions to be populated. Fallback is disabled.")
 
@@ -59,12 +59,12 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
 
     for ans in answers:
         q_id = ans.get("questionId")
-        # selectedOptionIndex may arrive as a string from the client — normalize
-        # to int so it compares against the (also normalized) correctIndex.
+
+
         selected = _to_int(ans.get("selectedOption") if ans.get("selectedOption") is not None else ans.get("selectedOptionIndex"), -1)
-        # The category is taken from the answer, then the stored question. When
-        # neither provides one, the question is bucketed as "Uncategorized" — a
-        # category is never fabricated.
+
+
+
         cat = ans.get("category") or (answer_key.get(q_id, {}).get("category") if q_id in answer_key else None) or "Uncategorized"
 
         if cat not in categories:
@@ -77,7 +77,7 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
             categories[cat]["correct"] += 1
             total_correct += 1
 
-    # Only categories that actually contain answered questions are reported.
+
     category_scores = {
         cat_name: round((stats["correct"] / stats["total"]) * 100.0, 1)
         for cat_name, stats in categories.items()

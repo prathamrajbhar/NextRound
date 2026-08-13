@@ -9,8 +9,8 @@ import {
   type AptitudeQuestion,
 } from './useAptitudeQuestions';
 
-export const QUESTION_TIME_LIMIT = 60; // 60s per question
-export const TOTAL_TIME_LIMIT = 900; // 15 min total
+export const QUESTION_TIME_LIMIT = 60; 
+export const TOTAL_TIME_LIMIT = 900; 
 
 interface UseAptitudeSessionOptions {
   questions?: AptitudeQuestion[];
@@ -22,12 +22,12 @@ interface UseAptitudeSessionOptions {
   disableProctoring?: boolean;
 }
 
-/**
- * Aptitude assessment state machine. Owns question loading (via
- * useAptitudeQuestions), category section flow, per-question + overall
- * timers, proctoring strikes, and the final composite submit. The console
- * component consumes this hook and only renders the active screen.
- */
+
+
+
+
+
+
 export function useAptitudeSession({
   questions = [],
   applicationId,
@@ -44,7 +44,7 @@ export function useAptitudeSession({
     company,
   });
 
-  // Section/Category tracking states
+  
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [completedCategoryScores, setCompletedCategoryScores] = useState<Record<string, number>>({});
   const [isStarted, setIsStarted] = useState(false);
@@ -61,7 +61,7 @@ export function useAptitudeSession({
   const [strikeCount, setStrikeCount] = useState(0);
 
 
-  // Normalize & sort active questions sequentially by category
+  
   const activeQuestions = useMemo(() => {
     const list = fetchedQuestions.length > 0 ? fetchedQuestions : questions;
     const mapped = list.map((q, idx) => ({
@@ -76,15 +76,15 @@ export function useAptitudeSession({
     });
   }, [fetchedQuestions, questions]);
 
-  // Available unique categories — always all 4 standard categories so the hub
-  // shows every section upfront. Questions are loaded per-category on demand.
+  
+  
   const availableCategories = useMemo(() => {
     return [...STANDARD_CATEGORIES] as string[];
   }, []);
 
-  // Get question count per category for display purposes
-  // If we have actual questions loaded, use those counts
-  // Otherwise estimate from standard distribution
+  
+  
+  
   const getCategoryQuestionCount = useCallback((category: string): number => {
     if (mcqDistribution && typeof mcqDistribution[category] === 'number') {
       return mcqDistribution[category];
@@ -95,22 +95,22 @@ export function useAptitudeSession({
       return actualQuestions.length;
     }
     
-    // Fallback: estimate from total if we don't have questions loaded yet
-    // This ensures we show reasonable estimates before questions are loaded
+    
+    
     const totalQuestions = activeQuestions.length;
     if (totalQuestions === 0) {
-      // Default to 5 per category if no data available
+      
       return 5;
     }
     
-    // Distribute evenly across categories
+    
     const base = Math.floor(totalQuestions / 4);
     const remainder = totalQuestions % 4;
     const categoryIndex = (STANDARD_CATEGORIES as readonly string[]).indexOf(category);
     return base + (categoryIndex >= 0 && categoryIndex < remainder ? 1 : 0);
   }, [activeQuestions, mcqDistribution]);
 
-  // Active questions for the currently selected category section
+  
   const activeCategoryQuestions = useMemo(() => {
     if (!selectedCategory) return [];
     const filtered = activeQuestions.filter((q) => q.category === selectedCategory);
@@ -120,7 +120,7 @@ export function useAptitudeSession({
     return filtered;
   }, [activeQuestions, selectedCategory, mcqDistribution]);
 
-  // Prefetch the next batch as the candidate nears the end of the loaded set
+  
   useEffect(() => {
     if (!applicationId && activeQuestions.length > 0 && currentIndex >= activeQuestions.length - 2 && !isPrefetching) {
       const timer = setTimeout(() => {
@@ -130,7 +130,7 @@ export function useAptitudeSession({
     }
   }, [applicationId, currentIndex, activeQuestions.length, isPrefetching, prefetchNextBatch]);
 
-  // Final Overall Submission
+  
   const handleFinalSubmit = useCallback(async () => {
     setIsSubmitting(true);
     let percentage = 0;
@@ -153,7 +153,7 @@ export function useAptitudeSession({
         console.error('Failed to submit aptitude assessment:', err);
       }
     } else {
-      // Practice/mock mode: score locally using correctIndex if available
+      
       let totalCorrect = 0;
       activeQuestions.forEach((q) => {
         const correctIdx = q.correctIndex;
@@ -169,7 +169,7 @@ export function useAptitudeSession({
     setIsSubmitting(false);
   }, [answers, applicationId, activeQuestions, strikeCount, timeLeft]);
 
-  // Submit current category section & return to Category Selection Hub
+  
   const handleCategorySubmit = useCallback(async () => {
     if (!selectedCategory) return;
 
@@ -186,7 +186,7 @@ export function useAptitudeSession({
 
     setCompletedCategoryScores((prev) => {
       const nextScores = { ...prev, [selectedCategory]: catScore };
-      // Auto-submit when all categories are done
+      
       const allDone = availableCategories.every((cat) => nextScores[cat] !== undefined);
       if (allDone) setTimeout(() => handleFinalSubmit(), 100);
       return nextScores;
@@ -196,8 +196,8 @@ export function useAptitudeSession({
     setIsStarted(false);
   }, [selectedCategory, activeCategoryQuestions, answers, availableCategories, handleFinalSubmit]);
 
-  // Anti-Cheat: only watch tab visibility (fullscreen is managed by the
-  // external ProctoringClient when proctoring is active).
+  
+  
   useEffect(() => {
     if (disableProctoring || submitted || !isStarted || !selectedCategory) return;
 
@@ -214,7 +214,7 @@ export function useAptitudeSession({
     return () => document.removeEventListener('visibilitychange', handleVisibilityViolation);
   }, [disableProctoring, submitted, isStarted, selectedCategory]);
 
-  // Reset per-question timer on question change
+  
   useEffect(() => {
     if (!isStarted || !selectedCategory) return;
     const timer = setTimeout(() => {
@@ -224,7 +224,7 @@ export function useAptitudeSession({
     return () => clearTimeout(timer);
   }, [currentIndex, isStarted, selectedCategory]);
 
-  // 60-Second Per-Question Timer
+  
   useEffect(() => {
     if (submitted || showWarningModal || !isStarted || !selectedCategory) return;
 
@@ -247,7 +247,7 @@ export function useAptitudeSession({
     return () => clearInterval(interval);
   }, [submitted, showWarningModal, isStarted, selectedCategory, currentIndex, activeCategoryQuestions.length, handleCategorySubmit]);
 
-  // Overall Countdown Timer
+  
   useEffect(() => {
     if (submitted || showWarningModal || !isStarted) return;
 

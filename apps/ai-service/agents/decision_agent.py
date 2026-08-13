@@ -13,14 +13,14 @@ class DecisionState(TypedDict, total=False):
     evaluation_id: Optional[str]
     composite_score: Optional[float]
     confidence: Optional[float]
-    decision: str  # 'hire' | 'reject' | 'hold_for_review'
+    decision: str
     auto_offer: bool
     offer_letter_content: str
     rejection_email_content: str
     hold_notice_content: str
     reasoning: str
-    # Job offer terms carried from the job payload that reaches the agent.
-    # These are used verbatim in the draft offer letter and never invented.
+
+
     job_title: Optional[str]
     salary: Optional[str]
     equity: Optional[str]
@@ -31,13 +31,13 @@ def threshold_match_node(state: DecisionState) -> DecisionState:
     score = state.get("composite_score")
     conf = state.get("confidence")
 
-    # Decision Threshold Contract:
-    # Score >= 80.0 AND Confidence >= 0.70 -> HIRE (Auto Offer)
-    # Score < 65.0 AND Confidence >= 0.70 -> REJECT (Constructive Rejection)
-    # Confidence < 0.70 OR Score 65..79 -> HOLD (HR Manual Review Queue)
-    # No composite score -> HOLD (an unknown score must never become an auto-reject)
-    # Missing confidence -> HOLD (an unknown confidence must never be assumed to
-    # be high; fabricating 1.0 would let an unscored candidate auto-pass).
+
+
+
+
+
+
+
 
     if score is None:
         decision = "hold_for_review"
@@ -235,7 +235,7 @@ async def run_decision_agent(
         except Exception as e:
             logger.error(f"LangGraph decision execution failed: {e}")
 
-    # Fallback linear node execution
+
     s1 = threshold_match_node(initial_state)
     branch = route_decision_branch(s1)
     if branch == "draft_offer":

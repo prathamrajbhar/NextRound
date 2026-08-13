@@ -5,7 +5,7 @@ import { notificationService } from '../../services/notification.service';
 
 export const notificationsRouter = Router();
 
-// GET /api/v1/notifications/stream - Real-time SSE Live Notifications Stream
+
 notificationsRouter.get(
   '/stream',
   authenticate,
@@ -21,7 +21,7 @@ notificationsRouter.get(
   }
 );
 
-// GET /api/v1/notifications - Fetch authenticated user's notifications
+
 notificationsRouter.get(
   '/',
   authenticate,
@@ -52,7 +52,7 @@ notificationsRouter.get(
   }
 );
 
-// PATCH /api/v1/notifications/:id/read - Mark single notification as read
+
 notificationsRouter.patch(
   '/:id/read',
   authenticate,
@@ -84,7 +84,7 @@ notificationsRouter.patch(
   }
 );
 
-// POST /api/v1/notifications/read-all - Mark all user notifications as read
+
 notificationsRouter.post(
   '/read-all',
   authenticate,
@@ -107,7 +107,7 @@ notificationsRouter.post(
   }
 );
 
-// DELETE /api/v1/notifications/:id - Delete a single notification
+
 notificationsRouter.delete(
   '/:id',
   authenticate,
@@ -136,7 +136,7 @@ notificationsRouter.delete(
   }
 );
 
-// DELETE /api/v1/notifications - Delete all read notifications for user
+
 notificationsRouter.delete(
   '/',
   authenticate,

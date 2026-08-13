@@ -52,13 +52,13 @@ export function CandidateOnboardingShell({
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col lg:flex-row font-sans selection:bg-orange-500 selection:text-white">
-      {/* Left Rail — Brand, Hero Context & Vertical Timeline (38% Width) */}
+      {}
       <aside className="w-full lg:w-[38%] bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 border-r border-slate-800/80 p-6 sm:p-10 lg:p-12 flex flex-col justify-between relative overflow-hidden">
-        {/* Subtle Ambient Radial Glow */}
+        {}
         <div className="absolute -top-20 -left-20 h-72 w-72 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="space-y-8 relative z-10">
-          {/* Header Brand Logo */}
+          {}
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 group">
               <div className="relative h-10 w-10 rounded-xl overflow-hidden group-hover:scale-105 transition-transform border border-orange-500/40 shadow-md shrink-0">
@@ -75,7 +75,7 @@ export function CandidateOnboardingShell({
             </span>
           </div>
 
-          {/* Dynamic Step Hero Text */}
+          {}
           <div className="space-y-2.5 pt-2">
             <span className="text-xs font-black uppercase tracking-widest text-orange-400">
               Phase 0{current + 1} of 0{steps.length}
@@ -88,7 +88,7 @@ export function CandidateOnboardingShell({
             </p>
           </div>
 
-          {/* Vertical Stepper Timeline */}
+          {}
           <ol className="space-y-4 pt-4">
             {steps.map((step, idx) => {
               const active = idx === current;
@@ -124,7 +124,7 @@ export function CandidateOnboardingShell({
           </ol>
         </div>
 
-        {/* AI Profile Readiness Footer Card */}
+        {}
         <div className="pt-8 relative z-10">
           <div className="p-4 sm:p-5 rounded-2xl border border-slate-800 bg-slate-900/80 backdrop-blur-md space-y-3 shadow-lg">
             <div className="flex items-center justify-between">
@@ -146,10 +146,10 @@ export function CandidateOnboardingShell({
         </div>
       </aside>
 
-      {/* Right Workspace Panel (62% Width) */}
+      {}
       <main className="w-full lg:w-[62%] bg-slate-950 p-6 sm:p-12 lg:p-14 flex flex-col justify-between min-h-screen">
         <div className="w-full max-w-2xl mx-auto space-y-8 my-auto">
-          {/* Active Step Header */}
+          {}
           <div className="pb-6 border-b border-slate-800/80">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-black uppercase tracking-widest text-orange-400">
@@ -170,13 +170,13 @@ export function CandidateOnboardingShell({
             </div>
           )}
 
-          {/* Form Step Body */}
+          {}
           <div key={current} className="animate-in fade-in slide-in-from-right-3 duration-200">
             {children}
           </div>
         </div>
 
-        {/* Footer Navigation Bar */}
+        {}
         <footer className="w-full max-w-2xl mx-auto pt-8 border-t border-slate-800/80 mt-10 flex items-center justify-between">
           <div>
             {showSkip && onSkip ? (

@@ -7,10 +7,10 @@ import { serializeApplicationList } from '../../lib/serializers';
 
 export const hrDashboardRouter = Router();
 
-// Org scoping is JWT-derived; never accept a client-supplied org_id.
+
 hrDashboardRouter.use(rejectOrgIdParam);
 
-// GET /api/v1/hr/dashboard - Aggregated HR KPI metrics & active job pipeline status
+
 hrDashboardRouter.get(
   '/dashboard',
   authenticate,
@@ -20,7 +20,7 @@ hrDashboardRouter.get(
     try {
       const orgId = req.user!.orgId!;
 
-      // Active jobs count
+      
       const activeJobsCount = await prisma.job.count({
         where: {
           org_id: orgId,
@@ -28,14 +28,14 @@ hrDashboardRouter.get(
         },
       });
 
-      // Total applicants for org's jobs
+      
       const totalApplicantsCount = await prisma.application.count({
         where: {
           job: { org_id: orgId },
         },
       });
 
-      // Pending interviews count
+      
       const pendingInterviewsCount = await prisma.interview.count({
         where: {
           status: 'scheduled',
@@ -45,7 +45,7 @@ hrDashboardRouter.get(
         },
       });
 
-      // Compute stage distribution across org jobs
+      
       const applications = await prisma.application.findMany({
         where: {
           job: { org_id: orgId },
@@ -74,7 +74,7 @@ hrDashboardRouter.get(
         stageDistribution[stageKey] = (stageDistribution[stageKey] || 0) + 1;
       });
 
-      // Fetch recent agent activities for org
+      
       const agentLogs = await prisma.agentLog.findMany({
         where: { org_id: orgId },
         orderBy: { created_at: 'desc' },
@@ -88,7 +88,7 @@ hrDashboardRouter.get(
         timestamp: log.created_at.toISOString(),
       }));
 
-      // Compute avg time-to-hire in days
+      
       const hrCompletedApps = await prisma.application.findMany({
         where: {
           job: { org_id: orgId },
@@ -106,7 +106,7 @@ hrDashboardRouter.get(
           ? Math.round(hireTimes.reduce((acc, val) => acc + val, 0) / hireTimes.length / (1000 * 60 * 60 * 24))
           : 0;
 
-      // Decision counts (hire/hold/reject) by evaluation decision
+      
       const decidedEvals = await prisma.evaluation.findMany({
         where: {
           application: { job: { org_id: orgId } },
@@ -121,7 +121,7 @@ hrDashboardRouter.get(
         reject: decidedEvals.filter((e) => e.decision === 'reject').length,
       };
 
-      // Recent applications with relations for candidate/job context
+      
       const recentApps = await prisma.application.findMany({
         where: { job: { org_id: orgId } },
         include: {

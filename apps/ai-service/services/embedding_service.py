@@ -4,7 +4,7 @@ from core.config import settings
 
 logger = logging.getLogger("embedding_service")
 
-# Try initializing Google GenAI Client
+
 genai_client = None
 if settings.gemini_api_key:
     try:
@@ -14,11 +14,11 @@ if settings.gemini_api_key:
         logger.warning(f"Failed to initialize Google GenAI Client: {e}")
 
 
-# Try initializing FastEmbed ONNX TextEmbedding model (768-dim)
+
 onnx_embedding_model = None
 try:
     from fastembed import TextEmbedding
-    # BAAI/bge-base-en-v1.5 produces 768-dimensional normalized float vectors
+
     onnx_embedding_model = TextEmbedding(model_name="BAAI/bge-base-en-v1.5")
     logger.info("Successfully initialized ONNX Vector Embedding Engine (BAAI/bge-base-en-v1.5)")
 except Exception as e:
@@ -38,7 +38,7 @@ def embed_text_with_source(text: str) -> tuple[list[float], str]:
 
     errors = []
 
-    # 1. Primary: Self-Hosted FastEmbed ONNX Container Engine
+
     if onnx_embedding_model:
         try:
             embeddings = list(onnx_embedding_model.embed([text]))
@@ -50,7 +50,7 @@ def embed_text_with_source(text: str) -> tuple[list[float], str]:
             logger.error(f"FastEmbed ONNX embedding generation failed: {e}")
             errors.append(e)
 
-    # 2. Secondary: Gemini API text-embedding-004
+
     if genai_client:
         try:
             response = genai_client.models.embed_content(
@@ -108,7 +108,7 @@ def embed_resume_with_source(resume_text: str, chunk_size: int = 500) -> tuple[l
     if not chunk_embeddings:
         return [0.0] * 768, "empty"
 
-    # Average pooling across all chunks
+
     avg_vec = [0.0] * 768
     for vec in chunk_embeddings:
         for idx in range(768):
@@ -117,12 +117,12 @@ def embed_resume_with_source(resume_text: str, chunk_size: int = 500) -> tuple[l
     num_chunks = len(chunk_embeddings)
     avg_vec = [x / num_chunks for x in avg_vec]
 
-    # Re-normalize
+
     norm = math.sqrt(sum(x * x for x in avg_vec))
     if norm > 0:
         avg_vec = [x / norm for x in avg_vec]
 
-    # Report the most reliable source observed across chunks
+
     source = "onnx" if "onnx" in sources else "gemini"
     return avg_vec, source
 
@@ -151,5 +151,5 @@ def cosine_similarity(a: list[float], b: list[float]) -> float:
         return 0.0
 
     sim = dot_product / (norm_a * norm_b)
-    # Clamp to [0, 1]
+
     return max(0.0, min(1.0, (sim + 1.0) / 2.0 if sim < 0 else sim))

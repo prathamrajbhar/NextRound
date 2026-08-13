@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 
 export async function generateText(prompt: string): Promise<string> {
-  const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const geminiApiKey = process.env.GEMINI_API_KEY;
 
   if (!geminiApiKey) {
     throw new Error(

@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Enable class-based dark mode for Tailwind v4 */
+
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -8,53 +8,53 @@
   --font-display: var(--font-google-sans), system-ui, sans-serif;
 
   --text-xs: 0.875rem;
-  /* Scaled up to 14px */
+  
   --text-xs--line-height: 1.375rem;
 
   --text-sm: 0.975rem;
-  /* Scaled up to 15.6px */
+  
   --text-sm--line-height: 1.475rem;
 
   --text-base: 1.1rem;
-  /* Scaled up to 17.6px */
+  
   --text-base--line-height: 1.675rem;
 
   --text-lg: 1.25rem;
-  /* Scaled up to 20.0px */
+  
   --text-lg--line-height: 1.875rem;
 
   --text-xl: 1.45rem;
-  /* Scaled up to 23.2px */
+  
   --text-xl--line-height: 2.05rem;
 
   --text-2xl: 1.8rem;
-  /* Scaled up to 28.8px */
+  
   --text-2xl--line-height: 2.375rem;
 
   --text-3xl: 2.35rem;
-  /* Scaled up to 37.6px */
+  
   --text-3xl--line-height: 2.875rem;
 
   --text-4xl: 3rem;
-  /* Scaled up to 48.0px */
+  
   --text-4xl--line-height: 3.5rem;
 
   --text-5xl: 3.75rem;
-  /* Scaled up to 60.0px */
+  
   --text-5xl--line-height: 4.25rem;
 
   --text-6xl: 4.75rem;
-  /* Scaled up to 76.0px */
+  
   --text-6xl--line-height: 5.25rem;
 
-  /* Centralized Color Scheme Variables mapping */
+  
   --color-brand-50: var(--brand-50);
   --color-brand-100: var(--brand-100);
   --color-brand-200: var(--brand-200);
   --color-brand-300: var(--brand-300);
   --color-brand-400: var(--brand-400);
   --color-brand-505: var(--brand-500);
-  /* custom fix */
+  
   --color-brand-500: var(--brand-500);
   --color-brand-600: var(--brand-600);
   --color-brand-700: var(--brand-700);
@@ -97,14 +97,14 @@
   --color-purple-600: var(--purple-600);
   --color-purple-700: var(--purple-700);
 
-  /* Semantic Aliases for page-level classes */
+  
   --color-indigo-50: var(--brand-50);
   --color-indigo-100: var(--brand-100);
   --color-indigo-200: var(--brand-200);
   --color-indigo-300: var(--brand-300);
   --color-indigo-400: var(--brand-400);
   --color-indigo-505: var(--brand-500);
-  /* custom fix */
+  
   --color-indigo-500: var(--brand-500);
   --color-indigo-600: var(--brand-600);
   --color-indigo-650: var(--brand-600);
@@ -144,18 +144,18 @@
 
 :root {
   --background: #ffffff;
-  /* Premium white background */
+  
   --foreground: #1e293b;
-  /* Softer dark slate headings instead of aggressive dark black */
+  
   --text-body: #334155;
-  /* Slate 700 body text for high readability */
+  
   --text-muted: #64748b;
-  /* Slate 500 muted text for better contrast */
+  
   --border-color: rgba(0, 0, 0, 0.08);
-  /* Subtle dark border for white canvas contrast */
+  
   --primary: var(--brand-600);
   --success-color: var(--success-600);
-  /* Centralized Color Scheme Design Tokens (Orange, Green, White Theme) */
+  
   --brand-50: #fff7ed;
   --brand-100: #ffedd5;
   --brand-200: #fed7aa;
@@ -203,7 +203,7 @@
   --purple-600: var(--brand-500);
   --purple-700: var(--brand-600);
 
-  /* Skeleton loader surface tokens */
+  
   --skeleton-base: rgba(203, 213, 225, 0.55);
   --skeleton-mid: rgba(226, 232, 240, 0.85);
   --skeleton-high: rgba(248, 250, 252, 0.95);
@@ -211,10 +211,10 @@
   --skeleton-sheen: rgba(255, 255, 255, 0.65);
 }
 
-/* =========================================
-   DARK MODE CSS VARIABLES
-   Applied when <html class="dark"> is set
-   ========================================= */
+
+
+
+
 .dark {
   --background: #0d1117;
   --foreground: #f1f5f9;
@@ -222,7 +222,7 @@
   --text-muted: #94a3b8;
   --border-color: rgba(255, 255, 255, 0.08);
 
-  /* Skeleton loader surface tokens (dark) */
+  
   --skeleton-base: rgba(30, 41, 59, 0.6);
   --skeleton-mid: rgba(51, 65, 85, 0.75);
   --skeleton-high: rgba(71, 85, 105, 0.85);
@@ -236,7 +236,7 @@ body {
   font-family: var(--font-sans);
   overflow-x: hidden;
   font-size: 1.05rem;
-  /* Increased body font size from 1.025rem */
+  
   line-height: 1.625;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -250,12 +250,12 @@ body {
     font-family: var(--font-display);
     font-weight: 600;
     letter-spacing: -0.025em;
-    /* Cleaner, modern tight tracking */
+    
     line-height: 1.25;
   }
 }
 
-/* Override aggressive font weight utility classes to soften look */
+
 .font-black {
   font-weight: 700 !important;
 }
@@ -263,7 +263,7 @@ body {
   font-weight: 600 !important;
 }
 
-/* Premium Light Glassmorphism Panels (Adjusted for white background) */
+
 .glass-panel {
   background: rgba(255, 255, 255, 0.75) !important;
   border: 1px solid rgba(0, 0, 0, 0.06) !important;
@@ -302,7 +302,7 @@ body {
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-/* Premium Light Glassmorphism Cards - Clean style (Adjusted for white background) */
+
 .glass-card {
   position: relative;
   background: rgba(255, 255, 255, 0.75);
@@ -341,17 +341,17 @@ body {
     inset 0 1px 1px rgba(255, 255, 255, 0.06);
 }
 
-/* Primary Accent Glass Card */
+
 .glass-card-indigo:hover {
   border-color: rgba(249, 115, 22, 0.2) !important;
 }
 
-/* Emerald Accent Glass Card */
+
 .glass-card-emerald:hover {
   border-color: rgba(34, 197, 94, 0.2) !important;
 }
 
-/* Purple Accent Glass Card */
+
 .glass-card-purple:hover {
   border-color: rgba(249, 115, 22, 0.2) !important;
 }
@@ -374,7 +374,7 @@ body {
   outline: none !important;
 }
 
-/* Glassmorphic Global Overrides for Sidebars and Headers */
+
 header {
   background-color: rgba(255, 255, 255, 0.75) !important;
   border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
@@ -401,12 +401,12 @@ aside {
   border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Force layouts that use bg-slate-50/50 to be transparent so the blobs show through */
+
 .bg-slate-50\/50 {
   background-color: transparent !important;
 }
 
-/* Reusable premium glossy buttons classes */
+
 .btn-glossy-brand {
   background-image: none !important;
   background-color: var(--brand-600) !important;
@@ -467,35 +467,35 @@ aside {
     inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
 }
 
-/* Intercept and scale up arbitrary sub-pixel text classes used across the codebase */
+
 .text-\[9px\] {
   font-size: 0.725rem !important;
-  /* Scale up ~9px to ~11.6px */
+  
   line-height: 1.15rem !important;
 }
 
 .text-\[10px\] {
   font-size: 0.775rem !important;
-  /* Scale up 10px to ~12.4px */
+  
   line-height: 1.25rem !important;
 }
 
 .text-\[11px\] {
   font-size: 0.825rem !important;
-  /* Scale up 11px to ~13.2px */
+  
   line-height: 1.35rem !important;
 }
 
-/* ---------------------------------------------------------------------- */
-/* Animation utilities                                                     */
-/*                                                                          */
-/* `animate-in`/`fade-in`/`zoom-in-95`/`duration-*` classes are used across */
-/* ~40 files in this codebase but were never backed by an actual animation */
-/* plugin (e.g. tailwindcss-animate) or custom CSS — they render as        */
-/* no-ops today. Rather than add an extra dependency, define the small set */
-/* of keyframes actually used, plus a few new ones for Phase 1 primitives  */
-/* (toast slide-in, skeleton shimmer, orb pulse for later phases).         */
-/* ---------------------------------------------------------------------- */
+
+
+
+
+
+
+
+
+
+
 
 @keyframes fade-in {
   from {
@@ -531,7 +531,7 @@ aside {
   }
 }
 
-/* Premium skeleton surface: dimensional base + hairline border + sheen sweep */
+
 .skeleton-shimmer {
   position: relative;
   background: linear-gradient(
@@ -615,8 +615,8 @@ aside {
   animation-duration: 300ms;
 }
 
-/* Standalone utility classes (not requiring the .animate-in base class)
-   for use in new Phase 1+ components. */
+
+
 .anim-fade-in {
   animation: fade-in 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -633,7 +633,7 @@ aside {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Auth ambient animations */
+
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -669,7 +669,7 @@ aside {
   animation: drift 24s ease-in-out infinite reverse;
 }
 
-/* Respect reduced-motion preferences for ambient + entrance animations */
+
 @media (prefers-reduced-motion: reduce) {
   .anim-fade-in,
   .anim-zoom-in,
@@ -683,7 +683,7 @@ aside {
   }
 }
 
-/* Elegant ambient floating blobs styling */
+
 .blob-container {
   position: fixed;
   top: 0;
@@ -729,7 +729,7 @@ aside {
   background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.5) 100%);
 }
 
-/* Dark mode blob adjustments */
+
 .dark .blob-1 {
   opacity: 0.12;
   background: radial-gradient(circle, rgba(249, 115, 22, 0.15) 0%, rgba(251, 146, 60, 0.08) 100%);
@@ -751,7 +751,7 @@ aside {
   }
 }
 
-/* Dark mode glass-input */
+
 .dark .glass-input {
   background: rgba(30, 41, 59, 0.7) !important;
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -763,9 +763,9 @@ aside {
   border-color: var(--primary) !important;
 }
 
-/* =========================================
-   CUSTOM VIEW TRANSITION RIPPLE SCHEME
-   ========================================= */
+
+
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
@@ -780,7 +780,7 @@ aside {
   z-index: 9999;
 }
 
-/* Temporarily disable transitions on all elements during theme change to prevent stuttering */
+
 html.view-transitioning *,
 html.view-transitioning *::before,
 html.view-transitioning *::after {

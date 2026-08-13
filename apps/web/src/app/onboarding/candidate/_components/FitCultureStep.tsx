@@ -29,7 +29,7 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
         currentValue: form[field],
       };
 
-      // regenerate-field failures fall through to a parse-resume file upload.
+      
       const regenerated = await apiClient
         .post<{ text?: string }>('/candidate/regenerate-field', payload)
         .catch(() => undefined);

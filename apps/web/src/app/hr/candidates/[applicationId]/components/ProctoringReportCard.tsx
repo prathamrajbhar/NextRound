@@ -83,7 +83,7 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
     }
   };
 
-  // Format elapsed time (ms -> mm:ss)
+  
   const formatElapsed = (ms: number) => {
     const totalSecs = Math.floor(ms / 1000);
     const mins = Math.floor(totalSecs / 60);
@@ -91,7 +91,7 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Human readable rule name
+  
   const getRuleName = (code: string) => {
     switch (code) {
       case 'repeated_tab_switch':
@@ -109,7 +109,7 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
     }
   };
 
-  // Severity color maps
+  
   const severityColors = {
     high: 'text-rose-500 bg-rose-500/10 border-rose-500/30',
     medium: 'text-amber-500 bg-amber-500/10 border-amber-500/30',
@@ -135,7 +135,7 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
       ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
       : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30';
 
-  // Compute metrics
+  
   const tabSwitches = events.filter((e) => e.kind === 'tab_hidden').length;
   const fsExits = events.filter((e) => e.kind === 'fullscreen_exit').length;
   const mediaStops = events.filter((e) => e.kind.endsWith('_stopped')).length;
@@ -143,7 +143,7 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
   return (
     <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5 font-sans">
       
-      {/* Header Banner */}
+      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-brand-600 dark:text-orange-400" />
@@ -160,7 +160,7 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
         </span>
       </div>
 
-      {/* Main Violation Alert Badges */}
+      {}
       {localViolations.length > 0 ? (
         <div className="space-y-3">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
@@ -201,13 +201,13 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
                     </div>
                   </div>
 
-                  {/* Evidence Metadata */}
+                  {}
                   <div className="text-[10px] opacity-75 space-y-0.5">
                     <div>First Seen: {new Date(violation.first_seen_at).toLocaleTimeString()}</div>
                     <div>Last Seen: {new Date(violation.last_seen_at).toLocaleTimeString()}</div>
                   </div>
 
-                  {/* Review Notes Display */}
+                  {}
                   {violation.review_reason && (
                     <div className="p-2.5 rounded-2xl bg-black/10 border border-black/10 text-[11px] space-y-1">
                       <span className="font-extrabold block text-[9px] opacity-60 uppercase tracking-widest">Reviewer Comments</span>
@@ -215,7 +215,7 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
                     </div>
                   )}
 
-                  {/* HR Action controls */}
+                  {}
                   {isPending && !isReviewing && (
                     <button
                       onClick={() => {
@@ -291,7 +291,7 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
         </div>
       )}
 
-      {/* Security Metrics Grid */}
+      {}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 p-3 rounded-2xl text-center">
           <Monitor className="h-4.5 w-4.5 text-slate-400 dark:text-slate-500 mx-auto mb-1.5" />
@@ -316,7 +316,7 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
         </div>
       </div>
 
-      {/* Expanded Chronological Event Log Timeline */}
+      {}
       <div className="space-y-2">
         <button
           type="button"
@@ -333,7 +333,7 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
               const severityBadge = severityColors[event.severity] || severityColors.info;
               return (
                 <div key={event.id} className="relative group text-xs font-semibold">
-                  {/* Bullet timeline dot */}
+                  {}
                   <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-slate-900 border border-slate-700 ring-4 ring-slate-950" />
 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">

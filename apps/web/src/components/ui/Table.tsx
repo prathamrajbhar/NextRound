@@ -4,7 +4,7 @@ import React from 'react';
 import { cn } from '@/lib/cn';
 
 export interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
-  /** Wraps the table in a horizontally-scrollable, rounded glass container */
+  
   containerClassName?: string;
 }
 

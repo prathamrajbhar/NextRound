@@ -1,11 +1,11 @@
-"""Question caching service to reduce repeated HTTP calls to Express API.
 
-This service implements a simple in-memory cache for stored assessment questions,
-dramatically reducing latency and database load when multiple jobs access the
-same application's assessment data.
 
-Cache invalidation can be triggered via the callback API or on a TTL basis.
-"""
+
+
+
+
+
+
 
 import logging
 import time
@@ -13,9 +13,9 @@ from typing import Dict, List, Optional, Any, Tuple
 
 logger = logging.getLogger("question_cache_service")
 
-# Format: { application_id: (questions, min_score, cached_timestamp) }
+
 _ASSESSMENT_CACHE: Dict[str, Tuple[List[dict], Optional[float], float]] = {}
-CACHE_TTL_SECONDS = 3600  # 1 hour
+CACHE_TTL_SECONDS = 3600
 
 
 def get_cached_assessment_data(
@@ -30,7 +30,7 @@ def get_cached_assessment_data(
     
     questions, min_score, cached_at = _ASSESSMENT_CACHE[application_id]
     
-    # Check if cache entry has expired
+
     if time.time() - cached_at > CACHE_TTL_SECONDS:
         logger.debug(f"Assessment cache for {application_id} expired (TTL {CACHE_TTL_SECONDS}s)")
         del _ASSESSMENT_CACHE[application_id]

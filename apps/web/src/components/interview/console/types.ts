@@ -1,9 +1,9 @@
 import type { ProctoringClient } from '@/lib/proctoring/ProctoringClient';
 
-// ---------------------------------------------------------------------------
-// Shared interview types — the single source of truth for these shapes.
-// useInterviewSession re-exports from here; all console components import here.
-// ---------------------------------------------------------------------------
+
+
+
+
 
 export interface Message {
   id: string;
@@ -36,7 +36,7 @@ export interface UnifiedInterviewConsoleProps {
   timeRemaining?: number;
   callDuration?: number;
 
-  // Voice & AI session state (for ai-voice and mock-practice modes)
+  
   messages?: Message[];
   phase?: InterviewPhase;
   isAnalyzing?: boolean;
@@ -44,13 +44,13 @@ export interface UnifiedInterviewConsoleProps {
   onSubmitAnswer?: (text: string) => void;
   onEndSession: () => void;
 
-  // Proctoring (anti-cheat enforcement)
+  
   strikeCount?: number;
   showWarningModal?: boolean;
   onResumeFullscreen?: () => void;
   onEliminate?: () => void;
   proctoringClient?: ProctoringClient | null;
 
-  // HR Recruiter Evaluation Form (hr-recruiter mode only)
+  
   onCompleteHRRound?: (result: 'pass' | 'fail', notes: string) => void;
 }

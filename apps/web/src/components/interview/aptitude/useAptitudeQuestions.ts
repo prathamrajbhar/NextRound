@@ -19,7 +19,7 @@ interface RawApiQuestion {
   question?: string;
   options?: string[];
   difficulty?: string;
-  /** correct_index (real assessments, stripped) or correctIndex (mock/practice) */
+  
   correctIndex?: number;
   correct_index?: number;
 }
@@ -61,11 +61,11 @@ function normalizeQuestion(q: RawApiQuestion, idx: number): AptitudeQuestion {
   };
 }
 
-/**
- * Fetches aptitude questions from the server.
- * The server selects randomly from the DB question bank — no category/batch
- * params needed. One request returns the full set for this session.
- */
+
+
+
+
+
 export function useAptitudeQuestions({
   applicationId,
   sessionId,
@@ -76,7 +76,7 @@ export function useAptitudeQuestions({
   const [mcqDistribution, setMcqDistribution] = useState<Record<string, number> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  // isPrefetching kept for API compatibility with useAptitudeSession
+  
   const [isPrefetching] = useState(false);
 
   useEffect(() => {
@@ -108,7 +108,7 @@ export function useAptitudeQuestions({
       } catch (err) {
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : 'Failed to load questions.';
-          // 401 means session expired — give a clear actionable message
+          
           const isAuth = msg.toLowerCase().includes('401') || msg.toLowerCase().includes('authentication') || msg.toLowerCase().includes('token');
           setFetchError(isAuth
             ? 'Your session has expired. Please log in again to start the assessment.'
@@ -125,7 +125,7 @@ export function useAptitudeQuestions({
     return () => { cancelled = true; };
   }, [applicationId, sessionId, role, company]);
 
-  // No-op: questions are fully loaded in one shot from the DB
+  
   const prefetchNextBatch = useCallback(async () => {}, []);
 
   return { questions, mcqDistribution, isLoading, isPrefetching, prefetchNextBatch, fetchError };

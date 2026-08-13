@@ -69,7 +69,7 @@ export function ActionModals({
       const pathsXml = paths.map((p) => `<path d="${p}" stroke="#059669" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" />`).join('');
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120">${pathsXml}</svg>`;
     }
-    // Fallback: styled text SVG signature
+    
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120"><text x="20" y="70" font-family="serif" font-size="32" font-style="italic" fill="#059669">${signatureText || candidateName}</text></svg>`;
   };
 
@@ -82,7 +82,7 @@ export function ActionModals({
 
   return (
     <>
-      {/* Accept & Sign Modal */}
+      {}
       {showAccept && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-md w-full p-6 sm:p-7 space-y-6 shadow-2xl">
@@ -203,7 +203,7 @@ export function ActionModals({
         </div>
       )}
 
-      {/* Decline Offer Modal */}
+      {}
       {showDecline && (
         <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-md w-full p-6 sm:p-7 space-y-5 shadow-2xl">

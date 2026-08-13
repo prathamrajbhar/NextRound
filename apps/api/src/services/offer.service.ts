@@ -4,9 +4,9 @@ import { deriveSalary, deriveEquity } from '../lib/offer-terms';
 
 export interface OfferDraftInput {
   applicationId: string;
-  /** The Job the offer is for; salary/equity are derived from it when no explicit override is given. */
+  
   job: { title: string; salary: string | null | undefined; thresholds?: unknown };
-  /** Explicit overrides, honored as real caller inputs when provided. */
+  
   roleTitle?: string | null;
   salary?: number | null;
   equity?: string | null;
@@ -16,7 +16,7 @@ export interface OfferDraftInput {
 
 export interface OfferDraftResult {
   offer: Awaited<ReturnType<typeof prisma.offer.upsert>>;
-  /** True only when a brand-new offer was created (fresh magic-link token minted). */
+  
   isNew: boolean;
 }
 
@@ -24,16 +24,16 @@ export class NoSalaryConfiguredError extends Error {
   statusCode = 422;
 }
 
-/**
- * Idempotent offer creation: derive offer terms from the Job record (never
- * fabricating fallbacks), refuse when the Job genuinely has no salary, and
- * upsert on `application_id` so a retried decision updates the existing offer
- * (keeping its magic-link token) instead of crashing on the unique constraint.
- *
- * Returns the offer plus whether it was freshly created. Throws
- * `NoSalaryConfiguredError` (422) when no salary can be derived and none was
- * provided explicitly.
- */
+
+
+
+
+
+
+
+
+
+
 export async function upsertOffer(input: OfferDraftInput): Promise<OfferDraftResult> {
   const { applicationId, job } = input;
 

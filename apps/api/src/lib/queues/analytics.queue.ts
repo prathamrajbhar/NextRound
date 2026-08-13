@@ -16,12 +16,12 @@ export async function enqueueAnalyticsReport(payload: AnalyticsJobPayload) {
   return job;
 }
 
-// Register recurring weekly analytics cron job (Every Monday at 00:00 UTC)
+
 export async function setupWeeklyAnalyticsCron() {
   try {
     await analyticsQueue.upsertJobScheduler(
       'weekly_analytics_cron',
-      { pattern: '0 0 * * 1' }, // Mondays 00:00 UTC
+      { pattern: '0 0 * * 1' }, 
       {
         name: 'weekly_analytics_cron',
         data: { type: 'weekly_report' },

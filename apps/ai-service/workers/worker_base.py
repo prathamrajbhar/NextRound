@@ -1,19 +1,19 @@
-"""Shared plumbing for BullMQ agent workers.
 
-Every worker previously duplicated the same lifecycle: fetch job context from the
-Express internal API, run the LangGraph agent, callback the result, then post a
-completed/failed audit record to ``internal/agent-logs``. This module extracts
-that lifecycle so a worker only declares its agent name, action label, and the
-job-specific work function.
 
-Two shapes are supported:
 
-- ``run_agent_job`` — the full fetch → agent → callback → audit pipeline used by
-  the hiring-pipeline workers (screening, evaluator, interview, ...).
-- ``post_internal`` — a bare "POST/PATCH a payload, map the HTTP status to
-  success" helper used by workers that do not emit an agent audit trail (mock
-  feedback, prep content, resume builder).
-"""
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 import logging
 from typing import Awaitable, Callable, Dict, Optional
@@ -22,8 +22,8 @@ from core.http_client import callback_client
 
 logger = logging.getLogger("worker_base")
 
-# A worker's job-specific work: performs the agent execution + internal result
-# callback and returns the payload to store as the audit-log ``output``.
+
+
 WorkFn = Callable[[], Awaitable[Dict]]
 
 

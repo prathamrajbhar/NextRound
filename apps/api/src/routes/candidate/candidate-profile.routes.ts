@@ -11,7 +11,7 @@ import { syncCandidateSocialProfiles } from '../../services/social-sync.service'
 export const candidateProfileRouter = Router();
 
 const upload = multer({
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, 
   fileFilter: (_req, file, cb) => {
     const ext = (file.originalname || '').toLowerCase();
     const isAllowedExt = ext.endsWith('.pdf') || ext.endsWith('.docx') || ext.endsWith('.doc') || ext.endsWith('.txt');
@@ -20,14 +20,14 @@ const upload = multer({
     if (isAllowedExt || isAllowedMime || !file.mimetype) {
       cb(null, true);
     } else {
-      // Reject non-document files (e.g. .exe, .zip) at the boundary instead of
-      // buffering up to 10MB of binary into memory for a parser that can't use it.
+      
+      
       cb(null, false);
     }
   },
 });
 
-// POST /api/v1/candidate/regenerate-field - Regenerate a specific profile field using ALL candidate resources (resume, social data, github, linkedin, skills)
+
 candidateProfileRouter.post(
   '/regenerate-field',
   optionalAuthenticate,
@@ -66,7 +66,7 @@ candidateProfileRouter.post(
   }
 );
 
-// POST /api/v1/candidate/sync-social - Scrape and sync GitHub & LinkedIn profiles
+
 candidateProfileRouter.post(
   '/sync-social',
   optionalAuthenticate,
@@ -79,10 +79,10 @@ candidateProfileRouter.post(
 
       const socialData = await syncCandidateSocialProfiles(githubUrl, linkedinUrl);
 
-      // A real LinkedIn sync now runs against the user-approved bytemap scraper.
-      // When it genuinely fails (profile not found, scraper/network error), report
-      // the honest reason with a 4xx/5xx instead of claiming success. An upstream
-      // timeout is an upstream error (504), not a client-side problem.
+      
+      
+      
+      
       const linkedinFailed = Boolean(linkedinUrl) && socialData.linkedin?.synced === false;
       if (linkedinFailed) {
         const reason = socialData.linkedin?.reason || 'LinkedIn sync failed.';
@@ -105,7 +105,7 @@ candidateProfileRouter.post(
   }
 );
 
-// POST /api/v1/candidate/profile - Create or update candidate profile with optional resume upload
+
 candidateProfileRouter.post(
   '/profile',
   authenticate,
@@ -144,14 +144,14 @@ candidateProfileRouter.post(
         try {
           bodyData = JSON.parse(req.body.data);
         } catch (e) {
-          // keep bodyData as is
+          
         }
       }
 
       const validated = CandidateProfileSchema.parse(bodyData);
 
-      // Only update fields the client actually sent, so partial updates
-      // (e.g. from the Settings page) never wipe existing profile data.
+      
+      
       const bodyHas = (key: string) => Object.prototype.hasOwnProperty.call(bodyData, key);
 
       const profile = await prisma.candidateProfile.upsert({
@@ -223,7 +223,7 @@ candidateProfileRouter.post(
   }
 );
 
-// GET /api/v1/candidate/profile - Get candidate profile
+
 candidateProfileRouter.get(
   '/profile',
   authenticate,

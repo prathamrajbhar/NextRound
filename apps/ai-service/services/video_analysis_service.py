@@ -21,9 +21,9 @@ def analyze_frame_expression(
             "error": "Either image_base64 or landmark_data must be provided"
         }
 
-    # Without real landmark telemetry there is no signal to analyze. An image
-    # payload alone cannot truthfully yield gaze/emotion/engagement values, so
-    # the result is an honest "no_signal" (never a byte-hash heuristic).
+
+
+
     if not landmark_data:
         return {
             "success": True,
@@ -39,16 +39,16 @@ def analyze_frame_expression(
             "soft_skills_confidence": None,
         }
 
-    # Real landmark telemetry analysis path. Missing individual landmark keys
-    # still default to baseline values — the caller supplied landmarks, so the
-    # analysis legitimately runs.
+
+
+
     yaw = float(landmark_data.get("yaw", 0.0))
     pitch = float(landmark_data.get("pitch", 0.0))
     roll = float(landmark_data.get("roll", 0.0))
     smile_ratio = float(landmark_data.get("smile_ratio", 0.2))
     eye_openness = float(landmark_data.get("eye_openness", 0.8))
 
-    # Gaze direction determination
+
     abs_yaw = abs(yaw)
     abs_pitch = abs(pitch)
 
@@ -68,7 +68,7 @@ def analyze_frame_expression(
         gaze_direction = "down"
         eye_contact = False
 
-    # Compute emotion probability distribution
+
     if smile_ratio > 0.4 and eye_contact:
         emotions_dist = {"confident": 0.55, "focused": 0.30, "neutral": 0.10, "stressed": 0.03, "confused": 0.01, "hesitant": 0.01}
         primary_emotion = "confident"
@@ -85,9 +85,9 @@ def analyze_frame_expression(
         emotions_dist = {"neutral": 0.50, "focused": 0.30, "confident": 0.10, "stressed": 0.05, "confused": 0.03, "hesitant": 0.02}
         primary_emotion = "neutral"
 
-    # Engagement index (0-100) & Soft Skills Confidence Score (0-100).
-    # Scores reflect the real computed value clamped to 0-100 — no artificial
-    # floor is applied, so a genuinely low-signal frame is reported as low.
+
+
+
     base_engagement = 85.0 if eye_contact else 55.0
     engagement_score = round(min(100.0, max(0.0, base_engagement - (abs_yaw * 1.2) + (smile_ratio * 15.0))), 1)
     soft_skills_confidence = round(min(100.0, max(0.0, (emotions_dist["confident"] * 40.0) + (emotions_dist["focused"] * 35.0) + (emotions_dist["neutral"] * 25.0) + (engagement_score * 0.2))), 1)
@@ -129,9 +129,9 @@ def analyze_video_session(frames: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     for f in frames:
         img_b64 = f.get("image_base64", "")
-        # Landmarks are only trusted when the frame actually carries them.
-        # A frame that only ships an image must not be coerced into fake
-        # baseline landmarks — it yields an honest "no_signal" result.
+
+
+
         landmarks = f.get("landmark_data")
         if not landmarks:
             present = {
@@ -160,7 +160,7 @@ def analyze_video_session(frames: List[Dict[str, Any]]) -> Dict[str, Any]:
         total_engagement += analysis.get("engagement_score", 0.0)
         total_confidence += analysis.get("soft_skills_confidence", 0.0)
 
-    # Aggregated metrics are computed only from frames with a real signal.
+
     num_valid = len(frame_results) - no_signal_frames
     if num_valid <= 0:
         return {
@@ -182,12 +182,12 @@ def analyze_video_session(frames: List[Dict[str, Any]]) -> Dict[str, Any]:
     avg_engagement = round(total_engagement / num_valid, 1)
     avg_confidence = round(total_confidence / num_valid, 1)
 
-    # Compute percentage distribution for overall session
+
     overall_emotion_percentages = {
         e: round((count / num_valid) * 100.0, 1) for e, count in emotion_counts.items()
     }
 
-    # Focus stability score (0-100) — computed from real telemetry, no floor.
+
     focus_stability = round(min(100.0, max(0.0, eye_contact_percentage - (off_screen_flags * 5.0))), 1)
 
     return {

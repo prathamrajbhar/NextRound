@@ -13,10 +13,10 @@ import { emailService } from '../../services/email.service';
 
 export const organizationRouter = Router();
 
-// Org scoping is JWT-derived; never accept a client-supplied org_id.
+
 organizationRouter.use(rejectOrgIdParam);
 
-// Verify the HR user's JWT org matches the target resource's org.
+
 function enforceOrgMatch(req: Request, res: Response, targetOrgId: string): boolean {
   if (req.user?.orgId !== targetOrgId) {
     res.status(403).json({ success: false, error: 'Forbidden: Access denied to other organization resources' });
@@ -25,7 +25,7 @@ function enforceOrgMatch(req: Request, res: Response, targetOrgId: string): bool
   return true;
 }
 
-// POST /api/v1/organizations - Create or update current HR user's organization
+
 organizationRouter.post(
   '/',
   authenticate,
@@ -41,7 +41,7 @@ organizationRouter.post(
       let orgId = req.user.orgId;
 
       if (!orgId) {
-        // Create new organization and link to HR user
+        
         const newOrg = await prisma.organization.create({
           data: {
             name: validated.name,
@@ -64,7 +64,7 @@ organizationRouter.post(
         });
       }
 
-      // Update existing organization
+      
       const updatedOrg = await prisma.organization.update({
         where: { id: orgId },
         data: {
@@ -86,7 +86,7 @@ organizationRouter.post(
   }
 );
 
-// GET /api/v1/organizations/me - Fetch current HR user's organization
+
 organizationRouter.get(
   '/me',
   authenticate,
@@ -112,7 +112,7 @@ organizationRouter.get(
   }
 );
 
-// GET /api/v1/organizations/:id - Fetch organization details by ID (HR scoped)
+
 organizationRouter.get(
   '/:id',
   authenticate,
@@ -141,7 +141,7 @@ organizationRouter.get(
   }
 );
 
-// PATCH /api/v1/organizations/:id - Partial update organization
+
 organizationRouter.patch(
   '/:id',
   authenticate,
@@ -191,7 +191,7 @@ organizationRouter.patch(
   }
 );
 
-// GET /api/v1/organizations/:id/settings - Fetch settings
+
 organizationRouter.get(
   '/:id/settings',
   authenticate,
@@ -221,7 +221,7 @@ organizationRouter.get(
   }
 );
 
-// PATCH /api/v1/organizations/:id/settings - Update settings
+
 organizationRouter.patch(
   '/:id/settings',
   authenticate,
@@ -262,7 +262,7 @@ organizationRouter.patch(
   }
 );
 
-// GET /api/v1/organizations/:id/members - List members
+
 organizationRouter.get(
   '/:id/members',
   authenticate,
@@ -293,7 +293,7 @@ organizationRouter.get(
   }
 );
 
-// POST /api/v1/organizations/:id/members/invite - Invite member
+
 organizationRouter.post(
   '/:id/members/invite',
   authenticate,
@@ -306,7 +306,7 @@ organizationRouter.post(
 
       const validated = MemberInviteSchema.parse(req.body);
 
-      // Check if user already exists
+      
       const existingUser = await prisma.user.findUnique({
         where: { email: validated.email },
       });
@@ -315,7 +315,7 @@ organizationRouter.post(
         if (existingUser.org_id === id) {
           return res.status(400).json({ success: false, error: 'User is already a member of this organization' });
         }
-        // Associate user with org if currently unassociated
+        
         if (!existingUser.org_id) {
           const updatedUser = await prisma.user.update({
             where: { id: existingUser.id },
@@ -330,11 +330,11 @@ organizationRouter.post(
         return res.status(400).json({ success: false, error: 'User belongs to another organization' });
       }
 
-      // Create pending invited user or return invitation confirmation. There is no
-      // BullMQ mail queue in this repo (see QUEUE_NAMES in lib/bullmq.ts), so the
-      // invitation is sent directly through the email service. Only report success
-      // when the transporter actually accepted it — never claim "queued" without
-      // delivering the email.
+      
+      
+      
+      
+      
       const invited = await emailService.sendMemberInvite(
         validated.email,
         id,
@@ -361,7 +361,7 @@ organizationRouter.post(
   }
 );
 
-// DELETE /api/v1/organizations/:id/members/:userId - Remove member
+
 organizationRouter.delete(
   '/:id/members/:userId',
   authenticate,

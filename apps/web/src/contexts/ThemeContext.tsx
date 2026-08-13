@@ -60,7 +60,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem('theme', newMode);
     } catch {
-      // Handle private browsing quota errors gracefully
+      
     }
   };
 

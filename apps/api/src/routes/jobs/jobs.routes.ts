@@ -14,10 +14,10 @@ import { extractRequirementsFromJd } from '../../services/jd-extractor.service';
 
 export const jobRouter = Router();
 
-// Org scoping is JWT-derived; never accept a client-supplied org_id.
+
 jobRouter.use(rejectOrgIdParam);
 
-// POST /api/v1/jobs - HR create draft job
+
 jobRouter.post(
   '/',
   authenticate,
@@ -69,14 +69,14 @@ jobRouter.post(
   }
 );
 
-// GET /api/v1/jobs - List jobs (Authenticated candidate or HR org-scoped)
+
 jobRouter.get(
   '/',
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
 
-      // HR user: list jobs in their organization
+      
       if (req.user && req.user.role === 'hr' && req.user.orgId) {
         const { status } = req.query;
         const statusFilter = status && typeof status === 'string' ? status : undefined;
@@ -106,7 +106,7 @@ jobRouter.get(
         });
       }
 
-      // Public / candidate: list active/published jobs
+      
       const jobs = await prisma.job.findMany({
         where: {
           status: { in: ['published', 'active'] as any },
@@ -129,7 +129,7 @@ jobRouter.get(
   }
 );
 
-// GET /api/v1/jobs/org - HR list jobs in their organization (registered before /:id)
+
 jobRouter.get(
   '/org',
   authenticate,
@@ -173,7 +173,7 @@ jobRouter.get(
   }
 );
 
-// GET /api/v1/jobs/:id - Single job details (Authenticated candidate or HR org-scoped)
+
 jobRouter.get(
   '/:id',
   authenticate,
@@ -197,13 +197,13 @@ jobRouter.get(
         return res.status(404).json({ success: false, error: 'Job not found' });
       }
 
-      // If HR user, ensure org isolation
+      
       if (req.user && req.user.role === 'hr') {
         if (job.org_id !== req.user.orgId) {
           return res.status(403).json({ success: false, error: 'Forbidden: Access denied to job' });
         }
       } else {
-        // Public/candidate access only for published/active jobs
+        
         if (job.status !== 'published' && job.status !== 'active') {
           return res.status(404).json({ success: false, error: 'Job not found' });
         }
@@ -264,13 +264,13 @@ async function handleJobUpdate(req: Request, res: Response, next: NextFunction) 
   }
 }
 
-// PATCH /api/v1/jobs/:id - Update job fields
+
 jobRouter.patch('/:id', authenticate, requireRole('hr'), requireOrgScope, handleJobUpdate);
 
-// PUT /api/v1/jobs/:id - Alias for full job update
+
 jobRouter.put('/:id', authenticate, requireRole('hr'), requireOrgScope, handleJobUpdate);
 
-// POST /api/v1/jobs/:id/publish - HR publish job & enqueue sourcing agent
+
 jobRouter.post(
   '/:id/publish',
   authenticate,
@@ -297,7 +297,7 @@ jobRouter.post(
         data: { status: 'published' },
       });
 
-      // Enqueue sourcing queue job for auto-sourcing & indexing
+      
       try {
         await enqueueSourcing(updatedJob.id, 'sourcing_index', {
           orgId: updatedJob.org_id,
@@ -317,7 +317,7 @@ jobRouter.post(
   }
 );
 
-// POST /api/v1/jobs/:id/close - HR close job
+
 jobRouter.post(
   '/:id/close',
   authenticate,
@@ -354,7 +354,7 @@ jobRouter.post(
   }
 );
 
-// DELETE /api/v1/jobs/:id - HR soft delete job
+
 jobRouter.delete(
   '/:id',
   authenticate,
@@ -391,7 +391,7 @@ jobRouter.delete(
   }
 );
 
-// POST /api/v1/jobs/extract-requirements - Real-time AI extraction of skills, soft skills, culture, and rubric
+
 jobRouter.post(
   '/extract-requirements',
   authenticate,
@@ -414,7 +414,7 @@ jobRouter.post(
   }
 );
 
-// POST /api/v1/jobs/:id/ai-assist - Enqueue JD parsing & run real-time AI assist
+
 jobRouter.post(
   '/:id/ai-assist',
   authenticate,
@@ -438,7 +438,7 @@ jobRouter.post(
 
       const extracted = await extractRequirementsFromJd(existingJob.description, existingJob.title);
 
-      // Save real extracted requirements directly to the job record
+      
       const updatedJob = await prisma.job.update({
         where: { id: jobId },
         data: {
@@ -448,7 +448,7 @@ jobRouter.post(
         },
       });
 
-      // Best effort background worker enqueue
+      
       try {
         await enqueueSourcing(existingJob.id, 'ai-jd-assist', {
           orgId: existingJob.org_id,
@@ -473,7 +473,7 @@ jobRouter.post(
   }
 );
 
-// GET /api/v1/jobs/:id/pipeline - Kanban stage breakdown
+
 jobRouter.get(
   '/:id/pipeline',
   authenticate,
@@ -505,7 +505,7 @@ jobRouter.get(
         orderBy: { applied_at: 'desc' },
       });
 
-      // Group applications by status for Kanban board
+      
       const pipeline: Record<string, typeof applications> = {
         applied: [],
         screening: [],
@@ -544,7 +544,7 @@ jobRouter.get(
   }
 );
 
-// GET /api/v1/jobs/:id/applications - List applications for job
+
 jobRouter.get(
   '/:id/applications',
   authenticate,

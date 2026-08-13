@@ -1,15 +1,16 @@
-/**
- * Single source of truth for frontend environment configuration.
- * Resolves API Base URL fallback across all frontend components.
- */
+function requiredEnv(key: string): string {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`);
+  }
+  return value;
+}
+
 export const siteConfig = {
-  apiBaseUrl:
-    process.env.NEXT_PUBLIC_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_API_URL ||
-    'http://localhost:4000/api/v1',
+  apiBaseUrl: requiredEnv('NEXT_PUBLIC_API_URL'),
   appName: 'HireOS',
-  appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-  aiServiceUrl: process.env.NEXT_PUBLIC_AI_SERVICE_URL || 'http://localhost:8000',
+  appUrl: requiredEnv('NEXT_PUBLIC_APP_URL'),
+  aiServiceUrl: requiredEnv('NEXT_PUBLIC_AI_BASE_URL'),
 };
 
 export const API_BASE_URL = siteConfig.apiBaseUrl;

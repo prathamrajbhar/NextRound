@@ -8,9 +8,9 @@ import { Application } from '@/types';
 import { Calendar, Clock, ChevronRight, Check } from 'lucide-react';
 import { ApplicationDetailSkeleton } from '@/components/ui';
 
-// Render a scheduler slot (a real ISO UTC datetime from the API) as a readable
-// UTC string. If a value is somehow not parseable, show the raw value rather
-// than fabricating a time.
+
+
+
 function formatSlot(slot: string): string {
   const date = new Date(slot);
   if (Number.isNaN(date.getTime())) return slot;
@@ -42,9 +42,9 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
     fetchApp();
   }, [applicationId]);
 
-  // Real slots come from the scheduler AgentLog via the application payload.
-  // When none exist we show an honest empty state — never a fabricated
-  // 'Tomorrow at 10:00 AM' fallback.
+  
+  
+  
   const slots = app?.scheduledSlots && app.scheduledSlots.length > 0 ? app.scheduledSlots : [];
   const effectiveSelected = selectedSlot ?? slots[0];
 
@@ -82,8 +82,8 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
       }, 1500);
     } catch (err) {
       console.warn('API slot confirmation warning:', err);
-      // Honest failure: no fabricated "Slot Confirmed!" when the backend did
-      // not persist the slot.
+      
+      
       setConfirmed(false);
       setConfirmError('We could not confirm this slot right now. Please try again.');
     }
@@ -91,7 +91,7 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto animate-in fade-in duration-200">
-      {/* Breadcrumbs */}
+      {}
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
         <Link href="/candidate/applications" className="hover:text-indigo-600 transition-colors">Applications</Link>
         <ChevronRight className="h-3 w-3 text-slate-300" />
@@ -125,7 +125,7 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
 
             {slots.length > 0 ? (
               <>
-                {/* Time slot cards */}
+                {}
                 <div className="space-y-2 max-w-sm mx-auto">
                   {slots.map((slot) => {
                     const isSelected = effectiveSelected === slot;

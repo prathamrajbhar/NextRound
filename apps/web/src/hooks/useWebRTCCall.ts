@@ -38,7 +38,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       return;
     }
 
-    // 1. Setup API signal helpers
+    
     const postSignal = async (msg: WebRTCSignalMessage) => {
       try {
         await apiClient.post(`/interviews/${applicationId}/signal`, {
@@ -50,7 +50,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     };
 
-    // 2. Initialize RTCPeerConnection with public STUN servers
+    
     const configuration: RTCConfiguration = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -62,7 +62,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
 
     const polite = mode === 'hr-candidate';
 
-    // 3. Perfect Negotiation: Handle onnegotiationneeded (automatically triggered on track additions)
+    
     pc.onnegotiationneeded = async () => {
       try {
         makingOfferRef.current = true;
@@ -95,14 +95,14 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       });
     };
 
-    // 5. Track Remote Video Stream
+    
     pc.ontrack = (event) => {
       if (event.streams && event.streams[0]) {
         setRemoteStream(event.streams[0]);
       }
     };
 
-    // 6. Monitor connection state changes
+    
     pc.onconnectionstatechange = () => {
       setConnectionState(pc.connectionState);
       if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
@@ -110,7 +110,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     };
 
-    // 7. Perfect Negotiation: Handle incoming signaling messages
+    
     const handleIncomingSignal = async (data: WebRTCSignalMessage) => {
       try {
         const { type, description, candidate } = data;
@@ -145,7 +145,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
             }
           }
         } else if (type === 'ready' || type === 'ready_reply') {
-          // If the candidate joins or reconnects, the impolite peer (Recruiter) initiates renegotiation
+          
           if (!polite && pc.signalingState === 'stable') {
             try {
               makingOfferRef.current = true;
@@ -163,7 +163,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
               makingOfferRef.current = false;
             }
           } else if (polite && type === 'ready') {
-            // Polite peer (Candidate) replies to 'ready' to nudge the impolite peer to initiate
+            
             await postSignal({ type: 'ready_reply' });
           }
         }
@@ -172,7 +172,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     };
 
-    // 8. Start signaling polling interval
+    
     let lastPolledTime = new Date(Date.now() - 5000);
     const pollInterval = setInterval(async () => {
       try {
@@ -181,14 +181,14 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
         );
         if (res && Array.isArray(res)) {
           for (const signal of res) {
-            // Only process signals from the OTHER peer
+            
             const isSelf = signal.sender === (mode === 'hr-candidate' ? 'candidate' : 'recruiter');
             if (!isSelf) {
               await handleIncomingSignal(signal.message);
             }
           }
           if (res.length > 0) {
-            // Update lastPolledTime to the timestamp of the last message processed
+            
             const maxTime = new Date(res[res.length - 1].created_at);
             lastPolledTime = maxTime;
           }
@@ -198,7 +198,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     }, 1200);
 
-    // 9. Broadcast ready state immediately upon initialization
+    
     postSignal({ type: 'ready' });
 
     return () => {
@@ -209,7 +209,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
     };
   }, [isVideoCallMode, applicationId, mode]);
 
-  // Sync local stream tracks dynamically to the RTCPeerConnection
+  
   useEffect(() => {
     if (!isVideoCallMode || !pcRef.current || !localStream) {
       return;
@@ -218,7 +218,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
     const pc = pcRef.current;
     const currentSenders = pc.getSenders();
 
-    // Remove old tracks
+    
     currentSenders.forEach((sender) => {
       try {
         pc.removeTrack(sender);
@@ -227,7 +227,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     });
 
-    // Add new tracks
+    
     localStream.getTracks().forEach((track) => {
       pc.addTrack(track, localStream);
     });

@@ -12,14 +12,14 @@ export interface CreateSubmissionInput {
   idempotencyKey?: string;
 }
 
-/**
- * Creates an immutable coding submission record in a database transaction
- * and enqueues execution asynchronously.
- */
+
+
+
+
 export async function enqueueSubmissionExecution(input: CreateSubmissionInput) {
   const idempotencyKey = input.idempotencyKey || `sub_${crypto.randomUUID()}`;
 
-  // Check existing submission by idempotency key
+  
   const existing = await prisma.codingSubmission.findUnique({
     where: { idempotency_key: idempotencyKey },
   });
@@ -27,14 +27,14 @@ export async function enqueueSubmissionExecution(input: CreateSubmissionInput) {
     return existing;
   }
 
-  // Count existing attempts for this application to set attempt_number
+  
   const attemptCount = await prisma.codingSubmission.count({
     where: { application_id: input.applicationId },
   });
 
   const codeHash = crypto.createHash('sha256').update(input.code).digest('hex');
 
-  // Transaction: Create submission in DB with status "queued"
+  
   const submission = await prisma.$transaction(async (tx) => {
     return tx.codingSubmission.create({
       data: {
@@ -54,9 +54,9 @@ export async function enqueueSubmissionExecution(input: CreateSubmissionInput) {
     });
   });
 
-  // Asynchronously execute queue job without blocking HTTP request
+  
   processSubmissionJob(submission.id).catch((err) => {
-    // Log error to console/logger and record failed status in DB
+    
     console.error(`[Queue Error] Submission ${submission.id} failed processing:`, err);
     prisma.codingSubmission
       .update({
@@ -74,11 +74,11 @@ export async function enqueueSubmissionExecution(input: CreateSubmissionInput) {
   return submission;
 }
 
-/**
- * Worker processor for executing candidate submission inside the isolated sandbox.
- */
+
+
+
 export async function processSubmissionJob(submissionId: string) {
-  // Update status to "running"
+  
   await prisma.codingSubmission.update({
     where: { id: submissionId },
     data: { status: 'running' },
@@ -93,7 +93,7 @@ export async function processSubmissionJob(submissionId: string) {
     throw new Error(`Submission ${submissionId} not found in database.`);
   }
 
-  // Determine test cases and entry point from problem database record or default
+  
   let testCases: TestCaseInput[] = [];
   let entryPoint = 'solution';
 
@@ -111,7 +111,7 @@ export async function processSubmissionJob(submissionId: string) {
     ];
   }
 
-  // Execute in isolated sandbox
+  
   const summary = executeCodingSubmission(
     submission.code,
     submission.language,
@@ -121,7 +121,7 @@ export async function processSubmissionJob(submissionId: string) {
 
   const finalStatus = summary.allPassed ? 'passed' : summary.passRate > 0 ? 'failed' : 'failed';
 
-  // Persist final submission result
+  
   const updated = await prisma.codingSubmission.update({
     where: { id: submissionId },
     data: {
@@ -137,7 +137,7 @@ export async function processSubmissionJob(submissionId: string) {
     },
   });
 
-  // Calculate composite evaluation score without automatically setting decision
+  
   if (submission.application_id) {
     await updateApplicationCodingScore(submission.application_id, summary.passRate);
   }
@@ -145,6 +145,6 @@ export async function processSubmissionJob(submissionId: string) {
   return updated;
 }
 
-/**
- * Updates application evaluation coding score without making an automated hiring decision.
- */
+
+
+

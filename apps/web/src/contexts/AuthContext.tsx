@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { UserPublic } from '@nextround/shared';
 import { apiClient } from '@/lib/apiClient';
 
@@ -20,12 +21,13 @@ async function fetchCurrentUser(): Promise<UserPublic | null> {
     const { user } = await apiClient.get<{ user: UserPublic }>('/auth/me');
     return user ?? null;
   } catch {
-    // token invalid or API unreachable — caller clears auth state
+    
   }
   return null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<UserPublic | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -92,13 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await apiClient.post('/auth/logout');
     } catch {
-      // Ignore network errors on logout
     }
     setUser(null);
-    if (typeof window !== 'undefined') {
-      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
-      window.location.href = '/login';
-    }
+    router.push('/login');
   };
 
   return (

@@ -51,9 +51,9 @@ async def process_decision_job(job_data: dict) -> bool:
         composite_score = job_data.get("compositeScore")
         confidence = job_data.get("confidence")
 
-        # Fetch the stored application (with its Job) so the Decision Agent drafts
-        # the offer letter from real job terms (title, salary, equity) — never
-        # constants. Also serves as a defensive fallback for missing scores.
+
+
+
         job_terms = {}
         try:
             data = await fetch_internal(f"internal/applications/{application_id}/raw")
@@ -73,15 +73,15 @@ async def process_decision_job(job_data: dict) -> bool:
         except Exception as fetch_err:
             logger.warning(f"Failed to fetch stored application for decision context: {fetch_err}")
 
-        # A missing composite must never be coerced to 0.0 (which would route to
-        # an auto-reject). It stays None and the Decision Agent sends it to the
-        # HR Hold Queue for manual review instead. Confidence likewise stays None
-        # when unknown — never fabricated as 1.0 — so a missing confidence routes
-        # the application to the HR Hold Queue rather than to an auto decision.
+
+
+
+
+
         composite_score = _coerce_optional_float(composite_score)
         confidence = _coerce_optional_float(confidence)
 
-        # Run Decision LangGraph Agent
+
         result = await run_decision_agent(
             application_id=application_id,
             evaluation_id=evaluation_id,
@@ -92,9 +92,9 @@ async def process_decision_job(job_data: dict) -> bool:
             equity=job_terms.get("equity"),
         )
 
-        # The decision callback targets the real evaluation record. A fabricated
-        # "eval_<applicationId>" id would write a decision to a non-existent
-        # evaluation; fail instead when no real evaluation id is available.
+
+
+
         if not evaluation_id:
             raise RuntimeError(
                 f"No evaluation id available for decision job on application {application_id}. "
@@ -102,7 +102,7 @@ async def process_decision_job(job_data: dict) -> bool:
             )
         eval_id = evaluation_id
 
-        # Send decision result to Express API internal callback endpoint
+
         await callback_client.patch(
             f"internal/evaluations/{eval_id}/decision",
             json={

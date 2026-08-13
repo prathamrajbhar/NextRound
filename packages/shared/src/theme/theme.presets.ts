@@ -42,10 +42,10 @@ export const ALTERNATE_EMERALD_THEME_CONFIG: ThemeConfig = {
   },
 };
 
-/**
- * Generates runtime record of CSS custom properties for light or dark mode
- * based on a ThemeConfig instance.
- */
+
+
+
+
 export function generateThemeCssVariables(
   theme: ThemeConfig,
   mode: 'light' | 'dark' = 'light'
@@ -68,12 +68,12 @@ export function generateThemeCssVariables(
     '--glass-shadow': semantic.glassShadow,
   };
 
-  // Map 11-shade brand palette to --brand-*
+  
   Object.entries(theme.brand).forEach(([shade, value]) => {
     vars[`--brand-${shade}`] = value;
   });
 
-  // Map status palettes
+  
   Object.entries(theme.success).forEach(([shade, value]) => {
     vars[`--success-${shade}`] = value;
   });
@@ -90,9 +90,9 @@ export function generateThemeCssVariables(
   return vars;
 }
 
-/**
- * Applies a theme's CSS variables directly to an HTML element (e.g. document.documentElement)
- */
+
+
+
 export function applyThemeToElement(
   element: HTMLElement,
   theme: ThemeConfig,

@@ -45,7 +45,7 @@ export default function JobDescriptionCard({
 
     setJd(text.substring(0, start) + replacement + text.substring(end));
     
-    // Reset focus and selection
+    
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(start + prefix.length, start + prefix.length + (selectedText || 'text').length);
@@ -70,7 +70,7 @@ export default function JobDescriptionCard({
         </button>
       </div>
 
-      {/* Templates Prefill */}
+      {}
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider mr-1">Sample Templates:</span>
         {TEMPLATES.map((tmpl) => (
@@ -85,7 +85,7 @@ export default function JobDescriptionCard({
         ))}
       </div>
 
-      {/* Formatting Toolbar */}
+      {}
       <div className="flex items-center gap-1 bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 p-1.5 rounded-xl">
         <button
           type="button"
@@ -125,7 +125,7 @@ export default function JobDescriptionCard({
         </span>
       </div>
 
-      {/* Editor Body */}
+      {}
       <textarea
         ref={textareaRef}
         required

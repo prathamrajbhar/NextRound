@@ -4,16 +4,16 @@ import { prisma } from '../lib/prisma';
 class NotificationService {
   private sseClients: Map<string, Set<Response>> = new Map();
 
-  /**
-   * Add active SSE client response stream for a user
-   */
+  
+
+
   public addClient(userId: string, res: Response) {
     if (!this.sseClients.has(userId)) {
       this.sseClients.set(userId, new Set());
     }
     this.sseClients.get(userId)!.add(res);
 
-    // Keep-alive heartbeat every 30 seconds
+    
     const interval = setInterval(() => {
       if (res.writableEnded) {
         clearInterval(interval);
@@ -28,9 +28,9 @@ class NotificationService {
     });
   }
 
-  /**
-   * Remove active SSE client stream
-   */
+  
+
+
   public removeClient(userId: string, res: Response) {
     const clients = this.sseClients.get(userId);
     if (clients) {
@@ -41,9 +41,9 @@ class NotificationService {
     }
   }
 
-  /**
-   * Create persistent notification record in database & stream real-time SSE event to online clients
-   */
+  
+
+
   public async createNotification(
     userId: string,
     title: string,
@@ -60,7 +60,7 @@ class NotificationService {
         },
       });
 
-      // Stream to active SSE clients if user is online
+      
       const clients = this.sseClients.get(userId);
       if (clients && clients.size > 0) {
         const payload = `data: ${JSON.stringify(notification)}\n\n`;
@@ -78,9 +78,9 @@ class NotificationService {
     }
   }
 
-  /**
-   * Broadcast notification to all users in an organization
-   */
+  
+
+
   public async createOrgNotification(
     orgId: string,
     title: string,

@@ -8,7 +8,7 @@ import { getCandidateProfileId } from '../../lib/candidate-profile';
 
 export const resumeBuilderRouter = Router();
 
-// GET /api/v1/resume-builder/history - Fetch past generated resume sessions for candidate
+
 resumeBuilderRouter.get(
   '/history',
   authenticate,
@@ -48,7 +48,7 @@ resumeBuilderRouter.get(
   }
 );
 
-// POST /api/v1/resume-builder/sessions - Start AI Voice Resume Builder Session
+
 resumeBuilderRouter.post(
   '/sessions',
   authenticate,
@@ -88,7 +88,7 @@ resumeBuilderRouter.post(
   }
 );
 
-// GET /api/v1/resume-builder/:sessionId - Fetch session status & details
+
 resumeBuilderRouter.get(
   '/:sessionId',
   authenticate,
@@ -118,7 +118,7 @@ resumeBuilderRouter.get(
   }
 );
 
-// POST /api/v1/resume-builder/:sessionId/end - End session and enqueue PDF generation worker
+
 resumeBuilderRouter.post(
   '/:sessionId/end',
   authenticate,
@@ -165,7 +165,7 @@ resumeBuilderRouter.post(
   }
 );
 
-// GET /api/v1/resume-builder/:sessionId/result - Get generated resume JSON & PDF download URL
+
 resumeBuilderRouter.get(
   '/:sessionId/result',
   authenticate,
@@ -203,7 +203,7 @@ resumeBuilderRouter.get(
   }
 );
 
-// DELETE /api/v1/resume-builder/:sessionId - Delete a candidate's resume session
+
 resumeBuilderRouter.delete(
   '/:sessionId',
   authenticate,

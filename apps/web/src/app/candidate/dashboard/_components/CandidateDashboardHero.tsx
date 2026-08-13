@@ -12,7 +12,7 @@ interface CandidateDashboardHeroProps {
 export function CandidateDashboardHero({ candidateName, totalAppsCount }: CandidateDashboardHeroProps) {
   return (
     <div className="relative overflow-hidden rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-r from-slate-50 via-slate-50/95 to-slate-100/90 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-900/90 p-6 md:p-8 shadow-md dark:shadow-2xl">
-      {/* Background ambient glows */}
+      {}
       <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-3xl pointer-events-none" />
       <div className="absolute -left-16 -bottom-16 h-64 w-64 rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-3xl pointer-events-none" />
 
@@ -45,7 +45,7 @@ export function CandidateDashboardHero({ candidateName, totalAppsCount }: Candid
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
           <Link
             href="/candidate/mock/new"

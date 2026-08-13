@@ -6,7 +6,7 @@ import { extractTextFromBuffer, parseResumeWithGemini } from '../../services/res
 export const resumeParserRouter = Router();
 
 const upload = multer({
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, 
   fileFilter: (_req, file, cb) => {
     const ext = (file.originalname || '').toLowerCase();
     const isAllowedExt = ext.endsWith('.pdf') || ext.endsWith('.docx') || ext.endsWith('.doc') || ext.endsWith('.txt');
@@ -15,14 +15,14 @@ const upload = multer({
     if (isAllowedExt || isAllowedMime || !file.mimetype) {
       cb(null, true);
     } else {
-      // Reject non-document files (e.g. .exe, .zip) at the boundary instead of
-      // buffering up to 10MB of binary into memory for a parser that can't use it.
+      
+      
       cb(null, false);
     }
   },
 });
 
-// POST /api/v1/candidate/parse-resume - Convert resume file to text and parse using Gemini LLM
+
 resumeParserRouter.post(
   '/parse-resume',
   optionalAuthenticate,

@@ -20,12 +20,12 @@ from workers.analytics_worker import process_analytics_job
 
 logger = logging.getLogger("ai_service_workers")
 
-# A job handler receives the raw BullMQ payload and returns True/False.
+
 JobHandler = Callable[[dict], Awaitable[bool]]
 
-# Queue name -> job handler (listed in hiring-pipeline order). Every queue in
-# AGENT_QUEUES must be present here (except "sourcing", which multiplexes several
-# actions; see SOURCING_ACTIONS).
+
+
+
 QUEUE_HANDLERS: Dict[str, JobHandler] = {
     "screening": process_screening_job,
     "interview": process_interview_job,
@@ -40,20 +40,20 @@ QUEUE_HANDLERS: Dict[str, JobHandler] = {
     "analytics": process_analytics_job,
 }
 
-# The sourcing queue carries three different job types distinguished by the
-# payload's "action" field.
+
+
 SOURCING_ACTIONS: Dict[str, JobHandler] = {
     "ai-jd-assist": process_jd_parser_job,
     "sourcing_index": process_sourcing_job,
-    # The Express prep route enqueues prep generation here with action
-    # "prep-generate" (not on the "prep" queue). The worker reads the job
-    # context from the payload's extraData and resolves the real job title +
-    # organization from the internal job endpoint, so content is never generic
-    # or fabricated.
+
+
+
+
+
     "prep-generate": process_prep_job,
 }
 
-# Queues the worker manager polls.
+
 AGENT_QUEUES = list(QUEUE_HANDLERS) + ["sourcing"]
 
 
@@ -101,21 +101,21 @@ class AgentWorkerManager:
                     await asyncio.sleep(3)
                     continue
 
-                # Poll BullMQ wait list or custom job queue
+
                 job_id = await redis.rpop(f"bull:{queue_name}:wait")
 
                 if not job_id:
-                    # Dequeue priority jobs from ZSET so priority enqueues are never stalled
+
                     prioritized = await redis.zpopmin(f"bull:{queue_name}:prioritized")
                     if prioritized:
                         job_id = prioritized[0][0]
 
                 if job_id:
-                    # Fetch BullMQ job hash data
+
                     job_key = f"bull:{queue_name}:{job_id}"
                     job_data_raw = await redis.hget(job_key, "data")
 
-                    # Acknowledge the job and clean queue states to avoid stalled checker retries
+
                     await self._acknowledge_and_clean_job(redis, queue_name, job_id)
 
                     if job_data_raw:

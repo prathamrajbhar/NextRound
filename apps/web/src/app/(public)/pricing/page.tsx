@@ -99,7 +99,7 @@ export default function PricingPage() {
       <PublicNavbar />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 md:py-16 flex-1 w-full animate-in fade-in duration-300">
-        {/* Header Section */}
+        {}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 bg-brand-50 dark:bg-orange-950/80 border border-brand-200/60 dark:border-orange-900/60 px-3 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1">
             <Sparkles className="h-3 w-3" />
@@ -112,7 +112,7 @@ export default function PricingPage() {
             Select a plan tailored to your hiring volume. Automate candidate screening with transparent, reliable evaluation tools.
           </p>
 
-          {/* Billing Cycle Toggle */}
+          {}
           <div className="flex items-center justify-center gap-3 mt-8">
             <span className={`text-xs font-bold ${billingCycle === 'monthly' ? 'text-slate-900 dark:text-slate-100 font-extrabold' : 'text-slate-400'}`}>
               Monthly Billing
@@ -137,7 +137,7 @@ export default function PricingPage() {
           </div>
         </div>
 
-        {/* Pricing Cards Grid (3 Columns) */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto mb-20">
           {plans.map((plan, idx) => (
             <div
@@ -204,7 +204,7 @@ export default function PricingPage() {
           ))}
         </div>
 
-        {/* FAQ Accordion Section */}
+        {}
         <div className="max-w-3xl mx-auto border-t border-slate-200/60 dark:border-slate-800 pt-16">
           <div className="text-center mb-10">
             <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100 font-display">

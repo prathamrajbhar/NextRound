@@ -46,13 +46,13 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
           }
         }
       } catch {
-        // default state
+        
       }
     }
     loadAiSettings();
   }, []);
 
-  // Audio level animation during mic test
+  
   useEffect(() => {
     let animationFrameId: number;
     let localStream: MediaStream | null = null;
@@ -109,7 +109,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
       );
       onSave();
     } catch {
-      // fallback
+      
     } finally {
       setSaving(false);
     }
@@ -117,7 +117,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Voice & Assistant Card */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-slate-800 pb-3">
           <div>
@@ -147,7 +147,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
           </button>
         </div>
 
-        {/* Voice Selection Cards */}
+        {}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
             { name: 'Serena', gender: 'Female', tone: 'Professional & Warm' },
@@ -182,7 +182,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         </div>
       </div>
 
-      {/* Hardware Diagnostics Card */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
           <Volume2 className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -190,7 +190,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Mic Check Widget */}
+          {}
           <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-800/60 space-y-3">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
@@ -206,7 +206,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
               </button>
             </div>
 
-            {/* Equalizer Audio Level Visualizer */}
+            {}
             <div className="h-8 rounded-xl bg-slate-900 dark:bg-slate-950 px-3 flex items-center gap-1">
               {[...Array(16)].map((_, i) => {
                 const barHeight = micTesting ? Math.min(100, Math.max(15, audioLevel + Math.sin(i) * 30)) : 10;
@@ -224,7 +224,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
             </p>
           </div>
 
-          {/* Camera Check Widget */}
+          {}
           <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-800/60 space-y-3">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
@@ -255,7 +255,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         </div>
       </div>
 
-      {/* Transcription & Preferences */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           Session Subtitles &amp; Transcripts
@@ -304,7 +304,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         </div>
       </div>
 
-      {/* Save Button */}
+      {}
       <div className="flex justify-end">
         <button
           type="button"

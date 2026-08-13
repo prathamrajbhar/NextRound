@@ -46,7 +46,7 @@ export function CompanyOnboardingShell({
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8">
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left rail — brand + progress */}
+        {}
         <aside className="lg:col-span-4 flex flex-col gap-6">
           <Link href="/" className="inline-flex items-center gap-2.5 group w-fit">
             <div className="relative h-9 w-9 rounded-full overflow-hidden group-hover:scale-105 transition-transform flex-shrink-0 border border-white/40 shadow-md">
@@ -92,7 +92,7 @@ export function CompanyOnboardingShell({
           </p>
         </aside>
 
-        {/* Right card */}
+        {}
         <section className="lg:col-span-8 rounded-3xl border border-white/15 bg-slate-950/40 p-6 sm:p-8 shadow-2xl shadow-slate-950/80 backdrop-blur-2xl ring-1 ring-white/10 animate-in zoom-in-95 duration-200">
           <div className="mb-6 pb-4 border-b border-white/10">
             <span className="text-[10px] uppercase tracking-widest text-orange-400 font-black">

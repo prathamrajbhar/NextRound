@@ -27,7 +27,7 @@ export default function HrVideoCallConsole({ params }: { params: Promise<{ appli
     fetchApp();
   }, [applicationId]);
 
-  // Call timer effect
+  
   useEffect(() => {
     if (callEnded) return;
     const interval = setInterval(() => {

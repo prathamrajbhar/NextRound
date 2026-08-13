@@ -16,12 +16,12 @@ export interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectE
   placeholder?: string;
 }
 
-/**
- * Styled wrapper around the native <select> — keeps full native
- * accessibility/keyboard support while matching the glass input language.
- * A custom listbox isn't worth the a11y cost for a straightforward
- * single-select; this is the pragmatic "production-grade" choice.
- */
+
+
+
+
+
+
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, options, label, error, placeholder, id, ...props }, ref) => {
     const selectId = id || props.name;

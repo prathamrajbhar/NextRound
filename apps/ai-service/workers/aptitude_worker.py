@@ -27,7 +27,7 @@ async def process_aptitude_job(job_data: dict) -> bool:
     logger.info(f"Processing aptitude assessment job for applicationId: {application_id}")
 
     async def run() -> dict:
-        # Try cache first, then fetch from Express if not cached.
+
         stored_questions = []
         min_score = None
         
@@ -36,10 +36,10 @@ async def process_aptitude_job(job_data: dict) -> bool:
             stored_questions, min_score = cached_data
             logger.info(f"Using cached assessment data for {application_id}")
         else:
-            # Fetch stored generated questions and pass threshold for this session from Express.
-            # Both are required: scoring against a fabricated threshold or empty
-            # question set would be dishonest. The assessment agent raises when the
-            # stored question set is empty.
+
+
+
+
             try:
                 response = await callback_client.get(
                     f"internal/applications/{application_id}/assessment-data",
@@ -52,7 +52,7 @@ async def process_aptitude_job(job_data: dict) -> bool:
                 if isinstance(threshold, (int, float)):
                     min_score = float(threshold)
                 
-                # Cache the fetched data for future jobs
+
                 if stored_questions and min_score is not None:
                     set_cached_assessment_data(application_id, stored_questions, min_score)
                     logger.info(f"Cached assessment data for {application_id}")
@@ -62,7 +62,7 @@ async def process_aptitude_job(job_data: dict) -> bool:
         if min_score is None:
             raise RuntimeError(f"Aptitude job for application {application_id} has no pass threshold configured.")
 
-        # Run Assessment LangGraph Agent
+
         result = await run_assessment_agent(
             application_id=application_id,
             answers=answers,
@@ -72,7 +72,7 @@ async def process_aptitude_job(job_data: dict) -> bool:
             min_score=min_score,
         )
 
-        # Patch assessment result back to Express internal endpoint
+
         await callback_client.patch(
             f"internal/applications/{application_id}/assessment-result",
             json={

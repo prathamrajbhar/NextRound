@@ -39,21 +39,21 @@ def validate_ast_security(code: str, language: str = "python") -> Tuple[bool, st
 
 
     for node in ast.walk(tree):
-        # Check imports: import os, import sys
+
         if isinstance(node, ast.Import):
             for alias in node.names:
                 mod_base = alias.name.split(".")[0]
                 if mod_base in FORBIDDEN_MODULES:
                     return False, f"Security Violation: Import of module '{alias.name}' is strictly forbidden in sandbox."
 
-        # Check from X import Y
+
         elif isinstance(node, ast.ImportFrom):
             if node.module:
                 mod_base = node.module.split(".")[0]
                 if mod_base in FORBIDDEN_MODULES:
                     return False, f"Security Violation: Import from module '{node.module}' is strictly forbidden in sandbox."
 
-        # Check function calls: eval(), exec(), open()
+
         elif isinstance(node, ast.Call):
             if isinstance(node.func, ast.Name):
                 if node.func.id in FORBIDDEN_CALLS:
@@ -71,14 +71,14 @@ def set_sandbox_resource_limits():
         return
 
     try:
-        # 256MB Virtual Memory limit
+
         max_mem_bytes = 256 * 1024 * 1024
         resource.setrlimit(resource.RLIMIT_AS, (max_mem_bytes, max_mem_bytes))
     except Exception as e:
         logger.debug(f"Failed to set RLIMIT_AS: {e}")
 
     try:
-        # 5 seconds max CPU execution time
+
         resource.setrlimit(resource.RLIMIT_CPU, (5, 5))
     except Exception as e:
         logger.debug(f"Failed to set RLIMIT_CPU: {e}")
@@ -119,7 +119,7 @@ def execute_code_sandbox(
             "test_results": [],
         }
 
-    # 1. AST Security Analysis
+
     is_safe, sec_error = validate_ast_security(code, language)
     if not is_safe:
         return {
@@ -157,7 +157,7 @@ def execute_code_sandbox(
     peak_memory_kb = None
     start_all = time.time()
 
-    # Dynamic Test Runner Harness Script
+
     harness_template = f"""
 import sys
 import json
@@ -172,14 +172,12 @@ test_inputs = {repr(cases)}
 for idx, case in enumerate(test_inputs):
     try:
         inp_raw = case.get("input", "")
-        # Format input variable assignments (convert ', ' between assignments to newlines)
         import re
         inp_statements = re.sub(r',\\s*([a-zA-Z_][a-zA-Z0-9_]*\\s*=)', r'\\n\\1', inp_raw)
         
         local_scope = {{}}
         exec(inp_statements, globals(), local_scope)
         
-        # Invoke detected candidate function
         if "{fn_name}" in globals():
             fn = globals()["{fn_name}"]
         elif "{fn_name}" in local_scope:
@@ -195,7 +193,6 @@ for idx, case in enumerate(test_inputs):
         result = fn(**local_scope) if local_scope else fn()
         expected_raw = case.get("expectedOutput", "")
         
-        # Output comparison (handle lists, booleans, ints, strings)
         str_res = json.dumps(result) if isinstance(result, (list, dict)) else str(result)
         str_exp = str(expected_raw)
         
@@ -209,12 +206,6 @@ for idx, case in enumerate(test_inputs):
         print(json.dumps({{"case": idx, "passed": False, "error": str(err)}}))
 
 
-# Report this child process's own peak RSS (KB on Linux). We read VmHWM from
-# /proc/self/status rather than resource.getrusage().ru_maxrss: getrusage's
-# max-rss counter is NOT reset by exec and thus includes the spawning server
-# process's inherited footprint, which would over-report by hundreds of MB.
-# VmHWM resets on exec and reflects only the sandbox interpreter + candidate
-# code. On non-Linux (no /proc/self/status) we report null.
 import re as _re
 try:
     with open("/proc/self/status") as _st:
@@ -263,8 +254,8 @@ print(json.dumps({{"__peak_memory_kb__": _peak_kb}}))
     total_cases = len(cases)
     pass_rate = round(passed_count / max(1, total_cases), 2)
 
-    # Convert to a clean int KB value when the child reported it; keep None when
-    # it was never measured (timeout, crash, non-Linux ru_maxrss semantics).
+
+
     measured_memory_kb = None
     if isinstance(peak_memory_kb, (int, float)) and peak_memory_kb >= 0:
         measured_memory_kb = int(peak_memory_kb)

@@ -1,8 +1,8 @@
-/**
- * HTTP error type that the central error middleware (`middleware/errorHandler`)
- * turns into the API's failure envelope. Service layers throw these instead of
- * returning `res` objects, so business logic stays HTTP-free and testable.
- */
+
+
+
+
+
 export class HttpError extends Error {
   statusCode: number;
 

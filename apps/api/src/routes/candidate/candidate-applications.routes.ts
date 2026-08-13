@@ -7,7 +7,7 @@ import { advanceAssessmentStage } from '../../lib/pipeline';
 
 export const candidateApplicationsRouter = Router();
 
-// GET /api/v1/candidate/applications/:id/offer - Fetch candidate application offer
+
 candidateApplicationsRouter.get(
   '/applications/:id/offer',
   authenticate,
@@ -45,7 +45,7 @@ candidateApplicationsRouter.get(
   }
 );
 
-// GET /api/v1/candidate/applications/:id/onboarding - Fetch candidate application onboarding record
+
 candidateApplicationsRouter.get(
   '/applications/:id/onboarding',
   authenticate,
@@ -131,9 +131,9 @@ candidateApplicationsRouter.get(
       const completedCount = defaultTasks.filter((t) => t.status === 'completed').length;
       const progressPercent = Math.round((completedCount / defaultTasks.length) * 100);
 
-      // No real buddy/manager assignment exists on the Job, Offer, or org
-      // settings, so these are null (honest "not assigned") rather than
-      // fabricated people.
+      
+      
+      
       const onboardingRecord = {
         id: `onboard-${application.id}`,
         applicationId: application.id,
@@ -158,7 +158,7 @@ candidateApplicationsRouter.get(
   }
 );
 
-// GET /api/v1/candidate/applications/:id/take-home - Fetch take-home project details
+
 candidateApplicationsRouter.get(
   '/applications/:id/take-home',
   authenticate,
@@ -191,8 +191,8 @@ candidateApplicationsRouter.get(
         id: `project-${application.id}`,
         applicationId: application.id,
         candidateName,
-        // Neutral title: the assignment is a generic template, so it must not
-        // claim to be a "Full-Stack" assessment for a role that may not be one.
+        
+        
         title: `Technical Assessment: ${application.job.title}`,
         description: `Build a production-ready reactive dashboard showcasing state management, clean component modularity, strict error handling, and unit test coverage.`,
         status: 'assigned' as const,
@@ -216,7 +216,7 @@ candidateApplicationsRouter.get(
   }
 );
 
-// POST /api/v1/candidate/applications/:id/take-home/submit - Submit take-home project repo
+
 candidateApplicationsRouter.post(
   '/applications/:id/take-home/submit',
   authenticate,
@@ -239,8 +239,8 @@ candidateApplicationsRouter.post(
         return res.status(404).json({ success: false, error: 'Application not found' });
       }
 
-      // Keep the application in the assessment phase (screening_completed);
-      // advance to interview_scheduled only once all enabled modalities pass.
+      
+      
       await prisma.application.update({
         where: { id: appId },
         data: { status: 'screening_completed' },

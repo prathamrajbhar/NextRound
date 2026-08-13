@@ -53,7 +53,7 @@ export default function HrJobsList() {
   const handleStatusChange = async (jobId: string, newStatus: 'active' | 'draft' | 'closed') => {
     try {
       setUpdatingId(jobId);
-      // Optimistic update
+      
       setJobs((prev) =>
         prev.map((j) => (j.id === jobId ? { ...j, status: newStatus } : j))
       );
@@ -91,7 +91,7 @@ export default function HrJobsList() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Header */}
+      {}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Job Openings</h1>
@@ -108,9 +108,9 @@ export default function HrJobsList() {
         </Link>
       </div>
 
-      {/* Filter Tabs & Search */}
+      {}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-        {/* Tabs */}
+        {}
         <div className="flex p-1 rounded-xl bg-slate-200/50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 select-none text-xs font-bold text-slate-600 dark:text-slate-300">
           {(['all', 'active', 'draft', 'closed'] as const).map((item) => (
             <button
@@ -125,7 +125,7 @@ export default function HrJobsList() {
           ))}
         </div>
 
-        {/* Search */}
+        {}
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
           <input
@@ -138,7 +138,7 @@ export default function HrJobsList() {
         </div>
       </div>
 
-      {/* Table grid */}
+      {}
       {loading ? (
         <TableSkeleton rows={5} cols={4} />
       ) : filteredJobs.length > 0 ? (

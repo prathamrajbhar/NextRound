@@ -2,26 +2,27 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { env } from '../lib/env';
 
-/**
- * Isolated sandbox code executor for mock-interview coding submissions.
- *
- * Candidate code NEVER runs inside the API process. Every submission is executed
- * in a fresh OS child process with:
- *   - a scrubbed environment (no secrets, no DATABASE_URL, nothing inherited)
- *   - hard resource limits via `ulimit` (CPU seconds, virtual memory, process
- *     count, file size) applied before the interpreter is exec'd
- *   - a stdout cap so a runaway print cannot exhaust host memory
- *   - network access disabled (Python AST gate + Node module/fetch override)
- *
- * C++ and Java compile the candidate code against a generated harness that calls
- * the exact entry point with the persisted arguments and compares results, so a
- * wrong answer or compile error is recorded truthfully (they no longer just
- * print "Passed").
- *
- * The runner processes are detached into their own process group, so a timeout
- * kills the whole tree (e.g. an infinite loop) rather than leaking children.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 export interface SandboxTestCase {
   name: string;
@@ -50,8 +51,8 @@ export type SandboxStatus =
 
 export interface SandboxExecutionResult {
   status: SandboxStatus;
-  passRate: number; // 0-100 (0 when there are no tests or every test errored)
-  passRateRatio: number; // 0-1
+  passRate: number; 
+  passRateRatio: number; 
   results: SandboxTestResult[];
   executionTimeMs: number;
   memoryKb?: number;
@@ -68,26 +69,26 @@ export interface SandboxExecuteOptions {
 
 const RUNNER_VERSION = '3.0.0-isolated-sandbox';
 
-// CPU seconds, virtual memory (KB), max user processes, max file size (512-byte
-// blocks), max open files. Applied via `ulimit` before the interpreter exec's.
-//
-// PROC_LIMIT is deliberately high (not 64): `ulimit -u` (RLIMIT_NPROC) counts
-// processes for the WHOLE uid, not just this sandbox child. A dev machine
-// already has hundreds of processes (redis, postgres, editors), so a tight cap
-// makes threaded runtimes (Node, JVM) and multi-stage compilers (g++ forks
-// cc1plus/as/ld) fail with EAGAIN immediately. A fork bomb is still contained
-// by the CPU cap + process-group kill on timeout, so 1024 is a safe ceiling.
+
+
+
+
+
+
+
+
+
 const CPU_LIMIT_SECONDS = 4;
-const MEMORY_LIMIT_KB = 262144; // 256 MB
+const MEMORY_LIMIT_KB = 262144; 
 const PROC_LIMIT = 1024;
-const FILE_SIZE_BLOCKS = 2048; // ~1 MB
+const FILE_SIZE_BLOCKS = 2048; 
 const OPEN_FILES_LIMIT = 64;
 const PROCESS_TIMEOUT_MS = 10_000;
-const MAX_OUTPUT_BYTES = 1_048_576; // 1 MB
+const MAX_OUTPUT_BYTES = 1_048_576; 
 
-// Minimal, secret-free environment for every sandboxed child.
+
 const SANDBOX_ENV: NodeJS.ProcessEnv = {
-  PATH: process.env.PATH || '/usr/bin:/bin:/usr/local/bin',
+  PATH: env('PATH'),
   LANG: 'C.UTF-8',
   HOME: os.tmpdir(),
   TMPDIR: os.tmpdir(),
@@ -106,7 +107,7 @@ export function normalizeLanguage(language: string): string {
   return NUMERIC_LANG_ALIASES[lang] || lang;
 }
 
-/** Canonical string form of a value used to compare C++/Java results. */
+
 export function canonicalize(value: unknown): string {
   if (value === null || value === undefined) return '';
   if (Array.isArray(value)) return value.map(canonicalize).join(',');
@@ -119,7 +120,7 @@ export function canonicalize(value: unknown): string {
   return String(value);
 }
 
-/** Numeric-tolerant deep equality used for Python/Node results. */
+
 export function outputsEqual(actual: unknown, expected: unknown): boolean {
   if (typeof actual === 'number' && typeof expected === 'number') {
     return Math.abs(actual - expected) < 1e-6;
@@ -136,9 +137,9 @@ export function outputsEqual(actual: unknown, expected: unknown): boolean {
   return String(actual).trim() === String(expected).trim();
 }
 
-// ---------------------------------------------------------------------------
-// Child process plumbing
-// ---------------------------------------------------------------------------
+
+
+
 
 interface SpawnOutcome {
   code: number | null;
@@ -166,13 +167,13 @@ function spawnWithLimits(
   limits: SpawnLimits = {}
 ): Promise<SpawnOutcome> {
   return new Promise((resolve) => {
-    // `ulimit` runs first, then the interpreter is exec'd in the same process so
-    // the limits apply to it. detached => own process group => we can kill the
-    // whole tree on timeout. Compilation steps may relax these defaults
-    // (toolchains need more memory/disk than a candidate runtime). Note that
-    // JIT runtimes (Node/V8, JVM) reserve large virtual address space up front,
-    // so their `ulimit -v` is deliberately generous and the actual heap is
-    // bounded with `--max-old-space-size` / `-Xmx` instead.
+    
+    
+    
+    
+    
+    
+    
     const ulimitCmd = [
       `ulimit -t ${limits.cpuSeconds ?? CPU_LIMIT_SECONDS}`,
       `ulimit -v ${limits.memoryKb ?? MEMORY_LIMIT_KB}`,
@@ -202,12 +203,12 @@ function spawnWithLimits(
           maxRssKb = Math.max(maxRssKb, parseInt(match[1], 10));
         }
       } catch {
-        // child already gone — stop polling
+        
       }
     }, 100);
 
     child.stdin.on('error', () => {
-      /* child exited before we finished writing */
+      
     });
     child.stdin.write(inputJson);
     child.stdin.end();
@@ -233,7 +234,7 @@ function spawnWithLimits(
       try {
         process.kill(-(child.pid as number), 'SIGKILL');
       } catch {
-        /* already gone */
+        
       }
     }, limits.timeoutMs ?? PROCESS_TIMEOUT_MS);
 
@@ -278,9 +279,9 @@ function parseRunnerOutput(stdout: string): { ok: boolean; results?: any[]; erro
   }
 }
 
-// ---------------------------------------------------------------------------
-// Python runner
-// ---------------------------------------------------------------------------
+
+
+
 
 const PYTHON_RUNNER = `
 import ast, json, sys, time
@@ -363,9 +364,9 @@ for t in tests:
 print("__NR__" + json.dumps({"ok": True, "results": results}))
 `;
 
-// ---------------------------------------------------------------------------
-// Node runner (JavaScript & TypeScript)
-// ---------------------------------------------------------------------------
+
+
+
 
 const NODE_RUNNER = `
 let raw = '';
@@ -428,9 +429,9 @@ process.stdin.on('end', () => {
 });
 `;
 
-// ---------------------------------------------------------------------------
-// C++ harness generation
-// ---------------------------------------------------------------------------
+
+
+
 
 function cppLiteral(value: unknown): string {
   if (typeof value === 'number') return Number.isInteger(value) ? String(value) : String(value);
@@ -487,8 +488,8 @@ function buildCppHarness(code: string, entryPoint: string, testCases: SandboxTes
     .map((t, i) => {
       const expectedCanon = JSON.stringify(canonicalize(t.expected));
       const name = JSON.stringify(t.name);
-      // Named locals so signatures taking non-const lvalue refs (e.g.
-      // `vector<int>&`) bind; the entry call mirrors the persisted entry point.
+      
+      
       const argLocals = (t.args || [])
         .map((a, j) => `auto arg${j} = ${cppLiteral(a)};`)
         .join('\n');
@@ -536,9 +537,9 @@ ${testBlocks}
 `;
 }
 
-// ---------------------------------------------------------------------------
-// Java harness generation
-// ---------------------------------------------------------------------------
+
+
+
 
 function javaLiteral(value: unknown): string {
   if (typeof value === 'number') return Number.isInteger(value) ? String(value) : String(value);
@@ -634,9 +635,9 @@ ${JAVA_CANON_HELPERS}
   return { main, solution: code };
 }
 
-// ---------------------------------------------------------------------------
-// Public API
-// ---------------------------------------------------------------------------
+
+
+
 
 function finalizeResults(
   results: SandboxTestResult[],
@@ -650,8 +651,8 @@ function finalizeResults(
   const passRate = Math.round(passRateRatio * 100);
   const totalTimeMs = results.reduce((sum, r) => sum + (r.timeMs || 0), 0);
 
-  // An explicit status override (compile/runtime/timeout) always wins; otherwise
-  // the result is `passed` only when every test passed and none errored.
+  
+  
   const hasAnyError = results.some((r) => r.status !== 'passed' && r.status !== 'failed');
   const status: SandboxStatus =
     statusOverride || (total > 0 && passRate === 100 && !hasAnyError ? 'passed' : 'failed');
@@ -699,9 +700,9 @@ export async function executeInSandbox(opts: SandboxExecuteOptions): Promise<San
     }
 
     if (language === 'javascript' || language === 'typescript') {
-      // V8 reserves a 4GB pointer-compression cage up front, so `ulimit -v`
-      // MUST exceed 4GB or libuv cannot even create its worker threads. The
-      // committed heap is bounded with --max-old-space-size instead.
+      
+      
+      
       const outcome = await spawnWithLimits(
         'node',
         ['--max-old-space-size=256', '--max-semi-space-size=16', '-e', NODE_RUNNER],
@@ -738,8 +739,8 @@ function interpretRunnerOutcome(
   logs: string[],
   kind: 'python' | 'node'
 ): SandboxExecutionResult {
-  // Timeout can be triggered by our wall-clock timer OR by the `ulimit -t` CPU
-  // cap (which kills with SIGXCPU, then SIGKILL if the hard limit is reached).
+  
+  
   if (outcome.timedOut || outcome.signal === 'SIGXCPU' || outcome.signal === 'SIGKILL') {
     const reason = outcome.timedOut
       ? 'Process exceeded the wall-clock time limit and was killed.'
@@ -832,8 +833,8 @@ async function runCpp(opts: SandboxExecuteOptions, logs: string[]): Promise<Sand
       ['-std=c++17', '-O2', srcPath, '-o', binPath],
       '',
       {},
-      // cc1plus at -O2 with bits/stdc++.h needs generous VA; 1GB made the g++
-      // driver fail to vfork cc1plus. CPU/disk stay bounded.
+      
+      
       { cpuSeconds: 30, memoryKb: 4194304, fileSizeBlocks: 20480, timeoutMs: 60000 }
     );
     if (compile.code !== 0) {
@@ -895,7 +896,7 @@ async function runCpp(opts: SandboxExecuteOptions, logs: string[]): Promise<Sand
     try {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     } catch {
-      /* best-effort cleanup */
+      
     }
   }
 }
@@ -914,9 +915,9 @@ async function runJava(opts: SandboxExecuteOptions, logs: string[]): Promise<San
       ['-J-Xmx256m', mainPath, solPath],
       '',
       {},
-      // JVM auto-sizes its max heap to 1/4 of RAM by default; under a 1GB
-      // `ulimit -v` it could not reserve that VA and died silently. Bound the
-      // compiler heap explicitly and give it a generous address space.
+      
+      
+      
       { cpuSeconds: 30, memoryKb: 4194304, fileSizeBlocks: 20480, timeoutMs: 60000 }
     );
     if (compile.code !== 0) {
@@ -984,7 +985,7 @@ async function runJava(opts: SandboxExecuteOptions, logs: string[]): Promise<San
     try {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     } catch {
-      /* best-effort cleanup */
+      
     }
   }
 }

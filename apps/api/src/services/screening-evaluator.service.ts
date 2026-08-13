@@ -16,14 +16,14 @@ export interface ScreeningEvaluationResult {
   reasoning: string;
 }
 
-/**
- * Runs AI screening evaluation for a candidate application using Gemini LLM.
- *
- * Every score and every gap-analysis field comes from a validated LLM response.
- * No heuristic score, default threshold, or canned strengths list is ever used —
- * if the LLM cannot produce a complete, valid result the evaluation fails
- * instead of fabricating one.
- */
+
+
+
+
+
+
+
+
 export async function evaluateApplicationScreening(
   applicationId: string
 ): Promise<{ application: any; evaluation: any }> {
@@ -49,8 +49,8 @@ export async function evaluateApplicationScreening(
   const candidateRawText = app.candidate.raw_resume_text || app.candidate.bio || '';
   const candidateExp = app.candidate.years_of_experience || 0;
 
-  // The pass threshold comes from the job's real config. Fabricating a 70 would
-  // silently gate candidates against an invented number.
+  
+  
   const thresholds = (app.job.thresholds as any) || {};
   const minScore = typeof thresholds.minScore === 'number' ? thresholds.minScore : null;
   if (minScore === null) {
@@ -130,7 +130,7 @@ Return ONLY a JSON object matching:
     reasoning,
   };
 
-  // Update Application record status in DB
+  
   const updatedApp = await prisma.application.update({
     where: { id: applicationId },
     data: {
@@ -144,7 +144,7 @@ Return ONLY a JSON object matching:
     },
   });
 
-  // Upsert Evaluation record in DB
+  
   const evaluation = await prisma.evaluation.upsert({
     where: { application_id: applicationId },
     create: {
@@ -164,8 +164,8 @@ Return ONLY a JSON object matching:
     },
   });
 
-  // If screening passed, ensure Interview record is created. A failure here is
-  // a real failure — it is not silently swallowed.
+  
+  
   if (result.status !== 'rejected') {
     await ensureInterviewAndSchedule(applicationId);
   }

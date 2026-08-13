@@ -36,7 +36,7 @@ export default function HrSettingsPage() {
   const [savedSuccess, setSavedSuccess] = useState(false);
   const { theme, setTheme } = useTheme();
 
-  // General Settings state
+  
   const [orgName, setOrgName] = useState(DEFAULT_ORG_SETTINGS.orgName);
   const [orgDomain, setOrgDomain] = useState(DEFAULT_ORG_SETTINGS.domain);
   const [supportEmail, setSupportEmail] = useState(DEFAULT_ORG_SETTINGS.supportEmail);
@@ -70,17 +70,17 @@ export default function HrSettingsPage() {
     fetchSettings();
   }, []);
 
-  // Appearance & Theme State
+  
   const [brandColor, setBrandColor] = useState('orange');
   const [glassmorphism, setGlassmorphism] = useState(true);
   const [compactDensity, setCompactDensity] = useState(false);
 
-  // Notification Preferences State
+  
   const [notifyShortlist, setNotifyShortlist] = useState(true);
   const [notifyHighScore, setNotifyHighScore] = useState(true);
   const [dailyDigest, setDailyDigest] = useState(true);
 
-  // Team Members state initialized dynamically with current user
+  
   const [team, setTeam] = useState<{ id: string; name: string; email: string; role: string; status: string }[]>(() => {
     if (user?.email) {
       return [{ id: user?.id || 'me', name: user.email.split('@')[0], email: user.email, role: 'Owner', status: 'Active' }];
@@ -91,7 +91,7 @@ export default function HrSettingsPage() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'Admin' | 'Recruiter' | 'Reviewer'>('Recruiter');
 
-  // Email Templates state
+  
   const [activeTemplate, setActiveTemplate] = useState<'interview' | 'assessment' | 'offer' | 'rejection'>('interview');
   const [templates, setTemplates] = useState({
     interview: {
@@ -117,7 +117,7 @@ export default function HrSettingsPage() {
     setTimeout(() => setSavedSuccess(false), 2000);
   };
 
-  // Load persisted org members once we know the org id
+  
   useEffect(() => {
     async function loadMembers() {
       if (!orgId) return;
@@ -137,7 +137,7 @@ export default function HrSettingsPage() {
           );
         }
       } catch {
-        // keep default team list
+        
       }
     }
     loadMembers();
@@ -159,7 +159,7 @@ export default function HrSettingsPage() {
           },
         });
       } catch {
-        // keep local state if API unreachable
+        
       }
     }
     triggerSaveNotification();
@@ -174,7 +174,7 @@ export default function HrSettingsPage() {
           },
         });
       } catch {
-        // keep local state if API unreachable
+        
       }
     }
     triggerSaveNotification();
@@ -187,7 +187,7 @@ export default function HrSettingsPage() {
           settings: { emailTemplates: templates },
         });
       } catch {
-        // keep local state if API unreachable
+        
       }
     }
     triggerSaveNotification();
@@ -213,7 +213,7 @@ export default function HrSettingsPage() {
       ]);
       setInviteEmail('');
     } catch {
-      // keep local state if API unreachable
+      
     }
     triggerSaveNotification();
   };
@@ -223,7 +223,7 @@ export default function HrSettingsPage() {
       try {
         await apiClient.delete(`/organizations/${orgId}/members/${id}`);
       } catch {
-        // keep local state if API unreachable
+        
       }
     }
     setTeam(team.filter((m) => m.id !== id));
@@ -232,7 +232,7 @@ export default function HrSettingsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 pb-12 font-sans">
-      {/* Header */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-widest block mb-1">
@@ -254,9 +254,9 @@ export default function HrSettingsPage() {
         )}
       </div>
 
-      {/* Main Grid: Left Navigation (1 Col) / Right Content (3 Cols) */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {/* Left Sidebar Navigation Tabs */}
+        {}
         <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-4 shadow-md backdrop-blur-md glass-panel flex flex-col gap-1.5 select-none">
           <button
             type="button"
@@ -324,7 +324,7 @@ export default function HrSettingsPage() {
           </button>
         </div>
 
-        {/* Right Content Panel */}
+        {}
         <div className="lg:col-span-3 space-y-6">
           {activeTab === 'general' && (
             <GeneralSettingsTab

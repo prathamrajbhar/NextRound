@@ -40,7 +40,7 @@ export default function RubricWeightingCard({
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Candidate Scoring Weights</h3>
         </div>
         
-        {/* Auto Balance Switch */}
+        {}
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-slate-600 dark:text-slate-400 font-extrabold select-none">Auto-Balance</span>
           <label className="relative inline-flex items-center cursor-pointer">
@@ -55,7 +55,7 @@ export default function RubricWeightingCard({
         </div>
       </div>
 
-      {/* Breakdown Visualizer */}
+      {}
       <div className="space-y-2.5">
         <div className="flex h-3.5 w-full rounded-full overflow-hidden bg-slate-200/80 dark:bg-slate-800/80 shadow-inner p-0.5 border border-slate-200/50 dark:border-slate-700/50">
           <div style={{ width: `${(technical / (total || 1)) * 100}%` }} className="bg-indigo-500 rounded-l-full transition-all duration-300" title={`Tech: ${technical}%`} />
@@ -64,7 +64,7 @@ export default function RubricWeightingCard({
           <div style={{ width: `${(experience / (total || 1)) * 100}%` }} className="bg-amber-500 rounded-r-full transition-all duration-300" title={`Experience: ${experience}%`} />
         </div>
 
-        {/* Legend / Info */}
+        {}
         <div className="flex justify-between items-center text-[10px] text-slate-700 dark:text-slate-300 font-extrabold select-none flex-wrap gap-2">
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-indigo-500 block" />
@@ -85,7 +85,7 @@ export default function RubricWeightingCard({
         </div>
       </div>
 
-      {/* Balance Indicator Status */}
+      {}
       <div className={`p-3 rounded-2xl border flex items-center justify-between gap-2 text-[11px] font-extrabold ${
         isBalanced 
           ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300' 
@@ -115,9 +115,9 @@ export default function RubricWeightingCard({
         )}
       </div>
 
-      {/* Sliders list */}
+      {}
       <div className="space-y-4 pt-1 font-semibold text-slate-700 dark:text-slate-300 text-xs">
-        {/* Technical */}
+        {}
         <div className="space-y-1">
           <div className="flex justify-between items-center text-[11px]">
             <span className="flex items-center gap-1.5 font-extrabold text-slate-800 dark:text-slate-200">
@@ -136,7 +136,7 @@ export default function RubricWeightingCard({
           />
         </div>
 
-        {/* Communication */}
+        {}
         <div className="space-y-1">
           <div className="flex justify-between items-center text-[11px]">
             <span className="flex items-center gap-1.5 font-extrabold text-slate-800 dark:text-slate-200">
@@ -155,7 +155,7 @@ export default function RubricWeightingCard({
           />
         </div>
 
-        {/* Problem Solving */}
+        {}
         <div className="space-y-1">
           <div className="flex justify-between items-center text-[11px]">
             <span className="flex items-center gap-1.5 font-extrabold text-slate-800 dark:text-slate-200">
@@ -174,7 +174,7 @@ export default function RubricWeightingCard({
           />
         </div>
 
-        {/* Work Experience */}
+        {}
         <div className="space-y-1">
           <div className="flex justify-between items-center text-[11px]">
             <span className="flex items-center gap-1.5 font-extrabold text-slate-800 dark:text-slate-200">

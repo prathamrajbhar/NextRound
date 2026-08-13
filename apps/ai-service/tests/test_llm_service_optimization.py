@@ -1,7 +1,7 @@
-"""
-Tests for LLM service JSON extraction optimization.
-Verifies bracket-matching algorithm works correctly and outperforms regex.
-"""
+
+
+
+
 
 import json
 import time
@@ -45,7 +45,7 @@ def test_extract_json_object_with_nesting():
 
 def test_extract_json_array_large_response():
     """Test JSON array extraction on a large LLM response."""
-    # Simulate large LLM response with lots of text before the JSON
+
     prefix = "This is a very long prefix. " * 100
     json_data = [
         {"id": f"q{i}", "category": "test", "difficulty": "medium", "question": f"Question {i}"}
@@ -118,19 +118,19 @@ def test_performance_comparison():
     """Performance comparison between bracket-matching and regex (informal)."""
     import re
     
-    # Create an EXTREMELY large response to show bracket-matching advantage
-    # (with lots of nested text that regex needs to backtrack through)
+
+
     prefix = "This is very long LLM output with lots of text. " * 500
     json_data = [{"id": i, "text": "Sample question " * 20} for i in range(50)]
-    text = prefix + json.dumps(json_data) + prefix  # Text before and after
+    text = prefix + json.dumps(json_data) + prefix
     
-    # Test bracket-matching (current implementation)
+
     start = time.time()
     for _ in range(50):
         result = extract_json_array(text)
     bracket_time = time.time() - start
     
-    # Test regex approach (old implementation)
+
     def extract_json_array_regex(t):
         match = re.search(r"\[.*\]", t, re.DOTALL)
         if not match:
@@ -145,8 +145,8 @@ def test_performance_comparison():
         result = extract_json_array_regex(text)
     regex_time = time.time() - start
     
-    # With very large responses, bracket-matching performs better
-    # The benefit shows when response size is 100KB+
+
+
     print(f"✓ Performance comparison (on ~{len(text)/1024:.0f}KB response):")
     print(f"  Bracket-matching: {bracket_time:.4f}s for 50 calls")
     print(f"  Regex approach: {regex_time:.4f}s for 50 calls")

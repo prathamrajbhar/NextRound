@@ -15,14 +15,14 @@ import {
 import { executeCodingSubmission } from './coding-executor.service';
 import { notFound, forbidden, badRequest } from '../lib/http-errors';
 
-/**
- * Business logic for the client-facing applications API
- * (`/api/v1/applications/*`). Each function is HTTP-free: it performs the
- * apply flow, stage transitions, assessment generation/scoring, and offer
- * sign/decline, throwing `HttpError` (via `notFound`/`forbidden`/`badRequest`)
- * for the failure cases the route used to answer inline. The route layer owns
- * auth, serialization, and the response envelope.
- */
+
+
+
+
+
+
+
+
 
 export interface AppUserCtx {
   userId: string;
@@ -31,7 +31,7 @@ export interface AppUserCtx {
   email?: string | null;
 }
 
-/** Verify an application belongs to the authenticated candidate (via CandidateProfile). */
+
 export async function candidateOwnsApplication(applicationId: string, userId: string): Promise<boolean> {
   const app = await prisma.application.findFirst({
     where: { id: applicationId, candidate: { user_id: userId } },
@@ -40,15 +40,15 @@ export async function candidateOwnsApplication(applicationId: string, userId: st
   return Boolean(app);
 }
 
-// ---------------------------------------------------------------------------
-// Apply flow & listing
-// ---------------------------------------------------------------------------
 
-/** POST / — candidate submits an application. */
+
+
+
+
 export async function applyToJob(user: AppUserCtx, body: { jobId: string; resumeUrl?: string | null }) {
   const { jobId, resumeUrl } = body;
 
-  // Find or create candidate profile
+  
   let profile = await prisma.candidateProfile.findUnique({
     where: { user_id: user.userId },
   });
@@ -67,7 +67,7 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
     });
   }
 
-  // Check job exists and is active/published
+  
   const job = await prisma.job.findUnique({
     where: { id: jobId },
   });
@@ -76,7 +76,7 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
     throw badRequest('Job is not open for applications');
   }
 
-  // Prevent duplicate application
+  
   const existingApp = await prisma.application.findUnique({
     where: {
       candidate_id_job_id: {
@@ -90,7 +90,7 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
     throw badRequest('You have already applied for this job');
   }
 
-  // Create Application
+  
   const application = await prisma.application.create({
     data: {
       candidate_id: profile.id,
@@ -104,7 +104,7 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
     },
   });
 
-  // Send confirmation email asynchronously
+  
   if (user.email) {
     const candidateName = user.email.split('@')[0];
     emailService
@@ -112,7 +112,7 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
       .catch((err) => console.error('Failed to send confirmation email:', err));
   }
 
-  // Enqueue screening agent processing
+  
   try {
     await enqueueScreening(application.id, {
       candidateId: profile.id,
@@ -127,7 +127,7 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
   return { application };
 }
 
-/** GET /my — candidate's own applications; null when no profile exists yet. */
+
 export async function listCandidateApplications(userId: string): Promise<Rec[] | null> {
   const profile = await prisma.candidateProfile.findUnique({
     where: { user_id: userId },
@@ -164,10 +164,10 @@ export async function listCandidateApplications(userId: string): Promise<Rec[] |
   });
 }
 
-/** GET / — HR list applications for an org, optionally filtered by job. */
+
 export async function listOrgApplications(orgId: string, jobId?: string) {
   if (jobId) {
-    // Validate the job belongs to the HR org
+    
     const job = await prisma.job.findUnique({ where: { id: jobId } });
     if (!job || job.org_id !== orgId) {
       throw forbidden('Forbidden: Access denied to job applications');
@@ -199,7 +199,7 @@ export async function listOrgApplications(orgId: string, jobId?: string) {
   });
 }
 
-/** GET /:id — single application with the Scheduler Agent's real slot proposals. */
+
 export async function getApplication(appId: string, user: AppUserCtx) {
   const application = await prisma.application.findUnique({
     where: { id: appId },
@@ -226,7 +226,7 @@ export async function getApplication(appId: string, user: AppUserCtx) {
     throw notFound('Application not found');
   }
 
-  // Multi-tenant RBAC check
+  
   if (user.role === 'hr') {
     if (!user.orgId || application.job.org_id !== user.orgId) {
       throw forbidden('Forbidden: Access denied to application');
@@ -237,11 +237,11 @@ export async function getApplication(appId: string, user: AppUserCtx) {
     }
   }
 
-  // Expose the Scheduler Agent's real slot proposals on the application
-  // payload. Slots are persisted as a scheduler_agent AgentLog keyed by
-  // interview id (internal POST /interviews/:id/schedule-slots). When no
-  // slots have been generated the field is omitted so the client renders an
-  // honest empty state instead of fabricated 'Tomorrow at 10:00 AM' times.
+  
+  
+  
+  
+  
   let scheduledSlots: string[] = [];
   if (application.interview) {
     const slotLog = await prisma.agentLog.findFirst({
@@ -261,8 +261,8 @@ export async function getApplication(appId: string, user: AppUserCtx) {
     }
   }
 
-  // If the application is currently in assessment/screening_completed stage, check if we
-  // can advance the candidate to the next appropriate stage (interview or HR round).
+  
+  
   if (application.status === 'screening_completed' || application.status === 'assessment') {
     const nextStatus = await advanceAssessmentStage(application.id);
     if (nextStatus) {
@@ -273,11 +273,11 @@ export async function getApplication(appId: string, user: AppUserCtx) {
   return { application, scheduledSlots };
 }
 
-// ---------------------------------------------------------------------------
-// Screening & stage transitions
-// ---------------------------------------------------------------------------
 
-/** POST /:id/run-screening — run or re-run AI screening evaluation. */
+
+
+
+
 export async function runScreening(appId: string, user: AppUserCtx) {
   const application = await prisma.application.findUnique({
     where: { id: appId },
@@ -288,7 +288,7 @@ export async function runScreening(appId: string, user: AppUserCtx) {
     throw notFound('Application not found');
   }
 
-  // Authorization check
+  
   if (user.role === 'hr') {
     if (application.job.org_id !== user.orgId) {
       throw forbidden('Forbidden: Access denied to application');
@@ -302,7 +302,7 @@ export async function runScreening(appId: string, user: AppUserCtx) {
   return evaluateApplicationScreening(appId);
 }
 
-/** PATCH /:id/status — HR override stage status. */
+
 export async function overrideStatus(
   appId: string,
   orgId: string,
@@ -328,7 +328,7 @@ export async function overrideStatus(
     },
   });
 
-  // Optionally record evaluation reasoning if provided
+  
   if (body.reasoning) {
     await prisma.evaluation.upsert({
       where: { application_id: appId },
@@ -373,7 +373,7 @@ const VALID_STATUSES = [
   'withdrawn',
 ];
 
-/** PATCH /:id — HR advance candidate stage (Kanban). Maps stage name to status. */
+
 export async function advanceStage(
   appId: string,
   orgId: string,
@@ -416,7 +416,7 @@ export async function advanceStage(
   };
 }
 
-/** POST /:id/schedule — schedule HR round / voice interview. */
+
 export async function scheduleInterview(
   appId: string,
   user: AppUserCtx,
@@ -431,7 +431,7 @@ export async function scheduleInterview(
     throw notFound('Application not found');
   }
 
-  // RBAC check
+  
   if (user.role === 'hr') {
     if (application.job.org_id !== user.orgId) {
       throw forbidden('Forbidden: Access denied');
@@ -444,7 +444,7 @@ export async function scheduleInterview(
 
   const scheduledTime = body.scheduledAt ? new Date(body.scheduledAt) : new Date();
 
-  // Update HR round scheduled info or Interview scheduled status
+  
   const updatedApp = await prisma.application.update({
     where: { id: appId },
     data: {
@@ -454,7 +454,7 @@ export async function scheduleInterview(
     },
   });
 
-  // Upsert Interview record
+  
   const interview = await prisma.interview.upsert({
     where: { application_id: appId },
     create: {
@@ -471,7 +471,7 @@ export async function scheduleInterview(
   return { application: updatedApp, interview };
 }
 
-/** POST /:id/withdraw — candidate withdraws application. */
+
 export async function withdrawApplication(appId: string, userId: string) {
   const application = await prisma.application.findUnique({
     where: { id: appId },
@@ -494,11 +494,11 @@ export async function withdrawApplication(appId: string, userId: string) {
   return { application: updatedApp, message: 'Application withdrawn successfully' };
 }
 
-// ---------------------------------------------------------------------------
-// Aptitude assessment
-// ---------------------------------------------------------------------------
 
-/** Fetch an application with its candidate + job; callers enforce ownership. */
+
+
+
+
 function getAppForCandidate(appId: string, userId: string) {
   return prisma.application.findUnique({
     where: { id: appId },
@@ -506,7 +506,7 @@ function getAppForCandidate(appId: string, userId: string) {
   });
 }
 
-/** GET /:id/assessment/aptitude/chunk — progressive DB aptitude chunk. */
+
 export async function getAptitudeChunk(
   appId: string,
   userId: string,
@@ -524,7 +524,7 @@ export async function getAptitudeChunk(
     orderBy: { created_at: 'desc' },
   });
 
-  // If assessment already has questions stored, serve from there
+  
   const existingQuestions: any[] = Array.isArray(assessment?.questions)
     ? (assessment!.questions as any[])
     : [];
@@ -543,7 +543,7 @@ export async function getAptitudeChunk(
     return { assessmentId: assessment?.id, chunkIndex, chunkSize, questions: chunkQs, hasMore: existingQuestions.length > endIndex };
   }
 
-  // Select the full question set from DB if not yet stored
+  
   const assessmentConfig = (app.job?.assessmentConfig as any) || {};
   const mcqDistribution  = assessmentConfig.mcqDistribution as Record<string, number> | undefined;
   const totalCount = mcqDistribution
@@ -553,7 +553,7 @@ export async function getAptitudeChunk(
   const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
   const allQuestions = await selectAptitudeQuestions({ distribution });
 
-  // Persist all questions server-side (with correct_index for scoring later)
+  
   if (assessment) {
     assessment = await prisma.assessment.update({
       where: { id: assessment.id },
@@ -589,7 +589,7 @@ export async function getAptitudeChunk(
   };
 }
 
-/** POST /:id/assessment/aptitude/chunk — submit current chunk & fetch next. */
+
 export async function submitAptitudeChunk(
   appId: string,
   userId: string,
@@ -607,7 +607,7 @@ export async function submitAptitudeChunk(
     orderBy: { created_at: 'desc' },
   });
 
-  // Persist submitted answers
+  
   if (assessment) {
     const existingResponses = Array.isArray(assessment.responses) ? (assessment.responses as any[]) : [];
     const mergedResponses = [...existingResponses, ...(Array.isArray(answers) ? answers : [])];
@@ -622,8 +622,8 @@ export async function submitAptitudeChunk(
     ? (assessment!.questions as any[])
     : [];
 
-  // Questions are already stored in the assessment from getAptitudeChunk.
-  // Serve from cache — no further DB selection needed.
+  
+  
   const startOfNext = nextChunkIndex * Number(chunkSize);
   const endOfNext   = startOfNext + Number(chunkSize);
   const nextQs = existingQuestions.slice(startOfNext, endOfNext).map((q: any) => ({
@@ -643,7 +643,7 @@ export async function submitAptitudeChunk(
   };
 }
 
-/** GET /:id/assessment/aptitude — fetch aptitude questions from DB question bank. */
+
 export async function getAptitudeAssessment(appId: string, userId: string) {
   const app = await getAppForCandidate(appId, userId);
   if (!app || app.candidate.user_id !== userId) {
@@ -656,7 +656,7 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
     ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
     : Math.max(1, Math.min(100, Number(assessmentConfig.mcqCount) || 20));
 
-  // Return existing assessment if it already has the right number of questions
+  
   let assessment = await prisma.assessment.findFirst({
     where: { application_id: appId, test_type: 'aptitude' },
     orderBy: { created_at: 'desc' },
@@ -664,9 +664,9 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
 
   let allQuestions: any[] = [];
 
-  // Reuse stored completed questions ONLY if the count still matches the
-  // current HR-configured distribution. If HR changed the config (e.g., from
-  // 20 questions to 4), always re-draw so the new rules take effect.
+  
+  
+  
   const isCompleted = assessment?.status === 'completed';
   const storedCount = Array.isArray(assessment?.questions) ? (assessment!.questions as any[]).length : 0;
   const countMatchesConfig = storedCount === totalCount;
@@ -696,7 +696,7 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
     }
   }
 
-  // Strip correct_index before returning to client (included correctIndex for testing purposes)
+  
   const sanitizedQuestions = allQuestions.map((q: any) => ({
     id: q.id,
     category: q.category,
@@ -719,7 +719,7 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
   };
 }
 
-/** POST /:id/assessment/aptitude — submit aptitude answers. */
+
 export async function submitAptitude(
   appId: string,
   userId: string,
@@ -732,7 +732,7 @@ export async function submitAptitude(
 
   const { answers, totalTimeSeconds, tabSwitchCount } = body;
 
-  // Update responses in Assessment table
+  
   await prisma.assessment
     .updateMany({
       where: { application_id: appId, test_type: 'aptitude' },
@@ -745,9 +745,9 @@ export async function submitAptitude(
       console.error(`Failed to update assessment responses for application ${appId}:`, err);
     });
 
-  // Score the submission server-side against the persisted questions (which
-  // carry correctIndex) so the client gets a real result immediately instead
-  // of a fabricated 0%. The async job still runs for the full pipeline.
+  
+  
+  
   const storedAssessment = await prisma.assessment.findFirst({
     where: { application_id: appId, test_type: 'aptitude' },
     orderBy: { created_at: 'desc' },
@@ -764,18 +764,18 @@ export async function submitAptitude(
   for (const q of storedQuestions) {
     const correctIdx = q.correctIndex !== undefined ? q.correctIndex : q.correct_index;
     if (typeof correctIdx !== 'number') continue;
-    // Only score questions the candidate actually answered
+    
     if (!answerMap.has(q.id)) continue;
     totalScored++;
     if (answerMap.get(q.id) === correctIdx) correctCount++;
   }
   const computedScore = totalScored > 0 ? Math.round((correctCount / totalScored) * 100) : null;
 
-  // Enqueue assessment scoring job in BullMQ
+  
   await enqueueAssessment(appId, (answers as any[]) || [], { totalTimeSeconds, tabSwitchCount });
 
-  // NOTE: the response keeps the legacy top-level score fields (not the data
-  // envelope) because the web client reads res.score directly.
+  
+  
   return {
     score: computedScore,
     correctAnswers: correctCount,
@@ -784,18 +784,18 @@ export async function submitAptitude(
   };
 }
 
-// ---------------------------------------------------------------------------
-// Coding assessment
-// ---------------------------------------------------------------------------
 
-/** GET /:id/assessment/coding — fetch coding problem from DB question bank. */
+
+
+
+
 export async function getCodingAssessment(appId: string, userId: string) {
   const app = await getAppForCandidate(appId, userId);
   if (!app || app.candidate.user_id !== userId) {
     throw forbidden('Forbidden: Access denied');
   }
 
-  // Return existing coding assessment if already assigned
+  
   let assessment = await prisma.assessment.findFirst({
     where: { application_id: appId, test_type: 'coding' },
   });
@@ -821,7 +821,7 @@ export async function getCodingAssessment(appId: string, userId: string) {
     });
   }
 
-  // Strip hidden test cases before sending to candidate
+  
   const sanitizedProblem = {
     ...problem,
     testCases: (problem.testCases || []).filter((tc: any) => !tc.hidden),
@@ -830,7 +830,7 @@ export async function getCodingAssessment(appId: string, userId: string) {
   return { problem: sanitizedProblem };
 }
 
-/** POST /:id/assessment/coding — submit candidate code. */
+
 export async function submitCoding(
   appId: string,
   userId: string,
@@ -843,7 +843,7 @@ export async function submitCoding(
 
   const { code, language } = body;
 
-  // Retrieve the persisted coding problem from the Assessment table
+  
   const assessment = await prisma.assessment.findFirst({
     where: { application_id: appId, test_type: 'coding' },
   });
@@ -881,7 +881,7 @@ export async function submitCoding(
     },
   });
 
-  // Update assessment status to completed
+  
   await prisma.assessment.update({
     where: { id: assessment.id },
     data: {
@@ -890,7 +890,7 @@ export async function submitCoding(
     },
   });
 
-  // Update application evaluation score
+  
   await prisma.evaluation.upsert({
     where: { application_id: appId },
     create: {
@@ -913,7 +913,7 @@ export async function submitCoding(
   };
 }
 
-/** GET /:id/assessment/coding/:submissionId — poll submission status. */
+
 export async function getCodingSubmission(submissionId: string) {
   const submission = await prisma.codingSubmission.findUnique({
     where: { id: submissionId },
@@ -926,11 +926,11 @@ export async function getCodingSubmission(submissionId: string) {
   return { submission };
 }
 
-// ---------------------------------------------------------------------------
-// Reschedule
-// ---------------------------------------------------------------------------
 
-/** POST /:id/reschedule — request interview reschedule. */
+
+
+
+
 export async function requestReschedule(appId: string, userId: string) {
   const app = await prisma.application.findUnique({
     where: { id: appId },
@@ -947,15 +947,15 @@ export async function requestReschedule(appId: string, userId: string) {
     jobTitle: app.job.title,
   });
 
-  // NOTE: legacy top-level message shape (no data envelope) preserved as-is.
+  
   return { message: 'Reschedule request submitted. AI Scheduler is negotiating new slots...' };
 }
 
-// ---------------------------------------------------------------------------
-// Offers
-// ---------------------------------------------------------------------------
 
-/** GET /offer/token/:token — fetch offer by magic link token. */
+
+
+
+
 export async function getOfferByToken(token: string) {
   const offer = await prisma.offer.findFirst({
     where: { magic_link_token: token },
@@ -984,7 +984,7 @@ export async function getOfferByToken(token: string) {
   return { offer };
 }
 
-/** GET /:id/offer — fetch application offer details. */
+
 export async function getApplicationOffer(appId: string, user: AppUserCtx) {
   const application = await prisma.application.findUnique({
     where: { id: appId },
@@ -999,7 +999,7 @@ export async function getApplicationOffer(appId: string, user: AppUserCtx) {
     throw notFound('No offer found for application');
   }
 
-  // Check access permission
+  
   if (user.role === 'candidate' && application.candidate.user_id !== user.userId) {
     throw forbidden('Forbidden: Access denied');
   }
@@ -1010,10 +1010,10 @@ export async function getApplicationOffer(appId: string, user: AppUserCtx) {
   return { application, offer: application.offer };
 }
 
-/**
- * POST /:id/offer/sign — digitally sign offer.
- * Auth: authenticated candidate owner OR a valid magic_link_token (from the emailed link).
- */
+
+
+
+
 export async function signOffer(
   appId: string,
   body: { signature_svg?: string; magic_link_token?: string },
@@ -1039,7 +1039,7 @@ export async function signOffer(
     throw notFound('Offer not found for application');
   }
 
-  // Authorization: only the owning candidate or a valid magic link token may sign.
+  
   const isOwner =
     user?.role === 'candidate' && (await candidateOwnsApplication(offer.application_id, user.userId));
   const tokenValid =
@@ -1051,7 +1051,7 @@ export async function signOffer(
     throw forbidden('Forbidden: offer ownership could not be verified');
   }
 
-  // Update offer status and save signature SVG vector
+  
   const updatedOffer = await prisma.offer.update({
     where: { id: offer.id },
     data: {
@@ -1060,7 +1060,7 @@ export async function signOffer(
     },
   });
 
-  // Update application status to accepted
+  
   await prisma.application.update({
     where: { id: offer.application_id },
     data: { status: 'accepted' },
@@ -1069,10 +1069,10 @@ export async function signOffer(
   return { offer: updatedOffer, status: 'accepted' };
 }
 
-/**
- * POST /:id/offer/decline — candidate declines offer.
- * Auth: authenticated candidate owner OR a valid magic_link_token (from the emailed link).
- */
+
+
+
+
 export async function declineOffer(
   appId: string,
   body: { reason?: string; magic_link_token?: string },
@@ -1094,7 +1094,7 @@ export async function declineOffer(
     throw notFound('Offer not found for application');
   }
 
-  // Authorization: only the owning candidate or a valid magic link token may decline.
+  
   const isOwner =
     user?.role === 'candidate' && (await candidateOwnsApplication(offer.application_id, user.userId));
   const tokenValid =
@@ -1106,7 +1106,7 @@ export async function declineOffer(
     throw forbidden('Forbidden: offer ownership could not be verified');
   }
 
-  // Decline offer and update application to rejected
+  
   const updatedOffer = await prisma.offer.update({
     where: { id: offer.id },
     data: {

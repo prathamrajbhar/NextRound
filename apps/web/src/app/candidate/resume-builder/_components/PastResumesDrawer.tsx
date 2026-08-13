@@ -78,7 +78,7 @@ export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResum
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans">
       <div className="w-full max-w-md h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between p-6">
         
-        {/* Header */}
+        {}
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-xl bg-brand-50 dark:bg-orange-950/80 border border-brand-200 dark:border-orange-900 flex items-center justify-center text-brand-600 dark:text-orange-400">
@@ -98,7 +98,7 @@ export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResum
           </button>
         </div>
 
-        {/* Body List */}
+        {}
         <div className="flex-1 overflow-y-auto my-4 space-y-3 pr-1">
           {loading ? (
             <div className="flex items-center justify-center py-12 text-slate-400 gap-2 text-xs font-semibold">
@@ -141,7 +141,7 @@ export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResum
                   </p>
                 )}
 
-                {/* Actions */}
+                {}
                 <div className="flex items-center gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
                   <button
                     type="button"
@@ -178,7 +178,7 @@ export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResum
           )}
         </div>
 
-        {/* Footer */}
+        {}
         <div className="border-t border-slate-200 dark:border-slate-800 pt-3 text-center">
           <p className="text-[10px] text-slate-400 font-semibold">Resumes are automatically parsed and saved to your profile vault.</p>
         </div>

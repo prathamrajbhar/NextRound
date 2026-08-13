@@ -89,7 +89,7 @@ export default function AptitudeTestConsole({
   const displayShowWarning = showWarningModal !== undefined ? showWarningModal : session.showWarningModal;
   const displayResumeFullscreen = onResumeFullscreen !== undefined ? onResumeFullscreen : localResumeFS;
 
-  // SUBMITTED STATE
+  
   React.useEffect(() => {
     if (submitted && typeof document !== 'undefined' && document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
@@ -109,7 +109,7 @@ export default function AptitudeTestConsole({
     );
   }
 
-  // LOADING STATE
+  
   if (isLoading) {
     return (
       <AptitudeStateCard
@@ -120,7 +120,7 @@ export default function AptitudeTestConsole({
     );
   }
 
-  // FETCH ERROR STATE — auth failure, network error, empty questions
+  
   if (fetchError || activeQuestions.length === 0) {
     const isAuthError = fetchError?.toLowerCase().includes('session') || fetchError?.toLowerCase().includes('log in');
     return (
@@ -158,7 +158,7 @@ export default function AptitudeTestConsole({
     );
   }
 
-  // CATEGORY SELECTION HUB
+  
   if (!selectedCategory || !isStarted) {
     return (
       <AptitudeCategoryHub

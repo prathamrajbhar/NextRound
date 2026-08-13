@@ -52,7 +52,7 @@ export default function CandidateJobsPage() {
 
   const safeJobsList = Array.isArray(jobs) ? jobs : [];
 
-  // Filter jobs based on search criteria
+  
   const filteredJobs = safeJobsList.filter((job) => {
     const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase()) ||
       job.orgName.toLowerCase().includes(search.toLowerCase()) ||
@@ -77,7 +77,7 @@ export default function CandidateJobsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      {/* Header */}
+      {}
       <div className="border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Browse Opportunities</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
@@ -85,9 +85,9 @@ export default function CandidateJobsPage() {
         </p>
       </div>
 
-      {/* Search & Filter Bar */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded-2xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 shadow-md backdrop-blur-md glass-panel">
-        {/* Search box */}
+        {}
         <div className="md:col-span-2 relative">
           <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400 dark:text-slate-500" />
           <input
@@ -99,7 +99,7 @@ export default function CandidateJobsPage() {
           />
         </div>
 
-        {/* Location filter */}
+        {}
         <div>
           <select
             value={selectedLocation}
@@ -113,7 +113,7 @@ export default function CandidateJobsPage() {
           </select>
         </div>
 
-        {/* Experience level */}
+        {}
         <div>
           <select
             value={selectedExperience}
@@ -128,7 +128,7 @@ export default function CandidateJobsPage() {
         </div>
       </div>
 
-      {/* Main Grid: Job Cards */}
+      {}
       {filteredJobs.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredJobs.map((job) => {

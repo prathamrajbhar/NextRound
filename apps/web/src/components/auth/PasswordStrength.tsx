@@ -18,7 +18,7 @@ export function passwordScore(password: string): number {
   return Math.min(LEVELS.length - 1, score);
 }
 
-/** Four-segment strength meter shown once the user starts typing a password. */
+
 export default function PasswordStrength({ password }: { password: string }) {
   if (!password) return null;
 

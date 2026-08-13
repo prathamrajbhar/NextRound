@@ -25,7 +25,7 @@ export async function enqueueDecision(
 
   const job = await decisionQueue.add(JOB_NAMES.decision, payload, {
     ...DEFAULT_JOB_OPTIONS,
-    priority: 1, // Critical priority
+    priority: 1, 
   });
 
   return job;

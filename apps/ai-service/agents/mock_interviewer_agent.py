@@ -51,8 +51,8 @@ def run_mock_interviewer_agent(state: MockInterviewerState) -> MockInterviewerSt
     ai_response = (parsed or {}).get("response")
     hint = (parsed or {}).get("coaching_hint") if parsed else None
 
-    # A turn without real LLM output must fail — the caller raises a proper HTTP
-    # error instead of receiving canned text.
+
+
     if not ai_response:
         raise RuntimeError("Mock interviewer LLM returned no response for this turn.")
 

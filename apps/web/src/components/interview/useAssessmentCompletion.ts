@@ -10,11 +10,11 @@ interface UseAssessmentCompletionOptions {
   messages: Message[];
 }
 
-/**
- * Ends an assessment session: persists the transcript + score to the mock
- * session, records the candidate result locally for applications, and routes
- * to the appropriate destination (application detail or feedback page).
- */
+
+
+
+
+
 export function useAssessmentCompletion({ sessionId, applicationId, messages }: UseAssessmentCompletionOptions) {
   const router = useRouter();
 
@@ -27,9 +27,9 @@ export function useAssessmentCompletion({ sessionId, applicationId, messages }: 
       }
     }
 
-    // Only call the mock session end route when this is actually a mock session.
-    // When applicationId is set this is a real application assessment — the
-    // aptitude submit route already handles persistence, no session end needed.
+    
+    
+    
     const isMockSession = !applicationId && sessionId && sessionId !== 'new' && sessionId !== 'practice';
 
     if (isMockSession) {
@@ -44,7 +44,7 @@ export function useAssessmentCompletion({ sessionId, applicationId, messages }: 
         });
       } catch (err) {
         console.error('Failed to end mock session:', err);
-        // Session end failure means no evaluation will be available
+        
         throw new Error('Failed to save assessment results. Please try again.');
       }
     }

@@ -20,7 +20,7 @@ export async function enqueueEvaluation(
 
   const job = await evaluatorQueue.add(JOB_NAMES.evaluator, payload, {
     ...DEFAULT_JOB_OPTIONS,
-    priority: 1, // Critical priority
+    priority: 1, 
   });
 
   return job;

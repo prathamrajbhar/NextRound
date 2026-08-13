@@ -21,7 +21,7 @@ async def process_jd_parser_job(job_data: dict) -> bool:
 
     logger.info(f"Processing JD Parser job for jobId: {job_id}")
 
-    # org_id and the input description are only known after fetching the job.
+
     log_extra: dict = {"job_id": job_id}
     job_input: dict = {}
 
@@ -31,10 +31,10 @@ async def process_jd_parser_job(job_data: dict) -> bool:
         log_extra["org_id"] = job_info.get("org_id") or job_data.get("orgId")
         job_input["raw_description"] = raw_desc[:200]
 
-        # Execute JD Parser LangGraph Agent
+
         result = await run_jd_parser_agent(job_id=job_id, raw_description=raw_desc)
 
-        # Patch AI assist result back to Express
+
         await callback_client.patch(
             f"internal/jobs/{job_id}/ai-assist-result",
             json={

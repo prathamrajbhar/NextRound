@@ -33,9 +33,9 @@ export interface ExecutionSummary {
 
 const RUNNER_VERSION = '2.0.0-unified-sandbox';
 
-/**
- * Structured equality comparison with numeric tolerance for floats and deep object equality.
- */
+
+
+
 export function compareOutputs(actual: any, expected: any): boolean {
   if (actual === expected) return true;
   if (typeof actual === 'number' && typeof expected === 'number') {
@@ -54,9 +54,9 @@ export function compareOutputs(actual: any, expected: any): boolean {
   return String(actual).trim() === String(expected).trim();
 }
 
-/**
- * Primary code execution function using process-isolated language runners.
- */
+
+
+
 export function executeCodingSubmission(
   code: string,
   language: string,
@@ -151,9 +151,9 @@ export function executeCodingSubmission(
   };
 }
 
-// -------------------------------------------------------------------
-// Python Process Runner (stdin JSON IPC)
-// -------------------------------------------------------------------
+
+
+
 function executePythonSubprocess(code: string, entryPoint: string, args: any[]): { actual: any; error?: string; timedOut?: boolean } {
   const runnerScript = `
 import sys, json
@@ -207,9 +207,9 @@ except Exception as e:
   }
 }
 
-// -------------------------------------------------------------------
-// Node Process Runner (JavaScript & TypeScript)
-// -------------------------------------------------------------------
+
+
+
 function executeNodeSubprocess(code: string, entryPoint: string, args: any[]): { actual: any; error?: string; timedOut?: boolean } {
   const runnerScript = `
 const fs = require('fs');
@@ -223,7 +223,6 @@ process.stdin.on('end', () => {
     const entryFn = payload.entryPoint;
     const fnArgs = payload.args;
 
-    // Remove basic TypeScript type annotations if present
     const cleanCode = codeStr
       .replace(/((?:const|let|var)\\s+[a-zA-Z0-9_]+)\\s*:\\s*[a-zA-Z0-9_<>\\[\\]\\s,|&{}]+(?=\\s*=)/g, '$1')
       .replace(/([a-zA-Z0-9_]+)\\s*:\\s*[a-zA-Z0-9_<>\\[\\]\\s,|&{}]+(?=[,\\)])/g, '$1')
@@ -272,9 +271,9 @@ process.stdin.on('end', () => {
   }
 }
 
-// -------------------------------------------------------------------
-// C++ Process Runner
-// -------------------------------------------------------------------
+
+
+
 function executeCppSubprocess(code: string, entryPoint: string, args: any[]): { actual: any; error?: string; timedOut?: boolean } {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nextround-cpp-'));
   const srcPath = path.join(tmpDir, 'solution.cpp');
@@ -320,9 +319,9 @@ int main() {
   }
 }
 
-// -------------------------------------------------------------------
-// Java Process Runner
-// -------------------------------------------------------------------
+
+
+
 function executeJavaSubprocess(code: string, entryPoint: string, args: any[]): { actual: any; error?: string; timedOut?: boolean } {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nextround-java-'));
   const srcPath = path.join(tmpDir, 'Solution.java');

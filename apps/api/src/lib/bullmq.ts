@@ -1,30 +1,32 @@
 import { Queue, type JobsOptions } from 'bullmq';
-import { redis } from './redis';
+import { env } from './env';
+
+const redisUrl = new URL(env('REDIS_URL'));
 
 const connection = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379', 10),
+  host: redisUrl.hostname,
+  port: Number(redisUrl.port),
 };
 
-/**
- * Retry policy shared by every worker queue in this app. BullMQ replays a
- * failed job with exponential backoff starting at `delay`, and discards the
- * job record once it completes. Override per-enqueue by spreading this object
- * (e.g. `{ ...DEFAULT_JOB_OPTIONS, priority: 1 }`).
- */
+
+
+
+
+
+
 export const DEFAULT_JOB_OPTIONS: JobsOptions = {
   attempts: 3,
   backoff: { type: 'exponential', delay: 2000 },
   removeOnComplete: true,
 };
 
-/**
- * Canonical BullMQ job names, keyed by queue. Every enqueue in the app must
- * use a name from here (via the per-queue wrappers in `lib/queues/`) so two
- * producers can never enqueue the same queue under different names again.
- * The sourcing queue multiplexes job types via its `action` field, so its
- * names are nested.
- */
+
+
+
+
+
+
+
 export const JOB_NAMES = {
   sourcing: {
     jdAssist: 'ai-jd-assist',

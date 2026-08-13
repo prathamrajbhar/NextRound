@@ -11,10 +11,10 @@ export interface EmptyStateProps {
   className?: string;
 }
 
-/**
- * Consistent empty-state pattern (per docs/screens.md §F) for "no jobs",
- * "no candidates", "no mock sessions yet", etc. — icon + message + CTA.
- */
+
+
+
+
 export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
     <div

@@ -26,9 +26,9 @@ export function OfferPerksTimeline({
 
   return (
     <div className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 p-6 sm:p-7 shadow-xl backdrop-blur-xl space-y-6">
-      {/* Timeline & Benefits side by side */}
+      {}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Timeline column */}
+        {}
         <div className="space-y-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 p-5">
           <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-sm border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
             <Calendar className="h-4.5 w-4.5 text-brand-500" />
@@ -49,7 +49,7 @@ export function OfferPerksTimeline({
           </div>
         </div>
 
-        {/* Benefits column */}
+        {}
         <div className="space-y-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 p-5">
           <div className="flex items-center gap-2 text-slate-900 dark:text-white font-extrabold text-sm border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
             <ShieldCheck className="h-4.5 w-4.5 text-emerald-500" />
@@ -66,7 +66,7 @@ export function OfferPerksTimeline({
         </div>
       </div>
 
-      {/* PDF Attachment Bar */}
+      {}
       <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 border border-slate-200 dark:border-slate-700 shadow-sm">
@@ -101,7 +101,7 @@ export function OfferPerksTimeline({
         </div>
       </div>
 
-      {/* Action Buttons */}
+      {}
       {!isFinalized && (
         <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row gap-3">
           <button

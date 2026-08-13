@@ -51,7 +51,7 @@ async def stream_sentence_tts(text: str, voice: str = DEFAULT_VOICE) -> AsyncGen
         yield {"sentence": "", "audio": "", "is_final": True}
         return
 
-    # Split text into natural sentence chunks
+
     sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if s.strip()]
     if not sentences:
         sentences = [text.strip()]

@@ -22,10 +22,10 @@ export interface ClusterPlotProps {
   yLabel?: string;
 }
 
-/**
- * Hand-rolled SVG 2D scatter/cluster plot — no charting library dependency.
- * `x`/`y` are expected pre-normalized to a 0..100 range by the caller.
- */
+
+
+
+
 export function ClusterPlot({ points, width = 420, height = 300, className, xLabel, yLabel }: ClusterPlotProps) {
   const pad = 28;
   const plotW = width - pad * 2;

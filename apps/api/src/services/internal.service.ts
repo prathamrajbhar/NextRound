@@ -10,20 +10,20 @@ import {
 import { upsertOffer } from './offer.service';
 import { notFound, badRequest } from '../lib/http-errors';
 
-/**
- * Ingestion operations for the server-to-server internal webhook boundary
- * (`/api/v1/internal/*`). Python AI workers call back into these to persist
- * screening, assessment, coding, video, interview, evaluation, decision, and
- * offer results. Each function is HTTP-free: it returns the payload the route
- * should send back, and throws `HttpError` (via `notFound`/`badRequest`) for
- * the failure cases the route used to answer inline.
- */
 
-// ---------------------------------------------------------------------------
-// Jobs & sourcing
-// ---------------------------------------------------------------------------
 
-/** PATCH /jobs/:id/ai-assist-result */
+
+
+
+
+
+
+
+
+
+
+
+
 export async function recordAiAssistResult(jobId: string, body: Record<string, unknown>) {
   const existingJob = await prisma.job.findUnique({ where: { id: jobId } });
   if (!existingJob) {
@@ -44,7 +44,7 @@ export async function recordAiAssistResult(jobId: string, body: Record<string, u
   });
 }
 
-/** POST /sourcing/:jobId/candidates */
+
 export async function recordSourcedCandidates(jobId: string, body: Record<string, unknown>) {
   const job = await prisma.job.findUnique({ where: { id: jobId } });
   if (!job) {
@@ -69,11 +69,11 @@ export async function recordSourcedCandidates(jobId: string, body: Record<string
   });
 }
 
-// ---------------------------------------------------------------------------
-// Applications & interviews
-// ---------------------------------------------------------------------------
 
-/** PATCH /applications/:id/screening-result */
+
+
+
+
 export async function recordScreeningResult(applicationId: string, body: Record<string, unknown>) {
   const id = applicationId;
   const {
@@ -139,7 +139,7 @@ export async function recordScreeningResult(applicationId: string, body: Record<
     },
   });
 
-  // If candidate was rejected, send automated feedback email
+  
   if (updatedApp.status === 'rejected' && app.candidate.user.email) {
     const candidateName = app.candidate.user.email.split('@')[0];
     await emailService
@@ -153,13 +153,13 @@ export async function recordScreeningResult(applicationId: string, body: Record<
       .catch((err) => console.error('Failed to send rejection email:', err));
   }
 
-  // On screening pass, create the Interview record and have the Scheduler
-  // Agent generate 3 candidate slots (spec: scheduler runs after screening).
+  
+  
   if (updatedApp.status !== 'rejected') {
     await ensureInterviewAndSchedule(id).catch((err) =>
       console.error(`Failed to create interview/schedule for application ${id}:`, err)
     );
-    // If the assessment stage is disabled, automatically advance to Interview stage
+    
     await advanceAssessmentStage(id).catch((err) =>
       console.error(`advanceAssessmentStage failed during screening completion for ${id}:`, err)
     );
@@ -168,7 +168,7 @@ export async function recordScreeningResult(applicationId: string, body: Record<
   return { application: updatedApp, evaluation };
 }
 
-/** PATCH /applications/:id/assessment-result */
+
 export async function recordAssessmentResult(applicationId: string, body: Record<string, unknown>) {
   const id = applicationId;
   const { score, category_scores, total_questions, correct_answers, passed, feedback } = body;
@@ -178,11 +178,11 @@ export async function recordAssessmentResult(applicationId: string, body: Record
     throw notFound('Application not found');
   }
 
-  // Never regress a passed/advanced application. On pass, stay in the
-  // assessment phase while modalities are in progress and let the
-  // advanceAssessmentStage helper move the candidate to the Interview stage
-  // once ALL enabled assessment modalities have passed. On fail, reject only
-  // if the application is still within the assessment phase.
+  
+  
+  
+  
+  
   let updatedStatus: ApplicationStatus | null = null;
   if (passed) {
     updatedStatus =
@@ -212,7 +212,7 @@ export async function recordAssessmentResult(applicationId: string, body: Record
     },
   });
 
-  // Update Assessment record if present
+  
   await prisma.assessment
     .updateMany({
       where: { application_id: id, test_type: 'aptitude' },
@@ -236,7 +236,7 @@ export async function recordAssessmentResult(applicationId: string, body: Record
   return { application: updatedApp, evaluation };
 }
 
-/** PATCH /applications/:id/coding-result */
+
 export async function recordCodingResult(applicationId: string, body: Record<string, unknown>) {
   const id = applicationId;
   const {
@@ -255,7 +255,7 @@ export async function recordCodingResult(applicationId: string, body: Record<str
     throw notFound('Application not found');
   }
 
-  // Update CodingSubmission record if submissionId provided
+  
   if (submissionId) {
     await prisma.codingSubmission
       .update({
@@ -276,10 +276,10 @@ export async function recordCodingResult(applicationId: string, body: Record<str
       .catch((err) => console.warn('Could not update coding submission:', err));
   }
 
-  // Never regress a passed/advanced application. On pass, stay in the
-  // assessment phase until all enabled modalities pass, then the
-  // advanceAssessmentStage helper moves the candidate to the Interview stage.
-  // On fail, reject only if the application is still within the assessment phase.
+  
+  
+  
+  
   let updatedStatus: ApplicationStatus | null = null;
   if (passed) {
     updatedStatus =
@@ -322,7 +322,7 @@ export async function recordCodingResult(applicationId: string, body: Record<str
   return { application: updatedApp, evaluation };
 }
 
-/** GET /applications/:id/assessment-data */
+
 export async function getAssessmentData(applicationId: string, testType: string) {
   const id = applicationId;
   const assessment = await prisma.assessment.findFirst({
@@ -330,10 +330,10 @@ export async function getAssessmentData(applicationId: string, testType: string)
     orderBy: { created_at: 'desc' },
   });
 
-  // Surface the job's configured pass threshold so the AI worker can honor
-  // per-job scoring config. The HR sets passingScore inside assessmentConfig
-  // (Online Test panel). thresholds.minScore is the hiring shortlist threshold —
-  // a different concept. Prefer assessmentConfig.passingScore.
+  
+  
+  
+  
   let minScore: number | null = null;
   try {
     const app = await prisma.application.findUnique({
@@ -342,7 +342,7 @@ export async function getAssessmentData(applicationId: string, testType: string)
     });
     const assessmentConfig = (app?.job?.assessmentConfig ?? {}) as { passingScore?: number };
     const thresholds = (app?.job?.thresholds ?? {}) as { minScore?: number };
-    // Prefer HR-configured aptitude passing score; fall back to job-level minScore
+    
     minScore =
       typeof assessmentConfig.passingScore === 'number'
         ? assessmentConfig.passingScore
@@ -362,7 +362,7 @@ export async function getAssessmentData(applicationId: string, testType: string)
   };
 }
 
-/** PATCH /interviews/:id/result */
+
 export async function recordInterviewResult(interviewId: string, body: Record<string, unknown>) {
   const id = interviewId;
   const { transcript, audio_url, interview_score, scores, reasoning, feedback } = body;
@@ -385,9 +385,9 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
     },
   });
 
-  // No interview score is ever fabricated: when the evaluator callback omits
-  // it (and there is no real composite), the score is null and the candidate
-  // is neither advanced to HR nor rejected on a made-up number.
+  
+  
+  
   const scoreNum =
     typeof interview_score === 'number'
       ? interview_score
@@ -424,8 +424,8 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
     },
   });
 
-  // Advance application status to hr_round if passed, or rejected if failed.
-  // Without a real score we leave the status untouched (no fabricated move).
+  
+  
   if (scoreNum != null) {
     await prisma.application.update({
       where: { id: interview.application_id },
@@ -436,10 +436,10 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
     });
   }
 
-  // After a passed interview, run the Evaluator Agent so a real composite +
-  // confidence are computed before the HR round. The decision fires only
-  // after the human HR round passes (interviews/hr/:applicationId/result).
-  // Missing stage scores are passed as null — never fabricated defaults.
+  
+  
+  
+  
   if (scoreNum != null && scoreNum >= 70) {
     await enqueueEvaluation(
       interview.application_id,
@@ -467,7 +467,7 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
   return { interview: updatedInterview, evaluation };
 }
 
-/** PATCH /interviews/:id/confirmed-slot */
+
 export async function confirmInterviewSlot(interviewId: string, body: Record<string, unknown>) {
   const id = interviewId;
   const { scheduled_at } = body;
@@ -503,7 +503,7 @@ export async function confirmInterviewSlot(interviewId: string, body: Record<str
   return { interview: updatedInterview };
 }
 
-/** POST /interviews/:id/schedule-slots */
+
 export async function recordScheduleSlots(interviewId: string, body: Record<string, unknown>) {
   const id = interviewId;
   const { slots, formatted_email } = body;
@@ -520,7 +520,7 @@ export async function recordScheduleSlots(interviewId: string, body: Record<stri
     },
   });
 
-  // Save available slots into application metadata or agent log
+  
   await prisma.agentLog.create({
     data: {
       job_id: null,
@@ -535,11 +535,11 @@ export async function recordScheduleSlots(interviewId: string, body: Record<stri
   return { interview: updatedInterview, slots, formatted_email };
 }
 
-// ---------------------------------------------------------------------------
-// Evaluations, decisions & offers
-// ---------------------------------------------------------------------------
 
-/** PATCH /evaluations/:id */
+
+
+
+
 export async function recordFinalEvaluation(body: Record<string, unknown>) {
   const { application_id, composite_score, confidence, reasoning } = body;
 
@@ -567,7 +567,7 @@ export async function recordFinalEvaluation(body: Record<string, unknown>) {
         },
       });
 
-  // Low-confidence composites flag the candidate for a human HR hold review.
+  
   const conf = typeof confidence === 'number' ? confidence : 1.0;
   if (conf < 0.7) {
     const app = await prisma.application.findUnique({
@@ -592,7 +592,7 @@ export async function recordFinalEvaluation(body: Record<string, unknown>) {
   return { evaluation, status: 'hr_round', queuedDecision: false };
 }
 
-/** PATCH /evaluations/:id/decision */
+
 export async function applyDecision(evaluationId: string, body: Record<string, unknown>) {
   const id = evaluationId;
   const {
@@ -652,8 +652,8 @@ export async function applyDecision(evaluationId: string, body: Record<string, u
   }
 
   if (decision === 'hire') {
-    // Never emit a made-up offer: if the Job genuinely has no salary, refuse to
-    // create the offer instead of inventing a number (throws 422).
+    
+    
     const { offer, isNew } = await upsertOffer({
       applicationId: app.id,
       job: app.job,
@@ -665,7 +665,7 @@ export async function applyDecision(evaluationId: string, body: Record<string, u
       data: { status: 'offered' },
     });
 
-    // Only email the candidate when a brand-new offer was created (token freshly generated)
+    
     if (isNew) {
       const candidateName = app.candidate.user.email.split('@')[0];
       await emailService.sendOfferEmail(app.candidate.user.email, candidateName, app.job.title, {
@@ -703,7 +703,7 @@ export async function applyDecision(evaluationId: string, body: Record<string, u
   }
 }
 
-/** POST /offers */
+
 export async function createInternalOffer(body: Record<string, unknown>) {
   const {
     application_id,
@@ -718,9 +718,9 @@ export async function createInternalOffer(body: Record<string, unknown>) {
     throw badRequest('application_id is required');
   }
 
-  // Offer terms are derived from the real Job record (mirroring the
-  // decision-hire path) — never fabricated fallbacks. Explicit body values are
-  // honored as real caller inputs; otherwise the Job posting is the truth.
+  
+  
+  
   const app = await prisma.application.findUnique({
     where: { id: application_id as string },
     include: { job: true },
@@ -730,9 +730,9 @@ export async function createInternalOffer(body: Record<string, unknown>) {
     throw notFound('Application not found');
   }
 
-  // Idempotent offer creation: application_id is unique, so re-posting updates the
-  // existing offer (keeping its magic link token) instead of crashing on a constraint.
-  // A job with no salary refuses here (throws 422) rather than inventing a number.
+  
+  
+  
   const { offer } = await upsertOffer({
     applicationId: application_id as string,
     job: app.job,
@@ -747,11 +747,11 @@ export async function createInternalOffer(body: Record<string, unknown>) {
   return offer;
 }
 
-// ---------------------------------------------------------------------------
-// Mock prep, resume builder & prep content
-// ---------------------------------------------------------------------------
 
-/** PATCH /mock/sessions/:id/feedback */
+
+
+
+
 export async function recordMockFeedback(sessionId: string, body: Record<string, unknown>) {
   const id = sessionId;
   const { score, feedback, status } = body;
@@ -776,7 +776,7 @@ export async function recordMockFeedback(sessionId: string, body: Record<string,
   return { session: updated };
 }
 
-/** PATCH /resume-builder/:sessionId/result */
+
 export async function recordResumeBuilderResult(sessionId: string, body: Record<string, unknown>) {
   const { generatedResume, resumePdfUrl, status } = body;
 
@@ -800,7 +800,7 @@ export async function recordResumeBuilderResult(sessionId: string, body: Record<
   return { session: updated };
 }
 
-/** POST /prep/generate */
+
 export async function generatePrepContent(body: Record<string, unknown>) {
   const {
     companyName,
@@ -838,8 +838,8 @@ export async function generatePrepContent(body: Record<string, unknown>) {
       },
     });
   } else {
-    // Never fabricate prep content: without a real company name and role
-    // archetype there is nothing honest to create, so the request is refused.
+    
+    
     if (!companyName || !roleArchetype) {
       throw badRequest('companyName and roleArchetype are required to generate prep content');
     }
@@ -859,11 +859,11 @@ export async function generatePrepContent(body: Record<string, unknown>) {
   return { prepContent };
 }
 
-// ---------------------------------------------------------------------------
-// Agent logs, raw reads, analytics
-// ---------------------------------------------------------------------------
 
-/** POST /agent-logs */
+
+
+
+
 export async function createAgentLog(body: Record<string, unknown>) {
   const { job_id, org_id, agent_name, action, input, output, status, error } = body;
 
@@ -881,7 +881,7 @@ export async function createAgentLog(body: Record<string, unknown>) {
   });
 }
 
-/** GET /agent-logs */
+
 export async function listAgentLogs() {
   return prisma.agentLog.findMany({
     orderBy: { created_at: 'desc' },
@@ -889,7 +889,7 @@ export async function listAgentLogs() {
   });
 }
 
-/** GET /jobs/:id/raw */
+
 export async function getRawJob(jobId: string) {
   const job = await prisma.job.findUnique({
     where: { id: jobId },
@@ -901,7 +901,7 @@ export async function getRawJob(jobId: string) {
   return job;
 }
 
-/** GET /applications/:id/raw */
+
 export async function getRawApplication(applicationId: string) {
   const app = await prisma.application.findUnique({
     where: { id: applicationId },
@@ -921,7 +921,7 @@ export async function getRawApplication(applicationId: string) {
   return app;
 }
 
-/** PATCH /candidate/:id/embedding */
+
 export async function updateCandidateEmbedding(candidateId: string, body: Record<string, unknown>) {
   const id = candidateId;
   const { embedding } = body;
@@ -936,7 +936,7 @@ export async function updateCandidateEmbedding(candidateId: string, body: Record
   return { message: 'Candidate embedding updated successfully' };
 }
 
-/** GET /analytics/raw */
+
 export async function getRawAnalytics(orgId: string) {
   const jobs = await prisma.job.findMany({
     where: { org_id: orgId },
@@ -944,10 +944,10 @@ export async function getRawAnalytics(orgId: string) {
       applications: {
         include: {
           evaluations: true,
-          // Prisma relation is `interview Interview?` (singular), not `interviews`.
+          
           interview: true,
-          // Offer created_at is the terminal timestamp the Analytics Agent
-          // uses to compute a REAL mean time-to-hire for offered/accepted apps.
+          
+          
           offer: true,
         },
       },
@@ -957,7 +957,7 @@ export async function getRawAnalytics(orgId: string) {
   return { orgId, jobs };
 }
 
-/** POST /analytics/reports */
+
 export async function recordAnalyticsReport(body: Record<string, unknown>) {
   const { org_id, report_url, summary, generated_at } = body;
 
@@ -973,7 +973,7 @@ export async function recordAnalyticsReport(body: Record<string, unknown>) {
   });
 }
 
-/** PATCH /interviews/:id/sentiment */
+
 export async function updateInterviewSentiment(interviewId: string, body: Record<string, unknown>) {
   const id = interviewId;
   const { sentiment_report } = body;

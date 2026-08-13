@@ -36,10 +36,10 @@ interface AptitudeCategoryHubProps {
   onFinalSubmit: () => void;
 }
 
-/**
- * Landing hub listing each aptitude category as a card, with completion state
- * per section and the full-assessment submit action.
- */
+
+
+
+
 export function AptitudeCategoryHub({
   companyName,
   roleTitle,
@@ -70,7 +70,7 @@ export function AptitudeCategoryHub({
           </div>
         </div>
 
-        {/* 4 Category Cards Grid */}
+        {}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left pt-2">
           {categories.map((cat) => {
             const IconComp = CATEGORY_ICONS[cat] || Brain;
@@ -134,7 +134,7 @@ export function AptitudeCategoryHub({
           })}
         </div>
 
-        {/* Full Assessment Submit Button */}
+        {}
         {completedCount > 0 && (
           <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800">
             <button

@@ -28,14 +28,14 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
             correct_idx = q.get("correctIndex")
             explanation = q.get("explanation", "")
             
-            # Validate required fields are non-null
+
             if not cat or not diff:
                 logger.debug(f"Skipping question {q_id}: missing category or difficulty")
                 continue
             
-            # A question without a real correct answer index is unusable for
-            # assessment — fabricating correctIndex=0 would mark a random option
-            # as the answer key. Skip it rather than invent one.
+
+
+
             if not stem or not isinstance(opts, list) or len(opts) < 2:
                 continue
             if not isinstance(correct_idx, int) or correct_idx < 0 or correct_idx >= len(opts):
@@ -51,8 +51,8 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
                 "options": opts,
                 "correctIndex": correct_idx,
                 "explanation": str(explanation) if explanation else "",
-                # Mark LLM-generated questions so callers can distinguish them
-                # from static-bank fallback questions.
+
+
                 "source": "ai-generated",
             })
 
@@ -105,7 +105,7 @@ JSON Format required:
 ]
 """
 
-    # 1. Primary Provider: Gemini GenAI
+
     gemini_text = generate_text(prompt)
     if gemini_text:
         questions = _parse_llm_json_response(gemini_text, count, job_title)
@@ -181,12 +181,12 @@ Return ONLY raw JSON array:
   }}
 ]"""
 
-    # 1. Primary Provider: Gemini GenAI
+
     gemini_text = generate_text(prompt)
     if gemini_text:
         questions = _parse_llm_json_response(gemini_text, chunk_size, job_title)
         if questions:
-            # Stamp chunk-specific metadata
+
             for idx, q in enumerate(questions):
                 if not q["id"].startswith(f"chunk_{chunk_index}_"):
                     q["id"] = f"chunk_{chunk_index}_q{idx + 1}"

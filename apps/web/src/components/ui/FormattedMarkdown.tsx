@@ -11,19 +11,19 @@ interface FormattedMarkdownProps {
 export function FormattedMarkdown({ content, className = '' }: FormattedMarkdownProps) {
   if (!content) return null;
 
-  // 1. Robust pre-processing: isolate headings (##), separate embedded bullets (* / -), and normalize newlines
+  
   const preprocessed = content
-    // Insert double newline before '##'
+    
     .replace(/([^\n])\s*(##+)/g, '$1\n\n$2')
-    // Separate heading title from inline bullets: "## Key Responsibilities * Design..." -> "## Key Responsibilities\n\n* Design..."
+    
     .replace(/(##+\s+[^*\n]+?)\s*(\*|-)\s+/g, '$1\n\n* ')
-    // Insert newline before bullet items "* " or "- "
+    
     .replace(/([^\n])\s*(\*|-)\s+/g, '$1\n* ');
 
-  // 2. Split into blocks by double newlines
+  
   const rawBlocks = preprocessed.split(/\n\s*\n/);
 
-  // Helper to parse inline markdown (**bold**, *italic*)
+  
   const parseInline = (text: string): React.ReactNode[] => {
     const parts: React.ReactNode[] = [];
     const regex = /(\*\*.*?\*\*|\*.*?\*)/g;
@@ -64,12 +64,12 @@ export function FormattedMarkdown({ content, className = '' }: FormattedMarkdown
         const trimmed = block.trim();
         if (!trimmed) return null;
 
-        // Process block if it starts with a Heading (##)
+        
         if (trimmed.startsWith('##')) {
           let rawHeading = trimmed.replace(/^##+\s*/, '').trim();
           let bodyAfterHeading = '';
 
-          // If the heading block contains body text concatenated after the heading title
+          
           const wordCount = rawHeading.split(/\s+/).length;
           if (wordCount > 5) {
             const splitMatch = rawHeading.match(
@@ -103,7 +103,7 @@ export function FormattedMarkdown({ content, className = '' }: FormattedMarkdown
           );
         }
 
-        // Process Bullet list block
+        
         const lines = trimmed.split('\n').map((l) => l.trim()).filter(Boolean);
         const hasBullets = lines.some((l) => l.startsWith('*') || l.startsWith('-'));
 
@@ -111,7 +111,7 @@ export function FormattedMarkdown({ content, className = '' }: FormattedMarkdown
           return <BulletListBlock key={bIdx} text={trimmed} parseInline={parseInline} />;
         }
 
-        // Normal paragraph block
+        
         return (
           <p key={bIdx} className="font-normal leading-relaxed text-slate-700 dark:text-slate-300">
             {parseInline(trimmed)}
@@ -122,7 +122,7 @@ export function FormattedMarkdown({ content, className = '' }: FormattedMarkdown
   );
 }
 
-// Helper component for Bullet Lists
+
 function BulletListBlock({
   text,
   parseInline,

@@ -1,7 +1,7 @@
-/**
- * Reusable Audio Manager for NextRound Speech & Voice Services.
- * Encapsulates pre-unlocking, blob-streaming, and SpeechSynthesis fallbacks.
- */
+
+
+
+
 
 let globalAudioInstance: HTMLAudioElement | null = null;
 let lastAudioUrl: string | null = null;
@@ -17,9 +17,9 @@ export function getAudioInstance(): HTMLAudioElement {
   return globalAudioInstance;
 }
 
-/**
- * Pre-unlocks audio context and element during a synchronous user gesture (click).
- */
+
+
+
 export function unlockAudio() {
   try {
     const AudioCtx = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -29,7 +29,7 @@ export function unlockAudio() {
     }
 
     const audio = getAudioInstance();
-    // Silent WAV file to authorize element playback
+    
     audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP//';
     audio.play().then(() => audio.pause()).catch(() => {});
 
@@ -41,9 +41,9 @@ export function unlockAudio() {
   }
 }
 
-/**
- * Converts a large base64 data URI to a blob URL to prevent engine format issues.
- */
+
+
+
 export function dataUriToBlobUrl(dataUri: string): string {
   try {
     if (!dataUri.startsWith('data:')) return dataUri;
@@ -65,9 +65,9 @@ export function dataUriToBlobUrl(dataUri: string): string {
   }
 }
 
-/**
- * Fallback SpeechSynthesis player
- */
+
+
+
 export function playSpeechSynthesis(text: string, onEnd?: () => void) {
   if (typeof window === 'undefined' || !window.speechSynthesis) {
     if (onEnd) onEnd();
@@ -105,16 +105,16 @@ export function playSpeechSynthesis(text: string, onEnd?: () => void) {
   }
 }
 
-/**
- * Play text via Neural base64 audio, falling back to local TTS.
- */
+
+
+
 export function playAudio(text: string, audioUrl?: string, onEnd?: () => void) {
   lastText = text;
   if (audioUrl) {
     lastAudioUrl = audioUrl;
   }
 
-  // Cancel any ongoing playbacks
+  
   stopAudio();
 
   if (audioUrl) {
@@ -147,9 +147,9 @@ export function playAudio(text: string, audioUrl?: string, onEnd?: () => void) {
   playSpeechSynthesis(text, onEnd);
 }
 
-/**
- * Stops all playbacks.
- */
+
+
+
 export function stopAudio() {
   if (typeof window !== 'undefined') {
     window.speechSynthesis?.cancel();
@@ -161,9 +161,9 @@ export function stopAudio() {
   }
 }
 
-/**
- * Replays the last played text/audio.
- */
+
+
+
 export function replayLastAudio(onEnd?: () => void) {
   if (lastText) {
     playAudio(lastText, lastAudioUrl || undefined, onEnd);

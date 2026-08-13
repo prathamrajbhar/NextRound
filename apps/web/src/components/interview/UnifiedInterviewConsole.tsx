@@ -18,12 +18,12 @@ import { ProctoringWarningModal } from './ProctoringWarningModal';
 
 export type { InterviewConsoleMode, UnifiedInterviewConsoleProps };
 
-/**
- * Unified interview console state machine covering all session modes:
- * ai-voice / mock-practice (AI orb + transcript) and hr-candidate / hr-recruiter
- * (live WebRTC video + evaluation form). Each visual region is delegated to a
- * sub-component in ./console.
- */
+
+
+
+
+
+
 export function UnifiedInterviewConsole({
   applicationId,
   mode,
@@ -45,23 +45,23 @@ export function UnifiedInterviewConsole({
   onEliminate,
   proctoringClient,
 }: UnifiedInterviewConsoleProps) {
-  // Device & Stream States
+  
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
 
-  // UI Drawer & Text Chat Fallback
+  
   const [textInput, setTextInput] = useState('');
   const [showTranscriptDrawer, setShowTranscriptDrawer] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // HR Round Form State
+  
   const [hrNotes, setHrNotes] = useState('');
   const [hrDecision, setHrDecision] = useState<'pass' | 'fail' | null>(null);
 
-  // Local webcam/mic stream lifecycle — owns the getUserMedia stream and stops all tracks
-  // on unmount, pagehide, and when the session ends (via handleEndSession).
+  
+  
   const { stopLocalStream, hasCamPermission, micLevel, localStream } = useLocalMediaStream({
     videoRef,
     camActive,
@@ -79,7 +79,7 @@ export function UnifiedInterviewConsole({
     localStream,
   });
 
-  // Auto-scroll transcript drawer
+  
   useEffect(() => {
     if (showTranscriptDrawer) {
       transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -110,7 +110,7 @@ export function UnifiedInterviewConsole({
     }
   };
 
-  // Release the camera/mic the moment the session ends, before async API calls + navigation.
+  
   const handleEndSession = () => {
     stopLocalStream();
     onEndSession();
@@ -121,7 +121,7 @@ export function UnifiedInterviewConsole({
 
   return (
     <div className="fixed inset-0 w-screen h-screen bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans overflow-hidden select-none transition-colors duration-300">
-      {/* Header Bar */}
+      {}
       <ConsoleHeader
         mode={mode}
         companyName={companyName}
@@ -137,11 +137,11 @@ export function UnifiedInterviewConsole({
         onToggleFullscreen={toggleFullscreen}
       />
 
-      {/* Main View Body */}
+      {}
       <main className={`flex-1 p-3 sm:p-4 min-h-0 relative z-20 overflow-hidden grid gap-4 ${
         mode === 'hr-candidate' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'
       }`}>
-        {/* Left Viewport: Primary Feed (AI Voice Orb OR Remote Video Feed) */}
+        {}
         <ConsolePrimaryViewport
           mode={mode}
           aiSpeaking={aiSpeaking}
@@ -156,7 +156,7 @@ export function UnifiedInterviewConsole({
           localStream={localStream}
         />
 
-        {/* Right Viewport: Recruiter Evaluation Form (only shown in recruiter mode) */}
+        {}
         {mode !== 'hr-candidate' && (
           <ConsoleSecondaryViewport
             mode={mode}
@@ -173,12 +173,12 @@ export function UnifiedInterviewConsole({
         )}
       </main>
 
-      {/* Subtitle & Live Transcript Drawer Overlay */}
+      {}
       {showTranscriptDrawer && (
         <ConsoleTranscriptDrawer messages={messages} onClose={() => setShowTranscriptDrawer(false)} transcriptEndRef={transcriptEndRef} />
       )}
 
-      {/* Floating Bottom Control Bar */}
+      {}
       <ConsoleControlBar
         micActive={micActive}
         camActive={camActive}
@@ -192,10 +192,10 @@ export function UnifiedInterviewConsole({
         onEndSession={() => setShowExitConfirm(true)}
       />
 
-      {/* Exit Confirmation Modal */}
+      {}
       <ConsoleExitConfirm isOpen={showExitConfirm} onCancel={() => setShowExitConfirm(false)} onConfirm={handleEndSession} />
 
-      {/* Fullscreen Proctoring Warning Modal */}
+      {}
       <ProctoringWarningModal
         isOpen={showWarningModal}
         strikeCount={strikeCount}

@@ -116,7 +116,7 @@ export default function PipelineConfigCard({
 
   return (
     <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-6">
-      {/* Header */}
+      {}
       <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
         <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
           <Settings className="h-5 w-5" />
@@ -129,7 +129,7 @@ export default function PipelineConfigCard({
         </span>
       </div>
 
-      {/* Sleek Pipeline flow breadcrumbs */}
+      {}
       <div className="flex flex-wrap items-center gap-1.5 py-2 select-none border-b border-slate-200/40 dark:border-slate-800/40 pb-4">
         <span className="text-[10px] font-extrabold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-lg">
           Applied
@@ -177,9 +177,9 @@ export default function PipelineConfigCard({
         </span>
       </div>
 
-      {/* Stage Toggles & Integrated Sub-settings */}
+      {}
       <div className="space-y-4">
-        {/* 1. Resume Screen */}
+        {}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -203,7 +203,7 @@ export default function PipelineConfigCard({
           </div>
         </div>
 
-        {/* 2. Assessment Toggle + Integrated Config */}
+        {}
         <div className="space-y-2 border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -226,7 +226,7 @@ export default function PipelineConfigCard({
             </label>
           </div>
 
-          {/* Assessment inline details when active */}
+          {}
           {isActive('assessment') && (
             <div className="pl-9 pr-1 pt-2 space-y-4 animate-in fade-in duration-150">
               <div className="flex items-center justify-between">
@@ -241,7 +241,7 @@ export default function PipelineConfigCard({
                 </div>
               </div>
 
-              {/* Category distribution */}
+              {}
               <div className="space-y-2 border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Aptitude Categories</span>
@@ -306,7 +306,7 @@ export default function PipelineConfigCard({
                     );
                   })}
                 </div>
-                {/* Quick presets */}
+                {}
                 <div className="flex gap-1 pt-1">
                   <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400 mr-1">Presets:</span>
                   {[
@@ -351,7 +351,7 @@ export default function PipelineConfigCard({
           )}
         </div>
 
-        {/* 3. AI Voice Screen Toggle */}
+        {}
         <div className="space-y-2 border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -375,7 +375,7 @@ export default function PipelineConfigCard({
           </div>
         </div>
 
-        {/* 4. Live Panel */}
+        {}
         <div className="space-y-2 border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -400,7 +400,7 @@ export default function PipelineConfigCard({
         </div>
       </div>
 
-      {/* Sourcing & Shortlist Controls Section */}
+      {}
       <div className="border-t border-slate-200/60 dark:border-slate-800 pt-4 space-y-3">
         <div className="flex justify-between items-center">
           <div>

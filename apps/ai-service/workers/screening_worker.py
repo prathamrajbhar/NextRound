@@ -44,7 +44,7 @@ def build_profile_summary(candidate_info: dict) -> str:
     return "Candidate profile available for screening."
 
 
-# ML_BYPASS: ATS ML scorer — replace with trained LambdaMART ranker on resume-outcome data
+
 async def process_screening_job(job_data: dict) -> bool:
     """
     Process candidate screening evaluation job.
@@ -61,8 +61,8 @@ async def process_screening_job(job_data: dict) -> bool:
 
     logger.info(f"Processing screening job for applicationId: {application_id}")
 
-    # job_id/org_id are only known after fetching the application record; the work
-    # closure populates them so run_agent_job can attach them to the audit record.
+
+
     log_extra: dict = {}
 
     async def run() -> dict:
@@ -74,14 +74,14 @@ async def process_screening_job(job_data: dict) -> bool:
         log_extra["job_id"] = job_id
         log_extra["org_id"] = job_info.get("org_id")
 
-        # Prefer stored raw resume text so the LLM extracts real skills (never a file path).
+
         resume_text = (candidate_info.get("raw_resume_text") or "").strip()
         if not resume_text:
             resume_text = build_profile_summary(candidate_info)
         job_desc = job_info.get("description", "")
-        # The scoring rubric and pass threshold come from the job's real config.
-        # Fabricating defaults would silently score candidates against invented
-        # weights — screening fails fast instead when they are absent.
+
+
+
         rubric = job_info.get("rubric")
         thresholds = job_info.get("thresholds") or {}
         min_score = thresholds.get("minScore")
@@ -90,7 +90,7 @@ async def process_screening_job(job_data: dict) -> bool:
         if min_score is None:
             raise RuntimeError(f"Screening job for application {application_id} has no minScore threshold configured.")
 
-        # Generate & update 768-dim candidate resume embedding
+
         if candidate_id:
             try:
                 vector = embed_resume(resume_text)
@@ -101,7 +101,7 @@ async def process_screening_job(job_data: dict) -> bool:
             except Exception as embed_err:
                 logger.warning(f"Failed to update candidate embedding vector: {embed_err}")
 
-        # Run Screening LangGraph Agent
+
         result = await run_screening_agent(
             application_id=application_id,
             candidate_id=candidate_id or "",
@@ -112,7 +112,7 @@ async def process_screening_job(job_data: dict) -> bool:
             min_score=float(min_score),
         )
 
-        # Patch evaluation result back to Express internal endpoint
+
         await callback_client.patch(
             f"internal/applications/{application_id}/screening-result",
             json={

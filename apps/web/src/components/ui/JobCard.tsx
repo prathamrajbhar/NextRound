@@ -28,15 +28,15 @@ export interface JobCardProps {
   compact?: boolean;
 }
 
-/** Strip markdown syntax for plain-text previews */
+
 function stripMarkdown(text: string): string {
   return text
-    .replace(/#{1,6}\s*/g, '')       // headings
-    .replace(/\*\*(.+?)\*\*/g, '$1') // bold
-    .replace(/\*(.+?)\*/g, '$1')     // italic
-    .replace(/^[*\-]\s+/gm, '')      // bullet markers
-    .replace(/`(.+?)`/g, '$1')       // inline code
-    .replace(/\n+/g, ' ')            // collapse newlines
+    .replace(/#{1,6}\s*/g, '')       
+    .replace(/\*\*(.+?)\*\*/g, '$1') 
+    .replace(/\*(.+?)\*/g, '$1')     
+    .replace(/^[*\-]\s+/gm, '')      
+    .replace(/`(.+?)`/g, '$1')       
+    .replace(/\n+/g, ' ')            
     .trim();
 }
 
@@ -73,11 +73,11 @@ export function JobCard({
         className
       )}
     >
-      {/* Top Header Section */}
+      {}
       <div>
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3.5 min-w-0">
-            {/* Company Logo Component */}
+            {}
             <CompanyLogo name={orgName} logoUrl={orgLogo} size={compact ? 'sm' : 'md'} />
 
             <div className="min-w-0 flex-1">
@@ -105,7 +105,7 @@ export function JobCard({
             </div>
           </div>
 
-          {/* Right Badges: Status / Match Score */}
+          {}
           <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
             {matchScore !== undefined && (
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 dark:bg-emerald-950/70 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs">
@@ -124,7 +124,7 @@ export function JobCard({
           </div>
         </div>
 
-        {/* Job Description */}
+        {}
         <p
           className={cn(
             'text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-normal mt-3.5',
@@ -134,7 +134,7 @@ export function JobCard({
           {stripMarkdown(description)}
         </p>
 
-        {/* Key Job Info Chips */}
+        {}
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-100 dark:border-slate-800/80 pt-3.5">
           <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 text-xs font-semibold">
             <MapPin className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
@@ -153,7 +153,7 @@ export function JobCard({
         </div>
       </div>
 
-      {/* Footer & Action CTAs */}
+      {}
       <div className="flex items-center justify-between gap-3 border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-1">
         <div className="flex items-center gap-3 text-[10px] text-slate-400 dark:text-slate-400 font-medium">
           <span className="flex items-center gap-1">

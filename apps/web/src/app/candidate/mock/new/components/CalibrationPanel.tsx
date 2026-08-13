@@ -27,7 +27,7 @@ export default function CalibrationPanel({
 }: CalibrationPanelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Request actual user webcam & audio stream if active; owns cleanup (unmount/pagehide)
+  
   const { hasCamPermission, micLevel: realMicLevel } = useLocalMediaStream({
     videoRef,
     camActive,
@@ -60,7 +60,7 @@ export default function CalibrationPanel({
   return (
     <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-lg backdrop-blur-md glass-panel space-y-5 transition-colors duration-300">
       
-      {/* Header with Dynamic Badge */}
+      {}
       <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3.5">
         <div>
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Hardware Setup</h3>
@@ -72,7 +72,7 @@ export default function CalibrationPanel({
         </span>
       </div>
 
-      {/* Video Feed Frame with Focal Overlays */}
+      {}
       <div className="relative w-full aspect-video bg-slate-950 rounded-2xl border border-slate-200/20 dark:border-slate-800 overflow-hidden flex flex-col items-center justify-center shadow-inner group">
         {camActive ? (
           <div className="relative w-full h-full bg-slate-950">
@@ -95,7 +95,7 @@ export default function CalibrationPanel({
               </div>
             ) : (
               <>
-                {/* Clean HUD indicators */}
+                {}
                 <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-[9px] font-extrabold text-white uppercase tracking-wider shadow-sm select-none">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Live Preview
@@ -104,7 +104,7 @@ export default function CalibrationPanel({
                   <span>HD FEED (1080p)</span>
                 </div>
 
-                {/* Technical focal marks */}
+                {}
                 <div className="absolute top-3.5 left-3.5 w-2.5 h-2.5 border-t border-l border-white/40 pointer-events-none group-hover:border-white/70 transition-colors duration-300" />
                 <div className="absolute top-3.5 right-3.5 w-2.5 h-2.5 border-t border-r border-white/40 pointer-events-none group-hover:border-white/70 transition-colors duration-300" />
                 <div className="absolute bottom-3.5 left-3.5 w-2.5 h-2.5 border-b border-l border-white/40 pointer-events-none group-hover:border-white/70 transition-colors duration-300" />
@@ -123,7 +123,7 @@ export default function CalibrationPanel({
         )}
       </div>
 
-      {/* VU Equalizer Audio Level Indicator */}
+      {}
       <div className="space-y-2 bg-white/50 dark:bg-slate-800/30 p-3.5 rounded-2xl border border-slate-200/60 dark:border-slate-800">
         <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider select-none">
           <span className="flex items-center gap-1.5">
@@ -135,7 +135,7 @@ export default function CalibrationPanel({
           </span>
         </div>
         
-        {/* VU Meter Bars */}
+        {}
         <div className="flex gap-1 items-center h-3 px-0.5">
           {Array.from({ length: 18 }).map((_, index) => {
             const isActive = micActive && index < activeBars;
@@ -161,7 +161,7 @@ export default function CalibrationPanel({
         </div>
       </div>
 
-      {/* Control Buttons with Interactive States */}
+      {}
       <div className="grid grid-cols-2 gap-3 pt-1">
         <button
           type="button"

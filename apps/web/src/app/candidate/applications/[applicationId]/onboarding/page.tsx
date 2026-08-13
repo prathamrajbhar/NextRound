@@ -79,7 +79,7 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-16 animate-in fade-in duration-200">
-      {/* Breadcrumbs */}
+      {}
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
         <Link href="/candidate/applications" className="hover:text-indigo-650 transition-colors">Applications</Link>
         <ChevronRight className="h-3 w-3 text-slate-300" />
@@ -88,7 +88,7 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
         <span className="text-slate-800">Onboarding checklist</span>
       </div>
 
-      {/* Overview header */}
+      {}
       <div className="rounded-3xl border border-white/60 bg-white/45 p-6 sm:p-8 shadow-md backdrop-blur-md glass-panel space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-4">
@@ -106,7 +106,7 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
           </div>
         </div>
 
-        {/* Progress Bar */}
+        {}
         <div className="space-y-1.5">
           <div className="w-full bg-slate-200/50 rounded-full h-2 p-0.5 border border-slate-100/40">
             <div className="bg-emerald-500 h-1 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-300" style={{ width: `${onboard.progressPercent}%` }} />
@@ -114,10 +114,10 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* Main Grid Checklist */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Checklist column */}
+        {}
         <div className="lg:col-span-2 space-y-4">
           <h3 className="text-xs font-bold text-slate-805">Your Checklist Items</h3>
           
@@ -161,7 +161,7 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
           </div>
         </div>
 
-        {/* Sidebar Info Card */}
+        {}
         <div className="space-y-6">
           <div className="rounded-3xl border border-white/60 bg-white/45 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h4 className="text-xs font-bold text-slate-805 border-b border-slate-100 pb-2">Support Team</h4>

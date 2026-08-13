@@ -4,16 +4,16 @@ import React from 'react';
 import { XCircle } from '@/lib/lucide-google-icons';
 
 interface CodingStateScreenProps {
-  /** When set, renders the generation-failure card; otherwise the loading card. */
+  
   error?: string | null;
-  /** Company/role label shown while loading. */
+  
   loadingLabel?: string;
 }
 
-/**
- * Full-screen error and loading states for the coding console while the live
- * LLM problem is still being generated.
- */
+
+
+
+
 export function CodingStateScreen({ error, loadingLabel = 'Generating live coding problem via Gemini AI...' }: CodingStateScreenProps) {
   if (error) {
     return (

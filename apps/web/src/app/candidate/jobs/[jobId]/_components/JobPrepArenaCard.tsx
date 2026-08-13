@@ -23,7 +23,7 @@ export function JobPrepArenaCard({ orgName, title }: JobPrepArenaCardProps) {
       </div>
 
       <div className="space-y-3">
-        {/* Voice Mock Interview */}
+        {}
         <div className="p-3.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 rounded-2xl space-y-2 shadow-2xs">
           <div className="flex items-center gap-2 text-brand-600 dark:text-orange-400">
             <Mic className="h-4 w-4" />
@@ -41,7 +41,7 @@ export function JobPrepArenaCard({ orgName, title }: JobPrepArenaCardProps) {
           </Link>
         </div>
 
-        {/* Coding & MCQ Practice */}
+        {}
         <div className="p-3.5 bg-white/80 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700/70 rounded-2xl space-y-2 shadow-2xs">
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
             <Code className="h-4 w-4" />

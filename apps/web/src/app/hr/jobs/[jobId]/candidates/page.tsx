@@ -61,7 +61,7 @@ export default function HrJobCandidatesList({ params }: { params: Promise<{ jobI
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Breadcrumbs */}
+      {}
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
         <Link href="/hr/jobs" className="hover:text-purple-600 transition-colors">Jobs</Link>
         <ChevronRight className="h-3 w-3 text-slate-300" />
@@ -72,7 +72,7 @@ export default function HrJobCandidatesList({ params }: { params: Promise<{ jobI
         <span className="text-slate-800">Candidates</span>
       </div>
 
-      {/* Header */}
+      {}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">Vetted Candidates</h1>

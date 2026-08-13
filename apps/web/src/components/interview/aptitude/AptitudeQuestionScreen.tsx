@@ -30,11 +30,11 @@ interface AptitudeQuestionScreenProps {
   onEliminate: () => void;
 }
 
-/**
- * Active single-category question console: the question header with timers,
- * the current question + options, a grid navigator for the section, and the
- * fullscreen proctoring violation modal.
- */
+
+
+
+
+
 export function AptitudeQuestionScreen({
   companyName,
   roleTitle,
@@ -79,7 +79,7 @@ export function AptitudeQuestionScreen({
 
   return (
     <div className="w-full h-full flex flex-col justify-between p-4 sm:p-6 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans relative overflow-hidden transition-colors duration-300">
-      {/* Top Header Bar for Selected Category */}
+      {}
       <AptitudeQuestionHeader
         companyName={companyName}
         roleTitle={roleTitle}
@@ -91,9 +91,9 @@ export function AptitudeQuestionScreen({
         questionCount={questionCount}
       />
 
-      {/* Main 2-Column Content Layout */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 my-4 items-start overflow-hidden">
-        {/* Left 2-Cols: Active Question Console */}
+        {}
         <div className="lg:col-span-2 space-y-4 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white/90 dark:bg-slate-900/70 backdrop-blur-md shadow-lg flex flex-col justify-between h-full overflow-y-auto">
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800/60 pb-3">
@@ -109,7 +109,7 @@ export function AptitudeQuestionScreen({
               {currentQ.text}
             </h3>
 
-            {/* Answer Options */}
+            {}
             <div className="space-y-3 pt-2">
               {currentQ.options.map((opt, idx) => {
                 const isSelected = answers[currentQ.id] === idx;
@@ -141,7 +141,7 @@ export function AptitudeQuestionScreen({
             </div>
           </div>
 
-          {/* Question Navigation Controls */}
+          {}
           <div className="flex items-center justify-between pt-4 border-t border-slate-200/80 dark:border-slate-800/80 mt-auto">
             <button
               type="button"
@@ -163,7 +163,7 @@ export function AptitudeQuestionScreen({
           </div>
         </div>
 
-        {/* Right Col: Clean Question Navigator for this Section */}
+        {}
         <AptitudeNavigator
           category={category}
           questions={questions}
@@ -174,7 +174,7 @@ export function AptitudeQuestionScreen({
         />
       </div>
 
-      {/* Fullscreen Proctoring Violation Warning Modal */}
+      {}
       <ProctoringWarningModal
         isOpen={showWarningModal}
         strikeCount={strikeCount}

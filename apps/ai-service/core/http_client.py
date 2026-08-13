@@ -3,7 +3,7 @@ from core.config import settings
 
 class ExpressCallbackClient:
     def __init__(self):
-        self.base_url = settings.express_api_base_url
+        self.base_url = settings.api_base_url
         self.headers = {
             "X-Internal-Service-Secret": settings.internal_service_secret,
             "Content-Type": "application/json",

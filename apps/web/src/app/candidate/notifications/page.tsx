@@ -53,7 +53,7 @@ export default function CandidateNotificationsPage() {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     try {
       await apiClient.patch(`/notifications/${id}/read`, {});
-    } catch { /* optimistic update already applied */ }
+    } catch {  }
   };
 
   const deleteNotification = async (id: string, e: React.MouseEvent) => {
@@ -61,14 +61,14 @@ export default function CandidateNotificationsPage() {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
     try {
       await apiClient.delete(`/notifications/${id}`);
-    } catch { /* optimistic update already applied */ }
+    } catch {  }
   };
 
   const markAllAsRead = async () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     try {
       await apiClient.post('/notifications/read-all', {});
-    } catch { /* optimistic update already applied */ }
+    } catch {  }
   };
 
   const clearAll = async () => {
@@ -114,7 +114,7 @@ export default function CandidateNotificationsPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-16 animate-in fade-in duration-200">
-      {/* Header Bar */}
+      {}
       <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
@@ -157,7 +157,7 @@ export default function CandidateNotificationsPage() {
         </div>
       </div>
 
-      {/* Streamlined Filter Bar (All / Unread Only) */}
+      {}
       <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs font-bold w-fit">
         <button
           type="button"
@@ -188,7 +188,7 @@ export default function CandidateNotificationsPage() {
         </button>
       </div>
 
-      {/* Linear-Style Activity Feed Table */}
+      {}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-sm overflow-hidden">
         {visibleNotifications.length > 0 ? (
           <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
@@ -203,32 +203,32 @@ export default function CandidateNotificationsPage() {
                 }`}
               >
                 <div className="flex items-center gap-3.5 min-w-0">
-                  {/* Status Indicator Dot */}
+                  {}
                   <span
                     className={`h-2 w-2 rounded-full shrink-0 ${
                       n.read ? 'bg-transparent' : 'bg-brand-500 animate-pulse'
                     }`}
                   />
 
-                  {/* Icon Badge */}
+                  {}
                   <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200/60 dark:border-slate-700/60">
                     {getTypeIcon(n.type)}
                   </div>
 
-                  {/* Text Title */}
+                  {}
                   <p className="truncate text-xs font-semibold leading-relaxed">
                     {n.title || n.message}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-4 shrink-0">
-                  {/* Timestamp */}
+                  {}
                   <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1">
                     <Clock className="h-3 w-3" />
                     {n.created_at ? new Date(n.created_at).toLocaleString() : ''}
                   </span>
 
-                  {/* Action Toolbar on Hover */}
+                  {}
                   <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                     {!n.read && (
                       <button

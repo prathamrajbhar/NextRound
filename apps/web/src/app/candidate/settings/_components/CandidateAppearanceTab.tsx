@@ -32,7 +32,7 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
           }
         }
       } catch {
-        // default
+        
       }
     }
     loadUiSettings();
@@ -50,7 +50,7 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
         compactDensity,
       }).catch(() => null);
     } catch {
-      // fallback
+      
     }
 
     setSaving(false);
@@ -59,7 +59,7 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Theme Choice Card */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h2 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           <Palette className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -67,7 +67,7 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Dark Mode */}
+          {}
           <button
             type="button"
             onClick={() => setTheme('dark')}
@@ -89,7 +89,7 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
             </div>
           </button>
 
-          {/* Light Mode */}
+          {}
           <button
             type="button"
             onClick={() => setTheme('light')}
@@ -113,7 +113,7 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
         </div>
       </div>
 
-      {/* Visual Effects & Density */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           Visual Effects &amp; Interface Spacing
@@ -162,7 +162,7 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
         </div>
       </div>
 
-      {/* Save Button */}
+      {}
       <div className="flex justify-end">
         <button
           type="button"

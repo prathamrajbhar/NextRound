@@ -7,10 +7,10 @@ import * as proctoringService from '../../services/proctoring.service';
 
 export const proctoringRouter = Router();
 
-// Enforce authentication on all routes
+
 proctoringRouter.use(authenticate);
 
-// 1. POST /api/v1/proctoring/sessions - Start new proctoring session
+
 proctoringRouter.post(
   '/sessions',
   validate(CreateProctoringSessionSchema),
@@ -20,7 +20,7 @@ proctoringRouter.post(
   })
 );
 
-// 2. POST /api/v1/proctoring/sessions/:id/events - Log events batch
+
 proctoringRouter.post(
   '/sessions/:id/events',
   validate(BatchEventsSchema),
@@ -34,7 +34,7 @@ proctoringRouter.post(
   })
 );
 
-// 3. POST /api/v1/proctoring/sessions/:id/heartbeat - Record heartbeat
+
 proctoringRouter.post(
   '/sessions/:id/heartbeat',
   asyncHandler(async (req, res) => {
@@ -43,7 +43,7 @@ proctoringRouter.post(
   })
 );
 
-// 4. POST /api/v1/proctoring/sessions/:id/pause - Pause session
+
 proctoringRouter.post(
   '/sessions/:id/pause',
   asyncHandler(async (req, res) => {
@@ -52,7 +52,7 @@ proctoringRouter.post(
   })
 );
 
-// 5. POST /api/v1/proctoring/sessions/:id/resume - Resume session
+
 proctoringRouter.post(
   '/sessions/:id/resume',
   asyncHandler(async (req, res) => {
@@ -61,7 +61,7 @@ proctoringRouter.post(
   })
 );
 
-// 6. POST /api/v1/proctoring/sessions/:id/end - End session & trigger risk analysis
+
 proctoringRouter.post(
   '/sessions/:id/end',
   asyncHandler(async (req, res) => {
@@ -70,7 +70,7 @@ proctoringRouter.post(
   })
 );
 
-// 7. GET /api/v1/proctoring/sessions/:id/report - Fetch review report (Scoping check for org / owner)
+
 proctoringRouter.get(
   '/sessions/:id/report',
   asyncHandler(async (req, res) => {
@@ -84,7 +84,7 @@ proctoringRouter.get(
   })
 );
 
-// 8. GET /api/v1/proctoring/applications/:applicationId/report - Fetch report by applicationId
+
 proctoringRouter.get(
   '/applications/:applicationId/report',
   asyncHandler(async (req, res) => {
@@ -102,7 +102,7 @@ proctoringRouter.get(
   })
 );
 
-// 9. POST /api/v1/proctoring/violations/:id/review - Review proctoring violation (HR only)
+
 proctoringRouter.post(
   '/violations/:id/review',
   validate(ReviewViolationSchema),

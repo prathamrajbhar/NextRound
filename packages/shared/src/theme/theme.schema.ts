@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
-/**
- * 11-shade color palette schema (50 - 950)
- */
+
+
+
 export const ColorPaletteSchema = z.object({
   50: z.string(),
   100: z.string(),
@@ -19,9 +19,9 @@ export const ColorPaletteSchema = z.object({
 
 export type ColorPalette = z.infer<typeof ColorPaletteSchema>;
 
-/**
- * 6-shade status palette schema
- */
+
+
+
 export const StatusPaletteSchema = z.object({
   50: z.string(),
   100: z.string(),
@@ -33,9 +33,9 @@ export const StatusPaletteSchema = z.object({
 
 export type StatusPalette = z.infer<typeof StatusPaletteSchema>;
 
-/**
- * Semantic mode tokens for Light and Dark themes
- */
+
+
+
 export const SemanticTokensSchema = z.object({
   background: z.string(),
   foreground: z.string(),
@@ -54,9 +54,9 @@ export const SemanticTokensSchema = z.object({
 
 export type SemanticTokens = z.infer<typeof SemanticTokensSchema>;
 
-/**
- * Complete Centralized Theme Schema
- */
+
+
+
 export const ThemeConfigSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -72,9 +72,9 @@ export const ThemeConfigSchema = z.object({
 
 export type ThemeConfig = z.infer<typeof ThemeConfigSchema>;
 
-/**
- * Default NextRound Brand Palettes
- */
+
+
+
 export const DEFAULT_BRAND_PALETTE: ColorPalette = {
   50: '#fff7ed',
   100: '#ffedd5',

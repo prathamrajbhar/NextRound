@@ -17,19 +17,19 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   };
 
-  // HR portal requires an HR token (role-gated, not just any token)
+  
   if (pathname.startsWith('/hr')) {
     if (!hasToken) return redirectToLogin(pathname);
     if (userRole !== 'hr') return NextResponse.redirect(new URL('/candidate/dashboard', request.url));
   }
 
-  // Candidate portal requires a candidate token (role-gated, not just any token)
+  
   if (pathname.startsWith('/candidate')) {
     if (!hasToken) return redirectToLogin(pathname);
     if (userRole !== 'candidate') return NextResponse.redirect(new URL('/hr/dashboard', request.url));
   }
 
-  // Redirect away from auth pages if logged in directly to role-specific dashboard
+  
   if (hasToken && (pathname === '/login' || pathname === '/signup')) {
     return NextResponse.redirect(new URL(targetDashboard, request.url));
   }

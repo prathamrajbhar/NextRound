@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/apiClient';
 import { Job, Application } from '@/types';
 import { PipelineBoardSkeleton } from '@/components/ui';
 
-// Subcomponents
+
 import PipelineHeader from './components/PipelineHeader';
 import KanbanColumn from './components/KanbanColumn';
 import CandidateCard from './components/CandidateCard';
@@ -19,12 +19,12 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
   const [candidates, setCandidates] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Gating thresholds state
+  
   const [minScore, setMinScore] = useState(80);
   const [autoOffer, setAutoOffer] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Candidate Profile Review Drawer state
+  
   const [selectedCandidate, setSelectedCandidate] = useState<Application | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -88,7 +88,7 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
     return <div className="text-center p-8 text-xs font-bold text-slate-400">Job not found</div>;
   }
 
-  // Generate dynamic columns based on job stages
+  
   const columns: { id: 'Sourced' | 'Screened' | 'Assessment' | 'Interview' | 'HR Round' | 'Panel' | 'Decision'; name: string }[] = [
     { id: 'Sourced', name: 'Applied' }
   ];
@@ -127,7 +127,7 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 pb-12">
-      {/* Header controls section */}
+      {}
       <PipelineHeader
         jobTitle={job.title}
         pipelineActive={pipelineActive}
@@ -135,7 +135,7 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      {/* Widescreen Full-Width Kanban Board Columns */}
+      {}
       <div className={`grid grid-cols-1 ${gridColsClass} gap-4 items-start w-full`}>
         {columns.map((col) => {
           const colApps = getColCandidates(col.id);
@@ -161,14 +161,14 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
         })}
       </div>
 
-      {/* Candidate Profile Review Drawer */}
+      {}
       <CandidateProfileDrawer
         app={selectedCandidate}
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
       />
 
-      {/* Threshold settings Modal */}
+      {}
       <EditThresholdModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

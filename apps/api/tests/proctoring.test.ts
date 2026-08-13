@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getPolicy, evaluateSessionPolicy } from '../src/services/proctoring-policy.service';
 import { CreateProctoringSessionSchema, BatchEventsSchema, ReviewViolationSchema } from '../src/validators/proctoring.schemas';
 
-// Valid UUIDs for Zod schemas
+
 const VALID_UUID_1 = '123e4567-e89b-12d3-a456-426614174000';
 const VALID_UUID_2 = '123e4567-e89b-12d3-a456-426614174001';
 const VALID_UUID_3 = '123e4567-e89b-12d3-a456-426614174002';
@@ -13,16 +13,16 @@ describe('Proctoring Policy Engine', () => {
 
   it('should flag visibility loss (tab hidden) violations when they reach review count threshold', () => {
     const events: any[] = [
-      // 1st tab switch
+      
       { id: '1', kind: 'tab_hidden', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:00Z'), session_elapsed_ms: 1000 },
       { id: '2', kind: 'tab_visible', severity: 'info', source: 'browser', client_timestamp: new Date('2026-08-10T10:00:05Z'), session_elapsed_ms: 6000 },
-      // 2nd tab switch
+      
       { id: '3', kind: 'tab_hidden', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:01:00Z'), session_elapsed_ms: 61000 },
       { id: '4', kind: 'tab_visible', severity: 'info', source: 'browser', client_timestamp: new Date('2026-08-10T10:01:05Z'), session_elapsed_ms: 66000 },
-      // 3rd tab switch
+      
       { id: '5', kind: 'tab_hidden', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:02:00Z'), session_elapsed_ms: 121000 },
       { id: '6', kind: 'tab_visible', severity: 'info', source: 'browser', client_timestamp: new Date('2026-08-10T10:02:05Z'), session_elapsed_ms: 126000 },
-      // 4th tab switch
+      
       { id: '7', kind: 'tab_hidden', severity: 'warning', source: 'browser', client_timestamp: new Date('2026-08-10T10:03:00Z'), session_elapsed_ms: 181000 },
       { id: '8', kind: 'tab_visible', severity: 'info', source: 'browser', client_timestamp: new Date('2026-08-10T10:03:05Z'), session_elapsed_ms: 186000 },
     ];
@@ -45,7 +45,7 @@ describe('Proctoring Policy Engine', () => {
         client_timestamp: new Date('2026-08-10T10:00:00Z'),
         session_elapsed_ms: 1000,
       },
-      // Enter fullscreen 35 seconds later
+      
       {
         id: '2',
         kind: 'fullscreen_enter',
@@ -74,7 +74,7 @@ describe('Proctoring Policy Engine', () => {
         client_timestamp: new Date('2026-08-10T10:00:00Z'),
         session_elapsed_ms: 1000,
       },
-      // Enter fullscreen 8 seconds later
+      
       {
         id: '2',
         kind: 'fullscreen_enter',
@@ -104,7 +104,7 @@ describe('Proctoring Policy Engine', () => {
         session_elapsed_ms: 1000,
         payload_json: { label: 'FaceTime HD Camera' },
       },
-      // Camera started 15 seconds later (duration = 15s)
+      
       {
         id: '2',
         kind: 'camera_started',
@@ -126,7 +126,7 @@ describe('Proctoring Policy Engine', () => {
   it('should flag heartbeat telemetry gaps when gap >= 120s', () => {
     const events: any[] = [
       { id: '1', kind: 'heartbeat', severity: 'info', source: 'system', client_timestamp: new Date('2026-08-10T10:00:00Z'), session_elapsed_ms: 0 },
-      // 125 seconds gap (exceeds threshold 120s)
+      
       { id: '2', kind: 'heartbeat', severity: 'info', source: 'system', client_timestamp: new Date('2026-08-10T10:02:05Z'), session_elapsed_ms: 125000 },
     ];
 

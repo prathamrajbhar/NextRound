@@ -7,7 +7,7 @@ import { enqueueSourcing } from '../../lib/queues/sourcing.queue';
 
 export const prepRouter = Router();
 
-// GET /api/v1/prep - List all available prep content (candidate-facing)
+
 prepRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { company, role } = req.query;
@@ -44,7 +44,7 @@ prepRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-// POST /api/v1/prep/generate - HR trigger: enqueue AI prep content generation for a job
+
 prepRouter.post(
   '/generate',
   authenticate,
@@ -64,7 +64,7 @@ prepRouter.post(
         return res.status(404).json({ success: false, error: 'Job not found or access denied' });
       }
 
-      // Enqueue prep content generation via sourcing queue (action: prep-generate)
+      
       await enqueueSourcing(jobId, 'prep-generate', {
         orgId,
         jobTitle: job.title,
@@ -82,7 +82,7 @@ prepRouter.post(
   }
 );
 
-// GET /api/v1/prep/jobs/:jobId - Get prep content for specific job
+
 prepRouter.get('/jobs/:jobId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const jobId = req.params.jobId as string;
@@ -105,7 +105,7 @@ prepRouter.get('/jobs/:jobId', async (req: Request, res: Response, next: NextFun
       });
     }
 
-    // Return null when no prep content has been generated yet (no fabricated content).
+    
     const data = prepContent || null;
 
     return res.json({
@@ -117,7 +117,7 @@ prepRouter.get('/jobs/:jobId', async (req: Request, res: Response, next: NextFun
   }
 });
 
-// GET /api/v1/prep/:orgId - Get company-wide prep content
+
 prepRouter.get('/:orgId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const orgId = req.params.orgId as string;

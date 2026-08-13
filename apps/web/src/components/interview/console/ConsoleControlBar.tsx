@@ -16,10 +16,10 @@ interface ConsoleControlBarProps {
   onEndSession: () => void;
 }
 
-/**
- * Floating bottom control bar: mic/cam toggles, the text fallback input, and
- * the end-session button.
- */
+
+
+
+
 export function ConsoleControlBar({
   micActive,
   camActive,
@@ -56,7 +56,7 @@ export function ConsoleControlBar({
         </button>
       </div>
 
-      {/* Text Fallback Form */}
+      {}
       {showTextFallback && (
         <form onSubmit={onTextSubmit} className="hidden sm:flex flex-1 max-w-lg mx-4 items-center gap-2">
           <input

@@ -22,12 +22,12 @@ export const Autocomplete = React.forwardRef<HTMLInputElement, AutocompleteProps
     const [activeIndex, setActiveIndex] = useState(-1);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Filtered options based on query
+    
     const filteredOptions = options.filter((opt) =>
       opt.toLowerCase().includes(value.toLowerCase())
     );
 
-    // Close on click outside
+    
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
         if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -38,7 +38,7 @@ export const Autocomplete = React.forwardRef<HTMLInputElement, AutocompleteProps
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Reset active index when filtered options list changes or dropdown opens
+    
     useEffect(() => {
       setActiveIndex(-1);
     }, [value, isOpen]);

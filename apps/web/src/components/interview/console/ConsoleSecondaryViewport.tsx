@@ -17,10 +17,10 @@ interface ConsoleSecondaryViewportProps {
   onCompleteHRRound?: (result: 'pass' | 'fail', notes: string) => void;
 }
 
-/**
- * Right viewport of the interview console. In hr-recruiter mode this is the
- * live HR evaluation form; otherwise it is the candidate's local camera feed.
- */
+
+
+
+
 export function ConsoleSecondaryViewport({
   mode,
   candidateName,
@@ -93,7 +93,7 @@ export function ConsoleSecondaryViewport({
           </button>
         </div>
       ) : (
-        // Local Candidate Video Feed
+        
         <div className="relative w-full h-full bg-slate-950 flex items-center justify-center overflow-hidden">
           {camActive && hasCamPermission !== false ? (
             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform -scale-x-100" />
@@ -106,7 +106,7 @@ export function ConsoleSecondaryViewport({
             </div>
           )}
 
-          {/* Local Feed Overlay Badge */}
+          {}
           <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800/80 text-[10px] font-extrabold text-slate-300 flex items-center gap-1.5 backdrop-blur-md">
             <User className="h-3 w-3 text-brand-400" />
             <span>{candidateName} (You)</span>

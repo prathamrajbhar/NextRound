@@ -44,7 +44,7 @@ export default function JobBasicsCard({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Title */}
+        {}
         <div className="md:col-span-2 space-y-1.5">
           <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
             Job Title <span className="text-rose-500">*</span>
@@ -60,7 +60,7 @@ export default function JobBasicsCard({
           />
         </div>
 
-        {/* Department */}
+        {}
         <div className="space-y-1.5">
           <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
             Department
@@ -78,7 +78,7 @@ export default function JobBasicsCard({
           </select>
         </div>
 
-        {/* Location Type */}
+        {}
         <div className="space-y-1.5">
           <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
             Work Location
@@ -104,7 +104,7 @@ export default function JobBasicsCard({
           </div>
         </div>
 
-        {/* Experience Level */}
+        {}
         <div className="space-y-1.5">
           <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
             Experience Level
@@ -121,7 +121,7 @@ export default function JobBasicsCard({
           </select>
         </div>
 
-        {/* Salary Range */}
+        {}
         <div className="space-y-1.5">
           <div className="flex justify-between items-center">
             <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">

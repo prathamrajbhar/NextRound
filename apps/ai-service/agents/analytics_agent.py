@@ -1,9 +1,9 @@
-"""Analytics Agent: aggregate recruitment funnel metrics into an executive summary.
 
-The analytics pipeline is a fixed linear chain of four stages with no branching
-logic, so it does not use a LangGraph StateGraph — the stages are plain functions
-run in sequence by ``run_analytics_agent``.
-"""
+
+
+
+
+
 
 import logging
 from datetime import datetime, timezone
@@ -13,7 +13,7 @@ from services.pdf_generator import generate_analytics_pdf
 
 logger = logging.getLogger("analytics_agent")
 
-# Application stages that count as having reached each funnel milestone.
+
 _SCREENED_STATUSES = [
     "screening_completed", "assessment", "interview_scheduled", "interviewed",
     "evaluation", "hr_round", "decided", "offered", "accepted",
@@ -90,9 +90,9 @@ def compute_funnel_node(state: AnalyticsState) -> AnalyticsState:
         "offerAcceptanceRate": round((accepted / offered * 100) if offered else 0),
     }
 
-    # Time to hire: mean days from applied_at to the offer's created_at across
-    # offered/accepted applications that carry a real terminal timestamp. Left
-    # None (honest) when no terminal timestamp exists — no fabricated figure.
+
+
+
     hire_deltas_days = []
     for job in jobs:
         for app in job.get("applications", []):

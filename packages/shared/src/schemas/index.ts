@@ -242,11 +242,11 @@ export const CandidateProfileUpdateSchema = z.object({
   githubUrl: z.string().url().optional().nullable(),
 });
 
-// Candidate settings are stored as a merged JSON blob (each settings tab sends a
-// different subset: notifications, privacy, theme, AI voice prefs). `.passthrough()`
-// preserves tab-specific keys so the backend can merge them all into one record.
-// No `.default()` on the known keys: each tab only sends its own subset, so
-// defaults here would clobber previously-saved values for the other tabs.
+
+
+
+
+
 export const CandidateSettingsSchema = z
   .object({
     emailNotifications: z.boolean().optional(),
@@ -255,8 +255,8 @@ export const CandidateSettingsSchema = z
   })
   .passthrough();
 
-// HR recruiter profile. avatarUrl accepts relative paths (`/avatar-*.jpg`) and
-// base64 data URLs produced by the frontend avatar uploader, not just remote URLs.
+
+
 export const HRProfileUpdateSchema = z.object({
   name: z.string().min(2).optional(),
   avatarUrl: z.string().max(2_000_000).optional().nullable(),
@@ -343,11 +343,11 @@ export const CodingExecutionRequestSchema = z.object({
   idempotencyKey: z.string().optional(),
 });
 
-// ---------------------------------------------------------------------------
-// Mock interview flow schemas (spec §5)
-// ---------------------------------------------------------------------------
 
-/** Query params for GET .../assessment/aptitude/chunk */
+
+
+
+
 export const MockAptitudeChunkQuerySchema = z.object({
   chunkIndex: z.coerce.number().int().min(0).default(0),
   chunkSize: z.coerce.number().int().min(1).max(10).default(3),
@@ -358,7 +358,7 @@ export const MockAptitudeAnswerSchema = z.object({
   selectedIndex: z.number().int().min(0),
 });
 
-/** POST .../assessment/aptitude/chunk — submit one chunk's answers */
+
 export const MockAptitudeChunkSubmitSchema = z.object({
   chunkIndex: z.coerce.number().int().min(0),
   chunkSize: z.coerce.number().int().min(1).max(10).default(3),
@@ -366,7 +366,7 @@ export const MockAptitudeChunkSubmitSchema = z.object({
   clientRequestId: z.string().min(1).max(128).optional(),
 });
 
-/** POST .../assessment/aptitude — final aptitude submission */
+
 export const MockAptitudeSubmitSchema = z.object({
   answers: z.array(MockAptitudeAnswerSchema).default([]),
   totalTimeSeconds: z.number().int().min(0).optional(),
@@ -374,14 +374,14 @@ export const MockAptitudeSubmitSchema = z.object({
   idempotencyKey: z.string().min(1).max(128).optional(),
 });
 
-/** POST .../assessment/coding — submit candidate code */
+
 export const MockCodingSubmitSchema = z.object({
   code: z.string().min(1, 'Code cannot be empty').max(200_000, 'Code is too large'),
   language: z.enum(['python', 'javascript', 'typescript', 'java', 'cpp']),
   idempotencyKey: z.string().min(1).max(128).optional(),
 });
 
-/** POST .../assessment/video — submit recorded video answer */
+
 export const MockVideoSubmitSchema = z.object({
   videoUrl: z.string().url().min(1),
   durationSeconds: z.number().int().min(1).max(600),
@@ -390,7 +390,7 @@ export const MockVideoSubmitSchema = z.object({
   idempotencyKey: z.string().min(1).max(128).optional(),
 });
 
-/** POST .../complete — complete the mock session */
+
 export const MockCompleteSchema = z.object({}).passthrough();
 
 export const FileUploadValidationSchema = z.object({
@@ -411,7 +411,7 @@ export const EnvConfigSchema = z.object({
   REFRESH_TOKEN_SECRET: z.string().min(16, 'REFRESH_TOKEN_SECRET must be at least 16 characters'),
   INTERNAL_SERVICE_SECRET: z.string().min(16, 'INTERNAL_SERVICE_SECRET must be at least 16 characters'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
-  AI_SERVICE_URL: z.string().default('http://localhost:8000'),
+  AI_BASE_URL: z.string().default('http://localhost:8000'),
 });
 
 export type LoginInput = z.infer<typeof LoginSchema>;

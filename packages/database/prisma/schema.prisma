@@ -93,7 +93,7 @@ model User {
   org_id             String?
   reset_token_hash   String?
   reset_token_expiry DateTime?
-  // HR/recruiter profile details (name, avatar, timezone, linkedin, title, specialties)
+
   profile            Json      @default("{}")
   created_at         DateTime  @default(now())
 
@@ -178,7 +178,7 @@ model CandidateProfile {
   proud_project      String?                    @db.Text
   work_values        Json                       @default("[]")
   availability       Json                       @default("{}")
-  // Candidate preferences (notifications, privacy, theme, AI voice, etc.)
+
   settings           Json                       @default("{}")
   resume_embedding   Unsupported("vector(768)")?
   created_at         DateTime                   @default(now())
@@ -266,7 +266,7 @@ model Assessment {
   question_schema_version Int             @default(1)
   current_chunk_index    Int              @default(0)
   total_question_count   Int              @default(0)
-  // Idempotency ledger for chunk submissions: { "<chunkIndex>": { clientRequestId, submittedAt } }
+
   chunk_submissions      Json?
   created_at             DateTime         @default(now())
 
@@ -280,17 +280,15 @@ model Assessment {
   @@index([session_id])
 }
 
-// ── Static question bank (DB-seeded, no LLM generation) ──────────────────
-
 model AptitudeQuestion {
   id            String   @id @default(uuid())
-  category      String   // "Quantitative Aptitude" | "Logical Reasoning" | "Verbal Ability" | "Data Interpretation"
-  difficulty    String   @default("medium") // "easy" | "medium" | "hard"
+  category      String
+  difficulty    String   @default("medium")
   question      String   @db.Text
-  options       Json     // String[4]
-  correct_index Int      // 0–3, server-side only — never sent to client
+  options       Json
+  correct_index Int
   explanation   String?  @db.Text
-  tags          Json     @default("[]") // String[]
+  tags          Json     @default("[]")
   is_active     Boolean  @default(true)
   created_at    DateTime @default(now())
 
@@ -304,10 +302,10 @@ model CodingProblem {
   title              String
   description        String   @db.Text
   difficulty         String   @default("medium")
-  category           String   @default("Data Structures") // e.g. "Arrays", "Strings", "Trees"
-  tags               Json     @default("[]")              // String[]
+  category           String   @default("Data Structures")
+  tags               Json     @default("[]")
   is_active          Boolean  @default(true)
-  starter_code       Json     @default("{}") // Record<language, string>
+  starter_code       Json     @default("{}")
   entry_point        String   @default("solution")
   param_schema       Json     @default("[]")
   return_type        String   @default("any")
@@ -462,10 +460,7 @@ model MockSession {
   target_role      String
   difficulty       String?
   type             String    @default("mock")
-  // Mock interview lifecycle: created -> in_progress -> aptitude_in_progress ->
-  // aptitude_completed -> coding_in_progress -> coding_completed ->
-  // video_in_progress -> video_processing -> video_completed ->
-  // feedback_processing -> completed (or abandoned from any active state).
+
   status           String    @default("created")
   current_section  String    @default("aptitude")
   generation_seed  String?
@@ -552,8 +547,8 @@ model ProctoringSession {
   assessment_id     String?
   application_id    String?
   mock_session_id   String?
-  session_type      String    // "aptitude" | "coding" | "interview"
-  status            String    // "active" | "paused" | "ended"
+  session_type      String
+  status            String
   policy_version    String
   consent_version   String
   started_at        DateTime  @default(now())
@@ -581,9 +576,9 @@ model ProctoringEvent {
   client_event_id       String
   client_sequence       Int
   server_sequence       Int
-  kind                  String            // "tab_hidden", "tab_visible", "fullscreen_exit", "fullscreen_enter", "heartbeat", "camera_stopped", etc.
-  severity              String            // "info" | "warning" | "low" | "medium" | "high"
-  source                String            // "browser" | "system"
+  kind                  String
+  severity              String
+  source                String
   client_timestamp      DateTime
   server_received_at    DateTime          @default(now())
   session_elapsed_ms    Int
@@ -600,8 +595,8 @@ model ProctoringEvent {
 model ProctoringViolation {
   id                    String            @id @default(uuid())
   proctoring_session_id String
-  rule_code             String            // e.g. "repeated_tab_switch", "fullscreen_exit_review"
-  severity              String            // "low" | "medium" | "high"
+  rule_code             String
+  severity              String
   occurrence_count      Int               @default(1)
   first_seen_at         DateTime
   last_seen_at          DateTime
@@ -620,7 +615,7 @@ model ProctoringViolation {
 model WebRTCSignal {
   id             String   @id @default(uuid())
   application_id String
-  sender         String   // "candidate" or "recruiter"
+  sender         String
   message        Json
   created_at     DateTime @default(now())
 

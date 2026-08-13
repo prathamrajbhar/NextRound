@@ -58,7 +58,7 @@ export function useProctoringSession({
       consentVersion,
       onViolation: (kind) => {
         if (isEndedRef.current) return;
-        // Tab hidden, fullscreen exit, and window blur trigger strikes
+        
         if (
           kind === 'tab_hidden' ||
           kind === 'fullscreen_exit' ||

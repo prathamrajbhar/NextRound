@@ -95,22 +95,28 @@ DATABASE_URL="postgresql://postgres:apple@localhost:5432/nextround?schema=public
 # Redis Queue
 REDIS_URL="redis://localhost:6379"
 
-# API & Auth Secrets (Must be at least 32 characters)
+# API & Auth Secrets (Must be at least 32 characters; generate with `openssl rand -hex 32`)
 JWT_SECRET="super_secret_jwt_key_nextround_hireos_2026_production_secure_min32chars"
-INTERNAL_SERVICE_SECRET="internal_service_secret_nextround_hireos_2026_production_key_32chars"
+REFRESH_TOKEN_SECRET="your-refresh-secret-at-least-16-chars"
+INTERNAL_SERVICE_SECRET="your-ai-callback-secret-at-least-16-chars"
+
+# Public App & Service URLs
+# APP_URL: canonical web app origin (CORS + password reset / verification links).
+# API_BASE_URL: API base URL used by the AI service for internal callback webhooks.
+# AI_BASE_URL: AI service base URL used by the API.
+APP_URL="http://localhost:3000"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+NEXT_PUBLIC_API_URL="http://localhost:4000/api/v1"
+API_BASE_URL="http://localhost:4000/api/v1"
+NEXT_PUBLIC_AI_BASE_URL="http://localhost:8000"
+AI_BASE_URL="http://localhost:8000"
 
 # LLM & Voice API Keys
 GEMINI_API_KEY="your_gemini_api_key_here"
 GROQ_API_KEY="your_groq_api_key_here"
 
-# Services Ports & Base URLs
+# Services Ports
 PORT=4000
-AI_SERVICE_URL="http://localhost:8000"
-EXPRESS_API_BASE_URL="http://localhost:4000/api/v1"
-
-# Frontend Configuration
-NEXT_PUBLIC_API_URL="http://localhost:4000/api/v1"
-NEXT_PUBLIC_AI_SERVICE_URL="http://localhost:8000"
 ```
 
 ### 3. Setup Database Schema & Seed Data

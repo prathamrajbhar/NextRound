@@ -69,7 +69,7 @@ export default function CandidateResumesPage() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    // Format contact metadata with bullet points
+    
     const contactInfo = [
       r.phone,
       r.email,
@@ -79,7 +79,7 @@ export default function CandidateResumesPage() {
       r.portfolio
     ].filter(Boolean).join(' • ');
 
-    // Handle flexible skills shapes (flat string array vs grouped categorized objects)
+    
     let skillsHtml = '';
     const skillsList = r.skills || [];
     if (skillsList.length > 0) {
@@ -105,7 +105,7 @@ export default function CandidateResumesPage() {
       }
     }
 
-    // Format Professional Experience (support role/title and period/duration keys)
+    
     const experienceList = r.experience || [];
     let experienceHtml = '';
     if (experienceList.length > 0) {
@@ -131,7 +131,7 @@ export default function CandidateResumesPage() {
       `;
     }
 
-    // Format Featured Projects dynamically
+    
     const projectsList = r.projects || [];
     let projectsHtml = '';
     if (projectsList.length > 0) {
@@ -156,7 +156,7 @@ export default function CandidateResumesPage() {
       `;
     }
 
-    // Format Education dynamically
+    
     const educationList = r.education || [];
     let educationHtml = '';
     if (educationList.length > 0) {
@@ -177,7 +177,7 @@ export default function CandidateResumesPage() {
       `;
     }
 
-    // Format Certifications
+    
     const certList = r.certifications || [];
     let certsHtml = '';
     if (certList.length > 0) {
@@ -264,7 +264,7 @@ export default function CandidateResumesPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12 font-sans">
       
-      {/* SaaS Hero Header Bar */}
+      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold text-brand-600 dark:text-orange-400 bg-brand-50 dark:bg-orange-950/80 border border-brand-200/60 dark:border-orange-900/60 mb-1.5">
@@ -288,7 +288,7 @@ export default function CandidateResumesPage() {
         </Link>
       </div>
 
-      {/* Search Bar */}
+      {}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3.5 sm:p-4 rounded-2xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 backdrop-blur-md glass-panel">
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -306,7 +306,7 @@ export default function CandidateResumesPage() {
         </span>
       </div>
 
-      {/* Main Resumes Grid */}
+      {}
       {loading ? (
         <ResumesListSkeleton count={6} />
       ) : filteredHistory.length === 0 ? (
@@ -343,7 +343,7 @@ export default function CandidateResumesPage() {
                 }`}
               >
                 <div className="space-y-2.5">
-                  {/* Card Header */}
+                  {}
                   <div className="flex items-start justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800/80 pb-2.5">
                     <div>
                       <div className="flex items-center gap-1.5">
@@ -364,14 +364,14 @@ export default function CandidateResumesPage() {
                     </span>
                   </div>
 
-                  {/* Summary */}
+                  {}
                   {hasSummary && item.generatedResume && (
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed bg-white/50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-200/50 dark:border-slate-800 font-medium">
                       {item.generatedResume.summary}
                     </p>
                   )}
 
-                  {/* Skill Chips */}
+                  {}
                   <div className="flex flex-wrap gap-1 pt-0.5">
                     {skillsList.slice(0, 4).map((s: string) => (
                       <span
@@ -384,7 +384,7 @@ export default function CandidateResumesPage() {
                   </div>
                 </div>
 
-                {/* Card Action Bar (Edit & PDF Download) */}
+                {}
                 <div className="pt-2.5 border-t border-slate-200/60 dark:border-slate-800/80 space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -439,7 +439,7 @@ export default function CandidateResumesPage() {
         </div>
       )}
 
-      {/* Live Resume Editor Modal */}
+      {}
       <EditResumeModal
         isOpen={Boolean(editingItem)}
         onClose={() => setEditingItem(null)}
@@ -447,7 +447,7 @@ export default function CandidateResumesPage() {
         onSave={handleSaveEditedResume}
       />
 
-      {/* Delete Confirmation Modal */}
+      {}
       <Modal
         isOpen={Boolean(deleteConfirmationId)}
         onClose={() => setDeleteConfirmationId(null)}

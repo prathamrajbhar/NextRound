@@ -112,7 +112,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      {/* Breadcrumb Navigation */}
+      {}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
           <Link
@@ -125,7 +125,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
           <span className="text-slate-800 dark:text-slate-200 font-bold line-clamp-1">{job.title}</span>
         </div>
 
-        {/* Action icons */}
+        {}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setBookmarked(!bookmarked)}
@@ -151,7 +151,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
         </div>
       </div>
 
-      {/* Hero Job Header Card */}
+      {}
       <JobHeaderCard
         job={job}
         applied={applied}
@@ -160,11 +160,11 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
         submitting={submittingApp}
       />
 
-      {/* Main Grid Content */}
+      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-        {/* Main 2-Column Content Area */}
+        {}
         <div className="lg:col-span-2 space-y-8">
-          {/* About the Role Section */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 p-6 md:p-8 shadow-sm backdrop-blur-md glass-panel space-y-6">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-4">
               <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
@@ -204,16 +204,16 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
             )}
           </div>
 
-          {/* Rubric: What We Look For Section */}
+          {}
           <JobRubricCard rubric={job.rubric} />
 
-          {/* AI Prep Content Section */}
+          {}
           <JobPrepSection jobId={job.id} companyName={job.orgName} roleTitle={job.title} />
         </div>
 
-        {/* Sidebar Column */}
+        {}
         <div className="space-y-6">
-          {/* Overview Card */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 p-6 shadow-sm backdrop-blur-md glass-panel space-y-4">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 font-display">
               Overview
@@ -269,10 +269,10 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
             </div>
           </div>
 
-          {/* AI Practice & Prep Arena Card */}
+          {}
           <JobPrepArenaCard orgName={job.orgName} title={job.title} />
 
-          {/* Similar Roles */}
+          {}
           <div className="space-y-3">
             <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
               Similar Opportunities

@@ -13,10 +13,10 @@ interface AptitudeNavigatorProps {
   onSectionSubmit: () => void;
 }
 
-/**
- * Right-column section navigator: a grid of question buttons with answered
- * state, section progress counts, and the submit-section action.
- */
+
+
+
+
 export function AptitudeNavigator({
   category,
   questions,

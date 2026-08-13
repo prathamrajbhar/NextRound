@@ -42,7 +42,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           }
         }
       } catch {
-        // keep defaults
+        
       }
     }
     loadSettings();
@@ -70,7 +70,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
         digestFrequency,
       }).catch(() => null);
     } catch {
-      // ignore offline fallback
+      
     }
 
     setSaving(false);
@@ -79,7 +79,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Notifications Header Banner */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel flex justify-between items-center">
         <div className="space-y-1">
           <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -92,9 +92,9 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
         </div>
       </div>
 
-      {/* Switch Group */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-6">
-        {/* Toggle Item 1 */}
+        {}
         <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -122,7 +122,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           </button>
         </div>
 
-        {/* Toggle Item 2 */}
+        {}
         <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           </button>
         </div>
 
-        {/* Toggle Item 3 */}
+        {}
         <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -175,7 +175,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           </button>
         </div>
 
-        {/* Toggle Item 4 */}
+        {}
         <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -200,7 +200,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           </button>
         </div>
 
-        {/* Toggle Item 5 */}
+        {}
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
         </div>
       </div>
 
-      {/* Frequency selector card */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Digest Cadence</h4>
@@ -251,7 +251,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
         </div>
       </div>
 
-      {/* Save Button */}
+      {}
       <div className="flex justify-end">
         <button
           type="button"

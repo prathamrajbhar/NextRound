@@ -27,10 +27,10 @@ import * as internalService from '../../services/internal.service';
 
 export const internalRouter = Router();
 
-// Require internal service secret on all internal routes
+
 internalRouter.use(requireInternalSecret);
 
-// 1. PATCH /jobs/:id/ai-assist-result
+
 internalRouter.patch(
   '/jobs/:id/ai-assist-result',
   validate(AiAssistResultSchema),
@@ -39,7 +39,7 @@ internalRouter.patch(
   })
 );
 
-// 2. PATCH /applications/:id/screening-result
+
 internalRouter.patch(
   '/applications/:id/screening-result',
   validate(ScreeningResultSchema),
@@ -49,7 +49,7 @@ internalRouter.patch(
   })
 );
 
-// 3. POST /sourcing/:jobId/candidates
+
 internalRouter.post(
   '/sourcing/:jobId/candidates',
   validate(SourcedCandidatesSchema),
@@ -59,7 +59,7 @@ internalRouter.post(
   })
 );
 
-// 4. PATCH /candidate/:id/embedding
+
 internalRouter.patch(
   '/candidate/:id/embedding',
   validate(CandidateEmbeddingSchema),
@@ -69,7 +69,7 @@ internalRouter.patch(
   })
 );
 
-// 5. POST /agent-logs
+
 internalRouter.post(
   '/agent-logs',
   validate(AgentLogCreateSchema),
@@ -78,7 +78,7 @@ internalRouter.post(
   })
 );
 
-// 6. GET /agent-logs
+
 internalRouter.get(
   '/agent-logs',
   asyncHandler(async (_req, res) => {
@@ -86,7 +86,7 @@ internalRouter.get(
   })
 );
 
-// 7. GET /jobs/:id/raw
+
 internalRouter.get(
   '/jobs/:id/raw',
   asyncHandler(async (req, res) => {
@@ -94,7 +94,7 @@ internalRouter.get(
   })
 );
 
-// 8. GET /applications/:id/raw
+
 internalRouter.get(
   '/applications/:id/raw',
   asyncHandler(async (req, res) => {
@@ -102,7 +102,7 @@ internalRouter.get(
   })
 );
 
-// 9. POST /interviews/:id/schedule-slots
+
 internalRouter.post(
   '/interviews/:id/schedule-slots',
   validate(ScheduleSlotsSchema),
@@ -112,7 +112,7 @@ internalRouter.post(
   })
 );
 
-// 10. PATCH /interviews/:id/confirmed-slot
+
 internalRouter.patch(
   '/interviews/:id/confirmed-slot',
   validate(ConfirmedSlotSchema),
@@ -122,7 +122,7 @@ internalRouter.patch(
   })
 );
 
-// 11. PATCH /applications/:id/assessment-result
+
 internalRouter.patch(
   '/applications/:id/assessment-result',
   validate(AssessmentResultSchema),
@@ -132,7 +132,7 @@ internalRouter.patch(
   })
 );
 
-// GET /applications/:id/assessment-data - Fetch stored assessment questions for scoring
+
 internalRouter.get(
   '/applications/:id/assessment-data',
   asyncHandler(async (req, res) => {
@@ -141,7 +141,7 @@ internalRouter.get(
   })
 );
 
-// 12. PATCH /applications/:id/coding-result
+
 internalRouter.patch(
   '/applications/:id/coding-result',
   validate(CodingResultSchema),
@@ -151,7 +151,7 @@ internalRouter.patch(
   })
 );
 
-// 14. PATCH /interviews/:id/result
+
 internalRouter.patch(
   '/interviews/:id/result',
   validate(InterviewResultSchema),
@@ -161,7 +161,7 @@ internalRouter.patch(
   })
 );
 
-// 15. PATCH /evaluations/:id
+
 internalRouter.patch(
   '/evaluations/:id',
   validate(FinalEvaluationSchema),
@@ -170,7 +170,7 @@ internalRouter.patch(
   })
 );
 
-// 16. PATCH /evaluations/:id/decision
+
 internalRouter.patch(
   '/evaluations/:id/decision',
   validate(DecisionSchema),
@@ -180,7 +180,7 @@ internalRouter.patch(
   })
 );
 
-// 17. POST /offers
+
 internalRouter.post(
   '/offers',
   validate(InternalOfferCreateSchema),
@@ -189,7 +189,7 @@ internalRouter.post(
   })
 );
 
-// 18. PATCH /mock/sessions/:id/feedback
+
 internalRouter.patch(
   '/mock/sessions/:id/feedback',
   validate(MockFeedbackSchema),
@@ -199,7 +199,7 @@ internalRouter.patch(
   })
 );
 
-// 19. PATCH /resume-builder/:sessionId/result
+
 internalRouter.patch(
   '/resume-builder/:sessionId/result',
   validate(ResumeBuilderResultSchema),
@@ -212,7 +212,7 @@ internalRouter.patch(
   })
 );
 
-// 20. POST /prep/generate
+
 internalRouter.post(
   '/prep/generate',
   validate(PrepGenerateSchema),
@@ -221,7 +221,7 @@ internalRouter.post(
   })
 );
 
-// 21. GET /analytics/raw - Raw aggregated analytics data for Python Analytics Agent
+
 internalRouter.get(
   '/analytics/raw',
   validate(AnalyticsRawQuerySchema, 'query'),
@@ -234,7 +234,7 @@ internalRouter.get(
   })
 );
 
-// 22. POST /analytics/reports - Receive generated PDF analytics report metadata
+
 internalRouter.post(
   '/analytics/reports',
   validate(AnalyticsReportSchema),
@@ -243,7 +243,7 @@ internalRouter.post(
   })
 );
 
-// 23. PATCH /interviews/:id/sentiment - Update sentiment report from Python worker
+
 internalRouter.patch(
   '/interviews/:id/sentiment',
   validate(InterviewSentimentSchema),
