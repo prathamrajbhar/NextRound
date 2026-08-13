@@ -21,8 +21,8 @@ export default function HrCreateJob() {
   const [department, setDepartment] = useState('Engineering');
   const [locationType, setLocationType] = useState('Remote');
   const [experienceLevel, setExperienceLevel] = useState('Senior (5+ Years)');
-  const [minSalary, setMinSalary] = useState(130000);
-  const [maxSalary, setMaxSalary] = useState(180000);
+  const [minSalary, setMinSalary] = useState(1300000);
+  const [maxSalary, setMaxSalary] = useState(1800000);
 
   // Description & AI assistant state
   const [jd, setJd] = useState('');

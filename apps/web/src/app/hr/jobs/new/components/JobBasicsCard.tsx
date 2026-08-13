@@ -125,15 +125,15 @@ export default function JobBasicsCard({
         <div className="space-y-1.5">
           <div className="flex justify-between items-center">
             <label className="text-xs font-extrabold text-slate-700 dark:text-slate-300 block">
-              Salary Range (USD)
+              Salary Range (INR LPA)
             </label>
             <span className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400">
-              ${(minSalary / 1000).toFixed(0)}k - ${(maxSalary / 1000).toFixed(0)}k / year
+              ₹{(minSalary / 100000).toFixed(1)}L - ₹{(maxSalary / 100000).toFixed(1)}L / year
             </span>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
               <input
                 type="number"
                 value={minSalary}
@@ -144,7 +144,7 @@ export default function JobBasicsCard({
             </div>
             <span className="text-xs text-slate-400 font-bold dark:text-slate-500">-</span>
             <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
               <input
                 type="number"
                 value={maxSalary}

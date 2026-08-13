@@ -8,7 +8,7 @@ import { Job, Application } from '@/types';
 import { CompanyLogo, FormattedMarkdown } from '@/components/ui';
 import {
   MapPin,
-  DollarSign,
+  IndianRupee,
   Briefcase,
   Calendar,
   ChevronRight,
@@ -232,7 +232,7 @@ export default function CandidateJobDetailPage({ params }: { params: Promise<{ j
 
               <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/60 dark:bg-slate-800/40">
                 <div className="h-8 w-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/60 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-                  <DollarSign className="h-4 w-4" />
+                  <IndianRupee className="h-4 w-4" />
                 </div>
                 <div>
                   <span className="block text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">

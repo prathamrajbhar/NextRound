@@ -4,7 +4,7 @@ import React, { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { Job } from '@/types';
-import { Sliders, Briefcase, ArrowLeft, Building2, MapPin, DollarSign, Layers, Loader2 } from '@/lib/lucide-google-icons';
+import { Sliders, Briefcase, ArrowLeft, Building2, MapPin, IndianRupee, Layers, Loader2 } from '@/lib/lucide-google-icons';
 import Link from 'next/link';
 import { Autocomplete } from '@/components/ui';
 import { SUGGESTED_ROLES } from '@/lib/constants';
@@ -289,7 +289,7 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
                     Salary Range
                   </label>
                   <div className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50">
-                    <DollarSign className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                    <IndianRupee className="h-4 w-4 text-slate-400 flex-shrink-0" />
                     <input
                       type="text"
                       required

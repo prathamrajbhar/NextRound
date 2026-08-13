@@ -4,7 +4,7 @@ import React from 'react';
 import { CompanyLogo } from '@/components/ui';
 import {
   MapPin,
-  DollarSign,
+  IndianRupee,
   Briefcase,
   CheckCircle2,
   Check,
@@ -52,7 +52,7 @@ export function JobHeaderCard({ job, applied, onApply, skills, submitting = fals
               </span>
               <span className="text-slate-300 dark:text-slate-700">•</span>
               <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
-                <DollarSign className="h-3.5 w-3.5" />
+                <IndianRupee className="h-3.5 w-3.5" />
                 {job.salary}
               </span>
               <span className="text-slate-300 dark:text-slate-700">•</span>

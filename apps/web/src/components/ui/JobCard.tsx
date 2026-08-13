@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 import { CompanyLogo } from './CompanyLogo';
 import { Badge } from './Badge';
 import { getJobStatusBadgeClasses } from '@/lib/jobStatus';
-import { MapPin, DollarSign, Briefcase, CheckCircle2, Clock, Users, ArrowUpRight } from '@/lib/lucide-google-icons';
+import { MapPin, IndianRupee, Briefcase, CheckCircle2, Clock, Users, ArrowUpRight } from '@/lib/lucide-google-icons';
 
 export interface JobCardProps {
   id: string;
@@ -142,7 +142,7 @@ export function JobCard({
           </div>
 
           <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-400 text-xs font-semibold">
-            <DollarSign className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
+            <IndianRupee className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 flex-shrink-0" />
             <span>{salary}</span>
           </div>
 
