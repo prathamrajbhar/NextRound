@@ -74,13 +74,7 @@ async function refreshAccessToken(): Promise<boolean> {
     const refreshData = refreshRes.headers.get('content-type')?.includes('application/json')
       ? await refreshRes.json()
       : {};
-    if (refreshData.success && refreshData.data?.accessToken) {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('token', refreshData.data.accessToken);
-      }
-      return true;
-    }
-    return false;
+    return refreshData.success === true;
   } catch {
     return false;
   }
@@ -91,7 +85,6 @@ async function fetchNetworkApi<T>(
   options: RequestInit = {},
   isRetry = false
 ): Promise<ApiEnvelope<T>> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   // Don't force a Content-Type on multipart bodies — the browser must set the
   // boundary itself or the server can't parse the upload.
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
@@ -99,10 +92,6 @@ async function fetchNetworkApi<T>(
     ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
     ...(options.headers as Record<string, string>),
   };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
 
   const url = `${API_BASE_URL.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
 

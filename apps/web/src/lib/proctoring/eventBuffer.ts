@@ -40,17 +40,14 @@ export class ProctoringEventBuffer {
 
     const batch = [...this.buffer];
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
 
       const response = await fetch(this.uploadUrl, {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify({ events: batch }),
       });
 
@@ -77,17 +74,14 @@ export class ProctoringEventBuffer {
   async flush() {
     if (this.buffer.length === 0) return;
     try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
       };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
 
       const response = await fetch(this.uploadUrl, {
         method: 'POST',
         headers,
+        credentials: 'include',
         body: JSON.stringify({ events: this.buffer }),
       });
 

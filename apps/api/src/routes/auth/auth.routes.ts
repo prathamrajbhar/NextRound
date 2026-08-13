@@ -50,13 +50,11 @@ function setAuthCookies(res: Response, payload: JwtPayload) {
   });
 
   res.cookie('user_role', payload.role, {
-    httpOnly: false,
+    httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   });
-
-  return { accessToken, refreshToken };
 }
 
 function clearAuthCookies(res: Response) {
@@ -71,7 +69,7 @@ function clearAuthCookies(res: Response) {
     sameSite: 'lax',
   });
   res.clearCookie('user_role', {
-    httpOnly: false,
+    httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
   });
@@ -130,7 +128,7 @@ authRouter.post('/register', authRateLimiter, async (req: Request, res: Response
       orgId: user.org_id,
     };
 
-    const { accessToken, refreshToken } = setAuthCookies(res, jwtPayload);
+    setAuthCookies(res, jwtPayload);
 
     return res.status(201).json({
       success: true,
@@ -142,8 +140,6 @@ authRouter.post('/register', authRateLimiter, async (req: Request, res: Response
           org_id: user.org_id,
           created_at: user.created_at.toISOString(),
         },
-        accessToken,
-        refreshToken,
       },
     });
   } catch (err) {
@@ -182,7 +178,7 @@ authRouter.post('/login', authRateLimiter, async (req: Request, res: Response, n
       orgId: user.org_id,
     };
 
-    const { accessToken, refreshToken } = setAuthCookies(res, jwtPayload);
+    setAuthCookies(res, jwtPayload);
 
     return res.json({
       success: true,
@@ -194,8 +190,6 @@ authRouter.post('/login', authRateLimiter, async (req: Request, res: Response, n
           org_id: user.org_id,
           created_at: user.created_at.toISOString(),
         },
-        accessToken,
-        refreshToken,
       },
     });
   } catch (err) {
@@ -245,7 +239,7 @@ authRouter.post('/refresh', async (req: Request, res: Response, next: NextFuncti
       orgId: user.org_id,
     };
 
-    const { accessToken, refreshToken } = setAuthCookies(res, newJwtPayload);
+    setAuthCookies(res, newJwtPayload);
 
     return res.json({
       success: true,
@@ -257,8 +251,6 @@ authRouter.post('/refresh', async (req: Request, res: Response, next: NextFuncti
           org_id: user.org_id,
           created_at: user.created_at.toISOString(),
         },
-        accessToken,
-        refreshToken,
       },
     });
   } catch (err) {

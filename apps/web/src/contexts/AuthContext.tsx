@@ -32,9 +32,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshUser = async () => {
     const currentUser = await fetchCurrentUser();
     setUser(currentUser);
-    if (!currentUser && typeof window !== 'undefined') {
-      localStorage.removeItem('token');
-    }
     setLoading(false);
   };
 
@@ -43,9 +40,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchCurrentUser().then((currentUser) => {
       if (!mounted) return;
       setUser(currentUser);
-      if (!currentUser && typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-      }
       setLoading(false);
     });
     return () => {
@@ -55,16 +49,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const data = await apiClient.post<{ user: UserPublic; accessToken?: string }>('/auth/login', {
+      const data = await apiClient.post<{ user: UserPublic }>('/auth/login', {
         email,
         password,
       });
 
       if (data?.user) {
         setUser(data.user);
-        if (data.accessToken && typeof window !== 'undefined') {
-          localStorage.setItem('token', data.accessToken);
-        }
         return { success: true, user: data.user };
       }
       return { success: false, error: 'Login failed' };
@@ -80,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     orgName?: string
   ) => {
     try {
-      const data = await apiClient.post<{ user: UserPublic; accessToken?: string }>('/auth/register', {
+      const data = await apiClient.post<{ user: UserPublic }>('/auth/register', {
         email,
         password,
         role,
@@ -89,9 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data?.user) {
         setUser(data.user);
-        if (data.accessToken && typeof window !== 'undefined') {
-          localStorage.setItem('token', data.accessToken);
-        }
         return { success: true, user: data.user };
       }
       return { success: false, error: 'Registration failed' };
@@ -108,7 +96,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('token');
       // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = '/login';
     }
