@@ -64,7 +64,7 @@
 ---
 
 ## Skills & Configuration (.claude / .skills)
-- **`.claude/skills/`**: Stores auto-loading procedures and task-specific workflows (`design-standards`, `drizzle-schema`, `generic-crud`, `project-type-picker`, `qa-verify`, `rbac-guard`, `reviewer-doc`).
+- **`.claude/skills/`**: Stores auto-loading procedures and task-specific workflows (`design-standards`, `generic-crud`, `project-type-picker`, `qa-verify`, `rbac-guard`, `reviewer-doc`).
 - **`CLAUDE.md`**: Contains core repo facts, locked versions, and section rules. Detailed procedural guidance is kept inside `.claude/skills/` or `docs/` rather than over-inlining in `CLAUDE.md`.
 
 # CLAUDE.md
