@@ -65,7 +65,7 @@ export function AptitudeQuestionScreen({
   React.useEffect(() => {
     if (currentQ && lastShownQIdRef.current !== currentQ.id) {
       lastShownQIdRef.current = currentQ.id;
-      const correctIdx = currentQ.correctIndex !== undefined ? currentQ.correctIndex : (currentQ as any).correct_index;
+      const correctIdx = currentQ.correctIndex;
       if (typeof correctIdx === 'number' && correctIdx >= 0) {
         const optionLetter = String.fromCharCode(65 + correctIdx);
         toast({

@@ -116,24 +116,6 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
   }
   columns.push({ id: 'Decision', name: 'Final Decision' });
 
-  const handleAdvanceCandidateStage = async (appId: string) => {
-    const candidate = candidates.find((c) => c.id === appId);
-    if (!candidate) return;
-
-    const currentIdx = columns.findIndex((col) => col.id === candidate.stage);
-    if (currentIdx === -1 || currentIdx >= columns.length - 1) return;
-
-    const nextStage = columns[currentIdx + 1].id;
-    setCandidates((prev) =>
-      prev.map((c) => (c.id === appId ? { ...c, stage: nextStage } : c))
-    );
-
-    try {
-      await apiClient.patch(`/applications/${appId}`, { stage: nextStage });
-    } catch (err) {
-      console.warn('API update stage failed:', err);
-    }
-  };
 
   const getColCandidates = (stage: string) => {
     return candidates.filter((c) => c.stage === stage);

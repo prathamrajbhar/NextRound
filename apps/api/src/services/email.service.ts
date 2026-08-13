@@ -39,7 +39,7 @@ class EmailService {
           html: options.html,
           text: options.text || options.html.replace(/<[^>]+>/g, ''),
         });
-        console.log(`[EmailService] Email successfully sent to ${options.to}: ${options.subject}`);
+        console.info(`[EmailService] Email successfully sent to ${options.to}: ${options.subject}`);
       } else {
         console.error(`[EmailService] SMTP not configured; email to ${options.to} was NOT delivered (subject: ${options.subject}).`);
         return false;

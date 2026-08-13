@@ -55,7 +55,6 @@ export function JobPrepSection({ jobId, companyName }: JobPrepSectionProps) {
     fetchPrep();
   }, [jobId]);
 
-  const rawQuestions = Array.isArray(prep?.questions) ? prep.questions : [];
   const cultureNotes = Array.isArray(prep?.cultureNotes)
     ? prep.cultureNotes
     : Array.isArray(prep?.culture_notes)

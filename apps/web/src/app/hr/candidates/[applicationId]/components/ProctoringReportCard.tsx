@@ -6,12 +6,9 @@ import {
   AlertTriangle,
   CheckCircle2,
   Maximize2,
-  XCircle,
   Clock,
   Video,
-  Mic,
   Monitor,
-  Activity,
   ChevronDown,
 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
@@ -63,7 +60,7 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
   const [reviewReason, setReviewReason] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
-  const { session, violations, events } = report;
+  const { violations, events } = report;
   const [localViolations, setLocalViolations] = useState<ProctoringViolation[]>(violations);
 
   const handleReviewSubmit = async (violationId: string) => {

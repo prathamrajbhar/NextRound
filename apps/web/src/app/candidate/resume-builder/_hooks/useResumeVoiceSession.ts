@@ -49,26 +49,6 @@ const SpeechRecognitionClass =
     ? ((window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).SpeechRecognition ||
        (window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition)
     : null;
-function dataUriToBlobUrl(dataUri: string): string {
-  try {
-    if (!dataUri.startsWith('data:')) return dataUri;
-    const [header, base64Data] = dataUri.split(',');
-    if (!base64Data) return dataUri;
-    const mimeMatch = header.match(/:(.*?);/);
-    const mimeType = mimeMatch ? mimeMatch[1] : 'audio/mp3';
-    const binary = atob(base64Data);
-    const len = binary.length;
-    const buffer = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      buffer[i] = binary.charCodeAt(i);
-    }
-    const blob = new Blob([buffer], { type: mimeType });
-    return URL.createObjectURL(blob);
-  } catch (err) {
-    console.warn('Failed to convert data URI to blob URL:', err);
-    return dataUri;
-  }
-}
 
 interface UseResumeVoiceSessionProps {
   targetRole: string;

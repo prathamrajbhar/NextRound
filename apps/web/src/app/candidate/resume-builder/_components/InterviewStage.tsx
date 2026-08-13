@@ -12,7 +12,6 @@ import {
   PhoneOff,
   Sparkles,
   ArrowRight,
-  ShieldCheck,
   Send,
   Volume2,
 } from '@/lib/lucide-google-icons';

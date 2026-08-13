@@ -11,7 +11,6 @@ import {
   MessageSquare,
   Eye,
   Zap,
-  ChevronRight,
   Download,
   FileText,
   GithubIcon,

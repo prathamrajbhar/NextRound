@@ -156,7 +156,7 @@ export function useAptitudeSession({
       // Practice/mock mode: score locally using correctIndex if available
       let totalCorrect = 0;
       activeQuestions.forEach((q) => {
-        const correctIdx = q.correctIndex !== undefined ? q.correctIndex : (q as any).correct_index;
+        const correctIdx = q.correctIndex;
         if (correctIdx !== undefined && answers[q.id] === correctIdx) {
           totalCorrect++;
         }

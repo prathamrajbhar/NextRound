@@ -80,7 +80,6 @@ export function useProctoringSession({
 
     client.start();
     clientRef.current = client;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProctoringClient(client);
 
     return () => {

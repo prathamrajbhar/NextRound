@@ -3,6 +3,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { apiClient } from '@/lib/apiClient';
 
+interface WebRTCSignalMessage {
+  type: 'description' | 'candidate' | 'ready' | 'ready_reply';
+  description?: RTCSessionDescriptionInit | null;
+  candidate?: RTCIceCandidateInit | null;
+}
+
+interface WebRTCSignal {
+  id: string;
+  application_id: string;
+  sender: string;
+  message: WebRTCSignalMessage;
+  created_at: string;
+}
+
 interface UseWebRTCCallProps {
   applicationId: string;
   mode: 'hr-candidate' | 'hr-recruiter' | 'ai-voice' | 'mock-practice';
@@ -25,7 +39,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
     }
 
     // 1. Setup API signal helpers
-    const postSignal = async (msg: any) => {
+    const postSignal = async (msg: WebRTCSignalMessage) => {
       try {
         await apiClient.post(`/interviews/${applicationId}/signal`, {
           sender: mode === 'hr-candidate' ? 'candidate' : 'recruiter',
@@ -97,7 +111,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
     };
 
     // 7. Perfect Negotiation: Handle incoming signaling messages
-    const handleIncomingSignal = async (data: any) => {
+    const handleIncomingSignal = async (data: WebRTCSignalMessage) => {
       try {
         const { type, description, candidate } = data;
 
@@ -162,20 +176,20 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
     let lastPolledTime = new Date(Date.now() - 5000);
     const pollInterval = setInterval(async () => {
       try {
-        const res = await apiClient.get<any>(
+        const res = await apiClient.get<WebRTCSignal[]>(
           `/interviews/${applicationId}/signals?since=${lastPolledTime.toISOString()}`
         );
-        if (res && Array.isArray(res.data)) {
-          for (const signal of res.data) {
+        if (res && Array.isArray(res)) {
+          for (const signal of res) {
             // Only process signals from the OTHER peer
             const isSelf = signal.sender === (mode === 'hr-candidate' ? 'candidate' : 'recruiter');
             if (!isSelf) {
               await handleIncomingSignal(signal.message);
             }
           }
-          if (res.data.length > 0) {
+          if (res.length > 0) {
             // Update lastPolledTime to the timestamp of the last message processed
-            const maxTime = new Date(res.data[res.data.length - 1].created_at);
+            const maxTime = new Date(res[res.length - 1].created_at);
             lastPolledTime = maxTime;
           }
         }

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
-import { Application, Job } from '@/types';
+import { Application } from '@/types';
 import {
   ChevronRight,
   Video,
@@ -35,7 +35,6 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
   const { applicationId } = use(params);
 
   const [app, setApp] = useState<Application | null>(null);
-  const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [assessmentData, setAssessmentData] = useState<AssessData | null>(null);
   const [proctorReport, setProctorReport] = useState<ProctoringReport | null>(null);
@@ -77,11 +76,6 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
 
           const finalApp = { ...appData, scores: mergedScores, reasoning: mergedReasoning };
           setApp(finalApp);
-
-          if (finalApp.jobId) {
-            const jobData = await apiClient.get<Job>(`/jobs/${finalApp.jobId}`).catch(() => null);
-            if (jobData) setJob(jobData);
-          }
 
           const report = await apiClient.get<ProctoringReport>(`/proctoring/applications/${applicationId}/report`).catch(() => null);
           if (report) setProctorReport(report);

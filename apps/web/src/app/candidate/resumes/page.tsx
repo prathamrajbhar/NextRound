@@ -249,10 +249,8 @@ export default function CandidateResumesPage() {
       await apiClient.delete(`/resume-builder/${id}`);
       setHistory(prev => prev.filter(h => h.id !== id));
       if (primaryId === id) {
-        setPrimaryId(prev => {
-          const remaining = history.filter(h => h.id !== id);
-          return remaining.length > 0 ? remaining[0].id : null;
-        });
+        const remaining = history.filter(h => h.id !== id);
+        setPrimaryId(remaining.length > 0 ? remaining[0].id : null);
       }
     } catch (err) {
       console.error('Failed to delete resume:', err);

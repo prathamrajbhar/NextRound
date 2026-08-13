@@ -38,7 +38,7 @@ export function useInterviewSession({
     gazeCentered: null as boolean | null,
     engagementIndex: null as number | null,
   });
-  const [strikeCount, setStrikeCount] = useState(0);
+  const [strikeCount] = useState(0);
   const [showWarningModal, setShowWarningModal] = useState(false);
 
   const topicIndex = useRef(0);
