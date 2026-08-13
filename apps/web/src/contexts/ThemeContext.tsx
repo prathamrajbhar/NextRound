@@ -12,7 +12,7 @@ type Mode = 'light' | 'dark';
 interface ThemeContextValue {
   theme: Mode;
   themeConfig: ThemeConfig;
-  toggleTheme: () => void;
+  toggleTheme: (event?: React.MouseEvent | MouseEvent) => void;
   setTheme: (mode: Mode) => void;
   setThemeConfig: (config: ThemeConfig) => void;
 }
@@ -64,8 +64,56 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const toggleTheme = () => {
-    applyTheme(theme === 'dark' ? 'light' : 'dark');
+  const toggleTheme = (event?: React.MouseEvent | MouseEvent) => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+
+    const isAppearanceTransition =
+      typeof document !== 'undefined' &&
+      'startViewTransition' in document &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!isAppearanceTransition) {
+      applyTheme(nextTheme);
+      return;
+    }
+
+    const x = event?.clientX ?? window.innerWidth / 2;
+    const y = event?.clientY ?? window.innerHeight / 2;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    document.documentElement.classList.add('view-transitioning');
+
+    const transition = document.startViewTransition(() => {
+      applyTheme(nextTheme);
+    });
+
+    transition.ready.then(() => {
+      const clipPath = [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+      ];
+
+      const isDark = theme === 'dark';
+      document.documentElement.animate(
+        {
+          clipPath: isDark ? [...clipPath].reverse() : clipPath,
+        },
+        {
+          duration: 450,
+          easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+          pseudoElement: isDark
+            ? '::view-transition-old(root)'
+            : '::view-transition-new(root)',
+        }
+      );
+    });
+
+    transition.finished.finally(() => {
+      document.documentElement.classList.remove('view-transitioning');
+    });
   };
 
   const setTheme = (newMode: Mode) => {

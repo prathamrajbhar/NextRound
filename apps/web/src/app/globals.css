@@ -701,3 +701,36 @@ aside {
   background: rgba(30, 41, 59, 0.9) !important;
   border-color: var(--primary) !important;
 }
+
+/* =========================================
+   CUSTOM VIEW TRANSITION RIPPLE SCHEME
+   ========================================= */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+.dark::view-transition-old(root) {
+  z-index: 9999;
+}
+
+.dark::view-transition-new(root) {
+  z-index: 1;
+}
+
+/* Temporarily disable transitions on all elements during theme change to prevent stuttering */
+html.view-transitioning *,
+html.view-transitioning *::before,
+html.view-transitioning *::after {
+  transition: none !important;
+  animation-duration: 0s !important;
+}
