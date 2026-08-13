@@ -20,13 +20,8 @@ interface AuthFieldProps {
 }
 
 const inputCls =
-  'h-11 w-full rounded-xl border border-white/10 bg-slate-950/60 pl-10 text-sm text-white placeholder:text-slate-500 transition-all focus:outline-none focus:ring-2 focus:ring-orange-400/20';
+  'h-11 w-full rounded-xl border border-white/10 bg-slate-950/60 pl-10 text-sm text-white placeholder:text-slate-500 transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/20';
 
-/**
- * Labelled form field with a leading icon, inline error state and optional
- * right-side content (e.g. a password visibility toggle). Accessible: labels
- * the control, flags `aria-invalid` and wires the error to `aria-describedby`.
- */
 export default function AuthField({
   id,
   label,
@@ -45,7 +40,7 @@ export default function AuthField({
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between">
-        <label htmlFor={id} className="block text-[11px] font-bold text-slate-400">
+        <label htmlFor={id} className="block text-xs font-bold text-slate-400">
           {label}
         </label>
         {labelRight}
@@ -68,14 +63,14 @@ export default function AuthField({
           className={`${inputCls} ${rightSlot ? 'pr-10' : 'pr-4'} ${
             error
               ? 'border-rose-500/50 focus:border-rose-400 focus:ring-rose-400/20'
-              : 'focus:border-orange-400/70 focus:bg-slate-950/80'
+              : 'focus:border-brand-500/70 focus:bg-slate-950/80'
           }`}
         />
         {rightSlot}
       </div>
 
       {error && (
-        <p id={`${id}-error`} className="mt-1.5 text-[11px] font-semibold text-rose-400">
+        <p id={`${id}-error`} className="mt-1.5 text-xs font-semibold text-rose-400">
           {error}
         </p>
       )}
