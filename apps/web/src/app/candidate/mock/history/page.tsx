@@ -40,6 +40,21 @@ export default function MockHistoryPage() {
     );
   }
 
+  const sortedSessions = [...sessions].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+  const trendSessions = sortedSessions.slice(-7);
+  const latestScore = trendSessions[trendSessions.length - 1]?.score;
+  const firstScore = trendSessions[0]?.score;
+  const trendDelta =
+    latestScore !== undefined && firstScore !== undefined
+      ? Math.round((latestScore - firstScore) * 10) / 10
+      : null;
+  const avgScore =
+    trendSessions.length > 0
+      ? Math.round(trendSessions.reduce((sum, s) => sum + s.score, 0) / trendSessions.length)
+      : null;
+
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <div className="border-b border-slate-100 pb-4">
@@ -50,10 +65,9 @@ export default function MockHistoryPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left: Table of past sessions */}
         <div className="lg:col-span-2 space-y-4">
           <h2 className="text-base font-extrabold text-slate-800">Past Attempts</h2>
-          
+
           <div className="glass-card overflow-hidden">
             <table className="w-full border-collapse text-left">
               <thead>
@@ -102,34 +116,46 @@ export default function MockHistoryPage() {
           </div>
         </div>
 
-        {/* Right: Trend chart placeholder/indicator */}
         <div className="space-y-6">
           <h2 className="text-base font-extrabold text-slate-800">Practice Analytics</h2>
-          
+
           <div className="rounded-3xl border border-white/60 bg-white/40 p-6 shadow-sm backdrop-blur-md glass-panel space-y-6">
             <div className="flex justify-between items-center">
               <span className="text-[10px] font-bold text-slate-400 uppercase">Score Trend</span>
-              <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                <TrendingUp className="h-3 w-3" />
-                +4.0%
-              </span>
+              {trendDelta !== null && (
+                <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                  <TrendingUp className="h-3 w-3" />
+                  {trendDelta >= 0 ? '+' : ''}{trendDelta}%
+                </span>
+              )}
             </div>
 
-            {/* Simulated bar chart */}
-            <div className="flex items-end justify-around h-32 pt-4">
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-slate-300 w-8 rounded-t-lg transition-all" style={{ height: '81px' }}></div>
-                <span className="text-[9px] font-bold text-slate-400">June 30</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                <div className="bg-indigo-500 w-8 rounded-t-lg transition-all" style={{ height: '85px' }}></div>
-                <span className="text-[9px] font-bold text-slate-400">July 02</span>
-              </div>
-            </div>
+            {trendSessions.length >= 2 ? (
+              <>
+                <div className="flex items-end justify-around h-32 pt-4">
+                  {trendSessions.map((session, idx) => (
+                    <div key={idx} className="flex flex-col items-center gap-2">
+                      <div
+                        className={idx === trendSessions.length - 1 ? 'bg-indigo-500 w-8 rounded-t-lg transition-all' : 'bg-slate-300 w-8 rounded-t-lg transition-all'}
+                        style={{ height: `${Math.round(Math.min(session.score, 100) * 0.96)}px` }}
+                        title={`${session.targetRole} — ${session.score}%`}
+                      ></div>
+                      <span className="text-[9px] font-bold text-slate-400">{session.date}</span>
+                    </div>
+                  ))}
+                </div>
 
-            <p className="text-xs text-slate-500 leading-relaxed font-semibold">
-              Your overall communication logic shows significant gains. Work on answering core distributed systems questions.
-            </p>
+                <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                  {avgScore !== null
+                    ? `Your average score across ${trendSessions.length} recent sessions is ${avgScore}%.`
+                    : 'No practice sessions recorded yet.'}
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-slate-500 leading-relaxed font-semibold">
+                Complete at least two practice sessions to see your score trend.
+              </p>
+            )}
           </div>
         </div>
       </div>

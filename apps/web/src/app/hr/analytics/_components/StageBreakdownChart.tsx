@@ -14,6 +14,13 @@ interface StageBreakdownChartProps {
 }
 
 export function StageBreakdownChart({ funnelSteps }: StageBreakdownChartProps) {
+  const firstCount = funnelSteps[0]?.count;
+  const lastCount = funnelSteps[funnelSteps.length - 1]?.count;
+  const passRate =
+    firstCount && lastCount && firstCount > 0
+      ? Math.round((lastCount / firstCount) * 1000) / 10
+      : null;
+
   return (
     <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
       <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
@@ -26,9 +33,11 @@ export function StageBreakdownChart({ funnelSteps }: StageBreakdownChartProps) {
             Number of candidates remaining at each interview stage.
           </p>
         </div>
-        <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900">
-          12.6% Final Pass Rate
-        </span>
+        {passRate !== null && (
+          <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900">
+            {passRate}% Final Pass Rate
+          </span>
+        )}
       </div>
 
       <div className="space-y-4">

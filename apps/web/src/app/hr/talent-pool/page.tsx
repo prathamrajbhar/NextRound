@@ -61,12 +61,14 @@ export default function HrTalentPoolPage() {
   const filteredCandidates = safeCandidates.filter((c) => {
     const nameMatch = c.name.toLowerCase().includes(search.toLowerCase()) ||
       c.email.toLowerCase().includes(search.toLowerCase());
-    // Candidates with a null score were never semantically ranked; do not drop
-    // them on the min-score slider (null is "not scored", not a score of 0).
     const scoreMatch = c.similarityScore === null || c.similarityScore >= minScore;
     const skillMatch = selectedSkill === 'All' || c.skills.includes(selectedSkill);
     return nameMatch && scoreMatch && skillMatch;
   });
+
+  const scoutHighMatchCount = safeCandidates.filter(
+    (c) => c.similarityScore !== null && c.similarityScore >= 90,
+  ).length;
 
 
   if (loading) {
@@ -75,7 +77,6 @@ export default function HrTalentPoolPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* Console Top branding */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-5">
         <div>
           <span className="text-xs font-bold text-orange-600 dark:text-orange-400 uppercase tracking-widest block mb-1">
@@ -88,14 +89,15 @@ export default function HrTalentPoolPage() {
         </div>
       </div>
 
-      {/* Sourcing AI Scout recommendations box */}
       <div className="bg-gradient-to-br from-purple-500/10 via-indigo-500/5 to-transparent border border-purple-100 dark:border-purple-900/60 rounded-3xl p-6 flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between">
         <div className="flex gap-4 items-start">
           <Brain className="h-9 w-9 text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5 animate-pulse" />
           <div className="space-y-1">
             <h4 className="text-xs font-black text-purple-900 dark:text-purple-200 uppercase tracking-wide">AI Sourcing Scout Insights</h4>
             <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed font-semibold max-w-2xl">
-              Found <strong>3 candidates</strong> exceeding a 90% technical logic match rate with active pipeline slots. Profile scoring and semantic matching completed.
+              {scoutHighMatchCount > 0
+                ? <>Found <strong>{scoutHighMatchCount} {scoutHighMatchCount === 1 ? 'candidate' : 'candidates'}</strong> exceeding a 90% semantic match with the active job rubric. Profile scoring and semantic matching completed.</>
+                : 'No candidates currently exceed a 90% semantic match. Publish jobs or sync profiles to source a stronger pool.'}
             </p>
           </div>
         </div>
@@ -110,10 +112,8 @@ export default function HrTalentPoolPage() {
         </button>
       </div>
 
-      {/* Filter bar console */}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel grid grid-cols-1 sm:grid-cols-4 gap-4">
-        
-        {/* Search */}
+
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
           <input
@@ -125,7 +125,6 @@ export default function HrTalentPoolPage() {
           />
         </div>
 
-        {/* Skill dropdown */}
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-slate-400 dark:text-slate-500 flex-shrink-0" />
           <select
@@ -140,10 +139,6 @@ export default function HrTalentPoolPage() {
           </select>
         </div>
 
-
-
-
-        {/* Score filter slider */}
         <div className="space-y-1.5 flex flex-col justify-center">
           <div className="flex justify-between text-[10px] font-bold text-slate-500 dark:text-slate-400 px-1">
             <span>MIN SCORE</span>
@@ -161,7 +156,6 @@ export default function HrTalentPoolPage() {
         </div>
       </div>
 
-      {/* Candidates List grid */}
       {filteredCandidates.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredCandidates.map((c) => (
@@ -170,7 +164,6 @@ export default function HrTalentPoolPage() {
               className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/50 dark:bg-slate-900/60 p-6 shadow-xl backdrop-blur-md glass-panel flex flex-col justify-between hover:scale-[1.01] hover:shadow-2xl transition-all duration-300 group"
             >
               <div>
-                {/* Header info */}
                 <div className="flex justify-between items-start gap-4">
                   <div className="flex items-center gap-3">
                     <div className="h-11 w-11 rounded-full border border-purple-100 dark:border-purple-900/60 bg-gradient-to-br from-purple-400 to-indigo-500 flex items-center justify-center shadow-sm">
@@ -194,14 +187,12 @@ export default function HrTalentPoolPage() {
                   </div>
                 </div>
 
-                {/* Target Roles */}
                 {c.targetRoles.length > 0 && (
                   <p className="mt-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                     Targeting: {c.targetRoles.slice(0, 2).join(', ')}
                   </p>
                 )}
 
-                {/* Skills tags */}
                 <div className="flex flex-wrap gap-1.5 mt-3">
                   {c.skills.slice(0, 6).map((skill) => (
                     <span
@@ -214,7 +205,6 @@ export default function HrTalentPoolPage() {
                 </div>
               </div>
 
-              {/* Lower Action bar */}
               <div className="mt-6 flex justify-between items-center border-t border-slate-100 dark:border-slate-800 pt-4">
                 <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">
                   Last active: {new Date(c.lastActive).toLocaleDateString()}

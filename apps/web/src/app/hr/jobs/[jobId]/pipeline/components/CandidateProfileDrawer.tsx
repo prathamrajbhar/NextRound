@@ -33,7 +33,6 @@ export default function CandidateProfileDrawer({
 
   if (!isOpen || !app) return null;
 
-  // Handler to generate candidate resume from available application data only
   const handleDownloadResume = () => {
     const content = `=================================================\nHireOS CANDIDATE DOSSIER & RESUME: ${app.candidateName.toUpperCase()}\nEmail: ${app.candidateEmail}\nPipeline Stage: ${app.stage}\nAI Readiness Score: ${app.scores?.composite ?? 'N/A'}%\n=================================================\n\nCANDIDATE SNAPSHOT:\n- Position Applied: ${app.jobTitle || 'N/A'}\n- Skills: ${(app.skills || []).join(', ') || 'N/A'}\n\nAI EVALUATION SUMMARY:\nTechnical Score: ${app.scores?.technical ?? 'N/A'}%\nCommunication Score: ${app.scores?.communication ?? 'N/A'}%\nProblem Solving Score: ${app.scores?.problemSolving ?? 'N/A'}%\nExperience Score: ${app.scores?.experience ?? 'N/A'}%\n\nEvaluator Notes: "${app.reasoning || 'No evaluation notes available.'}"\n`;
 
@@ -50,12 +49,9 @@ export default function CandidateProfileDrawer({
 
   return (
     <div className="fixed top-16 inset-x-0 bottom-0 z-40 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-xs flex justify-end animate-in fade-in duration-200">
-      {/* Click Backdrop */}
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Slide-Over Drawer Container */}
       <div className="relative w-full max-w-xl h-full bg-white dark:bg-[#111827] text-slate-900 dark:text-slate-100 shadow-2xl border-l border-slate-200 dark:border-slate-800 flex flex-col justify-between z-10 animate-in slide-in-from-right duration-300 font-sans">
-        {/* Drawer Header */}
         <div className="p-5 md:p-6 border-b border-slate-200/80 dark:border-slate-800/80 flex justify-between items-center bg-slate-50/80 dark:bg-[#0b0f19] flex-shrink-0">
           <div className="flex gap-3.5 items-center min-w-0">
             {app.candidateAvatar ? (
@@ -129,7 +125,6 @@ export default function CandidateProfileDrawer({
           </div>
         </div>
 
-        {/* Drawer Tab Header */}
         <div className="h-11 px-6 bg-slate-100/70 dark:bg-[#161f30] border-b border-slate-200/80 dark:border-slate-800 flex items-center gap-6 text-xs font-bold text-slate-500 dark:text-slate-400 flex-shrink-0">
           <button
             type="button"
@@ -163,11 +158,9 @@ export default function CandidateProfileDrawer({
           </button>
         </div>
 
-        {/* Drawer Scrollable Body */}
         <div className="flex-1 p-6 overflow-y-auto space-y-5 text-xs bg-white dark:bg-[#111827]">
           {activeTab === 'resume' && (
             <div className="space-y-5">
-              {/* Quick Profile Meta Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                 <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800">
                   <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Experience</span>
@@ -187,7 +180,6 @@ export default function CandidateProfileDrawer({
                 </div>
               </div>
 
-              {/* Resume File Download Box */}
               <div className="p-4 rounded-2xl bg-brand-50/50 dark:bg-slate-900/90 border border-brand-200/60 dark:border-slate-800 flex items-center justify-between shadow-2xs">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-brand-100 dark:bg-orange-950/80 text-brand-600 dark:text-orange-400 border border-brand-200 dark:border-orange-800 flex items-center justify-center flex-shrink-0">
@@ -198,7 +190,7 @@ export default function CandidateProfileDrawer({
                       {app.candidateName.replace(/\s+/g, '_')}_Resume.pdf
                     </h4>
                     <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold block mt-0.5">
-                      PDF Document • 1.2 MB • Verified Upload
+                      Candidate dossier
                     </span>
                   </div>
                 </div>
@@ -213,21 +205,24 @@ export default function CandidateProfileDrawer({
                 </button>
               </div>
 
-              {/* Verified Tech Stack Tags */}
               <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800 space-y-2.5 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
                   Verified Tech Stack &amp; Skills
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {['React', 'TypeScript', 'Next.js', 'Node.js', 'System Architecture', 'Tailwind CSS', 'GraphQL', 'Jest'].map((skill, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 text-[11px] font-extrabold flex items-center gap-1 shadow-2xs"
-                    >
-                      <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                      {skill}
-                    </span>
-                  ))}
+                  {app.skills && app.skills.length > 0 ? (
+                    app.skills.map((skill, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 text-[11px] font-extrabold flex items-center gap-1 shadow-2xs"
+                      >
+                        <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-slate-500 dark:text-slate-400 font-medium">No skills are listed for this candidate.</p>
+                  )}
                 </div>
               </div>
 
@@ -240,7 +235,6 @@ export default function CandidateProfileDrawer({
                     <div className="relative border-l border-slate-200 dark:border-slate-800 ml-2 pl-4 space-y-5">
                       {app.workExperience.map((exp, idx) => (
                         <div key={idx} className="relative">
-                          {/* Timeline dot */}
                           <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-brand-600 dark:bg-orange-500 ring-4 ring-white dark:ring-[#161f30]" />
                           <div className="space-y-0.5">
                             <div className="flex items-center justify-between flex-wrap gap-1 font-extrabold">
@@ -265,7 +259,6 @@ export default function CandidateProfileDrawer({
 
           {activeTab === 'scorecard' && (
             <>
-              {/* Rubric Score Breakdown Bars */}
               {app.scores && (
                 <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800 space-y-4 shadow-2xs">
                   <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-800 pb-2">
@@ -315,13 +308,14 @@ export default function CandidateProfileDrawer({
                 </div>
               )}
 
-              {/* AI Evaluator Reasoning */}
               <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-2xs">
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
                   AI Evaluator Reasoning
                 </span>
                 <p className="text-xs text-slate-700 dark:text-slate-200 font-semibold leading-relaxed italic border-l-2 border-brand-500 pl-3 py-1 bg-white/60 dark:bg-slate-900/60 rounded-r-xl">
-                  &ldquo;{app.reasoning || 'Demonstrated competent understanding of senior software engineering architecture. Clean execution paths and solid Big-O analysis.'}&rdquo;
+                  {app.reasoning
+                    ? `"${app.reasoning}"`
+                    : 'No evaluator reasoning is available for this candidate yet.'}
                 </p>
               </div>
             </>
@@ -333,14 +327,18 @@ export default function CandidateProfileDrawer({
                 <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Screen Gaze Focus</span>
-                    <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 block mt-0.5">96% Direct Contact</span>
+                    <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 block mt-0.5">
+                      {app.engagementSignal ? `${app.engagementSignal.eyeContact}% Direct Contact` : 'No telemetry'}
+                    </span>
                   </div>
                   <Eye className="h-5 w-5 text-emerald-500" />
                 </div>
                 <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
                   <div>
                     <span className="text-[9px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Speech Pacing</span>
-                    <span className="text-sm font-extrabold text-amber-600 dark:text-amber-400 block mt-0.5">140 WPM (Optimal)</span>
+                    <span className="text-sm font-extrabold text-amber-600 dark:text-amber-400 block mt-0.5">
+                      {app.engagementSignal ? app.engagementSignal.speakingRate : 'No telemetry'}
+                    </span>
                   </div>
                   <Zap className="h-5 w-5 text-amber-500" />
                 </div>
@@ -350,21 +348,28 @@ export default function CandidateProfileDrawer({
                 <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-800 pb-2">
                   Interactive Q&amp;A Highlights
                 </span>
-                <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <span className="text-[10px] font-extrabold text-brand-600 dark:text-brand-400 uppercase">Question 1</span>
-                    <p className="font-extrabold text-slate-900 dark:text-slate-100">How do you handle virtualization for long scroll lists?</p>
-                    <p className="text-slate-700 dark:text-slate-300 bg-white/70 dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800 text-xs leading-relaxed font-medium">
-                      &ldquo;I use windowing libraries like react-window to compute dynamic row height indices and maintain 60fps scrolling.&rdquo;
-                    </p>
+                {app.transcript && app.transcript.length > 0 ? (
+                  <div className="space-y-3">
+                    {app.transcript.slice(0, 5).map((qa, idx) => (
+                      <div key={idx} className="space-y-1.5">
+                        <span className="text-[10px] font-extrabold text-brand-600 dark:text-brand-400 uppercase">Question {idx + 1}</span>
+                        <p className="font-extrabold text-slate-900 dark:text-slate-100">{qa.question}</p>
+                        <p className="text-slate-700 dark:text-slate-300 bg-white/70 dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200/60 dark:border-slate-800 text-xs leading-relaxed font-medium">
+                          &ldquo;{qa.answer}&rdquo;
+                        </p>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                ) : (
+                  <p className="text-slate-500 dark:text-slate-400 font-medium">
+                    No interview transcript is available for this candidate.
+                  </p>
+                )}
               </div>
             </div>
           )}
         </div>
 
-        {/* Drawer Footer Actions */}
         <div className="p-4 md:p-5 bg-slate-50/90 dark:bg-[#0b0f19] border-t border-slate-200/80 dark:border-slate-800 flex items-center justify-end gap-3 flex-shrink-0">
           <div className="flex items-center gap-2">
             <button

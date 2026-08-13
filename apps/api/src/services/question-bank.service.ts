@@ -1,15 +1,6 @@
-/**
- * question-bank.service.ts
- *
- * DB-only question selection. No LLM, no JSON, no fallbacks.
- * Throws a clear badRequest error when the bank is empty.
- */
 import { prisma } from '../lib/prisma';
 import { badRequest } from '../lib/http-errors';
 
-/* ── Public shapes ──────────────────────────────────────────────────────── */
-
-/** Full record including correct_index — server-side only, never send to client */
 export interface SelectedAptitudeQuestion {
   id: string;
   category: string;
@@ -20,7 +11,6 @@ export interface SelectedAptitudeQuestion {
   correct_index: number;
 }
 
-/** Client-safe shape: correct_index stripped */
 export type PublicAptitudeQuestion = Omit<SelectedAptitudeQuestion, 'correct_index'>;
 
 export interface SelectedCodingProblem {
@@ -37,14 +27,12 @@ export interface SelectedCodingProblem {
     description?: string;
     hidden: boolean;
   }>;
-  expectedComplexity: { time: string; space: string };
+  expectedComplexity: { time: string; space: string } | null;
 }
 
 export interface SelectAptitudeOptions {
-  /** Per-category question counts, e.g. { 'Quantitative Aptitude': 5, ... } */
   distribution: Record<string, number>;
   difficulty?: 'easy' | 'medium' | 'hard';
-  /** IDs to exclude (already used in this session) */
   excludeIds?: string[];
 }
 
@@ -53,13 +41,6 @@ export interface SelectCodingOptions {
   category?: string;
 }
 
-/* ── Aptitude ────────────────────────────────────────────────────────────── */
-
-/**
- * Select aptitude questions from the DB with Fisher-Yates random sampling.
- * Returns full records including correct_index for server-side scoring.
- * Always call toPublicAptitudeQuestions() before sending to clients.
- */
 export async function selectAptitudeQuestions(
   opts: SelectAptitudeOptions,
 ): Promise<SelectedAptitudeQuestion[]> {
@@ -95,7 +76,6 @@ export async function selectAptitudeQuestions(
     }
 
     if (pool.length === 0) {
-      // Skip rather than crash — partial assessment beats a broken session
       console.warn(
         `[question-bank] No questions for "${category}"` +
           (difficulty ? ` (${difficulty})` : '') +
@@ -104,7 +84,6 @@ export async function selectAptitudeQuestions(
       continue;
     }
 
-    // Use however many are available when bank is slightly short
     const actualCount = Math.min(count, pool.length);
     if (pool.length < count) {
       console.warn(
@@ -132,18 +111,12 @@ export async function selectAptitudeQuestions(
   return results;
 }
 
-/** Strip correct_index before sending questions to the frontend */
 export function toPublicAptitudeQuestions(
   questions: SelectedAptitudeQuestion[],
 ): PublicAptitudeQuestion[] {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return questions.map(({ correct_index, ...pub }) => pub);
 }
 
-/**
- * Build per-category distribution from a total count and optional job config.
- * Equal split across 4 standard categories by default.
- */
 export function buildAptitudeDistribution(
   totalCount: number,
   mcqDistribution?: Record<string, number>,
@@ -170,13 +143,6 @@ export function buildAptitudeDistribution(
   return dist;
 }
 
-/* ── Coding ──────────────────────────────────────────────────────────────── */
-
-/**
- * Select a random coding problem from the DB.
- * Returns the full record including hidden tests.
- * Always strip hidden tests before sending to the client.
- */
 export async function selectCodingProblem(
   opts: SelectCodingOptions = {},
 ): Promise<SelectedCodingProblem> {
@@ -222,11 +188,9 @@ export async function selectCodingProblem(
       ...publicTests.map(tc => ({ ...tc, hidden: false })),
       ...hiddenTests.map(tc => ({ ...tc, hidden: true  })),
     ],
-    expectedComplexity: { time: 'O(n)', space: 'O(n)' },
+    expectedComplexity: null,
   };
 }
-
-/* ── Util ────────────────────────────────────────────────────────────────── */
 
 function shuffleInPlace<T>(arr: T[]): T[] {
   for (let i = arr.length - 1; i > 0; i--) {

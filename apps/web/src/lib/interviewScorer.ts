@@ -1,5 +1,3 @@
-import { Topic } from './interviewTopics';
-
 export type InterviewScoreStatus = 'pending_evaluation' | 'pending_review' | 'completed';
 
 export interface ScoreResults {
@@ -13,24 +11,18 @@ export interface ScoreResults {
 
 export function evaluateInterview({
   role,
-  topics,
   transcriptData,
 }: {
   role: string;
-  topics: Topic[];
   transcriptData: { question: string; answer: string; feedback: string }[];
 }): ScoreResults {
-  // Honest pending state: no real evaluator scorecard is available to this
-  // function. Scores are produced server-side by the Interviewer/Evaluator agent
-  // (see apps/api/src/routes/interviews/interviews.routes.ts POST /:id/end, which
-  // enqueues the evaluation job) and must NOT be fabricated on the client.
   const answeredCount = transcriptData.filter((t) => t.answer.trim().length > 0).length;
 
   return {
     status: 'pending_evaluation',
     isPending: true,
     score: null,
-    feedback: `Your responses have been recorded and sent for AI evaluation. ${answeredCount} of ${topics.length} topic(s) answered for the ${role} role.`,
+    feedback: `Your responses have been recorded and sent for AI evaluation. ${answeredCount} response(s) recorded for the ${role} role.`,
     rubric: {
       technical: null,
       communication: null,

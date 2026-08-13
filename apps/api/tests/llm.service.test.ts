@@ -15,15 +15,12 @@ vi.mock('@google/genai', () => {
 
 describe('llm.service', () => {
   let originalEnv: NodeJS.ProcessEnv;
-  const mockFetch = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     originalEnv = { ...process.env };
-    // Clear keys by default
     delete process.env.GEMINI_API_KEY;
     delete process.env.GOOGLE_API_KEY;
-    globalThis.fetch = mockFetch as unknown as typeof fetch;
   });
 
   afterEach(() => {
@@ -43,52 +40,18 @@ describe('llm.service', () => {
       model: 'gemini-2.5-flash',
       contents: 'Hello',
     });
-    // The Ollama task runs in parallel (Promise.any), so fetch is still invoked.
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:11434/api/generate', expect.anything());
   });
 
-  it('should fallback to Ollama when Gemini fails', async () => {
+  it('should throw when Gemini fails (no model fallback)', async () => {
     process.env.GEMINI_API_KEY = 'test-gemini-key';
     mockGenerateContent.mockRejectedValueOnce(new Error('Gemini API Error'));
 
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ response: 'Ollama Response' }),
-    });
-
-    const result = await generateText('Hello');
-
-    expect(result).toBe('Ollama Response');
+    await expect(generateText('Hello')).rejects.toThrow('Gemini API Error');
     expect(mockGenerateContent).toHaveBeenCalled();
-    expect(mockFetch).toHaveBeenCalledWith(
-      'http://localhost:11434/api/generate',
-      expect.objectContaining({
-        method: 'POST',
-        body: expect.stringContaining('"prompt":"Hello"'),
-      })
-    );
   });
 
-  it('should immediately call Ollama if no Gemini key is configured', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ response: 'Ollama Response Direct' }),
-    });
-
-    const result = await generateText('Hello');
-
-    expect(result).toBe('Ollama Response Direct');
+  it('should throw if no Gemini key is configured', async () => {
+    await expect(generateText('Hello')).rejects.toThrow(/GEMINI_API_KEY is not configured/);
     expect(mockGenerateContent).not.toHaveBeenCalled();
-    expect(mockFetch).toHaveBeenCalled();
-  });
-
-  it('should throw an error if both Gemini and Ollama fail', async () => {
-    process.env.GEMINI_API_KEY = 'test-gemini-key';
-    mockGenerateContent.mockRejectedValueOnce(new Error('Gemini Error'));
-    mockFetch.mockRejectedValueOnce(new Error('Ollama connection failed'));
-
-    await expect(generateText('Hello')).rejects.toThrow(
-      'Both Gemini and Ollama models failed to generate content'
-    );
   });
 });

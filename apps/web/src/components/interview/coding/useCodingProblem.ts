@@ -18,7 +18,7 @@ export interface CodingProblem {
   starterCode: Record<SupportedLanguage, string>;
   testCases: { name: string; input: string; expected: string; hidden?: boolean }[];
   editorial: string;
-  expectedComplexity: { time: string; space: string };
+  expectedComplexity: { time: string; space: string } | null;
 }
 
 interface UseCodingProblemOptions {
@@ -28,10 +28,6 @@ interface UseCodingProblemOptions {
   company: string;
 }
 
-/**
- * Loads a coding problem from the backend DB question bank and normalizes the
- * API payload into the local `CodingProblem` shape.
- */
 export function useCodingProblem({ applicationId, sessionId, role, company }: UseCodingProblemOptions) {
   const [problem, setProblem] = useState<CodingProblem | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -79,8 +75,7 @@ export function useCodingProblem({ applicationId, sessionId, role, company }: Us
             })),
             editorial: typeof p.editorial === 'string' ? p.editorial : '',
             expectedComplexity:
-              (p.expectedComplexity as CodingProblem['expectedComplexity']) ||
-              { time: 'O(n)', space: 'O(1)' },
+              (p.expectedComplexity as CodingProblem['expectedComplexity']) || null,
           };
           setProblem(loaded);
           setError(null);

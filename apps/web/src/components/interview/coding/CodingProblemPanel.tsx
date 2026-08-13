@@ -18,10 +18,6 @@ const TABS: { key: CodingLeftTab; label: string; icon: React.ElementType }[] = [
   { key: 'submissions', label: 'Submissions', icon: CheckCircle2 },
 ];
 
-/**
- * Left split of the coding workspace: the problem statement, editorial, and
- * submissions history tabs.
- */
 export function CodingProblemPanel({ problem, activeTab, onTabChange }: CodingProblemPanelProps) {
   return (
     <div className="w-1/2 bg-white dark:bg-[#141414] rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden shadow-xs">
@@ -42,7 +38,6 @@ export function CodingProblemPanel({ problem, activeTab, onTabChange }: CodingPr
         ))}
       </div>
 
-      {/* Left Panel Content */}
       <div className="flex-1 p-5 overflow-y-auto space-y-6 text-slate-700 dark:text-slate-300 text-xs font-medium leading-relaxed">
         {activeTab === 'description' && (
           <>
@@ -55,17 +50,15 @@ export function CodingProblemPanel({ problem, activeTab, onTabChange }: CodingPr
                   {problem.category}
                 </span>
                 <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono">
-                  Target Time: {problem.expectedComplexity.time}
+                  Target Time: {problem.expectedComplexity?.time ?? 'Not specified'}
                 </span>
               </div>
             </div>
 
-            {/* Description text */}
             <div className="whitespace-pre-line text-slate-800 dark:text-slate-200 leading-relaxed font-sans text-xs">
               {problem.description}
             </div>
 
-            {/* Examples */}
             {problem.examples.length > 0 && (
               <div className="space-y-3 pt-2">
                 <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Examples:</h4>
@@ -81,7 +74,6 @@ export function CodingProblemPanel({ problem, activeTab, onTabChange }: CodingPr
               </div>
             )}
 
-            {/* Constraints */}
             {problem.constraints.length > 0 && (
               <div className="space-y-2 pt-2">
                 <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider">Constraints:</h4>
@@ -107,8 +99,8 @@ export function CodingProblemPanel({ problem, activeTab, onTabChange }: CodingPr
             <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
               <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Target Complexity</span>
               <div className="flex justify-between font-mono text-xs text-slate-800 dark:text-slate-200">
-                <span>Time Complexity: <strong>{problem.expectedComplexity.time}</strong></span>
-                <span>Space Complexity: <strong>{problem.expectedComplexity.space}</strong></span>
+                <span>Time Complexity: <strong>{problem.expectedComplexity?.time ?? 'Not specified'}</strong></span>
+                <span>Space Complexity: <strong>{problem.expectedComplexity?.space ?? 'Not specified'}</strong></span>
               </div>
             </div>
           </div>

@@ -1,26 +1,21 @@
 import jwt from 'jsonwebtoken';
 
-const DEFAULT_JWT_SECRET = 'nextround_default_secret_key_change_in_production';
-const DEFAULT_REFRESH_TOKEN_SECRET = 'nextround_default_refresh_secret_key_change_in_production';
+const JWT_SECRET = process.env.JWT_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
-const JWT_SECRET = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || DEFAULT_REFRESH_TOKEN_SECRET;
-
-// Fail fast in production when either signing secret is unset or still a known
-// default — silently signing tokens with a shared, published secret would let
-// anyone forge access/refresh tokens.
-if (process.env.NODE_ENV === 'production') {
-  const missingSecrets = [
-    process.env.JWT_SECRET && process.env.JWT_SECRET !== DEFAULT_JWT_SECRET ? null : 'JWT_SECRET',
-    process.env.REFRESH_TOKEN_SECRET && process.env.REFRESH_TOKEN_SECRET !== DEFAULT_REFRESH_TOKEN_SECRET ? null : 'REFRESH_TOKEN_SECRET',
-  ].filter(Boolean);
-
-  if (missingSecrets.length > 0) {
-    throw new Error(
-      `Refusing to start in production: ${missingSecrets.join(' and ')} ${missingSecrets.length > 1 ? 'are' : 'is'} missing or set to a known default value. Set strong, unique secrets in the environment.`
-    );
-  }
+if (!JWT_SECRET || JWT_SECRET.length < 16) {
+  throw new Error(
+    'JWT_SECRET is missing or too short. Set a strong, unique secret in the environment.'
+  );
 }
+if (!REFRESH_TOKEN_SECRET || REFRESH_TOKEN_SECRET.length < 16) {
+  throw new Error(
+    'REFRESH_TOKEN_SECRET is missing or too short. Set a strong, unique secret in the environment.'
+  );
+}
+
+const signingSecret: string = JWT_SECRET;
+const refreshSecret: string = REFRESH_TOKEN_SECRET;
 
 export interface JwtPayload {
   userId: string;
@@ -30,17 +25,21 @@ export interface JwtPayload {
 }
 
 export function signAccessToken(payload: JwtPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
+  return jwt.sign(payload, signingSecret, { expiresIn: '1h' });
 }
 
 export function signRefreshToken(payload: JwtPayload): string {
-  return jwt.sign(payload, REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, refreshSecret, { expiresIn: '7d' });
+}
+
+function verifyToken(token: string, secret: string): JwtPayload {
+  return jwt.verify(token, secret) as unknown as JwtPayload;
 }
 
 export function verifyAccessToken(token: string): JwtPayload {
-  return jwt.verify(token, JWT_SECRET) as JwtPayload;
+  return verifyToken(token, signingSecret);
 }
 
 export function verifyRefreshToken(token: string): JwtPayload {
-  return jwt.verify(token, REFRESH_TOKEN_SECRET) as JwtPayload;
+  return verifyToken(token, refreshSecret);
 }

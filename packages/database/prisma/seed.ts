@@ -1,21 +1,3 @@
-/**
- * NextRound — Production-grade Enterprise Seed Dataset.
- *
- * Authentic Indian tech ecosystem simulation:
- *   - 10 Tech Organizations (Bengaluru, Hyderabad, Gurgaon, Pune, Mumbai, etc.)
- *   - 25+ HR / Talent Acquisition users (Lead HR: steve.hr@gmail.com / 123456789)
- *   - 25+ Realistic Tech Jobs with rubrics, stages, and salary bands (LPA / USD)
- *   - 120+ Candidate Profiles (Lead Candidate: pratham@gmail.com / 123456789)
- *   - 700+ Applications through a realistic enterprise hiring funnel
- *   - Full supporting ecosystem: evaluations, interviews, audio transcripts,
- *     assessments, coding submissions, offers with signatures, proctoring telemetry,
- *     mock sessions, prep guides, talent bookmarks, agent logs, and notifications.
- *   - Rich Question Bank: Aptitude (Quant, Reasoning, Verbal, DI) + Multi-language Coding Problems.
- *
- * Password for all accounts: 123456789
- * Run: npm run seed --workspace=@nextround/database
- */
-
 import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcryptjs';
@@ -27,9 +9,6 @@ if (!connectionString) {
 }
 const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
-/* ============================================================
- * 1. CONFIG & SEEDED RNG
- * ============================================================ */
 const DEFAULT_PASSWORD = '123456789';
 const SEED_KEY = 20260811;
 
@@ -94,9 +73,6 @@ function randomFutureDate(minDays: number, maxDays: number): Date {
   return d;
 }
 
-/* ============================================================
- * 2. INDIAN NAME POOLS & GEOGRAPHY
- * ============================================================ */
 const INDIAN_FIRST_NAMES = [
   'Aarav', 'Rohan', 'Priya', 'Ananya', 'Aditya', 'Vikram', 'Sneha', 'Rajesh', 'Neha',
   'Pooja', 'Rahul', 'Siddharth', 'Amit', 'Ishaan', 'Kavya', 'Ritu', 'Suresh', 'Meera',
@@ -192,9 +168,6 @@ function uniqueEmail(first: string, last: string): string {
   return email;
 }
 
-/* ============================================================
- * 3. ORGANIZATIONS DEFINITIONS
- * ============================================================ */
 interface CompanyDef {
   name: string;
   industry: string;
@@ -288,9 +261,6 @@ const COMPANIES: CompanyDef[] = [
   },
 ];
 
-/* ============================================================
- * 4. DOMAINS, SKILLS & ROLES
- * ============================================================ */
 type Domain = 'frontend' | 'backend' | 'fullstack' | 'ai' | 'devops' | 'mobile' | 'data' | 'product' | 'security';
 
 interface DomainDef {
@@ -298,7 +268,7 @@ interface DomainDef {
   label: string;
   skills: string[];
   roles: string[];
-  salaryLPA: [number, number]; // [min, max] in Lakhs Per Annum
+  salaryLPA: [number, number];
 }
 
 const DOMAIN_DATA: DomainDef[] = [
@@ -379,9 +349,6 @@ function seniority(yoe: number): string {
   return 'Principal / Architect';
 }
 
-/* ============================================================
- * 5. REALISTIC JOB TEMPLATES
- * ============================================================ */
 interface JobTemplate {
   orgName: string;
   title: string;
@@ -617,9 +584,6 @@ Google Cloud India is seeking a Cloud Infrastructure Engineer for our Kubernetes
   },
 ];
 
-/* ============================================================
- * 6. QUESTION BANK DATASETS (Aptitude + Coding)
- * ============================================================ */
 interface AptitudeSeedItem {
   category: 'Quantitative Aptitude' | 'Logical Reasoning' | 'Verbal Ability' | 'Data Interpretation';
   difficulty: 'easy' | 'medium' | 'hard';
@@ -631,7 +595,6 @@ interface AptitudeSeedItem {
 }
 
 const APTITUDE_BANK: AptitudeSeedItem[] = [
-  // ── Quantitative Aptitude ────────────────────────────────────────────────
   {
     category: 'Quantitative Aptitude',
     difficulty: 'easy',
@@ -687,7 +650,6 @@ const APTITUDE_BANK: AptitudeSeedItem[] = [
     tags: ['profit-loss', 'discount'],
   },
 
-  // ── Logical Reasoning ────────────────────────────────────────────────────
   {
     category: 'Logical Reasoning',
     difficulty: 'easy',
@@ -748,7 +710,6 @@ const APTITUDE_BANK: AptitudeSeedItem[] = [
     tags: ['directions', 'coordinate-geometry'],
   },
 
-  // ── Verbal Ability ───────────────────────────────────────────────────────
   {
     category: 'Verbal Ability',
     difficulty: 'easy',
@@ -824,7 +785,6 @@ const APTITUDE_BANK: AptitudeSeedItem[] = [
     tags: ['sentence-completion', 'vocabulary'],
   },
 
-  // ── Data Interpretation ──────────────────────────────────────────────────
   {
     category: 'Data Interpretation',
     difficulty: 'easy',
@@ -953,9 +913,6 @@ const APTITUDE_BANK: AptitudeSeedItem[] = [
   },
 ];
 
-/* ============================================================
- * 7. CODING PROBLEMS DATASETS
- * ============================================================ */
 interface CodingSeedItem {
   slug: string;
   title: string;
@@ -1294,14 +1251,10 @@ Output: 4
   },
 ];
 
-/* ============================================================
- * 8. MAIN SEED RUNNER
- * ============================================================ */
 async function main(): Promise<void> {
   const startedAt = Date.now();
   console.log('🚀 Starting NextRound database cleanup and seed...');
 
-  /* ---------- STEP 1: CLEANUP ALL TABLES IN TOPOLOGICAL ORDER ---------- */
   console.log('🧹 Wiping complete database cleanly...');
   await prisma.proctoringViolation.deleteMany({});
   await prisma.proctoringEvent.deleteMany({});
@@ -1327,10 +1280,8 @@ async function main(): Promise<void> {
   await prisma.codingProblem.deleteMany({});
   console.log('✨ All database tables successfully cleaned.');
 
-  /* ---------- STEP 2: PASSWORD HASHING ---------- */
   const defaultPasswordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
-  /* ---------- STEP 3: SEED QUESTION BANK ---------- */
   console.log('📚 Seeding Aptitude Questions...');
   await prisma.aptitudeQuestion.createMany({
     data: APTITUDE_BANK.map((q) => ({
@@ -1368,7 +1319,6 @@ async function main(): Promise<void> {
   }
   console.log(`✅ Seeded ${CODING_BANK.length} Coding Problems.`);
 
-  /* ---------- STEP 4: SEED ORGANIZATIONS ---------- */
   console.log('🏢 Creating Organizations...');
   const orgMap = new Map<string, { id: string; def: CompanyDef }>();
 
@@ -1385,11 +1335,9 @@ async function main(): Promise<void> {
     orgMap.set(company.name, { id: org.id, def: company });
   }
 
-  /* ---------- STEP 5: SEED HR USERS ---------- */
   console.log('👤 Creating HR Recruiter Accounts...');
   const hrUsers: Array<{ id: string; email: string; name: string; orgId: string; orgName: string }> = [];
 
-  // Primary HR User (steve.hr@gmail.com / 123456789)
   const razorFlowOrg = orgMap.get('RazorFlow Technologies')!;
   const steveUser = await prisma.user.create({
     data: {
@@ -1418,7 +1366,6 @@ async function main(): Promise<void> {
     orgName: razorFlowOrg.def.name,
   });
 
-  // Recruiter for NexusCloud Labs (sarah.hr@gmail.com)
   const nexusOrg = orgMap.get('NexusCloud Labs')!;
   const sarahUser = await prisma.user.create({
     data: {
@@ -1447,7 +1394,6 @@ async function main(): Promise<void> {
     orgName: nexusOrg.def.name,
   });
 
-  // Recruiter for ZomatoScale QuickCommerce (rohit.hr@gmail.com)
   const zomatoOrg = orgMap.get('ZomatoScale QuickCommerce')!;
   const rohitUser = await prisma.user.create({
     data: {
@@ -1476,7 +1422,6 @@ async function main(): Promise<void> {
     orgName: zomatoOrg.def.name,
   });
 
-  // Recruiter for Google Cloud India (anita.hr@gmail.com)
   const googleOrg = orgMap.get('Google Cloud India')!;
   const anitaUser = await prisma.user.create({
     data: {
@@ -1507,7 +1452,6 @@ async function main(): Promise<void> {
 
   console.log(`✅ Seeded ${hrUsers.length} HR Recruiter Accounts.`);
 
-  /* ---------- STEP 6: SEED JOBS ---------- */
   console.log('💼 Creating Tech Job Postings...');
   const jobList: Array<{
     id: string;
@@ -1587,7 +1531,6 @@ async function main(): Promise<void> {
   }
   console.log(`✅ Seeded ${jobList.length} Job Postings.`);
 
-  /* ---------- STEP 7: SEED CANDIDATES ---------- */
   console.log('🎓 Creating Candidate Profiles...');
   const candidateList: Array<{
     userId: string;
@@ -1601,7 +1544,6 @@ async function main(): Promise<void> {
     location: string;
   }> = [];
 
-  // Primary Candidate User (pratham@gmail.com / 123456789)
   const prathamUser = await prisma.user.create({
     data: {
       email: 'pratham@gmail.com',
@@ -1661,7 +1603,6 @@ async function main(): Promise<void> {
     location: 'Bengaluru, India',
   });
 
-  // Additional 7 Hand-crafted Candidates representing realistic profiles
   const OTHER_CANDIDATES = [
     {
       email: 'priya.sharma@gmail.com',
@@ -1860,12 +1801,10 @@ async function main(): Promise<void> {
   }
   console.log(`✅ Seeded ${candidateList.length} Candidate Profiles.`);
 
-  /* ---------- STEP 8: SEED APPLICATIONS & PIPELINE FUNNEL ---------- */
   console.log('📈 Generating Enterprise Hiring Funnel & Applications...');
 
   let totalApps = 0;
 
-  // Find job IDs
   const razorFlowBackendJob = jobList.find(j => j.title === 'Senior Backend Engineer (Payments Core)' && j.orgName === 'RazorFlow Technologies')!;
   const razorFlowFullStackJob = jobList.find(j => j.title === 'Lead Full-Stack Engineer (Merchant Portal)' && j.orgName === 'RazorFlow Technologies')!;
   const razorFlowSecurityJob = jobList.find(j => j.title === 'Staff Security Engineer (AppSec & Cloud)' && j.orgName === 'RazorFlow Technologies')!;
@@ -1877,7 +1816,6 @@ async function main(): Promise<void> {
   
   const googleCloudK8sJob = jobList.find(j => j.title === 'Cloud Infrastructure Engineer (Kubernetes Core)' && j.orgName === 'Google Cloud India')!;
 
-  // Helpers to get created candidates
   const getCand = (email: string) => candidateList.find(c => c.email === email)!;
 
   const prathamCand = getCand('pratham@gmail.com');
@@ -1889,8 +1827,6 @@ async function main(): Promise<void> {
   const snehaCand = getCand('sneha.malhotra@gmail.com');
   const kabirCand = getCand('kabir.shah@gmail.com');
 
-  // Let's seed Pratham's applications:
-  // 1. RazorFlow Backend -> offered (Offer: pending review)
   const appPratham1 = await prisma.application.create({
     data: {
       candidate_id: prathamCand.profileId,
@@ -1909,16 +1845,9 @@ async function main(): Promise<void> {
     evaluationDecision: 'hire',
     evaluationReasoning: 'Exceptional candidate demonstrating deep proficiency in full-stack architecture, clean concurrency primitives, and production resilience. Strongly recommended for hire.',
     offerSalaryLPA: 46,
-    interviewTranscript: [
-      { speaker: 'ai', text: 'Welcome Pratham. Can you walk me through your solution for handling high-concurrency payment streams at scale?' },
-      { speaker: 'candidate', text: 'To handle high concurrency, I decouple payment ingestion from processing using Kafka. I ensure idempotency on the database level using optimistic locking and record-level locking for transactions, preventing double-debits while keeping low database lock contention.' },
-      { speaker: 'ai', text: 'Excellent. What database isolation levels do you choose for payments ledgers?' },
-      { speaker: 'candidate', text: 'I enforce Read Committed for generic read workloads, but elevate to Serializable or perform explicit SELECT FOR UPDATE locks for debit/credit operations to prevent write anomalies.' }
-    ]
   });
   totalApps++;
 
-  // 2. RazorFlow Lead FullStack -> interview_scheduled
   const appPratham2 = await prisma.application.create({
     data: {
       candidate_id: prathamCand.profileId,
@@ -1935,7 +1864,6 @@ async function main(): Promise<void> {
   });
   totalApps++;
 
-  // 3. NexusCloud AI Architect -> assessment (Pending)
   const appPratham3 = await prisma.application.create({
     data: {
       candidate_id: prathamCand.profileId,
@@ -1949,7 +1877,6 @@ async function main(): Promise<void> {
   });
   totalApps++;
 
-  // 4. ZomatoScale Frontend -> applied (Ready for AI screening)
   const appPratham4 = await prisma.application.create({
     data: {
       candidate_id: prathamCand.profileId,
@@ -1960,7 +1887,6 @@ async function main(): Promise<void> {
   });
   totalApps++;
 
-  // 5. Google Cloud India Kubernetes Core -> hr_round (scheduled)
   const appPratham5 = await prisma.application.create({
     data: {
       candidate_id: prathamCand.profileId,
@@ -1978,14 +1904,9 @@ async function main(): Promise<void> {
     resumeScore: 91.0,
     evaluationDecision: 'hire',
     evaluationReasoning: 'Candidate cleared technical evaluations with outstanding performance in Linux internals and container orchestration. Advanced to HR round.',
-    interviewTranscript: [
-      { speaker: 'ai', text: 'How do Kubernetes network plugins (CNIs) handle container namespace packet forwarding?' },
-      { speaker: 'candidate', text: 'CNIs typically create a veth pair. One interface is placed inside the container namespace, and the other is attached to a bridge or routed using Calico BGP in the host network. Traffic is routed based on IP routing rules or overlay networks (VXLAN).' }
-    ]
   });
   totalApps++;
 
-  // 6. NexusCloud Distributed Systems -> rejected
   const appPratham6 = await prisma.application.create({
     data: {
       candidate_id: prathamCand.profileId,
@@ -2001,16 +1922,10 @@ async function main(): Promise<void> {
     resumeScore: 80.0,
     evaluationDecision: 'reject',
     evaluationReasoning: 'Candidate demonstrated strong backend skills but lacked deep low-latency Rust experience required for this specific role.',
-    interviewTranscript: [
-      { speaker: 'ai', text: 'Can you write a lock-free ring buffer in Rust using atomic orderings?' },
-      { speaker: 'candidate', text: 'I would use std::sync::atomic with Acquire and Release orderings, but I have mostly worked with Go sync channels and mutex locking in production rather than raw Rust atomic pointers.' }
-    ]
   });
   totalApps++;
 
 
-  // Seed OTHER candidates applications:
-  // 1. Priya Sharma -> RazorFlow Lead FullStack (status interviewed, needs evaluation)
   const appPriya = await prisma.application.create({
     data: {
       candidate_id: priyaCand.profileId,
@@ -2027,16 +1942,9 @@ async function main(): Promise<void> {
     proctoringViolations: [
       { ruleCode: 'repeated_tab_switch', severity: 'low', count: 2 }
     ],
-    interviewTranscript: [
-      { speaker: 'ai', text: 'How do React Server Components (RSC) improve performance compared to standard Client components?' },
-      { speaker: 'candidate', text: 'RSC runs on the server, which means the bundle size of client-side JS is significantly reduced. Data fetching can occur closer to the database, eliminating multiple roundtrips and avoiding client-side layout shifts.' },
-      { speaker: 'ai', text: 'Great. Tell me about your WebGL project.' },
-      { speaker: 'candidate', text: 'I built a 3D financial kinetic visualization tool using Three.js and custom GLSL vertex shaders to display transactions streaming in real time without lagging the main browser thread.' }
-    ]
   });
   totalApps++;
 
-  // 2. Amit Patel -> RazorFlow Backend (status screening_completed)
   const appAmit = await prisma.application.create({
     data: {
       candidate_id: amitCand.profileId,
@@ -2047,7 +1955,6 @@ async function main(): Promise<void> {
   });
   totalApps++;
 
-  // 3. Ananya Iyer -> RazorFlow Lead FullStack (status applied, ready for screening)
   const appAnanya = await prisma.application.create({
     data: {
       candidate_id: ananyaCand.profileId,
@@ -2058,7 +1965,6 @@ async function main(): Promise<void> {
   });
   totalApps++;
 
-  // 4. Vikram Reddy -> RazorFlow Security Engineer (status accepted, offer signed)
   const appVikram = await prisma.application.create({
     data: {
       candidate_id: vikramCand.profileId,
@@ -2077,14 +1983,9 @@ async function main(): Promise<void> {
     evaluationDecision: 'hire',
     evaluationReasoning: 'Strong principal-level security candidate. Demonstrated deep knowledge in threat modeling, Kubernetes runtime hardening, and DevSecOps compliance.',
     offerSalaryLPA: 62,
-    interviewTranscript: [
-      { speaker: 'ai', text: 'How do you secure containers sharing the host kernel in a multi-tenant Kubernetes cluster?' },
-      { speaker: 'candidate', text: 'I enforce seccomp profiles, AppArmor/SELinux boundary checks, drop all default Linux capabilities except necessary ones, and implement NetworkPolicies to restrict pod-to-pod communication. I also employ gVisor or Kata Containers for strong virtualization-based container isolation.' }
-    ]
   });
   totalApps++;
 
-  // 5. Rahul Gupta -> RazorFlow Backend (status rejected, failed assessment threshold)
   const appRahul = await prisma.application.create({
     data: {
       candidate_id: rahulCand.profileId,
@@ -2105,7 +2006,6 @@ async function main(): Promise<void> {
   });
   totalApps++;
 
-  // 6. Sneha Malhotra -> NexusCloud AI Architect (status evaluation)
   const appSneha = await prisma.application.create({
     data: {
       candidate_id: snehaCand.profileId,
@@ -2121,14 +2021,9 @@ async function main(): Promise<void> {
     resumeScore: 88.0,
     evaluationDecision: 'hold_for_review',
     evaluationReasoning: 'Good machine learning foundations and LLM inference tuning experience. Needs comparison with other candidates in the pool before extending an offer.',
-    interviewTranscript: [
-      { speaker: 'ai', text: 'What techniques do you use to reduce LLM memory footprints during high-throughput inference?' },
-      { speaker: 'candidate', text: 'I apply KV caching techniques, PagedAttention via vLLM to prevent memory fragmentation, and model quantization (INT8/FP4). I also use TensorRT-LLM for kernel fusion and optimized attention operations.' }
-    ]
   });
   totalApps++;
 
-  // 7. Kabir Shah -> NexusCloud Distributed Systems (status offered)
   const appKabir = await prisma.application.create({
     data: {
       candidate_id: kabirCand.profileId,
@@ -2150,10 +2045,8 @@ async function main(): Promise<void> {
 
   console.log(`✅ Seeded ${totalApps} Applications with full assessment, interview, evaluation, and offer lifecycle.`);
 
-  /* ---------- STEP 9: SEED MOCK INTERVIEW SESSIONS & PREP CONTENT ---------- */
   console.log('🎯 Seeding Mock Sessions and Prep Content for Candidates...');
 
-  // Mock sessions for Pratham
   for (let m = 0; m < 3; m++) {
     const mockSession = await prisma.mockSession.create({
       data: {
@@ -2177,7 +2070,6 @@ async function main(): Promise<void> {
       },
     });
 
-    // Seed mock proctoring session
     await prisma.proctoringSession.create({
       data: {
         candidate_id: prathamCand.profileId,
@@ -2192,7 +2084,6 @@ async function main(): Promise<void> {
     });
   }
 
-  // Seed Resume Builder sessions for Pratham to display real completed resumes
   console.log('📄 Seeding completed Resume Builder history for Pratham...');
   const resumeDetails = {
     name: 'Pratham Rajbhar',
@@ -2281,7 +2172,6 @@ async function main(): Promise<void> {
     },
   });
 
-  // Prep content for top companies
   for (const company of COMPANIES.slice(0, 4)) {
     await prisma.prepContent.create({
       data: {
@@ -2299,10 +2189,8 @@ async function main(): Promise<void> {
     });
   }
 
-  /* ---------- STEP 10: SEED NOTIFICATIONS & TALENT BOOKMARKS ---------- */
   console.log('🔔 Seeding Notifications & Talent Bookmarks...');
 
-  // Notifications for Pratham
   await prisma.notification.createMany({
     data: [
       {
@@ -2332,7 +2220,6 @@ async function main(): Promise<void> {
     ],
   });
 
-  // Notifications for Steve (HR)
   await prisma.notification.createMany({
     data: [
       {
@@ -2354,7 +2241,6 @@ async function main(): Promise<void> {
     ],
   });
 
-  // Bookmarks for Steve Rao
   await prisma.talentBookmark.create({
     data: {
       org_id: razorFlowOrg.id,
@@ -2370,7 +2256,6 @@ async function main(): Promise<void> {
     },
   });
 
-  /* ---------- STEP 11: AGENT LOGS ---------- */
   console.log('🤖 Seeding Agent Execution Logs...');
   const agentLogs = [];
   for (const job of jobList) {
@@ -2397,7 +2282,6 @@ async function main(): Promise<void> {
   }
   await prisma.agentLog.createMany({ data: agentLogs });
 
-  /* ---------- FINISHED ---------- */
   const durationSec = ((Date.now() - startedAt) / 1000).toFixed(1);
   console.log('\n======================================================');
   console.log(`🎉 Database Seed Completed Successfully in ${durationSec}s!`);
@@ -2424,15 +2308,11 @@ async function main(): Promise<void> {
   console.log('======================================================\n');
 }
 
-/* ============================================================
- * HELPER: SEED APPLICATION DEEP DETAILS
- * ============================================================ */
 interface SeedAppCustomDetails {
   aptitudeScore?: number;
   codingScore?: number;
   interviewScore?: number;
   resumeScore?: number;
-  interviewTranscript?: Array<{ speaker: string; text: string }>;
   proctoringViolations?: Array<{ ruleCode: string; severity: 'low' | 'medium' | 'high'; count: number }>;
   evaluationReasoning?: string;
   evaluationDecision?: 'hire' | 'reject' | 'hold_for_review';
@@ -2454,7 +2334,6 @@ async function seedApplicationDetails(
   const needsEvaluation = ['evaluation', 'hr_round', 'decided', 'offered', 'accepted', 'rejected'].includes(status);
   const needsOffer = ['offered', 'accepted'].includes(status);
 
-  // 1. Assessment
   let assessmentId: string | undefined = undefined;
   if (needsAssessment) {
     const isPending = custom?.isAssessmentPending ?? false;
@@ -2489,7 +2368,6 @@ async function seedApplicationDetails(
     });
     assessmentId = assessment.id;
 
-    // Proctoring Session for Assessment
     const proctorSession = await prisma.proctoringSession.create({
       data: {
         candidate_id: candidateProfileId,
@@ -2504,7 +2382,6 @@ async function seedApplicationDetails(
       },
     });
 
-    // Proctoring Events
     await prisma.proctoringEvent.createMany({
       data: [
         {
@@ -2534,7 +2411,6 @@ async function seedApplicationDetails(
       ],
     });
 
-    // Seed proctoring violations if provided
     if (custom?.proctoringViolations && !isPending) {
       for (const violation of custom.proctoringViolations) {
         await prisma.proctoringViolation.create({
@@ -2552,14 +2428,12 @@ async function seedApplicationDetails(
     }
 
     if (!isPending) {
-      // Find the actual CodingProblem ID in DB
       const dbProblem = await prisma.codingProblem.findFirst({
         where: {
           slug: job.title.includes('Frontend') ? 'valid-parentheses' : 'two-sum',
         },
       });
 
-      // Coding Submissions
       await prisma.codingSubmission.create({
         data: {
           application_id: appId,
@@ -2592,35 +2466,19 @@ async function seedApplicationDetails(
     }
   }
 
-  // 2. Interview
   if (needsInterview) {
-    const defaultTranscript = [
-      { speaker: 'ai', text: 'Welcome to the NextRound technical evaluation. Can you describe how you approach database connection pooling and transaction isolation in a microservice?' },
-      { speaker: 'candidate', text: 'I typically configure connection pools with explicit min/max bounds and health checks, using Read Committed as the default isolation level, and upgrading to Serializable or optimistic locking for sensitive financial transactions.' },
-      { speaker: 'ai', text: 'Excellent. How do you handle cache invalidation when high-frequency writes occur?' },
-      { speaker: 'candidate', text: 'I prefer Write-Through caching combined with CDC (Change Data Capture) over Kafka to broadcast cache evictions asynchronously across distributed replicas.' },
-    ];
-
-    const transcript = custom?.interviewTranscript ?? defaultTranscript;
-
     await prisma.interview.create({
       data: {
         application_id: appId,
         scheduled_at: status === 'interview_scheduled' ? randomFutureDate(1, 5) : randomPastDate(2, 14),
-        transcript: transcript as any,
+        transcript: [],
         status: status === 'interview_scheduled' ? 'scheduled' : 'completed',
-        sentiment_report: {
-          sentiment: 'positive',
-          confidenceScore: 0.92,
-          tone: 'articulate and confident',
-          clarityScore: 94,
-        },
-        engagement_signal: { eyeContactPercent: 95, speakingPaceWPM: 135, pausesAppropriate: true },
+        sentiment_report: null,
+        engagement_signal: null,
       },
     });
   }
 
-  // 3. Evaluation
   if (needsEvaluation) {
     const resumeScore = custom?.resumeScore ?? (isPratham ? 95 : randFloat(70, 98));
     const interviewScore = custom?.interviewScore ?? (isPratham ? 94 : randFloat(68, 96));
@@ -2648,7 +2506,6 @@ async function seedApplicationDetails(
     });
   }
 
-  // 4. Offer
   if (needsOffer) {
     const salary = custom?.offerSalaryLPA ? (custom.offerSalaryLPA * 100000) : (job.salaryLPA[1] - 2) * 100000;
     await prisma.offer.create({
@@ -2659,7 +2516,7 @@ async function seedApplicationDetails(
         equity: '0.15% Stock Options (4-year vesting, 1-year cliff)',
         start_date: daysFromNow(20),
         status: status === 'accepted' ? 'accepted' : 'pending',
-        signature_svg: status === 'accepted' ? '<svg viewBox="0 0 200 60"><path d="M10 40 Q 50 10, 90 40 T 170 30" stroke="#ff6b00" fill="none" stroke-width="3"/></svg>' : null,
+        signature_svg: null,
         offer_letter_content: `We are pleased to extend an offer for the position of ${job.title} with an annual CTC of ₹${(salary / 100000).toFixed(0)} Lakhs and 0.15% equity.`,
         valid_until: daysFromNow(14),
       },

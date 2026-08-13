@@ -218,10 +218,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
     amber: 'bg-amber-100 dark:bg-amber-900/80 text-amber-800 dark:text-amber-200',
   };
 
-  // Sequential pipeline gate — only show the EARLIEST pending/active step.
-  // Each step is only included if its prerequisite stage is complete.
   const allNextSteps = [
-    // 1. AI Screening (only if still in applied/screening)
     (app.status === 'applied' || app.status === 'screening') &&
     (!job?.stages || job.stages.includes('screening')) && {
       icon: Sparkles,
@@ -233,7 +230,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       badge: 'In Progress',
     },
 
-    // 2. Aptitude Assessment (only after screening_completed or in assessment stage)
     (app.status === 'screening_completed' || app.status === 'assessment') &&
     (!job?.stages || job.stages.includes('assessment')) && {
       icon: ClipboardCheck,
@@ -247,7 +243,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       badge: assessments[0]?.status === 'completed' ? 'Completed' : 'Pending',
     },
 
-    // 3. Offer (only after decision)
     offer && isDecisionDone && {
       icon: Gift,
       label: 'Review Your Offer',
@@ -257,7 +252,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       badge: offer.status === 'accepted' ? 'Completed' : 'Action Required',
     },
 
-    // 4. Onboarding (only after decision + onboarding assigned)
     onboarding && isDecisionDone && {
       icon: UserPlus,
       label: 'Onboarding Checklist',
@@ -276,8 +270,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
     badge: string;
   }[];
 
-  // Show only the FIRST active (non-completed) step in the Next Steps panel.
-  // Once a step is marked completed, the next one becomes active.
   const completedBadges = ['Completed', 'Graded'];
   const firstIncomplete = allNextSteps.find((s) => !completedBadges.includes(s.badge));
   const nextSteps = firstIncomplete ? [firstIncomplete] : [];
@@ -286,7 +278,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      {/* Breadcrumb Navigation */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
           <Link
@@ -308,14 +299,10 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
         </Link>
       </div>
 
-      {/* Header Banner Card */}
       <ApplicationHeaderBanner app={app} jobLogo={job?.orgLogo} matchPercent={matchPercent} />
 
-      {/* Main Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column (2 Cols): Stage Pipeline & AI Scorecard */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Stage Pipeline Timeline Card */}
           <StagePipelineTimeline
             stages={stages}
             onStageClick={(stageName) => {
@@ -325,13 +312,10 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
             }}
           />
 
-          {/* AI Scorecard Breakdown (if scores exist) */}
           {app.scores && <CandidateScorecard scores={app.scores} />}
         </div>
 
-        {/* Right Column: Decision Action Panel & Next Steps */}
         <div className="space-y-6">
-          {/* Offer Released Banner (if decided) */}
           {app.status === 'decided' && (
             <div className="relative overflow-hidden rounded-3xl border border-emerald-200 dark:border-emerald-800/80 bg-gradient-to-br from-emerald-50/60 via-emerald-50/30 to-teal-50/40 dark:from-emerald-950/50 dark:via-emerald-900/30 dark:to-teal-950/40 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
               <div className="flex items-center justify-between">
@@ -351,7 +335,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
               </p>
 
               <div className="bg-white/80 dark:bg-slate-900/80 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/60 text-xs text-slate-700 dark:text-slate-200 italic font-medium shadow-2xs">
-                &ldquo;{app.reasoning || 'Candidate completed evaluation rounds and qualification criteria.'}&rdquo;
+                &ldquo;{app.reasoning ? app.reasoning : 'No evaluator notes are available for this application.'}&rdquo;
               </div>
 
               {offer && (
@@ -366,7 +350,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
             </div>
           )}
 
-          {/* Interview Scheduled Status Box */}
           {app.status === 'interview_scheduled' && (
             <div className="rounded-3xl border border-purple-200 dark:border-purple-800 bg-purple-50/50 dark:bg-purple-950/40 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
               <div className="flex items-center gap-2 text-purple-700 dark:text-purple-300 font-bold">
@@ -387,7 +370,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
             </div>
           )}
 
-          {/* Human HR Round Status Box */}
           {(app.status === 'hr_round' || app.stage === 'HR Round') && (
             <div className="rounded-3xl border border-brand-200 dark:border-orange-800/80 bg-brand-50/50 dark:bg-orange-950/40 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
               <div className="flex items-center gap-2 text-brand-700 dark:text-orange-300 font-extrabold">
@@ -407,7 +389,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
             </div>
           )}
 
-          {/* Next Steps Items List */}
           {nextSteps.length > 0 && (
             <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 p-6 shadow-sm backdrop-blur-md glass-panel space-y-4">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display border-b border-slate-200/60 dark:border-slate-800 pb-3">
@@ -466,7 +447,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
             </div>
           )}
 
-          {/* AI Practice Promo Card */}
           <div className="rounded-3xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/30 dark:bg-amber-950/20 p-6 shadow-sm backdrop-blur-md glass-panel space-y-3">
             <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-extrabold">
               <Sparkles className="h-4.5 w-4.5 text-amber-600 dark:text-amber-400" />
@@ -486,7 +466,6 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
         </div>
       </div>
 
-      {/* AI Resume Screening Interactive Modal */}
       {showScreeningModal && (
         <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 md:p-8 max-w-lg w-full shadow-2xl space-y-6">
@@ -537,7 +516,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
                     <span>Screening Passed!</span>
                   </div>
                   <p className="text-[11px] leading-relaxed text-emerald-800 dark:text-emerald-300 font-medium">
-                    {app.reasoning || 'Qualification check complete. Your profile matched job criteria and advanced to the Assessment stage.'}
+                    {app.reasoning ? app.reasoning : 'No screening notes are available for this application.'}
                   </p>
                 </div>
               ) : (
@@ -549,7 +528,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
                         <span>Screening Rejected</span>
                       </div>
                       <p className="text-[11px] leading-relaxed text-rose-800 dark:text-rose-300 font-medium whitespace-pre-wrap">
-                        {app.reasoning || 'The AI Screening Agent evaluated your profile and determined it does not meet the minimum requirements for this role at this time.'}
+                        {app.reasoning ? app.reasoning : 'No rejection feedback is available for this application.'}
                       </p>
                     </div>
                   )}

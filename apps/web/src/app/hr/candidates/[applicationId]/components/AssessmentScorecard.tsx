@@ -42,19 +42,17 @@ export function AssessmentScorecard({ assessmentData }: AssessmentScorecardProps
         </span>
       </div>
 
-      {/* Subsection scores */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-white/50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 p-3 rounded-2xl text-xs font-semibold text-slate-700 dark:text-slate-300">
           <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase block">MCQ Logic Vetting</span>
-          <span className="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-1 block">{assessmentData.mcqScore ?? assessmentData.overallScore ?? 80}%</span>
+          <span className="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-1 block">{assessmentData.mcqScore ?? assessmentData.overallScore ?? '—'}%</span>
         </div>
         <div className="bg-white/50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700 p-3 rounded-2xl text-xs font-semibold text-slate-700 dark:text-slate-300">
           <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase block">Coding Algorithmic Logic</span>
-          <span className="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-1 block">{assessmentData.codingScore ?? assessmentData.codeScore ?? 85}%</span>
+          <span className="text-base font-extrabold text-slate-800 dark:text-slate-100 mt-1 block">{assessmentData.codingScore ?? assessmentData.codeScore ?? '—'}%</span>
         </div>
       </div>
 
-      {/* Category Breakdowns if available */}
       {assessmentData.categoryScores && Object.keys(assessmentData.categoryScores).length > 0 && (
         <div className="space-y-2 pt-2 border-t border-amber-200/40 dark:border-amber-900/40">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Category Skill Breakdown</span>
@@ -69,7 +67,6 @@ export function AssessmentScorecard({ assessmentData }: AssessmentScorecardProps
         </div>
       )}
 
-      {/* Proctoring & Complexity Telemetry */}
       {(assessmentData.tabSwitchCount !== undefined || assessmentData.complexityAnalysis) && (
         <div className="space-y-2 pt-2 border-t border-amber-200/40 dark:border-amber-900/40 text-xs font-semibold">
           {assessmentData.tabSwitchCount !== undefined && assessmentData.tabSwitchCount > 0 && (
@@ -87,7 +84,6 @@ export function AssessmentScorecard({ assessmentData }: AssessmentScorecardProps
         </div>
       )}
 
-      {/* Monospace Code Viewer */}
       {assessmentData.submittedCode && (
         <div className="space-y-2">
           <button

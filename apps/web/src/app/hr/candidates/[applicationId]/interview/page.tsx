@@ -14,7 +14,7 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
 
   const [isPlaying, setIsPlaying] = useState(false);
   const currentTime = '02:40';
-  const progress = 30; // percentage
+  const progress = 30;
 
   useEffect(() => {
     async function fetchReplay() {
@@ -30,9 +30,6 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
                 const parsed = JSON.parse(local);
                 nextApp = {
                   ...data,
-                  // Only merge a client scorecard that actually carries a real
-                  // completed score. A pending review (score: null) must not
-                  // overwrite the server-authoritative scores with 0s/NaN.
                   scores:
                     parsed.status === 'completed' && typeof parsed.score === 'number'
                       ? {
@@ -90,7 +87,6 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Breadcrumbs */}
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
         <Link href="/hr/dashboard" className="hover:text-purple-600">Overview</Link>
         <ChevronRight className="h-3 w-3 text-slate-300" />
@@ -99,7 +95,6 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
         <span className="text-slate-800">Voice Replay</span>
       </div>
 
-      {/* Header */}
       <div className="rounded-3xl border border-white/60 bg-white/45 p-6 shadow-md backdrop-blur-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Audio Archive Room</span>
@@ -110,9 +105,7 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
         </button>
       </div>
 
-      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Audio Card */}
         <div className="rounded-3xl border border-white/60 bg-white/40 p-6 shadow-md backdrop-blur-md space-y-6">
           <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">Audio Controller</h3>
           <div className="flex items-center justify-center gap-4">
@@ -132,7 +125,6 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
           </div>
         </div>
 
-        {/* Transcripts */}
         <div className="lg:col-span-2 rounded-3xl border border-white/60 bg-white/40 p-6 md:p-8 shadow-sm backdrop-blur-md space-y-6">
           <h3 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2">Conversation Log</h3>
           <div className="space-y-6">
@@ -150,7 +142,7 @@ export default function HrInterviewReplayPage({ params }: { params: Promise<{ ap
                   <div className="bg-emerald-50/40 border border-emerald-100/50 p-3 rounded-2xl text-[11px] text-slate-500 font-semibold leading-relaxed w-full">
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-extrabold text-slate-850">Evaluator Score Annotation</span>
-                      <span className="text-emerald-705 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">{item.score || app.scores?.composite || 85}% grade</span>
+                      <span className="text-emerald-705 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">{item.score ?? app.scores?.composite ?? '—'}% grade</span>
                     </div>
                     {item.feedback}
                   </div>

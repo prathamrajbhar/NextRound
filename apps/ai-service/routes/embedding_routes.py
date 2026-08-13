@@ -13,13 +13,10 @@ logger = logging.getLogger("embedding_routes")
 
 embedding_router = APIRouter(prefix="/api/v1/embeddings", tags=["embeddings"])
 
-# Exact engine label per source so callers can detect hash fallbacks and never
-# treat them as a real semantic embedding.
 SOURCE_MODEL_LABELS = {
     "onnx": "BAAI/bge-base-en-v1.5 (ONNX)",
     "gemini": "Gemini text-embedding-004",
-    "hash-fallback": "Fallback-768 hash",
-    "empty": "Fallback-768 hash",
+    "empty": "Empty input (zero vector)",
 }
 
 
@@ -35,9 +32,6 @@ class SimilarityRequest(BaseModel):
 
 @embedding_router.post("/generate")
 async def generate_embedding(req: EmbeddingRequest):
-    """
-    Generate 768-dimensional vector embedding for input text using self-hosted ONNX model.
-    """
     if not req.text or not req.text.strip():
         raise HTTPException(status_code=400, detail="Text field cannot be empty")
 
@@ -48,7 +42,7 @@ async def generate_embedding(req: EmbeddingRequest):
         vec, source = embed_text_with_source(req.text)
     elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
-    model_name = SOURCE_MODEL_LABELS.get(source, "Fallback-768 hash")
+    model_name = SOURCE_MODEL_LABELS.get(source, "Unknown")
 
     return {
         "success": True,
@@ -63,17 +57,11 @@ async def generate_embedding(req: EmbeddingRequest):
 
 @embedding_router.post("/similarity")
 async def compute_similarity(req: SimilarityRequest):
-    """
-    Compute cosine similarity score (0.0 to 1.0) between two text strings using 768-dim embeddings.
-    """
     start_time = time.perf_counter()
     vec_a, src_a = embed_text_with_source(req.text_a)
     vec_b, src_b = embed_text_with_source(req.text_b)
     elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
-    # The score is only semantically meaningful if neither side is a fallback
-    # (zero/hash vector). Report None when either side lacks a real embedding
-    # rather than returning a fabricated cosine of 0.0.
     semantic = {"onnx", "gemini"}
     if src_a in semantic and src_b in semantic:
         score = cosine_similarity(vec_a, vec_b)

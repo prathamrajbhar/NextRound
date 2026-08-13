@@ -97,24 +97,19 @@ type ResumeStatus = 'idle' | 'generating' | 'completed' | 'error';
 export default function AIResumeBuilderPage() {
   const [stage, setStage] = useState<Stage>('setup');
 
-  // Setup Form
   const [targetRole, setTargetRole] = useState('Senior Full Stack Engineer');
   const [experienceLevel, setExperienceLevel] = useState('Senior (5+ Years)');
 
-  // Call duration countdown
-  const [timeRemaining, setTimeRemaining] = useState(900); // 15 mins
+  const [timeRemaining, setTimeRemaining] = useState(900);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
-  // Resume status
   const [resumeStatus, setResumeStatus] = useState<ResumeStatus>('idle');
   const [resumeData, setResumeData] = useState<ATSResumeData>(DEFAULT_GENERATED_RESUME);
   const [selectedTemplate, setSelectedTemplate] = useState<'classic' | 'modern' | 'executive'>('classic');
   const [copiedText, setCopiedText] = useState(false);
 
-  // Video Ref for Local WebCam Feed
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Instantiate Voice Session Hook
   const {
     sessionId,
     conversationHistory,
@@ -140,7 +135,6 @@ export default function AIResumeBuilderPage() {
     },
   });
 
-  // Extract current AI message
   const lastAiMessage = [...conversationHistory]
     .reverse()
     .find((h) => h.role === 'ai')?.content || 'Connecting to AI voice agent...';
@@ -150,7 +144,6 @@ export default function AIResumeBuilderPage() {
     simulatedUserAnswer: '',
   };
 
-  // Local webcam and microphone analysis feed; released when unmounted
   const { micLevel } = useLocalMediaStream({
     videoRef,
     camActive,
@@ -158,7 +151,6 @@ export default function AIResumeBuilderPage() {
     enabled: stage === 'interview',
   });
 
-  // Timer countdown
   useEffect(() => {
     if (!isTimerRunning || timeRemaining <= 0) return;
     const timer = setInterval(() => {
@@ -167,7 +159,6 @@ export default function AIResumeBuilderPage() {
     return () => clearInterval(timer);
   }, [isTimerRunning, timeRemaining]);
 
-  // Polling for resume builder worker completion
   useEffect(() => {
     if (stage !== 'resume' || !sessionId || resumeStatus !== 'generating') return;
 
@@ -185,7 +176,6 @@ export default function AIResumeBuilderPage() {
           const raw = res.generatedResume || {};
           const contact = raw.contact || {};
 
-          // Map backend format to strict frontend ATSResumeData interface
           const mappedResume: ATSResumeData = {
             name: contact.name || raw.name || '',
             title: raw.title || targetRole,
@@ -196,12 +186,8 @@ export default function AIResumeBuilderPage() {
             github: contact.github || raw.github || '',
             portfolio: contact.portfolio || raw.portfolio || '',
             summary: raw.summary || '',
-            atsScore: raw.atsScore || raw.ats_score || 85,
-            scoreBreakdown: raw.scoreBreakdown || raw.score_breakdown || [
-              { label: 'Keyword Relevance', score: 85, description: 'Alignment with target role competencies' },
-              { label: 'Quantifiable Impact', score: 80, description: 'Percentage of bullet points containing metrics' },
-              { label: 'Structural Formatting', score: 90, description: 'Compliance with standard ATS parsers' }
-            ],
+            atsScore: raw.atsScore ?? raw.ats_score ?? 0,
+            scoreBreakdown: raw.scoreBreakdown ?? raw.score_breakdown ?? [],
             experience: (raw.work_history || raw.experience || []).map((exp) => ({
               role: exp.role || exp.title || '',
               company: exp.company || '',

@@ -154,23 +154,15 @@ export interface PrepContent {
   created_at: string;
 }
 
-// Canonical aptitude question shape — matches packages/shared/data/aptitude-questions.json.
-// The `source` field distinguishes AI-generated questions from canonical fallback questions:
-//   "ai-generated"  — produced by the Gemini / Ollama LLM chain
-//   "fallback"      — sourced verbatim from the shared static bank
 export interface AptitudeQuestion {
   id: string;
   category: string;
   difficulty: 'easy' | 'medium' | 'hard';
-  /** Full question stem (same value as `text`; both fields are kept in sync). */
   question: string;
-  /** Alias for `question`; kept for API backward-compat with the web console. */
   text: string;
   options: string[];
-  /** Zero-based index of the correct option. Stripped server-side before delivery to candidates. */
   correctIndex: number;
   explanation?: string;
-  /** Origin indicator: "ai-generated" when produced by an LLM, "fallback" when from the static bank. */
   source: 'ai-generated' | 'fallback';
 }
 
@@ -232,7 +224,7 @@ export interface SentimentReportDTO {
     text: string;
     sentiment: string;
     confidence: number;
-    stressIndicator: number; // 0-100
+    stressIndicator: number;
   }>;
   stressPeakMoments: Array<{
     timestamp?: string;
@@ -278,7 +270,7 @@ export interface TalentPoolCandidateDTO {
   skills: string[];
   targetRoles: string[];
   resumeUrl?: string | null;
-  similarityScore: number | null; // 0-100, or null when no real semantic match was available
+  similarityScore: number | null;
   isBookmarked: boolean;
   bookmarkId?: string | null;
   lastActive: string;

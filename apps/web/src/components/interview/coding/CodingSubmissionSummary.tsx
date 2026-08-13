@@ -15,10 +15,6 @@ interface CodingSubmissionSummaryProps {
   onComplete: (score: number) => void;
 }
 
-/**
- * Completion card shown after a successful submit: pass rate, sandbox
- * complexity analysis, difficulty, and the final "view feedback" action.
- */
 export function CodingSubmissionSummary({
   problem,
   language,
@@ -83,7 +79,7 @@ export function CodingSubmissionSummary({
             <Cpu className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
           </div>
           <div className="text-sm font-bold text-slate-800 dark:text-slate-200 tracking-tight">
-            {complexityFeedback || problem.expectedComplexity.time}
+            {complexityFeedback || problem.expectedComplexity?.time || 'Not specified'}
           </div>
           <span className="inline-block mt-1 text-[10px] text-slate-500 dark:text-slate-400 font-medium">
             Sandbox analysis

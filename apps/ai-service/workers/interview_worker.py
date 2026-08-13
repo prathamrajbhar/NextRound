@@ -8,30 +8,19 @@ logger = logging.getLogger("interview_worker")
 
 
 async def process_interview_job(job_data: dict) -> bool:
-    """
-    Process voice interview evaluation job:
-    1. Extract interview & application IDs.
-    2. Aggregate transcript & execute Interviewer Agent.
-    3. Post evaluation result back to Express internal endpoint /internal/interviews/:id/result.
-    4. Log agent audit record.
-    """
     interview_id = job_data.get("interviewId")
     application_id = job_data.get("applicationId")
 
-    if not interview_id and not application_id:
-        logger.error("Missing interviewId/applicationId in interview job payload.")
+    if not interview_id:
+        logger.error("Missing interviewId in interview job payload. Refusing to fabricate an interview ID.")
         return False
 
-    target_interview_id = interview_id or f"intv_{application_id}"
+    target_interview_id = interview_id
     logger.info(f"Processing interview evaluation job for interviewId: {target_interview_id}")
 
     async def run() -> dict:
         raw_transcript = job_data.get("transcript") or []
 
-        # Completion scoring must run on the real transcript only. An empty (or
-        # malformed) transcript is skipped explicitly — no synthetic closing turn
-        # is injected and no fabricated score is emitted. The application stays
-        # in its current state for human review.
         if not isinstance(raw_transcript, list) or len(raw_transcript) == 0:
             logger.warning(
                 f"Interview {target_interview_id} has no transcript turns; "
@@ -39,7 +28,6 @@ async def process_interview_job(job_data: dict) -> bool:
             )
             raise AgentJobSkip
 
-        # Run Interviewer Agent in completion mode to finalize scores
         initial_state: InterviewerState = {
             "interview_id": target_interview_id,
             "application_id": application_id or target_interview_id,
@@ -72,10 +60,6 @@ async def process_interview_job(job_data: dict) -> bool:
             json=patch_payload,
         )
 
-        # Execute Sentiment + Stress Analyser on voice interview transcript. The
-        # audio-prosody ML pipeline is not built yet, so the service reports an
-        # "unavailable" state — skip persisting a report rather than storing
-        # fabricated metrics on the interview record.
         try:
             sentiment_report = analyze_interview_sentiment(target_interview_id, raw_transcript)
             if not sentiment_report or sentiment_report.get("status") == "unavailable":

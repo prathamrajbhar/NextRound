@@ -1,6 +1,5 @@
 import { generateText } from './llm.service';
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PDFParse } = require('pdf-parse');
 
 export interface ParsedResumeData {
@@ -26,9 +25,6 @@ export interface ParsedResumeData {
   workValues?: string[];
 }
 
-/**
- * Normalizes letter-spaced resume headings like "P R O F E S S I O N A L  S U M M A R Y"
- */
 function normalizeResumeText(text: string): string {
   let cleaned = text.replace(/P\s+R\s+O\s+F\s+E\s+S\s+S\s+I\s+O\s+N\s+A\s+L\s+S\s+U\s+M\s+M\s+A\s+R\s+Y/gi, 'PROFESSIONAL SUMMARY');
   cleaned = cleaned.replace(/E\s+X\s+P\s+E\s+R\s+I\s+E\s+N\s+C\s+E/gi, 'EXPERIENCE');
@@ -51,9 +47,6 @@ export interface FieldRegenerationPayload {
   currentValue?: string;
 }
 
-/**
- * Synthesizes a single candidate profile field (e.g. proudProject, bio, headline) using ALL available candidate resources.
- */
 export async function generateFieldWithGemini(payload: FieldRegenerationPayload): Promise<string> {
   const { field, rawResumeText, socialData, linkedinUrl, githubUrl, portfolioUrl, skills, targetRoles, yearsOfExperience, currentValue } = payload;
 
@@ -115,9 +108,6 @@ Return ONLY the generated text string for the field without markdown formatting,
   }
 }
 
-/**
- * Extracts plain text from an uploaded file buffer (PDF or plain text).
- */
 export async function extractTextFromBuffer(
   buffer: Buffer,
   mimeType: string,
@@ -137,15 +127,11 @@ export async function extractTextFromBuffer(
     }
   }
 
-  // Fallback / plain text handling
   const rawText = buffer.toString('utf-8');
   const cleaned = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ' ').trim();
   return normalizeResumeText(cleaned);
 }
 
-/**
- * Parses raw resume text into structured candidate profile fields using Gemini LLM.
- */
 export async function parseResumeWithGemini(rawText: string): Promise<ParsedResumeData> {
   if (rawText.length > 20) {
     try {
@@ -197,7 +183,6 @@ ${rawText.slice(0, 12000)}`;
     }
   }
 
-  // Heuristic fallback if Gemini API is not configured or fails
   return fallbackHeuristicParsing(rawText);
 }
 
@@ -233,7 +218,7 @@ function sanitizeParsedData(data: Record<string, unknown>, rawText: string): Par
   const headline = toString(data.headline, data.professionalHeadline, data.title, data.currentRole, data.role) || heuristic.headline;
   const phone = toString(data.phone, data.phone_number, data.phoneNumber, data.mobile) || heuristic.phone;
   const location = toString(data.location, data.currentLocation, data.address, data.city) || heuristic.location;
-  const timezone = toString(data.timezone) || heuristic.timezone || 'Asia/Kolkata';
+  const timezone = toString(data.timezone) || heuristic.timezone;
 
   let linkedinUrl = toString(data.linkedinUrl, data.linkedin) || heuristic.linkedinUrl;
   if (linkedinUrl && !linkedinUrl.startsWith('http')) {
@@ -252,7 +237,6 @@ function sanitizeParsedData(data: Record<string, unknown>, rawText: string): Par
 
   const skills = Array.from(new Set([...toStringArray(data.skills), ...(heuristic.skills || [])]));
 
-  // Dynamically infer targetRoles if empty
   let targetRoles = toStringArray(data.targetRoles, data.roles);
   if (targetRoles.length === 0) {
     if (headline) {
@@ -273,10 +257,9 @@ function sanitizeParsedData(data: Record<string, unknown>, rawText: string): Par
   const workModeStr = toString(data.workMode);
   const workMode = ['Remote', 'Hybrid', 'Onsite'].includes(workModeStr || '')
     ? (workModeStr as 'Remote' | 'Hybrid' | 'Onsite')
-    : 'Remote';
+    : undefined;
 
   let bio = toString(data.bio, data.summary, data.professionalSummary) || heuristic.bio;
-  // Clean header lines from bio if Gemini returned contact headers
   if (bio && (bio.includes('@') || bio.includes('+91') || bio.includes('http'))) {
     bio = bio
       .split('\n')
@@ -288,8 +271,8 @@ function sanitizeParsedData(data: Record<string, unknown>, rawText: string): Par
   const proudProject = toString(data.proudProject, data.keyProject, data.featuredProject) || heuristic.proudProject;
   const currentCtc = toNumber(data.currentCtc);
   const expectedSalary = toNumber(data.expectedSalary);
-  const noticePeriod = toString(data.noticePeriod) || '30 days';
-  const workAuthorization = toString(data.workAuthorization) || 'Authorized';
+  const noticePeriod = toString(data.noticePeriod);
+  const workAuthorization = toString(data.workAuthorization);
 
   return {
     fullName,
@@ -347,17 +330,14 @@ function fallbackHeuristicParsing(rawText: string): ParsedResumeData {
     }
   }
 
-  // Location match
   const locationMatch = normalized.match(/([A-Z][a-z]+(?: [A-Z][a-z]+)*,\s*[A-Z][a-z]+(?:\s*\d{5,6})?)/);
   const location = locationMatch ? locationMatch[1] : undefined;
 
-  // Contact links
   const linkedinMatch = normalized.match(/(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i);
   const githubMatch = normalized.match(/(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9_-]+/i);
   const portfolioMatch = normalized.match(/(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9_-]+\.(?:tech|io|dev|com|me|design)/i);
   const phoneMatch = normalized.match(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
 
-  // Extract date ranges for years of experience
   const dateYears = normalized.match(/\b(20\d{2})\b/g);
   let yearsOfExperience: number | undefined;
   if (dateYears && dateYears.length >= 2) {
@@ -386,7 +366,6 @@ function fallbackHeuristicParsing(rawText: string): ParsedResumeData {
   if (skills.includes('React') || skills.includes('Next.js')) targetRoles.push('Full-Stack Engineer');
   if (skills.includes('Python') || skills.includes('FastAPI')) targetRoles.push('AI/ML Engineer');
 
-  // Extract bio summary paragraph
   let bio: string | undefined;
   const summaryIdx = normalized.search(/PROFESSIONAL SUMMARY|SUMMARY|PROFILE|ABOUT ME/i);
   if (summaryIdx !== -1) {
@@ -400,10 +379,9 @@ function fallbackHeuristicParsing(rawText: string): ParsedResumeData {
       .trim();
   }
   if (!bio || bio.length < 20) {
-    bio = `Full-stack & AI software engineer experienced in building real-world applications using ${skills.slice(0, 5).join(', ')}.`;
+    bio = '';
   }
 
-  // Extract project highlight paragraph
   let proudProject: string | undefined;
   const projectIdx = normalized.search(/PROJECTS|FEATURED PROJECTS|KEY PROJECTS|EXPERIENCE/i);
   if (projectIdx !== -1) {
@@ -418,7 +396,7 @@ function fallbackHeuristicParsing(rawText: string): ParsedResumeData {
       .trim();
   }
   if (!proudProject || proudProject.length < 20) {
-    proudProject = `Built full-stack web and AI application using ${skills.slice(0, 4).join(', ')} with real-time API integrations and cloud database.`;
+    proudProject = '';
   }
 
   return {

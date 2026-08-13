@@ -57,9 +57,9 @@ export default function HrDashboard() {
   const decisionsCount = dashboardData?.decisionsCount?.hire ?? applications.filter((app) => app.status === 'decided' && app.decision === 'hire').length;
 
   const vettedCandidates = applications.map((app) => {
-    const tech = app.scores?.technical ?? 75;
-    const comm = app.scores?.communication ?? 72;
-    const composite = app.scores?.composite ?? Math.floor((tech + comm) / 2);
+    const tech = app.scores?.technical ?? 0;
+    const comm = app.scores?.communication ?? 0;
+    const composite = app.scores?.composite ?? 0;
     const proctorFlagsCount = app.proctorFlags?.length ?? 0;
 
     return {
@@ -109,7 +109,6 @@ export default function HrDashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-350">
-      {/* Console Top branding */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-5">
         <div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">Recruiter Dashboard</h1>
@@ -126,7 +125,6 @@ export default function HrDashboard() {
         </Link>
       </div>
 
-      {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="glass-card p-5 flex items-center gap-4">
           <div className="h-10 w-10 rounded-xl bg-brand-50 dark:bg-orange-950/50 border border-brand-100 dark:border-orange-900/60 flex items-center justify-center text-brand-600 dark:text-orange-400 shadow-sm">
@@ -169,11 +167,8 @@ export default function HrDashboard() {
         </div>
       </div>
 
-      {/* Main Workspace grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Section: Active Postings & Vetting Action Queue */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Active Postings */}
           <div className="space-y-4">
             <h2 className="text-base font-extrabold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
               <Layers className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
@@ -206,7 +201,6 @@ export default function HrDashboard() {
             )}
           </div>
 
-          {/* Unified Vetting Action Grid */}
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-extrabold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-2">
@@ -299,9 +293,7 @@ export default function HrDashboard() {
           </div>
         </div>
 
-        {/* Right Section: Scheduled Assessments & Conversion Funnel */}
         <div className="space-y-6">
-          {/* Upcoming Vetting Assessments */}
           <div className="glass-card p-5 space-y-4">
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-800 pb-2 flex items-center gap-1.5">
               <Calendar className="h-4 w-4 text-brand-600 dark:text-orange-400" />
@@ -330,7 +322,6 @@ export default function HrDashboard() {
             )}
           </div>
 
-          {/* Vetting Conversion Funnel */}
           <div className="glass-card p-5 space-y-4">
             <span className="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-800 pb-2">
               Hiring Funnel

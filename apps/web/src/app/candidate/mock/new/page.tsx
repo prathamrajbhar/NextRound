@@ -23,7 +23,7 @@ import { CompanyLogo, SearchableSelect } from '@/components/ui';
 import type { SearchableSelectOption } from '@/components/ui';
 import { apiClient } from '@/lib/apiClient';
 import { deriveJobOptions, normalizeJobs } from '@/lib/jobOptions';
-import type { Job } from '@/types';
+import type { Job, MockSession } from '@/types';
 
 function MockInterviewSetupForm() {
   const router = useRouter();
@@ -38,15 +38,24 @@ function MockInterviewSetupForm() {
   const [difficulty, setDifficulty] = useState<'junior' | 'mid' | 'senior'>('mid');
   const [loading, setLoading] = useState(false);
   const [isCalibrating, setIsCalibrating] = useState(false);
+  const [latestScore, setLatestScore] = useState<number | null>(null);
 
-  // Posted-job picker state (sourced live from GET /jobs)
+  useEffect(() => {
+    apiClient
+      .get<MockSession[]>('/mock/sessions')
+      .then((data) => {
+        const score = data?.[0]?.score;
+        setLatestScore(typeof score === 'number' ? score : null);
+      })
+      .catch(() => setLatestScore(null));
+  }, []);
+
   const [orgId, setOrgId] = useState<string | null>(null);
   const [companyOptions, setCompanyOptions] = useState<SearchableSelectOption[]>([]);
   const [rolesByOrgId, setRolesByOrgId] = useState<Record<string, string[]>>({});
   const [postedLoading, setPostedLoading] = useState(true);
   const [postedError, setPostedError] = useState<string | null>(null);
 
-  // Hardware states
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
   const [micLevel, setMicLevel] = useState(45);
@@ -84,8 +93,6 @@ function MockInterviewSetupForm() {
         updateLevel();
       })
       .catch((err) => {
-        // NotAllowedError / NotFoundError are expected when mic is denied or absent
-        // — silently reset the level bar, do not surface to the Next.js dev overlay
         const name = err instanceof DOMException ? err.name : '';
         if (!['NotAllowedError', 'NotFoundError', 'AbortError'].includes(name)) {
           console.error('Microphone access failed:', err);
@@ -109,7 +116,6 @@ function MockInterviewSetupForm() {
     return () => clearTimeout(t);
   }, [isCalibrating]);
 
-  // Load real posted companies/positions; reconcile any URL deep-link with posted values.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -228,8 +234,7 @@ function MockInterviewSetupForm() {
 
   return (
     <div className="w-full space-y-6 pb-12 animate-in fade-in duration-300 font-sans">
-      
-      {/* SaaS Studio Header Bar */}
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider text-brand-600 dark:text-orange-400 bg-brand-50 dark:bg-orange-950/80 border border-brand-200/60 dark:border-orange-900/60 uppercase mb-1.5">
@@ -244,7 +249,6 @@ function MockInterviewSetupForm() {
           </p>
         </div>
 
-        {/* Readiness Badges */}
         <div className="flex items-center gap-3">
           <div className="px-3.5 py-2 rounded-2xl bg-white/60 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 backdrop-blur-md glass-panel flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm">
             <ShieldCheck className="h-4 w-4 text-emerald-500" />
@@ -253,21 +257,18 @@ function MockInterviewSetupForm() {
 
           <div className="px-3.5 py-2 rounded-2xl bg-white/60 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 backdrop-blur-md glass-panel flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm">
             <Award className="h-4 w-4 text-amber-500" />
-            <span>Latest Practice: <strong className="text-amber-600 dark:text-amber-400 font-extrabold">85% Score</strong></span>
+            <span>Latest Practice: <strong className="text-amber-600 dark:text-amber-400 font-extrabold">{latestScore !== null ? `${latestScore}% Score` : 'No sessions yet'}</strong></span>
           </div>
         </div>
       </div>
 
       <form onSubmit={handleStart} className="space-y-6">
-        
-        {/* Balanced 50/50 2-Column Grid */}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          
-          {/* Left Column: Role & Assessment Track Card */}
+
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel flex flex-col justify-between space-y-6">
             <div className="space-y-6">
-              
-              {/* Target Role Section */}
+
               <div className="space-y-4 border-b border-slate-200/60 dark:border-slate-800 pb-5">
                 <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
                   <Building2 className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -325,7 +326,6 @@ function MockInterviewSetupForm() {
                 </div>
               </div>
 
-              {/* Assessment Round Selector (4 Options) */}
               <div className="space-y-4 border-b border-slate-200/60 dark:border-slate-800 pb-5">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
@@ -384,7 +384,6 @@ function MockInterviewSetupForm() {
                 </div>
               </div>
 
-              {/* Seniority Level */}
               <div className="space-y-3">
                 <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
                   <Sliders className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -423,7 +422,6 @@ function MockInterviewSetupForm() {
 
             </div>
 
-            {/* Launch Actions */}
             <div className="space-y-4 pt-4 border-t border-slate-200/60 dark:border-slate-800">
               <label className="flex items-start gap-2.5 cursor-pointer select-none">
                 <input
@@ -451,7 +449,6 @@ function MockInterviewSetupForm() {
 
           </div>
 
-          {/* Right Column: Calibration & Hardware Console */}
           <CalibrationPanel
             company={company}
             role={role}

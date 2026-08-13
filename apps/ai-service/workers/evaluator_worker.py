@@ -7,13 +7,6 @@ logger = logging.getLogger("evaluator_worker")
 
 
 async def process_evaluator_job(job_data: dict) -> bool:
-    """
-    Process evaluation job.
-    1. Extract application_id, stage, interview_id from job_data.
-    2. Execute Evaluator LangGraph agent (asserts scoring isolation).
-    3. Patch evaluation results back to Express internal endpoint.
-    4. Log agent audit record.
-    """
     application_id = job_data.get("applicationId")
     if not application_id:
         logger.error("Missing applicationId in evaluator job payload.")
@@ -26,9 +19,6 @@ async def process_evaluator_job(job_data: dict) -> bool:
     extra = job_data.get("extraData") or {}
 
     async def run() -> dict:
-        # Run Evaluator LangGraph Agent. Stage scores absent from the job payload
-        # are passed as None (never fabricated defaults); the agent reweights the
-        # composite over the stages that actually produced a score.
         result = await run_evaluator_agent(
             application_id=application_id,
             stage=stage,
@@ -41,9 +31,8 @@ async def process_evaluator_job(job_data: dict) -> bool:
             proctor_telemetry=extra.get("proctor_telemetry", {}),
         )
 
-        eval_id = interview_id or f"eval_{application_id}"
+        eval_id = interview_id or application_id
 
-        # Send evaluation result to Express API internal callback endpoint
         await callback_client.patch(
             f"internal/evaluations/{eval_id}",
             json={
