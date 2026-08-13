@@ -277,15 +277,15 @@ export default function SentimentAnalysisPage() {
         </div>
 
         {/* Visual Heatmap Graph */}
-        <div className="p-6 rounded-2xl bg-slate-900 text-white space-y-6">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-semibold border-b border-slate-800 pb-3">
-            <span className="flex items-center gap-2">
+        <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 space-y-6">
+          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800 pb-3">
+            <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" /> Confidence Level
             </span>
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
               <span className="h-2.5 w-2.5 rounded-full bg-rose-400" /> Stress Level
             </span>
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
               <span className="h-2.5 w-2.5 rounded-full bg-amber-400" /> Hesitation Index
             </span>
           </div>
@@ -300,33 +300,33 @@ export default function SentimentAnalysisPage() {
                   onClick={() => setSelectedTopic(isSelected ? null : item.topic)}
                   className={`p-3 rounded-xl border transition-all cursor-pointer space-y-3 ${
                     isSelected
-                      ? 'border-orange-500 bg-orange-950/60 shadow-lg scale-105'
-                      : 'border-slate-800 bg-slate-900/90 hover:border-slate-700'
+                      ? 'border-orange-500 bg-orange-500/10 dark:bg-orange-950/60 shadow-lg scale-105'
+                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 hover:border-slate-350 dark:hover:border-slate-700 shadow-2xs'
                   }`}
                 >
-                  <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono">
+                  <div className="flex justify-between items-center text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                     <span>{item.time}</span>
                     <span className={`px-1.5 py-0.5 rounded font-black uppercase text-[8px] ${
                       item.emotionLabel === 'Confident' || item.emotionLabel === 'Enthusiastic'
-                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800'
                         : item.emotionLabel === 'Hesitant'
-                        ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                        ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800'
                         : item.emotionLabel === 'Neutral'
-                        ? 'bg-slate-800 text-slate-350 border border-slate-700'
-                        : 'bg-rose-950 text-rose-300 border border-rose-800'
+                        ? 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-350 border border-slate-200/80 dark:border-slate-700'
+                        : 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/80 dark:border-rose-800'
                     }`}>
                       {item.emotionLabel}
                     </span>
                   </div>
 
-                  <p className="text-xs font-bold text-slate-100 line-clamp-2 leading-snug">{item.topic}</p>
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-100 line-clamp-2 leading-snug">{item.topic}</p>
 
                   <div className="space-y-1.5">
                     <div className="space-y-0.5">
                       <div className="flex justify-between text-[9px] text-emerald-400 font-bold">
                         <span>Conf</span> <span>{item.confidence}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div className="h-full bg-emerald-400 rounded-full" style={{ width: `${item.confidence}%` }} />
                       </div>
                     </div>
@@ -335,7 +335,7 @@ export default function SentimentAnalysisPage() {
                       <div className="flex justify-between text-[9px] text-rose-400 font-bold">
                         <span>Stress</span> <span>{item.stress}%</span>
                       </div>
-                      <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                         <div className="h-full bg-rose-400 rounded-full" style={{ width: `${item.stress}%` }} />
                       </div>
                     </div>
