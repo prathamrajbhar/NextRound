@@ -72,7 +72,7 @@ export function WorkflowSection() {
         </div>
 
         {/* Toggle selector */}
-        <div className="flex p-1 rounded-2xl bg-slate-150/60 dark:bg-slate-955 border border-slate-200/50 dark:border-slate-855 select-none self-start md:self-auto backdrop-blur-xs">
+        <div className="flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 select-none self-start md:self-auto backdrop-blur-xs">
           <button
             onClick={() => setActiveTab('employers')}
             className={`px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
@@ -106,7 +106,7 @@ export function WorkflowSection() {
               className="rounded-3xl border border-white/60 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/60 backdrop-blur-md shadow-xs p-6 relative group transition-all hover:scale-[1.01]"
             >
               {/* Step Sequence Number */}
-              <span className="absolute top-4 right-5 text-3xl font-black text-slate-155 dark:text-slate-800 group-hover:text-brand-100 dark:group-hover:text-slate-700 transition-colors select-none">
+              <span className="absolute top-4 right-5 text-3xl font-black text-slate-200 dark:text-slate-800 group-hover:text-brand-105 dark:group-hover:text-slate-700 transition-colors select-none">
                 {step.number}
               </span>
 
@@ -116,10 +116,10 @@ export function WorkflowSection() {
               </div>
 
               {/* Title & Body */}
-              <h3 className="text-base font-extrabold text-slate-850 dark:text-slate-200">
+              <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-200">
                 {step.title}
               </h3>
-              <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              <p className="mt-3 text-xs leading-relaxed text-slate-500 dark:text-slate-400 font-medium">
                 {step.description}
               </p>
             </div>

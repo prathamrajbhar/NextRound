@@ -62,7 +62,7 @@ export function FaqSection() {
 
               <div
                 className={`transition-all duration-305 ease-in-out overflow-hidden ${
-                  isOpen ? 'max-h-[160px] border-t border-slate-100 dark:border-slate-850 p-5' : 'max-h-0'
+                  isOpen ? 'max-h-[160px] border-t border-slate-100 dark:border-slate-800 p-5' : 'max-h-0'
                 }`}
               >
                 <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400 font-medium">

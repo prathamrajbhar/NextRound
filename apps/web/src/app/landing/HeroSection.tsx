@@ -145,7 +145,7 @@ export function HeroSection({ hrHref, candidateHref, isLoggedIn }: HeroSectionPr
       <div className="lg:col-span-5">
         <div className="relative rounded-3xl border border-white/60 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/60 backdrop-blur-xl shadow-xl p-6 overflow-hidden">
           {/* Header Console controls */}
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-4 mb-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
             <div className="flex items-center gap-2">
               <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-ping" />
               <span className="text-xs font-extrabold tracking-wide uppercase text-slate-500 dark:text-slate-400">
@@ -210,14 +210,14 @@ export function HeroSection({ hrHref, candidateHref, isLoggedIn }: HeroSectionPr
           </div>
 
           {/* Proctoring HUD Metrics */}
-          <div className="mt-4 grid grid-cols-2 gap-3 pt-4 border-t border-slate-100 dark:border-slate-850">
-            <div className="p-2.5 rounded-xl bg-slate-50/30 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-850 flex items-center justify-between">
+          <div className="mt-4 grid grid-cols-2 gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <div className="p-2.5 rounded-xl bg-slate-50/30 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Gaze Focus</span>
               <span className={`text-[10px] font-extrabold ${activeStep.gaze ? 'text-emerald-500' : 'text-rose-500'}`}>
                 {activeStep.gaze ? '✓ Centered' : '⨯ Off-Screen'}
               </span>
             </div>
-            <div className="p-2.5 rounded-xl bg-slate-50/30 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-850 flex items-center justify-between">
+            <div className="p-2.5 rounded-xl bg-slate-50/30 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500">Face Detector</span>
               <span className="text-[10px] font-extrabold text-emerald-500">
                 {activeStep.faces} Active

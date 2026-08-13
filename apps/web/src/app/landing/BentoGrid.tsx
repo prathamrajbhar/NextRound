@@ -72,14 +72,14 @@ export function BentoGrid() {
           </div>
 
           {/* Interactive Visual: Rubric JSON structure */}
-          <div className="mt-6 p-4 rounded-2xl bg-slate-955 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-900 text-[10.5px] font-mono text-emerald-600 dark:text-emerald-400 space-y-1 select-none">
-            <p className="text-slate-450 dark:text-slate-500">{"{"}</p>
+          <div className="mt-6 p-4 rounded-2xl bg-slate-950/20 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-900 text-[10.5px] font-mono text-emerald-600 dark:text-emerald-400 space-y-1 select-none">
+            <p className="text-slate-400 dark:text-slate-500">{"{"}</p>
             <p className="pl-4"><span className="text-orange-600 dark:text-orange-400">&quot;jobTitle&quot;</span>: <span className="text-indigo-600 dark:text-teal-355">&quot;Senior Frontend Engineer&quot;</span>,</p>
             <p className="pl-4"><span className="text-orange-600 dark:text-orange-400">&quot;dimensions&quot;</span>: [</p>
             <p className="pl-8">{"{ "}<span className="text-orange-600 dark:text-orange-400">&quot;name&quot;</span>: <span className="text-indigo-600 dark:text-teal-355">&quot;WebRTC Signaling&quot;</span>, <span className="text-orange-600 dark:text-orange-400">&quot;weight&quot;</span>: <span className="text-purple-650 dark:text-purple-300">0.3</span>{" }"},</p>
             <p className="pl-8">{"{ "}<span className="text-orange-600 dark:text-orange-400">&quot;name&quot;</span>: <span className="text-indigo-600 dark:text-teal-355">&quot;React Hydration&quot;</span>, <span className="text-orange-600 dark:text-orange-400">&quot;weight&quot;</span>: <span className="text-purple-650 dark:text-purple-300">0.4</span>{" }"} </p>
             <p className="pl-4">]</p>
-            <p className="text-slate-450 dark:text-slate-500">{"}"}</p>
+            <p className="text-slate-400 dark:text-slate-500">{"}"}</p>
           </div>
         </div>
 
@@ -143,9 +143,9 @@ export function BentoGrid() {
             <div>
               <div className="flex justify-between text-[9px] font-extrabold text-slate-500 dark:text-slate-400 mb-1">
                 <span>System Architecture</span>
-                <span className="text-brand-650 dark:text-orange-405">{hoveredCard === 2 ? '94%' : '88%'}</span>
+                <span className="text-brand-600 dark:text-orange-400">{hoveredCard === 2 ? '94%' : '88%'}</span>
               </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-955 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
                 <div
                   className="bg-brand-600 dark:bg-orange-500 h-full transition-all duration-700"
                   style={{ width: hoveredCard === 2 ? '94%' : '88%' }}
@@ -155,9 +155,9 @@ export function BentoGrid() {
             <div>
               <div className="flex justify-between text-[9px] font-extrabold text-slate-500 dark:text-slate-400 mb-1">
                 <span>Problem Solving</span>
-                <span className="text-brand-650 dark:text-orange-405">{hoveredCard === 2 ? '85%' : '80%'}</span>
+                <span className="text-brand-600 dark:text-orange-400">{hoveredCard === 2 ? '85%' : '80%'}</span>
               </div>
-              <div className="w-full bg-slate-100 dark:bg-slate-955 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-slate-100 dark:bg-slate-900 rounded-full h-1.5 overflow-hidden">
                 <div
                   className="bg-brand-600 dark:bg-orange-500 h-full transition-all duration-700"
                   style={{ width: hoveredCard === 2 ? '85%' : '80%' }}
@@ -187,7 +187,7 @@ export function BentoGrid() {
 
           {/* Interactive Visual: Typing search bar */}
           <div className="mt-6 space-y-3 select-none">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-100 dark:border-slate-800/85 bg-white/40 dark:bg-slate-955 text-xs font-mono text-slate-450 dark:text-slate-500 min-h-[38px] relative">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-100 dark:border-slate-800/85 bg-white/40 dark:bg-slate-900 text-xs font-mono text-slate-400 dark:text-slate-500 min-h-[38px] relative">
               <span>🔍</span>
               <span>
                 {typedQuery || <span className="text-slate-350 dark:text-slate-650">Hover card to search talent pool...</span>}
