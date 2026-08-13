@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { Sparkles, Play, Pause, RefreshCw, Activity, ArrowRight, User } from '@/lib/lucide-google-icons';
+import { Sparkles, ArrowRight, User } from '@/lib/lucide-google-icons';
 
 interface HeroSectionProps {
   hrHref: string;
@@ -10,121 +10,14 @@ interface HeroSectionProps {
   isLoggedIn: boolean;
 }
 
-const dialogueSteps = [
-  {
-    speaker: 'AI Recruiter',
-    text: "Hello! Welcome to the interview. Can you tell me about a time you had to handle a tight deadline at work?",
-    status: 'Speaking' as const,
-    audioQuality: 'Good',
-    callStatus: 'Connected',
-  },
-  {
-    speaker: 'Candidate (You)',
-    text: "In my last role, our main client launch was moved up by a week. I coordinated with our design team to prioritize the essential features and successfully delivered the project on time.",
-    status: 'Listening' as const,
-    audioQuality: 'Good',
-    callStatus: 'Connected',
-  },
-  {
-    speaker: 'AI Recruiter',
-    text: "Evaluating your response against the job requirements...",
-    status: 'Analyzing' as const,
-    audioQuality: 'Analyzing',
-    callStatus: 'Connected',
-  },
-  {
-    speaker: 'AI Recruiter',
-    text: "Evaluation Complete. Verdict: Recommended. Key strengths: Strong prioritization, clear team coordination, and proactive communication.",
-    status: 'Idle' as const,
-    audioQuality: 'Excellent',
-    callStatus: 'Completed',
-  },
-];
-
 export function HeroSection({ hrHref, candidateHref, isLoggedIn }: HeroSectionProps) {
-  const [simStep, setSimStep] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [typedSubtitle, setTypedSubtitle] = useState('');
-  const [callSeconds, setCallSeconds] = useState(12);
-
-  // Call duration counter
-  useEffect(() => {
-    if (!isPlaying) return;
-    const interval = setInterval(() => {
-      setCallSeconds((prev) => prev + 1);
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [isPlaying]);
-
-  // Autoplay intervals
-  useEffect(() => {
-    if (!isPlaying) return;
-    const timer = setTimeout(() => {
-      setSimStep((prev) => (prev + 1) % dialogueSteps.length);
-    }, 5500);
-    return () => clearTimeout(timer);
-  }, [simStep, isPlaying]);
-
-  // Subtitles typewriter animation
-  useEffect(() => {
-    let active = true;
-    let i = 0;
-    
-    const timeout = setTimeout(() => {
-      if (!active) return;
-      setTypedSubtitle('');
-
-      const fullText = dialogueSteps[simStep].text;
-      const interval = setInterval(() => {
-        if (!active) return;
-        setTypedSubtitle(fullText.slice(0, i + 1));
-        i++;
-        if (i >= fullText.length) {
-          clearInterval(interval);
-        }
-      }, 20);
-
-      return () => clearInterval(interval);
-    }, 0);
-
-    return () => {
-      active = false;
-      clearTimeout(timeout);
-    };
-  }, [simStep]);
-
-  const activeStep = dialogueSteps[simStep];
-
-  const formatTime = (secs: number) => {
-    const mins = Math.floor(secs / 60);
-    const remainingSecs = secs % 60;
-    return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
-  };
-
   return (
-    <section className="relative px-4 sm:px-6 pt-12 pb-16 lg:px-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-      <style>{`
-        @keyframes ripple {
-          0% { transform: scale(0.9); opacity: 0.6; }
-          50% { opacity: 0.3; }
-          100% { transform: scale(1.5); opacity: 0; }
-        }
-        @keyframes equalize {
-          0%, 100% { transform: scaleY(0.3); }
-          50% { transform: scaleY(1); }
-        }
-        .animate-ripple-1 { animation: ripple 3s infinite ease-out; }
-        .animate-ripple-2 { animation: ripple 3s infinite ease-out 1s; }
-        .animate-ripple-3 { animation: ripple 3s infinite ease-out 2s; }
-        .animate-equalize-1 { animation: equalize 0.6s infinite ease-in-out; }
-        .animate-equalize-2 { animation: equalize 0.8s infinite ease-in-out 0.1s; }
-        .animate-equalize-3 { animation: equalize 0.5s infinite ease-in-out 0.2s; }
-        .animate-equalize-4 { animation: equalize 0.7s infinite ease-in-out 0.3s; }
-        .animate-equalize-5 { animation: equalize 0.9s infinite ease-in-out 0.15s; }
-      `}</style>
+    <section className="relative px-4 sm:px-6 pt-16 pb-20 lg:px-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center overflow-hidden">
+      {/* Background radial gradient glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_500px_at_50%_-120px,rgba(99,102,241,0.06),transparent)] dark:bg-[radial-gradient(circle_500px_at_50%_-120px,rgba(99,102,241,0.04),transparent)] pointer-events-none" />
 
       {/* Left Columns: Pitch & CTAs */}
-      <div className="lg:col-span-7 space-y-6 text-left">
+      <div className="lg:col-span-7 space-y-6 text-left relative z-10">
         <div className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-black text-brand-600 dark:text-emerald-400 bg-brand-50/80 dark:bg-emerald-950/30 border border-brand-100 dark:border-emerald-900/40 select-none">
           <Sparkles className="h-3.5 w-3.5 animate-pulse" />
           <span>AI-Powered Voice Screening</span>
@@ -160,7 +53,7 @@ export function HeroSection({ hrHref, candidateHref, isLoggedIn }: HeroSectionPr
 
         {/* Small trust logos / security compliance */}
         <div className="pt-6 border-t border-slate-100 dark:border-slate-800/50 flex flex-wrap items-center gap-6 text-slate-400 dark:text-slate-500 select-none">
-          <span className="text-[10px] font-black uppercase tracking-wider">Enterprise Security</span>
+          <span className="text-xs font-black uppercase tracking-wider">Enterprise Security</span>
           <div className="flex gap-4 text-xs font-bold font-mono">
             <span>🛡️ SOC-2 Type II</span>
             <span>🔒 Encrypted &amp; Secure</span>
@@ -169,124 +62,81 @@ export function HeroSection({ hrHref, candidateHref, isLoggedIn }: HeroSectionPr
         </div>
       </div>
 
-      {/* Right Columns: Premium dark HUD voice Call Simulator */}
-      <div className="lg:col-span-5">
-        <div className="relative rounded-3xl border border-slate-850 bg-slate-950/95 dark:bg-slate-950/80 backdrop-blur-xl shadow-2xl p-6 overflow-hidden text-white shadow-indigo-500/5">
-          {/* Subtle backing neon glow */}
-          <div className="absolute -top-24 -left-24 h-48 w-48 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -right-24 h-48 w-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+      {/* Right Columns: Theme-Aware Contained Candidate Audio Snippet Card */}
+      <div className="lg:col-span-5 relative z-10 w-full">
+        <div className="relative rounded-3xl border border-slate-250 dark:border-slate-800/80 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-xl dark:shadow-2xl p-6 overflow-hidden text-slate-850 dark:text-white max-w-md mx-auto w-full">
+          {/* Backing glow */}
+          <div className="absolute -top-24 -left-24 h-48 w-48 rounded-full bg-brand-500/5 dark:bg-indigo-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 h-48 w-48 rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-3xl pointer-events-none" />
 
-          {/* Header Console controls */}
-          <div className="flex items-center justify-between border-b border-slate-900 pb-4 mb-4 relative z-10">
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black tracking-widest uppercase text-slate-450">
-                Voice Call Simulator
-              </span>
-            </div>
-            
+          {/* Card Header (Candidate Profile) */}
+          <div className="flex items-start justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-900 relative z-10">
             <div className="flex items-center gap-3">
-              {/* Call Timer duration display */}
-              <span className="text-xs font-mono font-extrabold text-slate-400 bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-800">
-                {formatTime(callSeconds)}
-              </span>
-
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-850 text-slate-400 cursor-pointer border border-slate-800"
-                  title={isPlaying ? 'Pause' : 'Play'}
-                >
-                  {isPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                </button>
-                <button
-                  onClick={() => setSimStep((prev) => (prev + 1) % dialogueSteps.length)}
-                  className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-850 text-slate-400 cursor-pointer border border-slate-800"
-                  title="Next Step"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" />
-                </button>
+              {/* Avatar Circle */}
+              <div className="h-10 w-10 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-center font-black text-indigo-700 dark:text-emerald-400">
+                SJ
               </div>
-            </div>
-          </div>
-
-          {/* AI Voice status Orb & Ripple waves */}
-          <div className="flex flex-col items-center justify-center py-6 space-y-5 relative z-10">
-            <div className="relative h-20 w-20 flex items-center justify-center">
-              {/* Concentric expanding ripples */}
-              {isPlaying && activeStep.status !== 'Idle' && (
-                <>
-                  <div className="absolute inset-0 rounded-full border border-indigo-500/20 animate-ripple-1" />
-                  <div className="absolute inset-0 rounded-full border border-teal-500/20 animate-ripple-2" />
-                  <div className="absolute inset-0 rounded-full border border-emerald-500/20 animate-ripple-3" />
-                </>
-              )}
-
-              {/* The Pulse Orb */}
-              <div className={`relative h-16 w-16 rounded-full flex items-center justify-center transition-all duration-550 border border-white/10 ${
-                activeStep.status === 'Speaking' ? 'bg-gradient-to-tr from-brand-500 to-indigo-500 shadow-lg shadow-indigo-500/30 scale-105' :
-                activeStep.status === 'Listening' ? 'bg-gradient-to-tr from-emerald-500 to-teal-500 shadow-lg shadow-teal-500/30 scale-100' :
-                activeStep.status === 'Analyzing' ? 'bg-gradient-to-tr from-amber-500 to-orange-500 shadow-lg shadow-orange-500/30 animate-pulse' :
-                'bg-slate-900 border-slate-800'
-              }`}>
-                <Activity className="h-6 w-6 text-white" />
+              <div className="text-left">
+                <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-200">Sarah Jenkins</h3>
+                <span className="text-xs font-bold text-slate-450 dark:text-slate-500">Senior Product Designer</span>
               </div>
             </div>
 
-            {/* Equalizer frequency bars display */}
-            <div className="flex items-end justify-center gap-1 h-5 overflow-hidden">
-              <div className={`w-0.75 bg-brand-500 rounded-full ${isPlaying && activeStep.status === 'Speaking' ? 'animate-equalize-1' : 'h-1.5'}`} />
-              <div className={`w-0.75 bg-indigo-500 rounded-full ${isPlaying && activeStep.status === 'Listening' ? 'animate-equalize-2' : 'h-1'}`} />
-              <div className={`w-0.75 bg-teal-500 rounded-full ${isPlaying && activeStep.status !== 'Idle' ? 'animate-equalize-3' : 'h-2'}`} />
-              <div className={`w-0.75 bg-emerald-500 rounded-full ${isPlaying && activeStep.status === 'Speaking' ? 'animate-equalize-4' : 'h-1.5'}`} />
-              <div className={`w-0.75 bg-purple-500 rounded-full ${isPlaying && activeStep.status === 'Listening' ? 'animate-equalize-5' : 'h-1'}`} />
-            </div>
+            {/* Match Score Badge */}
+            <span className="text-xs font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl">
+              92% Fit Score
+            </span>
           </div>
 
-          {/* Subtitles & Transcriptions styled as chat bubbles */}
-          <div className="bg-slate-950/70 border border-slate-900 rounded-2xl p-4 min-h-[140px] flex flex-col justify-end space-y-3 relative z-10">
-            {/* Show last speaking bubble if candidates/recruiter are conversing */}
-            {activeStep.status !== 'Speaking' && simStep > 0 && (
-              <div className="self-start max-w-[85%] bg-slate-900 border border-slate-800 rounded-2xl p-3 text-[10.5px] text-slate-350 leading-relaxed">
-                <span className="block text-[8px] font-black uppercase text-indigo-400 mb-1">AI Recruiter</span>
-                {dialogueSteps[1 - (simStep % 2)].text}
-              </div>
-            )}
+          {/* Audio Player Mockup */}
+          <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/60 border border-slate-150 dark:border-slate-850 flex items-center gap-4 relative z-10 mb-4">
+            {/* Play Circle Button */}
+            <button className="h-9 w-9 rounded-full bg-slate-900 dark:bg-orange-600 hover:scale-105 active:scale-95 text-white flex items-center justify-center shadow-md transition-all cursor-pointer">
+              <span className="text-xs">▶</span>
+            </button>
 
-            {/* Main active speech typewriter bubble */}
-            <div className={`self-end max-w-[85%] rounded-2xl p-3 text-[10.5px] leading-relaxed transition-all duration-300 ${
-              activeStep.speaker.startsWith('AI') || activeStep.speaker.startsWith('System')
-                ? 'self-start bg-slate-900 border border-slate-800 text-slate-200'
-                : 'self-end bg-brand-600/90 border border-brand-500/40 text-white'
-            }`}>
-              <span className={`block text-[8px] font-black uppercase mb-1 ${
-                activeStep.speaker.startsWith('AI') || activeStep.speaker.startsWith('System')
-                  ? 'text-indigo-400'
-                  : 'text-white/80'
-              }`}>
-                {activeStep.speaker}
-              </span>
-              <p className="font-sans">
-                {typedSubtitle}
-                {isPlaying && <span className="animate-pulse">|</span>}
-              </p>
+            {/* Static Audio Waveform Graphic */}
+            <div className="flex-grow flex items-center gap-0.5 h-6">
+              <div className="h-2 w-1 bg-slate-350 dark:bg-slate-700 rounded-full" />
+              <div className="h-4 w-1 bg-slate-350 dark:bg-slate-700 rounded-full" />
+              <div className="h-5 w-1 bg-brand-500 dark:bg-orange-500 rounded-full" />
+              <div className="h-3 w-1 bg-brand-500 dark:bg-orange-500 rounded-full" />
+              <div className="h-6 w-1 bg-brand-500 dark:bg-orange-500 rounded-full" />
+              <div className="h-4 w-1 bg-brand-500 dark:bg-orange-500 rounded-full" />
+              <div className="h-2 w-1 bg-slate-350 dark:bg-slate-700 rounded-full" />
+              <div className="h-5 w-1 bg-slate-350 dark:bg-slate-700 rounded-full" />
+              <div className="h-3 w-1 bg-slate-350 dark:bg-slate-700 rounded-full" />
+              <div className="h-4 w-1 bg-slate-350 dark:bg-slate-700 rounded-full" />
+              <div className="h-2 w-1 bg-slate-350 dark:bg-slate-700 rounded-full" />
             </div>
+
+            {/* Duration Display */}
+            <span className="text-xs font-mono font-extrabold text-slate-450 dark:text-slate-500">
+              0:45
+            </span>
           </div>
 
-          {/* Call HUD stats */}
-          <div className="mt-4 grid grid-cols-2 gap-3 pt-4 border-t border-slate-900 relative z-10">
-            <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-900 flex items-center justify-between">
-              <span className="text-[10px] font-bold text-slate-500">Audio Quality</span>
-              <span className="text-[10px] font-extrabold text-emerald-450">
-                {activeStep.audioQuality}
-              </span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-slate-900/60 border border-slate-900 flex items-center justify-between">
-              <span className="text-[10px] font-bold text-slate-500">Line Connection</span>
-              <span className="text-[10px] font-extrabold text-emerald-450">
-                {activeStep.callStatus}
-              </span>
-            </div>
+          {/* AI Call Evaluation Summary Bubble */}
+          <div className="bg-slate-50/50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/80 rounded-2xl p-3.5 text-left text-xs leading-relaxed text-slate-700 dark:text-slate-200 relative z-10 mb-4 font-medium">
+            <span className="block text-xs font-black uppercase text-indigo-650 dark:text-indigo-400 mb-1">
+              AI Evaluation Summary
+            </span>
+            <p className="font-sans">
+              &quot;Sarah demonstrated strong communication, clear visual design frameworks, and a structured approach to solving team timeline conflicts.&quot;
+            </p>
+          </div>
+
+          {/* Skills Checklist Tags */}
+          <div className="flex flex-wrap gap-1.5 pt-2 relative z-10 border-t border-slate-100 dark:border-slate-900">
+            <span className="text-xs font-extrabold text-slate-500 bg-slate-100 dark:bg-slate-900 dark:text-slate-400 px-2 py-0.5 rounded-lg border border-slate-150 dark:border-slate-800">
+              Product Design
+            </span>
+            <span className="text-xs font-extrabold text-slate-500 bg-slate-100 dark:bg-slate-900 dark:text-slate-400 px-2 py-0.5 rounded-lg border border-slate-150 dark:border-slate-800">
+              Figma
+            </span>
+            <span className="text-xs font-extrabold text-slate-500 bg-slate-100 dark:bg-slate-900 dark:text-slate-400 px-2 py-0.5 rounded-lg border border-slate-150 dark:border-slate-800">
+              User Research
+            </span>
           </div>
         </div>
       </div>
