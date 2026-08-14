@@ -20,8 +20,22 @@ export type ProctoringSessionModel = runtime.Types.Result.DefaultSelection<Prism
 
 export type AggregateProctoringSession = {
   _count: ProctoringSessionCountAggregateOutputType | null
+  _avg: ProctoringSessionAvgAggregateOutputType | null
+  _sum: ProctoringSessionSumAggregateOutputType | null
   _min: ProctoringSessionMinAggregateOutputType | null
   _max: ProctoringSessionMaxAggregateOutputType | null
+}
+
+export type ProctoringSessionAvgAggregateOutputType = {
+  recording_duration_ms: number | null
+  recording_size_bytes: number | null
+  risk_score: number | null
+}
+
+export type ProctoringSessionSumAggregateOutputType = {
+  recording_duration_ms: number | null
+  recording_size_bytes: number | null
+  risk_score: number | null
 }
 
 export type ProctoringSessionMinAggregateOutputType = {
@@ -34,6 +48,10 @@ export type ProctoringSessionMinAggregateOutputType = {
   status: string | null
   policy_version: string | null
   consent_version: string | null
+  recording_url: string | null
+  recording_duration_ms: number | null
+  recording_size_bytes: number | null
+  risk_score: number | null
   started_at: Date | null
   ended_at: Date | null
   last_heartbeat_at: Date | null
@@ -51,6 +69,10 @@ export type ProctoringSessionMaxAggregateOutputType = {
   status: string | null
   policy_version: string | null
   consent_version: string | null
+  recording_url: string | null
+  recording_duration_ms: number | null
+  recording_size_bytes: number | null
+  risk_score: number | null
   started_at: Date | null
   ended_at: Date | null
   last_heartbeat_at: Date | null
@@ -68,6 +90,11 @@ export type ProctoringSessionCountAggregateOutputType = {
   status: number
   policy_version: number
   consent_version: number
+  recording_url: number
+  recording_duration_ms: number
+  recording_size_bytes: number
+  risk_score: number
+  summary_json: number
   started_at: number
   ended_at: number
   last_heartbeat_at: number
@@ -76,6 +103,18 @@ export type ProctoringSessionCountAggregateOutputType = {
   _all: number
 }
 
+
+export type ProctoringSessionAvgAggregateInputType = {
+  recording_duration_ms?: true
+  recording_size_bytes?: true
+  risk_score?: true
+}
+
+export type ProctoringSessionSumAggregateInputType = {
+  recording_duration_ms?: true
+  recording_size_bytes?: true
+  risk_score?: true
+}
 
 export type ProctoringSessionMinAggregateInputType = {
   id?: true
@@ -87,6 +126,10 @@ export type ProctoringSessionMinAggregateInputType = {
   status?: true
   policy_version?: true
   consent_version?: true
+  recording_url?: true
+  recording_duration_ms?: true
+  recording_size_bytes?: true
+  risk_score?: true
   started_at?: true
   ended_at?: true
   last_heartbeat_at?: true
@@ -104,6 +147,10 @@ export type ProctoringSessionMaxAggregateInputType = {
   status?: true
   policy_version?: true
   consent_version?: true
+  recording_url?: true
+  recording_duration_ms?: true
+  recording_size_bytes?: true
+  risk_score?: true
   started_at?: true
   ended_at?: true
   last_heartbeat_at?: true
@@ -121,6 +168,11 @@ export type ProctoringSessionCountAggregateInputType = {
   status?: true
   policy_version?: true
   consent_version?: true
+  recording_url?: true
+  recording_duration_ms?: true
+  recording_size_bytes?: true
+  risk_score?: true
+  summary_json?: true
   started_at?: true
   ended_at?: true
   last_heartbeat_at?: true
@@ -167,6 +219,18 @@ export type ProctoringSessionAggregateArgs<ExtArgs extends runtime.Types.Extensi
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: ProctoringSessionAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
+   * Select which fields to sum
+  **/
+  _sum?: ProctoringSessionSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: ProctoringSessionMinAggregateInputType
@@ -197,6 +261,8 @@ export type ProctoringSessionGroupByArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   _count?: ProctoringSessionCountAggregateInputType | true
+  _avg?: ProctoringSessionAvgAggregateInputType
+  _sum?: ProctoringSessionSumAggregateInputType
   _min?: ProctoringSessionMinAggregateInputType
   _max?: ProctoringSessionMaxAggregateInputType
 }
@@ -211,12 +277,19 @@ export type ProctoringSessionGroupByOutputType = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url: string | null
+  recording_duration_ms: number | null
+  recording_size_bytes: number | null
+  risk_score: number | null
+  summary_json: runtime.JsonValue
   started_at: Date
   ended_at: Date | null
   last_heartbeat_at: Date | null
   created_at: Date
   updated_at: Date
   _count: ProctoringSessionCountAggregateOutputType | null
+  _avg: ProctoringSessionAvgAggregateOutputType | null
+  _sum: ProctoringSessionSumAggregateOutputType | null
   _min: ProctoringSessionMinAggregateOutputType | null
   _max: ProctoringSessionMaxAggregateOutputType | null
 }
@@ -249,6 +322,11 @@ export type ProctoringSessionWhereInput = {
   status?: Prisma.StringFilter<"ProctoringSession"> | string
   policy_version?: Prisma.StringFilter<"ProctoringSession"> | string
   consent_version?: Prisma.StringFilter<"ProctoringSession"> | string
+  recording_url?: Prisma.StringNullableFilter<"ProctoringSession"> | string | null
+  recording_duration_ms?: Prisma.IntNullableFilter<"ProctoringSession"> | number | null
+  recording_size_bytes?: Prisma.IntNullableFilter<"ProctoringSession"> | number | null
+  risk_score?: Prisma.FloatNullableFilter<"ProctoringSession"> | number | null
+  summary_json?: Prisma.JsonFilter<"ProctoringSession">
   started_at?: Prisma.DateTimeFilter<"ProctoringSession"> | Date | string
   ended_at?: Prisma.DateTimeNullableFilter<"ProctoringSession"> | Date | string | null
   last_heartbeat_at?: Prisma.DateTimeNullableFilter<"ProctoringSession"> | Date | string | null
@@ -260,6 +338,7 @@ export type ProctoringSessionWhereInput = {
   mock_session?: Prisma.XOR<Prisma.MockSessionNullableScalarRelationFilter, Prisma.MockSessionWhereInput> | null
   events?: Prisma.ProctoringEventListRelationFilter
   violations?: Prisma.ProctoringViolationListRelationFilter
+  evidence?: Prisma.ProctoringEvidenceListRelationFilter
 }
 
 export type ProctoringSessionOrderByWithRelationInput = {
@@ -272,6 +351,11 @@ export type ProctoringSessionOrderByWithRelationInput = {
   status?: Prisma.SortOrder
   policy_version?: Prisma.SortOrder
   consent_version?: Prisma.SortOrder
+  recording_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  recording_duration_ms?: Prisma.SortOrderInput | Prisma.SortOrder
+  recording_size_bytes?: Prisma.SortOrderInput | Prisma.SortOrder
+  risk_score?: Prisma.SortOrderInput | Prisma.SortOrder
+  summary_json?: Prisma.SortOrder
   started_at?: Prisma.SortOrder
   ended_at?: Prisma.SortOrderInput | Prisma.SortOrder
   last_heartbeat_at?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -283,6 +367,7 @@ export type ProctoringSessionOrderByWithRelationInput = {
   mock_session?: Prisma.MockSessionOrderByWithRelationInput
   events?: Prisma.ProctoringEventOrderByRelationAggregateInput
   violations?: Prisma.ProctoringViolationOrderByRelationAggregateInput
+  evidence?: Prisma.ProctoringEvidenceOrderByRelationAggregateInput
 }
 
 export type ProctoringSessionWhereUniqueInput = Prisma.AtLeast<{
@@ -298,6 +383,11 @@ export type ProctoringSessionWhereUniqueInput = Prisma.AtLeast<{
   status?: Prisma.StringFilter<"ProctoringSession"> | string
   policy_version?: Prisma.StringFilter<"ProctoringSession"> | string
   consent_version?: Prisma.StringFilter<"ProctoringSession"> | string
+  recording_url?: Prisma.StringNullableFilter<"ProctoringSession"> | string | null
+  recording_duration_ms?: Prisma.IntNullableFilter<"ProctoringSession"> | number | null
+  recording_size_bytes?: Prisma.IntNullableFilter<"ProctoringSession"> | number | null
+  risk_score?: Prisma.FloatNullableFilter<"ProctoringSession"> | number | null
+  summary_json?: Prisma.JsonFilter<"ProctoringSession">
   started_at?: Prisma.DateTimeFilter<"ProctoringSession"> | Date | string
   ended_at?: Prisma.DateTimeNullableFilter<"ProctoringSession"> | Date | string | null
   last_heartbeat_at?: Prisma.DateTimeNullableFilter<"ProctoringSession"> | Date | string | null
@@ -309,6 +399,7 @@ export type ProctoringSessionWhereUniqueInput = Prisma.AtLeast<{
   mock_session?: Prisma.XOR<Prisma.MockSessionNullableScalarRelationFilter, Prisma.MockSessionWhereInput> | null
   events?: Prisma.ProctoringEventListRelationFilter
   violations?: Prisma.ProctoringViolationListRelationFilter
+  evidence?: Prisma.ProctoringEvidenceListRelationFilter
 }, "id">
 
 export type ProctoringSessionOrderByWithAggregationInput = {
@@ -321,14 +412,21 @@ export type ProctoringSessionOrderByWithAggregationInput = {
   status?: Prisma.SortOrder
   policy_version?: Prisma.SortOrder
   consent_version?: Prisma.SortOrder
+  recording_url?: Prisma.SortOrderInput | Prisma.SortOrder
+  recording_duration_ms?: Prisma.SortOrderInput | Prisma.SortOrder
+  recording_size_bytes?: Prisma.SortOrderInput | Prisma.SortOrder
+  risk_score?: Prisma.SortOrderInput | Prisma.SortOrder
+  summary_json?: Prisma.SortOrder
   started_at?: Prisma.SortOrder
   ended_at?: Prisma.SortOrderInput | Prisma.SortOrder
   last_heartbeat_at?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
   _count?: Prisma.ProctoringSessionCountOrderByAggregateInput
+  _avg?: Prisma.ProctoringSessionAvgOrderByAggregateInput
   _max?: Prisma.ProctoringSessionMaxOrderByAggregateInput
   _min?: Prisma.ProctoringSessionMinOrderByAggregateInput
+  _sum?: Prisma.ProctoringSessionSumOrderByAggregateInput
 }
 
 export type ProctoringSessionScalarWhereWithAggregatesInput = {
@@ -344,6 +442,11 @@ export type ProctoringSessionScalarWhereWithAggregatesInput = {
   status?: Prisma.StringWithAggregatesFilter<"ProctoringSession"> | string
   policy_version?: Prisma.StringWithAggregatesFilter<"ProctoringSession"> | string
   consent_version?: Prisma.StringWithAggregatesFilter<"ProctoringSession"> | string
+  recording_url?: Prisma.StringNullableWithAggregatesFilter<"ProctoringSession"> | string | null
+  recording_duration_ms?: Prisma.IntNullableWithAggregatesFilter<"ProctoringSession"> | number | null
+  recording_size_bytes?: Prisma.IntNullableWithAggregatesFilter<"ProctoringSession"> | number | null
+  risk_score?: Prisma.FloatNullableWithAggregatesFilter<"ProctoringSession"> | number | null
+  summary_json?: Prisma.JsonWithAggregatesFilter<"ProctoringSession">
   started_at?: Prisma.DateTimeWithAggregatesFilter<"ProctoringSession"> | Date | string
   ended_at?: Prisma.DateTimeNullableWithAggregatesFilter<"ProctoringSession"> | Date | string | null
   last_heartbeat_at?: Prisma.DateTimeNullableWithAggregatesFilter<"ProctoringSession"> | Date | string | null
@@ -357,6 +460,11 @@ export type ProctoringSessionCreateInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -368,6 +476,7 @@ export type ProctoringSessionCreateInput = {
   mock_session?: Prisma.MockSessionCreateNestedOneWithoutProctoring_sessionsInput
   events?: Prisma.ProctoringEventCreateNestedManyWithoutProctoring_sessionInput
   violations?: Prisma.ProctoringViolationCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionUncheckedCreateInput = {
@@ -380,6 +489,11 @@ export type ProctoringSessionUncheckedCreateInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -387,6 +501,7 @@ export type ProctoringSessionUncheckedCreateInput = {
   updated_at?: Date | string
   events?: Prisma.ProctoringEventUncheckedCreateNestedManyWithoutProctoring_sessionInput
   violations?: Prisma.ProctoringViolationUncheckedCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionUpdateInput = {
@@ -395,6 +510,11 @@ export type ProctoringSessionUpdateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -406,6 +526,7 @@ export type ProctoringSessionUpdateInput = {
   mock_session?: Prisma.MockSessionUpdateOneWithoutProctoring_sessionsNestedInput
   events?: Prisma.ProctoringEventUpdateManyWithoutProctoring_sessionNestedInput
   violations?: Prisma.ProctoringViolationUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionUncheckedUpdateInput = {
@@ -418,6 +539,11 @@ export type ProctoringSessionUncheckedUpdateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -425,6 +551,7 @@ export type ProctoringSessionUncheckedUpdateInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.ProctoringEventUncheckedUpdateManyWithoutProctoring_sessionNestedInput
   violations?: Prisma.ProctoringViolationUncheckedUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionCreateManyInput = {
@@ -437,6 +564,11 @@ export type ProctoringSessionCreateManyInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -450,6 +582,11 @@ export type ProctoringSessionUpdateManyMutationInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -467,6 +604,11 @@ export type ProctoringSessionUncheckedUpdateManyInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -494,11 +636,22 @@ export type ProctoringSessionCountOrderByAggregateInput = {
   status?: Prisma.SortOrder
   policy_version?: Prisma.SortOrder
   consent_version?: Prisma.SortOrder
+  recording_url?: Prisma.SortOrder
+  recording_duration_ms?: Prisma.SortOrder
+  recording_size_bytes?: Prisma.SortOrder
+  risk_score?: Prisma.SortOrder
+  summary_json?: Prisma.SortOrder
   started_at?: Prisma.SortOrder
   ended_at?: Prisma.SortOrder
   last_heartbeat_at?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
+}
+
+export type ProctoringSessionAvgOrderByAggregateInput = {
+  recording_duration_ms?: Prisma.SortOrder
+  recording_size_bytes?: Prisma.SortOrder
+  risk_score?: Prisma.SortOrder
 }
 
 export type ProctoringSessionMaxOrderByAggregateInput = {
@@ -511,6 +664,10 @@ export type ProctoringSessionMaxOrderByAggregateInput = {
   status?: Prisma.SortOrder
   policy_version?: Prisma.SortOrder
   consent_version?: Prisma.SortOrder
+  recording_url?: Prisma.SortOrder
+  recording_duration_ms?: Prisma.SortOrder
+  recording_size_bytes?: Prisma.SortOrder
+  risk_score?: Prisma.SortOrder
   started_at?: Prisma.SortOrder
   ended_at?: Prisma.SortOrder
   last_heartbeat_at?: Prisma.SortOrder
@@ -528,11 +685,21 @@ export type ProctoringSessionMinOrderByAggregateInput = {
   status?: Prisma.SortOrder
   policy_version?: Prisma.SortOrder
   consent_version?: Prisma.SortOrder
+  recording_url?: Prisma.SortOrder
+  recording_duration_ms?: Prisma.SortOrder
+  recording_size_bytes?: Prisma.SortOrder
+  risk_score?: Prisma.SortOrder
   started_at?: Prisma.SortOrder
   ended_at?: Prisma.SortOrder
   last_heartbeat_at?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
   updated_at?: Prisma.SortOrder
+}
+
+export type ProctoringSessionSumOrderByAggregateInput = {
+  recording_duration_ms?: Prisma.SortOrder
+  recording_size_bytes?: Prisma.SortOrder
+  risk_score?: Prisma.SortOrder
 }
 
 export type ProctoringSessionScalarRelationFilter = {
@@ -708,6 +875,20 @@ export type ProctoringSessionUncheckedUpdateManyWithoutMock_sessionNestedInput =
   deleteMany?: Prisma.ProctoringSessionScalarWhereInput | Prisma.ProctoringSessionScalarWhereInput[]
 }
 
+export type ProctoringSessionCreateNestedOneWithoutEvidenceInput = {
+  create?: Prisma.XOR<Prisma.ProctoringSessionCreateWithoutEvidenceInput, Prisma.ProctoringSessionUncheckedCreateWithoutEvidenceInput>
+  connectOrCreate?: Prisma.ProctoringSessionCreateOrConnectWithoutEvidenceInput
+  connect?: Prisma.ProctoringSessionWhereUniqueInput
+}
+
+export type ProctoringSessionUpdateOneRequiredWithoutEvidenceNestedInput = {
+  create?: Prisma.XOR<Prisma.ProctoringSessionCreateWithoutEvidenceInput, Prisma.ProctoringSessionUncheckedCreateWithoutEvidenceInput>
+  connectOrCreate?: Prisma.ProctoringSessionCreateOrConnectWithoutEvidenceInput
+  upsert?: Prisma.ProctoringSessionUpsertWithoutEvidenceInput
+  connect?: Prisma.ProctoringSessionWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.ProctoringSessionUpdateToOneWithWhereWithoutEvidenceInput, Prisma.ProctoringSessionUpdateWithoutEvidenceInput>, Prisma.ProctoringSessionUncheckedUpdateWithoutEvidenceInput>
+}
+
 export type ProctoringSessionCreateNestedOneWithoutEventsInput = {
   create?: Prisma.XOR<Prisma.ProctoringSessionCreateWithoutEventsInput, Prisma.ProctoringSessionUncheckedCreateWithoutEventsInput>
   connectOrCreate?: Prisma.ProctoringSessionCreateOrConnectWithoutEventsInput
@@ -742,6 +923,11 @@ export type ProctoringSessionCreateWithoutCandidateInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -752,6 +938,7 @@ export type ProctoringSessionCreateWithoutCandidateInput = {
   mock_session?: Prisma.MockSessionCreateNestedOneWithoutProctoring_sessionsInput
   events?: Prisma.ProctoringEventCreateNestedManyWithoutProctoring_sessionInput
   violations?: Prisma.ProctoringViolationCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionUncheckedCreateWithoutCandidateInput = {
@@ -763,6 +950,11 @@ export type ProctoringSessionUncheckedCreateWithoutCandidateInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -770,6 +962,7 @@ export type ProctoringSessionUncheckedCreateWithoutCandidateInput = {
   updated_at?: Date | string
   events?: Prisma.ProctoringEventUncheckedCreateNestedManyWithoutProctoring_sessionInput
   violations?: Prisma.ProctoringViolationUncheckedCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionCreateOrConnectWithoutCandidateInput = {
@@ -811,6 +1004,11 @@ export type ProctoringSessionScalarWhereInput = {
   status?: Prisma.StringFilter<"ProctoringSession"> | string
   policy_version?: Prisma.StringFilter<"ProctoringSession"> | string
   consent_version?: Prisma.StringFilter<"ProctoringSession"> | string
+  recording_url?: Prisma.StringNullableFilter<"ProctoringSession"> | string | null
+  recording_duration_ms?: Prisma.IntNullableFilter<"ProctoringSession"> | number | null
+  recording_size_bytes?: Prisma.IntNullableFilter<"ProctoringSession"> | number | null
+  risk_score?: Prisma.FloatNullableFilter<"ProctoringSession"> | number | null
+  summary_json?: Prisma.JsonFilter<"ProctoringSession">
   started_at?: Prisma.DateTimeFilter<"ProctoringSession"> | Date | string
   ended_at?: Prisma.DateTimeNullableFilter<"ProctoringSession"> | Date | string | null
   last_heartbeat_at?: Prisma.DateTimeNullableFilter<"ProctoringSession"> | Date | string | null
@@ -824,6 +1022,11 @@ export type ProctoringSessionCreateWithoutApplicationInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -834,6 +1037,7 @@ export type ProctoringSessionCreateWithoutApplicationInput = {
   mock_session?: Prisma.MockSessionCreateNestedOneWithoutProctoring_sessionsInput
   events?: Prisma.ProctoringEventCreateNestedManyWithoutProctoring_sessionInput
   violations?: Prisma.ProctoringViolationCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionUncheckedCreateWithoutApplicationInput = {
@@ -845,6 +1049,11 @@ export type ProctoringSessionUncheckedCreateWithoutApplicationInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -852,6 +1061,7 @@ export type ProctoringSessionUncheckedCreateWithoutApplicationInput = {
   updated_at?: Date | string
   events?: Prisma.ProctoringEventUncheckedCreateNestedManyWithoutProctoring_sessionInput
   violations?: Prisma.ProctoringViolationUncheckedCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionCreateOrConnectWithoutApplicationInput = {
@@ -886,6 +1096,11 @@ export type ProctoringSessionCreateWithoutAssessmentInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -896,6 +1111,7 @@ export type ProctoringSessionCreateWithoutAssessmentInput = {
   mock_session?: Prisma.MockSessionCreateNestedOneWithoutProctoring_sessionsInput
   events?: Prisma.ProctoringEventCreateNestedManyWithoutProctoring_sessionInput
   violations?: Prisma.ProctoringViolationCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionUncheckedCreateWithoutAssessmentInput = {
@@ -907,6 +1123,11 @@ export type ProctoringSessionUncheckedCreateWithoutAssessmentInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -914,6 +1135,7 @@ export type ProctoringSessionUncheckedCreateWithoutAssessmentInput = {
   updated_at?: Date | string
   events?: Prisma.ProctoringEventUncheckedCreateNestedManyWithoutProctoring_sessionInput
   violations?: Prisma.ProctoringViolationUncheckedCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionCreateOrConnectWithoutAssessmentInput = {
@@ -948,6 +1170,11 @@ export type ProctoringSessionCreateWithoutMock_sessionInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -958,6 +1185,7 @@ export type ProctoringSessionCreateWithoutMock_sessionInput = {
   application?: Prisma.ApplicationCreateNestedOneWithoutProctoring_sessionsInput
   events?: Prisma.ProctoringEventCreateNestedManyWithoutProctoring_sessionInput
   violations?: Prisma.ProctoringViolationCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionUncheckedCreateWithoutMock_sessionInput = {
@@ -969,6 +1197,11 @@ export type ProctoringSessionUncheckedCreateWithoutMock_sessionInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -976,6 +1209,7 @@ export type ProctoringSessionUncheckedCreateWithoutMock_sessionInput = {
   updated_at?: Date | string
   events?: Prisma.ProctoringEventUncheckedCreateNestedManyWithoutProctoring_sessionInput
   violations?: Prisma.ProctoringViolationUncheckedCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionCreateOrConnectWithoutMock_sessionInput = {
@@ -1004,12 +1238,129 @@ export type ProctoringSessionUpdateManyWithWhereWithoutMock_sessionInput = {
   data: Prisma.XOR<Prisma.ProctoringSessionUpdateManyMutationInput, Prisma.ProctoringSessionUncheckedUpdateManyWithoutMock_sessionInput>
 }
 
+export type ProctoringSessionCreateWithoutEvidenceInput = {
+  id?: string
+  session_type: string
+  status: string
+  policy_version: string
+  consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  started_at?: Date | string
+  ended_at?: Date | string | null
+  last_heartbeat_at?: Date | string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  candidate: Prisma.CandidateProfileCreateNestedOneWithoutProctoring_sessionsInput
+  assessment?: Prisma.AssessmentCreateNestedOneWithoutProctoring_sessionsInput
+  application?: Prisma.ApplicationCreateNestedOneWithoutProctoring_sessionsInput
+  mock_session?: Prisma.MockSessionCreateNestedOneWithoutProctoring_sessionsInput
+  events?: Prisma.ProctoringEventCreateNestedManyWithoutProctoring_sessionInput
+  violations?: Prisma.ProctoringViolationCreateNestedManyWithoutProctoring_sessionInput
+}
+
+export type ProctoringSessionUncheckedCreateWithoutEvidenceInput = {
+  id?: string
+  candidate_id: string
+  assessment_id?: string | null
+  application_id?: string | null
+  mock_session_id?: string | null
+  session_type: string
+  status: string
+  policy_version: string
+  consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  started_at?: Date | string
+  ended_at?: Date | string | null
+  last_heartbeat_at?: Date | string | null
+  created_at?: Date | string
+  updated_at?: Date | string
+  events?: Prisma.ProctoringEventUncheckedCreateNestedManyWithoutProctoring_sessionInput
+  violations?: Prisma.ProctoringViolationUncheckedCreateNestedManyWithoutProctoring_sessionInput
+}
+
+export type ProctoringSessionCreateOrConnectWithoutEvidenceInput = {
+  where: Prisma.ProctoringSessionWhereUniqueInput
+  create: Prisma.XOR<Prisma.ProctoringSessionCreateWithoutEvidenceInput, Prisma.ProctoringSessionUncheckedCreateWithoutEvidenceInput>
+}
+
+export type ProctoringSessionUpsertWithoutEvidenceInput = {
+  update: Prisma.XOR<Prisma.ProctoringSessionUpdateWithoutEvidenceInput, Prisma.ProctoringSessionUncheckedUpdateWithoutEvidenceInput>
+  create: Prisma.XOR<Prisma.ProctoringSessionCreateWithoutEvidenceInput, Prisma.ProctoringSessionUncheckedCreateWithoutEvidenceInput>
+  where?: Prisma.ProctoringSessionWhereInput
+}
+
+export type ProctoringSessionUpdateToOneWithWhereWithoutEvidenceInput = {
+  where?: Prisma.ProctoringSessionWhereInput
+  data: Prisma.XOR<Prisma.ProctoringSessionUpdateWithoutEvidenceInput, Prisma.ProctoringSessionUncheckedUpdateWithoutEvidenceInput>
+}
+
+export type ProctoringSessionUpdateWithoutEvidenceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  session_type?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  policy_version?: Prisma.StringFieldUpdateOperationsInput | string
+  consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  candidate?: Prisma.CandidateProfileUpdateOneRequiredWithoutProctoring_sessionsNestedInput
+  assessment?: Prisma.AssessmentUpdateOneWithoutProctoring_sessionsNestedInput
+  application?: Prisma.ApplicationUpdateOneWithoutProctoring_sessionsNestedInput
+  mock_session?: Prisma.MockSessionUpdateOneWithoutProctoring_sessionsNestedInput
+  events?: Prisma.ProctoringEventUpdateManyWithoutProctoring_sessionNestedInput
+  violations?: Prisma.ProctoringViolationUpdateManyWithoutProctoring_sessionNestedInput
+}
+
+export type ProctoringSessionUncheckedUpdateWithoutEvidenceInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  candidate_id?: Prisma.StringFieldUpdateOperationsInput | string
+  assessment_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  application_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  mock_session_id?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  session_type?: Prisma.StringFieldUpdateOperationsInput | string
+  status?: Prisma.StringFieldUpdateOperationsInput | string
+  policy_version?: Prisma.StringFieldUpdateOperationsInput | string
+  consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  events?: Prisma.ProctoringEventUncheckedUpdateManyWithoutProctoring_sessionNestedInput
+  violations?: Prisma.ProctoringViolationUncheckedUpdateManyWithoutProctoring_sessionNestedInput
+}
+
 export type ProctoringSessionCreateWithoutEventsInput = {
   id?: string
   session_type: string
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -1020,6 +1371,7 @@ export type ProctoringSessionCreateWithoutEventsInput = {
   application?: Prisma.ApplicationCreateNestedOneWithoutProctoring_sessionsInput
   mock_session?: Prisma.MockSessionCreateNestedOneWithoutProctoring_sessionsInput
   violations?: Prisma.ProctoringViolationCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionUncheckedCreateWithoutEventsInput = {
@@ -1032,12 +1384,18 @@ export type ProctoringSessionUncheckedCreateWithoutEventsInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
   created_at?: Date | string
   updated_at?: Date | string
   violations?: Prisma.ProctoringViolationUncheckedCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionCreateOrConnectWithoutEventsInput = {
@@ -1062,6 +1420,11 @@ export type ProctoringSessionUpdateWithoutEventsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1072,6 +1435,7 @@ export type ProctoringSessionUpdateWithoutEventsInput = {
   application?: Prisma.ApplicationUpdateOneWithoutProctoring_sessionsNestedInput
   mock_session?: Prisma.MockSessionUpdateOneWithoutProctoring_sessionsNestedInput
   violations?: Prisma.ProctoringViolationUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionUncheckedUpdateWithoutEventsInput = {
@@ -1084,12 +1448,18 @@ export type ProctoringSessionUncheckedUpdateWithoutEventsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   violations?: Prisma.ProctoringViolationUncheckedUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionCreateWithoutViolationsInput = {
@@ -1098,6 +1468,11 @@ export type ProctoringSessionCreateWithoutViolationsInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -1108,6 +1483,7 @@ export type ProctoringSessionCreateWithoutViolationsInput = {
   application?: Prisma.ApplicationCreateNestedOneWithoutProctoring_sessionsInput
   mock_session?: Prisma.MockSessionCreateNestedOneWithoutProctoring_sessionsInput
   events?: Prisma.ProctoringEventCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionUncheckedCreateWithoutViolationsInput = {
@@ -1120,12 +1496,18 @@ export type ProctoringSessionUncheckedCreateWithoutViolationsInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
   created_at?: Date | string
   updated_at?: Date | string
   events?: Prisma.ProctoringEventUncheckedCreateNestedManyWithoutProctoring_sessionInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedCreateNestedManyWithoutProctoring_sessionInput
 }
 
 export type ProctoringSessionCreateOrConnectWithoutViolationsInput = {
@@ -1150,6 +1532,11 @@ export type ProctoringSessionUpdateWithoutViolationsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1160,6 +1547,7 @@ export type ProctoringSessionUpdateWithoutViolationsInput = {
   application?: Prisma.ApplicationUpdateOneWithoutProctoring_sessionsNestedInput
   mock_session?: Prisma.MockSessionUpdateOneWithoutProctoring_sessionsNestedInput
   events?: Prisma.ProctoringEventUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionUncheckedUpdateWithoutViolationsInput = {
@@ -1172,12 +1560,18 @@ export type ProctoringSessionUncheckedUpdateWithoutViolationsInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.ProctoringEventUncheckedUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionCreateManyCandidateInput = {
@@ -1189,6 +1583,11 @@ export type ProctoringSessionCreateManyCandidateInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -1202,6 +1601,11 @@ export type ProctoringSessionUpdateWithoutCandidateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1212,6 +1616,7 @@ export type ProctoringSessionUpdateWithoutCandidateInput = {
   mock_session?: Prisma.MockSessionUpdateOneWithoutProctoring_sessionsNestedInput
   events?: Prisma.ProctoringEventUpdateManyWithoutProctoring_sessionNestedInput
   violations?: Prisma.ProctoringViolationUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionUncheckedUpdateWithoutCandidateInput = {
@@ -1223,6 +1628,11 @@ export type ProctoringSessionUncheckedUpdateWithoutCandidateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1230,6 +1640,7 @@ export type ProctoringSessionUncheckedUpdateWithoutCandidateInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.ProctoringEventUncheckedUpdateManyWithoutProctoring_sessionNestedInput
   violations?: Prisma.ProctoringViolationUncheckedUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionUncheckedUpdateManyWithoutCandidateInput = {
@@ -1241,6 +1652,11 @@ export type ProctoringSessionUncheckedUpdateManyWithoutCandidateInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1257,6 +1673,11 @@ export type ProctoringSessionCreateManyApplicationInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -1270,6 +1691,11 @@ export type ProctoringSessionUpdateWithoutApplicationInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1280,6 +1706,7 @@ export type ProctoringSessionUpdateWithoutApplicationInput = {
   mock_session?: Prisma.MockSessionUpdateOneWithoutProctoring_sessionsNestedInput
   events?: Prisma.ProctoringEventUpdateManyWithoutProctoring_sessionNestedInput
   violations?: Prisma.ProctoringViolationUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionUncheckedUpdateWithoutApplicationInput = {
@@ -1291,6 +1718,11 @@ export type ProctoringSessionUncheckedUpdateWithoutApplicationInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1298,6 +1730,7 @@ export type ProctoringSessionUncheckedUpdateWithoutApplicationInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.ProctoringEventUncheckedUpdateManyWithoutProctoring_sessionNestedInput
   violations?: Prisma.ProctoringViolationUncheckedUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionUncheckedUpdateManyWithoutApplicationInput = {
@@ -1309,6 +1742,11 @@ export type ProctoringSessionUncheckedUpdateManyWithoutApplicationInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1325,6 +1763,11 @@ export type ProctoringSessionCreateManyAssessmentInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -1338,6 +1781,11 @@ export type ProctoringSessionUpdateWithoutAssessmentInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1348,6 +1796,7 @@ export type ProctoringSessionUpdateWithoutAssessmentInput = {
   mock_session?: Prisma.MockSessionUpdateOneWithoutProctoring_sessionsNestedInput
   events?: Prisma.ProctoringEventUpdateManyWithoutProctoring_sessionNestedInput
   violations?: Prisma.ProctoringViolationUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionUncheckedUpdateWithoutAssessmentInput = {
@@ -1359,6 +1808,11 @@ export type ProctoringSessionUncheckedUpdateWithoutAssessmentInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1366,6 +1820,7 @@ export type ProctoringSessionUncheckedUpdateWithoutAssessmentInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.ProctoringEventUncheckedUpdateManyWithoutProctoring_sessionNestedInput
   violations?: Prisma.ProctoringViolationUncheckedUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionUncheckedUpdateManyWithoutAssessmentInput = {
@@ -1377,6 +1832,11 @@ export type ProctoringSessionUncheckedUpdateManyWithoutAssessmentInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1393,6 +1853,11 @@ export type ProctoringSessionCreateManyMock_sessionInput = {
   status: string
   policy_version: string
   consent_version: string
+  recording_url?: string | null
+  recording_duration_ms?: number | null
+  recording_size_bytes?: number | null
+  risk_score?: number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Date | string
   ended_at?: Date | string | null
   last_heartbeat_at?: Date | string | null
@@ -1406,6 +1871,11 @@ export type ProctoringSessionUpdateWithoutMock_sessionInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1416,6 +1886,7 @@ export type ProctoringSessionUpdateWithoutMock_sessionInput = {
   application?: Prisma.ApplicationUpdateOneWithoutProctoring_sessionsNestedInput
   events?: Prisma.ProctoringEventUpdateManyWithoutProctoring_sessionNestedInput
   violations?: Prisma.ProctoringViolationUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionUncheckedUpdateWithoutMock_sessionInput = {
@@ -1427,6 +1898,11 @@ export type ProctoringSessionUncheckedUpdateWithoutMock_sessionInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1434,6 +1910,7 @@ export type ProctoringSessionUncheckedUpdateWithoutMock_sessionInput = {
   updated_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   events?: Prisma.ProctoringEventUncheckedUpdateManyWithoutProctoring_sessionNestedInput
   violations?: Prisma.ProctoringViolationUncheckedUpdateManyWithoutProctoring_sessionNestedInput
+  evidence?: Prisma.ProctoringEvidenceUncheckedUpdateManyWithoutProctoring_sessionNestedInput
 }
 
 export type ProctoringSessionUncheckedUpdateManyWithoutMock_sessionInput = {
@@ -1445,6 +1922,11 @@ export type ProctoringSessionUncheckedUpdateManyWithoutMock_sessionInput = {
   status?: Prisma.StringFieldUpdateOperationsInput | string
   policy_version?: Prisma.StringFieldUpdateOperationsInput | string
   consent_version?: Prisma.StringFieldUpdateOperationsInput | string
+  recording_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  recording_duration_ms?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  recording_size_bytes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  risk_score?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  summary_json?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   started_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ended_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   last_heartbeat_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -1460,11 +1942,13 @@ export type ProctoringSessionUncheckedUpdateManyWithoutMock_sessionInput = {
 export type ProctoringSessionCountOutputType = {
   events: number
   violations: number
+  evidence: number
 }
 
 export type ProctoringSessionCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   events?: boolean | ProctoringSessionCountOutputTypeCountEventsArgs
   violations?: boolean | ProctoringSessionCountOutputTypeCountViolationsArgs
+  evidence?: boolean | ProctoringSessionCountOutputTypeCountEvidenceArgs
 }
 
 /**
@@ -1491,6 +1975,13 @@ export type ProctoringSessionCountOutputTypeCountViolationsArgs<ExtArgs extends 
   where?: Prisma.ProctoringViolationWhereInput
 }
 
+/**
+ * ProctoringSessionCountOutputType without action
+ */
+export type ProctoringSessionCountOutputTypeCountEvidenceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.ProctoringEvidenceWhereInput
+}
+
 
 export type ProctoringSessionSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1502,6 +1993,11 @@ export type ProctoringSessionSelect<ExtArgs extends runtime.Types.Extensions.Int
   status?: boolean
   policy_version?: boolean
   consent_version?: boolean
+  recording_url?: boolean
+  recording_duration_ms?: boolean
+  recording_size_bytes?: boolean
+  risk_score?: boolean
+  summary_json?: boolean
   started_at?: boolean
   ended_at?: boolean
   last_heartbeat_at?: boolean
@@ -1513,6 +2009,7 @@ export type ProctoringSessionSelect<ExtArgs extends runtime.Types.Extensions.Int
   mock_session?: boolean | Prisma.ProctoringSession$mock_sessionArgs<ExtArgs>
   events?: boolean | Prisma.ProctoringSession$eventsArgs<ExtArgs>
   violations?: boolean | Prisma.ProctoringSession$violationsArgs<ExtArgs>
+  evidence?: boolean | Prisma.ProctoringSession$evidenceArgs<ExtArgs>
   _count?: boolean | Prisma.ProctoringSessionCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["proctoringSession"]>
 
@@ -1526,6 +2023,11 @@ export type ProctoringSessionSelectCreateManyAndReturn<ExtArgs extends runtime.T
   status?: boolean
   policy_version?: boolean
   consent_version?: boolean
+  recording_url?: boolean
+  recording_duration_ms?: boolean
+  recording_size_bytes?: boolean
+  risk_score?: boolean
+  summary_json?: boolean
   started_at?: boolean
   ended_at?: boolean
   last_heartbeat_at?: boolean
@@ -1547,6 +2049,11 @@ export type ProctoringSessionSelectUpdateManyAndReturn<ExtArgs extends runtime.T
   status?: boolean
   policy_version?: boolean
   consent_version?: boolean
+  recording_url?: boolean
+  recording_duration_ms?: boolean
+  recording_size_bytes?: boolean
+  risk_score?: boolean
+  summary_json?: boolean
   started_at?: boolean
   ended_at?: boolean
   last_heartbeat_at?: boolean
@@ -1568,6 +2075,11 @@ export type ProctoringSessionSelectScalar = {
   status?: boolean
   policy_version?: boolean
   consent_version?: boolean
+  recording_url?: boolean
+  recording_duration_ms?: boolean
+  recording_size_bytes?: boolean
+  risk_score?: boolean
+  summary_json?: boolean
   started_at?: boolean
   ended_at?: boolean
   last_heartbeat_at?: boolean
@@ -1575,7 +2087,7 @@ export type ProctoringSessionSelectScalar = {
   updated_at?: boolean
 }
 
-export type ProctoringSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "candidate_id" | "assessment_id" | "application_id" | "mock_session_id" | "session_type" | "status" | "policy_version" | "consent_version" | "started_at" | "ended_at" | "last_heartbeat_at" | "created_at" | "updated_at", ExtArgs["result"]["proctoringSession"]>
+export type ProctoringSessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "candidate_id" | "assessment_id" | "application_id" | "mock_session_id" | "session_type" | "status" | "policy_version" | "consent_version" | "recording_url" | "recording_duration_ms" | "recording_size_bytes" | "risk_score" | "summary_json" | "started_at" | "ended_at" | "last_heartbeat_at" | "created_at" | "updated_at", ExtArgs["result"]["proctoringSession"]>
 export type ProctoringSessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   candidate?: boolean | Prisma.CandidateProfileDefaultArgs<ExtArgs>
   assessment?: boolean | Prisma.ProctoringSession$assessmentArgs<ExtArgs>
@@ -1583,6 +2095,7 @@ export type ProctoringSessionInclude<ExtArgs extends runtime.Types.Extensions.In
   mock_session?: boolean | Prisma.ProctoringSession$mock_sessionArgs<ExtArgs>
   events?: boolean | Prisma.ProctoringSession$eventsArgs<ExtArgs>
   violations?: boolean | Prisma.ProctoringSession$violationsArgs<ExtArgs>
+  evidence?: boolean | Prisma.ProctoringSession$evidenceArgs<ExtArgs>
   _count?: boolean | Prisma.ProctoringSessionCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type ProctoringSessionIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1607,6 +2120,7 @@ export type $ProctoringSessionPayload<ExtArgs extends runtime.Types.Extensions.I
     mock_session: Prisma.$MockSessionPayload<ExtArgs> | null
     events: Prisma.$ProctoringEventPayload<ExtArgs>[]
     violations: Prisma.$ProctoringViolationPayload<ExtArgs>[]
+    evidence: Prisma.$ProctoringEvidencePayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1618,6 +2132,11 @@ export type $ProctoringSessionPayload<ExtArgs extends runtime.Types.Extensions.I
     status: string
     policy_version: string
     consent_version: string
+    recording_url: string | null
+    recording_duration_ms: number | null
+    recording_size_bytes: number | null
+    risk_score: number | null
+    summary_json: runtime.JsonValue
     started_at: Date
     ended_at: Date | null
     last_heartbeat_at: Date | null
@@ -2023,6 +2542,7 @@ export interface Prisma__ProctoringSessionClient<T, Null = never, ExtArgs extend
   mock_session<T extends Prisma.ProctoringSession$mock_sessionArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProctoringSession$mock_sessionArgs<ExtArgs>>): Prisma.Prisma__MockSessionClient<runtime.Types.Result.GetResult<Prisma.$MockSessionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   events<T extends Prisma.ProctoringSession$eventsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProctoringSession$eventsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProctoringEventPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   violations<T extends Prisma.ProctoringSession$violationsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProctoringSession$violationsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProctoringViolationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  evidence<T extends Prisma.ProctoringSession$evidenceArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.ProctoringSession$evidenceArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProctoringEvidencePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2061,6 +2581,11 @@ export interface ProctoringSessionFieldRefs {
   readonly status: Prisma.FieldRef<"ProctoringSession", 'String'>
   readonly policy_version: Prisma.FieldRef<"ProctoringSession", 'String'>
   readonly consent_version: Prisma.FieldRef<"ProctoringSession", 'String'>
+  readonly recording_url: Prisma.FieldRef<"ProctoringSession", 'String'>
+  readonly recording_duration_ms: Prisma.FieldRef<"ProctoringSession", 'Int'>
+  readonly recording_size_bytes: Prisma.FieldRef<"ProctoringSession", 'Int'>
+  readonly risk_score: Prisma.FieldRef<"ProctoringSession", 'Float'>
+  readonly summary_json: Prisma.FieldRef<"ProctoringSession", 'Json'>
   readonly started_at: Prisma.FieldRef<"ProctoringSession", 'DateTime'>
   readonly ended_at: Prisma.FieldRef<"ProctoringSession", 'DateTime'>
   readonly last_heartbeat_at: Prisma.FieldRef<"ProctoringSession", 'DateTime'>
@@ -2569,6 +3094,30 @@ export type ProctoringSession$violationsArgs<ExtArgs extends runtime.Types.Exten
   take?: number
   skip?: number
   distinct?: Prisma.ProctoringViolationScalarFieldEnum | Prisma.ProctoringViolationScalarFieldEnum[]
+}
+
+/**
+ * ProctoringSession.evidence
+ */
+export type ProctoringSession$evidenceArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the ProctoringEvidence
+   */
+  select?: Prisma.ProctoringEvidenceSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the ProctoringEvidence
+   */
+  omit?: Prisma.ProctoringEvidenceOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.ProctoringEvidenceInclude<ExtArgs> | null
+  where?: Prisma.ProctoringEvidenceWhereInput
+  orderBy?: Prisma.ProctoringEvidenceOrderByWithRelationInput | Prisma.ProctoringEvidenceOrderByWithRelationInput[]
+  cursor?: Prisma.ProctoringEvidenceWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.ProctoringEvidenceScalarFieldEnum | Prisma.ProctoringEvidenceScalarFieldEnum[]
 }
 
 /**

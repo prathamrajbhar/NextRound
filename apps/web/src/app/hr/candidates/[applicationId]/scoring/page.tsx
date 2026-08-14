@@ -3,6 +3,9 @@
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
+import { useApplication } from '@/hooks/queries';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { getScopedStorage } from '@/lib/storage';
 import { Application } from '@/types';
 import {
   ChevronRight,
@@ -15,6 +18,7 @@ import DecisionControl from '../components/DecisionControl';
 import { CandidateHeader } from '../components/CandidateHeader';
 import { AssessmentScorecard } from '../components/AssessmentScorecard';
 import { ProctoringReportCard, type ProctoringReport } from '../components/ProctoringReportCard';
+import { EvidenceReviewCard } from '../components/EvidenceReviewCard';
 import { CandidateDetailSkeleton } from '@/components/ui';
 
 interface VoiceData {
@@ -33,29 +37,31 @@ interface AssessData {
 
 export default function HrCandidateScoringPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
-
+  const { user } = useAuthContext();
   const [app, setApp] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [assessmentData, setAssessmentData] = useState<AssessData | null>(null);
   const [proctorReport, setProctorReport] = useState<ProctoringReport | null>(null);
 
+  const { data: fetchedApp } = useApplication(applicationId);
+
   useEffect(() => {
     async function fetchScoringData() {
       try {
         setLoading(true);
-        let appData = await apiClient.get<Application>(`/applications/${applicationId}`).catch(() => null);
+        let appData = fetchedApp ?? null;
         if (!appData && typeof window !== 'undefined') {
-          const storedHrResult = localStorage.getItem(`hrRoundResult_${applicationId}`);
+          const storedHrResult = getScopedStorage(user?.id, `hrRoundResult_${applicationId}`);
           if (storedHrResult) appData = JSON.parse(storedHrResult);
         }
 
         if (appData) {
           let voiceInterviewData: VoiceData | null = null;
           if (typeof window !== 'undefined') {
-            const localVoice = localStorage.getItem(`candidateInterview_${applicationId}`);
+            const localVoice = getScopedStorage(user?.id, `candidateInterview_${applicationId}`);
             if (localVoice) voiceInterviewData = JSON.parse(localVoice);
             
-            const localAssess = localStorage.getItem(`assessmentResult_${applicationId}`);
+            const localAssess = getScopedStorage(user?.id, `assessmentResult_${applicationId}`);
             if (localAssess) setAssessmentData(JSON.parse(localAssess));
           }
 
@@ -87,7 +93,7 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
       }
     }
     fetchScoringData();
-  }, [applicationId]);
+  }, [fetchedApp, applicationId, user?.id]);
 
   if (loading) {
     return <CandidateDetailSkeleton />;
@@ -107,7 +113,6 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 pb-12 font-sans">
-      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
           <Link href="/hr/jobs" className="hover:text-brand-600 dark:hover:text-orange-400">Jobs</Link>
@@ -133,11 +138,9 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
       <CandidateHeader app={app} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {}
         <div className="lg:col-span-2 space-y-6">
           <SkillsScorecard scores={app.scores} />
 
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-3">
             <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 font-display">
               AI Agent Vetting Reasoning
@@ -149,20 +152,18 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
 
           <AssessmentScorecard assessmentData={assessmentData} />
 
-          {proctorReport && <ProctoringReportCard report={proctorReport} />}
+          {proctorReport && (
+            <EvidenceReviewCard
+              recording={proctorReport.recording}
+              evidence={proctorReport.evidence}
+              riskScore={proctorReport.risk_score}
+              summary={proctorReport.summary}
+            />
+          )}
 
-          {}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
-            <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 font-display">
-              Screening Gap Analysis
-            </h3>
-            <div className="space-y-3.5 text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
-              <p className="text-slate-500 dark:text-slate-400 font-medium">Screening gap analysis not yet available.</p>
-            </div>
-          </div>
+          {proctorReport && <ProctoringReportCard report={proctorReport} />}
         </div>
 
-        {}
         <div className="space-y-6">
           {app.stage?.toLowerCase() === 'hr round' && (
             <div className="rounded-3xl border border-brand-200/80 dark:border-orange-800/80 bg-brand-50/40 dark:bg-orange-950/40 p-6 shadow-md backdrop-blur-md glass-panel text-center space-y-3">
@@ -182,43 +183,11 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
               </Link>
             </div>
           )}
-
           <DecisionControl
             appId={app.id}
             initialDecision={app.decision || 'hold'}
             initialReasoning={app.reasoning || ''}
-            showApprovalButtons={true}
           />
-
-          {}
-          <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel text-center space-y-4">
-            <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-display">
-              Interview Session Replay
-            </h4>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-              Listen to recorded AI voice interview recording and dynamic transcript grading log.
-            </p>
-            <button
-              type="button"
-              onClick={() => alert('Playing recorded AI voice session audio...')}
-              className="w-full py-2.5 rounded-xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Video className="h-4 w-4" />
-              <span>Replay Voice Session</span>
-            </button>
-
-            {}
-            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-200/60 dark:border-slate-800 text-left">
-              <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Gaze Contact</span>
-                <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 mt-0.5 block">No data</span>
-              </div>
-              <div className="p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Speech Pacing</span>
-                <span className="text-xs font-extrabold text-amber-600 dark:text-amber-400 mt-0.5 block">No data</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

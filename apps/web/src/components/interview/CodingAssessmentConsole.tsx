@@ -13,6 +13,7 @@ import { CodingStartCard } from './coding/CodingStartCard';
 import type { TestResult } from './coding/types';
 
 import type { ProctoringClient } from '@/lib/proctoring/ProctoringClient';
+import { RecordingBadge } from './RecordingBadge';
 
 interface CodingConsoleProps {
   company?: string;
@@ -24,12 +25,9 @@ interface CodingConsoleProps {
   strikeCount?: number;
   showWarningModal?: boolean;
   onResumeFullscreen?: () => void;
+  recordingActive?: boolean;
+  recordingDurationMs?: number;
 }
-
-
-
-
-
 
 export default function CodingAssessmentConsole({
   company = '',
@@ -41,6 +39,8 @@ export default function CodingAssessmentConsole({
   strikeCount: outerStrikeCount,
   showWarningModal: outerWarningModal,
   onResumeFullscreen: outerResumeFullscreen,
+  recordingActive = false,
+  recordingDurationMs = 0,
 }: CodingConsoleProps) {
   const { problem, error } = useCodingProblem({ applicationId, sessionId, role, company });
 
@@ -196,7 +196,6 @@ export default function CodingAssessmentConsole({
 
   return (
     <div className="flex flex-col h-screen w-screen bg-slate-900 text-slate-100 font-sans overflow-hidden">
-      {}
       <CodingHeader
         company={company}
         role={role}
@@ -209,19 +208,22 @@ export default function CodingAssessmentConsole({
       />
 
       {!submitted ? (
-        <main className="flex-1 p-2 flex gap-2 overflow-hidden bg-slate-100 dark:bg-[#0a0a0a]">
-          <CodingProblemPanel problem={problem} activeTab={activeLeftTab} onTabChange={setActiveLeftTab} />
-          <CodingWorkspacePanel
-            problem={problem}
-            language={language}
-            code={code}
-            onCodeChange={setCode}
-            activeBottomTab={activeBottomTab}
-            onBottomTabChange={setActiveBottomTab}
-            testResults={testResults}
-            outputLogs={outputLogs}
-          />
-        </main>
+        <>
+          <RecordingBadge active={recordingActive} durationMs={recordingDurationMs} />
+          <main className="flex-1 p-2 flex gap-2 overflow-hidden bg-slate-100 dark:bg-[#0a0a0a]">
+            <CodingProblemPanel problem={problem} activeTab={activeLeftTab} onTabChange={setActiveLeftTab} />
+            <CodingWorkspacePanel
+              problem={problem}
+              language={language}
+              code={code}
+              onCodeChange={setCode}
+              activeBottomTab={activeBottomTab}
+              onBottomTabChange={setActiveBottomTab}
+              testResults={testResults}
+              outputLogs={outputLogs}
+            />
+          </main>
+        </>
       ) : (
         <CodingSubmissionSummary
           problem={problem}
@@ -234,7 +236,6 @@ export default function CodingAssessmentConsole({
         />
       )}
 
-      {}
       <ProctoringWarningModal
         isOpen={displayShowWarning && !submitted}
         strikeCount={displayStrikeCount}

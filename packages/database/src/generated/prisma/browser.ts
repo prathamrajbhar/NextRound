@@ -118,6 +118,11 @@ export type TalentBookmark = Prisma.TalentBookmarkModel
  */
 export type ProctoringSession = Prisma.ProctoringSessionModel
 /**
+ * Model ProctoringEvidence
+ * 
+ */
+export type ProctoringEvidence = Prisma.ProctoringEvidenceModel
+/**
  * Model ProctoringEvent
  * 
  */

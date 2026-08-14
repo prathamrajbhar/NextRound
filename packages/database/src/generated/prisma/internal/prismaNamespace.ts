@@ -417,6 +417,7 @@ export const ModelName = {
   Notification: 'Notification',
   TalentBookmark: 'TalentBookmark',
   ProctoringSession: 'ProctoringSession',
+  ProctoringEvidence: 'ProctoringEvidence',
   ProctoringEvent: 'ProctoringEvent',
   ProctoringViolation: 'ProctoringViolation',
   WebRTCSignal: 'WebRTCSignal'
@@ -435,7 +436,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "aptitudeQuestion" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark" | "proctoringSession" | "proctoringEvent" | "proctoringViolation" | "webRTCSignal"
+    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "aptitudeQuestion" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark" | "proctoringSession" | "proctoringEvidence" | "proctoringEvent" | "proctoringViolation" | "webRTCSignal"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1919,6 +1920,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    ProctoringEvidence: {
+      payload: Prisma.$ProctoringEvidencePayload<ExtArgs>
+      fields: Prisma.ProctoringEvidenceFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.ProctoringEvidenceFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEvidencePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.ProctoringEvidenceFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEvidencePayload>
+        }
+        findFirst: {
+          args: Prisma.ProctoringEvidenceFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEvidencePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.ProctoringEvidenceFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEvidencePayload>
+        }
+        findMany: {
+          args: Prisma.ProctoringEvidenceFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEvidencePayload>[]
+        }
+        create: {
+          args: Prisma.ProctoringEvidenceCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEvidencePayload>
+        }
+        createMany: {
+          args: Prisma.ProctoringEvidenceCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.ProctoringEvidenceCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEvidencePayload>[]
+        }
+        delete: {
+          args: Prisma.ProctoringEvidenceDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEvidencePayload>
+        }
+        update: {
+          args: Prisma.ProctoringEvidenceUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEvidencePayload>
+        }
+        deleteMany: {
+          args: Prisma.ProctoringEvidenceDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.ProctoringEvidenceUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.ProctoringEvidenceUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEvidencePayload>[]
+        }
+        upsert: {
+          args: Prisma.ProctoringEvidenceUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$ProctoringEvidencePayload>
+        }
+        aggregate: {
+          args: Prisma.ProctoringEvidenceAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateProctoringEvidence>
+        }
+        groupBy: {
+          args: Prisma.ProctoringEvidenceGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProctoringEvidenceGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.ProctoringEvidenceCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.ProctoringEvidenceCountAggregateOutputType> | number
+        }
+      }
+    }
     ProctoringEvent: {
       payload: Prisma.$ProctoringEventPayload<ExtArgs>
       fields: Prisma.ProctoringEventFieldRefs
@@ -2560,6 +2635,11 @@ export const ProctoringSessionScalarFieldEnum = {
   status: 'status',
   policy_version: 'policy_version',
   consent_version: 'consent_version',
+  recording_url: 'recording_url',
+  recording_duration_ms: 'recording_duration_ms',
+  recording_size_bytes: 'recording_size_bytes',
+  risk_score: 'risk_score',
+  summary_json: 'summary_json',
   started_at: 'started_at',
   ended_at: 'ended_at',
   last_heartbeat_at: 'last_heartbeat_at',
@@ -2568,6 +2648,23 @@ export const ProctoringSessionScalarFieldEnum = {
 } as const
 
 export type ProctoringSessionScalarFieldEnum = (typeof ProctoringSessionScalarFieldEnum)[keyof typeof ProctoringSessionScalarFieldEnum]
+
+
+export const ProctoringEvidenceScalarFieldEnum = {
+  id: 'id',
+  proctoring_session_id: 'proctoring_session_id',
+  kind: 'kind',
+  mime_type: 'mime_type',
+  url: 'url',
+  size_bytes: 'size_bytes',
+  width: 'width',
+  height: 'height',
+  captured_at: 'captured_at',
+  payload_json: 'payload_json',
+  created_at: 'created_at'
+} as const
+
+export type ProctoringEvidenceScalarFieldEnum = (typeof ProctoringEvidenceScalarFieldEnum)[keyof typeof ProctoringEvidenceScalarFieldEnum]
 
 
 export const ProctoringEventScalarFieldEnum = {
@@ -3059,6 +3156,7 @@ export type GlobalOmitConfig = {
   notification?: Prisma.NotificationOmit
   talentBookmark?: Prisma.TalentBookmarkOmit
   proctoringSession?: Prisma.ProctoringSessionOmit
+  proctoringEvidence?: Prisma.ProctoringEvidenceOmit
   proctoringEvent?: Prisma.ProctoringEventOmit
   proctoringViolation?: Prisma.ProctoringViolationOmit
   webRTCSignal?: Prisma.WebRTCSignalOmit

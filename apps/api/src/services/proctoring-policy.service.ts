@@ -20,6 +20,7 @@ export interface ProctoringSummary {
   totalFaceMissingMs?: number;
   totalMultipleFacesMs?: number;
   multipleVoicesCount?: number;
+  backgroundNoiseHighCount?: number;
   copyPasteActivityCount?: number;
   suspiciousBehaviorPattern?: boolean;
 }
@@ -378,6 +379,7 @@ export function evaluateSessionPolicy(
       totalFaceMissingMs,
       totalMultipleFacesMs,
       multipleVoicesCount,
+      backgroundNoiseHighCount,
       copyPasteActivityCount,
       suspiciousBehaviorPattern: hasRapidWarnings,
     },

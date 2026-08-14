@@ -145,6 +145,26 @@ The Interviewer Agent replaces static question scripts with a fully adaptive dia
 - "Run Tests" executes the submission against visible test cases in an isolated sandbox with real-time output. "Submit" triggers the final evaluation against hidden test cases.
 - Metrics captured: pass rate, execution time (ms), memory usage (MB), Big-O complexity estimate.
 
+### 6.3 Secured Assessment Proctoring (Aptitude & Coding)
+Both multi-modal consoles run behind a single-person gate and live proctoring pipeline to make the assessment round genuinely cheat-proof.
+
+- **Pre-assessment gate (`ProctoringGate`)**: Acquires camera + mic, verifies exactly one person in frame via MediaPipe (`blaze_face_short_range`), requires explicit consent before the session starts.
+- **Face detection**: MediaPipe Tasks Vision (WASM) runs client-side each frame with a heuristic fallback if WASM/model fails to load.
+- **Hybrid enforcement**:
+  - *Persistent multi-face* (>5s) fires `multiple_faces_persistent` → candidate is **disqualified immediately**.
+  - *Tab-switch / fullscreen exit* keeps the existing 3-strike rule (strike → warning modal → elimination).
+  - *Noise spikes, multi-voice, mic-off* are HR-review flags only — they never auto-block.
+- **Audio recording**: One WebM/OGG/WAV file recorded via `MediaRecorder`, uploaded once at session end to `POST /api/v1/proctoring/sessions/:id/recording` and stored in DB (`recording_url`, `recording_duration_ms`, `recording_size_bytes`).
+- **Camera evidence**: Periodic low-res snapshots (~every 30s + on face-count change) uploaded to `POST /api/v1/proctoring/sessions/:id/evidence` and stored as `ProctoringEvidence` (kind `camera_snapshot`).
+- **Risk score**: `computeRiskScore` (high=40 / medium=20 / low=5 pts, per-violation occurrence capped at 3, max 100) persisted on `ProctoringSession.risk_score` with a `summary_json` of telemetry counters.
+- **HR evidence review**: On the scoring platform, HR sees the risk gauge, audio player + download, camera snapshot grid (click-to-zoom), and summary chips (face-missing, multi-face, multi-voice, noise, tab-switches, copy/paste).
+
+**Queue:** `assessment-queue` / `coding-queue`
+
+**Internal callback:** `PATCH /api/v1/internal/applications/:id/assessment-result`
+
+**DB records modified:** `Assessment`, `AgentLog`, `ProctoringSession` (recording/risk/summary), `ProctoringEvidence`
+
 **Queue:** `coding-queue`
 
 **Internal callback:** `PATCH /api/v1/internal/applications/:id/coding-result`

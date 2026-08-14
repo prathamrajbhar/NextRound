@@ -1,5 +1,7 @@
 import { prisma } from '../lib/prisma';
+import { Prisma } from '@nextround/database';
 import { getPolicy, evaluateSessionPolicy } from './proctoring-policy.service';
+import { uploadFile } from '../lib/storage';
 import { forbidden, notFound, badRequest } from '../lib/http-errors';
 
 interface CreateSessionInput {
@@ -241,6 +243,90 @@ export async function endProctoringSession(sessionId: string, userId: string) {
   return updatedSession;
 }
 
+export async function saveProctoringRecording(
+  sessionId: string,
+  userId: string,
+  buffer: Buffer,
+  opts: { mimeType?: string; durationMs?: number }
+) {
+  const session = await requireSessionOwnership(sessionId, userId);
+
+  const mimeType = opts.mimeType || 'audio/webm';
+  const ext = mimeType.includes('wav') ? 'wav' : mimeType.includes('ogg') ? 'ogg' : 'webm';
+  const ts = Date.now();
+  const key = `audio/proctor-${sessionId}-${ts}.${ext}`;
+  const url = await uploadFile(key, buffer, mimeType);
+
+  const updated = await prisma.proctoringSession.update({
+    where: { id: sessionId },
+    data: {
+      recording_url: url,
+      recording_duration_ms: opts.durationMs ?? null,
+      recording_size_bytes: buffer.length,
+    },
+  });
+
+  await prisma.proctoringEvidence.create({
+    data: {
+      proctoring_session_id: sessionId,
+      kind: 'audio_recording',
+      mime_type: mimeType,
+      url,
+      size_bytes: buffer.length,
+      captured_at: new Date(),
+      payload_json: { duration_ms: opts.durationMs ?? null } as Prisma.InputJsonValue,
+    },
+  });
+
+  return updated;
+}
+
+export async function saveProctoringSnapshot(
+  sessionId: string,
+  userId: string,
+  buffer: Buffer,
+  opts: { mimeType?: string; width?: number; height?: number; payload?: Record<string, unknown> }
+) {
+  const session = await requireSessionOwnership(sessionId, userId);
+
+  const mimeType = opts.mimeType || 'image/jpeg';
+  const ext = mimeType.includes('png') ? 'png' : 'jpg';
+  const ts = Date.now();
+  const key = `video/proctor-${sessionId}-snap-${ts}.${ext}`;
+  const url = await uploadFile(key, buffer, mimeType);
+
+  return prisma.proctoringEvidence.create({
+    data: {
+      proctoring_session_id: sessionId,
+      kind: 'camera_snapshot',
+      mime_type: mimeType,
+      url,
+      size_bytes: buffer.length,
+      width: opts.width ?? null,
+      height: opts.height ?? null,
+      captured_at: new Date(),
+      payload_json: (opts.payload ?? {}) as Prisma.InputJsonValue,
+    },
+  });
+}
+
+async function requireSessionOwnership(sessionId: string, userId: string) {
+  const session = await prisma.proctoringSession.findUnique({
+    where: { id: sessionId },
+    include: { candidate: true },
+  });
+
+  if (!session) {
+    throw notFound('Proctoring session not found');
+  }
+
+  if (session.candidate.user_id !== userId) {
+    throw forbidden('Access denied: Unauthorized access to session');
+  }
+
+  return session;
+}
+
 export async function analyzeSessionRisk(sessionId: string) {
   const session = await prisma.proctoringSession.findUnique({
     where: { id: sessionId },
@@ -250,7 +336,7 @@ export async function analyzeSessionRisk(sessionId: string) {
   if (!session) return;
 
   const policy = getPolicy(session.policy_version);
-  const { violations } = evaluateSessionPolicy(policy, session.events);
+  const { violations, summary } = evaluateSessionPolicy(policy, session.events);
 
   
   if (violations.length > 0) {
@@ -281,6 +367,28 @@ export async function analyzeSessionRisk(sessionId: string) {
       )
     );
   }
+
+  const riskScore = computeRiskScore(violations);
+
+  await prisma.proctoringSession.update({
+    where: { id: sessionId },
+    data: {
+      risk_score: riskScore,
+      summary_json: summary as unknown as Prisma.InputJsonValue,
+    },
+  });
+}
+
+export function computeRiskScore(
+  violations: Array<{ severity: string; occurrence_count: number }>
+): number {
+  const weights: Record<string, number> = { high: 40, medium: 20, low: 5 };
+  let raw = 0;
+  for (const v of violations) {
+    const weight = weights[v.severity] ?? 0;
+    raw += weight * Math.min(v.occurrence_count, 3);
+  }
+  return Math.min(100, Math.round(raw));
 }
 
 export async function getProctoringReport(sessionId: string, role: string, userOrgId?: string | null, userId?: string) {
@@ -290,6 +398,7 @@ export async function getProctoringReport(sessionId: string, role: string, userO
       candidate: { include: { user: { select: { email: true } } } },
       events: { orderBy: { server_sequence: 'asc' } },
       violations: true,
+      evidence: { orderBy: { captured_at: 'asc' } },
       application: {
         include: {
           job: { select: { org_id: true } },
@@ -323,6 +432,26 @@ export async function getProctoringReport(sessionId: string, role: string, userO
       last_heartbeat_at: session.last_heartbeat_at,
       candidate_email: session.candidate.user.email,
     },
+    risk_score: session.risk_score,
+    summary: session.summary_json,
+    recording: session.recording_url
+      ? {
+          url: session.recording_url,
+          duration_ms: session.recording_duration_ms,
+          size_bytes: session.recording_size_bytes,
+        }
+      : null,
+    evidence: session.evidence.map((e) => ({
+      id: e.id,
+      kind: e.kind,
+      mime_type: e.mime_type,
+      url: e.url,
+      size_bytes: e.size_bytes,
+      width: e.width,
+      height: e.height,
+      captured_at: e.captured_at,
+      payload_json: e.payload_json,
+    })),
     violations: session.violations,
     events: session.events.map((e) => ({
       id: e.id,

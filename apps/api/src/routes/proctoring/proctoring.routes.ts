@@ -1,11 +1,35 @@
-import { Router } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
+import multer from 'multer';
 import { authenticate } from '../../middleware/auth';
 import { asyncHandler, ok, validate } from '../../lib/http';
 import { forbidden } from '../../lib/http-errors';
-import { CreateProctoringSessionSchema, BatchEventsSchema, ReviewViolationSchema } from '../../validators/proctoring.schemas';
+import {
+  CreateProctoringSessionSchema,
+  BatchEventsSchema,
+  ReviewViolationSchema,
+  RecordingUploadSchema,
+  EvidenceUploadSchema,
+} from '../../validators/proctoring.schemas';
 import * as proctoringService from '../../services/proctoring.service';
 
 export const proctoringRouter = Router();
+
+const AUDIO_MIME_RE = /(webm|ogg|wav|audio|mp4|mpeg)/;
+const IMAGE_MIME_RE = /(jpeg|jpg|png|image)/;
+
+const recordingUpload = multer({
+  limits: { fileSize: 60 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    cb(null, !file.mimetype || AUDIO_MIME_RE.test(file.mimetype));
+  },
+});
+
+const evidenceUpload = multer({
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    cb(null, !file.mimetype || IMAGE_MIME_RE.test(file.mimetype));
+  },
+});
 
 
 proctoringRouter.use(authenticate);
@@ -67,6 +91,75 @@ proctoringRouter.post(
   asyncHandler(async (req, res) => {
     const session = await proctoringService.endProctoringSession(req.params.id as string, req.user!.userId);
     ok(res, session);
+  })
+);
+
+
+proctoringRouter.post(
+  '/sessions/:id/recording',
+  (req: Request, res: Response, next: NextFunction) => {
+    recordingUpload.single('file')(req, res, (err) => {
+      if (err) {
+        console.error('[Proctoring] Recording upload error:', err);
+        return res.status(400).json({
+          success: false,
+          error: typeof err === 'string' ? err : err.message || 'Recording upload error',
+        });
+      }
+      next();
+    });
+  },
+  validate(RecordingUploadSchema),
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No recording file uploaded' });
+    }
+    const body = req.body as { duration_ms?: number | null };
+    const session = await proctoringService.saveProctoringRecording(
+      req.params.id as string,
+      req.user!.userId,
+      req.file.buffer,
+      {
+        mimeType: req.file.mimetype,
+        durationMs: body.duration_ms ?? undefined,
+      }
+    );
+    ok(res, { session_id: session.id, recording_url: session.recording_url }, 201);
+  })
+);
+
+
+proctoringRouter.post(
+  '/sessions/:id/evidence',
+  (req: Request, res: Response, next: NextFunction) => {
+    evidenceUpload.single('file')(req, res, (err) => {
+      if (err) {
+        console.error('[Proctoring] Evidence upload error:', err);
+        return res.status(400).json({
+          success: false,
+          error: typeof err === 'string' ? err : err.message || 'Evidence upload error',
+        });
+      }
+      next();
+    });
+  },
+  validate(EvidenceUploadSchema),
+  asyncHandler(async (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'No evidence file uploaded' });
+    }
+    const body = req.body as { width?: number; height?: number };
+    const evidence = await proctoringService.saveProctoringSnapshot(
+      req.params.id as string,
+      req.user!.userId,
+      req.file.buffer,
+      {
+        mimeType: req.file.mimetype,
+        width: body.width ?? undefined,
+        height: body.height ?? undefined,
+      }
+    );
+    ok(res, { evidence_id: evidence.id, url: evidence.url }, 201);
   })
 );
 

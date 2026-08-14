@@ -133,11 +133,20 @@ All endpoints are served by `apps/api` (Express.js 5.2.1) and prefixed with `/ap
 ## 7. Multi-Modal Assessments (`/applications/:id/*`)
 
 | Method | Path | Auth | Description |
-|---|---|---|---|
+|---|---|---|---|---|
 | GET | `/applications/:id/assessment` | Candidate Own | Fetch aptitude test questions and timer status. |
 | POST | `/applications/:id/assessment` | Candidate Own | Submit aptitude test answers. Enqueues assessment worker. |
 | GET | `/applications/:id/take-home` | Candidate Own | Fetch coding problem specs, starter code, and test cases. |
 | POST | `/applications/:id/take-home` | Candidate Own | Submit code solution. Body: `{ language, code }`. Enqueues coding worker. |
+
+### 7.1 Proctoring Evidence Uploads (`/proctoring/sessions/:id/*`)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/proctoring/sessions/:id/recording` | Candidate Own | Upload final audio recording (multipart `file` WebM/OGG/WAV, `duration_ms`). Max 60 MB. Persists `recording_url`, `recording_duration_ms`, `recording_size_bytes`. |
+| POST | `/proctoring/sessions/:id/evidence` | Candidate Own | Upload camera snapshot (multipart `file` JPEG/PNG, `width`, `height`). Max 2 MB. Creates `ProctoringEvidence` (kind `camera_snapshot`). |
+| GET | `/proctoring/sessions/:id/report` | HR Org Scoped | Full report: session, `risk_score` (0–100), `summary_json` counters, `recording`, `evidence[]`, `violations`, `events`. |
+| PATCH | `/proctoring/sessions/:id/heartbeat` | Candidate Own | Periodic telemetry heartbeat. |
 
 ---
 

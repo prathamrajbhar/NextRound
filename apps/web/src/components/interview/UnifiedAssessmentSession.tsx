@@ -11,6 +11,7 @@ import { NextRoundTransitionCard } from '@/components/interview/NextRoundTransit
 import { useAssessmentDetails } from '@/components/interview/useAssessmentDetails';
 import { useAssessmentCompletion } from '@/components/interview/useAssessmentCompletion';
 import { useProctoringSession } from '@/lib/proctoring/useProctoringSession';
+import { ProctoringGate } from '@/components/interview/ProctoringGate';
 import { apiClient } from '@/lib/apiClient';
 
 interface InterRoundData {
@@ -41,6 +42,7 @@ export function UnifiedAssessmentSession({
   const [comprehensiveStep, setComprehensiveStep] = useState<'aptitude' | 'coding' | 'technical'>('aptitude');
   const [pendingNextRound, setPendingNextRound] = useState<InterRoundData | null>(null);
   const [candidateId, setCandidateId] = useState<string | null>(null);
+  const [captureStream, setCaptureStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -85,10 +87,13 @@ export function UnifiedAssessmentSession({
     handleResumeFullscreen: proctorResumeFS,
     handleEnd: proctorEnd,
     suppressViolations,
+    startCapture,
+    recordingActive,
+    recordingDurationMs,
     proctoringClient,
   } = useProctoringSession({
     sessionId,
-    candidateId: (stage !== 'check' && candidateId) ? candidateId : '',
+    candidateId: candidateId || '',
     sessionType: track === 'coding' ? 'coding' : track === 'aptitude' ? 'aptitude' : track === 'video' ? 'video' : 'interview',
     applicationId: applicationId || undefined,
     mockSessionId: applicationId ? undefined : sessionId,
@@ -108,9 +113,7 @@ export function UnifiedAssessmentSession({
     if (typeof document !== 'undefined' && document.fullscreenElement) {
       try {
         await document.exitFullscreen();
-      } catch {
-        
-      }
+      } catch {}
     }
     try {
       await proctorEnd();
@@ -129,7 +132,21 @@ export function UnifiedAssessmentSession({
     setPendingNextRound(null);
   };
 
+  const needsProctoringGate =
+    (track === 'aptitude' || track === 'coding' || track === 'comprehensive') &&
+    !!candidateId &&
+    !captureStream;
+
+  const handleGateProceed = (stream: MediaStream) => {
+    startCapture(stream);
+    setCaptureStream(stream);
+    startSession();
+  };
+
   if (stage === 'check') {
+    if (needsProctoringGate) {
+      return <ProctoringGate company={targetCompany} role={targetRole} onProceed={handleGateProceed} />;
+    }
     return (
       <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-y-auto transition-colors duration-300">
         <InterviewCheckScreen
@@ -168,6 +185,8 @@ export function UnifiedAssessmentSession({
           strikeCount={proctorStrikeCount}
           showWarningModal={proctorShowWarning}
           onResumeFullscreen={proctorResumeFS}
+          recordingActive={recordingActive}
+          recordingDurationMs={recordingDurationMs}
           onComplete={(score) => {
             if (track === 'comprehensive') {
               setPendingNextRound({
@@ -198,6 +217,8 @@ export function UnifiedAssessmentSession({
           strikeCount={proctorStrikeCount}
           showWarningModal={proctorShowWarning}
           onResumeFullscreen={proctorResumeFS}
+          recordingActive={recordingActive}
+          recordingDurationMs={recordingDurationMs}
           onComplete={(score) => {
             if (track === 'comprehensive') {
               setPendingNextRound({

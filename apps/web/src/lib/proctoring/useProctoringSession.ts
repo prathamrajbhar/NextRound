@@ -31,7 +31,21 @@ export function useProctoringSession({
   const [strikeCount, setStrikeCount] = useState(0);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [proctoringClient, setProctoringClient] = useState<ProctoringClient | null>(null);
+  const [recordingActive, setRecordingActive] = useState(false);
+  const [recordingDurationMs, setRecordingDurationMs] = useState(0);
   const clientRef = useRef<ProctoringClient | null>(null);
+
+  useEffect(() => {
+    if (!clientRef.current) return;
+    const t = setInterval(() => {
+      const state = clientRef.current?.getRecordingState?.();
+      if (state) {
+        setRecordingActive(state.active);
+        setRecordingDurationMs(state.durationMs);
+      }
+    }, 1000);
+    return () => clearInterval(t);
+  }, [proctoringClient]);
 
   const onViolationDetectedRef = useRef(onViolationDetected);
   const onDisqualifiedRef = useRef(onDisqualified);
@@ -58,7 +72,12 @@ export function useProctoringSession({
       consentVersion,
       onViolation: (kind) => {
         if (isEndedRef.current) return;
-        
+
+        if (kind === 'multiple_faces_persistent') {
+          onDisqualifiedRef.current?.();
+          return;
+        }
+
         if (
           kind === 'tab_hidden' ||
           kind === 'fullscreen_exit' ||
@@ -148,15 +167,24 @@ export function useProctoringSession({
     }
   };
 
+  const startCapture = (stream: MediaStream) => {
+    if (clientRef.current) {
+      clientRef.current.trackMediaStream(stream);
+    }
+  };
+
   return {
     strikeCount,
     showWarningModal,
+    recordingActive,
+    recordingDurationMs,
     handleResumeFullscreen,
     handlePause,
     handleResume,
     handleEnd,
     suppressViolations,
     trackMediaStream,
+    startCapture,
     proctoringClient,
   };
 }

@@ -45,6 +45,38 @@ export interface ProctoringReport {
     last_heartbeat_at: string | null;
     candidate_email: string;
   };
+  risk_score?: number | null;
+  summary?: {
+    tabSwitchCount?: number;
+    totalHiddenDurationMs?: number;
+    fullscreenExitCount?: number;
+    totalOutsideFullscreenMs?: number;
+    maxHeartbeatGapMs?: number;
+    cameraOffDurationMs?: number;
+    micOffDurationMs?: number;
+    totalFaceMissingMs?: number;
+    totalMultipleFacesMs?: number;
+    multipleVoicesCount?: number;
+    backgroundNoiseHighCount?: number;
+    copyPasteActivityCount?: number;
+    suspiciousBehaviorPattern?: boolean;
+  } | null;
+  recording?: {
+    url: string;
+    duration_ms?: number | null;
+    size_bytes?: number | null;
+  } | null;
+  evidence?: Array<{
+    id: string;
+    kind: string;
+    mime_type: string;
+    url: string;
+    size_bytes?: number | null;
+    width?: number | null;
+    height?: number | null;
+    captured_at: string;
+    payload_json?: Record<string, unknown>;
+  }>;
   violations: ProctoringViolation[];
   events: ProctoringEvent[];
 }
@@ -143,7 +175,6 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
   return (
     <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5 font-sans">
       
-      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-brand-600 dark:text-orange-400" />
@@ -160,7 +191,6 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
         </span>
       </div>
 
-      {}
       {localViolations.length > 0 ? (
         <div className="space-y-3">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
@@ -201,13 +231,11 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
                     </div>
                   </div>
 
-                  {}
                   <div className="text-[10px] opacity-75 space-y-0.5">
                     <div>First Seen: {new Date(violation.first_seen_at).toLocaleTimeString()}</div>
                     <div>Last Seen: {new Date(violation.last_seen_at).toLocaleTimeString()}</div>
                   </div>
 
-                  {}
                   {violation.review_reason && (
                     <div className="p-2.5 rounded-2xl bg-black/10 border border-black/10 text-[11px] space-y-1">
                       <span className="font-extrabold block text-[9px] opacity-60 uppercase tracking-widest">Reviewer Comments</span>
@@ -215,7 +243,6 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
                     </div>
                   )}
 
-                  {}
                   {isPending && !isReviewing && (
                     <button
                       onClick={() => {
@@ -291,7 +318,6 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
         </div>
       )}
 
-      {}
       <div className="grid grid-cols-3 gap-3">
         <div className="bg-slate-50/60 dark:bg-slate-800/40 border border-slate-200/50 dark:border-slate-800 p-3 rounded-2xl text-center">
           <Monitor className="h-4.5 w-4.5 text-slate-400 dark:text-slate-500 mx-auto mb-1.5" />
@@ -316,7 +342,6 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
         </div>
       </div>
 
-      {}
       <div className="space-y-2">
         <button
           type="button"
@@ -333,7 +358,6 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
               const severityBadge = severityColors[event.severity] || severityColors.info;
               return (
                 <div key={event.id} className="relative group text-xs font-semibold">
-                  {}
                   <span className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-slate-900 border border-slate-700 ring-4 ring-slate-950" />
 
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">

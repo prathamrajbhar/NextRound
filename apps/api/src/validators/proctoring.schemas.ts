@@ -47,3 +47,12 @@ export const ReviewViolationSchema = z.object({
   status: z.enum(['acknowledged', 'false_positive', 'escalated', 'resolved']),
   review_reason: z.string().min(1, 'Review notes/reason is required'),
 });
+
+export const RecordingUploadSchema = z.object({
+  duration_ms: z.coerce.number().int().nonnegative().optional(),
+});
+
+export const EvidenceUploadSchema = z.object({
+  width: z.coerce.number().int().positive().optional(),
+  height: z.coerce.number().int().positive().optional(),
+});

@@ -11,6 +11,7 @@ import { AlertTriangle, LogIn } from '@/lib/lucide-google-icons';
 import type { AptitudeQuestion } from './aptitude/useAptitudeQuestions';
 
 import type { ProctoringClient } from '@/lib/proctoring/ProctoringClient';
+import { RecordingBadge } from './RecordingBadge';
 
 interface AptitudeTestConsoleProps {
   questions?: AptitudeQuestion[];
@@ -26,6 +27,8 @@ interface AptitudeTestConsoleProps {
   strikeCount?: number;
   showWarningModal?: boolean;
   onResumeFullscreen?: () => void;
+  recordingActive?: boolean;
+  recordingDurationMs?: number;
 }
 
 const MAX_STRIKES = 3;
@@ -44,6 +47,8 @@ export default function AptitudeTestConsole({
   strikeCount,
   showWarningModal,
   onResumeFullscreen,
+  recordingActive = false,
+  recordingDurationMs = 0,
 }: AptitudeTestConsoleProps) {
   const router = useRouter();
   const displayCompany = company || companyName || 'NextRound';
@@ -161,18 +166,21 @@ export default function AptitudeTestConsole({
   
   if (!selectedCategory || !isStarted) {
     return (
-      <AptitudeCategoryHub
-        companyName={displayCompany}
-        roleTitle={displayRole}
-        companyLogoUrl={companyLogoUrl}
-        categories={availableCategories}
-        activeQuestions={activeQuestions}
-        completedCategoryScores={completedCategoryScores}
-        isSubmitting={isSubmitting}
-        getCategoryQuestionCount={getCategoryQuestionCount}
-        onStartCategory={handleStartCategorySection}
-        onFinalSubmit={handleFinalSubmit}
-      />
+      <>
+        <RecordingBadge active={recordingActive} durationMs={recordingDurationMs} />
+        <AptitudeCategoryHub
+          companyName={displayCompany}
+          roleTitle={displayRole}
+          companyLogoUrl={companyLogoUrl}
+          categories={availableCategories}
+          activeQuestions={activeQuestions}
+          completedCategoryScores={completedCategoryScores}
+          isSubmitting={isSubmitting}
+          getCategoryQuestionCount={getCategoryQuestionCount}
+          onStartCategory={handleStartCategorySection}
+          onFinalSubmit={handleFinalSubmit}
+        />
+      </>
     );
   }
 
@@ -189,26 +197,29 @@ export default function AptitudeTestConsole({
   }
 
   return (
-    <AptitudeQuestionScreen
-      companyName={displayCompany}
-      roleTitle={displayRole}
-      companyLogoUrl={companyLogoUrl}
-      category={selectedCategory}
-      questions={activeCategoryQuestions}
-      currentIndex={currentIndex}
-      questionTimeLeft={questionTimeLeft}
-      timeLeft={timeLeft}
-      answers={answers}
-      onSelectOption={handleSelectOption}
-      onPrevious={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
-      onNext={() => setCurrentIndex((prev) => Math.min(activeCategoryQuestions.length - 1, prev + 1))}
-      onNavigate={setCurrentIndex}
-      onSectionSubmit={handleCategorySubmit}
-      showWarningModal={displayShowWarning}
-      strikeCount={displayStrikeCount}
-      maxStrikes={MAX_STRIKES}
-      onResumeFullscreen={displayResumeFullscreen}
-      onEliminate={handleEliminateCandidate}
-    />
+    <>
+      <RecordingBadge active={recordingActive} durationMs={recordingDurationMs} />
+      <AptitudeQuestionScreen
+        companyName={displayCompany}
+        roleTitle={displayRole}
+        companyLogoUrl={companyLogoUrl}
+        category={selectedCategory}
+        questions={activeCategoryQuestions}
+        currentIndex={currentIndex}
+        questionTimeLeft={questionTimeLeft}
+        timeLeft={timeLeft}
+        answers={answers}
+        onSelectOption={handleSelectOption}
+        onPrevious={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
+        onNext={() => setCurrentIndex((prev) => Math.min(activeCategoryQuestions.length - 1, prev + 1))}
+        onNavigate={setCurrentIndex}
+        onSectionSubmit={handleCategorySubmit}
+        showWarningModal={displayShowWarning}
+        strikeCount={displayStrikeCount}
+        maxStrikes={MAX_STRIKES}
+        onResumeFullscreen={displayResumeFullscreen}
+        onEliminate={handleEliminateCandidate}
+      />
+    </>
   );
 }

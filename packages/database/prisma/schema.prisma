@@ -551,11 +551,16 @@ model ProctoringSession {
   status            String
   policy_version    String
   consent_version   String
-  started_at        DateTime  @default(now())
+  recording_url     String?
+  recording_duration_ms Int?
+  recording_size_bytes  Int?
+  risk_score        Float?
+  summary_json      Json          @default("{}")
+  started_at        DateTime      @default(now())
   ended_at          DateTime?
   last_heartbeat_at DateTime?
-  created_at        DateTime  @default(now())
-  updated_at        DateTime  @updatedAt
+  created_at        DateTime      @default(now())
+  updated_at        DateTime      @updatedAt
 
   candidate      CandidateProfile     @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
   assessment     Assessment?          @relation(fields: [assessment_id], references: [id], onDelete: Cascade)
@@ -563,11 +568,31 @@ model ProctoringSession {
   mock_session   MockSession?         @relation(fields: [mock_session_id], references: [id], onDelete: Cascade)
   events         ProctoringEvent[]
   violations     ProctoringViolation[]
+  evidence       ProctoringEvidence[]
 
   @@index([candidate_id])
   @@index([assessment_id])
   @@index([application_id])
   @@index([mock_session_id])
+}
+
+model ProctoringEvidence {
+  id                    String            @id @default(uuid())
+  proctoring_session_id String
+  kind                  String
+  mime_type             String
+  url                   String
+  size_bytes            Int?
+  width                 Int?
+  height                Int?
+  captured_at           DateTime          @default(now())
+  payload_json          Json              @default("{}")
+  created_at            DateTime          @default(now())
+
+  proctoring_session    ProctoringSession @relation(fields: [proctoring_session_id], references: [id], onDelete: Cascade)
+
+  @@index([proctoring_session_id])
+  @@index([kind])
 }
 
 model ProctoringEvent {
