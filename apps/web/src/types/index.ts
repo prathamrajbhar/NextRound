@@ -262,11 +262,14 @@ export interface CandidateSentimentProfile {
   role: string;
   avatar: string;
   interviewDate: string;
-  durationMinutes: number;
-  overallStressScore: number;
-  confidenceRating: number;
-  speechClarityScore: number;
-  avgPauseDurationSec: number;
+  hasAudioAnalysis: boolean;
+  audioUrl: string | null;
+  durationMinutes: number | null;
+  overallTone: string | null;
+  overallStressScore: number | null;
+  confidenceRating: number | null;
+  speechClarityScore: number | null;
+  avgPauseDurationSec: number | null;
   biomarkers: {
     audioTone: {
       steadyPercent: number;
@@ -276,7 +279,7 @@ export interface CandidateSentimentProfile {
     speechPace: {
       wpm: number;
       idealRange: string;
-      status: 'Optimal (145 WPM)' | 'Rushed (185 WPM)' | 'Hesitant (105 WPM)';
+      status: 'Optimal' | 'Rushed' | 'Hesitant';
     };
     pitchVariation: {
       hzStdDev: number;
@@ -287,33 +290,14 @@ export interface CandidateSentimentProfile {
       longPauseCount: number;
       status: 'Natural Cadence' | 'Frequent Pauses' | 'Blocking Stalls';
     };
-  };
+  } | null;
   journeyGraph: {
-    time: string;
+    timeLabel: string;
     minute: number;
-    topic: string;
     confidence: number;
     stress: number;
     hesitation: number;
-    emotionLabel: 'Confident' | 'Neutral' | 'Hesitant' | 'Stressed' | 'Enthusiastic';
-  }[];
-  transcriptWithSentiment: {
-    id: number;
-    timestamp: string;
-    topic: string;
-    speaker: 'AI Agent' | 'Candidate';
-    text: string;
-    emotion: 'Confident' | 'Neutral' | 'Hesitant' | 'Stressed' | 'Enthusiastic';
-    audioMetrics: {
-      pitch: string;
-      pace: string;
-      tone: string;
-    };
-    hrInsight?: {
-      type: 'Nervousness' | 'Skill Gap' | 'High Mastery';
-      title: string;
-      explanation: string;
-    };
+    emotionLabel: 'Confident' | 'Neutral' | 'Hesitant' | 'Stressed';
   }[];
 }
 

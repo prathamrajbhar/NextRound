@@ -201,6 +201,16 @@ All endpoints are served by `apps/api` (Express.js 5.2.1) and prefixed with `/ap
 
 ---
 
+## 12b. HR Sentiment & Stress Analyser (`/hr/sentiment`)
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/hr/sentiment` | HR Org Scoped | List audio-derived sentiment profiles for completed interviews in the HR's org (stress, confidence, clarity, biomarkers, journey graph). Profiles with no audio analysis expose `hasAudioAnalysis: false`. |
+| GET | `/hr/sentiment/:interviewId` | HR Org Scoped | Single interview audio sentiment profile. |
+
+---
+
+
 ## 13. Candidate Prep Library (`/candidate/prep`)
 
 | Method | Path | Auth | Description |
@@ -231,6 +241,7 @@ Secured endpoints callable exclusively by the Python AI service via `X-Internal-
 | PATCH | `/internal/applications/:id/screening-result` | Write resume score, gap analysis, semantic match score. |
 | POST | `/internal/interviews/:id/schedule-slots` | Save 3 proposed interview slot options from Scheduler Agent. |
 | PATCH | `/internal/interviews/:id/complete` | Save final transcript, audio storage URL, proctor flags, engagement telemetry. |
+| PATCH | `/internal/interviews/:id/sentiment` | Save audio-derived sentiment/prosody report (tone, pitch, speaking rate, pauses, stress, confidence) to `Interview.sentiment_report`. Body: `{ sentiment_report }`. |
 | PATCH | `/internal/applications/:id/assessment-result` | Save aptitude category score breakdown. |
 | PATCH | `/internal/applications/:id/coding-result` | Save code pass rate, execution timing, memory, complexity score. |
 | PATCH | `/internal/evaluations/:id` | Save composite score and confidence level. |

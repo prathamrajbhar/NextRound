@@ -214,25 +214,33 @@ export interface CandidateDashboardData {
 
 export interface SentimentReportDTO {
   interviewId: string;
-  overallTone: 'confident' | 'hesitant' | 'stressed' | 'enthusiastic' | 'neutral';
-  overallStressLevel: 'low' | 'moderate' | 'high';
-  speechPaceWpm: number;
-  pitchVarianceHz: number;
-  emotionalJourney: Array<{
-    turnNumber: number;
-    speaker: 'interviewer' | 'candidate';
-    text: string;
-    sentiment: string;
-    confidence: number;
-    stressIndicator: number;
-  }>;
-  stressPeakMoments: Array<{
-    timestamp?: string;
-    turnIndex: number;
-    questionText: string;
-    candidateResponseSnippet: string;
+  status: 'completed' | 'unavailable';
+  source: 'audio';
+  audioUrl: string;
+  overall: {
+    tone: 'calm' | 'steady' | 'anxious' | 'stressed';
     stressScore: number;
-    reason: string;
+    confidenceScore: number;
+    clarityScore: number;
+  };
+  audio: {
+    speakingRateWpm: number;
+    avgPauseDurationSec: number;
+    pausesPerMinute: number;
+    longPauseCount: number;
+    pitchMeanHz: number;
+    pitchStdDevHz: number;
+    tremorPercent: number;
+    steadyPercent: number;
+    durationSec: number;
+  };
+  journey: Array<{
+    timeLabel: string;
+    minute: number;
+    confidence: number;
+    stress: number;
+    hesitation: number;
+    emotionLabel: 'Confident' | 'Neutral' | 'Hesitant' | 'Stressed';
   }>;
   summaryNarrative: string;
 }

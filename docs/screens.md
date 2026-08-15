@@ -126,7 +126,7 @@ All HR routes require `role = "hr"`. Data is scoped to `org_id` derived from JWT
 
 ### C13. Sentiment + Stress Analyser (`/hr/sentiment-analysis`)
 **Purpose:** Audio biomarker inspection and candidate nervousness evaluation.
-**Components:** HrSidebar, Candidate Selector Dropdown, Vocal Biomarker Engine Cards (tone harmony, WPM, pitch variation, pause frequency), Interactive Emotional Journey Timeline Graph, Synchronized Transcript (line-by-line with emotion badges: `[Confident]`, `[Hesitant]`, `[Stressed]`), AI Recommendation Callout (nervousness vs. skill gap assessment).
+**Components:** HrSidebar, Candidate Selector Dropdown, Audio Prosody Biomarker Engine Cards (tone harmony, WPM, pitch variation, pause frequency), Interactive Emotional Journey Timeline Graph (per audio segment), Honest Empty State (no audio recording attached), AI Recommendation Callout (nervousness vs. skill gap assessment). All metrics derived from `Interview.audio_url`; no transcript-based sentiment labels.
 
 ### C14. HR Profile (`/hr/profile`)
 **Purpose:** HR user's own account management.

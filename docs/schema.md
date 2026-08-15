@@ -235,6 +235,7 @@ model Interview {
   audio_url         String?         // Storage URL
   proctor_flags     Json?           // periodic CV telemetry snapshots
   engagement_signal Json?           // aggregate engagement metrics
+  sentiment_report  Json?           // audio-derived prosody/sentiment report (tone, pitch, speaking rate, pauses, stress, confidence) computed from audio_url only
   video_consent     Boolean         @default(false)
   status            InterviewStatus @default(scheduled)
   created_at        DateTime        @default(now())
@@ -435,6 +436,46 @@ model PrepContent {
   }
 ]
 ```
+
+### 3.7 `Interview.sentiment_report` (Audio-Derived Prosody Report)
+Written by the AI sentiment service via `PATCH /api/v1/internal/interviews/:id/sentiment` after interview evaluation. Computed **only** from `Interview.audio_url` (pitch via autocorrelation on decoded PCM, speaking rate/pauses via word-level transcription timings). The stored transcript is never used. Shape:
+```json
+{
+  "interviewId": "uuid",
+  "status": "completed",
+  "source": "audio",
+  "audioUrl": "https://.../interview.webm",
+  "overall": {
+    "tone": "calm | steady | anxious | stressed",
+    "stressScore": 34,
+    "confidenceScore": 66,
+    "clarityScore": 78
+  },
+  "audio": {
+    "speakingRateWpm": 141.2,
+    "avgPauseDurationSec": 1.05,
+    "pausesPerMinute": 9.4,
+    "longPauseCount": 2,
+    "pitchMeanHz": 162.5,
+    "pitchStdDevHz": 21.3,
+    "tremorPercent": 11,
+    "steadyPercent": 89,
+    "durationSec": 610.5
+  },
+  "journey": [
+    {
+      "timeLabel": "00:00",
+      "minute": 0,
+      "confidence": 70,
+      "stress": 30,
+      "hesitation": 18,
+      "emotionLabel": "Neutral"
+    }
+  ],
+  "summaryNarrative": "Audio prosody analysis of the candidate's voice detected..."
+}
+```
+When audio is missing, unreachable, or undecodable the report is `{ "status": "unavailable", "reason": "..." }` and is **not** persisted (honest empty state).
 
 ---
 

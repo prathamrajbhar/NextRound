@@ -61,7 +61,8 @@ async def process_interview_job(job_data: dict) -> bool:
         )
 
         try:
-            sentiment_report = analyze_interview_sentiment(target_interview_id, raw_transcript)
+            audio_url = job_data.get("audioUrl") or ""
+            sentiment_report = analyze_interview_sentiment(target_interview_id, audio_url)
             if not sentiment_report or sentiment_report.get("status") == "unavailable":
                 logger.info(
                     f"Sentiment analysis unavailable for interview {target_interview_id}; "

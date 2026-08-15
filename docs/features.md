@@ -321,12 +321,13 @@ Both multi-modal consoles run behind a single-person gate and live proctoring pi
 **Surface:** HR Portal — `/hr/sentiment-analysis`
 
 **What it does:**
-- **Vocal Biomarker Engine**: Analyses candidate interview audio for tone harmony, speech pace (WPM), pitch micro-variations, and pause patterns.
-- **Emotional Journey Graph**: Interactive visual timeline tracking confidence, stress, and hesitation levels across interview topics and timestamps.
-- **Synchronized HR Transcript**: Line-by-line interview transcript annotated with real-time emotion markers (`[Confident]`, `[Hesitant]`, `[Stressed]`) and per-line pitch/pace metrics.
+- **Audio Prosody Biomarker Engine**: Analyses the candidate interview **audio recording** for tone harmony, speech pace (WPM), pitch micro-variations, tremor/steadiness, and pause patterns. All metrics are derived from the audio signal (`Interview.audio_url`) — the stored transcript text is never used for sentiment.
+- **Emotional Journey Graph**: Interactive visual timeline tracking confidence, stress, and hesitation levels across consecutive audio segments of the interview.
 - **AI Recommendation Callouts**: Distinguishes temporary interview nervousness from genuine technical skill gaps — directly informs HR decision-making before the Human HR Round.
 
-**Data source:** `Interview.transcript`, `Interview.audio_url` — processed post-interview by the Evaluator Agent.
+**Data source:** `Interview.audio_url` — decoded post-interview by the AI sentiment service, which extracts pitch (autocorrelation on PCM), speaking rate and pause features (word-level transcription timings), then derives stress, confidence, and clarity scores. Honest empty state is shown when a completed session has no audio recording.
+
+**Internal trigger:** `PATCH /api/v1/internal/interviews/:id/sentiment` — the AI service posts the audio-derived report to `Interview.sentiment_report` after interview evaluation.
 
 ---
 

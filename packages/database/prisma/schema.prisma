@@ -244,7 +244,7 @@ model Interview {
   audio_url         String?
   proctor_flags     Json?
   engagement_signal Json?
-  sentiment_report  Json?
+  sentiment_report  Json? /// Audio-derived prosody/sentiment report (tone, pitch, speaking rate, pauses, stress, confidence) computed from audio_url. Never derived from transcript text.
   status            InterviewStatus @default(scheduled)
   created_at        DateTime        @default(now())
 
