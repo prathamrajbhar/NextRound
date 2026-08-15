@@ -12,6 +12,7 @@ import {
 } from '@/lib/lucide-google-icons';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/apiClient';
+import { getScopedStorage, setScopedStorage } from '@/lib/storage';
 
 interface CandidateProfileTabProps {
   onSave: () => void;
@@ -52,15 +53,15 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
           if (typeof p.bio === 'string') setBio(p.bio);
         } else {
           
-          const savedName = localStorage.getItem('candidate_name');
-          const savedEmail = localStorage.getItem('candidate_email');
-          const savedPhone = localStorage.getItem('candidate_phone');
-          const savedLoc = localStorage.getItem('candidate_location');
-          const savedHeadline = localStorage.getItem('candidate_headline');
-          const savedPortfolio = localStorage.getItem('candidate_portfolio');
-          const savedGithub = localStorage.getItem('candidate_github');
-          const savedLinkedin = localStorage.getItem('candidate_linkedin');
-          const savedBio = localStorage.getItem('candidate_bio');
+          const savedName = getScopedStorage(user?.id, 'candidate_name');
+          const savedEmail = getScopedStorage(user?.id, 'candidate_email');
+          const savedPhone = getScopedStorage(user?.id, 'candidate_phone');
+          const savedLoc = getScopedStorage(user?.id, 'candidate_location');
+          const savedHeadline = getScopedStorage(user?.id, 'candidate_headline');
+          const savedPortfolio = getScopedStorage(user?.id, 'candidate_portfolio');
+          const savedGithub = getScopedStorage(user?.id, 'candidate_github');
+          const savedLinkedin = getScopedStorage(user?.id, 'candidate_linkedin');
+          const savedBio = getScopedStorage(user?.id, 'candidate_bio');
 
           if (savedName) setFullName(savedName);
           if (savedEmail) setEmail(savedEmail);
@@ -72,9 +73,7 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
           if (savedLinkedin) setLinkedinUrl(savedLinkedin);
           if (savedBio) setBio(savedBio);
         }
-      } catch {
-        
-      }
+      } catch {}
     }
 
     loadProfile();
@@ -92,15 +91,15 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
 
   const handleSave = async () => {
     setSaving(true);
-    localStorage.setItem('candidate_name', fullName);
-    localStorage.setItem('candidate_email', email);
-    localStorage.setItem('candidate_phone', phone);
-    localStorage.setItem('candidate_location', location);
-    localStorage.setItem('candidate_headline', headline);
-    localStorage.setItem('candidate_portfolio', portfolioUrl);
-    localStorage.setItem('candidate_github', githubUrl);
-    localStorage.setItem('candidate_linkedin', linkedinUrl);
-    localStorage.setItem('candidate_bio', bio);
+    setScopedStorage(user?.id, 'candidate_name', fullName);
+    setScopedStorage(user?.id, 'candidate_email', email);
+    setScopedStorage(user?.id, 'candidate_phone', phone);
+    setScopedStorage(user?.id, 'candidate_location', location);
+    setScopedStorage(user?.id, 'candidate_headline', headline);
+    setScopedStorage(user?.id, 'candidate_portfolio', portfolioUrl);
+    setScopedStorage(user?.id, 'candidate_github', githubUrl);
+    setScopedStorage(user?.id, 'candidate_linkedin', linkedinUrl);
+    setScopedStorage(user?.id, 'candidate_bio', bio);
 
     try {
       await apiClient.post('/candidate/profile', {
@@ -113,9 +112,7 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
         linkedinUrl: linkedinUrl || null,
         bio,
       }).catch(() => null);
-    } catch {
-      
-    }
+    } catch {}
 
     window.dispatchEvent(new Event('profile_update'));
     setSaving(false);
@@ -124,7 +121,6 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel flex flex-col sm:flex-row items-center gap-6">
         <div className="relative group cursor-pointer">
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-brand-500 to-amber-500 dark:from-orange-500 dark:to-amber-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-brand-500/20 dark:shadow-orange-500/20">
@@ -154,7 +150,6 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
         </div>
       </div>
 
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
           <User className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -225,7 +220,6 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
         </div>
       </div>
 
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           Links &amp; Professional Bio
@@ -280,7 +274,6 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
           />
         </div>
 
-        {}
         <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-end">
           <button
             type="button"

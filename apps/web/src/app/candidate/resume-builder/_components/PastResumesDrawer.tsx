@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   X,
   FileText,
@@ -12,7 +12,7 @@ import {
   ExternalLink,
   Loader2,
 } from '@/lib/lucide-google-icons';
-import { apiClient } from '@/lib/apiClient';
+import { useResumeHistory } from '@/hooks/queries';
 import { GeneratedResumeData } from '../../resumes/_components/EditResumeModal';
 
 interface ResumeHistoryItem {
@@ -33,31 +33,13 @@ interface PastResumesDrawerProps {
 }
 
 export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResumesDrawerProps) {
-  const [history, setHistory] = useState<ResumeHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const fetchHistory = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await apiClient.get<{ history: ResumeHistoryItem[] }>('/resume-builder/history');
-      if (res?.history) {
-        setHistory(res.history);
-      }
-    } catch (err) {
-      console.error('Failed to fetch resume builder history:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const timer = setTimeout(() => {
-      fetchHistory();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [isOpen, fetchHistory]);
+  const { data, isLoading } = useResumeHistory();
+  const history = useMemo(
+    () => ((data?.history ?? []) as ResumeHistoryItem[]),
+    [data]
+  );
 
   const handleCopyText = (item: ResumeHistoryItem) => {
     if (!item.generatedResume) return;
@@ -78,7 +60,6 @@ export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResum
     <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200 font-sans">
       <div className="w-full max-w-md h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between p-6">
         
-        {}
         <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-xl bg-brand-50 dark:bg-orange-950/80 border border-brand-200 dark:border-orange-900 flex items-center justify-center text-brand-600 dark:text-orange-400">
@@ -98,9 +79,8 @@ export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResum
           </button>
         </div>
 
-        {}
         <div className="flex-1 overflow-y-auto my-4 space-y-3 pr-1">
-          {loading ? (
+          {isLoading ? (
             <div className="flex items-center justify-center py-12 text-slate-400 gap-2 text-xs font-semibold">
               <Loader2 className="h-4 w-4 animate-spin text-brand-500" />
               <span>Loading resume vault...</span>
@@ -141,7 +121,6 @@ export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResum
                   </p>
                 )}
 
-                {}
                 <div className="flex items-center gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
                   <button
                     type="button"
@@ -178,7 +157,6 @@ export function PastResumesDrawer({ isOpen, onClose, onSelectResume }: PastResum
           )}
         </div>
 
-        {}
         <div className="border-t border-slate-200 dark:border-slate-800 pt-3 text-center">
           <p className="text-[10px] text-slate-400 font-semibold">Resumes are automatically parsed and saved to your profile vault.</p>
         </div>

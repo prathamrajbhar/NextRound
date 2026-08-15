@@ -3,8 +3,15 @@ import { API_BASE_URL } from './config';
 
 let refreshPromise: Promise<boolean> | null = null;
 
+export interface ApiFailureMeta {
+  status?: number;
+  errorCode?: string;
+}
+
+export type ApiResult<T> = ApiEnvelope<T> & ApiFailureMeta;
+
 interface CacheEntry {
-  data: ApiEnvelope<unknown>;
+  data: ApiResult<unknown>;
   timestamp: number;
 }
 
@@ -27,7 +34,7 @@ export async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {},
   isRetry = false
-): Promise<ApiEnvelope<T>> {
+): Promise<ApiResult<T>> {
   const method = (options.method || 'GET').toUpperCase();
   const cacheKey = `${method}:${endpoint}`;
 
@@ -84,7 +91,7 @@ async function fetchNetworkApi<T>(
   endpoint: string,
   options: RequestInit = {},
   isRetry = false
-): Promise<ApiEnvelope<T>> {
+): Promise<ApiResult<T>> {
   
   
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
@@ -123,9 +130,12 @@ async function fetchNetworkApi<T>(
       
       
       if (!res.ok) {
+        const apiError = typeof data.error === 'string' ? null : data.error;
         return {
           success: false,
-          error: typeof data.error === 'string' ? data.error : (data.error as { message?: string })?.message || `HTTP ${res.status}: ${res.statusText}`,
+          error: apiError?.message || (typeof data.error === 'string' ? data.error : undefined) || `HTTP ${res.status}: ${res.statusText}`,
+          status: res.status,
+          errorCode: apiError?.code,
         };
       }
       return data;
@@ -133,12 +143,15 @@ async function fetchNetworkApi<T>(
       return {
         success: false,
         error: `HTTP ${res.status} (${res.statusText || 'Server Error'}): Non-JSON response received`,
+        status: res.status,
+        errorCode: 'SERVER',
       };
     }
   } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Network error',
+      errorCode: 'NETWORK',
     };
   }
 }

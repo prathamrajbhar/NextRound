@@ -1,8 +1,11 @@
 'use client';
 
-import React, { use, useState, useEffect } from 'react';
+import React, { use, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import { Offer } from '@/types';
+import { useOffer } from '@/hooks/queries';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { OfferHeader } from './components/OfferHeader';
 import { ExecutiveRewardsGrid } from './components/ExecutiveRewardsGrid';
 import { EmbeddedDocumentViewer } from './components/EmbeddedDocumentViewer';
@@ -18,24 +21,9 @@ export default function CandidateOfferPage({
   params: Promise<{ applicationId: string }>;
 }) {
   const { applicationId } = use(params);
+  const queryClient = useQueryClient();
 
-  const [offer, setOffer] = useState<Offer | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchOffer() {
-      try {
-        setLoading(true);
-        const res = await apiClient.get<Offer>(`/candidate/applications/${applicationId}/offer`);
-        if (res) setOffer(res);
-      } catch (err) {
-        console.error('Failed to fetch offer details:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchOffer();
-  }, [applicationId]);
+  const { data: offer, isLoading, isError, error, refetch } = useOffer(applicationId);
 
   const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [showDeclineModal, setShowDeclineModal] = useState(false);
@@ -50,7 +38,7 @@ export default function CandidateOfferPage({
     } catch (err) {
       console.error('Failed to post digital signature to API:', err);
     }
-    setOffer((prev) => (prev ? { ...prev, status: 'accepted' } : null));
+    queryClient.setQueryData<Offer>(['offer', applicationId], (prev) => (prev ? { ...prev, status: 'accepted' } : prev));
     setActionDone('accepted');
     setShowAcceptModal(false);
   };
@@ -61,12 +49,22 @@ export default function CandidateOfferPage({
     } catch (err) {
       console.error('Failed to post decline status to API:', err);
     }
-    setOffer((prev) => (prev ? { ...prev, status: 'declined' } : null));
+    queryClient.setQueryData<Offer>(['offer', applicationId], (prev) => (prev ? { ...prev, status: 'declined' } : prev));
     setActionDone('declined');
     setShowDeclineModal(false);
   };
 
-  if (loading) {
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="w-full max-w-md">
+          <ErrorState error={error} onRetry={refetch} />
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return <ApplicationDetailSkeleton />;
   }
 
@@ -81,7 +79,6 @@ export default function CandidateOfferPage({
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-16 animate-in fade-in duration-200">
-      {}
       <OfferHeader
         applicationId={applicationId}
         jobTitle={offer.jobTitle}
@@ -90,7 +87,6 @@ export default function CandidateOfferPage({
         totalCtc={offer.baseSalary}
       />
 
-      {}
       {actionDone && (
         <div
           className={`p-4 rounded-2xl border flex items-start gap-3 shadow-sm ${
@@ -117,9 +113,7 @@ export default function CandidateOfferPage({
         </div>
       )}
 
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {}
         <div className="lg:col-span-2 space-y-6">
           <ExecutiveRewardsGrid
             baseSalary={offer.baseSalary}
@@ -138,7 +132,6 @@ export default function CandidateOfferPage({
           />
         </div>
 
-        {}
         <div className="lg:col-span-1">
           <OfferActionSidebar
             status={offer.status}
@@ -150,7 +143,6 @@ export default function CandidateOfferPage({
         </div>
       </div>
 
-      {}
       <OfferDocumentModal
         isOpen={showPdfModal}
         onClose={() => setShowPdfModal(false)}
@@ -161,7 +153,6 @@ export default function CandidateOfferPage({
         joiningDate={offer.joiningDate}
       />
 
-      {}
       <ActionModals
         showAccept={showAcceptModal}
         showDecline={showDeclineModal}

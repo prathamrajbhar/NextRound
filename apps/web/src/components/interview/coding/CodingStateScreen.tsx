@@ -10,10 +10,6 @@ interface CodingStateScreenProps {
   loadingLabel?: string;
 }
 
-
-
-
-
 export function CodingStateScreen({ error, loadingLabel = 'Generating live coding problem via Gemini AI...' }: CodingStateScreenProps) {
   if (error) {
     return (

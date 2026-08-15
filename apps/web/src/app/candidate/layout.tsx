@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import CandidateSidebar from '@/components/CandidateSidebar';
 import { Bell, Menu, X } from '@/lib/lucide-google-icons';
@@ -8,8 +8,9 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import Image from 'next/image';
 
 import { usePathname } from 'next/navigation';
-import { apiClient } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { getScopedStorage } from '@/lib/storage';
+import { useNotifications } from '@/hooks/queries';
 
 interface ApiNotification {
   id: string;
@@ -35,39 +36,28 @@ export default function CandidateLayout({
   useEffect(() => {
     
     setMounted(true);
-    const savedAvatar = localStorage.getItem('candidate_avatar');
-    const savedName = localStorage.getItem('candidate_name');
+    const savedAvatar = getScopedStorage(user?.id, 'candidate_avatar');
+    const savedName = getScopedStorage(user?.id, 'candidate_name');
     if (savedAvatar) setAvatar(savedAvatar);
     if (savedName) setName(savedName);
-  }, []);
+  }, [user?.id]);
 
   const displayName = mounted ? (name || (user?.email ? user.email.split('@')[0] : 'Candidate')) : 'Candidate';
 
   
-  const [notifications, setNotifications] = useState<{ id: number; rawId?: string; text: string; time: string; read: boolean }[]>([]);
+  const { data } = useNotifications();
+
+  const rawData = data as { notifications?: ApiNotification[] } | ApiNotification[] | undefined;
+  const list = Array.isArray(rawData) ? rawData : rawData?.notifications;
+  const notifications = useMemo(
+    () => (Array.isArray(list) ? list : []),
+    [list]
+  );
 
   useEffect(() => {
-    let isMounted = true;
-    apiClient.get<{ notifications: ApiNotification[] }>('/notifications')
-      .then((res) => {
-        if (isMounted && res && res.notifications) {
-          const formatted = res.notifications.map((n, idx) => ({
-            id: idx + 1,
-            rawId: n.id,
-            text: n.message || n.title || 'Notification alert',
-            time: new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            read: n.read,
-          }));
-          setNotifications(formatted);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to load notifications:', err);
-      });
-
     const handleStorageChange = () => {
-      const updatedAvatar = localStorage.getItem('candidate_avatar');
-      const updatedName = localStorage.getItem('candidate_name');
+      const updatedAvatar = getScopedStorage(user?.id, 'candidate_avatar');
+      const updatedName = getScopedStorage(user?.id, 'candidate_name');
       if (updatedAvatar) setAvatar(updatedAvatar);
       if (updatedName) setName(updatedName);
     };
@@ -76,11 +66,10 @@ export default function CandidateLayout({
     window.addEventListener('profile_update', handleStorageChange);
 
     return () => {
-      isMounted = false;
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('profile_update', handleStorageChange);
     };
-  }, []);
+  }, [user?.id]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -97,7 +86,6 @@ export default function CandidateLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50/50 dark:bg-slate-950/60 relative transition-colors duration-300">
-      {}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -105,7 +93,6 @@ export default function CandidateLayout({
         />
       )}
 
-      {}
       <div className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
         <CandidateSidebar avatar={avatar} name={displayName} />
@@ -114,7 +101,6 @@ export default function CandidateLayout({
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 border-b border-white/60 dark:border-slate-800/80 bg-white/20 dark:bg-slate-900/60 backdrop-blur-sm flex items-center justify-between px-4 md:px-8 relative z-30 transition-colors duration-300">
           <div className="flex items-center gap-3">
-            {}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-all cursor-pointer md:hidden flex items-center justify-center"
@@ -125,10 +111,8 @@ export default function CandidateLayout({
           </div>
 
           <div className="flex items-center gap-3 md:gap-4">
-            {}
             <ThemeToggle />
 
-            {}
             <Link
               href="/candidate/notifications"
               className="relative p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-all block"
@@ -140,7 +124,6 @@ export default function CandidateLayout({
               )}
             </Link>
 
-            {}
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{displayName}</span>
               <Image

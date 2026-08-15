@@ -37,7 +37,7 @@ export function useAptitudeSession({
   onComplete,
   disableProctoring = false,
 }: UseAptitudeSessionOptions) {
-  const { questions: fetchedQuestions, mcqDistribution, isLoading, isPrefetching, prefetchNextBatch, fetchError } = useAptitudeQuestions({
+  const { questions: fetchedQuestions, mcqDistribution, isLoading, fetchError } = useAptitudeQuestions({
     applicationId,
     sessionId,
     role,
@@ -120,17 +120,6 @@ export function useAptitudeSession({
     return filtered;
   }, [activeQuestions, selectedCategory, mcqDistribution]);
 
-  
-  useEffect(() => {
-    if (!applicationId && activeQuestions.length > 0 && currentIndex >= activeQuestions.length - 2 && !isPrefetching) {
-      const timer = setTimeout(() => {
-        prefetchNextBatch();
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [applicationId, currentIndex, activeQuestions.length, isPrefetching, prefetchNextBatch]);
-
-  
   const handleFinalSubmit = useCallback(async () => {
     setIsSubmitting(true);
     let percentage = 0;

@@ -9,9 +9,6 @@ interface ConsoleExitConfirmProps {
   onConfirm: () => void;
 }
 
-
-
-
 export function ConsoleExitConfirm({ isOpen, onCancel, onConfirm }: ConsoleExitConfirmProps) {
   if (!isOpen) return null;
 

@@ -23,7 +23,6 @@ export default function PublicNavbar() {
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-slate-955/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-900/80 transition-colors duration-300">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-        {}
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2.5 group">
             <div className="relative h-10 w-10 rounded-full overflow-hidden group-hover:scale-105 transition-transform flex-shrink-0 select-none border border-slate-200 dark:border-slate-750 shadow-2xs">
@@ -43,7 +42,6 @@ export default function PublicNavbar() {
           </Link>
         </div>
 
-        {}
         <nav className="hidden md:flex items-center gap-3">
           {links.map((link) => {
             const isActive = pathname === link.path || (link.path !== '/' && pathname.startsWith(link.path));
@@ -63,9 +61,7 @@ export default function PublicNavbar() {
           })}
         </nav>
 
-        {}
         <div className="flex items-center gap-4">
-          {}
           <ThemeToggle />
 
           {user ? (

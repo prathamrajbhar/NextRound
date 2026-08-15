@@ -61,7 +61,6 @@ export function Badge({
   );
 }
 
-
 export function statusToIntent(status: string): BadgeIntent {
   const s = status.toLowerCase();
   if (['hired', 'active', 'audited', 'confirmed', 'completed', 'passed'].some((k) => s.includes(k))) return 'emerald';

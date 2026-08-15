@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { getScopedStorage } from '@/lib/storage';
 
 interface ApiNotification {
   id: string;
@@ -35,11 +36,11 @@ export default function HrLayout({
   useEffect(() => {
     
     setMounted(true);
-    const savedAvatar = localStorage.getItem('hr_avatar');
-    const savedName = localStorage.getItem('hr_name');
+    const savedAvatar = getScopedStorage(user?.id, 'hr_avatar');
+    const savedName = getScopedStorage(user?.id, 'hr_name');
     if (savedAvatar) setAvatar(savedAvatar);
     if (savedName) setName(savedName);
-  }, []);
+  }, [user?.id]);
 
   const displayName = mounted ? (name || (user?.email ? user.email.split('@')[0] : 'Recruiter')) : 'Recruiter';
 
@@ -66,8 +67,8 @@ export default function HrLayout({
       });
 
     const handleStorageChange = () => {
-      const updatedAvatar = localStorage.getItem('hr_avatar');
-      const updatedName = localStorage.getItem('hr_name');
+      const updatedAvatar = getScopedStorage(user?.id, 'hr_avatar');
+      const updatedName = getScopedStorage(user?.id, 'hr_name');
       if (updatedAvatar) setAvatar(updatedAvatar);
       if (updatedName) setName(updatedName);
     };
@@ -80,7 +81,7 @@ export default function HrLayout({
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('hr_profile_update', handleStorageChange);
     };
-  }, []);
+  }, [user?.id]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -92,7 +93,6 @@ export default function HrLayout({
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50/50 dark:bg-slate-950/60 relative transition-colors duration-300">
-      {}
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
@@ -100,7 +100,6 @@ export default function HrLayout({
         />
       )}
 
-      {}
       <div className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
         <HrSidebar avatar={avatar} name={displayName} />
@@ -109,7 +108,6 @@ export default function HrLayout({
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 border-b border-white/60 dark:border-slate-800/80 bg-white/20 dark:bg-slate-900/60 backdrop-blur-sm flex items-center justify-between px-4 md:px-8 relative z-30 transition-colors duration-300">
           <div className="flex items-center gap-3">
-            {}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-all cursor-pointer md:hidden flex items-center justify-center"
@@ -120,10 +118,8 @@ export default function HrLayout({
           </div>
 
           <div className="flex items-center gap-3 md:gap-4">
-            {}
             <ThemeToggle />
 
-            {}
             <Link
               href="/hr/notifications"
               className="relative p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-all block"
@@ -135,7 +131,6 @@ export default function HrLayout({
               )}
             </Link>
 
-            {}
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{displayName}</span>
               <Image

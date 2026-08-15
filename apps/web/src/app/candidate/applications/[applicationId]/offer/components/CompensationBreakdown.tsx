@@ -39,7 +39,6 @@ export function CompensationBreakdown({ baseSalary, bonus, equity }: Compensatio
           </div>
         </div>
 
-        {}
         <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 self-start sm:self-auto">
           <button
             type="button"
@@ -66,9 +65,7 @@ export function CompensationBreakdown({ baseSalary, bonus, equity }: Compensatio
         </div>
       </div>
 
-      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {}
         <div className="group rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/50 p-5 hover:border-brand-500/50 transition-all shadow-sm">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
@@ -89,7 +86,6 @@ export function CompensationBreakdown({ baseSalary, bonus, equity }: Compensatio
           </div>
         </div>
 
-        {}
         <div className="group rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/50 p-5 hover:border-emerald-500/50 transition-all shadow-sm">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
@@ -110,7 +106,6 @@ export function CompensationBreakdown({ baseSalary, bonus, equity }: Compensatio
           </div>
         </div>
 
-        {}
         <div className="group rounded-2xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/50 p-5 hover:border-amber-500/50 transition-all shadow-sm">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 mb-2">
             <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
@@ -132,7 +127,6 @@ export function CompensationBreakdown({ baseSalary, bonus, equity }: Compensatio
         </div>
       </div>
 
-      {}
       <div className="space-y-2 pt-2">
         <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
           <span className="flex items-center gap-1.5">

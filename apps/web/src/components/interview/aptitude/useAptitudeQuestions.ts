@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/apiClient';
 
 export interface AptitudeQuestion {
@@ -76,8 +76,6 @@ export function useAptitudeQuestions({
   const [mcqDistribution, setMcqDistribution] = useState<Record<string, number> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  
-  const [isPrefetching] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,7 +124,5 @@ export function useAptitudeQuestions({
   }, [applicationId, sessionId, role, company]);
 
   
-  const prefetchNextBatch = useCallback(async () => {}, []);
-
-  return { questions, mcqDistribution, isLoading, isPrefetching, prefetchNextBatch, fetchError };
+  return { questions, mcqDistribution, isLoading, fetchError };
 }

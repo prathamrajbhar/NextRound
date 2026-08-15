@@ -16,20 +16,11 @@ export type { BadgeProps, BadgeIntent } from './Badge';
 export { Modal } from './Modal';
 export type { ModalProps } from './Modal';
 
-export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs';
-export type { TabsProps } from './Tabs';
-
-export { Select } from './Select';
-export type { SelectProps, SelectOption } from './Select';
-
 export { Autocomplete } from './Autocomplete';
 export type { AutocompleteProps } from './Autocomplete';
 
 export { SearchableSelect } from './SearchableSelect';
 export type { SearchableSelectProps, SearchableSelectOption } from './SearchableSelect';
-
-export { Tooltip } from './Tooltip';
-export type { TooltipProps } from './Tooltip';
 
 export {
   Skeleton,
@@ -49,18 +40,6 @@ export {
   CandidateDetailSkeleton,
   PipelineBoardSkeleton,
 } from './Skeleton';
-
-export { EmptyState } from './EmptyState';
-export type { EmptyStateProps } from './EmptyState';
-
-export { Table, TableHead, TableBody, TableRow, TableHeadCell, TableCell } from './Table';
-export type { TableProps, TableRowProps, TableHeadCellProps, TableCellProps } from './Table';
-
-export { RadarChart } from './RadarChart';
-export type { RadarChartProps, RadarSeries } from './RadarChart';
-
-export { ClusterPlot } from './ClusterPlot';
-export type { ClusterPlotProps, ClusterPoint } from './ClusterPlot';
 
 export { ThemeToggle } from './ThemeToggle';
 

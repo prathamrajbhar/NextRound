@@ -28,10 +28,6 @@ const paddingClass = {
   lg: 'p-6',
 };
 
-
-
-
-
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, accent = 'none', hoverable = true, padding = 'md', children, ...props }, ref) => {
     return (

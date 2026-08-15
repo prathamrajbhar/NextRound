@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bell, ArrowUpRight, Sparkles, Scale, Mic, Send, AlertTriangle, CheckCheck, Trash2, Check, Clock } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
+import { useNotifications } from '@/hooks/queries';
 import { Notification } from '@/types';
 import { NotificationsListSkeleton } from '@/components/ui';
 
@@ -21,30 +22,16 @@ const typeMeta: Record<Notification['type'], { label: string; icon: React.ReactN
 
 export default function HrNotificationsPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<FilterKey>('all');
 
-  useEffect(() => {
-    async function fetchNotifications() {
-      try {
-        setLoading(true);
-        const data = await apiClient.get<{ notifications: Notification[] } | Notification[]>('/notifications');
-        if (data) {
-          const list = Array.isArray(data) ? data : data.notifications;
-          setNotifications(Array.isArray(list) ? list : []);
-        } else {
-          setNotifications([]);
-        }
-      } catch (err) {
-        console.error('Failed to load notifications:', err);
-        setNotifications([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchNotifications();
-  }, []);
+  const { data, isLoading, refetch } = useNotifications();
+
+  const rawData = data as { notifications?: Notification[] } | Notification[] | undefined;
+  const list = Array.isArray(rawData) ? rawData : rawData?.notifications;
+  const notifications = useMemo(
+    () => (Array.isArray(list) ? list : []),
+    [list]
+  );
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -55,9 +42,9 @@ export default function HrNotificationsPage() {
 
   const markAsRead = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     try {
       await apiClient.patch(`/notifications/${id}/read`);
+      refetch();
     } catch (err) {
       console.error('Failed to mark notification read:', err);
     }
@@ -65,27 +52,27 @@ export default function HrNotificationsPage() {
 
   const deleteNotification = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
     try {
       await apiClient.delete(`/notifications/${id}`);
+      refetch();
     } catch (err) {
       console.error('Failed to delete notification:', err);
     }
   };
 
   const markAllAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     try {
       await apiClient.post('/notifications/read-all');
+      refetch();
     } catch (err) {
       console.error('Failed to mark all notifications read:', err);
     }
   };
 
   const clearAll = async () => {
-    setNotifications((prev) => prev.filter((n) => !n.read));
     try {
       await apiClient.delete('/notifications');
+      refetch();
     } catch (err) {
       console.error('Failed to clear notifications:', err);
     }
@@ -98,7 +85,6 @@ export default function HrNotificationsPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-16 animate-in fade-in duration-200">
-      {}
       <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
@@ -141,7 +127,6 @@ export default function HrNotificationsPage() {
         </div>
       </div>
 
-      {}
       <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs font-bold w-fit">
         <button
           type="button"
@@ -172,8 +157,7 @@ export default function HrNotificationsPage() {
         </button>
       </div>
 
-      {}
-      {loading ? (
+      {isLoading ? (
         <NotificationsListSkeleton count={6} />
       ) : (
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-sm overflow-hidden">
@@ -193,32 +177,27 @@ export default function HrNotificationsPage() {
                     }`}
                   >
                     <div className="flex items-center gap-3.5 min-w-0">
-                      {}
                       <span
                         className={`h-2 w-2 rounded-full shrink-0 ${
                           n.read ? 'bg-transparent' : 'bg-brand-500 animate-pulse'
                         }`}
                       />
 
-                      {}
                       <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200/60 dark:border-slate-700/60">
                         {meta.icon}
                       </div>
 
-                      {}
                       <p className="truncate text-xs font-semibold leading-relaxed">
                         {n.text}
                       </p>
                     </div>
 
                     <div className="flex items-center gap-4 shrink-0">
-                      {}
                       <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {n.time}
                       </span>
 
-                      {}
                       <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                         {!n.read && (
                           <button

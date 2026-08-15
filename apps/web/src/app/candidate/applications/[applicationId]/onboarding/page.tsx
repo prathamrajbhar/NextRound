@@ -1,34 +1,31 @@
 'use client';
 
-import React, { use, useState, useEffect } from 'react';
+import React, { use } from 'react';
 import Link from 'next/link';
-import { apiClient } from '@/lib/apiClient';
+import { useQueryClient } from '@tanstack/react-query';
 import { OnboardingRecord } from '@/types';
+import { useOnboarding } from '@/hooks/queries';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { ChevronRight, UserPlus } from 'lucide-react';
 import { ApplicationDetailSkeleton } from '@/components/ui';
 
 export default function CandidateOnboardingPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
+  const queryClient = useQueryClient();
 
-  const [onboard, setOnboard] = useState<OnboardingRecord | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: onboard, isLoading, isError, error, refetch } = useOnboarding(applicationId);
 
-  useEffect(() => {
-    async function fetchOnboarding() {
-      try {
-        setLoading(true);
-        const res = await apiClient.get<OnboardingRecord>(`/candidate/applications/${applicationId}/onboarding`);
-        if (res) setOnboard(res);
-      } catch (err) {
-        console.error('Failed to load onboarding:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchOnboarding();
-  }, [applicationId]);
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="w-full max-w-md">
+          <ErrorState error={error} onRetry={refetch} />
+        </div>
+      </div>
+    );
+  }
 
-  if (loading) {
+  if (isLoading) {
     return <ApplicationDetailSkeleton />;
   }
 
@@ -55,11 +52,9 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
     const completedCount = updatedTasks.filter((t) => t.status === 'completed').length;
     const progressPercent = Math.round((completedCount / updatedTasks.length) * 100);
 
-    setOnboard({
-      ...onboard,
-      tasks: updatedTasks,
-      progressPercent,
-    });
+    queryClient.setQueryData<OnboardingRecord>(['onboarding', applicationId], (prev) =>
+      prev ? { ...prev, tasks: updatedTasks, progressPercent } : prev
+    );
   };
 
   const getCategoryColor = (cat: string) => {
@@ -79,7 +74,6 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-16 animate-in fade-in duration-200">
-      {}
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
         <Link href="/candidate/applications" className="hover:text-indigo-650 transition-colors">Applications</Link>
         <ChevronRight className="h-3 w-3 text-slate-300" />
@@ -88,7 +82,6 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
         <span className="text-slate-800">Onboarding checklist</span>
       </div>
 
-      {}
       <div className="rounded-3xl border border-white/60 bg-white/45 p-6 sm:p-8 shadow-md backdrop-blur-md glass-panel space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-4">
@@ -106,7 +99,6 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
           </div>
         </div>
 
-        {}
         <div className="space-y-1.5">
           <div className="w-full bg-slate-200/50 rounded-full h-2 p-0.5 border border-slate-100/40">
             <div className="bg-emerald-500 h-1 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.4)] transition-all duration-300" style={{ width: `${onboard.progressPercent}%` }} />
@@ -114,10 +106,8 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {}
         <div className="lg:col-span-2 space-y-4">
           <h3 className="text-xs font-bold text-slate-805">Your Checklist Items</h3>
           
@@ -161,7 +151,6 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
           </div>
         </div>
 
-        {}
         <div className="space-y-6">
           <div className="rounded-3xl border border-white/60 bg-white/45 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h4 className="text-xs font-bold text-slate-805 border-b border-slate-100 pb-2">Support Team</h4>

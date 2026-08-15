@@ -69,7 +69,6 @@ export function CandidateHeader({ app }: CandidateHeaderProps) {
           </div>
         </div>
 
-        {}
         <div className="text-left sm:text-right bg-emerald-50/50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/60 p-4 rounded-2xl">
           <span className="text-md font-extrabold text-emerald-600 dark:text-emerald-400 font-display">
             {app.scores?.composite ?? 0}%
@@ -80,7 +79,6 @@ export function CandidateHeader({ app }: CandidateHeaderProps) {
         </div>
       </div>
 
-      {}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="p-4 rounded-2xl bg-white/45 dark:bg-slate-900/60 border border-white/60 dark:border-slate-800 shadow-2xs glass-panel">
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Total Experience</span>

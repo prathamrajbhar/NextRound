@@ -12,12 +12,16 @@ import {
   Save,
 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { useSafeMediaStream } from '@/hooks/useSafeMediaStream';
+import { getScopedStorageJSON, setScopedStorageJSON } from '@/lib/storage';
 
 interface CandidateAiPreferencesTabProps {
   onSave: () => void;
 }
 
 export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabProps) {
+  const { user } = useAuthContext();
   const [selectedVoice, setSelectedVoice] = useState('Alloy');
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState(true);
@@ -37,58 +41,59 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
           if (typeof s.liveTranscript === 'boolean') setLiveTranscript(s.liveTranscript);
           if (typeof s.autoSubmitTranscript === 'boolean') setAutoSubmitTranscript(s.autoSubmitTranscript);
         } else {
-          const saved = localStorage.getItem('candidate_ai_settings');
-          if (saved) {
-            const parsed = JSON.parse(saved);
+          const parsed = getScopedStorageJSON<Record<string, unknown>>(user?.id, 'candidate_ai_settings');
+          if (parsed) {
             if (typeof parsed.selectedVoice === 'string') setSelectedVoice(parsed.selectedVoice);
             if (typeof parsed.liveTranscript === 'boolean') setLiveTranscript(parsed.liveTranscript);
             if (typeof parsed.autoSubmitTranscript === 'boolean') setAutoSubmitTranscript(parsed.autoSubmitTranscript);
           }
         }
-      } catch {
-        
-      }
+      } catch {}
     }
     loadAiSettings();
-  }, []);
+  }, [user?.id]);
 
-  
+  const { start } = useSafeMediaStream({
+    constraints: { audio: true },
+    enabled: micTesting,
+  });
+
   useEffect(() => {
-    let animationFrameId: number;
-    let localStream: MediaStream | null = null;
-    if (micTesting) {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then((stream) => {
-          localStream = stream;
-          const audioContext = new AudioContext();
-          const analyser = audioContext.createAnalyser();
-          const microphone = audioContext.createMediaStreamSource(stream);
-          microphone.connect(analyser);
-          analyser.fftSize = 256;
-          const bufferLength = analyser.frequencyBinCount;
-          const dataArray = new Uint8Array(bufferLength);
+    if (!micTesting) return;
+    let audioContext: AudioContext | null = null;
+    let animationFrameId = 0;
+    let active = true;
 
-          const updateLevel = () => {
-            analyser.getByteFrequencyData(dataArray);
-            const average = dataArray.reduce((a, b) => a + b) / bufferLength;
-            setAudioLevel(Math.floor((average / 255) * 100));
-            animationFrameId = requestAnimationFrame(updateLevel);
-          };
-          updateLevel();
-        })
-        .catch((err) => {
-          console.error('Microphone access failed:', err);
-          setAudioLevel(0);
-        });
-    }
+    start()
+      .then((stream) => {
+        if (!stream || !active) return;
+        audioContext = new AudioContext();
+        const analyser = audioContext.createAnalyser();
+        const microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        const updateLevel = () => {
+          analyser.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+          setAudioLevel(Math.floor((average / 255) * 100));
+          animationFrameId = requestAnimationFrame(updateLevel);
+        };
+        updateLevel();
+      })
+      .catch(() => {
+        setAudioLevel(0);
+      });
+
     return () => {
+      active = false;
       if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (localStream) {
-        localStream.getTracks().forEach((track) => track.stop());
-      }
+      if (audioContext) void audioContext.close();
       setAudioLevel(0);
     };
-  }, [micTesting]);
+  }, [micTesting, start]);
 
   const handleTestAudio = () => {
     setIsPlayingAudio(true);
@@ -103,21 +108,19 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         liveTranscript,
         autoSubmitTranscript,
       });
-      localStorage.setItem(
+      setScopedStorageJSON(
+        user?.id,
         'candidate_ai_settings',
-        JSON.stringify({ selectedVoice, liveTranscript, autoSubmitTranscript })
+        { selectedVoice, liveTranscript, autoSubmitTranscript }
       );
       onSave();
-    } catch {
-      
-    } finally {
+    } catch {} finally {
       setSaving(false);
     }
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-slate-800 pb-3">
           <div>
@@ -147,7 +150,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
           </button>
         </div>
 
-        {}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
             { name: 'Serena', gender: 'Female', tone: 'Professional & Warm' },
@@ -182,7 +184,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         </div>
       </div>
 
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
           <Volume2 className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -190,7 +191,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {}
           <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-800/60 space-y-3">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
@@ -206,7 +206,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
               </button>
             </div>
 
-            {}
             <div className="h-8 rounded-xl bg-slate-900 dark:bg-slate-950 px-3 flex items-center gap-1">
               {[...Array(16)].map((_, i) => {
                 const barHeight = micTesting ? Math.min(100, Math.max(15, audioLevel + Math.sin(i) * 30)) : 10;
@@ -224,7 +223,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
             </p>
           </div>
 
-          {}
           <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/60 dark:bg-slate-800/60 space-y-3">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
@@ -255,7 +253,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         </div>
       </div>
 
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           Session Subtitles &amp; Transcripts
@@ -304,7 +301,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         </div>
       </div>
 
-      {}
       <div className="flex justify-end">
         <button
           type="button"

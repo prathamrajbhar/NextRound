@@ -9,7 +9,6 @@ interface DecisionControlProps {
   evaluationId?: string;
   initialDecision: 'hire' | 'reject' | 'hold';
   initialReasoning: string;
-  showApprovalButtons: boolean;
 }
 
 export default function DecisionControl({
@@ -17,7 +16,6 @@ export default function DecisionControl({
   evaluationId,
   initialDecision,
   initialReasoning,
-  showApprovalButtons,
 }: DecisionControlProps) {
   const [decision, setDecision] = useState(initialDecision);
   const [reasoning, setReasoning] = useState(initialReasoning);
@@ -113,27 +111,6 @@ export default function DecisionControl({
         {errorMsg && (
           <div className="text-center text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 border border-rose-100 dark:border-rose-900/60 rounded p-1.5">
             {errorMsg}
-          </div>
-        )}
-
-        {showApprovalButtons && (
-          <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 space-y-2">
-            <button
-              type="button"
-              disabled={!proctorReviewed}
-              onClick={() => alert(`POST /evaluations/${appId}/decision/approve successful`)}
-              className="w-full rounded-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 text-xs shadow transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Approve Offer
-            </button>
-            <button
-              type="button"
-              disabled={!proctorReviewed}
-              onClick={() => alert(`Decision overridden for application ${appId}`)}
-              className="w-full rounded-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold py-2.5 text-xs shadow-sm transition-all cursor-pointer glass-panel disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Override Decision
-            </button>
           </div>
         )}
 

@@ -122,7 +122,6 @@ export function FormattedMarkdown({ content, className = '' }: FormattedMarkdown
   );
 }
 
-
 function BulletListBlock({
   text,
   parseInline,

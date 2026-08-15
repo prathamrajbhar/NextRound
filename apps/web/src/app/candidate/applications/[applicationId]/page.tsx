@@ -1,15 +1,15 @@
 'use client';
 
-import React, { use, useEffect, useState } from 'react';
+import React, { use, useState } from 'react';
 import Link from 'next/link';
+import { useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/apiClient';
 import {
   Application,
-  Job,
-  Offer,
   AssessmentResult,
-  OnboardingRecord,
 } from '@/types';
+import { useApplication, useOffer, useOnboarding, useJob } from '@/hooks/queries';
+import { ErrorState } from '@/components/ui/ErrorState';
 import {
   ChevronRight,
   Calendar,
@@ -33,13 +33,15 @@ import { ApplicationDetailSkeleton } from '@/components/ui';
 
 export default function CandidateApplicationDetailPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
+  const queryClient = useQueryClient();
 
-  const [loading, setLoading] = useState(true);
-  const [app, setApp] = useState<Application | null>(null);
-  const [job, setJob] = useState<Job | null>(null);
-  const [offer, setOffer] = useState<Offer | null>(null);
-  const [assessments, setAssessments] = useState<AssessmentResult[]>([]);
-  const [onboarding, setOnboarding] = useState<OnboardingRecord | null>(null);
+  const { data: app, isLoading, isError, error, refetch } = useApplication(applicationId);
+  const { data: job } = useJob(app?.jobId ?? null);
+  const { data: offer } = useOffer(applicationId);
+  const { data: onboarding } = useOnboarding(applicationId);
+
+  const rawApp = app as (Application & { assessments?: AssessmentResult[] }) | null | undefined;
+  const assessments = Array.isArray(rawApp?.assessments) ? rawApp.assessments : [];
 
   const [showScreeningModal, setShowScreeningModal] = useState(false);
   const [runningScreening, setRunningScreening] = useState(false);
@@ -52,7 +54,7 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
       setScreeningError(null);
       const res = await apiClient.post<{ application: Application }>(`/applications/${applicationId}/run-screening`);
       if (res && res.application) {
-        setApp(res.application);
+        queryClient.setQueryData(['application', applicationId], res.application);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to complete AI screening evaluation.';
@@ -62,43 +64,17 @@ export default function CandidateApplicationDetailPage({ params }: { params: Pro
     }
   };
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const [appRes, offerRes, onboardingRes] = await Promise.allSettled([
-          apiClient.get<Application>(`/applications/${applicationId}`),
-          apiClient.get<Offer>(`/candidate/applications/${applicationId}/offer`),
-          apiClient.get<OnboardingRecord>(`/candidate/applications/${applicationId}/onboarding`),
-        ]);
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="w-full max-w-md">
+          <ErrorState error={error} onRetry={refetch} />
+        </div>
+      </div>
+    );
+  }
 
-        if (appRes.status === 'fulfilled' && appRes.value) {
-          setApp(appRes.value);
-          const rawApp = appRes.value as Application & { assessments?: AssessmentResult[] };
-          if (Array.isArray(rawApp.assessments)) {
-            setAssessments(rawApp.assessments);
-          }
-          if (appRes.value.jobId) {
-            const jRes = await apiClient.get<Job>(`/jobs/${appRes.value.jobId}`);
-            if (jRes) setJob(jRes);
-          }
-        }
-        if (offerRes.status === 'fulfilled' && offerRes.value) {
-          setOffer(offerRes.value);
-        }
-        if (onboardingRes.status === 'fulfilled' && onboardingRes.value) {
-          setOnboarding(onboardingRes.value);
-        }
-      } catch (err) {
-        console.error('Failed to fetch application details:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, [applicationId]);
-
-  if (loading) {
+  if (isLoading) {
     return <ApplicationDetailSkeleton />;
   }
 

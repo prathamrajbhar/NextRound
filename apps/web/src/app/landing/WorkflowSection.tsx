@@ -71,7 +71,6 @@ export function WorkflowSection() {
           </p>
         </div>
 
-        {}
         <div className="flex p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 select-none self-start md:self-auto backdrop-blur-xs">
           <button
             onClick={() => setActiveTab('employers')}
@@ -96,7 +95,6 @@ export function WorkflowSection() {
         </div>
       </div>
 
-      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {activeSteps.map((step) => {
           const StepIcon = step.icon;
@@ -105,17 +103,14 @@ export function WorkflowSection() {
               key={step.title}
               className="rounded-3xl border border-white/60 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/60 backdrop-blur-md shadow-xs p-6 relative group transition-all hover:scale-[1.01]"
             >
-              {}
               <span className="absolute top-4 right-5 text-3xl font-black text-slate-200 dark:text-slate-800 group-hover:text-brand-100 dark:group-hover:text-slate-700 transition-colors select-none">
                 {step.number}
               </span>
 
-              {}
               <div className={`h-11 w-11 rounded-xl flex items-center justify-center border mb-6 ${step.colorClass}`}>
                 <StepIcon className="h-5 w-5" />
               </div>
 
-              {}
               <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-200">
                 {step.title}
               </h3>

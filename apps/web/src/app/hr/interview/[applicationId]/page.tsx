@@ -3,31 +3,19 @@
 import React, { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
-import { Application } from '@/types';
+import { useApplication } from '@/hooks/queries';
 import UnifiedInterviewConsole from '@/components/interview/UnifiedInterviewConsole';
 
 export default function HrVideoCallConsole({ params }: { params: Promise<{ applicationId: string }> }) {
   const router = useRouter();
   const { applicationId } = use(params);
 
-  const [app, setApp] = useState<Application | null>(null);
   const [callDuration, setCallDuration] = useState(0);
   const [callEnded, setCallEnded] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchApp() {
-      try {
-        const data = await apiClient.get<Application>(`/applications/${applicationId}`);
-        setApp(data);
-      } catch (err) {
-        console.error('Failed to load application:', err);
-      }
-    }
-    fetchApp();
-  }, [applicationId]);
+  const { data: app } = useApplication(applicationId);
 
-  
   useEffect(() => {
     if (callEnded) return;
     const interval = setInterval(() => {

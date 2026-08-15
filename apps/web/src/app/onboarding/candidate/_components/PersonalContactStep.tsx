@@ -93,7 +93,6 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
     <div className="space-y-5 animate-in fade-in duration-150">
       <input ref={fileInputRef} type="file" accept=".pdf,.docx,.txt" className="hidden" onChange={handleFile} />
 
-      {}
       <div className="rounded-2xl border border-orange-500/30 bg-slate-900/90 p-4 shadow-md flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center border border-orange-500/30 shrink-0">
@@ -160,7 +159,6 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
         </div>
       )}
 
-      {}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
         <div>
           <label className={labelCls}>

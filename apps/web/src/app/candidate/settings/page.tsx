@@ -10,7 +10,8 @@ import {
   CheckCircle2,
 } from '@/lib/lucide-google-icons';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { apiClient } from '@/lib/apiClient';
+import { getScopedStorage } from '@/lib/storage';
+import { useCandidateProfile } from '@/hooks/queries';
 import { CandidateProfileTab } from './_components/CandidateProfileTab';
 import { CandidateNotificationsTab } from './_components/CandidateNotificationsTab';
 import { CandidateAiPreferencesTab } from './_components/CandidateAiPreferencesTab';
@@ -23,54 +24,55 @@ export default function CandidateSettingsPage() {
   const [savedToast, setSavedToast] = useState(false);
   const [readinessScore, setReadinessScore] = useState(60);
 
-  const calculateReadiness = useCallback(async () => {
-    try {
-      const res = await apiClient.get<{ profile?: Record<string, unknown> }>('/candidate/profile').catch(() => null);
-      const p = res?.profile || {};
-      const name = (p.full_name as string) || localStorage.getItem('candidate_name') || (user?.email ? user.email.split('@')[0] : '');
-      const email = (p.email as string) || user?.email || localStorage.getItem('candidate_email');
-      const headline = (p.headline as string) || localStorage.getItem('candidate_headline');
-      const phone = (p.phone as string) || localStorage.getItem('candidate_phone');
-      const loc = (p.location as string) || localStorage.getItem('candidate_location');
-      const portfolio = (p.portfolio_url as string) || localStorage.getItem('candidate_portfolio');
-      const bio = (p.bio as string) || localStorage.getItem('candidate_bio');
+  const { data: profileRes, refetch } = useCandidateProfile();
 
-      let score = 20; 
-      if (name) score += 15;
-      if (email) score += 15;
-      if (headline) score += 15;
-      if (phone) score += 10;
-      if (loc) score += 10;
-      if (portfolio) score += 5;
-      if (bio) score += 10;
+  const calculateReadiness = useCallback(() => {
+    const p = (profileRes?.profile ?? null) as Record<string, unknown> | null;
+    const profile = p || {};
+    const name = (profile.full_name as string) || getScopedStorage(user?.id, 'candidate_name') || (user?.email ? user.email.split('@')[0] : '');
+    const email = (profile.email as string) || user?.email || getScopedStorage(user?.id, 'candidate_email');
+    const headline = (profile.headline as string) || getScopedStorage(user?.id, 'candidate_headline');
+    const phone = (profile.phone as string) || getScopedStorage(user?.id, 'candidate_phone');
+    const loc = (profile.location as string) || getScopedStorage(user?.id, 'candidate_location');
+    const portfolio = (profile.portfolio_url as string) || getScopedStorage(user?.id, 'candidate_portfolio');
+    const bio = (profile.bio as string) || getScopedStorage(user?.id, 'candidate_bio');
 
-      setReadinessScore(Math.min(100, score));
-    } catch {
-      setReadinessScore(80);
-    }
-  }, [user]);
+    let score = 20; 
+    if (name) score += 15;
+    if (email) score += 15;
+    if (headline) score += 15;
+    if (phone) score += 10;
+    if (loc) score += 10;
+    if (portfolio) score += 5;
+    if (bio) score += 10;
+
+    setReadinessScore(Math.min(100, score));
+  }, [profileRes, user]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       calculateReadiness();
     }, 0);
-    const handleUpdate = () => calculateReadiness();
+    const handleUpdate = () => {
+      refetch();
+      calculateReadiness();
+    };
     window.addEventListener('profile_update', handleUpdate);
     return () => {
       clearTimeout(timer);
       window.removeEventListener('profile_update', handleUpdate);
     };
-  }, [calculateReadiness]);
+  }, [calculateReadiness, refetch]);
 
   const triggerSaveNotification = () => {
     setSavedToast(true);
+    refetch();
     calculateReadiness();
     setTimeout(() => setSavedToast(false), 2200);
   };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 pb-12 font-sans">
-      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-widest block mb-1">
@@ -84,7 +86,6 @@ export default function CandidateSettingsPage() {
           </p>
         </div>
 
-        {}
         <div className="flex items-center gap-3">
           {savedToast ? (
             <div className="px-4 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-extrabold flex items-center gap-1.5 animate-in zoom-in-95 duration-200 shadow-sm">
@@ -105,9 +106,7 @@ export default function CandidateSettingsPage() {
         </div>
       </div>
 
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {}
         <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-4 shadow-md backdrop-blur-md glass-panel flex flex-col gap-1.5 select-none">
           <button
             type="button"
@@ -175,7 +174,6 @@ export default function CandidateSettingsPage() {
           </button>
         </div>
 
-        {}
         <div className="lg:col-span-3">
           {activeTab === 'profile' && <CandidateProfileTab onSave={triggerSaveNotification} />}
           {activeTab === 'notifications' && <CandidateNotificationsTab onSave={triggerSaveNotification} />}

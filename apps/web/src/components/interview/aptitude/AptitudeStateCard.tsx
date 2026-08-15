@@ -13,10 +13,6 @@ interface AptitudeStateCardProps {
   spinningIcon?: boolean;
 }
 
-
-
-
-
 export function AptitudeStateCard({
   icon: Icon = Brain,
   title,

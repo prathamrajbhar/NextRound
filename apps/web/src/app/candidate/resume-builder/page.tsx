@@ -141,7 +141,6 @@ export default function AIResumeBuilderPage() {
 
   const currentTurn = {
     aiMessage: lastAiMessage,
-    simulatedUserAnswer: '',
   };
 
   const { micLevel } = useLocalMediaStream({
@@ -346,5 +345,4 @@ export default function AIResumeBuilderPage() {
     </div>
   );
 }
-
 

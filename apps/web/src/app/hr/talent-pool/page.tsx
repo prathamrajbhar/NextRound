@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { apiClient } from '@/lib/apiClient';
+import { useTalentPool } from '@/hooks/queries';
 import { JobsGridSkeleton } from '@/components/ui/Skeleton';
 import { Search, ChevronRight, Users, Filter, Brain } from '@/lib/lucide-google-icons';
-
 
 interface TalentCandidate {
   candidateId: string;
@@ -23,34 +22,12 @@ interface TalentCandidate {
 }
 
 export default function HrTalentPoolPage() {
-  const [candidates, setCandidates] = useState<TalentCandidate[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [minScore, setMinScore] = useState<number>(70);
   const [selectedSkill, setSelectedSkill] = useState<string>('All');
 
-  useEffect(() => {
-    async function fetchTalentPool() {
-      try {
-        setLoading(true);
-        const data = await apiClient.get<{ candidates: TalentCandidate[]; total: number }>(
-          `/hr/talent-pool${search ? `?query=${encodeURIComponent(search)}` : ''}`
-        );
-        if (data?.candidates) {
-          setCandidates(Array.isArray(data.candidates) ? data.candidates : []);
-        } else {
-          setCandidates([]);
-        }
-      } catch (err) {
-        console.error('Failed to load talent pool:', err);
-        setCandidates([]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchTalentPool();
-  }, [search]);
-
+  const { data, isLoading } = useTalentPool(search);
+  const candidates = (Array.isArray(data?.candidates) ? data.candidates : []) as unknown as TalentCandidate[];
 
   const safeCandidates = Array.isArray(candidates) ? candidates : [];
 
@@ -70,8 +47,7 @@ export default function HrTalentPoolPage() {
     (c) => c.similarityScore !== null && c.similarityScore >= 90,
   ).length;
 
-
-  if (loading) {
+  if (isLoading) {
     return <JobsGridSkeleton count={6} />;
   }
 

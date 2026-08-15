@@ -5,7 +5,6 @@ import { apiClient } from '@/lib/apiClient';
 import { Job, Application } from '@/types';
 import { PipelineBoardSkeleton } from '@/components/ui';
 
-
 import PipelineHeader from './components/PipelineHeader';
 import KanbanColumn from './components/KanbanColumn';
 import CandidateCard from './components/CandidateCard';
@@ -112,7 +111,6 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
   }
   columns.push({ id: 'Decision', name: 'Final Decision' });
 
-
   const getColCandidates = (stage: string) => {
     return candidates.filter((c) => c.stage === stage);
   };
@@ -127,7 +125,6 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 pb-12">
-      {}
       <PipelineHeader
         jobTitle={job.title}
         pipelineActive={pipelineActive}
@@ -135,7 +132,6 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      {}
       <div className={`grid grid-cols-1 ${gridColsClass} gap-4 items-start w-full`}>
         {columns.map((col) => {
           const colApps = getColCandidates(col.id);
@@ -161,14 +157,12 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
         })}
       </div>
 
-      {}
       <CandidateProfileDrawer
         app={selectedCandidate}
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
       />
 
-      {}
       <EditThresholdModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

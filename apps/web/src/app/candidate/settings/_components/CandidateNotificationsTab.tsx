@@ -3,12 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Save } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { getScopedStorageJSON, setScopedStorageJSON } from '@/lib/storage';
 
 interface CandidateNotificationsTabProps {
   onSave: () => void;
 }
 
 export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabProps) {
+  const { user } = useAuthContext();
   const [emailInvites, setEmailInvites] = useState(true);
   const [smsReminders, setSmsReminders] = useState(true);
   const [aiScoreReports, setAiScoreReports] = useState(true);
@@ -30,9 +33,8 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           if (typeof s.statusUpdates === 'boolean') setStatusUpdates(s.statusUpdates);
           if (typeof s.digestFrequency === 'string') setDigestFrequency(s.digestFrequency);
         } else {
-          const saved = localStorage.getItem('candidate_notification_settings');
-          if (saved) {
-            const parsed = JSON.parse(saved);
+          const parsed = getScopedStorageJSON<Record<string, unknown>>(user?.id, 'candidate_notification_settings');
+          if (parsed) {
             if (typeof parsed.emailInvites === 'boolean') setEmailInvites(parsed.emailInvites);
             if (typeof parsed.smsReminders === 'boolean') setSmsReminders(parsed.smsReminders);
             if (typeof parsed.aiScoreReports === 'boolean') setAiScoreReports(parsed.aiScoreReports);
@@ -41,12 +43,10 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
             if (typeof parsed.digestFrequency === 'string') setDigestFrequency(parsed.digestFrequency);
           }
         }
-      } catch {
-        
-      }
+      } catch {}
     }
     loadSettings();
-  }, []);
+  }, [user?.id]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -58,7 +58,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
       statusUpdates,
       digestFrequency,
     };
-    localStorage.setItem('candidate_notification_settings', JSON.stringify(settingsData));
+    setScopedStorageJSON(user?.id, 'candidate_notification_settings', settingsData);
 
     try {
       await apiClient.patch('/candidate/settings', {
@@ -69,9 +69,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
         statusUpdates,
         digestFrequency,
       }).catch(() => null);
-    } catch {
-      
-    }
+    } catch {}
 
     setSaving(false);
     onSave();
@@ -79,7 +77,6 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel flex justify-between items-center">
         <div className="space-y-1">
           <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -92,9 +89,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
         </div>
       </div>
 
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-6">
-        {}
         <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -122,7 +117,6 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           </button>
         </div>
 
-        {}
         <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -147,7 +141,6 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           </button>
         </div>
 
-        {}
         <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -175,7 +168,6 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           </button>
         </div>
 
-        {}
         <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -200,7 +192,6 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           </button>
         </div>
 
-        {}
         <div className="flex items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
@@ -226,7 +217,6 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
         </div>
       </div>
 
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">Digest Cadence</h4>
@@ -251,7 +241,6 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
         </div>
       </div>
 
-      {}
       <div className="flex justify-end">
         <button
           type="button"

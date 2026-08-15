@@ -16,10 +16,6 @@ interface ConsolePrimaryViewportProps {
   localStream?: MediaStream | null;
 }
 
-
-
-
-
 export function ConsolePrimaryViewport({
   mode,
   aiSpeaking,
@@ -83,7 +79,6 @@ export function ConsolePrimaryViewport({
               <Bot className={`h-16 w-16 sm:h-20 sm:w-20 ${aiSpeaking ? 'text-amber-400' : isAnalyzing ? 'text-indigo-400' : 'text-slate-400'}`} />
             </div>
 
-            {}
             <div className="flex items-center justify-center gap-1.5 mt-4 h-8">
               {[40, 70, 90, 60, 80, 50, 95, 65, 45].map((h, i) => (
                 <span
@@ -139,13 +134,11 @@ export function ConsolePrimaryViewport({
             </div>
           )}
 
-          {}
           <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800/80 text-[10px] font-extrabold text-slate-300 flex items-center gap-1.5 backdrop-blur-md shadow-lg">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             <span>{mode === 'hr-recruiter' ? 'Remote Candidate Feed' : 'Hiring Manager'}</span>
           </div>
 
-          {}
           {isVideoCall && localStream && (
             <div className="absolute bottom-4 right-4 w-32 h-44 sm:w-40 sm:h-56 rounded-2xl overflow-hidden border border-slate-200/20 dark:border-slate-800 bg-slate-950 shadow-2xl z-30 transition-all duration-300 group hover:scale-105">
               <video

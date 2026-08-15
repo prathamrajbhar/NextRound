@@ -10,9 +10,6 @@ interface ConsoleTranscriptDrawerProps {
   transcriptEndRef: React.RefObject<HTMLDivElement | null>;
 }
 
-
-
-
 export function ConsoleTranscriptDrawer({ messages, onClose, transcriptEndRef }: ConsoleTranscriptDrawerProps) {
   return (
     <div className="absolute right-4 top-20 bottom-24 w-80 sm:w-96 bg-slate-900/95 border border-slate-800 rounded-3xl p-4 shadow-2xl backdrop-blur-xl z-40 flex flex-col space-y-3 font-sans">

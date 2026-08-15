@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   FileText,
@@ -13,6 +13,8 @@ import {
   Edit,
 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
+import { useQueryClient } from '@tanstack/react-query';
+import { useResumeHistory } from '@/hooks/queries';
 import { EditResumeModal, GeneratedResumeData } from './_components/EditResumeModal';
 import { Modal, ResumesListSkeleton } from '@/components/ui';
 
@@ -28,36 +30,24 @@ interface ResumeHistoryItem {
 }
 
 export default function CandidateResumesPage() {
-  const [history, setHistory] = useState<ResumeHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [primaryId, setPrimaryId] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<ResumeHistoryItem | null>(null);
   const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
 
-  const fetchHistory = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await apiClient.get<{ history: ResumeHistoryItem[] }>('/resume-builder/history');
-      if (res?.history) {
-        setHistory(res.history);
-        if (res.history.length > 0) {
-          setPrimaryId(res.history[0].id);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch resume history:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useResumeHistory();
+
+  const history = useMemo(
+    () => ((data?.history ?? []) as ResumeHistoryItem[]),
+    [data]
+  );
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchHistory();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [fetchHistory]);
+    if (history.length > 0 && primaryId === null) {
+      setPrimaryId(history[0].id);
+    }
+  }, [history, primaryId]);
 
   const handleDownloadPdf = (item: ResumeHistoryItem) => {
     if (item.resumePdfUrl) {
@@ -236,7 +226,8 @@ export default function CandidateResumesPage() {
   };
 
   const handleSaveEditedResume = (updatedItem: { id: string; targetRole: string; targetCompany: string; generatedResume: GeneratedResumeData | null }) => {
-    setHistory(history.map(h => h.id === updatedItem.id ? { ...h, ...updatedItem } : h));
+    const updated = history.map(h => h.id === updatedItem.id ? { ...h, ...updatedItem } : h);
+    queryClient.setQueryData(['resume-history'], { history: updated });
   };
 
   const handleDeleteResume = (id: string) => {
@@ -246,9 +237,9 @@ export default function CandidateResumesPage() {
   const performDelete = async (id: string) => {
     try {
       await apiClient.delete(`/resume-builder/${id}`);
-      setHistory(prev => prev.filter(h => h.id !== id));
+      const remaining = history.filter(h => h.id !== id);
+      queryClient.setQueryData(['resume-history'], { history: remaining });
       if (primaryId === id) {
-        const remaining = history.filter(h => h.id !== id);
         setPrimaryId(remaining.length > 0 ? remaining[0].id : null);
       }
     } catch (err) {
@@ -264,7 +255,6 @@ export default function CandidateResumesPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12 font-sans">
       
-      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold text-brand-600 dark:text-orange-400 bg-brand-50 dark:bg-orange-950/80 border border-brand-200/60 dark:border-orange-900/60 mb-1.5">
@@ -288,7 +278,6 @@ export default function CandidateResumesPage() {
         </Link>
       </div>
 
-      {}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3.5 sm:p-4 rounded-2xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 backdrop-blur-md glass-panel">
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -306,8 +295,7 @@ export default function CandidateResumesPage() {
         </span>
       </div>
 
-      {}
-      {loading ? (
+      {isLoading ? (
         <ResumesListSkeleton count={6} />
       ) : filteredHistory.length === 0 ? (
         <div className="text-center py-16 p-8 rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/40 dark:bg-slate-900/40 space-y-3">
@@ -343,7 +331,6 @@ export default function CandidateResumesPage() {
                 }`}
               >
                 <div className="space-y-2.5">
-                  {}
                   <div className="flex items-start justify-between gap-2 border-b border-slate-200/60 dark:border-slate-800/80 pb-2.5">
                     <div>
                       <div className="flex items-center gap-1.5">
@@ -364,14 +351,12 @@ export default function CandidateResumesPage() {
                     </span>
                   </div>
 
-                  {}
                   {hasSummary && item.generatedResume && (
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed bg-white/50 dark:bg-slate-800/40 p-2.5 rounded-xl border border-slate-200/50 dark:border-slate-800 font-medium">
                       {item.generatedResume.summary}
                     </p>
                   )}
 
-                  {}
                   <div className="flex flex-wrap gap-1 pt-0.5">
                     {skillsList.slice(0, 4).map((s: string) => (
                       <span
@@ -384,7 +369,6 @@ export default function CandidateResumesPage() {
                   </div>
                 </div>
 
-                {}
                 <div className="pt-2.5 border-t border-slate-200/60 dark:border-slate-800/80 space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <button
@@ -439,7 +423,6 @@ export default function CandidateResumesPage() {
         </div>
       )}
 
-      {}
       <EditResumeModal
         isOpen={Boolean(editingItem)}
         onClose={() => setEditingItem(null)}
@@ -447,7 +430,6 @@ export default function CandidateResumesPage() {
         onSave={handleSaveEditedResume}
       />
 
-      {}
       <Modal
         isOpen={Boolean(deleteConfirmationId)}
         onClose={() => setDeleteConfirmationId(null)}

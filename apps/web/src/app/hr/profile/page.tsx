@@ -22,6 +22,8 @@ import { SUGGESTED_COMPANIES, SUGGESTED_ROLES } from '@/lib/suggestedOptions';
 
 import { useAuthContext } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/apiClient';
+import { useHrProfile } from '@/hooks/queries';
+import { getScopedStorage, setScopedStorage } from '@/lib/storage';
 
 export default function HrProfile() {
   const { user } = useAuthContext();
@@ -39,45 +41,41 @@ export default function HrProfile() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
 
-  useEffect(() => {
-    async function loadHrProfile() {
-      if (user?.email) {
-        setEmail(user.email);
-        setName(user.email.split('@')[0]);
-      }
+  const { data: profile, isError: profileError } = useHrProfile();
 
-      try {
-        const res = await apiClient.get<{ profile?: Record<string, unknown>; name?: string; full_name?: string; email?: string; role?: string; company?: string; org_name?: string; linkedin_url?: string; avatar?: string; specialties?: string[] }>('/hr/profile');
-        if (res) {
-          const profileObj = res.profile || res;
-          if (typeof profileObj.name === 'string') setName(profileObj.name);
-          if (typeof profileObj.full_name === 'string') setName(profileObj.full_name);
-          if (typeof profileObj.email === 'string') setEmail(profileObj.email);
-          if (typeof profileObj.role === 'string') setRole(profileObj.role);
-          if (typeof profileObj.company === 'string') setCompany(profileObj.company);
-          if (typeof profileObj.org_name === 'string') setCompany(profileObj.org_name);
-          if (typeof profileObj.linkedin_url === 'string') setLinkedinUrl(profileObj.linkedin_url);
-          if (typeof profileObj.avatar === 'string') setAvatar(profileObj.avatar);
-          if (Array.isArray(profileObj.specialties)) setSpecialties(profileObj.specialties);
-        }
-      } catch {
-        const savedName = localStorage.getItem('hr_name');
-        const savedEmail = localStorage.getItem('hr_email');
-        const savedRole = localStorage.getItem('hr_role');
-        const savedCompany = localStorage.getItem('hr_company');
-        const savedLinkedin = localStorage.getItem('hr_linkedin');
-        const savedAvatar = localStorage.getItem('hr_avatar');
-        
-        if (savedName) setName(savedName);
-        if (savedEmail) setEmail(savedEmail);
-        if (savedRole) setRole(savedRole);
-        if (savedCompany) setCompany(savedCompany);
-        if (savedLinkedin) setLinkedinUrl(savedLinkedin);
-        if (savedAvatar) setAvatar(savedAvatar);
-      }
+  useEffect(() => {
+    if (user?.email) {
+      setEmail(user.email);
+      setName(user.email.split('@')[0]);
     }
-    loadHrProfile();
-  }, [user]);
+
+    if (profile) {
+      const profileObj = profile.profile || profile;
+      if (typeof profileObj.name === 'string') setName(profileObj.name);
+      if (typeof profileObj.full_name === 'string') setName(profileObj.full_name);
+      if (typeof profileObj.email === 'string') setEmail(profileObj.email);
+      if (typeof profileObj.role === 'string') setRole(profileObj.role);
+      if (typeof profileObj.company === 'string') setCompany(profileObj.company);
+      if (typeof profileObj.org_name === 'string') setCompany(profileObj.org_name);
+      if (typeof profileObj.linkedin_url === 'string') setLinkedinUrl(profileObj.linkedin_url);
+      if (typeof profileObj.avatar === 'string') setAvatar(profileObj.avatar);
+      if (Array.isArray(profileObj.specialties)) setSpecialties(profileObj.specialties);
+    } else if (profileError) {
+      const savedName = getScopedStorage(user?.id, 'hr_name');
+      const savedEmail = getScopedStorage(user?.id, 'hr_email');
+      const savedRole = getScopedStorage(user?.id, 'hr_role');
+      const savedCompany = getScopedStorage(user?.id, 'hr_company');
+      const savedLinkedin = getScopedStorage(user?.id, 'hr_linkedin');
+      const savedAvatar = getScopedStorage(user?.id, 'hr_avatar');
+      
+      if (savedName) setName(savedName);
+      if (savedEmail) setEmail(savedEmail);
+      if (savedRole) setRole(savedRole);
+      if (savedCompany) setCompany(savedCompany);
+      if (savedLinkedin) setLinkedinUrl(savedLinkedin);
+      if (savedAvatar) setAvatar(savedAvatar);
+    }
+  }, [user, profile, profileError]);
 
   const handleSave = async () => {
     
@@ -88,16 +86,14 @@ export default function HrProfile() {
         avatarUrl: avatar,
         specialties,
       });
-    } catch {
-      
-    }
+    } catch {}
 
-    localStorage.setItem('hr_name', name);
-    localStorage.setItem('hr_email', email);
-    localStorage.setItem('hr_role', role);
-    localStorage.setItem('hr_company', company);
-    localStorage.setItem('hr_linkedin', linkedinUrl);
-    localStorage.setItem('hr_avatar', avatar);
+    setScopedStorage(user?.id, 'hr_name', name);
+    setScopedStorage(user?.id, 'hr_email', email);
+    setScopedStorage(user?.id, 'hr_role', role);
+    setScopedStorage(user?.id, 'hr_company', company);
+    setScopedStorage(user?.id, 'hr_linkedin', linkedinUrl);
+    setScopedStorage(user?.id, 'hr_avatar', avatar);
 
     
     window.dispatchEvent(new Event('hr_profile_update'));
@@ -147,7 +143,6 @@ export default function HrProfile() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       
-      {}
       <div className="border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest block mb-1">
           Identity Center
@@ -158,20 +153,16 @@ export default function HrProfile() {
         </p>
       </div>
 
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        {}
         <div className="lg:col-span-2 space-y-6">
           
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 sm:p-8 shadow-xl backdrop-blur-md glass-panel space-y-6">
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 flex items-center gap-1.5">
               <User className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
               Recruiter Details
             </h3>
 
-            {}
             <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-slate-200/60 dark:border-slate-800 pb-5">
               <div className="relative h-16 w-16 rounded-full overflow-hidden border-2 border-slate-200 dark:border-slate-700 shadow-sm flex-shrink-0">
                 <Image src={avatar} alt="Profile Avatar" width={64} height={64} className="h-full w-full object-cover" unoptimized />
@@ -212,7 +203,6 @@ export default function HrProfile() {
               </div>
             </div>
 
-            {}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Full Name</label>
@@ -276,7 +266,6 @@ export default function HrProfile() {
               </div>
             </div>
 
-            {}
             <div className="pt-4 border-t border-slate-200/60 dark:border-slate-800 flex justify-end gap-3 items-center">
               {detailsSaved && (
                 <span className="text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-900/60 rounded-full p-1.5 flex items-center justify-center animate-in scale-in duration-200 shadow-sm">
@@ -293,7 +282,6 @@ export default function HrProfile() {
             </div>
           </div>
 
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 flex items-center gap-1.5">
               <Sparkles className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400 animate-pulse" />
@@ -331,7 +319,6 @@ export default function HrProfile() {
             </form>
           </div>
 
-          {}
           <div className="rounded-3xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/20 p-6 shadow-sm glass-panel space-y-4">
             <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400">
               <AlertTriangle className="h-5 w-5" />
@@ -357,10 +344,8 @@ export default function HrProfile() {
           </div>
         </div>
 
-        {}
         <div className="space-y-6">
           
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel text-center">
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Workspace Integrity</span>
             <div className="relative h-24 w-24 mx-auto my-4 flex items-center justify-center">
@@ -392,7 +377,6 @@ export default function HrProfile() {
             </span>
           </div>
 
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h3 className="text-xs font-black text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2">Active License</h3>
             

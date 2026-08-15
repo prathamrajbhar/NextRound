@@ -48,7 +48,6 @@ export function OfferHeader({
 
   return (
     <header className="space-y-3">
-      {}
       <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
         <Link href="/candidate/applications" className="hover:text-brand-600 dark:hover:text-brand-400 transition-colors">
           Applications
@@ -61,7 +60,6 @@ export function OfferHeader({
         <span className="text-slate-900 dark:text-slate-100 font-semibold">Offer Letter</span>
       </nav>
 
-      {}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 sm:p-6 shadow-sm backdrop-blur-md">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
@@ -93,7 +91,6 @@ export function OfferHeader({
             </div>
           </div>
 
-          {}
           <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 self-start sm:self-auto">
             <span className="text-[11px] uppercase tracking-wider font-bold text-slate-400">
               Total Annual CTC

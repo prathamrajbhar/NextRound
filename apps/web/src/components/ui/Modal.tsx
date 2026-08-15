@@ -23,12 +23,6 @@ const sizeClass = {
   xl: 'max-w-2xl',
 };
 
-
-
-
-
-
-
 export function Modal({ isOpen, onClose, title, description, children, footer, size = 'md', icon }: ModalProps) {
   useEffect(() => {
     if (!isOpen) return;

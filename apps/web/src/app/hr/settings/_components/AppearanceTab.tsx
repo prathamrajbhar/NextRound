@@ -28,7 +28,6 @@ export function AppearanceTab({
 }: AppearanceTabProps) {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
         <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           <Palette className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
@@ -37,7 +36,6 @@ export function AppearanceTab({
           </h3>
         </div>
 
-        {}
         <div className="grid grid-cols-2 gap-4">
           <div
             onClick={() => setTheme('light')}
@@ -74,7 +72,6 @@ export function AppearanceTab({
           </div>
         </div>
 
-        {}
         <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 space-y-3">
           <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100 block">Primary Accent Palette</span>
           <div className="grid grid-cols-4 gap-2">
@@ -101,7 +98,6 @@ export function AppearanceTab({
           </div>
         </div>
 
-        {}
         <div className="pt-2 border-t border-slate-200/60 dark:border-slate-800 space-y-3">
           <div className="flex items-center justify-between">
             <div>

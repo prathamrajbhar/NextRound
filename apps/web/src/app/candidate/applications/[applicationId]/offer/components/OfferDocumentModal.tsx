@@ -27,7 +27,6 @@ export function OfferDocumentModal({
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-        {}
         <div className="p-4 px-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/60">
           <div className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-brand-500" />
@@ -61,10 +60,8 @@ export function OfferDocumentModal({
           </div>
         </div>
 
-        {}
         <div className="p-6 sm:p-10 overflow-y-auto space-y-6 text-slate-800 dark:text-slate-200 text-xs font-serif leading-relaxed bg-slate-100/50 dark:bg-slate-950/50">
           <div className="bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-2xl shadow-md border border-slate-200 dark:border-slate-800 space-y-6 font-sans">
-            {}
             <div className="flex justify-between items-start border-b border-slate-200 dark:border-slate-800 pb-6">
               <div>
                 <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight uppercase">
@@ -80,7 +77,6 @@ export function OfferDocumentModal({
               </div>
             </div>
 
-            {}
             <div className="space-y-1 font-sans">
               <span className="text-xs font-bold text-slate-900 dark:text-white block">Dear {candidateName},</span>
               <p className="text-xs text-slate-600 dark:text-slate-300">
@@ -88,7 +84,6 @@ export function OfferDocumentModal({
               </p>
             </div>
 
-            {}
             <div className="space-y-3 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
               <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                 Summary of Employment Terms
@@ -109,14 +104,12 @@ export function OfferDocumentModal({
               </ul>
             </div>
 
-            {}
             <div className="space-y-2 text-[11px] text-slate-500 dark:text-slate-400 leading-normal">
               <p>
                 This offer is contingent upon successful completion of reference checks, background verification, and your acceptance of company confidentiality policies.
               </p>
             </div>
 
-            {}
             <div className="pt-6 border-t border-slate-200 dark:border-slate-800 flex justify-between items-end">
               <div>
                 <span className="text-[10px] text-slate-400 uppercase tracking-widest block mb-2">Authorized Signatory</span>

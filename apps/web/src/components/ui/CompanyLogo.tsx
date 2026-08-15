@@ -24,7 +24,6 @@ const iconSizes = {
   xl: 'h-8 w-8',
 };
 
-
 const brandSvgMap: Record<string, (props: { className?: string }) => React.ReactNode> = {
   swiggy: ({ className }) => (
     <svg className={cn("w-full h-full text-[#FC8019]", className)} viewBox="0 0 24 24" fill="currentColor">
@@ -69,7 +68,6 @@ const brandSvgMap: Record<string, (props: { className?: string }) => React.React
     </svg>
   )
 };
-
 
 const colorGradients = [
   'from-amber-500 to-orange-600 text-white',

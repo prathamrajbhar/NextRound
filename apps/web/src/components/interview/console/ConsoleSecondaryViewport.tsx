@@ -17,10 +17,6 @@ interface ConsoleSecondaryViewportProps {
   onCompleteHRRound?: (result: 'pass' | 'fail', notes: string) => void;
 }
 
-
-
-
-
 export function ConsoleSecondaryViewport({
   mode,
   candidateName,
@@ -106,7 +102,6 @@ export function ConsoleSecondaryViewport({
             </div>
           )}
 
-          {}
           <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-slate-950/80 border border-slate-800/80 text-[10px] font-extrabold text-slate-300 flex items-center gap-1.5 backdrop-blur-md">
             <User className="h-3 w-3 text-brand-400" />
             <span>{candidateName} (You)</span>

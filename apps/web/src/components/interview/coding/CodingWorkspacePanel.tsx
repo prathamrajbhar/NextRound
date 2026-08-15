@@ -26,10 +26,6 @@ const FILE_EXTENSION: Record<SupportedLanguage, string> = {
   cpp: 'cpp',
 };
 
-
-
-
-
 export function CodingWorkspacePanel({
   problem,
   language,
@@ -46,7 +42,6 @@ export function CodingWorkspacePanel({
 
   return (
     <div className="w-1/2 flex flex-col gap-2 overflow-hidden">
-      {}
       <div className="flex-1 bg-white dark:bg-[#141414] rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden shadow-xs">
         <div className="h-10 px-3 bg-slate-50 dark:bg-[#1a1a1a] border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-mono text-slate-500 dark:text-slate-400 flex-shrink-0">
           <span className="flex items-center gap-2 text-slate-800 dark:text-slate-200 font-bold">
@@ -57,16 +52,13 @@ export function CodingWorkspacePanel({
           </span>
         </div>
 
-        {}
         <div className="flex-1 flex overflow-hidden bg-slate-50 dark:bg-[#1e1e1e]">
-          {}
           <div className="w-10 py-3 bg-slate-100 dark:bg-[#181818] border-r border-slate-200 dark:border-slate-800 text-right pr-2 text-slate-400 dark:text-slate-600 font-mono text-xs select-none leading-relaxed">
             {lineNumbers.map((n) => (
               <div key={n}>{n}</div>
             ))}
           </div>
 
-          {}
           <textarea
             value={code}
             onChange={(e) => onCodeChange(e.target.value)}
@@ -76,7 +68,6 @@ export function CodingWorkspacePanel({
         </div>
       </div>
 
-      {}
       <div className="h-52 bg-white dark:bg-[#141414] rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden flex-shrink-0 shadow-xs">
         <div className="h-9 px-3 bg-slate-50 dark:bg-[#1a1a1a] border-b border-slate-200 dark:border-slate-800 flex items-center gap-4 text-xs font-semibold text-slate-500 dark:text-slate-400 flex-shrink-0">
           <button
@@ -108,7 +99,6 @@ export function CodingWorkspacePanel({
           </button>
         </div>
 
-        {}
         <div className="flex-1 p-3 font-mono text-xs overflow-y-auto bg-slate-50 dark:bg-[#181818]">
           {activeBottomTab === 'testcases' && (
             <div className="space-y-2 text-slate-700 dark:text-slate-300">

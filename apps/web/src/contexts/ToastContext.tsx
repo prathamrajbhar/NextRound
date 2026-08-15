@@ -39,12 +39,6 @@ const variantStyles: Record<ToastVariant, { icon: React.ReactNode; className: st
   },
 };
 
-
-
-
-
-
-
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [mounted, setMounted] = useState(false);

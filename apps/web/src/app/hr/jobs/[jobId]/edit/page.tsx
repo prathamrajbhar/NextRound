@@ -200,7 +200,6 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-in fade-in duration-200 pb-12">
-      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mb-1">
@@ -242,11 +241,8 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
         </div>
       )}
 
-      {}
       <form onSubmit={handleUpdate} className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        {}
         <div className="space-y-6">
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
             <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <Building2 className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
@@ -341,7 +337,6 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
             </div>
           </div>
 
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
@@ -364,7 +359,6 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
               />
             </div>
 
-            {}
             <div className="space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-800">
               <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 Required Tech Stack Tags
@@ -383,9 +377,7 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
           </div>
         </div>
 
-        {}
         <div className="space-y-6">
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -468,7 +460,6 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
             </div>
           </div>
 
-          {}
           <PipelineConfigCard
             minScore={minScore}
             setMinScore={setMinScore}

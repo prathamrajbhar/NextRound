@@ -4,12 +4,15 @@ import React, { useState, useEffect } from 'react';
 import { Palette, Sun, Moon, CheckCircle2, Save } from '@/lib/lucide-google-icons';
 import { useTheme } from '@/contexts/ThemeContext';
 import { apiClient } from '@/lib/apiClient';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { getScopedStorageJSON, setScopedStorageJSON } from '@/lib/storage';
 
 interface CandidateAppearanceTabProps {
   onSave: () => void;
 }
 
 export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) {
+  const { user } = useAuthContext();
   const { theme, setTheme } = useTheme();
   const [glassmorphism, setGlassmorphism] = useState(true);
   const [compactDensity, setCompactDensity] = useState(false);
@@ -24,24 +27,21 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
           if (typeof s.glassmorphism === 'boolean') setGlassmorphism(s.glassmorphism);
           if (typeof s.compactDensity === 'boolean') setCompactDensity(s.compactDensity);
         } else {
-          const saved = localStorage.getItem('candidate_ui_settings');
-          if (saved) {
-            const parsed = JSON.parse(saved);
+          const parsed = getScopedStorageJSON<Record<string, unknown>>(user?.id, 'candidate_ui_settings');
+          if (parsed) {
             if (typeof parsed.glassmorphism === 'boolean') setGlassmorphism(parsed.glassmorphism);
             if (typeof parsed.compactDensity === 'boolean') setCompactDensity(parsed.compactDensity);
           }
         }
-      } catch {
-        
-      }
+      } catch {}
     }
     loadUiSettings();
-  }, []);
+  }, [user?.id]);
 
   const handleSave = async () => {
     setSaving(true);
     const uiData = { glassmorphism, compactDensity };
-    localStorage.setItem('candidate_ui_settings', JSON.stringify(uiData));
+    setScopedStorageJSON(user?.id, 'candidate_ui_settings', uiData);
 
     try {
       await apiClient.patch('/candidate/settings', {
@@ -49,9 +49,7 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
         glassmorphism,
         compactDensity,
       }).catch(() => null);
-    } catch {
-      
-    }
+    } catch {}
 
     setSaving(false);
     onSave();
@@ -59,7 +57,6 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h2 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           <Palette className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -67,7 +64,6 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {}
           <button
             type="button"
             onClick={() => setTheme('dark')}
@@ -89,7 +85,6 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
             </div>
           </button>
 
-          {}
           <button
             type="button"
             onClick={() => setTheme('light')}
@@ -113,7 +108,6 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
         </div>
       </div>
 
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           Visual Effects &amp; Interface Spacing
@@ -162,7 +156,6 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
         </div>
       </div>
 
-      {}
       <div className="flex justify-end">
         <button
           type="button"

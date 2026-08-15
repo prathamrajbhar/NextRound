@@ -5,11 +5,9 @@ import { cn } from '@/lib/cn';
 
 export type SkeletonProps = React.HTMLAttributes<HTMLDivElement>;
 
-
 export function Skeleton({ className, ...props }: SkeletonProps) {
   return <div className={cn('skeleton-shimmer relative overflow-hidden rounded-xl', className)} {...props} />;
 }
-
 
 export function CardSkeleton({ className }: { className?: string }) {
   return (
@@ -27,7 +25,6 @@ export function CardSkeleton({ className }: { className?: string }) {
   );
 }
 
-
 export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: number }) {
   return (
     <div className="space-y-3">
@@ -41,7 +38,6 @@ export function TableSkeleton({ rows = 5, cols = 4 }: { rows?: number; cols?: nu
     </div>
   );
 }
-
 
 export function JobsGridSkeleton({ count = 6 }: { count?: number }) {
   return (
@@ -61,7 +57,6 @@ export function JobsGridSkeleton({ count = 6 }: { count?: number }) {
     </div>
   );
 }
-
 
 export function ApplicationsListSkeleton({ count = 4 }: { count?: number }) {
   return (
@@ -85,7 +80,6 @@ export function ApplicationsListSkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
-
 export function HrStatsSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -102,7 +96,6 @@ export function HrStatsSkeleton({ count = 4 }: { count?: number }) {
     </div>
   );
 }
-
 
 export function AnalyticsGridSkeleton() {
   return (
@@ -122,7 +115,6 @@ export function AnalyticsGridSkeleton() {
   );
 }
 
-
 export function PageHeaderSkeleton() {
   return (
     <div className="flex items-start gap-3.5">
@@ -134,7 +126,6 @@ export function PageHeaderSkeleton() {
     </div>
   );
 }
-
 
 export function FormCardSkeleton({ rows = 4 }: { rows?: number }) {
   return (
@@ -149,7 +140,6 @@ export function FormCardSkeleton({ rows = 4 }: { rows?: number }) {
     </div>
   );
 }
-
 
 export function NotificationsListSkeleton({ count = 6 }: { count?: number }) {
   return (
@@ -167,7 +157,6 @@ export function NotificationsListSkeleton({ count = 6 }: { count?: number }) {
     </div>
   );
 }
-
 
 export function MockHistorySkeleton({ count = 4 }: { count?: number }) {
   return (
@@ -189,7 +178,6 @@ export function MockHistorySkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
-
 export function ResumesListSkeleton({ count = 4 }: { count?: number }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -210,7 +198,6 @@ export function ResumesListSkeleton({ count = 4 }: { count?: number }) {
     </div>
   );
 }
-
 
 export function JobDetailSkeleton() {
   return (
@@ -265,7 +252,6 @@ export function JobDetailSkeleton() {
   );
 }
 
-
 export function ApplicationDetailSkeleton() {
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
@@ -306,7 +292,6 @@ export function ApplicationDetailSkeleton() {
     </div>
   );
 }
-
 
 export function CandidateDetailSkeleton() {
   return (
@@ -353,7 +338,6 @@ export function CandidateDetailSkeleton() {
     </div>
   );
 }
-
 
 export function PipelineBoardSkeleton({ cols = 5 }: { cols?: number }) {
   return (

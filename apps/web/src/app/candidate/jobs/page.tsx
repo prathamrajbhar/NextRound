@@ -1,54 +1,62 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { apiClient } from '@/lib/apiClient';
 import { Job, Application } from '@/types';
 import { JobCard, JobsGridSkeleton } from '@/components/ui';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Search, Filter } from '@/lib/lucide-google-icons';
 
 export default function CandidateJobsPage() {
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [search, setSearch] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedExperience, setSelectedExperience] = useState('All');
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const [jobsRes, appsRes] = await Promise.allSettled([
-          apiClient.get<Job[]>('/jobs'),
-          apiClient.get<Application[]>('/candidate/applications'),
-        ]);
+  const load = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [jobsRes, appsRes] = await Promise.allSettled([
+        apiClient.get<Job[]>('/jobs'),
+        apiClient.get<Application[]>('/candidate/applications'),
+      ]);
 
-        if (jobsRes.status === 'fulfilled' && jobsRes.value) {
-          const rawVal = jobsRes.value as unknown;
-          const jobsList = Array.isArray(rawVal)
-            ? rawVal
-            : typeof rawVal === 'object' && rawVal !== null && 'jobs' in rawVal && Array.isArray((rawVal as { jobs: Job[] }).jobs)
-              ? (rawVal as { jobs: Job[] }).jobs
-              : [];
-          setJobs(jobsList);
-        }
-        if (appsRes.status === 'fulfilled' && appsRes.value) {
-          const rawApps = appsRes.value as unknown;
-          const appsList = Array.isArray(rawApps)
-            ? rawApps
-            : typeof rawApps === 'object' && rawApps !== null && 'applications' in rawApps && Array.isArray((rawApps as { applications: Application[] }).applications)
-              ? (rawApps as { applications: Application[] }).applications
-              : [];
-          setApplications(appsList);
-        }
-      } catch (err) {
-        console.error('Failed to load opportunities:', err);
-      } finally {
-        setLoading(false);
+      if (jobsRes.status === 'fulfilled' && jobsRes.value) {
+        const rawVal = jobsRes.value as unknown;
+        const jobsList = Array.isArray(rawVal)
+          ? rawVal
+          : typeof rawVal === 'object' && rawVal !== null && 'jobs' in rawVal && Array.isArray((rawVal as { jobs: Job[] }).jobs)
+            ? (rawVal as { jobs: Job[] }).jobs
+            : [];
+        setJobs(jobsList);
       }
+      if (appsRes.status === 'fulfilled' && appsRes.value) {
+        const rawApps = appsRes.value as unknown;
+        const appsList = Array.isArray(rawApps)
+          ? rawApps
+          : typeof rawApps === 'object' && rawApps !== null && 'applications' in rawApps && Array.isArray((rawApps as { applications: Application[] }).applications)
+            ? (rawApps as { applications: Application[] }).applications
+            : [];
+        setApplications(appsList);
+      }
+
+      if (jobsRes.status === 'rejected' && appsRes.status === 'rejected') {
+        setError(jobsRes.reason);
+      }
+    } catch (err) {
+      setError(err);
+    } finally {
+      setLoading(false);
     }
-    fetchData();
   }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const safeJobsList = Array.isArray(jobs) ? jobs : [];
 
@@ -71,13 +79,22 @@ export default function CandidateJobsPage() {
     return matchesSearch && matchesLocation && matchesExperience;
   });
 
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="w-full max-w-md">
+          <ErrorState error={error} onRetry={load} />
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return <JobsGridSkeleton count={6} />;
   }
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      {}
       <div className="border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Browse Opportunities</h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
@@ -85,9 +102,7 @@ export default function CandidateJobsPage() {
         </p>
       </div>
 
-      {}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded-2xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 shadow-md backdrop-blur-md glass-panel">
-        {}
         <div className="md:col-span-2 relative">
           <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400 dark:text-slate-500" />
           <input
@@ -99,7 +114,6 @@ export default function CandidateJobsPage() {
           />
         </div>
 
-        {}
         <div>
           <select
             value={selectedLocation}
@@ -113,7 +127,6 @@ export default function CandidateJobsPage() {
           </select>
         </div>
 
-        {}
         <div>
           <select
             value={selectedExperience}
@@ -128,7 +141,6 @@ export default function CandidateJobsPage() {
         </div>
       </div>
 
-      {}
       {filteredJobs.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredJobs.map((job) => {

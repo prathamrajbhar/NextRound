@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { mediaManager } from '@/lib/media/mediaManager';
 
 interface UseLocalMediaStreamOptions {
   videoRef: React.RefObject<HTMLVideoElement | null>;
@@ -58,7 +59,7 @@ export function useLocalMediaStream({
 
     const stream = streamRef.current;
     if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
+      mediaManager.release(stream);
       streamRef.current = null;
       setLocalStream(null);
     }
@@ -96,6 +97,7 @@ export function useLocalMediaStream({
         streamRef.current = stream;
         setLocalStream(stream);
         setHasCamPermission(true);
+        mediaManager.acquire(stream);
         onStreamCreatedRef.current?.(stream);
 
         if (videoRef.current) {
@@ -127,9 +129,7 @@ export function useLocalMediaStream({
               };
               rafRef.current = requestAnimationFrame(updateLevel);
             }
-          } catch {
-            
-          }
+          } catch {}
         }
       } catch {
         setHasCamPermission(false);

@@ -1,34 +1,20 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
-import { apiClient } from '@/lib/apiClient';
-import { MockSession } from '@/types';
 import { ChevronRight, TrendingUp } from 'lucide-react';
 import { getCompanyDomain } from '@/utils/logo';
 import { MockHistorySkeleton, Skeleton } from '@/components/ui';
+import { useMockSessions } from '@/hooks/queries';
 
 export default function MockHistoryPage() {
-  const [loading, setLoading] = useState(true);
-  const [sessions, setSessions] = useState<MockSession[]>([]);
+  const { data, isLoading } = useMockSessions();
 
-  useEffect(() => {
-    async function fetchSessions() {
-      try {
-        setLoading(true);
-        const data = await apiClient.get<MockSession[]>('/mock/sessions');
-        if (data) {
-          setSessions(data);
-        }
-      } catch (err) {
-        console.error('Failed to load mock history:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchSessions();
-  }, []);
-  if (loading) {
+  const sessions = useMemo(
+    () => (Array.isArray(data) ? data : []),
+    [data]
+  );
+  if (isLoading) {
     return (
       <div className="space-y-6 animate-in fade-in duration-200">
         <div className="space-y-2">

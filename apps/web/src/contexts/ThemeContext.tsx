@@ -59,9 +59,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyThemeToElement(root, config, newMode);
     try {
       localStorage.setItem('theme', newMode);
-    } catch {
-      
-    }
+    } catch {}
   };
 
   const toggleTheme = (event?: React.MouseEvent | MouseEvent) => {

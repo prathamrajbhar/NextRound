@@ -1,43 +1,29 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { apiClient } from '@/lib/apiClient';
-import { Application } from '@/types';
+import { useMyApplications } from '@/hooks/queries';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { ApplicationsListSkeleton } from '@/components/ui/Skeleton';
 import { Compass, Briefcase, ChevronRight } from '@/lib/lucide-google-icons';
 import { getApplicationStatusBadgeClasses, formatApplicationStatus } from '@/lib/applicationStatus';
 
 export default function CandidateApplications() {
-  const [loading, setLoading] = useState(true);
-  const [applications, setApplications] = useState<Application[]>([]);
+  const { data, isLoading, isError, error, refetch } = useMyApplications();
 
-  useEffect(() => {
-    async function fetchApplications() {
-      try {
-        setLoading(true);
-        const data = await apiClient.get<Application[]>('/applications/my');
-        if (data) {
-          const rawApps = data as unknown;
-          const appsList = Array.isArray(rawApps)
-            ? rawApps
-            : typeof rawApps === 'object' && rawApps !== null && 'applications' in rawApps && Array.isArray((rawApps as { applications: Application[] }).applications)
-            ? (rawApps as { applications: Application[] }).applications
-            : [];
-          setApplications(appsList);
-        }
-      } catch (err) {
-        console.error('Failed to fetch candidate applications:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchApplications();
-  }, []);
+  const safeApps = Array.isArray(data) ? data : [];
 
-  const safeApps = Array.isArray(applications) ? applications : [];
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="w-full max-w-md">
+          <ErrorState error={error} onRetry={refetch} />
+        </div>
+      </div>
+    );
+  }
 
-  if (loading) {
+  if (isLoading) {
     return <ApplicationsListSkeleton count={5} />;
   }
 

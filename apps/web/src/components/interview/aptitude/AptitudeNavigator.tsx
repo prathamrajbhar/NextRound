@@ -13,10 +13,6 @@ interface AptitudeNavigatorProps {
   onSectionSubmit: () => void;
 }
 
-
-
-
-
 export function AptitudeNavigator({
   category,
   questions,

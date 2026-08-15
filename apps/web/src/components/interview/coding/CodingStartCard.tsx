@@ -26,7 +26,6 @@ export function CodingStartCard({
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
       <div className="w-full max-w-xl p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl space-y-6 text-center backdrop-blur-md">
         
-        {}
         <div className="mx-auto h-16 w-16 rounded-2xl flex items-center justify-center bg-indigo-500/10 border border-indigo-500/30 text-indigo-500 shadow-sm animate-pulse">
           <Terminal className="h-8 w-8" />
         </div>
@@ -44,7 +43,6 @@ export function CodingStartCard({
           </p>
         </div>
 
-        {}
         <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 text-left space-y-3">
           <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
             Target Challenge
@@ -60,7 +58,6 @@ export function CodingStartCard({
           </div>
         </div>
 
-        {}
         <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-left space-y-3">
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs uppercase tracking-wider">
             <ShieldAlert className="h-4.5 w-4.5" />

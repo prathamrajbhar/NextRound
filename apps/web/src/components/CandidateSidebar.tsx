@@ -53,7 +53,6 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
 
   return (
     <aside className="w-64 border-r border-white/60 dark:border-slate-800/80 bg-white/30 dark:bg-slate-900/60 backdrop-blur-md flex flex-col p-4 h-screen transition-colors duration-300">
-      {}
       <div className="mb-6 px-2">
         <Link href="/" className="flex items-center gap-2.5 group">
           <div className="relative h-9 w-9 rounded-full overflow-hidden group-hover:scale-105 transition-transform duration-200 flex-shrink-0 select-none">
@@ -74,7 +73,6 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
         </span>
       </div>
 
-      {}
       <nav className="flex-grow space-y-5">
         {menuGroups.map((group) => (
           <div key={group.title} className="space-y-1.5">
@@ -112,9 +110,7 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
         ))}
       </nav>
 
-      {}
       <div className="mt-auto space-y-4 pt-4 border-t border-slate-100/60 dark:border-slate-800/80">
-        {}
         <div className="flex items-center justify-between p-2 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white/40 dark:bg-slate-800/40 hover:bg-white/60 dark:hover:bg-slate-800/70 transition-colors duration-250">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="relative flex-shrink-0">

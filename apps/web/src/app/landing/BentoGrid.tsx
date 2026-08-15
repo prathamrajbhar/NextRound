@@ -21,7 +21,6 @@ export function BentoGrid() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {}
         <div
           onMouseEnter={() => setHoveredCard(0)}
           onMouseLeave={() => setHoveredCard(null)}
@@ -39,7 +38,6 @@ export function BentoGrid() {
             </div>
           </div>
 
-          {}
           <div className="mt-6 p-4 rounded-2xl bg-white/60 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-350 space-y-2 select-none">
             <div className="flex justify-between items-center">
               <span className="font-extrabold">Interview Status</span>
@@ -52,7 +50,6 @@ export function BentoGrid() {
           </div>
         </div>
 
-        {}
         <div
           onMouseEnter={() => setHoveredCard(1)}
           onMouseLeave={() => setHoveredCard(null)}
@@ -70,7 +67,6 @@ export function BentoGrid() {
             </div>
           </div>
 
-          {}
           <div className="mt-6 p-4 rounded-2xl bg-white/60 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-350 space-y-2 select-none">
             <span className="font-extrabold block uppercase tracking-wider text-xs text-brand-600 dark:text-emerald-450 mb-1">AI Summary</span>
             <p className="leading-relaxed font-medium text-slate-600 dark:text-slate-400">
@@ -79,7 +75,6 @@ export function BentoGrid() {
           </div>
         </div>
 
-        {}
         <div
           onMouseEnter={() => setHoveredCard(2)}
           onMouseLeave={() => setHoveredCard(null)}
@@ -97,7 +92,6 @@ export function BentoGrid() {
             </div>
           </div>
 
-          {}
           <div className="mt-6 space-y-2.5 select-none">
             <div>
               <div className="flex justify-between text-xs font-extrabold text-slate-500 dark:text-slate-450 mb-1">

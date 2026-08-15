@@ -4,7 +4,7 @@ import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
-import { Application } from '@/types';
+import { useApplication } from '@/hooks/queries';
 import UnifiedInterviewConsole from '@/components/interview/UnifiedInterviewConsole';
 import {
   Mic,
@@ -20,8 +20,7 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
   const router = useRouter();
   const { applicationId } = use(params);
 
-  const [app, setApp] = useState<Application | null>(null);
-  const [loadError, setLoadError] = useState(false);
+  const { data: app, isLoading, isError } = useApplication(applicationId);
   const [joined, setJoined] = useState(false);
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
@@ -31,24 +30,6 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
   const companyName = app?.orgName || 'Interview';
   const jobTitle = app?.jobTitle || 'Candidate Interview';
 
-  useEffect(() => {
-    async function fetchApp() {
-      try {
-        const res = await apiClient.get<Application>(`/applications/${applicationId}`);
-        if (res) {
-          setApp(res);
-        } else {
-          setLoadError(true);
-        }
-      } catch (err) {
-        console.error('Failed to load application:', err);
-        setLoadError(true);
-      }
-    }
-    fetchApp();
-  }, [applicationId]);
-
-  
   useEffect(() => {
     if (!joined) return;
     const interval = setInterval(() => {
@@ -76,7 +57,7 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     }
   };
 
-  if (loadError) {
+  if (isError) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center px-6">
         <div className="max-w-sm w-full text-center space-y-3">
@@ -99,7 +80,7 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     );
   }
 
-  if (!app) {
+  if (isLoading || !app) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400 text-xs font-bold">
         Loading HR Round Room...
@@ -112,7 +93,6 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     return (
       <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-slate-100 flex flex-col font-sans p-6 items-center justify-center overflow-y-auto">
         <div className="max-w-xl w-full space-y-6 animate-in fade-in duration-300">
-          {}
           <Link
             href={`/candidate/applications/${app.id}`}
             className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors"
@@ -121,7 +101,6 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
             <span>Back to Application Detail</span>
           </Link>
 
-          {}
           <div className="rounded-3xl border border-slate-800 bg-slate-900/80 p-8 text-center space-y-4 backdrop-blur-md shadow-2xl">
             <div className="h-16 w-16 rounded-full bg-brand-500/20 border border-brand-500/40 flex items-center justify-center mx-auto text-brand-400 shadow-md">
               <UserCheck className="h-8 w-8" />
@@ -149,7 +128,6 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
               </p>
             </div>
 
-            {}
             <div className="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3">
               <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">
                 Hardware Device Pre-Check
@@ -186,7 +164,6 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
               </div>
             )}
 
-            {}
             <button
               type="button"
               onClick={handleJoinCall}

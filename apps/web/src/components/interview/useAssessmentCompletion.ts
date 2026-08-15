@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { setScopedStorageJSON } from '@/lib/storage';
 import { Message } from '@/components/interview/console/types';
 
 interface UseAssessmentCompletionOptions {
@@ -17,6 +19,7 @@ interface UseAssessmentCompletionOptions {
 
 export function useAssessmentCompletion({ sessionId, applicationId, messages }: UseAssessmentCompletionOptions) {
   const router = useRouter();
+  const { user } = useAuthContext();
 
   const handleComplete = async (score?: number) => {
     if (document.fullscreenElement) {
@@ -50,12 +53,12 @@ export function useAssessmentCompletion({ sessionId, applicationId, messages }: 
     }
 
     if (applicationId) {
-      localStorage.setItem(`candidateAssessmentCompleted_${applicationId}`, 'true');
+      setScopedStorageJSON(user?.id, `candidateAssessmentCompleted_${applicationId}`, true);
       const scoreObj = {
         overallScore: score ?? 0,
         completedDate: new Date().toISOString().slice(0, 10),
       };
-      localStorage.setItem(`assessmentResult_${applicationId}`, JSON.stringify(scoreObj));
+      setScopedStorageJSON(user?.id, `assessmentResult_${applicationId}`, scoreObj);
       router.push(`/candidate/applications/${applicationId}`);
     } else {
       router.push(`/candidate/mock/${sessionId}/feedback`);

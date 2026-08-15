@@ -1,15 +1,13 @@
 'use client';
 
-import React, { useState, use, useEffect } from 'react';
+import React, { useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
-import { Application } from '@/types';
+import { useApplication } from '@/hooks/queries';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Calendar, Clock, ChevronRight, Check } from 'lucide-react';
 import { ApplicationDetailSkeleton } from '@/components/ui';
-
-
-
 
 function formatSlot(slot: string): string {
   const date = new Date(slot);
@@ -21,34 +19,25 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
   const router = useRouter();
   const { applicationId } = use(params);
 
-  const [app, setApp] = useState<Application | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: app, isLoading, isError, error, refetch } = useApplication(applicationId);
   const [selectedSlot, setSelectedSlot] = useState<string | undefined>(undefined);
   const [confirmed, setConfirmed] = useState(false);
   const [confirmError, setConfirmError] = useState('');
 
-  useEffect(() => {
-    async function fetchApp() {
-      try {
-        setLoading(true);
-        const res = await apiClient.get<Application>(`/applications/${applicationId}`);
-        if (res) setApp(res);
-      } catch (err) {
-        console.error('Failed to load application schedule:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchApp();
-  }, [applicationId]);
-
-  
-  
-  
   const slots = app?.scheduledSlots && app.scheduledSlots.length > 0 ? app.scheduledSlots : [];
   const effectiveSelected = selectedSlot ?? slots[0];
 
-  if (loading) {
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="w-full max-w-md">
+          <ErrorState error={error} onRetry={refetch} />
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return <ApplicationDetailSkeleton />;
   }
 
@@ -91,7 +80,6 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto animate-in fade-in duration-200">
-      {}
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
         <Link href="/candidate/applications" className="hover:text-indigo-600 transition-colors">Applications</Link>
         <ChevronRight className="h-3 w-3 text-slate-300" />
@@ -125,7 +113,6 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
 
             {slots.length > 0 ? (
               <>
-                {}
                 <div className="space-y-2 max-w-sm mx-auto">
                   {slots.map((slot) => {
                     const isSelected = effectiveSelected === slot;

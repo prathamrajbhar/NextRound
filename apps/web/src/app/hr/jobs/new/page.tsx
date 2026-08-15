@@ -6,7 +6,6 @@ import { ChevronRight, ArrowLeft, Save, Send } from 'lucide-react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 
-
 import JobBasicsCard from './components/JobBasicsCard';
 import JobDescriptionCard from './components/JobDescriptionCard';
 import AiExtractPanel from './components/AiExtractPanel';
@@ -241,10 +240,8 @@ export default function HrCreateJob() {
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12 animate-in fade-in duration-200">
-      {}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-5">
         <div>
-          {}
           <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-extrabold uppercase tracking-wider mb-1">
             <Link href="/hr/jobs" className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
               Jobs
@@ -260,7 +257,6 @@ export default function HrCreateJob() {
           </p>
         </div>
 
-        {}
         <div className="flex items-center gap-3">
           <Link
             href="/hr/jobs"
@@ -291,9 +287,7 @@ export default function HrCreateJob() {
         </div>
       </div>
 
-      {}
       <form onSubmit={handlePublish} className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        {}
         <div className="lg:col-span-2 space-y-6">
           <JobBasicsCard
             title={title}
@@ -330,7 +324,6 @@ export default function HrCreateJob() {
           />
         </div>
 
-        {}
         <div className="space-y-6 lg:sticky lg:top-6">
           <RubricWeightingCard
             technical={rubric.technical}

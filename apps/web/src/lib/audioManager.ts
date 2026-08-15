@@ -6,6 +6,16 @@
 let globalAudioInstance: HTMLAudioElement | null = null;
 let lastAudioUrl: string | null = null;
 let lastText = '';
+let currentBlobUrl: string | null = null;
+
+function revokeCurrentBlobUrl() {
+  if (currentBlobUrl) {
+    try {
+      URL.revokeObjectURL(currentBlobUrl);
+    } catch {}
+    currentBlobUrl = null;
+  }
+}
 
 export function getAudioInstance(): HTMLAudioElement {
   if (typeof window === 'undefined') {
@@ -119,8 +129,12 @@ export function playAudio(text: string, audioUrl?: string, onEnd?: () => void) {
 
   if (audioUrl) {
     try {
+      revokeCurrentBlobUrl();
       const playableUrl = dataUriToBlobUrl(audioUrl);
       const audio = getAudioInstance();
+      if (playableUrl !== audioUrl) {
+        currentBlobUrl = playableUrl;
+      }
       audio.src = playableUrl;
       audio.volume = 1.0;
 
@@ -153,9 +167,11 @@ export function playAudio(text: string, audioUrl?: string, onEnd?: () => void) {
 export function stopAudio() {
   if (typeof window !== 'undefined') {
     window.speechSynthesis?.cancel();
+    revokeCurrentBlobUrl();
     if (globalAudioInstance) {
       try {
         globalAudioInstance.pause();
+        globalAudioInstance.src = '';
       } catch {}
     }
   }

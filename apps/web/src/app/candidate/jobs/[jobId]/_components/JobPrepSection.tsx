@@ -74,7 +74,6 @@ export function JobPrepSection({ jobId, companyName }: JobPrepSectionProps) {
 
   return (
     <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/40 dark:bg-slate-900/60 p-6 md:p-8 shadow-sm backdrop-blur-md glass-panel space-y-6">
-      {}
       <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider text-brand-700 dark:text-orange-300 bg-brand-50 dark:bg-orange-950/60 border border-brand-200/60 dark:border-orange-900/60 mb-1.5">
@@ -96,7 +95,6 @@ export function JobPrepSection({ jobId, companyName }: JobPrepSectionProps) {
       ) : (
         <div className="space-y-6">
 
-          {}
           {(cultureNotes.length > 0 || skillChecklist.length > 0) && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {cultureNotes.length > 0 && (

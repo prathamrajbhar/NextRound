@@ -61,7 +61,6 @@ const createMaterialIcon = (iconName: string) => {
   return Component;
 };
 
-
 export const Activity = createMaterialIcon('monitoring');
 export const AlertCircle = createMaterialIcon('info');
 export const AlertTriangle = createMaterialIcon('warning');

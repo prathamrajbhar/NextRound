@@ -55,9 +55,7 @@ export function ExecutiveRewardsGrid({
         </div>
       </div>
 
-      {}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {}
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 space-y-2 shadow-sm">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -75,7 +73,6 @@ export function ExecutiveRewardsGrid({
           </span>
         </div>
 
-        {}
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 space-y-2 shadow-sm">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -93,7 +90,6 @@ export function ExecutiveRewardsGrid({
           </span>
         </div>
 
-        {}
         <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 space-y-2 shadow-sm">
           <div className="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400">
             <span className="flex items-center gap-1.5 uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -112,7 +108,6 @@ export function ExecutiveRewardsGrid({
         </div>
       </div>
 
-      {}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 space-y-3 shadow-sm">
         <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200 border-b border-slate-100 dark:border-slate-800 pb-2.5">
           <span className="flex items-center gap-1.5">
@@ -135,7 +130,6 @@ export function ExecutiveRewardsGrid({
         </div>
       </div>
 
-      {}
       <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 space-y-3 shadow-sm">
         <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-2.5">
           <ShieldCheck className="h-4 w-4 text-emerald-500" /> Included Health Benefits & Perks

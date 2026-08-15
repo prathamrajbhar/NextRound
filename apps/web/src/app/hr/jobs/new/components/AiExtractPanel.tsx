@@ -81,7 +81,6 @@ export default function AiExtractPanel({
       </div>
 
       <div className="space-y-5 text-xs font-semibold">
-        {}
         <div className="space-y-2">
           <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 tracking-wider flex items-center gap-1.5">
             <Award className="h-3.5 w-3.5 text-indigo-500" />
@@ -133,7 +132,6 @@ export default function AiExtractPanel({
           </div>
         </div>
 
-        {}
         <div className="space-y-2">
           <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 tracking-wider flex items-center gap-1.5">
             <ShieldAlert className="h-3.5 w-3.5 text-purple-500" />
@@ -180,7 +178,6 @@ export default function AiExtractPanel({
           </div>
         </div>
 
-        {}
         <div className="space-y-2">
           <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 tracking-wider flex items-center gap-1.5">
             <Heart className="h-3.5 w-3.5 text-rose-500" />

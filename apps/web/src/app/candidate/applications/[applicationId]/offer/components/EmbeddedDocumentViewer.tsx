@@ -22,7 +22,6 @@ export function EmbeddedDocumentViewer({
 }: EmbeddedDocumentProps) {
   return (
     <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 p-5 shadow-sm space-y-4">
-      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
@@ -57,10 +56,8 @@ export function EmbeddedDocumentViewer({
         </div>
       </div>
 
-      {}
       <div className="bg-slate-100 dark:bg-slate-950 p-5 sm:p-7 rounded-xl border border-slate-200 dark:border-slate-800 space-y-5 font-sans shadow-inner max-h-[460px] overflow-y-auto">
         <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-lg shadow-sm border border-slate-200/80 dark:border-slate-800 space-y-5 text-slate-800 dark:text-slate-200 text-xs leading-relaxed">
-          {}
           <div className="flex justify-between items-start border-b border-slate-200 dark:border-slate-800 pb-4">
             <div>
               <h2 className="text-base font-black text-slate-900 dark:text-white uppercase tracking-tight">
@@ -75,7 +72,6 @@ export function EmbeddedDocumentViewer({
             </div>
           </div>
 
-          {}
           <div className="space-y-2">
             <p>Dear <strong>{candidateName}</strong>,</p>
             <p>
@@ -93,7 +89,6 @@ export function EmbeddedDocumentViewer({
             </p>
           </div>
 
-          {}
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
             <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
               <ShieldCheck className="h-4 w-4" />

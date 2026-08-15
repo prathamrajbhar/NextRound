@@ -22,6 +22,8 @@ import {
 } from '@/lib/lucide-google-icons';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/apiClient';
+import { getScopedStorage, setScopedStorage } from '@/lib/storage';
+import { useCandidateProfile, useResumeHistory } from '@/hooks/queries';
 
 const PRESET_SKILLS = [
   'React',
@@ -45,13 +47,6 @@ const PRESET_ROLES = [
   'AI / ML Engineer',
 ];
 
-interface GeneratedResumeItem {
-  id: string;
-  targetRole: string;
-  resumePdfUrl: string | null;
-  createdAt: string;
-}
-
 export default function CandidateProfile() {
   const { user } = useAuthContext();
   const [name, setName] = useState(() => (user?.email ? user.email.split('@')[0] : ''));
@@ -72,73 +67,66 @@ export default function CandidateProfile() {
   const [resumeDate, setResumeDate] = useState('');
   const [skills, setSkills] = useState<string[]>(['React', 'TypeScript', 'Node.js']);
   const [newSkill, setNewSkill] = useState('');
-  const [generatedResumes, setGeneratedResumes] = useState<GeneratedResumeItem[]>([]);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
   const [detailsSaved, setDetailsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const { data: profileRes, status: profileStatus } = useCandidateProfile();
+  const { data: resumeRes } = useResumeHistory();
+  const generatedResumes = resumeRes?.history ?? [];
+
   useEffect(() => {
-    const fetchProfileAndResumes = async () => {
-      if (user?.email) {
-        setEmail(user.email);
-        setName(user.email.split('@')[0]);
-      }
-
-      try {
-        const res = await apiClient.get<{ profile?: Record<string, unknown> }>('/candidate/profile').catch(() => null);
-        if (res && res.profile) {
-          const p = res.profile;
-          if (typeof p.location === 'string') setLocation(p.location);
-          if (typeof p.headline === 'string') setHeadline(p.headline);
-          if (typeof p.linkedin_url === 'string') setLinkedinUrl(p.linkedin_url);
-          if (typeof p.github_url === 'string') setGithubUrl(p.github_url);
-          if (typeof p.portfolio_url === 'string') setPortfolioUrl(p.portfolio_url);
-          if (Array.isArray(p.skills) && p.skills.length > 0) setSkills(p.skills.map(String));
-          if (Array.isArray(p.target_roles) && p.target_roles.length > 0) setTargetRoles(p.target_roles.map(String));
-          if (p.years_of_experience !== undefined && p.years_of_experience !== null) setExperienceYears(String(p.years_of_experience));
-          if (typeof p.expected_salary === 'string') setExpectedSalary(p.expected_salary);
-          else if (typeof p.expected_salary === 'number') setExpectedSalary(`$${p.expected_salary.toLocaleString()} / yr`);
-          if (typeof p.bio === 'string') setBio(p.bio);
-          if (typeof p.resume_url === 'string') {
-            setResumeName(p.resume_url.split('/').pop() || 'candidate_resume.pdf');
-            setResumeDate('Uploaded recently');
-          }
-        } else {
-          
-          const savedName = localStorage.getItem('candidate_name');
-          const savedEmail = localStorage.getItem('candidate_email');
-          const savedPhone = localStorage.getItem('candidate_phone');
-          const savedLoc = localStorage.getItem('candidate_location');
-          const savedHeadline = localStorage.getItem('candidate_headline');
-          const savedLinkedin = localStorage.getItem('candidate_linkedin');
-          const savedGithub = localStorage.getItem('candidate_github');
-          const savedPortfolio = localStorage.getItem('candidate_portfolio');
-          const savedBio = localStorage.getItem('candidate_bio');
-          
-          if (savedName) setName(savedName);
-          if (savedEmail) setEmail(savedEmail);
-          if (savedPhone) setPhone(savedPhone);
-          if (savedLoc) setLocation(savedLoc);
-          if (savedHeadline) setHeadline(savedHeadline);
-          if (savedLinkedin) setLinkedinUrl(savedLinkedin);
-          if (savedGithub) setGithubUrl(savedGithub);
-          if (savedPortfolio) setPortfolioUrl(savedPortfolio);
-          if (savedBio) setBio(savedBio);
-        }
-
-        const resumeRes = await apiClient.get<{ history: GeneratedResumeItem[] }>('/resume-builder/history').catch(() => null);
-        if (resumeRes?.history) {
-          setGeneratedResumes(resumeRes.history);
-        }
-      } catch {
-        
-      }
+    if (user?.email) {
+      setEmail(user.email);
+      setName(user.email.split('@')[0]);
     }
-
-    fetchProfileAndResumes();
   }, [user]);
+
+  useEffect(() => {
+    if (profileStatus === 'pending') return;
+
+    const p = (profileRes?.profile ?? null) as Record<string, unknown> | null;
+    if (p) {
+      if (typeof p.location === 'string') setLocation(p.location);
+      if (typeof p.headline === 'string') setHeadline(p.headline);
+      if (typeof p.linkedin_url === 'string') setLinkedinUrl(p.linkedin_url);
+      if (typeof p.github_url === 'string') setGithubUrl(p.github_url);
+      if (typeof p.portfolio_url === 'string') setPortfolioUrl(p.portfolio_url);
+      if (Array.isArray(p.skills) && p.skills.length > 0) setSkills(p.skills.map(String));
+      if (Array.isArray(p.target_roles) && p.target_roles.length > 0) setTargetRoles(p.target_roles.map(String));
+      if (p.years_of_experience !== undefined && p.years_of_experience !== null) setExperienceYears(String(p.years_of_experience));
+      if (typeof p.expected_salary === 'string') setExpectedSalary(p.expected_salary);
+      else if (typeof p.expected_salary === 'number') setExpectedSalary(`$${p.expected_salary.toLocaleString()} / yr`);
+      if (typeof p.bio === 'string') setBio(p.bio);
+      if (typeof p.resume_url === 'string') {
+        setResumeName(p.resume_url.split('/').pop() || 'candidate_resume.pdf');
+        setResumeDate('Uploaded recently');
+      }
+    } else {
+      
+      const savedName = getScopedStorage(user?.id, 'candidate_name');
+      const savedEmail = getScopedStorage(user?.id, 'candidate_email');
+      const savedPhone = getScopedStorage(user?.id, 'candidate_phone');
+      const savedLoc = getScopedStorage(user?.id, 'candidate_location');
+      const savedHeadline = getScopedStorage(user?.id, 'candidate_headline');
+      const savedLinkedin = getScopedStorage(user?.id, 'candidate_linkedin');
+      const savedGithub = getScopedStorage(user?.id, 'candidate_github');
+      const savedPortfolio = getScopedStorage(user?.id, 'candidate_portfolio');
+      const savedBio = getScopedStorage(user?.id, 'candidate_bio');
+      
+      if (savedName) setName(savedName);
+      if (savedEmail) setEmail(savedEmail);
+      if (savedPhone) setPhone(savedPhone);
+      if (savedLoc) setLocation(savedLoc);
+      if (savedHeadline) setHeadline(savedHeadline);
+      if (savedLinkedin) setLinkedinUrl(savedLinkedin);
+      if (savedGithub) setGithubUrl(savedGithub);
+      if (savedPortfolio) setPortfolioUrl(savedPortfolio);
+      if (savedBio) setBio(savedBio);
+    }
+  }, [profileStatus, profileRes, user]);
 
   
   const getReadinessScore = () => {
@@ -158,15 +146,15 @@ export default function CandidateProfile() {
 
   const handleSaveDetails = async () => {
     setSaving(true);
-    localStorage.setItem('candidate_name', name);
-    localStorage.setItem('candidate_email', email);
-    localStorage.setItem('candidate_phone', phone);
-    localStorage.setItem('candidate_location', location);
-    localStorage.setItem('candidate_headline', headline);
-    localStorage.setItem('candidate_linkedin', linkedinUrl);
-    localStorage.setItem('candidate_github', githubUrl);
-    localStorage.setItem('candidate_portfolio', portfolioUrl);
-    localStorage.setItem('candidate_bio', bio);
+    setScopedStorage(user?.id, 'candidate_name', name);
+    setScopedStorage(user?.id, 'candidate_email', email);
+    setScopedStorage(user?.id, 'candidate_phone', phone);
+    setScopedStorage(user?.id, 'candidate_location', location);
+    setScopedStorage(user?.id, 'candidate_headline', headline);
+    setScopedStorage(user?.id, 'candidate_linkedin', linkedinUrl);
+    setScopedStorage(user?.id, 'candidate_github', githubUrl);
+    setScopedStorage(user?.id, 'candidate_portfolio', portfolioUrl);
+    setScopedStorage(user?.id, 'candidate_bio', bio);
 
     try {
       await apiClient.post('/candidate/profile', {
@@ -183,9 +171,7 @@ export default function CandidateProfile() {
         portfolioUrl: portfolioUrl || null,
         bio,
       }).catch(() => null);
-    } catch {
-      
-    }
+    } catch {}
     
     
     window.dispatchEvent(new Event('profile_update'));
@@ -255,7 +241,6 @@ export default function CandidateProfile() {
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12 font-sans">
       
-      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-widest block mb-1">
@@ -287,20 +272,16 @@ export default function CandidateProfile() {
         )}
       </div>
 
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         
-        {}
         <div className="lg:col-span-2 space-y-6">
           
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 sm:p-7 shadow-md backdrop-blur-md glass-panel space-y-6">
             <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
               <User className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
               Candidate Details &amp; Contact Info
             </h3>
             
-            {}
             <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-slate-200/60 dark:border-slate-800 pb-5">
               <div className="relative h-20 w-20 rounded-2xl overflow-hidden bg-gradient-to-br from-brand-500 to-amber-500 dark:from-orange-500 dark:to-amber-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-brand-500/20 dark:shadow-orange-500/20 flex-shrink-0">
                 {customAvatar ? (
@@ -348,7 +329,6 @@ export default function CandidateProfile() {
               </div>
             </div>
 
-            {}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Full Name</label>
@@ -418,7 +398,6 @@ export default function CandidateProfile() {
               />
             </div>
 
-            {}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
               <div className="space-y-1.5">
                 <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">LinkedIn URL</label>
@@ -457,7 +436,6 @@ export default function CandidateProfile() {
               </div>
             </div>
 
-            {}
             <div className="space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-800">
               <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Target Job Roles</label>
               <div className="flex flex-wrap gap-2">
@@ -482,7 +460,6 @@ export default function CandidateProfile() {
               </div>
             </div>
 
-            {}
             <div className="space-y-1.5 pt-2">
               <div className="flex justify-between items-center">
                 <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Professional Bio / Summary</label>
@@ -497,7 +474,6 @@ export default function CandidateProfile() {
               />
             </div>
 
-            {}
             <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-end">
               <button
                 type="button"
@@ -511,7 +487,6 @@ export default function CandidateProfile() {
             </div>
           </div>
 
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
@@ -521,7 +496,6 @@ export default function CandidateProfile() {
               <span className="text-[10px] font-extrabold text-slate-400">{skills.length} Skills Added</span>
             </div>
 
-            {}
             <div className="flex flex-wrap gap-2">
               {skills.map((s) => (
                 <span
@@ -536,7 +510,6 @@ export default function CandidateProfile() {
               ))}
             </div>
 
-            {}
             <form onSubmit={(e) => { e.preventDefault(); handleAddSkill(); }} className="flex gap-2 pt-1">
               <input
                 type="text"
@@ -553,7 +526,6 @@ export default function CandidateProfile() {
               </button>
             </form>
 
-            {}
             <div className="pt-2">
               <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block mb-2">Quick Add Suggestions</span>
               <div className="flex flex-wrap gap-1.5">
@@ -572,7 +544,6 @@ export default function CandidateProfile() {
             </div>
           </div>
 
-          {}
           <div className="rounded-3xl border border-rose-200/80 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/20 p-6 shadow-sm glass-panel space-y-4">
             <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
               <AlertTriangle className="h-4.5 w-4.5" />
@@ -599,14 +570,11 @@ export default function CandidateProfile() {
           </div>
         </div>
 
-        {}
         <div className="space-y-6">
           
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel text-center space-y-4">
             <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Profile Completeness</span>
             
-            {}
             <div className="relative h-28 w-28 mx-auto my-2 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <path
@@ -639,7 +607,6 @@ export default function CandidateProfile() {
             </div>
           </div>
 
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center justify-between">
               <span>Active Resume PDF</span>
@@ -666,7 +633,6 @@ export default function CandidateProfile() {
             </label>
           </div>
 
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex justify-between items-center border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">

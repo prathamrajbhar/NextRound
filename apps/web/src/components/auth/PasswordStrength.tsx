@@ -18,7 +18,6 @@ export function passwordScore(password: string): number {
   return Math.min(LEVELS.length - 1, score);
 }
 
-
 export default function PasswordStrength({ password }: { password: string }) {
   if (!password) return null;
 

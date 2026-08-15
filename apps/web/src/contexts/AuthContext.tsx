@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { useRouter } from 'next/navigation';
 import { UserPublic } from '@nextround/shared';
 import { apiClient } from '@/lib/apiClient';
+import { purgeUserState, purgeLegacyState } from '@/lib/storage';
 
 interface AuthContextType {
   user: UserPublic | null;
@@ -20,9 +21,7 @@ async function fetchCurrentUser(): Promise<UserPublic | null> {
   try {
     const { user } = await apiClient.get<{ user: UserPublic }>('/auth/me');
     return user ?? null;
-  } catch {
-    
-  }
+  } catch {}
   return null;
 }
 
@@ -51,6 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      purgeLegacyState();
+      apiClient.clearCache();
       const data = await apiClient.post<{ user: UserPublic }>('/auth/login', {
         email,
         password,
@@ -73,6 +74,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     orgName?: string
   ) => {
     try {
+      purgeLegacyState();
+      apiClient.clearCache();
       const data = await apiClient.post<{ user: UserPublic }>('/auth/register', {
         email,
         password,
@@ -91,9 +94,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    const currentUserId = user?.id;
     try {
       await apiClient.post('/auth/logout');
-    } catch {
+    } catch {}
+    apiClient.clearCache();
+    if (currentUserId) {
+      purgeUserState(currentUserId);
     }
     setUser(null);
     router.push('/login');

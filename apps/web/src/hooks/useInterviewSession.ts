@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { evaluateInterview } from '@/lib/interviewScorer';
 import { apiClient } from '@/lib/apiClient';
 import { siteConfig } from '@/lib/config';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { setScopedStorage } from '@/lib/storage';
 import type { Message, InterviewPhase } from '@/components/interview/console/types';
 
 export type { Message, InterviewPhase };
@@ -24,6 +26,7 @@ export function useInterviewSession({
   interviewId,
   onComplete,
 }: UseInterviewSessionProps) {
+  const { user } = useAuthContext();
   const [stage, setStage] = useState<'check' | 'session' | 'fallback'>('check');
   const [phase, setPhase] = useState<InterviewPhase>('Introduction');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -56,23 +59,6 @@ export function useInterviewSession({
     return () => clearInterval(t);
   }, [stage, showWarningModal]);
 
-  useEffect(() => {
-    if (stage !== 'session' || !interviewId) return;
-    const pTimer = setInterval(async () => {
-      try {
-        await apiClient.patch(`/interviews/${interviewId}/proctoring`, {
-          face_count: null,
-          gaze_centered: null,
-          engagement_index: null,
-          multiple_faces_detected: null,
-        });
-      } catch {
-        
-      }
-    }, 8000);
-    return () => clearInterval(pTimer);
-  }, [stage, interviewId]);
-
   const startSession = async () => {
     setStage('session');
     setPhase('Introduction');
@@ -86,9 +72,7 @@ export function useInterviewSession({
       try {
         await apiClient.post(`/interviews/${interviewId}/consent`, { consent: true });
         await apiClient.post(`/interviews/${interviewId}/session-token`);
-      } catch {
-        
-      }
+      } catch {}
     }
 
     await fsPromise;
@@ -191,7 +175,7 @@ export function useInterviewSession({
       }
     }
     const results = evaluateInterview({ role, transcriptData: transcriptData.current });
-    localStorage.setItem(storageKey, JSON.stringify(results));
+    setScopedStorage(user?.id, storageKey, JSON.stringify(results));
     onComplete(results);
   };
 
@@ -224,7 +208,7 @@ export function useInterviewSession({
         feedback: '',
       })),
     };
-    localStorage.setItem(storageKey, JSON.stringify(results));
+    setScopedStorage(user?.id, storageKey, JSON.stringify(results));
     onComplete(results);
   };
 
@@ -245,7 +229,6 @@ export function useInterviewSession({
     toggleMic: () => setMicActive(p => !p),
     toggleCam: () => setCamActive(p => !p),
     setStage,
-    strikeCount: 0,
     showWarningModal,
     onResumeFullscreen: handleResumeFullscreen,
     onEliminate: handleEliminateCandidate,

@@ -1,8 +1,7 @@
 'use client';
 
-import React, { use, useState, useEffect } from 'react';
+import React, { use, useEffect } from 'react';
 import Link from 'next/link';
-import { apiClient } from '@/lib/apiClient';
 import {
   CheckCircle2,
   ChevronRight,
@@ -20,6 +19,7 @@ import {
   TrendingUp,
 } from '@/lib/lucide-google-icons';
 import { CompanyLogo, ApplicationDetailSkeleton } from '@/components/ui';
+import { useMockFeedback } from '@/hooks/queries';
 
 interface FeedbackData {
   id?: string;
@@ -38,39 +38,29 @@ interface FeedbackData {
 export default function MockFeedbackPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = use(params);
 
-  const [feedbackData, setFeedbackData] = useState<FeedbackData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data, isLoading, refetch } = useMockFeedback(sessionId);
+  const feedbackData = data as FeedbackData | null | undefined;
 
   useEffect(() => {
+    if (feedbackData) return;
+
     let pollTimer: ReturnType<typeof setTimeout> | null = null;
     let attempts = 0;
-    const MAX_ATTEMPTS = 20; 
+    const MAX_ATTEMPTS = 20;
 
-    async function fetchFeedback() {
-      try {
-        setLoading(true);
-        const res = await apiClient.get<FeedbackData>(`/mock/sessions/${sessionId}/feedback`);
-        if (res) {
-          setFeedbackData(res);
-          setLoading(false);
-          return; 
-        }
-      } catch {
-        
-      }
-
+    const poll = () => {
       attempts++;
       if (attempts < MAX_ATTEMPTS) {
-        setLoading(false); 
-        pollTimer = setTimeout(fetchFeedback, 3000);
-      } else {
-        setLoading(false); 
+        pollTimer = setTimeout(() => {
+          refetch();
+          poll();
+        }, 3000);
       }
-    }
+    };
 
-    fetchFeedback();
+    poll();
     return () => { if (pollTimer) clearTimeout(pollTimer); };
-  }, [sessionId]);
+  }, [feedbackData, refetch]);
 
   const targetCompany = feedbackData?.targetCompany || 'Practice Mode';
   const targetRole = feedbackData?.targetRole || 'Software Engineering Role';
@@ -82,7 +72,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
   const strengths = feedbackData?.keyStrengths || [];
   const growthAreas = feedbackData?.areasToImprove || [];
 
-  if (loading) {
+  if (isLoading) {
     return <ApplicationDetailSkeleton />;
   }
 
@@ -114,7 +104,6 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
 
   return (
     <div className="w-full space-y-6 pb-12 animate-in fade-in duration-300">
-      {}
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 dark:text-slate-400">
         <Link href="/candidate/dashboard" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
           Dashboard
@@ -127,7 +116,6 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
         <span className="text-slate-700 dark:text-slate-200 font-bold">Report</span>
       </div>
 
-      {}
       <div className="relative overflow-hidden rounded-3xl border border-white/60 dark:border-slate-800 bg-gradient-to-br from-white/80 via-white/50 to-slate-50/50 dark:from-slate-900/90 dark:via-slate-900/70 dark:to-slate-950/90 p-6 md:p-8 shadow-md backdrop-blur-md glass-panel flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="flex gap-4 items-center">
           <CompanyLogo name={targetCompany} size="lg" className="shadow-md flex-shrink-0" />
@@ -164,11 +152,8 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
         </div>
       </div>
 
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {}
         <div className="lg:col-span-8 space-y-6">
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
@@ -184,7 +169,6 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
               &ldquo;{feedback}&rdquo;
             </p>
 
-            {}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div className="p-4 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-900/60 space-y-2.5">
                 <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300 font-extrabold text-xs">
@@ -228,7 +212,6 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
             </div>
           </div>
 
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
@@ -266,7 +249,6 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
             </div>
           </div>
 
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
@@ -317,9 +299,7 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
           </div>
         </div>
 
-        {}
         <div className="lg:col-span-4 space-y-6">
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 font-display flex items-center gap-2">
@@ -366,7 +346,6 @@ export default function MockFeedbackPage({ params }: { params: Promise<{ session
             </div>
           </div>
 
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel space-y-3">
             <Link
               href="/candidate/mock/new"

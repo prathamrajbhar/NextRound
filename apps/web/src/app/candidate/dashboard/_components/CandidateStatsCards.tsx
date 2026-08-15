@@ -17,7 +17,6 @@ export function CandidateStatsCards({
 }: CandidateStatsCardsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-      {}
       <div className="glass-card glass-card-indigo p-5 flex flex-col justify-between relative overflow-hidden group">
         <div className="flex items-center justify-between">
           <div className="h-11 w-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 dark:text-indigo-400 group-hover:scale-110 transition-transform">
@@ -44,7 +43,6 @@ export function CandidateStatsCards({
         </div>
       </div>
 
-      {}
       <div className="glass-card glass-card-emerald p-5 flex flex-col justify-between relative overflow-hidden group">
         <div className="flex items-center justify-between">
           <div className="h-11 w-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 dark:text-emerald-400 group-hover:scale-110 transition-transform">
@@ -71,7 +69,6 @@ export function CandidateStatsCards({
         </div>
       </div>
 
-      {}
       <div className="glass-card glass-card-purple p-5 flex flex-col justify-between relative overflow-hidden group">
         <div className="flex items-center justify-between">
           <div className="h-11 w-11 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500 dark:text-purple-400 group-hover:scale-110 transition-transform">
@@ -119,7 +116,6 @@ export function CandidateStatsCards({
         </div>
       </div>
 
-      {}
       <div className="glass-card p-5 flex flex-col justify-between relative overflow-hidden group border-amber-500/20">
         <div className="flex items-center justify-between">
           <div className="h-11 w-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 dark:text-amber-400 group-hover:scale-110 transition-transform">

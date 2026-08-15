@@ -16,10 +16,6 @@ interface ConsoleControlBarProps {
   onEndSession: () => void;
 }
 
-
-
-
-
 export function ConsoleControlBar({
   micActive,
   camActive,
@@ -56,7 +52,6 @@ export function ConsoleControlBar({
         </button>
       </div>
 
-      {}
       {showTextFallback && (
         <form onSubmit={onTextSubmit} className="hidden sm:flex flex-1 max-w-lg mx-4 items-center gap-2">
           <input

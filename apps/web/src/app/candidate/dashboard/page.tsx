@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { apiClient } from '@/lib/apiClient';
+import React from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { Application, Job } from '@/types';
+import { getScopedStorage } from '@/lib/storage';
+import { useCandidateDashboard } from '@/hooks/queries';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { CandidateDashboardHero } from './_components/CandidateDashboardHero';
 import { CandidateStatsCards } from './_components/CandidateStatsCards';
 import { CandidateApplicationsSection } from './_components/CandidateApplicationsSection';
@@ -11,94 +12,52 @@ import { CandidateJobsSection } from './_components/CandidateJobsSection';
 import { CandidateQuickPrepHub } from './_components/CandidateQuickPrepHub';
 import { CandidateDashboardSkeleton } from './_components/CandidateDashboardSkeleton';
 
-interface CandidateDashboardData {
-  applications: Application[];
-  jobs: Job[];
-  latestMockScore?: number;
-}
-
 export default function CandidateDashboard() {
   const { user } = useAuthContext();
-  const [loading, setLoading] = useState(true);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [latestMockScore, setLatestMockScore] = useState<number | null>(null);
+  const { data, isLoading, isError, error, refetch } = useCandidateDashboard();
 
   const candidateName =
     typeof window !== 'undefined'
-      ? localStorage.getItem('candidate_name') || (user?.email ? user.email.split('@')[0] : 'Candidate')
+      ? getScopedStorage(user?.id, 'candidate_name') || (user?.email ? user.email.split('@')[0] : 'Candidate')
       : user?.email
       ? user.email.split('@')[0]
       : 'Candidate';
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const [dashRes, appsRes, jobsRes, mockRes] = await Promise.allSettled([
-          apiClient.get<CandidateDashboardData>('/candidate/dashboard'),
-          apiClient.get<Application[]>('/candidate/applications'),
-          apiClient.get<Job[]>('/jobs'),
-          apiClient.get<{ overall_score?: number }[]>('/mock/sessions'),
-        ]);
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="w-full max-w-md">
+          <ErrorState error={error} onRetry={refetch} />
+        </div>
+      </div>
+    );
+  }
 
-        if (dashRes.status === 'fulfilled' && dashRes.value) {
-          if (dashRes.value.applications) setApplications(dashRes.value.applications);
-          if (dashRes.value.jobs) setJobs(dashRes.value.jobs);
-          if (dashRes.value.latestMockScore !== undefined) setLatestMockScore(dashRes.value.latestMockScore);
-        } else {
-          if (appsRes.status === 'fulfilled' && appsRes.value && Array.isArray(appsRes.value)) {
-            setApplications(appsRes.value);
-          }
-          if (jobsRes.status === 'fulfilled' && jobsRes.value && Array.isArray(jobsRes.value)) {
-            setJobs(jobsRes.value);
-          }
-        }
-
-        if (mockRes.status === 'fulfilled' && Array.isArray(mockRes.value) && mockRes.value.length > 0) {
-          const validScores = mockRes.value.map((s) => s.overall_score).filter((s): s is number => typeof s === 'number');
-          if (validScores.length > 0) {
-            setLatestMockScore(validScores[0]);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load candidate dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
-
-  if (loading) {
+  if (isLoading) {
     return <CandidateDashboardSkeleton />;
   }
 
-  const safeApps = Array.isArray(applications) ? applications : [];
-  const safeJobs = Array.isArray(jobs) ? jobs : [];
+  const safeApps = Array.isArray(data?.applications) ? data!.applications : [];
+  const safeJobs = Array.isArray(data?.jobs) ? data!.jobs : [];
+  const latestMockScore = data?.latestMockScore ?? null;
   const scheduledInterviews = safeApps.filter((app) => app.status === 'interview_scheduled');
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
-      {}
       <CandidateDashboardHero candidateName={candidateName} totalAppsCount={safeApps.length} />
 
-      {}
       <CandidateStatsCards
         totalApplications={safeApps.length}
         scheduledInterviewsCount={scheduledInterviews.length}
         latestMockScore={latestMockScore}
       />
 
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {}
         <div className="lg:col-span-2 space-y-8">
           <CandidateApplicationsSection applications={safeApps} />
           <CandidateQuickPrepHub />
         </div>
 
-        {}
         <div>
           <CandidateJobsSection jobs={safeJobs} />
         </div>

@@ -11,11 +11,6 @@ interface AptitudeResultScreenProps {
   onContinue: () => void;
 }
 
-
-
-
-
-
 export function AptitudeResultScreen({ companyName, roleTitle, score, isEliminated, onContinue }: AptitudeResultScreenProps) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center animate-in fade-in duration-300 font-sans">

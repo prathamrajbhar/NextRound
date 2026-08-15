@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Mic,
@@ -22,8 +22,9 @@ import CalibrationPanel, { AssessmentTrack } from './components/CalibrationPanel
 import { CompanyLogo, SearchableSelect } from '@/components/ui';
 import type { SearchableSelectOption } from '@/components/ui';
 import { apiClient } from '@/lib/apiClient';
+import { useSafeMediaStream } from '@/hooks/useSafeMediaStream';
+import { useJobs, useMockSessions } from '@/hooks/queries';
 import { deriveJobOptions, normalizeJobs } from '@/lib/jobOptions';
-import type { Job, MockSession } from '@/types';
 
 function MockInterviewSetupForm() {
   const router = useRouter();
@@ -38,28 +39,23 @@ function MockInterviewSetupForm() {
   const [difficulty, setDifficulty] = useState<'junior' | 'mid' | 'senior'>('mid');
   const [loading, setLoading] = useState(false);
   const [isCalibrating, setIsCalibrating] = useState(false);
-  const [latestScore, setLatestScore] = useState<number | null>(null);
 
-  useEffect(() => {
-    apiClient
-      .get<MockSession[]>('/mock/sessions')
-      .then((data) => {
-        const score = data?.[0]?.score;
-        setLatestScore(typeof score === 'number' ? score : null);
-      })
-      .catch(() => setLatestScore(null));
-  }, []);
+  const { data: mockSessionsData } = useMockSessions();
+  const latestScore = useMemo(() => {
+    const score = Array.isArray(mockSessionsData) ? mockSessionsData[0]?.score : undefined;
+    return typeof score === 'number' ? score : null;
+  }, [mockSessionsData]);
 
   const [orgId, setOrgId] = useState<string | null>(null);
-  const [companyOptions, setCompanyOptions] = useState<SearchableSelectOption[]>([]);
-  const [rolesByOrgId, setRolesByOrgId] = useState<Record<string, string[]>>({});
-  const [postedLoading, setPostedLoading] = useState(true);
-  const [postedError, setPostedError] = useState<string | null>(null);
-
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
   const [micLevel, setMicLevel] = useState(45);
   const [consent, setConsent] = useState(true);
+
+  const { start } = useSafeMediaStream({
+    constraints: { audio: true },
+    enabled: micActive,
+  });
 
   useEffect(() => {
     if (!micActive) {
@@ -68,23 +64,22 @@ function MockInterviewSetupForm() {
     }
     let audioContext: AudioContext | null = null;
     let analyser: AnalyserNode | null = null;
-    let microphone: MediaStreamAudioSourceNode | null = null;
     let rafId: number | null = null;
-    let localStream: MediaStream | null = null;
+    let active = true;
 
-    navigator.mediaDevices.getUserMedia({ audio: true })
+    start()
       .then((stream) => {
-        localStream = stream;
+        if (!stream || !active) return;
         audioContext = new AudioContext();
         analyser = audioContext.createAnalyser();
-        microphone = audioContext.createMediaStreamSource(stream);
+        const microphone = audioContext.createMediaStreamSource(stream);
         microphone.connect(analyser);
         analyser.fftSize = 256;
         const bufferLength = analyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
 
         const updateLevel = () => {
-          if (!analyser) return;
+          if (!analyser || !active) return;
           analyser.getByteFrequencyData(dataArray);
           const average = dataArray.reduce((a, b) => a + b) / bufferLength;
           setMicLevel(Math.floor((average / 255) * 100));
@@ -101,14 +96,12 @@ function MockInterviewSetupForm() {
       });
 
     return () => {
+      active = false;
       if (rafId) cancelAnimationFrame(rafId);
-      if (microphone) microphone.disconnect();
-      if (audioContext) audioContext.close();
-      if (localStream) {
-        localStream.getTracks().forEach((track) => track.stop());
-      }
+      if (audioContext) void audioContext.close();
+      setMicLevel(0);
     };
-  }, [micActive]);
+  }, [micActive, start]);
 
   useEffect(() => {
     if (!isCalibrating) return;
@@ -116,42 +109,34 @@ function MockInterviewSetupForm() {
     return () => clearTimeout(t);
   }, [isCalibrating]);
 
+  const { data: jobsData, isLoading: postedLoading, isError: postedError } = useJobs();
+  const postedErrorMessage = postedError ? 'Could not load posted roles.' : undefined;
+
+  const { companies: companyOptions, rolesByOrgId } = useMemo(
+    () => deriveJobOptions(normalizeJobs(jobsData)),
+    [jobsData]
+  );
+
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const jobs = normalizeJobs(await apiClient.get<Job[]>('/jobs'));
-        if (cancelled) return;
-        const { companies, rolesByOrgId: roles } = deriveJobOptions(jobs);
-        setCompanyOptions(companies);
-        setRolesByOrgId(roles);
-        if (companies.length === 0) {
-          setOrgId(null);
-          setCompany('');
-          setRole('');
-          return;
-        }
-        const matchedCompany =
-          companies.find((c) => c.label.toLowerCase() === (initialCompany || '').toLowerCase()) ||
-          companies[0];
-        const orgRoles = roles[matchedCompany.value] || [];
-        const matchedRole =
-          orgRoles.find((r) => r.toLowerCase() === (initialRole || '').toLowerCase()) ||
-          orgRoles[0] ||
-          '';
-        setOrgId(matchedCompany.value);
-        setCompany(matchedCompany.label);
-        setRole(matchedRole);
-      } catch {
-        if (!cancelled) setPostedError('Could not load posted roles.');
-      } finally {
-        if (!cancelled) setPostedLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [initialCompany, initialRole]);
+    if (postedLoading) return;
+    if (companyOptions.length === 0) {
+      setOrgId(null);
+      setCompany('');
+      setRole('');
+      return;
+    }
+    const matchedCompany =
+      companyOptions.find((c) => c.label.toLowerCase() === (initialCompany || '').toLowerCase()) ||
+      companyOptions[0];
+    const orgRoles = rolesByOrgId[matchedCompany.value] || [];
+    const matchedRole =
+      orgRoles.find((r) => r.toLowerCase() === (initialRole || '').toLowerCase()) ||
+      orgRoles[0] ||
+      '';
+    setOrgId(matchedCompany.value);
+    setCompany(matchedCompany.label);
+    setRole(matchedRole);
+  }, [postedLoading, companyOptions, rolesByOrgId, initialCompany, initialRole]);
 
   const handleCompanySelect = (opt: SearchableSelectOption) => {
     setCompany(opt.label);
@@ -300,7 +285,7 @@ function MockInterviewSetupForm() {
                           emptyMessage="No companies have posted roles yet"
                           placeholder="Search companies with open roles..."
                           icon={<Building2 className="h-4 w-4" />}
-                          error={postedError || undefined}
+                          error={postedErrorMessage}
                           className="text-xs font-semibold"
                         />
                       </div>

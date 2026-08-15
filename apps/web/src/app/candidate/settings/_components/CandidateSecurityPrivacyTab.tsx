@@ -3,12 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Lock, CheckCircle2, Save } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { getScopedStorageJSON, setScopedStorageJSON } from '@/lib/storage';
 
 interface CandidateSecurityPrivacyTabProps {
   onSave: () => void;
 }
 
 export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacyTabProps) {
+  const { user } = useAuthContext();
   const [visibility, setVisibility] = useState<'Verified' | 'Public' | 'Private'>('Verified');
   const [hideSalary, setHideSalary] = useState(false);
   const [twoFactor, setTwoFactor] = useState(true);
@@ -30,9 +33,8 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
           if (typeof s.hideSalary === 'boolean') setHideSalary(s.hideSalary);
           if (typeof s.twoFactor === 'boolean') setTwoFactor(s.twoFactor);
         } else {
-          const saved = localStorage.getItem('candidate_privacy_settings');
-          if (saved) {
-            const parsed = JSON.parse(saved);
+          const parsed = getScopedStorageJSON<Record<string, unknown>>(user?.id, 'candidate_privacy_settings');
+          if (parsed) {
             if (typeof parsed.visibility === 'string' && (parsed.visibility === 'Verified' || parsed.visibility === 'Public' || parsed.visibility === 'Private')) {
               setVisibility(parsed.visibility);
             }
@@ -40,12 +42,10 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
             if (typeof parsed.twoFactor === 'boolean') setTwoFactor(parsed.twoFactor);
           }
         }
-      } catch {
-        
-      }
+      } catch {}
     }
     loadPrivacySettings();
-  }, []);
+  }, [user?.id]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -57,9 +57,10 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
           twoFactor,
         },
       });
-      localStorage.setItem(
+      setScopedStorageJSON(
+        user?.id,
         'candidate_privacy_settings',
-        JSON.stringify({ visibility, hideSalary, twoFactor })
+        { visibility, hideSalary, twoFactor }
       );
       onSave();
     } catch (err) {
@@ -82,7 +83,6 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
 
   return (
     <div className="space-y-6">
-      {}
       <div>
         <h2 className="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <ShieldCheck className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
@@ -91,7 +91,6 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
         <p className="text-xs text-slate-500 font-medium">Manage profile discoverability, salary masking, and account credentials</p>
       </div>
 
-      {}
       <div className="space-y-3">
         <label className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Profile Visibility Mode</label>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -123,7 +122,6 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
         </div>
       </div>
 
-        {}
         <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 flex items-center justify-between">
           <div>
             <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">Hide Salary Expectations</span>
@@ -144,7 +142,6 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
           </button>
         </div>
 
-      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
           <Lock className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -178,7 +175,6 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
           </button>
         </div>
 
-        {}
         <form onSubmit={handlePasswordSubmit} className="space-y-4 pt-1">
           <div className="flex justify-between items-center">
             <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Update Account Password</span>
@@ -225,7 +221,6 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
         </form>
       </div>
 
-      {}
       <div className="flex justify-end">
         <button
           type="button"

@@ -14,6 +14,7 @@ import {
   ShieldCheck,
   Layers,
 } from '@/lib/lucide-google-icons';
+import { useSafeMediaStream } from '@/hooks/useSafeMediaStream';
 
 interface SetupStageProps {
   targetRole: string;
@@ -51,60 +52,57 @@ export function SetupStage({
   const [micTesting, setMicTesting] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
 
-  
+  const { start } = useSafeMediaStream({
+    constraints: { audio: true },
+    enabled: micTesting,
+  });
+
   useEffect(() => {
+    if (!micTesting) return;
     let audioContext: AudioContext | null = null;
     let analyser: AnalyserNode | null = null;
-    let microphone: MediaStreamAudioSourceNode | null = null;
     let rafId: number | null = null;
-    let localStream: MediaStream | null = null;
+    let active = true;
 
-    if (micTesting) {
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then((stream) => {
-          localStream = stream;
-          audioContext = new AudioContext();
-          analyser = audioContext.createAnalyser();
-          microphone = audioContext.createMediaStreamSource(stream);
-          microphone.connect(analyser);
-          analyser.fftSize = 256;
-          const bufferLength = analyser.frequencyBinCount;
-          const dataArray = new Uint8Array(bufferLength);
+    start()
+      .then((stream) => {
+        if (!stream || !active) return;
+        audioContext = new AudioContext();
+        analyser = audioContext.createAnalyser();
+        const microphone = audioContext.createMediaStreamSource(stream);
+        microphone.connect(analyser);
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
 
-          const updateLevel = () => {
-            if (!analyser) return;
-            analyser.getByteFrequencyData(dataArray);
-            const average = dataArray.reduce((a, b) => a + b) / bufferLength;
-            setAudioLevel(Math.floor((average / 255) * 100));
-            rafId = requestAnimationFrame(updateLevel);
-          };
-          updateLevel();
-        })
-        .catch((err) => {
-          console.error('Microphone access failed:', err);
-          setAudioLevel(0);
-        });
-    }
+        const updateLevel = () => {
+          if (!analyser || !active) return;
+          analyser.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+          setAudioLevel(Math.floor((average / 255) * 100));
+          rafId = requestAnimationFrame(updateLevel);
+        };
+        updateLevel();
+      })
+      .catch((err) => {
+        console.error('Microphone access failed:', err);
+        setAudioLevel(0);
+      });
 
     return () => {
+      active = false;
       if (rafId) cancelAnimationFrame(rafId);
-      if (microphone) microphone.disconnect();
-      if (audioContext) audioContext.close();
-      if (localStream) {
-        localStream.getTracks().forEach((track) => track.stop());
-      }
+      if (audioContext) void audioContext.close();
       setAudioLevel(0);
     };
-  }, [micTesting]);
+  }, [micTesting, start]);
 
   return (
     <div className="relative w-full space-y-6 animate-in fade-in duration-300 font-sans p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800/40 bg-white dark:bg-slate-950 text-slate-800 dark:text-white shadow-xl dark:shadow-2xl overflow-hidden">
       
-      {}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/5 dark:bg-orange-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-600/5 dark:bg-amber-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
 
-      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-100 dark:border-white/5 pb-4 z-10 relative">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-900/50 mb-1.5">
@@ -119,7 +117,6 @@ export function SetupStage({
           </p>
         </div>
 
-        {}
         <div className="flex items-center gap-3">
           <Link
             href="/candidate/resumes"
@@ -139,20 +136,16 @@ export function SetupStage({
         </div>
       </div>
 
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start z-10 relative">
         
-        {}
         <div className="lg:col-span-8 space-y-6">
           
-          {}
           <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-5">
             <h2 className="text-xs font-extrabold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-white/5 pb-3">
               <Target className="h-4.5 w-4.5 text-orange-500 dark:text-orange-400" />
               Target Position &amp; Role Focus
             </h2>
 
-            {}
             <div className="space-y-2">
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                 Target Job Title
@@ -166,7 +159,6 @@ export function SetupStage({
               />
             </div>
 
-            {}
             <div className="space-y-2">
               <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Popular Positions</span>
               <div className="flex flex-wrap gap-2">
@@ -192,14 +184,12 @@ export function SetupStage({
             </div>
           </div>
 
-          {}
           <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-5">
             <h2 className="text-xs font-extrabold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-white/5 pb-3">
               <Layers className="h-4.5 w-4.5 text-orange-500 dark:text-orange-400" />
               Seniority &amp; Domain Focus
             </h2>
 
-            {}
             <div className="space-y-2">
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                 Target Experience Level
@@ -229,7 +219,6 @@ export function SetupStage({
               </div>
             </div>
 
-            {}
             <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-white/5">
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                 Domain Industry Focus
@@ -255,10 +244,8 @@ export function SetupStage({
 
         </div>
 
-        {}
         <div className="lg:col-span-4 space-y-6">
           
-          {}
           <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-3">
               <div className="flex items-center gap-2">
@@ -278,7 +265,6 @@ export function SetupStage({
               </button>
             </div>
 
-            {}
             <div className="h-12 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/5 px-4 flex items-end gap-[3px] overflow-hidden">
               {[...Array(18)].map((_, i) => {
                 const barHeight = micTesting
@@ -311,7 +297,6 @@ export function SetupStage({
 
       </div>
 
-      {}
       <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4 z-10 relative">
         <div className="space-y-1 text-center sm:text-left">
           <div className="flex items-center gap-2 justify-center sm:justify-start">

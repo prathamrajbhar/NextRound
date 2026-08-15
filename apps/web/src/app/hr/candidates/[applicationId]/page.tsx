@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { use } from 'react';
 import Link from 'next/link';
-import { apiClient } from '@/lib/apiClient';
-import { Application, Job } from '@/types';
+import { useApplication, useJob } from '@/hooks/queries';
 import {
   ChevronRight,
   Download,
@@ -15,36 +14,25 @@ import {
 } from '@/lib/lucide-google-icons';
 import { CandidateHeader } from './components/CandidateHeader';
 import { CandidateDetailSkeleton } from '@/components/ui';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 export default function HrCandidateProfilePage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
 
-  const [app, setApp] = useState<Application | null>(null);
-  const [job, setJob] = useState<Job | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: app, isLoading, isError, error, refetch } = useApplication(applicationId);
+  const { data: job } = useJob(app?.jobId ?? null);
 
-  useEffect(() => {
-    async function fetchCandidateProfile() {
-      try {
-        setLoading(true);
-        const appData = await apiClient.get<Application>(`/applications/${applicationId}`).catch(() => null);
-        if (appData) {
-          setApp(appData);
-          if (appData.jobId) {
-            const jobData = await apiClient.get<Job>(`/jobs/${appData.jobId}`).catch(() => null);
-            if (jobData) setJob(jobData);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load candidate profile:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchCandidateProfile();
-  }, [applicationId]);
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="w-full max-w-md">
+          <ErrorState error={error} onRetry={refetch} />
+        </div>
+      </div>
+    );
+  }
 
-  if (loading) {
+  if (isLoading) {
     return <CandidateDetailSkeleton />;
   }
 
@@ -83,7 +71,6 @@ export default function HrCandidateProfilePage({ params }: { params: Promise<{ a
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 pb-12 font-sans">
-      {}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
           <Link href="/hr/jobs" className="hover:text-brand-600 dark:hover:text-orange-400 transition-colors">Jobs</Link>
@@ -111,14 +98,10 @@ export default function HrCandidateProfilePage({ params }: { params: Promise<{ a
         </div>
       </div>
 
-      {}
       <CandidateHeader app={app} />
 
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        {}
         <div className="lg:col-span-2 space-y-6">
-          {}
           <div className="p-5 rounded-3xl bg-brand-50/50 dark:bg-slate-900/90 border border-brand-200/60 dark:border-slate-800 flex items-center justify-between shadow-2xs backdrop-blur-md glass-panel">
             <div className="flex items-center gap-3">
               <div className="h-12 w-12 rounded-2xl bg-brand-100 dark:bg-orange-950/80 text-brand-600 dark:text-orange-400 border border-brand-200 dark:border-orange-800 flex items-center justify-center flex-shrink-0">
@@ -144,7 +127,6 @@ export default function HrCandidateProfilePage({ params }: { params: Promise<{ a
             </button>
           </div>
 
-          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-3">
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-200/60 dark:border-slate-800 pb-2">
               Verified Tech Stack &amp; Skill Competencies
@@ -171,7 +153,6 @@ export default function HrCandidateProfilePage({ params }: { params: Promise<{ a
                 <div className="relative border-l border-slate-200 dark:border-slate-800 ml-2 pl-4 space-y-5">
                   {app.workExperience.map((exp, idx) => (
                     <div key={idx} className="relative">
-                      {}
                       <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-brand-600 dark:bg-orange-500 ring-4 ring-white dark:ring-slate-900" />
                       <div className="space-y-0.5">
                         <div className="flex items-center justify-between flex-wrap gap-1 font-extrabold">
@@ -194,7 +175,6 @@ export default function HrCandidateProfilePage({ params }: { params: Promise<{ a
 
         </div>
 
-        {}
         <div className="space-y-6">
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-display border-b border-slate-200/60 dark:border-slate-800 pb-2.5">

@@ -14,11 +14,6 @@ interface NextRoundTransitionCardProps {
   onLaunch: () => void;
 }
 
-
-
-
-
-
 export function NextRoundTransitionCard({
   companyName,
   roleTitle,

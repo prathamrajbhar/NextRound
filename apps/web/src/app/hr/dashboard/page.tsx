@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { apiClient } from '@/lib/apiClient';
-import { Job, Application, HRDashboardData } from '@/types';
+import { useHrDashboard } from '@/hooks/queries';
+import { HRDashboardData } from '@/types';
+import { ErrorState } from '@/components/ui/ErrorState';
 import {
   Briefcase,
   Users,
@@ -20,36 +21,11 @@ import {
 } from '@/lib/lucide-google-icons';
 
 export default function HrDashboard() {
-  const [loading, setLoading] = useState(true);
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [dashboardData, setDashboardData] = useState<HRDashboardData | null>(null);
+  const { data, isLoading, isError, error, refetch } = useHrDashboard();
 
-  useEffect(() => {
-    async function fetchDashboard() {
-      try {
-        setLoading(true);
-        const [dashRes, jobsRes] = await Promise.allSettled([
-          apiClient.get<HRDashboardData>('/hr/dashboard'),
-          apiClient.get<Job[]>('/jobs/org'),
-        ]);
-
-        if (dashRes.status === 'fulfilled' && dashRes.value) {
-          setDashboardData(dashRes.value);
-          setApplications(dashRes.value.recentApplications || []);
-        }
-
-        if (jobsRes.status === 'fulfilled' && jobsRes.value) {
-          setJobs(jobsRes.value);
-        }
-      } catch (err) {
-        console.error('Failed to load HR dashboard data:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchDashboard();
-  }, []);
+  const jobs = data?.jobs ?? [];
+  const applications = data?.dashboard?.recentApplications ?? [];
+  const dashboardData: HRDashboardData | null = data?.dashboard ?? null;
 
   const activeJobs = jobs.filter((j) => j.status === 'active');
   const totalCandidates = dashboardData?.totalApplicationsCount ?? applications.length;
@@ -87,7 +63,17 @@ export default function HrDashboard() {
   const vettedPct = totalApplied > 0 ? Math.round((totalVetted / totalApplied) * 100) : 0;
   const hiredPct = totalApplied > 0 ? Math.round((totalHired / totalApplied) * 100) : 0;
 
-  if (loading) {
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] p-4">
+        <div className="w-full max-w-md">
+          <ErrorState error={error} onRetry={refetch} />
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return (
       <div className="space-y-8 animate-in fade-in duration-200">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

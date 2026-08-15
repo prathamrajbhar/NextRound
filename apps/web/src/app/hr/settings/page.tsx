@@ -136,9 +136,7 @@ export default function HrSettingsPage() {
             }))
           );
         }
-      } catch {
-        
-      }
+      } catch {}
     }
     loadMembers();
   }, [orgId, user]);
@@ -158,9 +156,7 @@ export default function HrSettingsPage() {
             anonymizeResumes,
           },
         });
-      } catch {
-        
-      }
+      } catch {}
     }
     triggerSaveNotification();
   };
@@ -173,9 +169,7 @@ export default function HrSettingsPage() {
             notificationPrefs: { notifyShortlist, notifyHighScore, dailyDigest },
           },
         });
-      } catch {
-        
-      }
+      } catch {}
     }
     triggerSaveNotification();
   };
@@ -186,9 +180,7 @@ export default function HrSettingsPage() {
         await apiClient.patch(`/organizations/${orgId}`, {
           settings: { emailTemplates: templates },
         });
-      } catch {
-        
-      }
+      } catch {}
     }
     triggerSaveNotification();
   };
@@ -212,9 +204,7 @@ export default function HrSettingsPage() {
         },
       ]);
       setInviteEmail('');
-    } catch {
-      
-    }
+    } catch {}
     triggerSaveNotification();
   };
 
@@ -222,9 +212,7 @@ export default function HrSettingsPage() {
     if (orgId && !id.startsWith('pending-')) {
       try {
         await apiClient.delete(`/organizations/${orgId}/members/${id}`);
-      } catch {
-        
-      }
+      } catch {}
     }
     setTeam(team.filter((m) => m.id !== id));
     triggerSaveNotification();
@@ -232,7 +220,6 @@ export default function HrSettingsPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 pb-12 font-sans">
-      {}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-widest block mb-1">
@@ -254,9 +241,7 @@ export default function HrSettingsPage() {
         )}
       </div>
 
-      {}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        {}
         <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-4 shadow-md backdrop-blur-md glass-panel flex flex-col gap-1.5 select-none">
           <button
             type="button"
@@ -324,7 +309,6 @@ export default function HrSettingsPage() {
           </button>
         </div>
 
-        {}
         <div className="lg:col-span-3 space-y-6">
           {activeTab === 'general' && (
             <GeneralSettingsTab

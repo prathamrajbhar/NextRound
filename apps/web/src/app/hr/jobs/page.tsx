@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
-import { Job } from '@/types';
+import { useOrgJobs } from '@/hooks/queries';
 import { Plus, Search, ChevronRight, Briefcase, Trash2, Loader2 } from '@/lib/lucide-google-icons';
 import { getJobStatusBadgeClasses } from '@/lib/jobStatus';
 import { TableSkeleton } from '@/components/ui';
@@ -18,31 +18,17 @@ function formatDate(dateStr: string) {
 export default function HrJobsList() {
   const [filter, setFilter] = useState<'all' | 'active' | 'draft' | 'closed'>('all');
   const [search, setSearch] = useState('');
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchJobs() {
-      try {
-        setLoading(true);
-        const data = await apiClient.get<Job[]>('/jobs/org').catch(() => apiClient.get<Job[]>('/jobs'));
-        setJobs(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error('Failed to fetch jobs:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchJobs();
-  }, []);
+  const { data, isLoading, refetch } = useOrgJobs();
+  const jobs = data ?? [];
 
   const handleDeleteJob = async (jobId: string) => {
     if (!window.confirm('Are you sure you want to delete this job posting?')) return;
     try {
       setUpdatingId(jobId);
       await apiClient.delete(`/jobs/${jobId}`).catch(() => apiClient.patch(`/jobs/${jobId}`, { status: 'deleted' }));
-      setJobs((prev) => prev.filter((j) => j.id !== jobId));
+      refetch();
     } catch (err) {
       console.error('Failed to delete job:', err);
     } finally {
@@ -53,10 +39,6 @@ export default function HrJobsList() {
   const handleStatusChange = async (jobId: string, newStatus: 'active' | 'draft' | 'closed') => {
     try {
       setUpdatingId(jobId);
-      
-      setJobs((prev) =>
-        prev.map((j) => (j.id === jobId ? { ...j, status: newStatus } : j))
-      );
 
       if (newStatus === 'active') {
         await apiClient.post(`/jobs/${jobId}/publish`).catch(() =>
@@ -69,10 +51,10 @@ export default function HrJobsList() {
       } else {
         await apiClient.patch(`/jobs/${jobId}`, { status: 'draft' });
       }
+      refetch();
     } catch (err) {
       console.error('Failed to update job status:', err);
-      const fresh = await apiClient.get<Job[]>('/jobs/org').catch(() => apiClient.get<Job[]>('/jobs'));
-      setJobs(Array.isArray(fresh) ? fresh : []);
+      refetch();
     } finally {
       setUpdatingId(null);
     }
@@ -91,7 +73,6 @@ export default function HrJobsList() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <h1 className="text-2xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Job Openings</h1>
@@ -108,9 +89,7 @@ export default function HrJobsList() {
         </Link>
       </div>
 
-      {}
       <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center">
-        {}
         <div className="flex p-1 rounded-xl bg-slate-200/50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 select-none text-xs font-bold text-slate-600 dark:text-slate-300">
           {(['all', 'active', 'draft', 'closed'] as const).map((item) => (
             <button
@@ -125,7 +104,6 @@ export default function HrJobsList() {
           ))}
         </div>
 
-        {}
         <div className="relative w-full md:w-80">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 dark:text-slate-500" />
           <input
@@ -138,8 +116,7 @@ export default function HrJobsList() {
         </div>
       </div>
 
-      {}
-      {loading ? (
+      {isLoading ? (
         <TableSkeleton rows={5} cols={4} />
       ) : filteredJobs.length > 0 ? (
         <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 shadow-md backdrop-blur-md glass-panel overflow-hidden">

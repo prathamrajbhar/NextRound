@@ -30,7 +30,6 @@ export function ProctoringWarningModal({
           : 'bg-slate-900 border-amber-500/40 text-slate-100 ring-2 ring-amber-500/30'
       }`}>
         
-        {}
         <div className="mx-auto h-16 w-16 rounded-3xl flex items-center justify-center shadow-lg border animate-bounce" style={{
           backgroundColor: isEliminated ? 'rgba(225, 29, 72, 0.2)' : 'rgba(245, 158, 11, 0.2)',
           borderColor: isEliminated ? 'rgba(225, 29, 72, 0.6)' : 'rgba(245, 158, 11, 0.6)',
@@ -42,7 +41,6 @@ export function ProctoringWarningModal({
           )}
         </div>
 
-        {}
         <div className="space-y-1">
           <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border bg-black/40" style={{
             color: isEliminated ? '#fecdd3' : '#fef3c7',
@@ -60,7 +58,6 @@ export function ProctoringWarningModal({
           </p>
         </div>
 
-        {}
         <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-2">
           <div className="flex justify-between text-xs font-black uppercase tracking-wider">
             <span>Violation Strikes</span>
@@ -87,7 +84,6 @@ export function ProctoringWarningModal({
           </div>
         </div>
 
-        {}
         <div className="pt-2">
           {!isEliminated ? (
             <button

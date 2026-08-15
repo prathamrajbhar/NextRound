@@ -18,12 +18,6 @@ import { ProctoringWarningModal } from './ProctoringWarningModal';
 
 export type { InterviewConsoleMode, UnifiedInterviewConsoleProps };
 
-
-
-
-
-
-
 export function UnifiedInterviewConsole({
   applicationId,
   mode,
@@ -121,7 +115,6 @@ export function UnifiedInterviewConsole({
 
   return (
     <div className="fixed inset-0 w-screen h-screen bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans overflow-hidden select-none transition-colors duration-300">
-      {}
       <ConsoleHeader
         mode={mode}
         companyName={companyName}
@@ -137,11 +130,9 @@ export function UnifiedInterviewConsole({
         onToggleFullscreen={toggleFullscreen}
       />
 
-      {}
       <main className={`flex-1 p-3 sm:p-4 min-h-0 relative z-20 overflow-hidden grid gap-4 ${
         mode === 'hr-candidate' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'
       }`}>
-        {}
         <ConsolePrimaryViewport
           mode={mode}
           aiSpeaking={aiSpeaking}
@@ -156,7 +147,6 @@ export function UnifiedInterviewConsole({
           localStream={localStream}
         />
 
-        {}
         {mode !== 'hr-candidate' && (
           <ConsoleSecondaryViewport
             mode={mode}
@@ -173,12 +163,10 @@ export function UnifiedInterviewConsole({
         )}
       </main>
 
-      {}
       {showTranscriptDrawer && (
         <ConsoleTranscriptDrawer messages={messages} onClose={() => setShowTranscriptDrawer(false)} transcriptEndRef={transcriptEndRef} />
       )}
 
-      {}
       <ConsoleControlBar
         micActive={micActive}
         camActive={camActive}
@@ -192,10 +180,8 @@ export function UnifiedInterviewConsole({
         onEndSession={() => setShowExitConfirm(true)}
       />
 
-      {}
       <ConsoleExitConfirm isOpen={showExitConfirm} onCancel={() => setShowExitConfirm(false)} onConfirm={handleEndSession} />
 
-      {}
       <ProctoringWarningModal
         isOpen={showWarningModal}
         strikeCount={strikeCount}

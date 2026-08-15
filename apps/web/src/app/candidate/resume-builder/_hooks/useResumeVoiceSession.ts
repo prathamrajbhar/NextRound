@@ -112,9 +112,7 @@ export function useResumeVoiceSession({
       if (recognition) {
         try {
           recognition.abort();
-        } catch {
-          
-        }
+        } catch {}
       }
     };
   }, []);
@@ -140,9 +138,7 @@ export function useResumeVoiceSession({
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch {
-        
-      }
+      } catch {}
       recognitionRef.current = null;
     }
   }, []);
@@ -154,9 +150,7 @@ export function useResumeVoiceSession({
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
-      } catch {
-        
-      }
+      } catch {}
     }
 
     const recognition = new SpeechRecognitionClass();
@@ -209,9 +203,7 @@ export function useResumeVoiceSession({
           
           try {
             recognitionRef.current?.start();
-          } catch {
-            
-          }
+          } catch {}
         }
       }
     };
