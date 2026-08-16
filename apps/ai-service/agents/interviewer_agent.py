@@ -1,13 +1,19 @@
 import logging
 import json
+import re
 from typing import Dict, Any, Optional, TypedDict, List
-from pydantic import BaseModel, Field
 from services.llm_service import generate_text, extract_json_object
 
 logger = logging.getLogger("interviewer_agent")
 
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
+
+# Structured action set the interviewer chooses after every answer.
+ACTIONS = ("FOLLOW_UP", "DEEPEN", "CLARIFY", "VERIFY", "NEXT_TOPIC", "END")
+
+# Safety cap: never let the interview drift past this many turns.
+MAX_TURNS = 12
 
 
 class InterviewerState(TypedDict, total=False):
@@ -18,6 +24,7 @@ class InterviewerState(TypedDict, total=False):
     job_title: str
     job_rubric: dict
     candidate_resume: str
+    candidate_context: dict
     conversation_history: List[Dict[str, str]]
     current_stage: str
     turn_number: int
@@ -29,193 +36,505 @@ class InterviewerState(TypedDict, total=False):
     latest_ai_response: str
     next_action: str
     final_scorecard: dict
+    required_skills: List[str]
+    skills_to_evaluate: List[str]
+    evaluated_skills: List[str]
+    current_skill: str
+    asked_questions: List[str]
+    last_analysis: dict
+    turn_records: List[dict]
+    evidence_used: List[str]
+
+
+# ---------------------------------------------------------------------------
+# Context helpers
+# ---------------------------------------------------------------------------
+
+
+def _derive_required_skills(state: InterviewerState) -> List[str]:
+    """Skills to evaluate: job required skills > rubric dims > candidate skills."""
+    ctx = state.get("candidate_context") or {}
+    job = ctx.get("job") or {}
+    job_skills = [str(s) for s in (job.get("skills") or []) if str(s).strip()]
+    if job_skills:
+        return job_skills
+
+    rubric = job.get("rubric") or state.get("job_rubric") or {}
+    if isinstance(rubric, dict):
+        dims = [str(k) for k in rubric.keys() if not str(k).startswith("_")]
+        if dims:
+            return dims
+
+    candidate_skills = [str(s) for s in (ctx.get("skills") or []) if str(s).strip()]
+    if candidate_skills:
+        return candidate_skills
+
+    return ["technical depth", "communication", "problem solving"]
+
+
+def _build_profile_text(state: InterviewerState) -> str:
+    """Rich factual profile text from structured context (or legacy resume string)."""
+    ctx = state.get("candidate_context") or {}
+    if not ctx:
+        return state.get("candidate_resume") or ""
+
+    parts: List[str] = []
+    cand = ctx.get("candidate") or {}
+    if cand.get("fullName"):
+        parts.append(f"Candidate: {cand['fullName']}")
+    if cand.get("headline"):
+        parts.append(f"Headline: {cand['headline']}")
+
+    skills = ctx.get("skills") or []
+    if skills:
+        parts.append(f"Skills: {', '.join(str(s) for s in skills)}")
+
+    resume = ctx.get("resume") or {}
+    raw = resume.get("rawText")
+    if raw:
+        parts.append(f"RESUME:\n{str(raw)[:3000]}")
+
+    github = ctx.get("social", {}).get("github")
+    if github:
+        parts.append(f"GITHUB: {json.dumps(github, default=str)[:1500]}")
+
+    linkedin = ctx.get("social", {}).get("linkedin")
+    if linkedin:
+        parts.append(f"LINKEDIN: {json.dumps(linkedin, default=str)[:1500]}")
+
+    projects = ctx.get("projects") or []
+    if projects:
+        parts.append(f"PROJECTS: {json.dumps(projects, default=str)[:1500]}")
+
+    experience = ctx.get("experience") or []
+    if experience:
+        parts.append(f"EXPERIENCE: {json.dumps(experience, default=str)[:1500]}")
+
+    job = ctx.get("job") or {}
+    if job.get("description"):
+        parts.append(f"JOB DESCRIPTION: {str(job['description'])[:2000]}")
+
+    focus = ctx.get("interviewFocus") or []
+    if focus:
+        focus_lines = [f"[{s.get('sourceType')}] {s.get('content')}" for s in focus if isinstance(s, dict)]
+        if focus_lines:
+            parts.append("MOST RELEVANT PROFILE SECTIONS:\n" + "\n".join(focus_lines)[:2000])
+
+    return "\n\n".join(parts)
+
+
+def _stage_for_skill(skill: str) -> str:
+    """Map a skill to a conversational stage for the voice console phase UI."""
+    s = skill.lower()
+    if any(k in s for k in ("communication", "behavioral", "culture", "team", "collab", "leadership")):
+        return "behavioral"
+    if any(k in s for k in ("project", "architecture", "github", "portfolio", "system design")):
+        return "project"
+    return "technical"
+
+
+# ---------------------------------------------------------------------------
+# Prompt builders
+# ---------------------------------------------------------------------------
+
+
+def _base_prompt(state: InterviewerState) -> str:
+    job_title = state.get("job_title") or "an open role"
+    current_skill = state.get("current_skill") or "relevant experience"
+    return (
+        f"You are a professional, human-like interviewer conducting a live interview for {job_title}.\n"
+        f"Current skill being evaluated: {current_skill}\n"
+        f"Required skills to evaluate: {', '.join(state.get('skills_to_evaluate') or [])}\n"
+        f"Skills sufficiently evaluated: {', '.join(state.get('evaluated_skills') or []) or 'none yet'}\n\n"
+        f"CANDIDATE PROFILE (only facts present here may be referenced — never invent candidate info):\n"
+        f"{_build_profile_text(state)}\n"
+    )
+
+
+def _history_text(state: InterviewerState) -> str:
+    history = state.get("conversation_history") or []
+    if not history:
+        return "(none — this is the very start of the conversation)"
+    return json.dumps(history, ensure_ascii=False)[:8000]
+
+
+def _asked_questions_text(state: InterviewerState) -> str:
+    asked = state.get("asked_questions") or []
+    if not asked:
+        return "(none)"
+    return json.dumps(asked, ensure_ascii=False)[:3000]
+
+
+def _build_turn_prompt(state: InterviewerState) -> str:
+    return (
+        _base_prompt(state)
+        + f"\nCONVERSATION HISTORY (full memory of the interview so far):\n{_history_text(state)}\n"
+        + f"\nQUESTIONS ALREADY ASKED — never repeat or rephrase these:\n{_asked_questions_text(state)}\n"
+        + f"\nLATEST CANDIDATE ANSWER:\n{state.get('latest_candidate_response') or '(empty)'}\n\n"
+        "Instructions:\n"
+        "- Carefully understand the candidate's complete answer. Analyze what they said, skills demonstrated, "
+        "missing details, relevant evidence, and which skills still need evaluation.\n"
+        "- Choose ONE action: FOLLOW_UP (good answer, explore one more aspect), DEEPEN (answer too short/shallow), "
+        "CLARIFY (answer unclear or ambiguous), VERIFY (candidate made a claim to verify with concrete evidence), "
+        "NEXT_TOPIC (current skill is sufficiently evaluated — move to the next required skill), "
+        "END (interview complete).\n"
+        "- spoken_response: a short, natural, conversational acknowledgment or transition (1-2 sentences).\n"
+        "- next_question: one clear, focused spoken question grounded in the candidate's resume, LinkedIn, GitHub, "
+        "projects, or their actual answer. For END, set next_question to null. Never repeat a question already asked.\n"
+        "- target_skill: the skill this turn targets. For NEXT_TOPIC, pick the next un-evaluated required skill.\n"
+        "- evidence_used: list which sources informed this turn: 'resume', 'linkedin', 'github', 'conversation'.\n"
+        "Return ONLY valid JSON in this exact shape:\n"
+        '{"action": "FOLLOW_UP|DEEPEN|CLARIFY|VERIFY|NEXT_TOPIC|END", "spoken_response": str, '
+        '"next_question": str or null, "target_skill": str, "answer_summary": str, '
+        '"evidence_used": ["resume","linkedin","github","conversation"], '
+        '"skills_demonstrated": [str], "missing_details": [str], "skills_still_needed": [str]}'
+    )
+
+
+def _build_greeting_prompt(state: InterviewerState) -> str:
+    return (
+        _base_prompt(state)
+        + f"\nQUESTIONS ALREADY ASKED — never repeat or rephrase these:\n{_asked_questions_text(state)}\n"
+        + "\nThis is the very first moment of the interview. Greet the candidate naturally and warmly, "
+        "introduce the conversation briefly, and ask ONE clear opening question about their experience "
+        "relevant to this role.\n"
+        "Return ONLY valid JSON in this exact shape:\n"
+        '{"action": "NEXT_TOPIC", "spoken_response": str, "next_question": str, "target_skill": str, '
+        '"answer_summary": "", "evidence_used": ["resume","linkedin","github"], '
+        '"skills_demonstrated": [], "missing_details": [], "skills_still_needed": []}'
+    )
+
+
+def _build_retry_prompt(state: InterviewerState, previous: dict) -> str:
+    return (
+        _build_turn_prompt(state)
+        + "\n\nYour previous answer produced a question that duplicates one already asked. Ask a DIFFERENT "
+        f"question about '{previous.get('target_skill') or state.get('current_skill')}'. Keep the same action, "
+        "spoken_response tone, and JSON shape."
+    )
+
+
+# ---------------------------------------------------------------------------
+# Duplicate-question prevention
+# ---------------------------------------------------------------------------
+
+
+def _normalize_question(q: str) -> str:
+    if not q:
+        return ""
+    q = q.lower()
+    q = re.sub(r"[^a-z0-9\s]", " ", q)
+    return " ".join(q.split())
+
+
+def _is_duplicate(candidate_q: str, asked: List[str]) -> bool:
+    nq = _normalize_question(candidate_q)
+    if not nq:
+        return False
+    for existing in asked:
+        na = _normalize_question(str(existing))
+        if not na:
+            continue
+        if nq == na:
+            return True
+        if nq in na or na in nq:
+            return True
+        tokens = set(nq.split())
+        if tokens and len(tokens & set(na.split())) / len(tokens) >= 0.9:
+            return True
+    return False
+
+
+def _force_next_topic(state: InterviewerState, analysis: dict) -> dict:
+    """When the LLM keeps producing duplicates, advance to the next skill naturally."""
+    remaining = state.get("skills_to_evaluate") or []
+    current = state.get("current_skill")
+    target = next((s for s in remaining if s != current), None) or current
+    analysis["action"] = "NEXT_TOPIC"
+    analysis["target_skill"] = target
+    analysis["next_question"] = None
+    analysis["spoken_response"] = (
+        "Thanks — that gives me what I needed on this. Let's move on to something I'd like to hear more about."
+    )
+    analysis["evidence_used"] = list(set(analysis.get("evidence_used") or []) | {"conversation"})
+    return analysis
+
+
+def _guard_duplicates(state: InterviewerState, analysis: dict) -> dict:
+    if not analysis:
+        return analysis
+    action = str(analysis.get("action") or "").upper()
+    if action == "END":
+        return analysis
+    question = analysis.get("next_question")
+    if not question or not _is_duplicate(str(question), state.get("asked_questions") or []):
+        return analysis
+
+    logger.info("InterviewerAgent: generated question duplicates a previous one; retrying once.")
+    retry = extract_json_object(generate_text(_build_retry_prompt(state, analysis), force_provider="groq"))
+    if retry:
+        retry_q = retry.get("next_question")
+        if retry_q and not _is_duplicate(str(retry_q), state.get("asked_questions") or []):
+            return retry
+    return _force_next_topic(state, analysis)
+
+
+# ---------------------------------------------------------------------------
+# Heuristic fallback for evaluation (keeps the interview moving if the LLM fails)
+# ---------------------------------------------------------------------------
+
+
+def _heuristic_analysis(state: InterviewerState) -> dict:
+    ans = (state.get("latest_candidate_response") or "").strip()
+    current_skill = state.get("current_skill") or "relevant experience"
+    remaining = state.get("skills_to_evaluate") or []
+    words = ans.split()
+    if len(words) < 8 or any(t in ans.lower() for t in ("don't know", "not sure", "skip", "pass", "no idea")):
+        return {
+            "action": "DEEPEN",
+            "spoken_response": "I'd like to understand that a bit better.",
+            "next_question": f"Could you walk me through a concrete example related to {current_skill}?",
+            "target_skill": current_skill,
+            "answer_summary": "Shallow or evasive answer detected.",
+            "evidence_used": ["conversation"],
+            "skills_demonstrated": [],
+            "missing_details": ["specific example", "metrics", "personal contribution"],
+            "skills_still_needed": remaining,
+        }
+    return {
+        "action": "NEXT_TOPIC",
+        "spoken_response": "Thanks for that.",
+        "next_question": None,
+        "target_skill": next((s for s in remaining if s != current_skill), current_skill),
+        "answer_summary": "Answer received but could not be deeply analyzed.",
+        "evidence_used": ["conversation"],
+        "skills_demonstrated": [],
+        "missing_details": [],
+        "skills_still_needed": remaining,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Nodes
+# ---------------------------------------------------------------------------
 
 
 def load_context_node(state: InterviewerState) -> InterviewerState:
-    """Node 1: Initialize context, load resume, job rubric, and conversation state."""
+    """Node 1: Initialize context, skills, memory, and asked-question list."""
     logger.info(f"InterviewerAgent: Loading context for interview {state.get('interview_id')}")
-    if not state.get("conversation_history"):
-        state["conversation_history"] = []
-    if not state.get("current_stage"):
-        state["current_stage"] = "intro"
-    if not state.get("turn_number"):
-        state["turn_number"] = 0
-    if not state.get("scores_so_far"):
-        state["scores_so_far"] = {}
-    if state.get("follow_up_depth") is None:
-        state["follow_up_depth"] = 0
-    if not state.get("evasion_flags"):
-        state["evasion_flags"] = []
+    state["conversation_history"] = state.get("conversation_history") or []
+    state["current_stage"] = state.get("current_stage") or "intro"
+    state["turn_number"] = state.get("turn_number") or 0
+    state["scores_so_far"] = state.get("scores_so_far") or {}
+    state["follow_up_depth"] = state.get("follow_up_depth") or 0
+    state["evasion_flags"] = state.get("evasion_flags") or []
+    state["evaluated_skills"] = state.get("evaluated_skills") or []
+    state["turn_records"] = state.get("turn_records") or []
+
+    required = _derive_required_skills(state)
+    state["required_skills"] = required
+    state["skills_to_evaluate"] = state.get("skills_to_evaluate") or list(required)
+    if not state.get("current_skill"):
+        state["current_skill"] = state["skills_to_evaluate"][0] if state["skills_to_evaluate"] else required[0]
+
+    state["asked_questions"] = state.get("asked_questions") or []
+    for entry in state["conversation_history"]:
+        if not isinstance(entry, dict):
+            continue
+        entry_text = entry.get("text") or entry.get("content") or ""
+        if str(entry.get("speaker") or entry.get("role") or "").lower() in ("ai", "interviewer") and entry_text:
+            state["asked_questions"].append(str(entry_text))
     return state
 
 
 def evaluate_last_answer_node(state: InterviewerState) -> InterviewerState:
-    """Node 2: Evaluate the candidate's last answer against rubric & detect evasion/shallow responses."""
-    candidate_ans = state.get("latest_candidate_response", "").strip()
-    if not candidate_ans:
+    """Node 2: Analyze the candidate's complete answer and decide the next action.
+
+    Produces `last_analysis`, a structured JSON turn with action, spoken_response,
+    next_question, target_skill, answer_summary, and evidence_used.
+    """
+    # Worker/evaluation path: full transcript already present, no live answer.
+    if state.get("current_stage") == "closing" and not state.get("latest_candidate_response"):
         return state
 
-    current_stage = state.get("current_stage", "technical")
-    logger.info(f"Evaluating answer for stage {current_stage}: '{candidate_ans[:60]}...'")
+    answer = (state.get("latest_candidate_response") or "").strip()
+    history = state.get("conversation_history") or []
+    has_ai_turns = any(str(e.get("speaker") or e.get("role") or "").lower() in ("ai", "interviewer") for e in history if isinstance(e, dict))
+    is_start = (not has_ai_turns) and state.get("turn_number", 0) == 0
 
+    if is_start:
+        raw = generate_text(_build_greeting_prompt(state), force_provider="groq")
+        analysis = extract_json_object(raw) if raw else None
+        if not analysis:
+            analysis = {
+                "action": "NEXT_TOPIC",
+                "spoken_response": f"Hi, thanks for joining. Let's talk about {state.get('current_skill') or 'your experience'}.",
+                "next_question": "Tell me a bit about your background and what you've been working on recently.",
+                "target_skill": state.get("current_skill") or "technical depth",
+                "answer_summary": "",
+                "evidence_used": ["resume", "linkedin", "github"],
+                "skills_demonstrated": [],
+                "missing_details": [],
+                "skills_still_needed": state.get("skills_to_evaluate") or [],
+            }
+        state["last_analysis"] = analysis
+        return state
 
-    words = candidate_ans.split()
-    is_shallow = len(words) < 12
-    is_evasive = any(term in candidate_ans.lower() for term in ["don't know", "not sure", "skip", "pass", "no idea"])
+    if not answer:
+        state["last_analysis"] = {
+            "action": "CLARIFY",
+            "spoken_response": "Sorry, I didn't quite catch that. Could you repeat your answer?",
+            "next_question": None,
+            "target_skill": state.get("current_skill") or "relevant experience",
+            "answer_summary": "No usable answer received (silence or unclear audio).",
+            "evidence_used": ["conversation"],
+            "skills_demonstrated": [],
+            "missing_details": [],
+            "skills_still_needed": state.get("skills_to_evaluate") or [],
+        }
+        return state
 
-    prompt = (
-        f"You are an AI interviewer evaluator. Evaluate this candidate response:\n"
-        f"Question Context/Stage: {current_stage}\n"
-        f"Candidate Answer: {candidate_ans}\n\n"
-        f"Return JSON format: {{\"score\": float (0-100), \"shallow\": bool, \"evasive\": bool, \"feedback\": str}}"
-    )
-    eval_data = extract_json_object(generate_text(prompt, force_provider="groq"))
-    if eval_data:
-        is_shallow = eval_data.get("shallow", is_shallow)
-        is_evasive = eval_data.get("evasive", is_evasive)
-        stage_key = "technical" if current_stage in ["intro", "technical", "project"] else "communication"
-        state["scores_so_far"][stage_key] = round(float(eval_data.get("score", 0)), 2)
+    raw = generate_text(_build_turn_prompt(state), force_provider="groq")
+    analysis = extract_json_object(raw) if raw else None
+    if not analysis:
+        analysis = _heuristic_analysis(state)
 
-    if is_evasive or is_shallow:
-        evasion_flags = state.get("evasion_flags", [])
-        evasion_flags.append(f"Stage {current_stage} turn {state.get('turn_number')}: Shallow/Evasive response detected")
-        state["evasion_flags"] = evasion_flags
-
+    analysis = _guard_duplicates(state, analysis)
+    state["last_analysis"] = analysis
+    state["evidence_used"] = analysis.get("evidence_used") or []
     return state
 
 
 def decide_next_action_node(state: InterviewerState) -> InterviewerState:
-    """Node 3: Decide whether to probe deeper (follow-up), ask next question, advance stage, or close."""
-    turn_number = state.get("turn_number", 0)
-    current_stage = state.get("current_stage", "intro")
-    follow_up_depth = state.get("follow_up_depth", 0)
-    candidate_ans = state.get("latest_candidate_response", "").lower()
-
-
-
-    if ("goodbye" in candidate_ans or "thank you" in candidate_ans) and turn_number > 6:
+    """Node 3: Route on the chosen action."""
+    if state.get("current_stage") == "closing" or state.get("turn_number", 0) >= MAX_TURNS:
         state["next_action"] = "close_interview"
         return state
 
-
-    evasion_flags = state.get("evasion_flags", [])
-    if evasion_flags and follow_up_depth < 1 and current_stage in ["technical", "project"]:
-        state["next_action"] = "follow_up"
-        return state
-
-
-    if current_stage == "intro" and turn_number >= 1:
-        state["next_action"] = "advance_stage"
-    elif current_stage == "technical" and turn_number >= 4:
-        state["next_action"] = "advance_stage"
-    elif current_stage == "behavioral" and turn_number >= 6:
-        state["next_action"] = "advance_stage"
-    elif current_stage == "project" and turn_number >= 8:
-        state["next_action"] = "advance_stage"
-    elif current_stage == "closing" or turn_number >= 10:
+    analysis = state.get("last_analysis") or {}
+    action = str(analysis.get("action") or "").upper()
+    if action == "END":
         state["next_action"] = "close_interview"
+    elif action == "NEXT_TOPIC":
+        state["next_action"] = "advance_skill"
+    elif action in ("FOLLOW_UP", "DEEPEN", "CLARIFY", "VERIFY"):
+        state["next_action"] = "generate_follow_up"
     else:
         state["next_action"] = "generate_question"
+    return state
 
+
+def _persist_turn(state: InterviewerState) -> InterviewerState:
+    """Record the AI turn into conversation history, asked questions, and turn records."""
+    analysis = state.get("last_analysis") or {}
+    spoken = str(analysis.get("spoken_response") or "").strip()
+    question = str(analysis.get("next_question") or "").strip()
+    combined = " ".join(p for p in (spoken, question) if p).strip()
+
+    state["latest_ai_response"] = combined
+    state["turn_number"] = state.get("turn_number", 0) + 1
+
+    history = state.get("conversation_history") or []
+    previous_question = ""
+    for entry in reversed(history):
+        if isinstance(entry, dict) and str(entry.get("speaker") or entry.get("role") or "").lower() in ("ai", "interviewer"):
+            previous_question = str(entry.get("text") or entry.get("content") or "")
+            break
+    history.append({"speaker": "ai", "text": combined, "stage": state.get("current_stage")})
+    state["conversation_history"] = history
+
+    if question:
+        asked = state.get("asked_questions") or []
+        asked.append(question)
+        state["asked_questions"] = asked
+
+    turn_records = state.get("turn_records") or []
+    turn_records.append({
+        "turn": state["turn_number"],
+        "question": previous_question,
+        "answer": state.get("latest_candidate_response") or "",
+        "answer_summary": analysis.get("answer_summary"),
+        "action": analysis.get("action"),
+        "target_skill": analysis.get("target_skill"),
+        "evaluated_skills": list(state.get("evaluated_skills") or []),
+        "remaining_skills": list(state.get("skills_to_evaluate") or []),
+        "evidence_used": analysis.get("evidence_used") or [],
+        "stage": state.get("current_stage"),
+    })
+    state["turn_records"] = turn_records
     return state
 
 
 def generate_question_node(state: InterviewerState) -> InterviewerState:
-    """Node 4: Generate main stage question using candidate resume & job rubric.
-
-    Every stage question is produced by the LLM — no canned template is ever
-    used. If the LLM returns nothing the interview fails instead of asking a
-    fabricated question.
-    """
-    current_stage = state.get("current_stage", "technical")
-    job_title = state.get("job_title")
-    candidate_resume = state.get("candidate_resume", "")
-    history = state.get("conversation_history", [])
-
-    prompt = (
-        f"You are a professional AI interviewer for the role of {job_title or 'an open position'}.\n"
-        f"Current Interview Stage: {current_stage}\n"
-        f"Candidate Resume Context: {candidate_resume[:1500]}\n"
-        f"Recent Conversation History: {json.dumps(history[-4:])}\n\n"
-        f"Ask ONE concise, engaging spoken interview question appropriate for the {current_stage} stage, referencing candidate's actual experience or projects if available. Keep it under 2 sentences."
-    )
-    question_text = generate_text(prompt, force_provider="groq")
-    if not question_text:
-        raise RuntimeError("Interviewer LLM returned no question for this turn.")
-
-    state["latest_ai_response"] = question_text
-    state["follow_up_depth"] = 0
-    state["turn_number"] = state.get("turn_number", 0) + 1
-
-    history.append({"speaker": "ai", "text": question_text, "stage": current_stage})
-    state["conversation_history"] = history
+    """Node 4: Emit the main stage question (greeting or next-topic)."""
+    _persist_turn(state)
     return state
 
 
 def generate_follow_up_node(state: InterviewerState) -> InterviewerState:
-    """Node 5: Generate dynamic targeted follow-up question when candidate answer lacks depth."""
-    candidate_ans = state.get("latest_candidate_response", "")
-    current_stage = state.get("current_stage", "technical")
-    history = state.get("conversation_history", [])
-
-    prompt = (
-        f"You are an AI technical interviewer. The candidate gave a brief or partial answer:\n"
-        f"Candidate Answer: '{candidate_ans}'\n\n"
-        f"Generate a polite, sharp 1-sentence follow-up probing deeper into technical execution or specific metrics."
-    )
-    follow_up_text = generate_text(prompt, force_provider="groq")
-    if not follow_up_text:
-        raise RuntimeError("Interviewer LLM returned no follow-up question.")
-
-    state["latest_ai_response"] = follow_up_text
+    """Node 5: Emit a targeted follow-up / deepen / clarify / verify question."""
     state["follow_up_depth"] = state.get("follow_up_depth", 0) + 1
-    state["turn_number"] = state.get("turn_number", 0) + 1
-
-    history.append({"speaker": "ai", "text": follow_up_text, "stage": f"{current_stage}_followup"})
-    state["conversation_history"] = history
+    _persist_turn(state)
     return state
 
 
-def advance_stage_node(state: InterviewerState) -> InterviewerState:
-    """Node 6: Advance interview to the next logical stage."""
-    stages = ["intro", "technical", "behavioral", "project", "closing"]
-    current_stage = state.get("current_stage", "intro")
-    try:
-        idx = stages.index(current_stage)
-        next_stage = stages[min(idx + 1, len(stages) - 1)]
-    except ValueError:
-        next_stage = "closing"
+def advance_skill_node(state: InterviewerState) -> InterviewerState:
+    """Node 6: Mark the current skill evaluated and move to the next required skill."""
+    analysis = state.get("last_analysis") or {}
+    target = analysis.get("target_skill") or state.get("current_skill")
+    current = state.get("current_skill")
+    is_greeting = not (state.get("latest_candidate_response") or "").strip()
 
-    logger.info(f"Advancing interview stage from {current_stage} to {next_stage}")
-    state["current_stage"] = next_stage
+    # On the greeting turn nothing has been answered yet, so never mark a skill evaluated.
+    if current and not is_greeting and str(current) != str(target):
+        evaluated = state.get("evaluated_skills") or []
+        if str(current) not in evaluated:
+            evaluated.append(str(current))
+        state["evaluated_skills"] = evaluated
+
+        remaining = state.get("skills_to_evaluate") or []
+        if str(current) in remaining:
+            remaining.remove(str(current))
+        if target and str(target) not in remaining and str(target) != str(current):
+            remaining.insert(0, str(target))
+        state["skills_to_evaluate"] = remaining
+
+    state["current_skill"] = target
+    state["follow_up_depth"] = 0
+    state["current_stage"] = _stage_for_skill(str(target or ""))
     return generate_question_node(state)
 
 
 def close_interview_node(state: InterviewerState) -> InterviewerState:
-    """Node 7: Close interview session with a real LLM concluding remark."""
-    current_stage = state.get("current_stage", "closing")
-    history = state.get("conversation_history", [])
+    """Node 7: Close the interview with a real, non-fabricated farewell."""
+    analysis = state.get("last_analysis") or {}
+    history = state.get("conversation_history") or []
 
-    prompt = (
-        "You are a professional AI interviewer ending a completed interview.\n"
-        f"Candidate Context: {json.dumps(history[-4:])}\n\n"
-        "Say goodbye to the candidate in 1-2 sentences, thank them for their time, "
-        "and tell them their results are being prepared. Do not invent scores."
-    )
-    closing_text = generate_text(prompt, force_provider="groq")
-    if not closing_text:
-        raise RuntimeError("Interviewer LLM returned no closing message.")
+    closing = str(analysis.get("spoken_response") or "").strip()
+    if not closing:
+        prompt = (
+            "You are a professional AI interviewer ending a completed interview.\n"
+            f"Candidate Context: {json.dumps(history[-4:])}\n\n"
+            "Say goodbye to the candidate in 1-2 sentences, thank them for their time, and tell them "
+            "their results are being prepared. Do not invent scores."
+        )
+        closing = generate_text(prompt, force_provider="groq")
+        if not closing:
+            raise RuntimeError("Interviewer LLM returned no closing message.")
 
-    state["latest_ai_response"] = closing_text
+    state["latest_ai_response"] = closing
     state["is_complete"] = True
-    history.append({"speaker": "ai", "text": closing_text, "stage": current_stage})
+    history.append({"speaker": "ai", "text": closing, "stage": "closing"})
     state["conversation_history"] = history
-
     return finalize_scores_node(state)
 
 
 def _collect_transcript_text(history: Any) -> tuple:
-    """Extract candidate/ai transcript text and count turns from conversation history."""
+    """Extract candidate/ai transcript text and count turns from conversation history.
+
+    Accepts both the agent's internal shape ({speaker, text}) and the frontend's
+    persisted Message shape ({role, content}).
+    """
     if not isinstance(history, list):
         return "", 0
     candidate_lines = []
@@ -226,7 +545,7 @@ def _collect_transcript_text(history: Any) -> tuple:
         text = entry.get("text") or entry.get("content") or ""
         if not isinstance(text, str):
             continue
-        speaker = str(entry.get("speaker", "")).lower()
+        speaker = str(entry.get("speaker") or entry.get("role") or "").lower()
         total += 1
         if speaker in ("candidate", "human", "interviewee", "me", "user"):
             candidate_lines.append(text.strip())
@@ -234,10 +553,10 @@ def _collect_transcript_text(history: Any) -> tuple:
 
 
 def _gemini_score_transcript(history: Any, job_title: str) -> Optional[Dict[str, Any]]:
-    """Score the full interview transcript with Gemini against the role rubric.
+    """Score the full interview transcript with the LLM against the role rubric.
 
     Returns a dict with technical/communication/problem_solving scores or None
-    when Gemini is unavailable, the transcript is too thin, or parsing fails.
+    when the LLM is unavailable, the transcript is too thin, or parsing fails.
     """
     transcript_text, _ = _collect_transcript_text(history)
     if len(transcript_text.strip()) < 40:
@@ -254,12 +573,10 @@ def _gemini_score_transcript(history: Any, job_title: str) -> Optional[Dict[str,
 
 
 def finalize_scores_node(state: InterviewerState) -> InterviewerState:
-    """Node 8: Aggregate turn scores into a final evaluation scorecard.
+    """Node 8: Aggregate real turn scores into a final evaluation scorecard.
 
-    Every score is either a Gemini score of the full transcript or a real
-    per-turn LLM score recorded during the interview. No length-based baseline
-    or default-0 score is ever used. If no real score exists the interview
-    evaluation fails instead of reporting fabricated numbers.
+    Every score is either a full-transcript LLM score or a real per-turn LLM
+    score recorded during the interview. No fabricated baseline is ever used.
     """
     scores = state.get("scores_so_far", {})
     history = state.get("conversation_history", [])
@@ -271,15 +588,12 @@ def finalize_scores_node(state: InterviewerState) -> InterviewerState:
 
     llm = _gemini_score_transcript(history, state.get("job_title") or "")
     if llm:
-
         tech = round(float(llm["technical_depth"]), 1) if llm.get("technical_depth") is not None else None
         comm = round(float(llm["communication"]), 1) if llm.get("communication") is not None else None
         prob = round(float(llm["problem_solving"]), 1) if llm.get("problem_solving") is not None else None
         if llm.get("overall_score") is not None:
             composite = round(float(llm["overall_score"]), 1)
         summary_feedback = llm.get("summary_feedback")
-
-
 
     if tech is None and scores.get("technical") is not None:
         tech = round(float(scores["technical"]), 1)
@@ -304,9 +618,15 @@ def finalize_scores_node(state: InterviewerState) -> InterviewerState:
         "evasion_flags_count": len(state.get("evasion_flags", [])),
         "total_turns": total_turns,
         "summary_feedback": summary_feedback,
+        "evaluated_skills": state.get("evaluated_skills") or [],
+        "skills_to_evaluate": state.get("skills_to_evaluate") or [],
     }
     return state
 
+
+# ---------------------------------------------------------------------------
+# LangGraph wiring
+# ---------------------------------------------------------------------------
 
 
 if LANGGRAPH_AVAILABLE:
@@ -317,7 +637,7 @@ if LANGGRAPH_AVAILABLE:
     graph_builder.add_node("decide_next_action", decide_next_action_node)
     graph_builder.add_node("generate_question", generate_question_node)
     graph_builder.add_node("generate_follow_up", generate_follow_up_node)
-    graph_builder.add_node("advance_stage", advance_stage_node)
+    graph_builder.add_node("advance_skill", advance_skill_node)
     graph_builder.add_node("close_interview", close_interview_node)
     graph_builder.add_node("finalize_scores", finalize_scores_node)
 
@@ -332,16 +652,16 @@ if LANGGRAPH_AVAILABLE:
         "decide_next_action",
         route_action,
         {
-            "follow_up": "generate_follow_up",
+            "generate_follow_up": "generate_follow_up",
             "generate_question": "generate_question",
-            "advance_stage": "advance_stage",
+            "advance_skill": "advance_skill",
             "close_interview": "close_interview",
         }
     )
 
     graph_builder.add_edge("generate_question", END)
     graph_builder.add_edge("generate_follow_up", END)
-    graph_builder.add_edge("advance_stage", END)
+    graph_builder.add_edge("advance_skill", END)
     graph_builder.add_edge("close_interview", "finalize_scores")
     graph_builder.add_edge("finalize_scores", END)
 
@@ -358,17 +678,15 @@ def run_interviewer_agent(state: InterviewerState) -> InterviewerState:
         except Exception as e:
             logger.error(f"LangGraph execution error: {e}. Falling back to linear execution.")
 
-
     state = load_context_node(state)
-    if state.get("latest_candidate_response"):
-        state = evaluate_last_answer_node(state)
+    state = evaluate_last_answer_node(state)
     state = decide_next_action_node(state)
     action = state.get("next_action", "generate_question")
 
-    if action == "follow_up":
+    if action == "generate_follow_up":
         state = generate_follow_up_node(state)
-    elif action == "advance_stage":
-        state = advance_stage_node(state)
+    elif action == "advance_skill":
+        state = advance_skill_node(state)
     elif action == "close_interview":
         state = close_interview_node(state)
     else:

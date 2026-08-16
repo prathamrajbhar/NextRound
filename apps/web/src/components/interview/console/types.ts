@@ -10,6 +10,24 @@ export interface Message {
   role: 'ai' | 'candidate';
   content: string;
   timestamp: string;
+  analysis?: {
+    action?: string;
+    target_skill?: string;
+    answer_summary?: string;
+    evidence_used?: string[];
+  } | null;
+  turnRecord?: {
+    turn?: number;
+    question?: string;
+    answer?: string;
+    answer_summary?: string;
+    action?: string;
+    target_skill?: string;
+    evaluated_skills?: string[];
+    remaining_skills?: string[];
+    evidence_used?: string[];
+    stage?: string;
+  } | null;
 }
 
 export type InterviewPhase = 'Introduction' | 'Core Vetting' | 'Deep-Dive' | 'Wrap-up';

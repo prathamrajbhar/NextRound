@@ -33,6 +33,9 @@ class InterviewRespondRequest(BaseModel):
     turnNumber: int = 0
     stage: str = "intro"
     candidateResume: Optional[str] = None
+    candidateContext: Optional[Dict[str, Any]] = None
+    requiredSkills: Optional[List[str]] = None
+    jobRubric: Optional[Dict[str, Any]] = None
     jobTitle: Optional[str] = None
     conversationHistory: List[Dict[str, Any]] = Field(default_factory=list)
     voice: Optional[str] = "en-US-ChristopherNeural"
@@ -44,6 +47,11 @@ class InterviewRespondResponse(BaseModel):
     stage: str
     isComplete: bool = False
     scorecard: Optional[Dict[str, Any]] = None
+    analysis: Optional[Dict[str, Any]] = None
+    turnRecord: Optional[Dict[str, Any]] = None
+    evaluatedSkills: Optional[List[str]] = None
+    remainingSkills: Optional[List[str]] = None
+    currentSkill: Optional[str] = None
 
 
 class TTSRequest(BaseModel):
@@ -104,7 +112,11 @@ async def generate_interview_response(request: InterviewRespondRequest):
         "latest_candidate_response": request.transcript,
         "conversation_history": request.conversationHistory or [],
         "candidate_resume": request.candidateResume,
+        "candidate_context": request.candidateContext,
+        "job_rubric": request.jobRubric,
     }
+    if request.requiredSkills:
+        state["required_skills"] = request.requiredSkills
 
 
     output_state = await asyncio.to_thread(run_interviewer_agent, state)
@@ -115,6 +127,9 @@ async def generate_interview_response(request: InterviewRespondRequest):
     next_stage = output_state.get("current_stage", request.stage)
     is_complete = bool(output_state.get("is_complete", False))
     scorecard = output_state.get("final_scorecard")
+    analysis = output_state.get("last_analysis")
+    turn_records = output_state.get("turn_records") or []
+    turn_record = turn_records[-1] if turn_records else None
 
 
     audio_url = await generate_tts_audio_base64(ai_text, voice=request.voice or "en-US-ChristopherNeural")
@@ -125,6 +140,11 @@ async def generate_interview_response(request: InterviewRespondRequest):
         stage=next_stage,
         isComplete=is_complete,
         scorecard=scorecard,
+        analysis=analysis,
+        turnRecord=turn_record,
+        evaluatedSkills=output_state.get("evaluated_skills") or [],
+        remainingSkills=output_state.get("skills_to_evaluate") or [],
+        currentSkill=output_state.get("current_skill"),
     )
 
 
@@ -153,7 +173,11 @@ async def voice_stream_response(request: InterviewRespondRequest):
         "latest_candidate_response": request.transcript,
         "conversation_history": request.conversationHistory or [],
         "candidate_resume": request.candidateResume,
+        "candidate_context": request.candidateContext,
+        "job_rubric": request.jobRubric,
     }
+    if request.requiredSkills:
+        state["required_skills"] = request.requiredSkills
 
     output_state = await asyncio.to_thread(run_interviewer_agent, state)
     ai_text = output_state.get("latest_ai_response")
