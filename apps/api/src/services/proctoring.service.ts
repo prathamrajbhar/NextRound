@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma';
 import { Prisma } from '@nextround/database';
 import { getPolicy, evaluateSessionPolicy } from './proctoring-policy.service';
+import { logger } from '../lib/logger';
 import { uploadFile } from '../lib/storage';
 import { forbidden, notFound, badRequest } from '../lib/http-errors';
 
@@ -237,7 +238,7 @@ export async function endProctoringSession(sessionId: string, userId: string) {
 
   
   analyzeSessionRisk(sessionId).catch((err) => {
-    console.error(`[Proctoring] Background risk analysis error for session ${sessionId}:`, err);
+    logger.child('Proctoring').error(`Background risk analysis error for session ${sessionId}:`, err);
   });
 
   return updatedSession;

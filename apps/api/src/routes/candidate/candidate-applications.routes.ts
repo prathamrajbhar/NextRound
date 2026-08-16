@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
+import { logger } from '../../lib/logger';
 import { serializeOffer } from '../../lib/serializers';
 import { advanceAssessmentStage } from '../../lib/pipeline';
 
@@ -247,7 +248,7 @@ candidateApplicationsRouter.post(
       });
 
       await advanceAssessmentStage(appId).catch((err) =>
-        console.error(`Failed to advance assessment stage for application ${appId}:`, err)
+        logger.child('CandidateApps').error(`Failed to advance assessment stage for application ${appId}:`, err)
       );
 
       return res.json({

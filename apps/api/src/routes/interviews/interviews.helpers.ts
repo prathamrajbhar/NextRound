@@ -1,5 +1,6 @@
 import { Prisma } from '@nextround/database';
 import { prisma } from '@nextround/database';
+import { logger } from '../../lib/logger';
 
 
 
@@ -31,7 +32,7 @@ export function loadIceServers(): IceServer[] {
         if (valid.length > 0) return valid;
       }
     } catch {
-      console.error('[ICE] Failed to parse WEBRTC_ICE_SERVERS env var; falling back to STUN defaults');
+      logger.child('ICE').warn('Failed to parse WEBRTC_ICE_SERVERS env var; falling back to STUN defaults');
     }
   }
   return [

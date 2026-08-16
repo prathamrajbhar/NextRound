@@ -3,6 +3,7 @@ import { notFound } from '../lib/http-errors';
 import { env } from '../lib/env';
 import { buildContextSections, hashContent, type ContextSection } from './candidate-embedding.service';
 import type { CandidateInterviewContext } from '@nextround/shared';
+import { logger } from '../lib/logger';
 
 const EMBEDDING_DIM = 768;
 
@@ -110,9 +111,15 @@ export async function getCandidateInterviewContext(
           section: m.section,
           content: m.content,
         }));
+        logger
+          .child('Context')
+          .info(`Semantic search for job ${jobId} against candidate ${candidateId} returned ${matches.length} relevant sections`);
       } catch {
+        logger.child('Context').warn(`Semantic search failed for candidate ${candidateId} / job ${jobId}; falling back to first sections`);
         interviewFocus = [];
       }
+    } else {
+      logger.child('Context').warn(`Could not embed job description for ${jobId}; falling back to first sections`);
     }
   }
   if (interviewFocus.length === 0) {

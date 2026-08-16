@@ -1,4 +1,5 @@
 import { generateText } from './llm.service';
+import { logger } from '../lib/logger';
 
 const { PDFParse } = require('pdf-parse');
 
@@ -103,7 +104,7 @@ Return ONLY the generated text string for the field without markdown formatting,
     const responseText = await generateText(prompt);
     return responseText.trim().replace(/^["']|["']$/g, '');
   } catch (err) {
-    console.error('Field regeneration error:', err);
+    logger.child('ResumeParser').error('Field regeneration error:', err);
     return currentValue || '';
   }
 }
@@ -123,7 +124,7 @@ export async function extractTextFromBuffer(
         return normalizeResumeText(data.text.trim());
       }
     } catch (err) {
-      console.error('Failed to extract text using PDFParse:', err);
+      logger.child('ResumeParser').error(`Failed to extract text using PDFParse for ${filename}:`, err);
     }
   }
 
@@ -179,7 +180,7 @@ ${rawText.slice(0, 12000)}`;
         return sanitizeParsedData(parsed, rawText);
       }
     } catch (err) {
-      console.error('LLM resume parsing error:', err);
+      logger.child('ResumeParser').error('LLM resume parsing error:', err);
     }
   }
 

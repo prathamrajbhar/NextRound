@@ -2,6 +2,7 @@ import { prisma, Prisma } from '@nextround/database';
 import type { ApplicationStatus, AgentStatus } from '@nextround/database';
 import { emailService } from './email.service';
 import { enqueueEvaluation } from '../lib/queues/evaluation.queue';
+import { logger } from '../lib/logger';
 import {
   ensureInterviewAndSchedule,
   advanceAssessmentStage,
@@ -153,18 +154,18 @@ export async function recordScreeningResult(applicationId: string, body: Record<
         gap_analysis,
         rejection_feedback as string | undefined
       )
-      .catch((err) => console.error('Failed to send rejection email:', err));
+      .catch((err) => logger.child('Internal').error(`Failed to send rejection email for application ${id}:`, err));
   }
 
   
   
   if (updatedApp.status !== 'rejected') {
     await ensureInterviewAndSchedule(id).catch((err) =>
-      console.error(`Failed to create interview/schedule for application ${id}:`, err)
+      logger.child('Internal').error(`Failed to create interview/schedule for application ${id}:`, err)
     );
     
     await advanceAssessmentStage(id).catch((err) =>
-      console.error(`advanceAssessmentStage failed during screening completion for ${id}:`, err)
+      logger.child('Internal').error(`advanceAssessmentStage failed during screening completion for ${id}:`, err)
     );
   }
 
@@ -226,13 +227,13 @@ export async function recordAssessmentResult(applicationId: string, body: Record
       },
     })
     .catch((err) => {
-      console.error(`Failed to update assessment ${id} with evaluation results:`, err);
+      logger.child('Internal').error(`Failed to update assessment ${id} with evaluation results:`, err);
       throw err;
     });
 
   if (passed) {
     await advanceAssessmentStage(id).catch((err) =>
-      console.error(`advanceAssessmentStage failed for application ${id}:`, err)
+      logger.child('Internal').error(`advanceAssessmentStage failed for application ${id}:`, err)
     );
   }
 
@@ -276,7 +277,7 @@ export async function recordCodingResult(applicationId: string, body: Record<str
           ai_feedback: (feedback as string) || 'Coding evaluation completed',
         },
       })
-      .catch((err) => console.warn('Could not update coding submission:', err));
+      .catch((err) => logger.child('Internal').warn(`Could not update coding submission for application ${id}:`, err));
   }
 
   
@@ -318,7 +319,7 @@ export async function recordCodingResult(applicationId: string, body: Record<str
 
   if (passed) {
     await advanceAssessmentStage(id).catch((err) =>
-      console.error(`advanceAssessmentStage failed for application ${id}:`, err)
+      logger.child('Internal').error(`advanceAssessmentStage failed for application ${id}:`, err)
     );
   }
 
@@ -460,10 +461,7 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
         proctor_telemetry: body.proctor_telemetry || {},
       }
     ).catch((err) =>
-      console.error(
-        `Failed to enqueue evaluator for application ${interview.application_id}:`,
-        err
-      )
+      logger.child('Internal').error(`Failed to enqueue evaluator for application ${interview.application_id}:`, err)
     );
   }
 

@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { JobCreateSchema, JobUpdateSchema } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
 import { authenticate, optionalAuthenticate } from '../../middleware/auth';
+import { logger } from '../../lib/logger';
 import { requireRole } from '../../middleware/rbac';
 import { requireOrgScope, rejectOrgIdParam } from '../../middleware/orgScope';
 import { enqueueSourcing } from '../../lib/queues/sourcing.queue';
@@ -304,7 +305,7 @@ jobRouter.post(
           timestamp: new Date().toISOString(),
         });
       } catch (queueErr) {
-        console.error('Failed to enqueue sourcing job:', queueErr);
+        logger.child('Jobs').error(`Failed to enqueue sourcing job for job ${updatedJob.id}:`, queueErr);
       }
 
       return res.json({
@@ -456,7 +457,7 @@ jobRouter.post(
           timestamp: new Date().toISOString(),
         });
       } catch (err) {
-        console.warn('Could not enqueue sourcing worker:', err);
+        logger.child('Jobs').warn(`Could not enqueue sourcing worker for job ${existingJob.id}:`, err);
       }
 
       return res.json({

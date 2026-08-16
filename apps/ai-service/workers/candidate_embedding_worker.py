@@ -20,16 +20,21 @@ async def process_candidate_embedding_job(job_data: dict) -> bool:
         logger.error("Missing candidateId in candidate embedding job payload.")
         return False
 
-    logger.info(f"Processing candidate embedding job for candidateId: {candidate_id}")
+    logger.info(f"Embedding build started for candidate {candidate_id}")
 
     async def run() -> dict:
         data = await fetch_internal(f"internal/candidates/{candidate_id}/sections")
         sections = data.get("sections") or []
         existing = data.get("existing") or []
+        logger.info(
+            f"Candidate {candidate_id} has {len(sections)} context sections; "
+            f"{len(existing)} already embedded"
+        )
 
         existing_hashes = {f"{e.get('sourceType')}:{e.get('section')}": e.get("contentHash") for e in existing}
 
         embeddings = []
+        skipped = 0
         for section in sections:
             source_type = section.get("sourceType")
             name = section.get("section")
@@ -38,10 +43,14 @@ async def process_candidate_embedding_job(job_data: dict) -> bool:
             if not source_type or not name or not content or not content_hash:
                 continue
             if existing_hashes.get(f"{source_type}:{name}") == content_hash:
-                logger.info(f"Skipping unchanged section {source_type}/{name}")
+                skipped += 1
                 continue
 
             vector, source = embed_text_with_source(content)
+            logger.debug(
+                f"Embedded {source_type}/{name} for candidate {candidate_id} "
+                f"({len(content)} chars, {len(vector)} dims, model={source})"
+            )
             embeddings.append({
                 "sourceType": source_type,
                 "section": name,
@@ -57,12 +66,13 @@ async def process_candidate_embedding_job(job_data: dict) -> bool:
             )
             logger.info(f"Stored {len(embeddings)} candidate embeddings for {candidate_id}")
         else:
-            logger.info(f"No new candidate embeddings to store for {candidate_id}")
+            logger.info(f"No new candidate embeddings to store for {candidate_id} ({skipped} unchanged)")
 
         return {
             "candidate_id": candidate_id,
             "sections_seen": len(sections),
             "embeddings_stored": len(embeddings),
+            "skipped_unchanged": skipped,
         }
 
     return await run_agent_job(

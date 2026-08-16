@@ -14,6 +14,7 @@ import {
 } from '../../services/social-sync.service';
 import { enqueueEmbeddingRebuild } from '../../services/candidate-embedding.service';
 import { getCandidateProfileId } from '../../lib/candidate-profile';
+import { logger } from '../../lib/logger';
 
 export const candidateProfileRouter = Router();
 
@@ -67,7 +68,7 @@ candidateProfileRouter.post(
         },
       });
     } catch (err) {
-      console.error('[RegenerateField] Processing error:', err);
+      logger.child('RegenerateField').error('Failed to regenerate profile field:', err);
       return next(err);
     }
   }
@@ -119,8 +120,11 @@ candidateProfileRouter.post(
       for (const outcome of socialData.syncs) {
         try {
           await persistSocialSyncOutcome(candidateId, outcome);
+          logger
+            .child('SyncSocial')
+            .info(`Persisted ${outcome.source} sync for candidate ${candidateId}: status=${outcome.status}`);
         } catch (persistErr) {
-          console.error('[SyncSocial] Failed to persist sync outcome:', persistErr);
+          logger.child('SyncSocial').error(`Failed to persist ${outcome.source} sync outcome for candidate ${candidateId}:`, persistErr);
         }
       }
 
@@ -138,7 +142,7 @@ candidateProfileRouter.post(
       }
 
       enqueueEmbeddingRebuild(candidateId).catch((err) =>
-        console.error('[SyncSocial] Failed to enqueue embedding rebuild:', err)
+        logger.child('SyncSocial').error(`Failed to enqueue embedding rebuild for candidate ${candidateId}:`, err)
       );
 
       return res.json({
@@ -146,7 +150,7 @@ candidateProfileRouter.post(
         data: socialData,
       });
     } catch (err) {
-      console.error('[SyncSocial] Processing error:', err);
+      logger.child('SyncSocial').error('Failed to sync social profiles:', err);
       return next(err);
     }
   }
@@ -188,7 +192,7 @@ candidateProfileRouter.delete(
       const candidateId = await getCandidateProfileId(req.user.userId);
       await deleteCandidateSocialSource(candidateId, source);
       enqueueEmbeddingRebuild(candidateId).catch((err) =>
-        console.error('[DeleteSocial] Failed to enqueue embedding rebuild:', err)
+        logger.child('DeleteSocial').error(`Failed to enqueue embedding rebuild after removing ${source} for candidate ${candidateId}:`, err)
       );
       return res.json({ success: true, data: { message: `Removed ${source} social data` } });
     } catch (err) {
@@ -227,7 +231,7 @@ candidateProfileRouter.post(
             extractedParsedResume = (await parseResumeWithGemini(extractedRawText)) as unknown as Record<string, unknown>;
           }
         } catch (extractErr) {
-          console.error('Failed auto-extracting text on profile upload:', extractErr);
+          logger.child('Profile').error(`Failed auto-extracting text on profile upload (${req.file.originalname}):`, extractErr);
         }
       }
 
@@ -317,7 +321,7 @@ candidateProfileRouter.post(
 
       if (profile.data_consent) {
         enqueueEmbeddingRebuild(profile.id).catch((err) =>
-          console.error('[Profile] Failed to enqueue embedding rebuild:', err)
+          logger.child('Profile').error(`Failed to enqueue embedding rebuild for candidate ${profile.id}:`, err)
         );
       }
 

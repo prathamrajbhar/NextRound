@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { optionalAuthenticate } from '../../middleware/auth';
 import { extractTextFromBuffer, parseResumeWithGemini } from '../../services/resume-parser.service';
+import { logger } from '../../lib/logger';
 
 export const resumeParserRouter = Router();
 
@@ -29,7 +30,7 @@ resumeParserRouter.post(
   (req: Request, res: Response, next: NextFunction) => {
     upload.single('resume')(req, res, (err) => {
       if (err) {
-        console.error('Multer file upload error in /parse-resume:', err);
+        logger.child('ParseResume').error('Multer file upload error in /parse-resume:', err);
         return res.status(400).json({ success: false, error: typeof err === 'string' ? err : err.message || 'File upload error' });
       }
       next();
@@ -47,6 +48,8 @@ resumeParserRouter.post(
         req.file.originalname
       );
 
+      logger.child('ParseResume').info(`Parsed resume "${req.file.originalname}": extracted ${rawText.length} chars`);
+
       if (!rawText || rawText.trim().length === 0) {
         return res.status(400).json({ success: false, error: 'Could not extract text from the uploaded resume file' });
       }
@@ -62,7 +65,7 @@ resumeParserRouter.post(
         },
       });
     } catch (err) {
-      console.error('[ParseResume] Processing error:', err);
+      logger.child('ParseResume').error('Failed to parse resume:', err);
       return next(err);
     }
   }

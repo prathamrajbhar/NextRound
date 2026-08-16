@@ -5,11 +5,13 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { UPLOAD_ROOT_DIR } from './lib/storage';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { requestLogger } from './middleware/requestLogger';
 import { apiRouter } from './routes';
 import { env } from './lib/env';
 
 export const app = express();
 
+app.use(requestLogger);
 app.use(helmet());
 app.use(
   cors({

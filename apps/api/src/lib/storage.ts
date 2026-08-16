@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { env } from './env';
+import { logger } from './logger';
 
 const supabaseUrl = env('SUPABASE_URL');
 const supabaseServiceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY');
@@ -57,6 +58,6 @@ export async function deleteFile(key: string): Promise<void> {
   const normalizedKey = key.replace(/\\/g, '/').replace(/^\/+/, '');
   const { error } = await supabase.storage.from(bucket).remove([normalizedKey]);
   if (error) {
-    console.error(`Failed to delete file from Supabase Storage: ${error.message}`);
+    logger.child('Storage').error(`Failed to delete file "${key}" from Supabase Storage:`, error.message);
   }
 }

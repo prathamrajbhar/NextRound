@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@nextround/database';
 import { prisma } from '@nextround/database';
 import { enqueueInterview } from '../../lib/queues/interview.queue';
+import { logger } from '../../lib/logger';
 import { enqueueDecision } from '../../lib/queues/decision.queue';
 import {
   ConsentBodySchema,
@@ -461,7 +462,7 @@ export async function getSignals(req: Request, res: Response, next: NextFunction
         application_id: applicationId,
         created_at: { lt: new Date(Date.now() - 300000) },
       },
-    }).catch(err => console.error('Failed to clean up old signaling messages:', err));
+    }).catch(err => logger.child('Interviews').error('Failed to clean up old signaling messages:', err));
 
     return res.json({ success: true, data: signals });
   } catch (error) {

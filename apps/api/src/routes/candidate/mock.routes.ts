@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
+import { logger } from '../../lib/logger';
 import { MockSessionCreateSchema } from '@nextround/shared';
 import { enqueueMockEvaluation } from '../../lib/queues/mock.queue';
 import { serializeMockSession, serializeMockSessionList } from '../../lib/serializers';
@@ -482,7 +483,7 @@ mockRouter.post(
             updated.difficulty || undefined
           );
         } catch (e) {
-          console.error('Failed to enqueue mock evaluation job:', e);
+          logger.child('Mock').error(`Failed to enqueue mock evaluation job for session ${updated.id || ''}:`, e);
           
         }
       }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/apiClient';
+import { normalizeCodingProblem, pickCodingEndpoint } from './normalize';
 
 export type SupportedLanguage = 'python' | 'javascript' | 'typescript' | 'java' | 'cpp';
 
@@ -36,48 +37,12 @@ export function useCodingProblem({ applicationId, sessionId, role, company }: Us
     let cancelled = false;
     async function fetchCodingProblem() {
       try {
-        const endpoint = applicationId
-          ? `/applications/${applicationId}/assessment/coding`
-          : sessionId
-          ? `/mock/sessions/${sessionId}/coding`
-          : `/coding/problem?role=${encodeURIComponent(role || 'Software Engineer')}&company=${encodeURIComponent(company || 'Tech Enterprise')}`;
+        const endpoint = pickCodingEndpoint({ applicationId, sessionId, role, company });
 
         const res = await apiClient.get<{ problem: Record<string, unknown> }>(endpoint);
         if (cancelled) return;
         if (res?.problem) {
-          const p = res.problem as Record<string, unknown>;
-          const rawTestCases = Array.isArray(p.testCases) ? p.testCases : [];
-          const loaded: CodingProblem = {
-            id: typeof p.id === 'string' ? p.id : 'db-problem',
-            title: typeof p.title === 'string' ? p.title : 'Coding Problem',
-            difficulty: (typeof p.difficulty === 'string'
-              ? p.difficulty.charAt(0).toUpperCase() + p.difficulty.slice(1).toLowerCase()
-              : 'Medium') as CodingProblem['difficulty'],
-            category: typeof p.category === 'string' ? p.category : 'Algorithms',
-            description: typeof p.description === 'string' ? p.description : '',
-            constraints: Array.isArray(p.constraints) ? (p.constraints as string[]) : [],
-            examples: Array.isArray(p.examples) ? (p.examples as CodingProblem['examples']) : [],
-            starterCode: {
-              python:     (p.starterCode as Record<string, string>)?.python     || '',
-              javascript: (p.starterCode as Record<string, string>)?.javascript || '',
-              typescript: (p.starterCode as Record<string, string>)?.typescript || '',
-              java:       (p.starterCode as Record<string, string>)?.java       || '',
-              cpp:        (p.starterCode as Record<string, string>)?.cpp        || '',
-            },
-            testCases: rawTestCases.map((tc: Record<string, unknown>, i: number) => ({
-              name:     typeof tc.name     === 'string' ? tc.name     : `Case ${i + 1}`,
-              input:    typeof tc.input    === 'string' ? tc.input    :
-                        tc.input !== undefined           ? JSON.stringify(tc.input) : '',
-              expected: typeof tc.expected === 'string' ? tc.expected :
-                        typeof tc.expectedOutput === 'string' ? tc.expectedOutput :
-                        tc.expected !== undefined ? JSON.stringify(tc.expected) : '',
-              hidden: Boolean(tc.hidden),
-            })),
-            editorial: typeof p.editorial === 'string' ? p.editorial : '',
-            expectedComplexity:
-              (p.expectedComplexity as CodingProblem['expectedComplexity']) || null,
-          };
-          setProblem(loaded);
+          setProblem(normalizeCodingProblem(res.problem as Record<string, unknown>));
           setError(null);
         } else {
           throw new Error('No coding problem found in the question bank. Contact your administrator.');

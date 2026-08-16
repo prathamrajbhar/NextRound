@@ -3,6 +3,7 @@ import multer from 'multer';
 import { authenticate } from '../../middleware/auth';
 import { asyncHandler, ok, validate } from '../../lib/http';
 import { forbidden } from '../../lib/http-errors';
+import { logger } from '../../lib/logger';
 import {
   CreateProctoringSessionSchema,
   BatchEventsSchema,
@@ -100,7 +101,7 @@ proctoringRouter.post(
   (req: Request, res: Response, next: NextFunction) => {
     recordingUpload.single('file')(req, res, (err) => {
       if (err) {
-        console.error('[Proctoring] Recording upload error:', err);
+        logger.child('Proctoring').error(`Recording upload error for session ${req.params.id}:`, err);
         return res.status(400).json({
           success: false,
           error: typeof err === 'string' ? err : err.message || 'Recording upload error',
@@ -134,7 +135,7 @@ proctoringRouter.post(
   (req: Request, res: Response, next: NextFunction) => {
     evidenceUpload.single('file')(req, res, (err) => {
       if (err) {
-        console.error('[Proctoring] Evidence upload error:', err);
+        logger.child('Proctoring').error(`Evidence upload error for session ${req.params.id}:`, err);
         return res.status(400).json({
           success: false,
           error: typeof err === 'string' ? err : err.message || 'Evidence upload error',

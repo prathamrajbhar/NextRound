@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import type { CandidateProfile } from '@nextround/database';
 import type { EmbeddingSourceType } from '@nextround/shared';
 import { enqueueCandidateEmbedding } from '../lib/queues/candidate-onboarding.queue';
+import { logger } from '../lib/logger';
 
 export interface ContextSection {
   sourceType: EmbeddingSourceType;
@@ -116,6 +117,14 @@ export function buildContextSections(
   if (profileParts.length > 0) {
     push('profile', 'full', `CANDIDATE PROFILE\n${profileParts.join('\n')}`);
   }
+
+  const bySource = sections.reduce<Record<string, number>>((acc, s) => {
+    acc[s.sourceType] = (acc[s.sourceType] || 0) + 1;
+    return acc;
+  }, {});
+  logger
+    .child('Embedding')
+    .info(`Built ${sections.length} context sections for candidate ${profile.id || 'unknown'}: ${JSON.stringify(bySource)}`);
 
   return sections;
 }

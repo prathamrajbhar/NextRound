@@ -1,5 +1,6 @@
 import { prisma } from '@nextround/database';
 import { enqueueScheduling } from './queues/scheduling.queue';
+import { logger } from './logger';
 
 type JobLike = {
   assessmentConfig?: unknown;
@@ -102,7 +103,7 @@ export async function ensureInterviewAndSchedule(
     availabilityHours,
     action: 'generate_slots',
   }).catch((err) => {
-    console.error(`Failed to enqueue scheduling for application ${applicationId}:`, err);
+    logger.child('Pipeline').error(`Failed to enqueue scheduling for application ${applicationId}:`, err);
   });
 
   return { interviewId: interview.id };

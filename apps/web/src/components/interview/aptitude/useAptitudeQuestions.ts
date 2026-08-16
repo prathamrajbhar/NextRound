@@ -31,8 +31,10 @@ export const STANDARD_CATEGORIES = [
   'Data Interpretation',
 ] as const;
 
-export function normalizeCategory(rawCat?: string, index: number = 0): string {
-  if (!rawCat) return STANDARD_CATEGORIES[index % 4];
+export function normalizeCategory(rawCat?: string): string {
+  if (!rawCat || !rawCat.trim()) {
+    throw new Error('Question is missing required field: category');
+  }
   const cat = rawCat.trim();
   if ((STANDARD_CATEGORIES as readonly string[]).includes(cat)) return cat;
   const lower = cat.toLowerCase();
@@ -40,7 +42,7 @@ export function normalizeCategory(rawCat?: string, index: number = 0): string {
   if (lower.includes('logic') || lower.includes('reason') || lower.includes('deduction')) return 'Logical Reasoning';
   if (lower.includes('verbal') || lower.includes('english') || lower.includes('grammar')) return 'Verbal Ability';
   if (lower.includes('data') || lower.includes('chart') || lower.includes('graph') || lower.includes('interpretation')) return 'Data Interpretation';
-  return STANDARD_CATEGORIES[index % 4];
+  throw new Error(`Question has an unrecognized category: "${rawCat}"`);
 }
 
 interface UseAptitudeQuestionsOptions {
@@ -50,13 +52,25 @@ interface UseAptitudeQuestionsOptions {
   company: string;
 }
 
-function normalizeQuestion(q: RawApiQuestion, idx: number): AptitudeQuestion {
+export function normalizeQuestion(q: RawApiQuestion): AptitudeQuestion {
+  const id = q.id;
+  if (typeof id !== 'string' || !id.trim()) {
+    throw new Error('Question is missing required field: id');
+  }
+  const text = q.text || q.question;
+  if (typeof text !== 'string' || !text.trim()) {
+    throw new Error(`Question "${id}" is missing required field: text`);
+  }
+  const options = q.options;
+  if (!Array.isArray(options) || options.length === 0) {
+    throw new Error(`Question "${id}" is missing required field: options`);
+  }
   return {
-    id: q.id || `q_${idx}`,
-    category: normalizeCategory(q.category, idx),
-    text: q.text || q.question || 'Question unavailable.',
-    options: q.options || [],
-    difficulty: q.difficulty || 'medium',
+    id,
+    category: normalizeCategory(q.category),
+    text,
+    options,
+    difficulty: q.difficulty,
     correctIndex: q.correctIndex ?? q.correct_index,
   };
 }
@@ -95,7 +109,7 @@ export function useAptitudeQuestions({
         if (cancelled) return;
 
         if (res?.questions && Array.isArray(res.questions) && res.questions.length > 0) {
-          setQuestions(res.questions.map(normalizeQuestion));
+          setQuestions(res.questions.map((q) => normalizeQuestion(q)));
           if (res.mcqDistribution) {
             setMcqDistribution(res.mcqDistribution);
           }

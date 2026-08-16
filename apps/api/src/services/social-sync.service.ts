@@ -3,6 +3,7 @@ import { env, envNumber } from '../lib/env';
 import { prisma } from '../lib/prisma';
 import { Prisma } from '@nextround/database';
 import type { SocialSource, SocialSyncStatus } from '@nextround/shared';
+import { logger } from '../lib/logger';
 
 export interface SyncedSocialData {
   github?: {
@@ -200,11 +201,16 @@ function scrapeOutcome(
 export async function syncGitHubProfileScraper(githubInput: string): Promise<SocialSyncOutcome> {
   const normalized = normalizeUsername(githubInput, 'github');
   if (!normalized.ok) {
+    logger.child('SocialSync').warn(`GitHub sync rejected input: ${normalized.reason}`);
     return { source: 'github', username: githubInput, status: 'failed', synced: false, reason: normalized.reason };
   }
   const username = normalized.username;
 
+  const started = Date.now();
   const { status, body, timedOut } = await fetchScraperProfile('github', username);
+  logger
+    .child('SocialSync')
+    .http(`GitHub scraper responded for ${username}: HTTP ${status || 'ERR'} (${body.length} bytes) in ${Date.now() - started}ms`);
   if (status === 404) {
     return scrapeOutcome('github', username, `GitHub profile '${username}' was not found by the scraper.`, 'not_found');
   }
@@ -282,6 +288,10 @@ export async function syncGitHubProfileScraper(githubInput: string): Promise<Soc
     profileUrl: str(profile.html_url) || `https://github.com/${username}`,
   };
 
+  logger
+    .child('SocialSync')
+    .info(`GitHub profile synced for ${username}: ${repositories.length} repos, ${totalStars} total stars, top languages: ${topLanguages.join(', ') || 'none'}`);
+
   return {
     source: 'github',
     username,
@@ -300,7 +310,11 @@ export async function syncLinkedInProfileScraper(linkedinInput: string): Promise
   const username = normalized.username;
   const profileUrl = `https://linkedin.com/in/${username}`;
 
+  const started = Date.now();
   const { status, body, timedOut } = await fetchScraperProfile('linkedin', username);
+  logger
+    .child('SocialSync')
+    .http(`LinkedIn scraper responded for ${username}: HTTP ${status || 'ERR'} (${body.length} bytes) in ${Date.now() - started}ms`);
   if (status === 404) {
     return scrapeOutcome('linkedin', username, `LinkedIn profile '${username}' was not found by the scraper.`, 'not_found');
   }
@@ -338,6 +352,10 @@ export async function syncLinkedInProfileScraper(linkedinInput: string): Promise
     experiences: Array.isArray(profile.experiences) ? profile.experiences : [],
     education: Array.isArray(profile.education) ? profile.education : [],
   };
+
+  logger
+    .child('SocialSync')
+    .info(`LinkedIn profile synced for ${username}: ${skills.length} skills, ${(normalizedData.experiences as unknown[]).length} roles, ${(normalizedData.education as unknown[]).length} education entries`);
 
   return {
     source: 'linkedin',

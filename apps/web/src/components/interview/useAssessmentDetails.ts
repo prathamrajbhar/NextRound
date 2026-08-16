@@ -21,7 +21,6 @@ export function useAssessmentDetails({ sessionId, applicationId, company, role }
     id: sessionId,
     targetCompany: company || '',
     targetRole: role || '',
-    difficulty: 'senior',
   });
   const [app, setApp] = useState<Partial<Application> | null>(null);
 
@@ -45,7 +44,6 @@ export function useAssessmentDetails({ sessionId, applicationId, company, role }
 
   const targetCompany = app?.orgName || session.targetCompany || company || '';
   const targetRole = app?.jobTitle || session.targetRole || role || '';
-  const difficulty = session.difficulty || 'senior';
 
-  return { targetCompany, targetRole, difficulty };
+  return { targetCompany, targetRole };
 }

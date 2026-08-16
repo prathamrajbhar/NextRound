@@ -38,6 +38,8 @@ export class ProctoringEventBuffer {
     if (this.uploading || this.buffer.length === 0) return;
     this.uploading = true;
 
+    // defer so events added synchronously in the same tick are coalesced
+    await Promise.resolve();
     const batch = [...this.buffer];
     try {
       const headers: Record<string, string> = {
