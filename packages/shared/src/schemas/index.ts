@@ -35,6 +35,10 @@ export const ChangePasswordSchema = z.object({
   newPassword: z.string().min(8, 'New password must be at least 8 characters long'),
 });
 
+export const UpdateEmailSchema = z.object({
+  email: z.string().email('Invalid email address'),
+});
+
 export const OrganizationSchema = z.object({
   name: z.string().min(2, 'Organization name must be at least 2 characters'),
   logoUrl: z.string().url().optional().nullable(),
@@ -49,6 +53,7 @@ export const CandidateProfileSchema = z.object({
   phone: z.string().max(40).optional().nullable(),
   location: z.string().max(160).optional().nullable(),
   timezone: z.string().max(80).optional().nullable(),
+  avatarUrl: z.string().max(25_000_000).optional().nullable(),
   resumeUrl: z.string().optional().nullable(),
   rawResumeText: z.string().optional().nullable(),
   parsedResume: z.record(z.string(), z.any()).optional().nullable(),
@@ -259,7 +264,7 @@ export const CandidateSettingsSchema = z
 
 export const HRProfileUpdateSchema = z.object({
   name: z.string().min(2).optional(),
-  avatarUrl: z.string().max(2_000_000).optional().nullable(),
+  avatarUrl: z.string().max(25_000_000).optional().nullable(),
   timezone: z.string().optional(),
   linkedinUrl: z.string().max(1000).optional().nullable(),
   title: z.string().max(200).optional().nullable(),
@@ -419,6 +424,7 @@ export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;
+export type UpdateEmailInput = z.infer<typeof UpdateEmailSchema>;
 export type OrganizationInput = z.infer<typeof OrganizationSchema>;
 export type OrganizationUpdateInput = z.infer<typeof OrganizationUpdateSchema>;
 export type OrganizationSettingsInput = z.infer<typeof OrganizationSettingsSchema>;
