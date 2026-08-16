@@ -11,6 +11,8 @@ import { NextRoundTransitionCard } from '@/components/interview/NextRoundTransit
 import { useAssessmentDetails } from '@/components/interview/useAssessmentDetails';
 import { useAssessmentCompletion } from '@/components/interview/useAssessmentCompletion';
 import { useProctoringSession } from '@/lib/proctoring/useProctoringSession';
+import { getProctoringFlagMessage } from '@/lib/proctoring/flagMessages';
+import { useToast } from '@/contexts/ToastContext';
 import { ProctoringGate } from '@/components/interview/ProctoringGate';
 import { apiClient } from '@/lib/apiClient';
 
@@ -37,6 +39,7 @@ export function UnifiedAssessmentSession({
   company,
   role,
 }: UnifiedAssessmentSessionProps) {
+  const { toast } = useToast();
   const { targetCompany, targetRole, difficulty } = useAssessmentDetails({ sessionId, applicationId, company, role });
 
   const [comprehensiveStep, setComprehensiveStep] = useState<'aptitude' | 'coding' | 'technical'>('aptitude');
@@ -99,6 +102,12 @@ export function UnifiedAssessmentSession({
     mockSessionId: applicationId ? undefined : sessionId,
     policyVersion: 'assessment-v1',
     consentVersion: 'v1',
+    onViolationDetected: (kind) => {
+      const msg = getProctoringFlagMessage(kind);
+      if (msg) {
+        toast({ title: msg.title, description: msg.description, variant: msg.variant });
+      }
+    },
     onDisqualified: () => {
       if (track === 'comprehensive') {
         onEliminate();

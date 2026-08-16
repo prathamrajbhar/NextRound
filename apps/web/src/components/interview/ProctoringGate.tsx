@@ -31,7 +31,10 @@ export function ProctoringGate({ company, role, onProceed }: ProctoringGateProps
   const [faceCount, setFaceCount] = useState<number | null>(null);
   const [consented, setConsented] = useState(false);
 
+  const handedOffRef = useRef(false);
+
   const stopStream = useCallback(() => {
+    if (handedOffRef.current) return;
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
   }, []);
@@ -128,6 +131,7 @@ export function ProctoringGate({ company, role, onProceed }: ProctoringGateProps
 
   const handleProceed = () => {
     if (!streamRef.current) return;
+    handedOffRef.current = true;
     onProceed(streamRef.current);
   };
 

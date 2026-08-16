@@ -7,12 +7,19 @@ import { Application } from '@/types';
 import { useInterviewSession } from '@/hooks/useInterviewSession';
 import InterviewCheckScreen from '@/components/interview/InterviewCheckScreen';
 import UnifiedInterviewConsole from '@/components/interview/UnifiedInterviewConsole';
+import { ProctoringGate } from '@/components/interview/ProctoringGate';
+import { useProctoringSession } from '@/lib/proctoring/useProctoringSession';
+import { getProctoringFlagMessage } from '@/lib/proctoring/flagMessages';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function LiveInterviewRoom({ params }: { params: Promise<{ interviewId: string }> }) {
   const router = useRouter();
   const { interviewId } = use(params);
+  const { toast } = useToast();
   const [app, setApp] = useState<Application | null>(null);
   const [loadError, setLoadError] = useState(false);
+  const [candidateId, setCandidateId] = useState<string | null>(null);
+  const [captureStream, setCaptureStream] = useState<MediaStream | null>(null);
 
   const companyName = app?.orgName || 'Interview';
   const jobTitle = app?.jobTitle || 'Candidate Interview';
@@ -34,6 +41,20 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
     fetchApp();
   }, [interviewId]);
 
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const res = await apiClient.get<{ profile: { id: string } }>('/candidate/profile');
+        if (res && res.profile) {
+          setCandidateId(res.profile.id);
+        }
+      } catch (err) {
+        console.warn('Failed to load candidate profile for proctoring:', err);
+      }
+    }
+    loadProfile();
+  }, []);
+
   const {
     stage,
     phase,
@@ -45,6 +66,7 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
     startSession,
     submitAnswer,
     wrapUp,
+    onEliminate: eliminateInterview,
   } = useInterviewSession({
     company: companyName,
     role: jobTitle,
@@ -55,6 +77,51 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
       router.push(`/candidate/applications/${interviewId}`);
     },
   });
+
+  const {
+    strikeCount: proctorStrikeCount,
+    showWarningModal: proctorShowWarning,
+    handleResumeFullscreen: proctorResumeFS,
+    handleEnd: proctorEnd,
+    suppressViolations,
+    startCapture,
+    proctoringClient,
+  } = useProctoringSession({
+    sessionId: interviewId,
+    candidateId: candidateId || '',
+    sessionType: 'interview',
+    applicationId: interviewId,
+    policyVersion: 'assessment-v1',
+    consentVersion: 'v1',
+    onViolationDetected: (kind) => {
+      const msg = getProctoringFlagMessage(kind);
+      if (msg) {
+        toast({ title: msg.title, description: msg.description, variant: msg.variant });
+      }
+    },
+    onDisqualified: () => {
+      suppressViolations(true);
+      proctorEnd().catch((err) => {
+        console.error('Failed to end proctoring session on disqualify:', err);
+      });
+      eliminateInterview();
+    },
+  });
+
+  const handleEndSession = async () => {
+    suppressViolations(true);
+    if (typeof document !== 'undefined' && document.fullscreenElement) {
+      try {
+        await document.exitFullscreen();
+      } catch {}
+    }
+    try {
+      await proctorEnd();
+    } catch (err) {
+      console.error('Failed to end proctoring session:', err);
+    }
+    wrapUp();
+  };
 
   if (loadError) {
     return (
@@ -85,6 +152,19 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
   }
 
   if (stage === 'check') {
+    if (candidateId && !captureStream) {
+      return (
+        <ProctoringGate
+          company={companyName}
+          role={jobTitle}
+          onProceed={(stream) => {
+            startCapture(stream);
+            setCaptureStream(stream);
+            startSession();
+          }}
+        />
+      );
+    }
     return (
       <InterviewCheckScreen
         company={companyName}
@@ -106,7 +186,12 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
       isAnalyzing={isAnalyzing}
       proctorTelemetry={proctorTelemetry}
       onSubmitAnswer={submitAnswer}
-      onEndSession={wrapUp}
+      onEndSession={handleEndSession}
+      proctoringClient={proctoringClient}
+      strikeCount={proctorStrikeCount}
+      showWarningModal={proctorShowWarning}
+      onResumeFullscreen={proctorResumeFS}
+      onEliminate={eliminateInterview}
     />
   );
 }

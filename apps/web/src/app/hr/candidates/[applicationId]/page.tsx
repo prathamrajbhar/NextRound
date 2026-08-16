@@ -1,8 +1,9 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useApplication, useJob } from '@/hooks/queries';
+import { apiClient } from '@/lib/apiClient';
 import {
   ChevronRight,
   Download,
@@ -15,12 +16,31 @@ import {
 import { CandidateHeader } from './components/CandidateHeader';
 import { CandidateDetailSkeleton } from '@/components/ui';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { ProctoringSummaryCard } from './components/ProctoringSummaryCard';
+import type { ProctoringReport } from './components/ProctoringReportCard';
 
 export default function HrCandidateProfilePage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
 
   const { data: app, isLoading, isError, error, refetch } = useApplication(applicationId);
   const { data: job } = useJob(app?.jobId ?? null);
+  const [proctorReport, setProctorReport] = useState<ProctoringReport | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!applicationId) return;
+    apiClient
+      .get<ProctoringReport>(`/proctoring/applications/${applicationId}/report`)
+      .then((report) => {
+        if (!cancelled && report) setProctorReport(report);
+      })
+      .catch(() => {
+        if (!cancelled) setProctorReport(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [applicationId]);
 
   if (isError) {
     return (
@@ -176,6 +196,8 @@ export default function HrCandidateProfilePage({ params }: { params: Promise<{ a
         </div>
 
         <div className="space-y-6">
+          <ProctoringSummaryCard applicationId={app.id} report={proctorReport} />
+
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h4 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 uppercase tracking-wider font-display border-b border-slate-200/60 dark:border-slate-800 pb-2.5">
               Profile Meta Details
