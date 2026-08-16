@@ -19,7 +19,10 @@ import { logger } from '../../lib/logger';
 export const candidateProfileRouter = Router();
 
 const upload = multer({
-  limits: { fileSize: 10 * 1024 * 1024 }, 
+  limits: { 
+    fileSize: 10 * 1024 * 1024,
+    fieldSize: 30 * 1024 * 1024 // Allow up to 30MB text fields for Base64 image payloads inside stringified JSON data
+  }, 
   fileFilter: (_req, file, cb) => {
     const ext = (file.originalname || '').toLowerCase();
     const isAllowedExt = ext.endsWith('.pdf') || ext.endsWith('.docx') || ext.endsWith('.doc') || ext.endsWith('.txt');
