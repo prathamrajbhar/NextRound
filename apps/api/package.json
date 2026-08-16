@@ -16,6 +16,7 @@
     "@google/genai": "^2.16.0",
     "@nextround/database": "*",
     "@nextround/shared": "*",
+    "@supabase/supabase-js": "^2.112.3",
     "@upstash/redis": "^1.38.2",
     "bcryptjs": "^2.4.3",
     "bullmq": "^6.0.9",

@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -15,13 +16,16 @@ class Settings(BaseSettings):
     groq_model: str = "llama-3.3-70b-versatile"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2"
+    supabase_url: str = ""
+    supabase_service_role_key: str = ""
+    supabase_storage_bucket: str = "nextround-storage"
     upload_dir: str = os.getenv(
         "UPLOAD_DIR",
         os.path.abspath(os.path.join(os.path.dirname(__file__), "../../api/uploads"))
     )
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=Path(__file__).resolve().parent.parent / ".env",
         env_file_encoding="utf-8",
         extra="ignore"
     )

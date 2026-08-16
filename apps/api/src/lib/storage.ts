@@ -1,83 +1,62 @@
-import fs from 'fs';
-import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 import { env } from './env';
 
-const uploadDirName = env('UPLOAD_DIR');
-let resolvedDir = path.isAbsolute(uploadDirName)
-  ? uploadDirName
-  : path.resolve(process.cwd(), uploadDirName);
+const supabaseUrl = env('SUPABASE_URL');
+const supabaseServiceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY');
+const bucket = env('SUPABASE_STORAGE_BUCKET');
 
+const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+  auth: {
+    persistSession: false,
+  },
+});
 
-if (!path.isAbsolute(uploadDirName) && process.cwd().endsWith('apps/api')) {
-  const rootUploads = path.resolve(process.cwd(), '../..', uploadDirName);
-  if (fs.existsSync(rootUploads) || fs.existsSync(path.resolve(process.cwd(), '../..', 'package.json'))) {
-    resolvedDir = rootUploads;
-  }
-}
-
-export const UPLOAD_ROOT_DIR = resolvedDir;
-
+export const UPLOAD_ROOT_DIR = '/tmp/nextround-uploads';
 export const SUB_DIRECTORIES = ['resumes', 'audio', 'video', 'offers', 'misc'];
 
-
-
-
 export function ensureUploadDirsExist(): void {
-  if (!fs.existsSync(UPLOAD_ROOT_DIR)) {
-    fs.mkdirSync(UPLOAD_ROOT_DIR, { recursive: true });
-  }
-
-  for (const subDir of SUB_DIRECTORIES) {
-    const fullPath = path.join(UPLOAD_ROOT_DIR, subDir);
-    if (!fs.existsSync(fullPath)) {
-      fs.mkdirSync(fullPath, { recursive: true });
-    }
-  }
+  // Cloud storage doesn't need local directories created
+  return;
 }
-
-
-
-
-
-
-
 
 export async function uploadFile(
   key: string,
   body: Buffer,
-  _contentType?: string
+  contentType?: string
 ): Promise<string> {
   const normalizedKey = key.replace(/\\/g, '/').replace(/^\/+/, '');
-  const filePath = path.join(UPLOAD_ROOT_DIR, normalizedKey);
 
-  
-  const parentDir = path.dirname(filePath);
-  if (!fs.existsSync(parentDir)) {
-    await fs.promises.mkdir(parentDir, { recursive: true });
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(normalizedKey, body, {
+      contentType,
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error(`Failed to upload file to Supabase Storage: ${error.message}`);
   }
 
-  await fs.promises.writeFile(filePath, body);
-  return `/uploads/${normalizedKey}`;
+  const { data: publicUrlData } = supabase.storage
+    .from(bucket)
+    .getPublicUrl(normalizedKey);
+
+  return publicUrlData.publicUrl;
 }
-
-
-
 
 export async function getPresignedUrl(key: string): Promise<string> {
   const normalizedKey = key.replace(/\\/g, '/').replace(/^\/+/, '');
-  if (normalizedKey.startsWith('uploads/')) {
-    return `/${normalizedKey}`;
+  if (normalizedKey.startsWith('http://') || normalizedKey.startsWith('https://')) {
+    return normalizedKey;
   }
-  return `/uploads/${normalizedKey}`;
+  const { data } = supabase.storage.from(bucket).getPublicUrl(normalizedKey);
+  return data.publicUrl;
 }
-
-
-
 
 export async function deleteFile(key: string): Promise<void> {
   const normalizedKey = key.replace(/\\/g, '/').replace(/^\/+/, '');
-  const filePath = path.join(UPLOAD_ROOT_DIR, normalizedKey);
-  if (fs.existsSync(filePath)) {
-    await fs.promises.unlink(filePath);
+  const { error } = await supabase.storage.from(bucket).remove([normalizedKey]);
+  if (error) {
+    console.error(`Failed to delete file from Supabase Storage: ${error.message}`);
   }
 }

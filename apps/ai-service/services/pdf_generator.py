@@ -4,9 +4,36 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 from xml.sax.saxutils import escape as xml_escape
+import httpx
 from core.config import settings
 
 logger = logging.getLogger("pdf_generator")
+
+
+def upload_to_supabase(file_path: str, key: str, content_type: str = "application/pdf") -> str:
+    if not settings.supabase_url or not settings.supabase_service_role_key:
+        logger.warning("Supabase credentials not configured in settings. Returning local fallback path.")
+        return f"/uploads/{key}"
+
+    with open(file_path, "rb") as f:
+        file_data = f.read()
+
+    url = f"{settings.supabase_url}/storage/v1/object/{settings.supabase_storage_bucket}/{key}"
+    
+    headers = {
+        "apikey": settings.supabase_service_role_key,
+        "Authorization": f"Bearer {settings.supabase_service_role_key}",
+        "Content-Type": content_type,
+        "x-upsert": "true"
+    }
+
+    with httpx.Client() as client:
+        response = client.post(url, content=file_data, headers=headers)
+        if response.status_code != 200:
+            logger.error(f"Failed to upload to Supabase Storage: {response.status_code} - {response.text}")
+            raise RuntimeError(f"Supabase upload failed: {response.text}")
+
+    return f"{settings.supabase_url}/storage/v1/object/public/{settings.supabase_storage_bucket}/{key}"
 
 
 def _esc(value: Any) -> str:
@@ -30,15 +57,15 @@ except ImportError:
 def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> str:
     """
     Generates an ATS-friendly single/two-page resume PDF from structured resume JSON.
-    Returns local relative upload URL (/uploads/resumes/resume_xxxx.pdf).
+    Uploads the generated PDF to Supabase Storage and returns the public URL.
     """
-    if not output_dir:
-        output_dir = os.path.join(settings.upload_dir, "resumes")
     file_id = str(uuid.uuid4())[:8]
     filename = f"resume_{file_id}.pdf"
-    file_path = os.path.join(output_dir, filename)
-
-    os.makedirs(output_dir, exist_ok=True)
+    
+    # Use temporary directory for intermediate generation
+    temp_dir = "/tmp/nextround-resumes"
+    os.makedirs(temp_dir, exist_ok=True)
+    file_path = os.path.join(temp_dir, filename)
 
     summary = resume_data.get("summary", "")
     contact = resume_data.get("contact", {})
@@ -158,9 +185,20 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
 
             doc.build(story)
             logger.info(f"Resume PDF generated successfully at {file_path}")
-            return f"/uploads/resumes/{filename}"
+            
+            # Upload to Supabase and clean up
+            key = f"resumes/{filename}"
+            try:
+                public_url = upload_to_supabase(file_path, key, "application/pdf")
+                return public_url
+            finally:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
         except Exception as e:
             logger.error(f"Error compiling PDF with ReportLab: {e}")
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            raise e
 
     raise RuntimeError("ReportLab is required to generate a real resume PDF. No mock PDF is written.")
 
@@ -174,17 +212,16 @@ def generate_analytics_pdf(
 ) -> str:
     """
     Generates a real executive analytics report PDF from funnel metrics,
-    conversion rates, and the narrative summary. Returns a local relative upload
-    URL (/uploads/analytics/analytics_xxxx.pdf). Raises RuntimeError when
-    ReportLab is unavailable (no mock PDF is written).
+    conversion rates, and the narrative summary. Uploads the generated PDF
+    to Supabase Storage and returns the public URL.
     """
-    if not output_dir:
-        output_dir = os.path.join(settings.upload_dir, "analytics")
     file_id = str(uuid.uuid4())[:8]
     filename = f"analytics_{file_id}.pdf"
-    file_path = os.path.join(output_dir, filename)
-
-    os.makedirs(output_dir, exist_ok=True)
+    
+    # Use temporary directory for intermediate generation
+    temp_dir = "/tmp/nextround-analytics"
+    os.makedirs(temp_dir, exist_ok=True)
+    file_path = os.path.join(temp_dir, filename)
 
     if not REPORTLAB_AVAILABLE:
         raise RuntimeError("ReportLab is required to generate a real analytics PDF. No mock PDF is written.")
@@ -288,8 +325,19 @@ def generate_analytics_pdf(
 
         doc.build(story)
         logger.info(f"Analytics PDF generated successfully at {file_path}")
-        return f"/uploads/analytics/{filename}"
+        
+        # Upload to Supabase and clean up
+        key = f"analytics/{filename}"
+        try:
+            public_url = upload_to_supabase(file_path, key, "application/pdf")
+            return public_url
+        finally:
+            if os.path.exists(file_path):
+                os.remove(file_path)
     except Exception as e:
         logger.error(f"Error compiling analytics PDF with ReportLab: {e}")
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        raise e
 
     raise RuntimeError("ReportLab is required to generate a real analytics PDF. No mock PDF is written.")
