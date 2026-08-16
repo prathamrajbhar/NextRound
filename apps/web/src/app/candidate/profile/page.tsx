@@ -18,6 +18,9 @@ import {
   Save,
   Zap,
   AlertCircle,
+  Trash2,
+  Download,
+  Loader2,
 } from '@/lib/lucide-google-icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -105,6 +108,22 @@ function convertNumberToIndianWords(num: number): string {
   return result.trim() ? result.trim() + ' Rupees' : '';
 }
 
+interface ParsedProfilePayload {
+  fullName?: string;
+  headline?: string;
+  phone?: string;
+  location?: string;
+  skills?: string[];
+  targetRoles?: string[];
+  yearsOfExperience?: number;
+  expectedSalary?: number;
+  bio?: string;
+  proudProject?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
+}
+
 export default function CandidateProfile() {
   const { user, refreshUser } = useAuthContext();
   const queryClient = useQueryClient();
@@ -126,6 +145,7 @@ export default function CandidateProfile() {
   const [resumeDate, setResumeDate] = useState('');
   const [resumeUrl, setResumeUrl] = useState('');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [uploadingResume, setUploadingResume] = useState(false);
   const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
 
@@ -280,12 +300,92 @@ export default function CandidateProfile() {
     }
   };
 
-  const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const mergeParsedProfile = (profile: ParsedProfilePayload) => {
+    if (profile.fullName) setName(profile.fullName);
+    if (profile.headline) setHeadline(profile.headline);
+    if (profile.phone) setPhone(profile.phone);
+    if (profile.location) setLocation(profile.location);
+    if (profile.bio) setBio(profile.bio);
+    if (profile.skills && profile.skills.length > 0) {
+      const combined = Array.from(new Set([...skills, ...profile.skills]));
+      setSkills(combined);
+    }
+    if (profile.targetRoles && profile.targetRoles.length > 0) {
+      const combined = Array.from(new Set([...targetRoles, ...profile.targetRoles]));
+      setTargetRoles(combined);
+    }
+    if (profile.yearsOfExperience !== undefined) setExperienceYears(String(profile.yearsOfExperience));
+    if (profile.expectedSalary !== undefined) setExpectedSalary(formatExpectedSalary(profile.expectedSalary));
+    if (profile.linkedinUrl) setLinkedinUrl(profile.linkedinUrl);
+    if (profile.githubUrl) setGithubUrl(profile.githubUrl);
+    if (profile.portfolioUrl) setPortfolioUrl(profile.portfolioUrl);
+  };
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setResumeFile(file);
-      setResumeName(file.name);
-      setResumeDate('Ready to upload — click Save Profile Details');
+    if (!file) return;
+
+    setUploadingResume(true);
+    setSaveError('');
+    try {
+      const formData = new FormData();
+      formData.append('resume', file);
+      
+      const parsed = await apiClient.post<{
+        profile?: ParsedProfilePayload;
+        rawText?: string;
+      }>('/candidate/parse-resume', formData);
+
+      const fd = new FormData();
+      fd.append('resume', file);
+      const currentData = buildPayload();
+      fd.append('data', JSON.stringify(currentData));
+
+      const uploadRes = await apiClient.post<{ profile?: { resume_url?: string } }>(
+        '/candidate/profile',
+        fd
+      );
+
+      const savedUrl = uploadRes?.profile?.resume_url;
+      if (savedUrl) {
+        setResumeUrl(savedUrl);
+        setResumeName(savedUrl.split('/').pop() || file.name);
+        setResumeDate('Uploaded just now');
+      }
+
+      if (parsed?.profile) {
+        mergeParsedProfile(parsed.profile);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['profile', 'candidate'] });
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to upload and parse resume.');
+    } finally {
+      setUploadingResume(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDeleteResume = async () => {
+    if (!confirm('Are you sure you want to delete your active resume?')) return;
+    setUploadingResume(true);
+    setSaveError('');
+    try {
+      const currentData = buildPayload() as any;
+      currentData.resumeUrl = null;
+      currentData.rawResumeText = null;
+      currentData.parsedResume = {};
+
+      await apiClient.post('/candidate/profile', currentData);
+
+      setResumeUrl('');
+      setResumeName('No resume uploaded');
+      setResumeDate('');
+      queryClient.invalidateQueries({ queryKey: ['profile', 'candidate'] });
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to delete resume.');
+    } finally {
+      setUploadingResume(false);
     }
   };
 
@@ -706,28 +806,52 @@ export default function CandidateProfile() {
                 <span className="text-xs font-extrabold truncate block">{resumeName}</span>
                 <span className="text-[10px] text-slate-400 dark:text-slate-400 font-semibold block mt-0.5">{resumeDate || 'PDF Resume Attached'}</span>
               </div>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {resumeUrl && (
+                  <>
+                    <a
+                      href={resumeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded-lg bg-brand-500/10 hover:bg-brand-500/20 text-brand-600 dark:text-orange-400 cursor-pointer transition-colors"
+                      title="Download Resume"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleDeleteResume}
+                      disabled={uploadingResume}
+                      className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 cursor-pointer transition-colors disabled:opacity-50"
+                      title="Delete Resume"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
 
             <label className="w-full text-center text-xs font-extrabold text-brand-600 dark:text-orange-400 hover:text-brand-700 dark:hover:text-orange-300 transition-colors py-3 cursor-pointer block border border-dashed border-brand-200 dark:border-orange-900/60 bg-brand-50/10 dark:bg-orange-950/20 rounded-2xl shadow-inner hover:bg-brand-50/20 dark:hover:bg-orange-950/40">
-              <UploadCloud className="h-5 w-5 mx-auto mb-1 text-brand-500 dark:text-orange-400" />
-              <span>{resumeFile ? 'Resume Selected — Save to Upload' : 'Replace Resume PDF'}</span>
+              {uploadingResume ? (
+                <div className="flex flex-col items-center justify-center gap-1">
+                  <Loader2 className="h-5 w-5 text-brand-500 dark:text-orange-400 animate-spin" />
+                  <span>Uploading &amp; Syncing details...</span>
+                </div>
+              ) : (
+                <>
+                  <UploadCloud className="h-5 w-5 mx-auto mb-1 text-brand-500 dark:text-orange-400" />
+                  <span>Upload &amp; Sync Resume PDF</span>
+                </>
+              )}
               <input
                 type="file"
                 accept=".pdf,.docx,.doc,.txt"
                 onChange={handleResumeUpload}
+                disabled={uploadingResume}
                 className="hidden"
               />
             </label>
-            {resumeUrl && (
-              <a
-                href={resumeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block text-center text-[11px] font-bold text-brand-600 dark:text-orange-400 hover:underline"
-              >
-                View current resume
-              </a>
-            )}
           </div>
 
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
