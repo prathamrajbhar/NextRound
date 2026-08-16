@@ -401,6 +401,8 @@ export const ModelName = {
   Organization: 'Organization',
   Job: 'Job',
   CandidateProfile: 'CandidateProfile',
+  SocialProfileSync: 'SocialProfileSync',
+  CandidateEmbedding: 'CandidateEmbedding',
   Application: 'Application',
   Evaluation: 'Evaluation',
   Interview: 'Interview',
@@ -436,7 +438,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "organization" | "job" | "candidateProfile" | "application" | "evaluation" | "interview" | "assessment" | "aptitudeQuestion" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark" | "proctoringSession" | "proctoringEvidence" | "proctoringEvent" | "proctoringViolation" | "webRTCSignal"
+    modelProps: "user" | "organization" | "job" | "candidateProfile" | "socialProfileSync" | "candidateEmbedding" | "application" | "evaluation" | "interview" | "assessment" | "aptitudeQuestion" | "codingProblem" | "codingSubmission" | "generatedQuestionChunk" | "codingProblemSnapshot" | "offer" | "agentLog" | "mockSession" | "prepContent" | "notification" | "talentBookmark" | "proctoringSession" | "proctoringEvidence" | "proctoringEvent" | "proctoringViolation" | "webRTCSignal"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -733,6 +735,138 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.CandidateProfileCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.CandidateProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    SocialProfileSync: {
+      payload: Prisma.$SocialProfileSyncPayload<ExtArgs>
+      fields: Prisma.SocialProfileSyncFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.SocialProfileSyncFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialProfileSyncPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.SocialProfileSyncFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialProfileSyncPayload>
+        }
+        findFirst: {
+          args: Prisma.SocialProfileSyncFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialProfileSyncPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.SocialProfileSyncFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialProfileSyncPayload>
+        }
+        findMany: {
+          args: Prisma.SocialProfileSyncFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialProfileSyncPayload>[]
+        }
+        create: {
+          args: Prisma.SocialProfileSyncCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialProfileSyncPayload>
+        }
+        createMany: {
+          args: Prisma.SocialProfileSyncCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.SocialProfileSyncCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialProfileSyncPayload>[]
+        }
+        delete: {
+          args: Prisma.SocialProfileSyncDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialProfileSyncPayload>
+        }
+        update: {
+          args: Prisma.SocialProfileSyncUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialProfileSyncPayload>
+        }
+        deleteMany: {
+          args: Prisma.SocialProfileSyncDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.SocialProfileSyncUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.SocialProfileSyncUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialProfileSyncPayload>[]
+        }
+        upsert: {
+          args: Prisma.SocialProfileSyncUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$SocialProfileSyncPayload>
+        }
+        aggregate: {
+          args: Prisma.SocialProfileSyncAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateSocialProfileSync>
+        }
+        groupBy: {
+          args: Prisma.SocialProfileSyncGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SocialProfileSyncGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.SocialProfileSyncCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.SocialProfileSyncCountAggregateOutputType> | number
+        }
+      }
+    }
+    CandidateEmbedding: {
+      payload: Prisma.$CandidateEmbeddingPayload<ExtArgs>
+      fields: Prisma.CandidateEmbeddingFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CandidateEmbeddingFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CandidateEmbeddingPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CandidateEmbeddingFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CandidateEmbeddingPayload>
+        }
+        findFirst: {
+          args: Prisma.CandidateEmbeddingFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CandidateEmbeddingPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CandidateEmbeddingFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CandidateEmbeddingPayload>
+        }
+        findMany: {
+          args: Prisma.CandidateEmbeddingFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CandidateEmbeddingPayload>[]
+        }
+        delete: {
+          args: Prisma.CandidateEmbeddingDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CandidateEmbeddingPayload>
+        }
+        update: {
+          args: Prisma.CandidateEmbeddingUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CandidateEmbeddingPayload>
+        }
+        deleteMany: {
+          args: Prisma.CandidateEmbeddingDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CandidateEmbeddingUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CandidateEmbeddingUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CandidateEmbeddingPayload>[]
+        }
+        aggregate: {
+          args: Prisma.CandidateEmbeddingAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCandidateEmbedding>
+        }
+        groupBy: {
+          args: Prisma.CandidateEmbeddingGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CandidateEmbeddingGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CandidateEmbeddingCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CandidateEmbeddingCountAggregateOutputType> | number
         }
       }
     }
@@ -2334,10 +2468,43 @@ export const CandidateProfileScalarFieldEnum = {
   work_values: 'work_values',
   availability: 'availability',
   settings: 'settings',
+  data_consent: 'data_consent',
+  data_consent_at: 'data_consent_at',
   created_at: 'created_at'
 } as const
 
 export type CandidateProfileScalarFieldEnum = (typeof CandidateProfileScalarFieldEnum)[keyof typeof CandidateProfileScalarFieldEnum]
+
+
+export const SocialProfileSyncScalarFieldEnum = {
+  id: 'id',
+  candidate_id: 'candidate_id',
+  source: 'source',
+  username: 'username',
+  status: 'status',
+  raw_data: 'raw_data',
+  normalized_data: 'normalized_data',
+  error: 'error',
+  synced_at: 'synced_at',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type SocialProfileSyncScalarFieldEnum = (typeof SocialProfileSyncScalarFieldEnum)[keyof typeof SocialProfileSyncScalarFieldEnum]
+
+
+export const CandidateEmbeddingScalarFieldEnum = {
+  id: 'id',
+  candidate_id: 'candidate_id',
+  source_type: 'source_type',
+  section: 'section',
+  content: 'content',
+  content_hash: 'content_hash',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type CandidateEmbeddingScalarFieldEnum = (typeof CandidateEmbeddingScalarFieldEnum)[keyof typeof CandidateEmbeddingScalarFieldEnum]
 
 
 export const ApplicationScalarFieldEnum = {
@@ -2869,6 +3036,41 @@ export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel,
 
 
 /**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
+ * Reference to a field of type 'SocialSource'
+ */
+export type EnumSocialSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SocialSource'>
+    
+
+
+/**
+ * Reference to a field of type 'SocialSource[]'
+ */
+export type ListEnumSocialSourceFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SocialSource[]'>
+    
+
+
+/**
+ * Reference to a field of type 'SocialSyncStatus'
+ */
+export type EnumSocialSyncStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SocialSyncStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'SocialSyncStatus[]'
+ */
+export type ListEnumSocialSyncStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SocialSyncStatus[]'>
+    
+
+
+/**
  * Reference to a field of type 'ApplicationStatus'
  */
 export type EnumApplicationStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ApplicationStatus'>
@@ -2949,13 +3151,6 @@ export type EnumAssessmentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<
  * Reference to a field of type 'AssessmentStatus[]'
  */
 export type ListEnumAssessmentStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AssessmentStatus[]'>
-    
-
-
-/**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -3141,6 +3336,8 @@ export type GlobalOmitConfig = {
   organization?: Prisma.OrganizationOmit
   job?: Prisma.JobOmit
   candidateProfile?: Prisma.CandidateProfileOmit
+  socialProfileSync?: Prisma.SocialProfileSyncOmit
+  candidateEmbedding?: Prisma.CandidateEmbeddingOmit
   application?: Prisma.ApplicationOmit
   evaluation?: Prisma.EvaluationOmit
   interview?: Prisma.InterviewOmit

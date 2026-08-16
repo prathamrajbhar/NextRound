@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { badRequest } from '../lib/http-errors';
+import { logger } from '../lib/logger';
 
 export interface SelectedAptitudeQuestion {
   id: string;
@@ -76,21 +77,25 @@ export async function selectAptitudeQuestions(
     }
 
     if (pool.length === 0) {
-      console.warn(
-        `[question-bank] No questions for "${category}"` +
-          (difficulty ? ` (${difficulty})` : '') +
-          `. Skipping. Seed the DB to include this category.`,
-      );
+      logger
+        .child('QuestionBank')
+        .warn(
+          `No questions for "${category}"` +
+            (difficulty ? ` (${difficulty})` : '') +
+            `. Skipping. Seed the DB to include this category.`,
+        );
       continue;
     }
 
     const actualCount = Math.min(count, pool.length);
     if (pool.length < count) {
-      console.warn(
-        `[question-bank] Only ${pool.length}/${count} available for "${category}"` +
-          (difficulty ? ` (${difficulty})` : '') +
-          `. Using all available.`,
-      );
+      logger
+        .child('QuestionBank')
+        .warn(
+          `Only ${pool.length}/${count} available for "${category}"` +
+            (difficulty ? ` (${difficulty})` : '') +
+            `. Using all available.`,
+        );
     }
 
     const selected = shuffleInPlace([...pool]).slice(0, actualCount);

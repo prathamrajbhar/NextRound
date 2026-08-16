@@ -78,7 +78,6 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
   } = useInterviewSession({
     company: companyName,
     role: jobTitle,
-    difficulty: 'mid',
     interviewId,
     onComplete: () => {
       router.push(`/candidate/applications/${interviewId}`);

@@ -20,6 +20,8 @@ export interface CandidateForm {
   githubUrl: string;
   portfolioUrl: string;
   
+  dataConsent: boolean;
+  
   yearsOfExperience: string;
   targetRoles: string[];
   skills: string[];
@@ -58,6 +60,7 @@ export const DEFAULT_FORM: CandidateForm = {
   linkedinUrl: '',
   githubUrl: '',
   portfolioUrl: '',
+  dataConsent: false,
   yearsOfExperience: '',
   targetRoles: [],
   skills: [],
@@ -194,6 +197,8 @@ export function buildCandidatePayload(form: CandidateForm) {
     linkedinUrl: form.linkedinUrl.trim() || undefined,
     githubUrl: form.githubUrl.trim() || undefined,
     portfolioUrl: form.portfolioUrl.trim() || undefined,
+    dataConsent: form.dataConsent,
+    consentAt: form.dataConsent ? new Date().toISOString() : undefined,
     bio: form.bio.trim() || undefined,
     skills: form.skills,
     targetRoles: form.targetRoles,

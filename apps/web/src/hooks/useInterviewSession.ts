@@ -11,8 +11,7 @@ export type { Message, InterviewPhase };
 interface UseInterviewSessionProps {
   company: string;
   role: string;
-  difficulty?: string;
-  interviewId?: string;
+  interviewId: string;
   onComplete: (data: unknown) => void;
 }
 
@@ -40,6 +39,8 @@ export function useInterviewSession({
   const transcriptData = useRef<{ question: string; answer: string; feedback: string }[]>([]);
   const messagesRef = useRef<Message[]>([]);
   const lastAiQuestion = useRef('');
+  const candidateResumeRef = useRef('');
+  const jobTitleRef = useRef(role);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -68,23 +69,74 @@ export function useInterviewSession({
         await apiClient.post(`/interviews/${interviewId}/consent`, { consent: true });
         await apiClient.post(`/interviews/${interviewId}/session-token`);
       } catch {}
+      try {
+        const ctx = await apiClient.get<{
+          context?: { job?: { title?: string } };
+          contextText?: string;
+        }>(`/interviews/${interviewId}/context`);
+        if (ctx?.contextText) candidateResumeRef.current = ctx.contextText;
+        if (ctx?.context?.job?.title) jobTitleRef.current = ctx.context.job.title;
+      } catch {}
     }
 
     await fsPromise;
 
-    setTimeout(() => {
-      const greeting = `Hello! Welcome to your AI voice interview for the ${role} position at ${company}. Please introduce yourself and describe your background.`;
-      lastAiQuestion.current = greeting;
+    let greeting = '';
+    let hasError = false;
+    try {
+      const res = await fetch(`${siteConfig.aiServiceUrl}/api/v1/ai/interview/respond`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          interviewId,
+          transcript: '',
+          turnNumber: 0,
+          stage: 'intro',
+          jobTitle: jobTitleRef.current || role,
+          candidateResume: candidateResumeRef.current || undefined,
+          conversationHistory: [],
+        }),
+      });
+      if (!res.ok) {
+        hasError = true;
+        setAiRespondError(`AI respond failed: ${res.status} ${res.statusText}`);
+      } else {
+        const data = await res.json();
+        if (data && typeof data.text === 'string' && data.text.trim()) {
+          greeting = data.text;
+        } else {
+          hasError = true;
+          setAiRespondError('AI returned an unexpected response format.');
+        }
+      }
+    } catch (err) {
+      hasError = true;
+      setAiRespondError(err instanceof Error ? err.message : 'Network error contacting AI service.');
+    }
+
+    if (hasError || !greeting) {
       setMessages([
         {
-          id: 'ai-init',
+          id: 'ai-init-error',
           role: 'ai',
-          content: greeting,
+          content: 'I could not reach the AI voice engine to start the session. Please check your connection and try again.',
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
       setIsAnalyzing(false);
-    }, 1200);
+      return;
+    }
+
+    lastAiQuestion.current = greeting;
+    setMessages([
+      {
+        id: 'ai-init',
+        role: 'ai',
+        content: greeting,
+        timestamp: new Date().toLocaleTimeString(),
+      },
+    ]);
+    setIsAnalyzing(false);
   };
 
   const submitAnswer = async (text: string) => {
@@ -97,17 +149,19 @@ export function useInterviewSession({
     setIsAnalyzing(true);
 
     let aiResponseText = '';
+    let nextStage = '';
     setAiRespondError(null);
     try {
       const res = await fetch(`${siteConfig.aiServiceUrl}/api/v1/ai/interview/respond`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          interviewId: interviewId || `intv_${currentTimestamp}`,
+          interviewId,
           transcript: text,
           turnNumber: messagesRef.current.length + 1,
           stage: phase === 'Introduction' ? 'intro' : phase === 'Core Vetting' ? 'technical' : 'closing',
-          jobTitle: role,
+          jobTitle: jobTitleRef.current || role,
+          candidateResume: candidateResumeRef.current || undefined,
           conversationHistory: messages.map(m => ({ speaker: m.role, text: m.content })),
         }),
       });
@@ -119,6 +173,7 @@ export function useInterviewSession({
         const data = await res.json();
         if (data && typeof data.text === 'string' && data.text.trim()) {
           aiResponseText = data.text;
+          nextStage = data.stage || '';
         } else {
           console.error('[interview] AI respond returned a malformed response without a text field', data);
           setAiRespondError('AI returned an unexpected response format.');
@@ -139,7 +194,15 @@ export function useInterviewSession({
         });
 
         lastAiQuestion.current = aiResponseText;
-        setPhase('Core Vetting');
+
+        let nextPhase: InterviewPhase = 'Core Vetting';
+        if (nextStage === 'intro') {
+          nextPhase = 'Introduction';
+        } else if (nextStage === 'closing') {
+          nextPhase = 'Wrap Up';
+        }
+        setPhase(nextPhase);
+
         setMessages((prev) => [
           ...prev,
           { id: `ai-${Date.now()}`, role: 'ai', content: aiResponseText, timestamp: new Date().toLocaleTimeString() }

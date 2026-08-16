@@ -1,12 +1,20 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
-import { CandidateProfileSchema } from '@nextround/shared';
+import { CandidateProfileSchema, SocialSyncRequestSchema } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
 import { authenticate, optionalAuthenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { uploadFile } from '../../lib/storage';
 import { extractTextFromBuffer, parseResumeWithGemini, generateFieldWithGemini } from '../../services/resume-parser.service';
-import { syncCandidateSocialProfiles } from '../../services/social-sync.service';
+import {
+  syncCandidateSocialProfiles,
+  persistSocialSyncOutcome,
+  listCandidateSocialSyncs,
+  deleteCandidateSocialSource,
+} from '../../services/social-sync.service';
+import { enqueueEmbeddingRebuild } from '../../services/candidate-embedding.service';
+import { getCandidateProfileId } from '../../lib/candidate-profile';
+import { logger } from '../../lib/logger';
 
 export const candidateProfileRouter = Router();
 
@@ -60,7 +68,7 @@ candidateProfileRouter.post(
         },
       });
     } catch (err) {
-      console.error('[RegenerateField] Processing error:', err);
+      logger.child('RegenerateField').error('Failed to regenerate profile field:', err);
       return next(err);
     }
   }
@@ -69,37 +77,125 @@ candidateProfileRouter.post(
 
 candidateProfileRouter.post(
   '/sync-social',
-  optionalAuthenticate,
+  authenticate,
+  requireRole('candidate'),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { githubUrl, linkedinUrl } = req.body || {};
-      if (!githubUrl && !linkedinUrl) {
-        return res.status(400).json({ success: false, error: 'Provide at least a githubUrl or linkedinUrl to sync' });
+      if (!req.user) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
       }
 
-      const socialData = await syncCandidateSocialProfiles(githubUrl, linkedinUrl);
+      const parsed = SocialSyncRequestSchema.safeParse(req.body || {});
+      if (!parsed.success) {
+        return res.status(400).json({ success: false, error: 'Invalid sync request' });
+      }
+      const { githubUrl, linkedinUrl, githubUsername, linkedinUsername, dataConsent } = parsed.data;
 
-      
-      
-      
-      
-      const linkedinFailed = Boolean(linkedinUrl) && socialData.linkedin?.synced === false;
+      if (!githubUrl && !linkedinUrl && !githubUsername && !linkedinUsername) {
+        return res.status(400).json({ success: false, error: 'Provide at least a GitHub or LinkedIn username/profile URL to sync' });
+      }
+
+      const candidateId = await getCandidateProfileId(req.user.userId);
+
+      if (!dataConsent) {
+        const profile = await prisma.candidateProfile.findUnique({ where: { id: candidateId } });
+        if (!profile?.data_consent) {
+          return res.status(400).json({
+            success: false,
+            error: 'Consent is required before fetching or analyzing your public social profiles.',
+          });
+        }
+      } else {
+        await prisma.candidateProfile.update({
+          where: { id: candidateId },
+          data: { data_consent: true, data_consent_at: new Date() },
+        });
+      }
+
+      const githubInput = githubUrl || githubUsername || undefined;
+      const linkedinInput = linkedinUrl || linkedinUsername || undefined;
+
+      const socialData = await syncCandidateSocialProfiles(githubInput, linkedinInput);
+
+      for (const outcome of socialData.syncs) {
+        try {
+          await persistSocialSyncOutcome(candidateId, outcome);
+          logger
+            .child('SyncSocial')
+            .info(`Persisted ${outcome.source} sync for candidate ${candidateId}: status=${outcome.status}`);
+        } catch (persistErr) {
+          logger.child('SyncSocial').error(`Failed to persist ${outcome.source} sync outcome for candidate ${candidateId}:`, persistErr);
+        }
+      }
+
+      const linkedinOutcome = socialData.syncs.find((s) => s.source === 'linkedin');
+      const linkedinFailed = Boolean(linkedinInput) && linkedinOutcome && !linkedinOutcome.synced;
       if (linkedinFailed) {
-        const reason = socialData.linkedin?.reason || 'LinkedIn sync failed.';
+        const reason = linkedinOutcome.reason || 'LinkedIn sync failed.';
         const timedOut = /timed out/i.test(reason);
-        const statusCode = socialData.linkedin?.status === 'not_found' ? 404 : timedOut ? 504 : 422;
+        const statusCode = linkedinOutcome.status === 'not_found' ? 404 : timedOut ? 504 : 422;
         return res.status(statusCode).json({
           success: false,
           error: reason,
+          data: socialData,
         });
       }
+
+      enqueueEmbeddingRebuild(candidateId).catch((err) =>
+        logger.child('SyncSocial').error(`Failed to enqueue embedding rebuild for candidate ${candidateId}:`, err)
+      );
 
       return res.json({
         success: true,
         data: socialData,
       });
     } catch (err) {
-      console.error('[SyncSocial] Processing error:', err);
+      logger.child('SyncSocial').error('Failed to sync social profiles:', err);
+      return next(err);
+    }
+  }
+);
+
+
+candidateProfileRouter.get(
+  '/social/syncs',
+  authenticate,
+  requireRole('candidate'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+      }
+      const candidateId = await getCandidateProfileId(req.user.userId);
+      const syncs = await listCandidateSocialSyncs(candidateId);
+      return res.json({ success: true, data: { syncs } });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
+
+candidateProfileRouter.delete(
+  '/social/:source',
+  authenticate,
+  requireRole('candidate'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ success: false, error: 'Unauthorized' });
+      }
+      const { source } = req.params as { source: string };
+      if (source !== 'github' && source !== 'linkedin') {
+        return res.status(400).json({ success: false, error: 'source must be "github" or "linkedin"' });
+      }
+      const candidateId = await getCandidateProfileId(req.user.userId);
+      await deleteCandidateSocialSource(candidateId, source);
+      enqueueEmbeddingRebuild(candidateId).catch((err) =>
+        logger.child('DeleteSocial').error(`Failed to enqueue embedding rebuild after removing ${source} for candidate ${candidateId}:`, err)
+      );
+      return res.json({ success: true, data: { message: `Removed ${source} social data` } });
+    } catch (err) {
       return next(err);
     }
   }
@@ -135,7 +231,7 @@ candidateProfileRouter.post(
             extractedParsedResume = (await parseResumeWithGemini(extractedRawText)) as unknown as Record<string, unknown>;
           }
         } catch (extractErr) {
-          console.error('Failed auto-extracting text on profile upload:', extractErr);
+          logger.child('Profile').error(`Failed auto-extracting text on profile upload (${req.file.originalname}):`, extractErr);
         }
       }
 
@@ -184,6 +280,12 @@ candidateProfileRouter.post(
           raw_resume_text: validated.rawResumeText || extractedRawText,
           parsed_resume: validated.parsedResume || extractedParsedResume || {},
           social_data: (validated as any).socialData || {},
+          data_consent: validated.dataConsent || false,
+          data_consent_at: validated.consentAt
+            ? new Date(validated.consentAt)
+            : validated.dataConsent
+            ? new Date()
+            : null,
         },
         update: {
           ...(bodyHas('fullName') && validated.fullName !== undefined ? { full_name: validated.fullName } : {}),
@@ -212,8 +314,16 @@ candidateProfileRouter.post(
           ...(extractedRawText || (bodyHas('rawResumeText') && validated.rawResumeText) ? { raw_resume_text: validated.rawResumeText || extractedRawText } : {}),
           ...(extractedParsedResume || (bodyHas('parsedResume') && validated.parsedResume) ? { parsed_resume: validated.parsedResume || extractedParsedResume } : {}),
           ...(bodyHas('socialData') && (validated as any).socialData ? { social_data: (validated as any).socialData } : {}),
+          ...(bodyHas('dataConsent') ? { data_consent: validated.dataConsent ?? false } : {}),
+          ...(bodyHas('dataConsent') && validated.dataConsent ? { data_consent_at: new Date() } : {}),
         },
       });
+
+      if (profile.data_consent) {
+        enqueueEmbeddingRebuild(profile.id).catch((err) =>
+          logger.child('Profile').error(`Failed to enqueue embedding rebuild for candidate ${profile.id}:`, err)
+        );
+      }
 
       return res.json({
         success: true,

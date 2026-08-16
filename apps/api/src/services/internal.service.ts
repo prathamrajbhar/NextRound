@@ -2,6 +2,7 @@ import { prisma, Prisma } from '@nextround/database';
 import type { ApplicationStatus, AgentStatus } from '@nextround/database';
 import { emailService } from './email.service';
 import { enqueueEvaluation } from '../lib/queues/evaluation.queue';
+import { logger } from '../lib/logger';
 import {
   ensureInterviewAndSchedule,
   advanceAssessmentStage,
@@ -9,6 +10,9 @@ import {
 } from '../lib/pipeline';
 import { upsertOffer } from './offer.service';
 import { notFound, badRequest } from '../lib/http-errors';
+import { buildContextSections, hashContent } from './candidate-embedding.service';
+import { getCandidateInterviewContext } from './candidate-context.service';
+import { deleteCandidateSocialSource as removeCandidateSocialSource } from './social-sync.service';
 
 
 
@@ -150,18 +154,18 @@ export async function recordScreeningResult(applicationId: string, body: Record<
         gap_analysis,
         rejection_feedback as string | undefined
       )
-      .catch((err) => console.error('Failed to send rejection email:', err));
+      .catch((err) => logger.child('Internal').error(`Failed to send rejection email for application ${id}:`, err));
   }
 
   
   
   if (updatedApp.status !== 'rejected') {
     await ensureInterviewAndSchedule(id).catch((err) =>
-      console.error(`Failed to create interview/schedule for application ${id}:`, err)
+      logger.child('Internal').error(`Failed to create interview/schedule for application ${id}:`, err)
     );
     
     await advanceAssessmentStage(id).catch((err) =>
-      console.error(`advanceAssessmentStage failed during screening completion for ${id}:`, err)
+      logger.child('Internal').error(`advanceAssessmentStage failed during screening completion for ${id}:`, err)
     );
   }
 
@@ -223,13 +227,13 @@ export async function recordAssessmentResult(applicationId: string, body: Record
       },
     })
     .catch((err) => {
-      console.error(`Failed to update assessment ${id} with evaluation results:`, err);
+      logger.child('Internal').error(`Failed to update assessment ${id} with evaluation results:`, err);
       throw err;
     });
 
   if (passed) {
     await advanceAssessmentStage(id).catch((err) =>
-      console.error(`advanceAssessmentStage failed for application ${id}:`, err)
+      logger.child('Internal').error(`advanceAssessmentStage failed for application ${id}:`, err)
     );
   }
 
@@ -273,7 +277,7 @@ export async function recordCodingResult(applicationId: string, body: Record<str
           ai_feedback: (feedback as string) || 'Coding evaluation completed',
         },
       })
-      .catch((err) => console.warn('Could not update coding submission:', err));
+      .catch((err) => logger.child('Internal').warn(`Could not update coding submission for application ${id}:`, err));
   }
 
   
@@ -315,7 +319,7 @@ export async function recordCodingResult(applicationId: string, body: Record<str
 
   if (passed) {
     await advanceAssessmentStage(id).catch((err) =>
-      console.error(`advanceAssessmentStage failed for application ${id}:`, err)
+      logger.child('Internal').error(`advanceAssessmentStage failed for application ${id}:`, err)
     );
   }
 
@@ -457,10 +461,7 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
         proctor_telemetry: body.proctor_telemetry || {},
       }
     ).catch((err) =>
-      console.error(
-        `Failed to enqueue evaluator for application ${interview.application_id}:`,
-        err
-      )
+      logger.child('Internal').error(`Failed to enqueue evaluator for application ${interview.application_id}:`, err)
     );
   }
 
@@ -934,6 +935,124 @@ export async function updateCandidateEmbedding(candidateId: string, body: Record
   await prisma.$executeRaw`UPDATE "CandidateProfile" SET resume_embedding = ${vectorStr}::vector WHERE id = ${id}`;
 
   return { message: 'Candidate embedding updated successfully' };
+}
+
+
+export async function getCandidateSections(candidateId: string) {
+  const profile = await prisma.candidateProfile.findUnique({
+    where: { id: candidateId },
+    include: { social_syncs: true },
+  });
+  if (!profile) throw notFound('Candidate profile not found');
+
+  const syncs = profile.social_syncs.map((s) => ({ source: s.source, normalized_data: s.normalized_data }));
+  const sections = buildContextSections(profile, syncs);
+
+  const existing = await prisma.candidateEmbedding.findMany({
+    where: { candidate_id: candidateId },
+    select: { source_type: true, section: true, content_hash: true },
+  });
+  const existingHashes = new Map(existing.map((e) => [`${e.source_type}:${e.section}`, e.content_hash]));
+
+  return {
+    candidateId,
+    sections: sections.map((s) => ({
+      sourceType: s.sourceType,
+      section: s.section,
+      content: s.content,
+      contentHash: hashContent(s.content),
+    })),
+    existing: Array.from(existingHashes.entries()).map(([key, hash]) => {
+      const [sourceType, ...rest] = key.split(':');
+      return { sourceType, section: rest.join(':'), contentHash: hash };
+    }),
+  };
+}
+
+
+export async function saveCandidateEmbeddings(candidateId: string, body: Record<string, unknown>) {
+  const sections = Array.isArray(body.sections) ? body.sections : [];
+
+  let upserted = 0;
+  let skipped = 0;
+  const profileSections: string[] = [];
+
+  for (const item of sections) {
+    const sourceType = typeof item.sourceType === 'string' ? item.sourceType : item.source_type;
+    const section = typeof item.section === 'string' ? item.section : '';
+    const content = typeof item.content === 'string' ? item.content : '';
+    const contentHash = typeof item.contentHash === 'string' ? item.contentHash : item.content_hash;
+    const embedding = Array.isArray(item.embedding) ? item.embedding : [];
+
+    if (!sourceType || !section || !content || !contentHash || embedding.length !== 768) {
+      continue;
+    }
+
+    const existing = await prisma.candidateEmbedding.findUnique({
+      where: {
+        candidate_id_source_type_section: { candidate_id: candidateId, source_type: sourceType, section },
+      },
+      select: { content_hash: true },
+    });
+
+    if (existing && existing.content_hash === contentHash) {
+      skipped += 1;
+      continue;
+    }
+
+    const vectorStr = `[${embedding.join(',')}]`;
+    await prisma.$executeRaw`
+      INSERT INTO "CandidateEmbedding" (id, candidate_id, source_type, section, content, embedding, content_hash, created_at, updated_at)
+      VALUES (gen_random_uuid(), ${candidateId}, ${sourceType}, ${section}, ${content}, ${vectorStr}::vector, ${contentHash}, now(), now())
+      ON CONFLICT ("candidate_id", "source_type", "section")
+      DO UPDATE SET content = EXCLUDED.content, embedding = EXCLUDED.embedding,
+        content_hash = EXCLUDED.content_hash, updated_at = now()
+    `;
+    upserted += 1;
+    if (sourceType === 'profile') profileSections.push(content);
+  }
+
+  if (profileSections.length > 0) {
+    const profileEmbedding = await fetchProfileEmbedding(profileSections.join('\n\n'));
+    if (profileEmbedding) {
+      const vectorStr = `[${profileEmbedding.join(',')}]`;
+      await prisma.$executeRaw`UPDATE "CandidateProfile" SET resume_embedding = ${vectorStr}::vector WHERE id = ${candidateId}`;
+    }
+  }
+
+  return { message: 'Candidate embeddings updated', upserted, skipped };
+}
+
+async function fetchProfileEmbedding(text: string): Promise<number[] | null> {
+  const aiServiceUrl = process.env.AI_BASE_URL || 'http://localhost:8000';
+  try {
+    const resp = await fetch(`${aiServiceUrl}/api/v1/embeddings/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text }),
+    });
+    if (!resp.ok) return null;
+    const body = (await resp.json()) as { data?: { embedding?: unknown } };
+    const embedding = body.data?.embedding;
+    if (!Array.isArray(embedding) || embedding.length !== 768) return null;
+    return embedding as number[];
+  } catch {
+    return null;
+  }
+}
+
+
+export async function deleteCandidateSocialSource(candidateId: string, source: string) {
+  if (source !== 'github' && source !== 'linkedin') {
+    throw badRequest('source must be "github" or "linkedin"');
+  }
+  await removeCandidateSocialSource(candidateId, source);
+  return { message: `Removed ${source} social data` };
+}
+
+
+export async function getCandidateInterviewContextInternal(candidateId: string, jobId: string) {
+  return getCandidateInterviewContext(candidateId, jobId);
 }
 
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { ProctoringClient } from './ProctoringClient';
+import { applyViolationPolicy, MAX_STRIKES } from './violationPolicy';
 
 interface UseProctoringSessionProps {
   sessionId: string;
@@ -73,21 +74,18 @@ export function useProctoringSession({
       onViolation: (kind) => {
         if (isEndedRef.current) return;
 
-        if (kind === 'multiple_faces_persistent') {
+        const decision = applyViolationPolicy(kind, 0);
+
+        if (decision.disqualifiesImmediately) {
           onDisqualifiedRef.current?.();
           return;
         }
 
-        if (
-          kind === 'tab_hidden' ||
-          kind === 'fullscreen_exit' ||
-          kind === 'window_blur' ||
-          kind === 'network_disconnected'
-        ) {
+        if (decision.incrementsStrike) {
           setStrikeCount((prev) => {
             const next = prev + 1;
             setShowWarningModal(true);
-            if (next >= 3) {
+            if (next >= MAX_STRIKES) {
               onDisqualifiedRef.current?.();
             }
             return next;

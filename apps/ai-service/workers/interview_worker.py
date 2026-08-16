@@ -2,9 +2,66 @@ import logging
 from core.http_client import callback_client
 from agents.interviewer_agent import run_interviewer_agent, InterviewerState
 from services.sentiment_service import analyze_interview_sentiment
-from workers.worker_base import run_agent_job, AgentJobSkip
+from workers.worker_base import fetch_internal, run_agent_job, AgentJobSkip
 
 logger = logging.getLogger("interview_worker")
+
+
+def _build_context_text(context: dict, max_length: int = 3000) -> str:
+    """Compose a factual candidate + job context string for the interviewer agent."""
+    parts = []
+    candidate = context.get("candidate") or {}
+    parts.append(f"Candidate: {candidate.get('fullName') or 'N/A'}")
+    parts.append(f"Headline: {candidate.get('headline') or 'N/A'}")
+    if candidate.get("location"):
+        parts.append(f"Location: {candidate.get('location')}")
+    if candidate.get("yearsOfExperience") is not None:
+        parts.append(f"Years of experience: {candidate.get('yearsOfExperience')}")
+    target_roles = candidate.get("targetRoles") or []
+    if target_roles:
+        parts.append(f"Target roles: {', '.join(target_roles)}")
+    if candidate.get("bio"):
+        parts.append(f"Bio: {candidate.get('bio')}")
+
+    skills = context.get("skills") or []
+    if skills:
+        parts.append(f"Skills: {', '.join(skills)}")
+
+    resume_raw = (context.get("resume") or {}).get("rawText")
+    if resume_raw:
+        parts.append(f"RESUME:\n{str(resume_raw)[:4000]}")
+
+    github = context.get("social", {}).get("github")
+    if github:
+        parts.append(f"GITHUB: {str(github)[:2000]}")
+    linkedin = context.get("social", {}).get("linkedin")
+    if linkedin:
+        parts.append(f"LINKEDIN: {str(linkedin)[:2000]}")
+
+    experience = context.get("experience") or []
+    if experience:
+        parts.append(f"EXPERIENCE: {str(experience)[:1500]}")
+    projects = context.get("projects") or []
+    if projects:
+        parts.append(f"PROJECTS: {str(projects)[:1500]}")
+    education = context.get("education") or []
+    if education:
+        parts.append(f"EDUCATION: {str(education)[:1000]}")
+
+    interview_focus = context.get("interviewFocus") or []
+    if interview_focus:
+        focus_text = "\n\n".join(
+            f"[{s.get('sourceType')}/{s.get('section')}]\n{s.get('content')}" for s in interview_focus
+        )
+        parts.append(f"MOST RELEVANT PROFILE SECTIONS FOR THE ROLE:\n{focus_text[:2500]}")
+
+    job = context.get("job") or {}
+    parts.append(f"JOB: {job.get('title') or 'N/A'}")
+    if job.get("description"):
+        parts.append(f"JOB DESCRIPTION: {str(job.get('description'))[:2500]}")
+
+    text = "\n\n".join(part for part in parts if part)
+    return text[:max_length]
 
 
 async def process_interview_job(job_data: dict) -> bool:
@@ -35,6 +92,45 @@ async def process_interview_job(job_data: dict) -> bool:
             "current_stage": "closing",
             "turn_number": len(raw_transcript),
         }
+
+        try:
+            application = await fetch_internal(f"internal/applications/{application_id or target_interview_id}/raw")
+            candidate_id = application.get("candidate_id")
+            job_id = application.get("job_id")
+            if candidate_id:
+                initial_state["candidate_id"] = candidate_id
+            if job_id:
+                initial_state["job_id"] = job_id
+
+            if candidate_id and job_id:
+                context = await fetch_internal(
+                    f"internal/candidates/{candidate_id}/context?jobId={job_id}"
+                )
+                initial_state["candidate_resume"] = _build_context_text(context or {})
+                job = (context or {}).get("job") or {}
+                if job.get("title"):
+                    initial_state["job_title"] = job["title"]
+                if job.get("rubric"):
+                    initial_state["job_rubric"] = job["rubric"]
+                logger.info(
+                    f"Loaded candidate context for interview {target_interview_id}: "
+                    f"candidate={candidate_id}, job={job_id}"
+                )
+            elif not candidate_id:
+                logger.warning(
+                    f"Interview {target_interview_id}: application {application_id} has no candidate_id; "
+                    "proceeding transcript-only."
+                )
+            else:
+                logger.warning(
+                    f"Interview {target_interview_id}: candidate {candidate_id} has no job_id; "
+                    "skipping candidate context (needs a job for relevance focus)."
+                )
+        except Exception as context_err:
+            logger.warning(
+                f"Failed to load candidate context for interview {target_interview_id}: {context_err}. "
+                "Proceeding with transcript-only evaluation."
+            )
 
         output_state = run_interviewer_agent(initial_state)
         scorecard = output_state.get("final_scorecard")

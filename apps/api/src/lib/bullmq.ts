@@ -44,6 +44,7 @@ export const JOB_NAMES = {
   prep: 'prep_generate',
   resumeBuilder: 'resume_builder_generate',
   analytics: 'generate_analytics_report',
+  candidateEmbed: 'candidate_embed',
 } as const;
 
 export const QUEUE_NAMES = [
@@ -60,6 +61,7 @@ export const QUEUE_NAMES = [
   'assessment',
   'coding',
   'analytics',
+  'candidate',
 ] as const;
 
 export type QueueName = typeof QUEUE_NAMES[number];
@@ -85,3 +87,4 @@ export const schedulingQueue = getQueue('scheduling');
 export const assessmentQueue = getQueue('assessment');
 export const codingQueue = getQueue('coding');
 export const analyticsQueue = getQueue('analytics');
+export const candidateEmbeddingQueue = getQueue('candidate');

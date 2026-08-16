@@ -60,6 +60,8 @@ export type CandidateProfileMinAggregateOutputType = {
   notice_period: string | null
   work_authorization: string | null
   proud_project: string | null
+  data_consent: boolean | null
+  data_consent_at: Date | null
   created_at: Date | null
 }
 
@@ -85,6 +87,8 @@ export type CandidateProfileMaxAggregateOutputType = {
   notice_period: string | null
   work_authorization: string | null
   proud_project: string | null
+  data_consent: boolean | null
+  data_consent_at: Date | null
   created_at: Date | null
 }
 
@@ -118,6 +122,8 @@ export type CandidateProfileCountAggregateOutputType = {
   work_values: number
   availability: number
   settings: number
+  data_consent: number
+  data_consent_at: number
   created_at: number
   _all: number
 }
@@ -157,6 +163,8 @@ export type CandidateProfileMinAggregateInputType = {
   notice_period?: true
   work_authorization?: true
   proud_project?: true
+  data_consent?: true
+  data_consent_at?: true
   created_at?: true
 }
 
@@ -182,6 +190,8 @@ export type CandidateProfileMaxAggregateInputType = {
   notice_period?: true
   work_authorization?: true
   proud_project?: true
+  data_consent?: true
+  data_consent_at?: true
   created_at?: true
 }
 
@@ -215,6 +225,8 @@ export type CandidateProfileCountAggregateInputType = {
   work_values?: true
   availability?: true
   settings?: true
+  data_consent?: true
+  data_consent_at?: true
   created_at?: true
   _all?: true
 }
@@ -335,6 +347,8 @@ export type CandidateProfileGroupByOutputType = {
   work_values: runtime.JsonValue
   availability: runtime.JsonValue
   settings: runtime.JsonValue
+  data_consent: boolean
+  data_consent_at: Date | null
   created_at: Date
   _count: CandidateProfileCountAggregateOutputType | null
   _avg: CandidateProfileAvgAggregateOutputType | null
@@ -391,12 +405,16 @@ export type CandidateProfileWhereInput = {
   work_values?: Prisma.JsonFilter<"CandidateProfile">
   availability?: Prisma.JsonFilter<"CandidateProfile">
   settings?: Prisma.JsonFilter<"CandidateProfile">
+  data_consent?: Prisma.BoolFilter<"CandidateProfile"> | boolean
+  data_consent_at?: Prisma.DateTimeNullableFilter<"CandidateProfile"> | Date | string | null
   created_at?: Prisma.DateTimeFilter<"CandidateProfile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   applications?: Prisma.ApplicationListRelationFilter
   mock_sessions?: Prisma.MockSessionListRelationFilter
   talent_bookmarks?: Prisma.TalentBookmarkListRelationFilter
   proctoring_sessions?: Prisma.ProctoringSessionListRelationFilter
+  social_syncs?: Prisma.SocialProfileSyncListRelationFilter
+  candidate_embeddings?: Prisma.CandidateEmbeddingListRelationFilter
 }
 
 export type CandidateProfileOrderByWithRelationInput = {
@@ -429,12 +447,16 @@ export type CandidateProfileOrderByWithRelationInput = {
   work_values?: Prisma.SortOrder
   availability?: Prisma.SortOrder
   settings?: Prisma.SortOrder
+  data_consent?: Prisma.SortOrder
+  data_consent_at?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   user?: Prisma.UserOrderByWithRelationInput
   applications?: Prisma.ApplicationOrderByRelationAggregateInput
   mock_sessions?: Prisma.MockSessionOrderByRelationAggregateInput
   talent_bookmarks?: Prisma.TalentBookmarkOrderByRelationAggregateInput
   proctoring_sessions?: Prisma.ProctoringSessionOrderByRelationAggregateInput
+  social_syncs?: Prisma.SocialProfileSyncOrderByRelationAggregateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingOrderByRelationAggregateInput
 }
 
 export type CandidateProfileWhereUniqueInput = Prisma.AtLeast<{
@@ -470,12 +492,16 @@ export type CandidateProfileWhereUniqueInput = Prisma.AtLeast<{
   work_values?: Prisma.JsonFilter<"CandidateProfile">
   availability?: Prisma.JsonFilter<"CandidateProfile">
   settings?: Prisma.JsonFilter<"CandidateProfile">
+  data_consent?: Prisma.BoolFilter<"CandidateProfile"> | boolean
+  data_consent_at?: Prisma.DateTimeNullableFilter<"CandidateProfile"> | Date | string | null
   created_at?: Prisma.DateTimeFilter<"CandidateProfile"> | Date | string
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
   applications?: Prisma.ApplicationListRelationFilter
   mock_sessions?: Prisma.MockSessionListRelationFilter
   talent_bookmarks?: Prisma.TalentBookmarkListRelationFilter
   proctoring_sessions?: Prisma.ProctoringSessionListRelationFilter
+  social_syncs?: Prisma.SocialProfileSyncListRelationFilter
+  candidate_embeddings?: Prisma.CandidateEmbeddingListRelationFilter
 }, "id" | "user_id">
 
 export type CandidateProfileOrderByWithAggregationInput = {
@@ -508,6 +534,8 @@ export type CandidateProfileOrderByWithAggregationInput = {
   work_values?: Prisma.SortOrder
   availability?: Prisma.SortOrder
   settings?: Prisma.SortOrder
+  data_consent?: Prisma.SortOrder
+  data_consent_at?: Prisma.SortOrderInput | Prisma.SortOrder
   created_at?: Prisma.SortOrder
   _count?: Prisma.CandidateProfileCountOrderByAggregateInput
   _avg?: Prisma.CandidateProfileAvgOrderByAggregateInput
@@ -549,6 +577,8 @@ export type CandidateProfileScalarWhereWithAggregatesInput = {
   work_values?: Prisma.JsonWithAggregatesFilter<"CandidateProfile">
   availability?: Prisma.JsonWithAggregatesFilter<"CandidateProfile">
   settings?: Prisma.JsonWithAggregatesFilter<"CandidateProfile">
+  data_consent?: Prisma.BoolWithAggregatesFilter<"CandidateProfile"> | boolean
+  data_consent_at?: Prisma.DateTimeNullableWithAggregatesFilter<"CandidateProfile"> | Date | string | null
   created_at?: Prisma.DateTimeWithAggregatesFilter<"CandidateProfile"> | Date | string
 }
 
@@ -581,12 +611,16 @@ export type CandidateProfileCreateInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   user: Prisma.UserCreateNestedOneWithoutCandidate_profileInput
   applications?: Prisma.ApplicationCreateNestedManyWithoutCandidateInput
   mock_sessions?: Prisma.MockSessionCreateNestedManyWithoutCandidateInput
   talent_bookmarks?: Prisma.TalentBookmarkCreateNestedManyWithoutCandidateInput
   proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileUncheckedCreateInput = {
@@ -619,11 +653,15 @@ export type CandidateProfileUncheckedCreateInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   applications?: Prisma.ApplicationUncheckedCreateNestedManyWithoutCandidateInput
   mock_sessions?: Prisma.MockSessionUncheckedCreateNestedManyWithoutCandidateInput
   talent_bookmarks?: Prisma.TalentBookmarkUncheckedCreateNestedManyWithoutCandidateInput
   proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileUpdateInput = {
@@ -655,12 +693,16 @@ export type CandidateProfileUpdateInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutCandidate_profileNestedInput
   applications?: Prisma.ApplicationUpdateManyWithoutCandidateNestedInput
   mock_sessions?: Prisma.MockSessionUpdateManyWithoutCandidateNestedInput
   talent_bookmarks?: Prisma.TalentBookmarkUpdateManyWithoutCandidateNestedInput
   proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUpdateManyWithoutCandidateNestedInput
 }
 
 export type CandidateProfileUncheckedUpdateInput = {
@@ -693,11 +735,15 @@ export type CandidateProfileUncheckedUpdateInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   applications?: Prisma.ApplicationUncheckedUpdateManyWithoutCandidateNestedInput
   mock_sessions?: Prisma.MockSessionUncheckedUpdateManyWithoutCandidateNestedInput
   talent_bookmarks?: Prisma.TalentBookmarkUncheckedUpdateManyWithoutCandidateNestedInput
   proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedUpdateManyWithoutCandidateNestedInput
 }
 
 export type CandidateProfileCreateManyInput = {
@@ -730,6 +776,8 @@ export type CandidateProfileCreateManyInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
 }
 
@@ -762,6 +810,8 @@ export type CandidateProfileUpdateManyMutationInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -795,6 +845,8 @@ export type CandidateProfileUncheckedUpdateManyInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -833,6 +885,8 @@ export type CandidateProfileCountOrderByAggregateInput = {
   work_values?: Prisma.SortOrder
   availability?: Prisma.SortOrder
   settings?: Prisma.SortOrder
+  data_consent?: Prisma.SortOrder
+  data_consent_at?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
 
@@ -864,6 +918,8 @@ export type CandidateProfileMaxOrderByAggregateInput = {
   notice_period?: Prisma.SortOrder
   work_authorization?: Prisma.SortOrder
   proud_project?: Prisma.SortOrder
+  data_consent?: Prisma.SortOrder
+  data_consent_at?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
 
@@ -889,6 +945,8 @@ export type CandidateProfileMinOrderByAggregateInput = {
   notice_period?: Prisma.SortOrder
   work_authorization?: Prisma.SortOrder
   proud_project?: Prisma.SortOrder
+  data_consent?: Prisma.SortOrder
+  data_consent_at?: Prisma.SortOrder
   created_at?: Prisma.SortOrder
 }
 
@@ -949,6 +1007,32 @@ export type NullableIntFieldUpdateOperationsInput = {
   decrement?: number
   multiply?: number
   divide?: number
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type CandidateProfileCreateNestedOneWithoutSocial_syncsInput = {
+  create?: Prisma.XOR<Prisma.CandidateProfileCreateWithoutSocial_syncsInput, Prisma.CandidateProfileUncheckedCreateWithoutSocial_syncsInput>
+  connectOrCreate?: Prisma.CandidateProfileCreateOrConnectWithoutSocial_syncsInput
+  connect?: Prisma.CandidateProfileWhereUniqueInput
+}
+
+export type CandidateProfileUpdateOneRequiredWithoutSocial_syncsNestedInput = {
+  create?: Prisma.XOR<Prisma.CandidateProfileCreateWithoutSocial_syncsInput, Prisma.CandidateProfileUncheckedCreateWithoutSocial_syncsInput>
+  connectOrCreate?: Prisma.CandidateProfileCreateOrConnectWithoutSocial_syncsInput
+  upsert?: Prisma.CandidateProfileUpsertWithoutSocial_syncsInput
+  connect?: Prisma.CandidateProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CandidateProfileUpdateToOneWithWhereWithoutSocial_syncsInput, Prisma.CandidateProfileUpdateWithoutSocial_syncsInput>, Prisma.CandidateProfileUncheckedUpdateWithoutSocial_syncsInput>
+}
+
+export type CandidateProfileUpdateOneRequiredWithoutCandidate_embeddingsNestedInput = {
+  create?: Prisma.XOR<Prisma.CandidateProfileCreateWithoutCandidate_embeddingsInput, Prisma.CandidateProfileUncheckedCreateWithoutCandidate_embeddingsInput>
+  connectOrCreate?: Prisma.CandidateProfileCreateOrConnectWithoutCandidate_embeddingsInput
+  upsert?: Prisma.CandidateProfileUpsertWithoutCandidate_embeddingsInput
+  connect?: Prisma.CandidateProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.CandidateProfileUpdateToOneWithWhereWithoutCandidate_embeddingsInput, Prisma.CandidateProfileUpdateWithoutCandidate_embeddingsInput>, Prisma.CandidateProfileUncheckedUpdateWithoutCandidate_embeddingsInput>
 }
 
 export type CandidateProfileCreateNestedOneWithoutApplicationsInput = {
@@ -1036,11 +1120,15 @@ export type CandidateProfileCreateWithoutUserInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   applications?: Prisma.ApplicationCreateNestedManyWithoutCandidateInput
   mock_sessions?: Prisma.MockSessionCreateNestedManyWithoutCandidateInput
   talent_bookmarks?: Prisma.TalentBookmarkCreateNestedManyWithoutCandidateInput
   proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileUncheckedCreateWithoutUserInput = {
@@ -1072,11 +1160,15 @@ export type CandidateProfileUncheckedCreateWithoutUserInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   applications?: Prisma.ApplicationUncheckedCreateNestedManyWithoutCandidateInput
   mock_sessions?: Prisma.MockSessionUncheckedCreateNestedManyWithoutCandidateInput
   talent_bookmarks?: Prisma.TalentBookmarkUncheckedCreateNestedManyWithoutCandidateInput
   proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileCreateOrConnectWithoutUserInput = {
@@ -1124,11 +1216,15 @@ export type CandidateProfileUpdateWithoutUserInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   applications?: Prisma.ApplicationUpdateManyWithoutCandidateNestedInput
   mock_sessions?: Prisma.MockSessionUpdateManyWithoutCandidateNestedInput
   talent_bookmarks?: Prisma.TalentBookmarkUpdateManyWithoutCandidateNestedInput
   proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUpdateManyWithoutCandidateNestedInput
 }
 
 export type CandidateProfileUncheckedUpdateWithoutUserInput = {
@@ -1160,11 +1256,367 @@ export type CandidateProfileUncheckedUpdateWithoutUserInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   applications?: Prisma.ApplicationUncheckedUpdateManyWithoutCandidateNestedInput
   mock_sessions?: Prisma.MockSessionUncheckedUpdateManyWithoutCandidateNestedInput
   talent_bookmarks?: Prisma.TalentBookmarkUncheckedUpdateManyWithoutCandidateNestedInput
   proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedUpdateManyWithoutCandidateNestedInput
+}
+
+export type CandidateProfileCreateWithoutSocial_syncsInput = {
+  id?: string
+  full_name?: string | null
+  headline?: string | null
+  phone?: string | null
+  location?: string | null
+  timezone?: string | null
+  avatar_url?: string | null
+  resume_url?: string | null
+  raw_resume_text?: string | null
+  parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  social_data?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  linkedin_url?: string | null
+  github_url?: string | null
+  portfolio_url?: string | null
+  bio?: string | null
+  skills?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  target_roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  years_of_experience?: number | null
+  work_mode?: string | null
+  current_ctc?: number | null
+  target_locations?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  expected_salary?: number | null
+  notice_period?: string | null
+  work_authorization?: string | null
+  proud_project?: string | null
+  work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
+  created_at?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutCandidate_profileInput
+  applications?: Prisma.ApplicationCreateNestedManyWithoutCandidateInput
+  mock_sessions?: Prisma.MockSessionCreateNestedManyWithoutCandidateInput
+  talent_bookmarks?: Prisma.TalentBookmarkCreateNestedManyWithoutCandidateInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingCreateNestedManyWithoutCandidateInput
+}
+
+export type CandidateProfileUncheckedCreateWithoutSocial_syncsInput = {
+  id?: string
+  user_id: string
+  full_name?: string | null
+  headline?: string | null
+  phone?: string | null
+  location?: string | null
+  timezone?: string | null
+  avatar_url?: string | null
+  resume_url?: string | null
+  raw_resume_text?: string | null
+  parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  social_data?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  linkedin_url?: string | null
+  github_url?: string | null
+  portfolio_url?: string | null
+  bio?: string | null
+  skills?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  target_roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  years_of_experience?: number | null
+  work_mode?: string | null
+  current_ctc?: number | null
+  target_locations?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  expected_salary?: number | null
+  notice_period?: string | null
+  work_authorization?: string | null
+  proud_project?: string | null
+  work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
+  created_at?: Date | string
+  applications?: Prisma.ApplicationUncheckedCreateNestedManyWithoutCandidateInput
+  mock_sessions?: Prisma.MockSessionUncheckedCreateNestedManyWithoutCandidateInput
+  talent_bookmarks?: Prisma.TalentBookmarkUncheckedCreateNestedManyWithoutCandidateInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedCreateNestedManyWithoutCandidateInput
+}
+
+export type CandidateProfileCreateOrConnectWithoutSocial_syncsInput = {
+  where: Prisma.CandidateProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.CandidateProfileCreateWithoutSocial_syncsInput, Prisma.CandidateProfileUncheckedCreateWithoutSocial_syncsInput>
+}
+
+export type CandidateProfileUpsertWithoutSocial_syncsInput = {
+  update: Prisma.XOR<Prisma.CandidateProfileUpdateWithoutSocial_syncsInput, Prisma.CandidateProfileUncheckedUpdateWithoutSocial_syncsInput>
+  create: Prisma.XOR<Prisma.CandidateProfileCreateWithoutSocial_syncsInput, Prisma.CandidateProfileUncheckedCreateWithoutSocial_syncsInput>
+  where?: Prisma.CandidateProfileWhereInput
+}
+
+export type CandidateProfileUpdateToOneWithWhereWithoutSocial_syncsInput = {
+  where?: Prisma.CandidateProfileWhereInput
+  data: Prisma.XOR<Prisma.CandidateProfileUpdateWithoutSocial_syncsInput, Prisma.CandidateProfileUncheckedUpdateWithoutSocial_syncsInput>
+}
+
+export type CandidateProfileUpdateWithoutSocial_syncsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  full_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  social_data?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  linkedin_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  portfolio_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  target_roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  years_of_experience?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  work_mode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_ctc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  target_locations?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  expected_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  notice_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_authorization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proud_project?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutCandidate_profileNestedInput
+  applications?: Prisma.ApplicationUpdateManyWithoutCandidateNestedInput
+  mock_sessions?: Prisma.MockSessionUpdateManyWithoutCandidateNestedInput
+  talent_bookmarks?: Prisma.TalentBookmarkUpdateManyWithoutCandidateNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUpdateManyWithoutCandidateNestedInput
+}
+
+export type CandidateProfileUncheckedUpdateWithoutSocial_syncsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  user_id?: Prisma.StringFieldUpdateOperationsInput | string
+  full_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  social_data?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  linkedin_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  portfolio_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  target_roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  years_of_experience?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  work_mode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_ctc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  target_locations?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  expected_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  notice_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_authorization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proud_project?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  applications?: Prisma.ApplicationUncheckedUpdateManyWithoutCandidateNestedInput
+  mock_sessions?: Prisma.MockSessionUncheckedUpdateManyWithoutCandidateNestedInput
+  talent_bookmarks?: Prisma.TalentBookmarkUncheckedUpdateManyWithoutCandidateNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedUpdateManyWithoutCandidateNestedInput
+}
+
+export type CandidateProfileCreateWithoutCandidate_embeddingsInput = {
+  id?: string
+  full_name?: string | null
+  headline?: string | null
+  phone?: string | null
+  location?: string | null
+  timezone?: string | null
+  avatar_url?: string | null
+  resume_url?: string | null
+  raw_resume_text?: string | null
+  parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  social_data?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  linkedin_url?: string | null
+  github_url?: string | null
+  portfolio_url?: string | null
+  bio?: string | null
+  skills?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  target_roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  years_of_experience?: number | null
+  work_mode?: string | null
+  current_ctc?: number | null
+  target_locations?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  expected_salary?: number | null
+  notice_period?: string | null
+  work_authorization?: string | null
+  proud_project?: string | null
+  work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
+  created_at?: Date | string
+  user: Prisma.UserCreateNestedOneWithoutCandidate_profileInput
+  applications?: Prisma.ApplicationCreateNestedManyWithoutCandidateInput
+  mock_sessions?: Prisma.MockSessionCreateNestedManyWithoutCandidateInput
+  talent_bookmarks?: Prisma.TalentBookmarkCreateNestedManyWithoutCandidateInput
+  proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncCreateNestedManyWithoutCandidateInput
+}
+
+export type CandidateProfileUncheckedCreateWithoutCandidate_embeddingsInput = {
+  id?: string
+  user_id: string
+  full_name?: string | null
+  headline?: string | null
+  phone?: string | null
+  location?: string | null
+  timezone?: string | null
+  avatar_url?: string | null
+  resume_url?: string | null
+  raw_resume_text?: string | null
+  parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  social_data?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  linkedin_url?: string | null
+  github_url?: string | null
+  portfolio_url?: string | null
+  bio?: string | null
+  skills?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  target_roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  years_of_experience?: number | null
+  work_mode?: string | null
+  current_ctc?: number | null
+  target_locations?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  expected_salary?: number | null
+  notice_period?: string | null
+  work_authorization?: string | null
+  proud_project?: string | null
+  work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
+  created_at?: Date | string
+  applications?: Prisma.ApplicationUncheckedCreateNestedManyWithoutCandidateInput
+  mock_sessions?: Prisma.MockSessionUncheckedCreateNestedManyWithoutCandidateInput
+  talent_bookmarks?: Prisma.TalentBookmarkUncheckedCreateNestedManyWithoutCandidateInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedCreateNestedManyWithoutCandidateInput
+}
+
+export type CandidateProfileCreateOrConnectWithoutCandidate_embeddingsInput = {
+  where: Prisma.CandidateProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.CandidateProfileCreateWithoutCandidate_embeddingsInput, Prisma.CandidateProfileUncheckedCreateWithoutCandidate_embeddingsInput>
+}
+
+export type CandidateProfileUpsertWithoutCandidate_embeddingsInput = {
+  update: Prisma.XOR<Prisma.CandidateProfileUpdateWithoutCandidate_embeddingsInput, Prisma.CandidateProfileUncheckedUpdateWithoutCandidate_embeddingsInput>
+  create: Prisma.XOR<Prisma.CandidateProfileCreateWithoutCandidate_embeddingsInput, Prisma.CandidateProfileUncheckedCreateWithoutCandidate_embeddingsInput>
+  where?: Prisma.CandidateProfileWhereInput
+}
+
+export type CandidateProfileUpdateToOneWithWhereWithoutCandidate_embeddingsInput = {
+  where?: Prisma.CandidateProfileWhereInput
+  data: Prisma.XOR<Prisma.CandidateProfileUpdateWithoutCandidate_embeddingsInput, Prisma.CandidateProfileUncheckedUpdateWithoutCandidate_embeddingsInput>
+}
+
+export type CandidateProfileUpdateWithoutCandidate_embeddingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  full_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  social_data?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  linkedin_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  portfolio_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  target_roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  years_of_experience?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  work_mode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_ctc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  target_locations?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  expected_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  notice_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_authorization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proud_project?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  user?: Prisma.UserUpdateOneRequiredWithoutCandidate_profileNestedInput
+  applications?: Prisma.ApplicationUpdateManyWithoutCandidateNestedInput
+  mock_sessions?: Prisma.MockSessionUpdateManyWithoutCandidateNestedInput
+  talent_bookmarks?: Prisma.TalentBookmarkUpdateManyWithoutCandidateNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUpdateManyWithoutCandidateNestedInput
+}
+
+export type CandidateProfileUncheckedUpdateWithoutCandidate_embeddingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  user_id?: Prisma.StringFieldUpdateOperationsInput | string
+  full_name?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  headline?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  social_data?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  linkedin_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  github_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  portfolio_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bio?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  skills?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  target_roles?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  years_of_experience?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  work_mode?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  current_ctc?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  target_locations?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  expected_salary?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  notice_period?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_authorization?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  proud_project?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  applications?: Prisma.ApplicationUncheckedUpdateManyWithoutCandidateNestedInput
+  mock_sessions?: Prisma.MockSessionUncheckedUpdateManyWithoutCandidateNestedInput
+  talent_bookmarks?: Prisma.TalentBookmarkUncheckedUpdateManyWithoutCandidateNestedInput
+  proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedUpdateManyWithoutCandidateNestedInput
 }
 
 export type CandidateProfileCreateWithoutApplicationsInput = {
@@ -1196,11 +1648,15 @@ export type CandidateProfileCreateWithoutApplicationsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   user: Prisma.UserCreateNestedOneWithoutCandidate_profileInput
   mock_sessions?: Prisma.MockSessionCreateNestedManyWithoutCandidateInput
   talent_bookmarks?: Prisma.TalentBookmarkCreateNestedManyWithoutCandidateInput
   proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileUncheckedCreateWithoutApplicationsInput = {
@@ -1233,10 +1689,14 @@ export type CandidateProfileUncheckedCreateWithoutApplicationsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   mock_sessions?: Prisma.MockSessionUncheckedCreateNestedManyWithoutCandidateInput
   talent_bookmarks?: Prisma.TalentBookmarkUncheckedCreateNestedManyWithoutCandidateInput
   proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileCreateOrConnectWithoutApplicationsInput = {
@@ -1284,11 +1744,15 @@ export type CandidateProfileUpdateWithoutApplicationsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutCandidate_profileNestedInput
   mock_sessions?: Prisma.MockSessionUpdateManyWithoutCandidateNestedInput
   talent_bookmarks?: Prisma.TalentBookmarkUpdateManyWithoutCandidateNestedInput
   proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUpdateManyWithoutCandidateNestedInput
 }
 
 export type CandidateProfileUncheckedUpdateWithoutApplicationsInput = {
@@ -1321,10 +1785,14 @@ export type CandidateProfileUncheckedUpdateWithoutApplicationsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   mock_sessions?: Prisma.MockSessionUncheckedUpdateManyWithoutCandidateNestedInput
   talent_bookmarks?: Prisma.TalentBookmarkUncheckedUpdateManyWithoutCandidateNestedInput
   proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedUpdateManyWithoutCandidateNestedInput
 }
 
 export type CandidateProfileCreateWithoutMock_sessionsInput = {
@@ -1356,11 +1824,15 @@ export type CandidateProfileCreateWithoutMock_sessionsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   user: Prisma.UserCreateNestedOneWithoutCandidate_profileInput
   applications?: Prisma.ApplicationCreateNestedManyWithoutCandidateInput
   talent_bookmarks?: Prisma.TalentBookmarkCreateNestedManyWithoutCandidateInput
   proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileUncheckedCreateWithoutMock_sessionsInput = {
@@ -1393,10 +1865,14 @@ export type CandidateProfileUncheckedCreateWithoutMock_sessionsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   applications?: Prisma.ApplicationUncheckedCreateNestedManyWithoutCandidateInput
   talent_bookmarks?: Prisma.TalentBookmarkUncheckedCreateNestedManyWithoutCandidateInput
   proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileCreateOrConnectWithoutMock_sessionsInput = {
@@ -1444,11 +1920,15 @@ export type CandidateProfileUpdateWithoutMock_sessionsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutCandidate_profileNestedInput
   applications?: Prisma.ApplicationUpdateManyWithoutCandidateNestedInput
   talent_bookmarks?: Prisma.TalentBookmarkUpdateManyWithoutCandidateNestedInput
   proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUpdateManyWithoutCandidateNestedInput
 }
 
 export type CandidateProfileUncheckedUpdateWithoutMock_sessionsInput = {
@@ -1481,10 +1961,14 @@ export type CandidateProfileUncheckedUpdateWithoutMock_sessionsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   applications?: Prisma.ApplicationUncheckedUpdateManyWithoutCandidateNestedInput
   talent_bookmarks?: Prisma.TalentBookmarkUncheckedUpdateManyWithoutCandidateNestedInput
   proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedUpdateManyWithoutCandidateNestedInput
 }
 
 export type CandidateProfileCreateWithoutTalent_bookmarksInput = {
@@ -1516,11 +2000,15 @@ export type CandidateProfileCreateWithoutTalent_bookmarksInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   user: Prisma.UserCreateNestedOneWithoutCandidate_profileInput
   applications?: Prisma.ApplicationCreateNestedManyWithoutCandidateInput
   mock_sessions?: Prisma.MockSessionCreateNestedManyWithoutCandidateInput
   proctoring_sessions?: Prisma.ProctoringSessionCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileUncheckedCreateWithoutTalent_bookmarksInput = {
@@ -1553,10 +2041,14 @@ export type CandidateProfileUncheckedCreateWithoutTalent_bookmarksInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   applications?: Prisma.ApplicationUncheckedCreateNestedManyWithoutCandidateInput
   mock_sessions?: Prisma.MockSessionUncheckedCreateNestedManyWithoutCandidateInput
   proctoring_sessions?: Prisma.ProctoringSessionUncheckedCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileCreateOrConnectWithoutTalent_bookmarksInput = {
@@ -1604,11 +2096,15 @@ export type CandidateProfileUpdateWithoutTalent_bookmarksInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutCandidate_profileNestedInput
   applications?: Prisma.ApplicationUpdateManyWithoutCandidateNestedInput
   mock_sessions?: Prisma.MockSessionUpdateManyWithoutCandidateNestedInput
   proctoring_sessions?: Prisma.ProctoringSessionUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUpdateManyWithoutCandidateNestedInput
 }
 
 export type CandidateProfileUncheckedUpdateWithoutTalent_bookmarksInput = {
@@ -1641,10 +2137,14 @@ export type CandidateProfileUncheckedUpdateWithoutTalent_bookmarksInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   applications?: Prisma.ApplicationUncheckedUpdateManyWithoutCandidateNestedInput
   mock_sessions?: Prisma.MockSessionUncheckedUpdateManyWithoutCandidateNestedInput
   proctoring_sessions?: Prisma.ProctoringSessionUncheckedUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedUpdateManyWithoutCandidateNestedInput
 }
 
 export type CandidateProfileCreateWithoutProctoring_sessionsInput = {
@@ -1676,11 +2176,15 @@ export type CandidateProfileCreateWithoutProctoring_sessionsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   user: Prisma.UserCreateNestedOneWithoutCandidate_profileInput
   applications?: Prisma.ApplicationCreateNestedManyWithoutCandidateInput
   mock_sessions?: Prisma.MockSessionCreateNestedManyWithoutCandidateInput
   talent_bookmarks?: Prisma.TalentBookmarkCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileUncheckedCreateWithoutProctoring_sessionsInput = {
@@ -1713,10 +2217,14 @@ export type CandidateProfileUncheckedCreateWithoutProctoring_sessionsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: boolean
+  data_consent_at?: Date | string | null
   created_at?: Date | string
   applications?: Prisma.ApplicationUncheckedCreateNestedManyWithoutCandidateInput
   mock_sessions?: Prisma.MockSessionUncheckedCreateNestedManyWithoutCandidateInput
   talent_bookmarks?: Prisma.TalentBookmarkUncheckedCreateNestedManyWithoutCandidateInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedCreateNestedManyWithoutCandidateInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedCreateNestedManyWithoutCandidateInput
 }
 
 export type CandidateProfileCreateOrConnectWithoutProctoring_sessionsInput = {
@@ -1764,11 +2272,15 @@ export type CandidateProfileUpdateWithoutProctoring_sessionsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   user?: Prisma.UserUpdateOneRequiredWithoutCandidate_profileNestedInput
   applications?: Prisma.ApplicationUpdateManyWithoutCandidateNestedInput
   mock_sessions?: Prisma.MockSessionUpdateManyWithoutCandidateNestedInput
   talent_bookmarks?: Prisma.TalentBookmarkUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUpdateManyWithoutCandidateNestedInput
 }
 
 export type CandidateProfileUncheckedUpdateWithoutProctoring_sessionsInput = {
@@ -1801,10 +2313,14 @@ export type CandidateProfileUncheckedUpdateWithoutProctoring_sessionsInput = {
   work_values?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   availability?: Prisma.JsonNullValueInput | runtime.InputJsonValue
   settings?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  data_consent?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  data_consent_at?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   created_at?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   applications?: Prisma.ApplicationUncheckedUpdateManyWithoutCandidateNestedInput
   mock_sessions?: Prisma.MockSessionUncheckedUpdateManyWithoutCandidateNestedInput
   talent_bookmarks?: Prisma.TalentBookmarkUncheckedUpdateManyWithoutCandidateNestedInput
+  social_syncs?: Prisma.SocialProfileSyncUncheckedUpdateManyWithoutCandidateNestedInput
+  candidate_embeddings?: Prisma.CandidateEmbeddingUncheckedUpdateManyWithoutCandidateNestedInput
 }
 
 
@@ -1817,6 +2333,8 @@ export type CandidateProfileCountOutputType = {
   mock_sessions: number
   talent_bookmarks: number
   proctoring_sessions: number
+  social_syncs: number
+  candidate_embeddings: number
 }
 
 export type CandidateProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1824,6 +2342,8 @@ export type CandidateProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.
   mock_sessions?: boolean | CandidateProfileCountOutputTypeCountMock_sessionsArgs
   talent_bookmarks?: boolean | CandidateProfileCountOutputTypeCountTalent_bookmarksArgs
   proctoring_sessions?: boolean | CandidateProfileCountOutputTypeCountProctoring_sessionsArgs
+  social_syncs?: boolean | CandidateProfileCountOutputTypeCountSocial_syncsArgs
+  candidate_embeddings?: boolean | CandidateProfileCountOutputTypeCountCandidate_embeddingsArgs
 }
 
 /**
@@ -1864,6 +2384,20 @@ export type CandidateProfileCountOutputTypeCountProctoring_sessionsArgs<ExtArgs 
   where?: Prisma.ProctoringSessionWhereInput
 }
 
+/**
+ * CandidateProfileCountOutputType without action
+ */
+export type CandidateProfileCountOutputTypeCountSocial_syncsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.SocialProfileSyncWhereInput
+}
+
+/**
+ * CandidateProfileCountOutputType without action
+ */
+export type CandidateProfileCountOutputTypeCountCandidate_embeddingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CandidateEmbeddingWhereInput
+}
+
 
 export type CandidateProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1895,12 +2429,16 @@ export type CandidateProfileSelect<ExtArgs extends runtime.Types.Extensions.Inte
   work_values?: boolean
   availability?: boolean
   settings?: boolean
+  data_consent?: boolean
+  data_consent_at?: boolean
   created_at?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   applications?: boolean | Prisma.CandidateProfile$applicationsArgs<ExtArgs>
   mock_sessions?: boolean | Prisma.CandidateProfile$mock_sessionsArgs<ExtArgs>
   talent_bookmarks?: boolean | Prisma.CandidateProfile$talent_bookmarksArgs<ExtArgs>
   proctoring_sessions?: boolean | Prisma.CandidateProfile$proctoring_sessionsArgs<ExtArgs>
+  social_syncs?: boolean | Prisma.CandidateProfile$social_syncsArgs<ExtArgs>
+  candidate_embeddings?: boolean | Prisma.CandidateProfile$candidate_embeddingsArgs<ExtArgs>
   _count?: boolean | Prisma.CandidateProfileCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["candidateProfile"]>
 
@@ -1934,6 +2472,8 @@ export type CandidateProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   work_values?: boolean
   availability?: boolean
   settings?: boolean
+  data_consent?: boolean
+  data_consent_at?: boolean
   created_at?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["candidateProfile"]>
@@ -1968,6 +2508,8 @@ export type CandidateProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   work_values?: boolean
   availability?: boolean
   settings?: boolean
+  data_consent?: boolean
+  data_consent_at?: boolean
   created_at?: boolean
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["candidateProfile"]>
@@ -2002,16 +2544,20 @@ export type CandidateProfileSelectScalar = {
   work_values?: boolean
   availability?: boolean
   settings?: boolean
+  data_consent?: boolean
+  data_consent_at?: boolean
   created_at?: boolean
 }
 
-export type CandidateProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "full_name" | "headline" | "phone" | "location" | "timezone" | "avatar_url" | "resume_url" | "raw_resume_text" | "parsed_resume" | "social_data" | "linkedin_url" | "github_url" | "portfolio_url" | "bio" | "skills" | "target_roles" | "years_of_experience" | "work_mode" | "current_ctc" | "target_locations" | "expected_salary" | "notice_period" | "work_authorization" | "proud_project" | "work_values" | "availability" | "settings" | "created_at", ExtArgs["result"]["candidateProfile"]>
+export type CandidateProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "full_name" | "headline" | "phone" | "location" | "timezone" | "avatar_url" | "resume_url" | "raw_resume_text" | "parsed_resume" | "social_data" | "linkedin_url" | "github_url" | "portfolio_url" | "bio" | "skills" | "target_roles" | "years_of_experience" | "work_mode" | "current_ctc" | "target_locations" | "expected_salary" | "notice_period" | "work_authorization" | "proud_project" | "work_values" | "availability" | "settings" | "data_consent" | "data_consent_at" | "created_at", ExtArgs["result"]["candidateProfile"]>
 export type CandidateProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   applications?: boolean | Prisma.CandidateProfile$applicationsArgs<ExtArgs>
   mock_sessions?: boolean | Prisma.CandidateProfile$mock_sessionsArgs<ExtArgs>
   talent_bookmarks?: boolean | Prisma.CandidateProfile$talent_bookmarksArgs<ExtArgs>
   proctoring_sessions?: boolean | Prisma.CandidateProfile$proctoring_sessionsArgs<ExtArgs>
+  social_syncs?: boolean | Prisma.CandidateProfile$social_syncsArgs<ExtArgs>
+  candidate_embeddings?: boolean | Prisma.CandidateProfile$candidate_embeddingsArgs<ExtArgs>
   _count?: boolean | Prisma.CandidateProfileCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type CandidateProfileIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2029,6 +2575,8 @@ export type $CandidateProfilePayload<ExtArgs extends runtime.Types.Extensions.In
     mock_sessions: Prisma.$MockSessionPayload<ExtArgs>[]
     talent_bookmarks: Prisma.$TalentBookmarkPayload<ExtArgs>[]
     proctoring_sessions: Prisma.$ProctoringSessionPayload<ExtArgs>[]
+    social_syncs: Prisma.$SocialProfileSyncPayload<ExtArgs>[]
+    candidate_embeddings: Prisma.$CandidateEmbeddingPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2060,6 +2608,8 @@ export type $CandidateProfilePayload<ExtArgs extends runtime.Types.Extensions.In
     work_values: runtime.JsonValue
     availability: runtime.JsonValue
     settings: runtime.JsonValue
+    data_consent: boolean
+    data_consent_at: Date | null
     created_at: Date
   }, ExtArgs["result"]["candidateProfile"]>
   composites: {}
@@ -2460,6 +3010,8 @@ export interface Prisma__CandidateProfileClient<T, Null = never, ExtArgs extends
   mock_sessions<T extends Prisma.CandidateProfile$mock_sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CandidateProfile$mock_sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MockSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   talent_bookmarks<T extends Prisma.CandidateProfile$talent_bookmarksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CandidateProfile$talent_bookmarksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TalentBookmarkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   proctoring_sessions<T extends Prisma.CandidateProfile$proctoring_sessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CandidateProfile$proctoring_sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ProctoringSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  social_syncs<T extends Prisma.CandidateProfile$social_syncsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CandidateProfile$social_syncsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$SocialProfileSyncPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  candidate_embeddings<T extends Prisma.CandidateProfile$candidate_embeddingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.CandidateProfile$candidate_embeddingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CandidateEmbeddingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2518,6 +3070,8 @@ export interface CandidateProfileFieldRefs {
   readonly work_values: Prisma.FieldRef<"CandidateProfile", 'Json'>
   readonly availability: Prisma.FieldRef<"CandidateProfile", 'Json'>
   readonly settings: Prisma.FieldRef<"CandidateProfile", 'Json'>
+  readonly data_consent: Prisma.FieldRef<"CandidateProfile", 'Boolean'>
+  readonly data_consent_at: Prisma.FieldRef<"CandidateProfile", 'DateTime'>
   readonly created_at: Prisma.FieldRef<"CandidateProfile", 'DateTime'>
 }
     
@@ -3013,6 +3567,54 @@ export type CandidateProfile$proctoring_sessionsArgs<ExtArgs extends runtime.Typ
   take?: number
   skip?: number
   distinct?: Prisma.ProctoringSessionScalarFieldEnum | Prisma.ProctoringSessionScalarFieldEnum[]
+}
+
+/**
+ * CandidateProfile.social_syncs
+ */
+export type CandidateProfile$social_syncsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the SocialProfileSync
+   */
+  select?: Prisma.SocialProfileSyncSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the SocialProfileSync
+   */
+  omit?: Prisma.SocialProfileSyncOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.SocialProfileSyncInclude<ExtArgs> | null
+  where?: Prisma.SocialProfileSyncWhereInput
+  orderBy?: Prisma.SocialProfileSyncOrderByWithRelationInput | Prisma.SocialProfileSyncOrderByWithRelationInput[]
+  cursor?: Prisma.SocialProfileSyncWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.SocialProfileSyncScalarFieldEnum | Prisma.SocialProfileSyncScalarFieldEnum[]
+}
+
+/**
+ * CandidateProfile.candidate_embeddings
+ */
+export type CandidateProfile$candidate_embeddingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CandidateEmbedding
+   */
+  select?: Prisma.CandidateEmbeddingSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CandidateEmbedding
+   */
+  omit?: Prisma.CandidateEmbeddingOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CandidateEmbeddingInclude<ExtArgs> | null
+  where?: Prisma.CandidateEmbeddingWhereInput
+  orderBy?: Prisma.CandidateEmbeddingOrderByWithRelationInput | Prisma.CandidateEmbeddingOrderByWithRelationInput[]
+  cursor?: Prisma.CandidateEmbeddingWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CandidateEmbeddingScalarFieldEnum | Prisma.CandidateEmbeddingScalarFieldEnum[]
 }
 
 /**

@@ -17,6 +17,7 @@ from workers.mock_worker import process_mock_job
 from workers.resume_builder_worker import process_resume_builder_job
 from workers.prep_content_worker import process_prep_job
 from workers.analytics_worker import process_analytics_job
+from workers.candidate_embedding_worker import process_candidate_embedding_job
 
 logger = logging.getLogger("ai_service_workers")
 
@@ -38,6 +39,7 @@ QUEUE_HANDLERS: Dict[str, JobHandler] = {
     "prep": process_prep_job,
     "resume-builder": process_resume_builder_job,
     "analytics": process_analytics_job,
+    "candidate": process_candidate_embedding_job,
 }
 
 

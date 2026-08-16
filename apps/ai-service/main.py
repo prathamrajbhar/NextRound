@@ -2,6 +2,7 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from core.config import settings
+from core.logging_config import configure_logging
 from core.redis_client import get_redis_client, close_redis_client
 from workers.agent_workers import worker_manager
 from routes.voice_routes import voice_router
@@ -14,8 +15,8 @@ from routes.sourcing_routes import sourcing_router
 from routes.video_routes import video_analysis_router
 from routes.assessment_routes import assessment_router
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("nextround-ai-service")
+configure_logging()
+logger = logging.getLogger("ai-service")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

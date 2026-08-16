@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
+import { logger } from '../lib/logger';
 
 export function errorHandler(
   err: Error,
@@ -22,16 +23,13 @@ export function errorHandler(
   
   
   if (statusCode >= 500) {
-    console.error(
-      JSON.stringify({
-        level: 'error',
-        message: err.message || 'Internal Server Error',
-        name: err.name,
-        stack: err.stack,
-        path: req.path,
-        method: req.method,
-      })
-    );
+    logger.error(`Unhandled error on ${req.method} ${req.originalUrl}`, err, {
+      name: err.name,
+      path: req.path,
+      method: req.method,
+    });
+  } else {
+    logger.warn(`Request failed with ${statusCode} on ${req.method} ${req.originalUrl}`, err.message);
   }
 
   const message = err.message || 'Internal Server Error';

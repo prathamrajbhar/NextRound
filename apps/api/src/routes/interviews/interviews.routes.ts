@@ -11,6 +11,7 @@ import {
   saveHrResult,
   sendSignal,
   getSignals,
+  getInterviewContext,
 } from './interviews.controller';
 
 export const interviewRouter = Router();
@@ -28,3 +29,4 @@ interviewRouter.get('/:id/transcript', getTranscript);
 interviewRouter.post('/hr/:applicationId/result', requireRole('hr'), saveHrResult);
 interviewRouter.post('/:id/signal', sendSignal);
 interviewRouter.get('/:id/signals', getSignals);
+interviewRouter.get('/:id/context', getInterviewContext);

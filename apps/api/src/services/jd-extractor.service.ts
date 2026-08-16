@@ -1,4 +1,5 @@
 import { generateText } from './llm.service';
+import { logger } from '../lib/logger';
 
 export interface ExtractedRequirements {
   skills: string[];
@@ -81,7 +82,7 @@ Return ONLY a valid JSON object matching this schema:
         };
       }
     } catch (err) {
-      console.error('JD requirement extraction error:', err);
+      logger.child('JDExtractor').error('JD requirement extraction error:', err);
     }
   }
 

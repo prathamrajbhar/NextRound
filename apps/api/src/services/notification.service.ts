@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import { prisma } from '../lib/prisma';
+import { logger } from '../lib/logger';
 
 class NotificationService {
   private sseClients: Map<string, Set<Response>> = new Map();
@@ -73,7 +74,7 @@ class NotificationService {
 
       return notification;
     } catch (err) {
-      console.error(`Failed to create/stream notification for user ${userId}:`, err);
+      logger.child('Notifications').error(`Failed to create/stream notification for user ${userId}:`, err);
       return null;
     }
   }
@@ -97,7 +98,7 @@ class NotificationService {
         users.map((u) => this.createNotification(u.id, title, message, type))
       );
     } catch (err) {
-      console.error(`Failed to broadcast org notification for org ${orgId}:`, err);
+      logger.child('Notifications').error(`Failed to broadcast org notification for org ${orgId}:`, err);
     }
   }
 }

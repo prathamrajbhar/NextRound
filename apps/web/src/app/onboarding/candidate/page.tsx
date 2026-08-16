@@ -36,6 +36,10 @@ export default function CandidateOnboarding() {
       setError('Please enter your full name to continue.');
       return;
     }
+    if (step === 0 && !form.dataConsent) {
+      setError('Please consent to profile data usage to continue.');
+      return;
+    }
     setError('');
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   };
@@ -49,6 +53,9 @@ export default function CandidateOnboarding() {
     setSubmitting(true);
     setError('');
     try {
+      if (!form.dataConsent) {
+        throw new Error('Please consent to profile data usage before completing your profile.');
+      }
       await apiClient.post('/candidate/profile', buildCandidatePayload(form));
       setSubmitting(false);
       router.push('/candidate/dashboard');

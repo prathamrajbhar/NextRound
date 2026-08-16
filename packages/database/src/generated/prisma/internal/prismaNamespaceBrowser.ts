@@ -55,6 +55,8 @@ export const ModelName = {
   Organization: 'Organization',
   Job: 'Job',
   CandidateProfile: 'CandidateProfile',
+  SocialProfileSync: 'SocialProfileSync',
+  CandidateEmbedding: 'CandidateEmbedding',
   Application: 'Application',
   Evaluation: 'Evaluation',
   Interview: 'Interview',
@@ -172,10 +174,43 @@ export const CandidateProfileScalarFieldEnum = {
   work_values: 'work_values',
   availability: 'availability',
   settings: 'settings',
+  data_consent: 'data_consent',
+  data_consent_at: 'data_consent_at',
   created_at: 'created_at'
 } as const
 
 export type CandidateProfileScalarFieldEnum = (typeof CandidateProfileScalarFieldEnum)[keyof typeof CandidateProfileScalarFieldEnum]
+
+
+export const SocialProfileSyncScalarFieldEnum = {
+  id: 'id',
+  candidate_id: 'candidate_id',
+  source: 'source',
+  username: 'username',
+  status: 'status',
+  raw_data: 'raw_data',
+  normalized_data: 'normalized_data',
+  error: 'error',
+  synced_at: 'synced_at',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type SocialProfileSyncScalarFieldEnum = (typeof SocialProfileSyncScalarFieldEnum)[keyof typeof SocialProfileSyncScalarFieldEnum]
+
+
+export const CandidateEmbeddingScalarFieldEnum = {
+  id: 'id',
+  candidate_id: 'candidate_id',
+  source_type: 'source_type',
+  section: 'section',
+  content: 'content',
+  content_hash: 'content_hash',
+  created_at: 'created_at',
+  updated_at: 'updated_at'
+} as const
+
+export type CandidateEmbeddingScalarFieldEnum = (typeof CandidateEmbeddingScalarFieldEnum)[keyof typeof CandidateEmbeddingScalarFieldEnum]
 
 
 export const ApplicationScalarFieldEnum = {

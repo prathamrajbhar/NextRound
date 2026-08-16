@@ -526,7 +526,6 @@ export class ProctoringClient {
     const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', ''].find(
       (t) => !t || typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)
     );
-    if (!mimeType) return;
 
     try {
       this.recordingChunks = [];
@@ -562,7 +561,23 @@ export class ProctoringClient {
 
       this.mediaRecorder = recorder;
       this.recordingActive = true;
-      recorder.start(1000);
+      try {
+        if (recorder.state === 'inactive') {
+          recorder.start(1000);
+        }
+      } catch (err) {
+        this.recordingActive = false;
+        this.mediaRecorder = null;
+        if (this.recordingTickId) {
+          clearInterval(this.recordingTickId);
+          this.recordingTickId = null;
+        }
+        console.warn('[ProctoringClient] MediaRecorder start failed; recording disabled for this session:', err);
+        this.logEvent('recording_start_failed', 'warning', 'system', {
+          mimeType: mimeType || 'default',
+        });
+        return;
+      }
 
       this.recordingTickId = setInterval(() => {
         if (this.recordingActive) {

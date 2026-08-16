@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { env } from '../lib/env';
+import { logger } from '../lib/logger';
 
 export interface EmailOptions {
   to: string;
@@ -25,7 +26,7 @@ class EmailService {
         auth: { user, pass },
       });
     } else {
-      console.warn('[EmailService] SMTP configuration missing. Emails will not be sent.');
+      logger.child('Email').warn('SMTP configuration missing; emails will not be sent.');
     }
   }
 
@@ -40,15 +41,15 @@ class EmailService {
           html: options.html,
           text: options.text || options.html.replace(/<[^>]+>/g, ''),
         });
-        console.info(`[EmailService] Email successfully sent to ${options.to}: ${options.subject}`);
+        logger.child('Email').info(`Email sent to ${options.to}: "${options.subject}"`);
       } else {
-        console.error(`[EmailService] SMTP not configured; email to ${options.to} was NOT delivered (subject: ${options.subject}).`);
+        logger.child('Email').error(`SMTP not configured; email to ${options.to} was NOT delivered (subject: "${options.subject}").`);
         return false;
       }
       return true;
 
     } catch (error) {
-      console.error('[EmailService] Failed to send email:', error);
+      logger.child('Email').error(`Failed to send email to ${options.to}:`, error);
       return false;
     }
   }

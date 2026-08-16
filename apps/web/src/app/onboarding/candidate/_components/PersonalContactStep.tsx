@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { User, Mail, Phone, MapPin, Compass, Lightbulb, FileUp, Check, Loader2, Sparkles, RefreshCw } from '@/lib/lucide-google-icons';
+import { User, Mail, Phone, MapPin, Compass, Lightbulb, FileUp, Check, Loader2, Sparkles, RefreshCw, ShieldCheck } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
 import { OnboardingStepProps, ParsedProfilePayload } from './useCandidateOnboarding';
 import { inputCls, labelCls, selectCls } from './CandidateOnboardingShell';
@@ -243,6 +243,31 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
             <input type="email" readOnly placeholder="Connected via signup" className={`${inputCls} pl-10 opacity-50 cursor-not-allowed`} />
           </div>
         </div>
+      </div>
+
+      <div
+        className={`rounded-2xl border p-5 transition-colors ${
+          form.dataConsent ? 'border-orange-500/40 bg-orange-500/5' : 'border-slate-800 bg-slate-900/60'
+        }`}
+      >
+        <label className="flex items-start gap-3.5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.dataConsent}
+            onChange={(e) => update('dataConsent', e.target.checked)}
+            className="mt-0.5 h-4.5 w-4.5 rounded-md accent-orange-500 shrink-0"
+          />
+          <span className="space-y-1">
+            <span className="flex items-center gap-2 text-sm font-extrabold text-white">
+              <ShieldCheck className="h-4 w-4 text-orange-400" />
+              Allow NextRound to import my public profile data
+            </span>
+            <span className="block text-xs text-slate-400 leading-relaxed">
+              I consent to NextRound securely fetching my public LinkedIn and GitHub data to power AI
+              screening, voice interviews and personalized prep — and understand I can revoke this at any time.
+            </span>
+          </span>
+        </label>
       </div>
     </div>
   );

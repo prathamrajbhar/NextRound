@@ -40,7 +40,7 @@ export function UnifiedAssessmentSession({
   role,
 }: UnifiedAssessmentSessionProps) {
   const { toast } = useToast();
-  const { targetCompany, targetRole, difficulty } = useAssessmentDetails({ sessionId, applicationId, company, role });
+  const { targetCompany, targetRole } = useAssessmentDetails({ sessionId, applicationId, company, role });
 
   useEffect(() => {
     return () => {
@@ -82,7 +82,7 @@ export function UnifiedAssessmentSession({
   } = useInterviewSession({
     company: targetCompany,
     role: targetRole,
-    difficulty,
+    interviewId: applicationId || sessionId,
     onComplete: (results) => {
       const score = results && typeof results === 'object' && 'score' in results ? (results as { score?: number }).score : undefined;
       handleCompleteWithProctor(score);

@@ -1,6 +1,7 @@
 import { prisma } from '@nextround/database';
 import { executeCodingSubmission, TestCaseInput } from './coding-executor.service';
 import { updateApplicationCodingScore } from './scoring.service';
+import { logger } from '../lib/logger';
 import crypto from 'crypto';
 
 
@@ -57,7 +58,7 @@ export async function enqueueSubmissionExecution(input: CreateSubmissionInput) {
   
   processSubmissionJob(submission.id).catch((err) => {
     
-    console.error(`[Queue Error] Submission ${submission.id} failed processing:`, err);
+    logger.child('SubmissionQueue').error(`Submission ${submission.id} failed processing:`, err);
     prisma.codingSubmission
       .update({
         where: { id: submission.id },
@@ -67,7 +68,7 @@ export async function enqueueSubmissionExecution(input: CreateSubmissionInput) {
         },
       })
       .catch((updateErr) => {
-        console.error(`Failed to mark submission ${submission.id} as errored:`, updateErr);
+        logger.child('SubmissionQueue').error(`Failed to mark submission ${submission.id} as errored:`, updateErr);
       });
   });
 

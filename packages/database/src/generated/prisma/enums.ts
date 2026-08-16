@@ -112,3 +112,22 @@ export const AgentStatus = {
 } as const
 
 export type AgentStatus = (typeof AgentStatus)[keyof typeof AgentStatus]
+
+
+export const SocialSource = {
+  github: 'github',
+  linkedin: 'linkedin'
+} as const
+
+export type SocialSource = (typeof SocialSource)[keyof typeof SocialSource]
+
+
+export const SocialSyncStatus = {
+  pending: 'pending',
+  synced: 'synced',
+  failed: 'failed',
+  not_found: 'not_found',
+  removed: 'removed'
+} as const
+
+export type SocialSyncStatus = (typeof SocialSyncStatus)[keyof typeof SocialSyncStatus]

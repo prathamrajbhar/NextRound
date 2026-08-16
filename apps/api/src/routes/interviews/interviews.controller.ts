@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@nextround/database';
 import { prisma } from '@nextround/database';
 import { enqueueInterview } from '../../lib/queues/interview.queue';
+import { logger } from '../../lib/logger';
 import { enqueueDecision } from '../../lib/queues/decision.queue';
 import {
   ConsentBodySchema,
@@ -14,6 +15,7 @@ import {
   findInterviewByRef,
   loadIceServers,
 } from './interviews.helpers';
+import { getCandidateInterviewContext, buildContextText } from '../../services/candidate-context.service';
 
 
 
@@ -460,9 +462,45 @@ export async function getSignals(req: Request, res: Response, next: NextFunction
         application_id: applicationId,
         created_at: { lt: new Date(Date.now() - 300000) },
       },
-    }).catch(err => console.error('Failed to clean up old signaling messages:', err));
+    }).catch(err => logger.child('Interviews').error('Failed to clean up old signaling messages:', err));
 
     return res.json({ success: true, data: signals });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+
+export async function getInterviewContext(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = String(req.params['id']);
+
+    const interview = await findInterviewByRef({
+      idOrApplicationId: id,
+      include: { application: { include: { candidate: true } } },
+    });
+
+    if (!interview) {
+      return res.status(404).json({ success: false, error: 'Interview session not found' });
+    }
+
+    if (
+      req.user?.role === 'candidate' &&
+      interview.application.candidate.user_id !== req.user.userId
+    ) {
+      return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+
+    const candidateId = interview.application.candidate_id;
+    const jobId = interview.application.job_id;
+
+    const context = await getCandidateInterviewContext(candidateId, jobId);
+    const contextText = buildContextText(context);
+
+    return res.json({
+      success: true,
+      data: { context, contextText },
+    });
   } catch (error) {
     return next(error);
   }

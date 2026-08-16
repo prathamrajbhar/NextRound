@@ -1,4 +1,5 @@
 import { analyticsQueue, JOB_NAMES, DEFAULT_JOB_OPTIONS } from '../bullmq';
+import { logger } from '../../lib/logger';
 
 export interface AnalyticsJobPayload {
   orgId?: string;
@@ -29,6 +30,6 @@ export async function setupWeeklyAnalyticsCron() {
       }
     );
   } catch (err) {
-    console.error('Failed to setup weekly analytics cron job:', err);
+    logger.child('AnalyticsCron').error('Failed to setup weekly analytics cron job:', err);
   }
 }

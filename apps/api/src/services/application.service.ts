@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma';
 import type { Rec } from '../lib/serializers';
 import { enqueueScreening } from '../lib/queues/screening.queue';
+import { logger } from '../lib/logger';
 import { enqueueScheduling } from '../lib/queues/scheduling.queue';
 import { enqueueAssessment } from '../lib/queues/assessment.queue';
 import { emailService } from './email.service';
@@ -109,7 +110,7 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
     const candidateName = user.email.split('@')[0];
     emailService
       .sendApplicationReceived(user.email, candidateName, application.job.title)
-      .catch((err) => console.error('Failed to send confirmation email:', err));
+      .catch((err) => logger.child('Applications').error(`Failed to send confirmation email to ${user.email}:`, err));
   }
 
   
@@ -120,8 +121,9 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
       resumeUrl: profile.resume_url,
       timestamp: new Date().toISOString(),
     });
+    logger.child('Applications').info(`Application ${application.id} accepted; screening job enqueued for job ${application.job_id}`);
   } catch (queueErr) {
-    console.error('Failed to enqueue screening job:', queueErr);
+    logger.child('Applications').error(`Failed to enqueue screening job for application ${application.id}:`, queueErr);
   }
 
   return { application };
@@ -742,7 +744,7 @@ export async function submitAptitude(
       },
     })
     .catch((err) => {
-      console.error(`Failed to update assessment responses for application ${appId}:`, err);
+      logger.child('Applications').error(`Failed to update assessment responses for application ${appId}:`, err);
     });
 
   

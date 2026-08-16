@@ -8,6 +8,7 @@ import {
   STANDARD_CATEGORIES,
   type AptitudeQuestion,
 } from './useAptitudeQuestions';
+import { computeAptitudeScore, resolveCategoryQuestionCount } from './scoring';
 
 export const QUESTION_TIME_LIMIT = 60; 
 export const TOTAL_TIME_LIMIT = 900; 
@@ -64,9 +65,9 @@ export function useAptitudeSession({
   
   const activeQuestions = useMemo(() => {
     const list = fetchedQuestions.length > 0 ? fetchedQuestions : questions;
-    const mapped = list.map((q, idx) => ({
+    const mapped = list.map((q) => ({
       ...q,
-      category: normalizeCategory(q.category, idx),
+      category: normalizeCategory(q.category),
     }));
 
     return mapped.sort((a, b) => {
@@ -86,28 +87,7 @@ export function useAptitudeSession({
   
   
   const getCategoryQuestionCount = useCallback((category: string): number => {
-    if (mcqDistribution && typeof mcqDistribution[category] === 'number') {
-      return mcqDistribution[category];
-    }
-
-    const actualQuestions = activeQuestions.filter(q => q.category === category);
-    if (actualQuestions.length > 0) {
-      return actualQuestions.length;
-    }
-    
-    
-    
-    const totalQuestions = activeQuestions.length;
-    if (totalQuestions === 0) {
-      
-      return 5;
-    }
-    
-    
-    const base = Math.floor(totalQuestions / 4);
-    const remainder = totalQuestions % 4;
-    const categoryIndex = (STANDARD_CATEGORIES as readonly string[]).indexOf(category);
-    return base + (categoryIndex >= 0 && categoryIndex < remainder ? 1 : 0);
+    return resolveCategoryQuestionCount(mcqDistribution, activeQuestions, category);
   }, [activeQuestions, mcqDistribution]);
 
   
@@ -142,15 +122,7 @@ export function useAptitudeSession({
         console.error('Failed to submit aptitude assessment:', err);
       }
     } else {
-      
-      let totalCorrect = 0;
-      activeQuestions.forEach((q) => {
-        const correctIdx = q.correctIndex;
-        if (correctIdx !== undefined && answers[q.id] === correctIdx) {
-          totalCorrect++;
-        }
-      });
-      percentage = activeQuestions.length > 0 ? Math.round((totalCorrect / activeQuestions.length) * 100) : 0;
+      percentage = computeAptitudeScore(answers, activeQuestions);
     }
 
     setFinalScore(percentage);

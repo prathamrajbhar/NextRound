@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import { logger } from '../../lib/logger';
 import {
   RegisterSchema,
   LoginSchema,
@@ -333,7 +334,7 @@ authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Reque
           text: `Reset your password at: ${resetUrl}`,
         });
       } catch (emailErr) {
-        console.error('[ForgotPassword] Failed to send reset email:', emailErr);
+        logger.child('Auth').error('Failed to send password reset email:', emailErr);
       }
     }
 
