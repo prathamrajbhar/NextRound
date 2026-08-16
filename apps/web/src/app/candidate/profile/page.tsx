@@ -58,6 +58,53 @@ function formatExpectedSalary(value: number | null | undefined): string {
   return `₹${value.toLocaleString()} / yr`;
 }
 
+function convertNumberToIndianWords(num: number): string {
+  if (num === 0) return 'Zero Rupees';
+
+  const singleDigits = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+  const doubleDigits = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const tensMultiple = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+
+  const getWord = (n: number): string => {
+    let str = '';
+    if (n > 99) {
+      str += singleDigits[Math.floor(n / 100)] + ' Hundred ';
+      n %= 100;
+    }
+    if (n > 19) {
+      str += tensMultiple[Math.floor(n / 10)] + ' ' + singleDigits[n % 10];
+    } else if (n > 9) {
+      str += doubleDigits[n - 10];
+    } else if (n > 0) {
+      str += singleDigits[n];
+    }
+    return str.trim();
+  };
+
+  let result = '';
+  const crore = Math.floor(num / 10000000);
+  num %= 10000000;
+  const lakh = Math.floor(num / 100000);
+  num %= 100000;
+  const thousand = Math.floor(num / 1000);
+  num %= 1000;
+
+  if (crore > 0) {
+    result += getWord(crore) + ' Crore ';
+  }
+  if (lakh > 0) {
+    result += getWord(lakh) + ' Lakh ';
+  }
+  if (thousand > 0) {
+    result += getWord(thousand) + ' Thousand ';
+  }
+  if (num > 0) {
+    result += getWord(num);
+  }
+
+  return result.trim() ? result.trim() + ' Rupees' : '';
+}
+
 export default function CandidateProfile() {
   const { user, refreshUser } = useAuthContext();
   const queryClient = useQueryClient();
@@ -493,6 +540,11 @@ export default function CandidateProfile() {
                   onChange={(e) => setExpectedSalary(e.target.value)}
                   className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
                 />
+                {parseExpectedSalary(expectedSalary) !== null && (
+                  <p className="text-[10px] text-brand-650 dark:text-orange-405 font-extrabold tracking-wide mt-1 animate-in fade-in duration-200 uppercase">
+                    In Words: {convertNumberToIndianWords(parseExpectedSalary(expectedSalary)!)}
+                  </p>
+                )}
               </div>
             </div>
 
