@@ -1,7 +1,7 @@
 import path from 'path';
 import { config } from 'dotenv';
 // Load API .env first before dynamic imports are evaluated
-config({ path: path.resolve(__dirname, '../../../.env') });
+config({ path: path.resolve(__dirname, '../.env') });
 
 import { describe, expect, it } from 'vitest';
 
