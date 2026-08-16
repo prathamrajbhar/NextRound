@@ -106,9 +106,10 @@ class AgentWorkerManager:
 
                 if not job_id:
 
-                    prioritized = await redis.zpopmin(f"bull:{queue_name}:prioritized")
+                    prioritized = await redis.zrange(f"bull:{queue_name}:prioritized", 0, 0, withscores=True)
                     if prioritized:
                         job_id = prioritized[0][0]
+                        await redis.zrem(f"bull:{queue_name}:prioritized", job_id)
 
                 if job_id:
 

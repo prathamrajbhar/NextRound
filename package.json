@@ -7,7 +7,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently --kill-others \"turbo dev\" \"./apps/ai-service/.venv/bin/python apps/ai-service/main.py\"",
+    "dev": "concurrently --kill-others \"turbo dev\" \"node scripts/run-ai-service.js\"",
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",

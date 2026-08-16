@@ -1,8 +1,10 @@
 import ast
 import json
 import logging
-import os
-import resource
+try:
+    import resource
+except ImportError:
+    resource = None
 import subprocess
 import textwrap
 import time
@@ -67,7 +69,7 @@ def validate_ast_security(code: str, language: str = "python") -> Tuple[bool, st
 
 def set_sandbox_resource_limits():
     """Set OS process resource caps for execution child processes (Linux only)."""
-    if os.name == "nt":
+    if os.name == "nt" or resource is None:
         return
 
     try:
