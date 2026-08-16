@@ -107,6 +107,7 @@ async def process_interview_job(job_data: dict) -> bool:
                     f"internal/candidates/{candidate_id}/context?jobId={job_id}"
                 )
                 initial_state["candidate_resume"] = _build_context_text(context or {})
+                initial_state["candidate_context"] = context or {}
                 job = (context or {}).get("job") or {}
                 if job.get("title"):
                     initial_state["job_title"] = job["title"]

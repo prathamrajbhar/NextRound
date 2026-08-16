@@ -16,7 +16,6 @@ interface UseInterviewSessionProps {
 }
 
 export function useInterviewSession({
-  company,
   role,
   interviewId,
   onComplete,
@@ -40,7 +39,10 @@ export function useInterviewSession({
   const messagesRef = useRef<Message[]>([]);
   const lastAiQuestion = useRef('');
   const candidateResumeRef = useRef('');
+  const candidateContextRef = useRef<Record<string, unknown> | null>(null);
   const jobTitleRef = useRef(role);
+  const aiAnalysisRef = useRef<Message['analysis'] | null>(null);
+  const aiTurnRecordRef = useRef<Message['turnRecord'] | null>(null);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -71,10 +73,15 @@ export function useInterviewSession({
       } catch {}
       try {
         const ctx = await apiClient.get<{
-          context?: { job?: { title?: string } };
+          context?: {
+            job?: { title?: string; skills?: string[]; rubric?: Record<string, unknown> };
+          };
           contextText?: string;
         }>(`/interviews/${interviewId}/context`);
         if (ctx?.contextText) candidateResumeRef.current = ctx.contextText;
+        if (ctx?.context) {
+          candidateContextRef.current = ctx.context as unknown as Record<string, unknown>;
+        }
         if (ctx?.context?.job?.title) jobTitleRef.current = ctx.context.job.title;
       } catch {}
     }
@@ -94,6 +101,7 @@ export function useInterviewSession({
           stage: 'intro',
           jobTitle: jobTitleRef.current || role,
           candidateResume: candidateResumeRef.current || undefined,
+          candidateContext: candidateContextRef.current || undefined,
           conversationHistory: [],
         }),
       });
@@ -162,6 +170,7 @@ export function useInterviewSession({
           stage: phase === 'Introduction' ? 'intro' : phase === 'Core Vetting' ? 'technical' : 'closing',
           jobTitle: jobTitleRef.current || role,
           candidateResume: candidateResumeRef.current || undefined,
+          candidateContext: candidateContextRef.current || undefined,
           conversationHistory: messages.map(m => ({ speaker: m.role, text: m.content })),
         }),
       });
@@ -174,6 +183,8 @@ export function useInterviewSession({
         if (data && typeof data.text === 'string' && data.text.trim()) {
           aiResponseText = data.text;
           nextStage = data.stage || '';
+          aiAnalysisRef.current = data.analysis || null;
+          aiTurnRecordRef.current = data.turnRecord || null;
         } else {
           console.error('[interview] AI respond returned a malformed response without a text field', data);
           setAiRespondError('AI returned an unexpected response format.');
@@ -205,7 +216,14 @@ export function useInterviewSession({
 
         setMessages((prev) => [
           ...prev,
-          { id: `ai-${Date.now()}`, role: 'ai', content: aiResponseText, timestamp: new Date().toLocaleTimeString() }
+          {
+            id: `ai-${Date.now()}`,
+            role: 'ai',
+            content: aiResponseText,
+            timestamp: new Date().toLocaleTimeString(),
+            analysis: aiAnalysisRef.current || undefined,
+            turnRecord: aiTurnRecordRef.current || undefined,
+          }
         ]);
         setIsAnalyzing(false);
       } else {
