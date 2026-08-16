@@ -25,12 +25,22 @@ class Settings(BaseSettings):
     )
 
     model_config = SettingsConfigDict(
-        env_file=Path(__file__).resolve().parent.parent / ".env",
+        env_file=Path(__file__).resolve().parent.parent.parent.parent / ".env",
         env_file_encoding="utf-8",
         extra="ignore"
     )
 
 settings = Settings()
+
+# Override port with AI_PORT if set to prevent collision with Node API's PORT setting
+if os.getenv("AI_PORT"):
+    settings.port = int(os.getenv("AI_PORT"))
+
+# Also map host/environment from AI_HOST/AI_ENVIRONMENT if defined
+if os.getenv("AI_HOST"):
+    settings.host = os.getenv("AI_HOST")
+if os.getenv("AI_ENVIRONMENT"):
+    settings.environment = os.getenv("AI_ENVIRONMENT")
 
 _DEFAULT_SECRETS = (
     "internal_secret_key_change_in_production",
