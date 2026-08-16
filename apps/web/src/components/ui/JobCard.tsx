@@ -30,12 +30,12 @@ export interface JobCardProps {
 
 function stripMarkdown(text: string): string {
   return text
-    .replace(/#{1,6}\s*/g, '')       
-    .replace(/\*\*(.+?)\*\*/g, '$1') 
-    .replace(/\*(.+?)\*/g, '$1')     
-    .replace(/^[*\-]\s+/gm, '')      
-    .replace(/`(.+?)`/g, '$1')       
-    .replace(/\n+/g, ' ')            
+    .replace(/#{1,6}\s*/g, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/^[*\-]\s+/gm, '')
+    .replace(/`(.+?)`/g, '$1')
+    .replace(/\n+/g, ' ')
     .trim();
 }
 
@@ -108,7 +108,7 @@ export function JobCard({
                 {matchScore}% Match
               </span>
             )}
-            
+
             <span
               className={cn(
                 'text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider border',

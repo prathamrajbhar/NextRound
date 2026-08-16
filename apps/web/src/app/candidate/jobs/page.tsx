@@ -60,7 +60,7 @@ export default function CandidateJobsPage() {
 
   const safeJobsList = Array.isArray(jobs) ? jobs : [];
 
-  
+
   const filteredJobs = safeJobsList.filter((job) => {
     const matchesSearch = job.title.toLowerCase().includes(search.toLowerCase()) ||
       job.orgName.toLowerCase().includes(search.toLowerCase()) ||
