@@ -80,7 +80,9 @@ export default function HrNotificationsPage() {
 
   const handleRowClick = (n: Notification) => {
     if (!n.read) markAsRead(n.id);
-    router.push(n.link);
+    if (n.link) {
+      router.push(n.link);
+    }
   };
 
   return (

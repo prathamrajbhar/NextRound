@@ -52,47 +52,34 @@ describe('aptitude/normalizeCategory', () => {
     expect(normalizeCategory('Graphs and Tables')).toBe('Data Interpretation');
   });
 
-  it('falls back to the standard category by question index for unknown labels', () => {
-    expect(normalizeCategory('General Knowledge', 0)).toBe('Quantitative Aptitude');
-    expect(normalizeCategory('General Knowledge', 1)).toBe('Logical Reasoning');
-    expect(normalizeCategory('General Knowledge', 2)).toBe('Verbal Ability');
-    expect(normalizeCategory('General Knowledge', 3)).toBe('Data Interpretation');
-  });
-
   it('falls back to index 0 when no category is provided', () => {
-    expect(normalizeCategory(undefined)).toBe('Quantitative Aptitude');
-    expect(normalizeCategory('')).toBe('Quantitative Aptitude');
+    expect(() => normalizeCategory(undefined)).toThrow('Question is missing required field: category');
+    expect(() => normalizeCategory('')).toThrow('Question is missing required field: category');
   });
 });
 
 describe('aptitude/normalizeQuestion', () => {
-  it('fills defaults for missing fields', () => {
-    const normalized = normalizeQuestion({}, 2);
-    expect(normalized.id).toBe('q_2');
-    expect(normalized.category).toBe('Verbal Ability');
-    expect(normalized.text).toBe('Question unavailable.');
-    expect(normalized.options).toEqual([]);
-    expect(normalized.difficulty).toBe('medium');
-    expect(normalized.correctIndex).toBeUndefined();
+  it('throws for missing required fields', () => {
+    expect(() => normalizeQuestion({})).toThrow();
   });
 
   it('prefers the explicit question field over the legacy field', () => {
-    const normalized = normalizeQuestion({ id: '1', text: 'Real', question: 'Legacy' }, 0);
+    const normalized = normalizeQuestion({ id: '1', text: 'Real', question: 'Legacy', options: ['A'], category: 'Quantitative Aptitude' });
     expect(normalized.text).toBe('Real');
   });
 
   it('falls back to the legacy question field', () => {
-    const normalized = normalizeQuestion({ id: '1', question: 'Legacy' }, 0);
+    const normalized = normalizeQuestion({ id: '1', question: 'Legacy', options: ['A'], category: 'Quantitative Aptitude' });
     expect(normalized.text).toBe('Legacy');
   });
 
   it('accepts snake_case correct_index', () => {
-    const normalized = normalizeQuestion({ id: '1', correct_index: 3 }, 0);
+    const normalized = normalizeQuestion({ id: '1', text: 'Q1', options: ['A'], category: 'Quantitative Aptitude', correct_index: 3 });
     expect(normalized.correctIndex).toBe(3);
   });
 
   it('prefers camelCase correctIndex over snake_case', () => {
-    const normalized = normalizeQuestion({ id: '1', correctIndex: 1, correct_index: 3 }, 0);
+    const normalized = normalizeQuestion({ id: '1', text: 'Q1', options: ['A'], category: 'Quantitative Aptitude', correctIndex: 1, correct_index: 3 });
     expect(normalized.correctIndex).toBe(1);
   });
 });

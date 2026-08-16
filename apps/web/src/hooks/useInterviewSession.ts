@@ -199,7 +199,7 @@ export function useInterviewSession({
         if (nextStage === 'intro') {
           nextPhase = 'Introduction';
         } else if (nextStage === 'closing') {
-          nextPhase = 'Wrap Up';
+          nextPhase = 'Wrap-up';
         }
         setPhase(nextPhase);
 
