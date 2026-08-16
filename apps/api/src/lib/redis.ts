@@ -1,15 +1,12 @@
-import Redis from 'ioredis';
+import { Redis } from '@upstash/redis';
 import { env } from './env';
 
-const redisUrl = env('REDIS_URL');
+const upstashRestUrl = env('UPSTASH_REDIS_REST_URL');
+const upstashRestToken = env('UPSTASH_REDIS_REST_TOKEN');
 
-export const redis = new Redis(redisUrl, {
-  maxRetriesPerRequest: null,
-  lazyConnect: true,
-});
-
-redis.on('error', (err) => {
-  console.error('[Redis Error]:', err);
+export const redis = new Redis({
+  url: upstashRestUrl,
+  token: upstashRestToken,
 });
 
 export default redis;

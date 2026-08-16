@@ -1,12 +1,12 @@
 import { Queue, type JobsOptions } from 'bullmq';
+import Redis from 'ioredis';
 import { env } from './env';
 
-const redisUrl = new URL(env('REDIS_URL'));
+const redisUrlString = env('REDIS_URL');
 
-const connection = {
-  host: redisUrl.hostname,
-  port: Number(redisUrl.port),
-};
+const connection = new Redis(redisUrlString, {
+  maxRetriesPerRequest: null,
+});
 
 
 
