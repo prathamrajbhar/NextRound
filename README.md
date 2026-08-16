@@ -86,38 +86,24 @@ npm install
 
 ### 2. Configure Environment Variables (`.env`)
 
-Create a `.env` file at the root directory (or update existing `.env`):
+Each workspace loads its own `.env`. Copy each `.env.example` and fill in real values:
 
-```env
-# PostgreSQL Database
-DATABASE_URL="postgresql://postgres:apple@localhost:5432/nextround?schema=public"
+```bash
+# API (apps/api) — ports, DB, Redis, JWT secrets, SMTP, scraper
+cp apps/api/.env.example apps/api/.env
 
-# Redis Queue
-REDIS_URL="redis://localhost:6379"
+# Web (apps/web) — public app/API/AI URLs
+cp apps/web/.env.example apps/web/.env
 
-# API & Auth Secrets (Must be at least 32 characters; generate with `openssl rand -hex 32`)
-JWT_SECRET="super_secret_jwt_key_nextround_hireos_2026_production_secure_min32chars"
-REFRESH_TOKEN_SECRET="your-refresh-secret-at-least-16-chars"
-INTERNAL_SERVICE_SECRET="your-ai-callback-secret-at-least-16-chars"
+# AI Service (apps/ai-service) — LLM keys, Redis, internal secret
+cp apps/ai-service/.env.example apps/ai-service/.env
 
-# Public App & Service URLs
-# APP_URL: canonical web app origin (CORS + password reset / verification links).
-# API_BASE_URL: API base URL used by the AI service for internal callback webhooks.
-# AI_BASE_URL: AI service base URL used by the API.
-APP_URL="http://localhost:3000"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-NEXT_PUBLIC_API_URL="http://localhost:4000/api/v1"
-API_BASE_URL="http://localhost:4000/api/v1"
-NEXT_PUBLIC_AI_BASE_URL="http://localhost:8000"
-AI_BASE_URL="http://localhost:8000"
-
-# LLM & Voice API Keys
-GEMINI_API_KEY="your_gemini_api_key_here"
-GROQ_API_KEY="your_groq_api_key_here"
-
-# Services Ports
-PORT=4000
+# Database package (packages/database) — Prisma DATABASE_URL
+cp packages/database/.env.example packages/database/.env
 ```
+
+> Secrets must be at least 16 characters; generate with `openssl rand -hex 32`.
+> `INTERNAL_SERVICE_SECRET` must match between `apps/api/.env` and `apps/ai-service/.env`.
 
 ### 3. Setup Database Schema & Seed Data
 
