@@ -16,7 +16,6 @@ interface UseInterviewSessionProps {
 }
 
 export function useInterviewSession({
-  company,
   role,
   interviewId,
   onComplete,
