@@ -1,11 +1,12 @@
 import os
 from pathlib import Path
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    port: int = 8000
-    host: str = "0.0.0.0"
-    environment: str = "development"
+    port: int = Field(8000, validation_alias="AI_PORT")
+    host: str = Field("0.0.0.0", validation_alias="AI_HOST")
+    environment: str = Field("development", validation_alias="AI_ENVIRONMENT")
     internal_service_secret: str = "internal_secret_key_change_in_production"
     api_base_url: str = "http://localhost:4000/api/v1"
     redis_url: str = "redis://localhost:6379"
@@ -31,16 +32,6 @@ class Settings(BaseSettings):
     )
 
 settings = Settings()
-
-# Override port with AI_PORT if set to prevent collision with Node API's PORT setting
-if os.getenv("AI_PORT"):
-    settings.port = int(os.getenv("AI_PORT"))
-
-# Also map host/environment from AI_HOST/AI_ENVIRONMENT if defined
-if os.getenv("AI_HOST"):
-    settings.host = os.getenv("AI_HOST")
-if os.getenv("AI_ENVIRONMENT"):
-    settings.environment = os.getenv("AI_ENVIRONMENT")
 
 _DEFAULT_SECRETS = (
     "internal_secret_key_change_in_production",
