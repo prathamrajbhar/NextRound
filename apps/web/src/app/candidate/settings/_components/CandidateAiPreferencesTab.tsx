@@ -12,16 +12,13 @@ import {
   Save,
 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
-import { useAuthContext } from '@/contexts/AuthContext';
 import { useSafeMediaStream } from '@/hooks/useSafeMediaStream';
-import { getScopedStorageJSON, setScopedStorageJSON } from '@/lib/storage';
 
 interface CandidateAiPreferencesTabProps {
   onSave: () => void;
 }
 
 export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabProps) {
-  const { user } = useAuthContext();
   const [selectedVoice, setSelectedVoice] = useState('Alloy');
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState(true);
@@ -34,24 +31,17 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
   useEffect(() => {
     async function loadAiSettings() {
       try {
-        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings').catch(() => null);
-        if (res && res.settings) {
+        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings');
+        if (res?.settings) {
           const s = res.settings;
           if (typeof s.defaultVoice === 'string') setSelectedVoice(s.defaultVoice);
           if (typeof s.liveTranscript === 'boolean') setLiveTranscript(s.liveTranscript);
           if (typeof s.autoSubmitTranscript === 'boolean') setAutoSubmitTranscript(s.autoSubmitTranscript);
-        } else {
-          const parsed = getScopedStorageJSON<Record<string, unknown>>(user?.id, 'candidate_ai_settings');
-          if (parsed) {
-            if (typeof parsed.selectedVoice === 'string') setSelectedVoice(parsed.selectedVoice);
-            if (typeof parsed.liveTranscript === 'boolean') setLiveTranscript(parsed.liveTranscript);
-            if (typeof parsed.autoSubmitTranscript === 'boolean') setAutoSubmitTranscript(parsed.autoSubmitTranscript);
-          }
         }
       } catch {}
     }
     loadAiSettings();
-  }, [user?.id]);
+  }, []);
 
   const { start } = useSafeMediaStream({
     constraints: { audio: true },
@@ -108,11 +98,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         liveTranscript,
         autoSubmitTranscript,
       });
-      setScopedStorageJSON(
-        user?.id,
-        'candidate_ai_settings',
-        { selectedVoice, liveTranscript, autoSubmitTranscript }
-      );
       onSave();
     } catch {} finally {
       setSaving(false);

@@ -579,6 +579,9 @@ export type $InterviewPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     audio_url: string | null
     proctor_flags: runtime.JsonValue | null
     engagement_signal: runtime.JsonValue | null
+    /**
+     * Audio-derived prosody/sentiment report (tone, pitch, speaking rate, pauses, stress, confidence) computed from audio_url. Never derived from transcript text.
+     */
     sentiment_report: runtime.JsonValue | null
     status: $Enums.InterviewStatus
     created_at: Date

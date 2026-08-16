@@ -158,6 +158,7 @@ model CandidateProfile {
   phone              String?
   location           String?
   timezone           String?
+  avatar_url         String?
   resume_url         String?
   raw_resume_text    String?                    @db.Text
   parsed_resume      Json                       @default("{}")

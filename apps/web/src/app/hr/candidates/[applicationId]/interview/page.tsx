@@ -1,54 +1,15 @@
 'use client';
 
-import React, { use, useEffect, useState } from 'react';
+import React, { use } from 'react';
 import Link from 'next/link';
 import { useApplication } from '@/hooks/queries';
-import { useAuthContext } from '@/contexts/AuthContext';
-import { getScopedStorage } from '@/lib/storage';
-import { Application } from '@/types';
 import { ChevronRight } from '@/lib/lucide-google-icons';
 import { CandidateDetailSkeleton } from '@/components/ui';
 import { ErrorState } from '@/components/ui/ErrorState';
 
 export default function HrInterviewReplayPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
-  const { user } = useAuthContext();
-  const [mergedApp, setMergedApp] = useState<Application | null>(null);
-
-  const { data: app, isLoading, isError, error, refetch } = useApplication(applicationId);
-
-  useEffect(() => {
-    if (!app) return;
-    let nextApp = app;
-    if (typeof window !== 'undefined') {
-      const local = getScopedStorage(user?.id, `candidateInterview_${applicationId}`);
-      if (local) {
-        try {
-          const parsed = JSON.parse(local);
-          nextApp = {
-            ...app,
-            scores:
-              parsed.status === 'completed' && typeof parsed.score === 'number'
-                ? {
-                    composite: parsed.score,
-                    technical: parsed.rubric.technical,
-                    communication: parsed.rubric.communication,
-                    problemSolving: Math.floor(parsed.score * 0.95),
-                    experience: Math.floor(parsed.score * 0.92),
-                    confidence: Math.floor(parsed.score * 0.98),
-                  }
-                : app.scores,
-            transcript: parsed.transcript || app.transcript,
-          };
-        } catch (err) {
-          console.error('Failed to parse local interview data:', err);
-        }
-      }
-    }
-    setMergedApp(nextApp);
-  }, [app, applicationId, user?.id]);
-
-  const displayApp = mergedApp;
+  const { data: displayApp, isLoading, isError, error, refetch } = useApplication(applicationId);
 
   if (isError) {
     return (

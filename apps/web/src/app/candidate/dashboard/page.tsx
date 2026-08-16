@@ -2,8 +2,7 @@
 
 import React from 'react';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { getScopedStorage } from '@/lib/storage';
-import { useCandidateDashboard } from '@/hooks/queries';
+import { useCandidateDashboard, useCandidateProfile } from '@/hooks/queries';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { CandidateDashboardHero } from './_components/CandidateDashboardHero';
 import { CandidateStatsCards } from './_components/CandidateStatsCards';
@@ -15,13 +14,10 @@ import { CandidateDashboardSkeleton } from './_components/CandidateDashboardSkel
 export default function CandidateDashboard() {
   const { user } = useAuthContext();
   const { data, isLoading, isError, error, refetch } = useCandidateDashboard();
+  const { data: profileRes } = useCandidateProfile();
 
-  const candidateName =
-    typeof window !== 'undefined'
-      ? getScopedStorage(user?.id, 'candidate_name') || (user?.email ? user.email.split('@')[0] : 'Candidate')
-      : user?.email
-      ? user.email.split('@')[0]
-      : 'Candidate';
+  const profile = profileRes?.profile as { full_name?: string | null } | null | undefined;
+  const candidateName = profile?.full_name || (user?.email ? user.email.split('@')[0] : 'Candidate');
 
   if (isError) {
     return (

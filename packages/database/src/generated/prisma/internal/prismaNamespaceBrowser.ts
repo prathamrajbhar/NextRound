@@ -150,6 +150,7 @@ export const CandidateProfileScalarFieldEnum = {
   phone: 'phone',
   location: 'location',
   timezone: 'timezone',
+  avatar_url: 'avatar_url',
   resume_url: 'resume_url',
   raw_resume_text: 'raw_resume_text',
   parsed_resume: 'parsed_resume',

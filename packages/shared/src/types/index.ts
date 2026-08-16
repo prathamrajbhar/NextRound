@@ -77,6 +77,7 @@ export interface CandidateProfile {
   phone?: string | null;
   location?: string | null;
   timezone?: string | null;
+  avatar_url?: string | null;
   resume_url?: string | null;
   linkedin_url?: string | null;
   github_url?: string | null;

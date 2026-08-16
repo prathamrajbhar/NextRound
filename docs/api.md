@@ -106,16 +106,13 @@ All endpoints are served by `apps/api` (Express.js 5.2.1) and prefixed with `/ap
 
 ---
 
-## 5. Candidate Profile (`/candidates`)
+## 5. Candidate Profile (`/candidate`)
 
 | Method | Path | Auth | Description |
 |---|---|---|---|
-| GET | `/candidates/me` | Candidate | Fetch candidate profile. |
-| POST | `/candidates/me/resume` | Candidate | Multipart PDF/DOCX upload. Triggers background parse job. |
-| PATCH | `/candidates/me` | Candidate | Update skills, GitHub/LinkedIn URLs, target compensation, work authorization. |
-| DELETE | `/candidates/me` | Candidate | GDPR deletion request — soft-deletes profile and queues data purge. |
-| POST | `/candidates/me/voice-resume/start` | Candidate | Start an AI Voice Resume Builder session. Returns `{ sessionId, webrtcCredentials }`. |
-| POST | `/candidates/me/voice-resume/complete` | Candidate | Mark session complete and trigger resume generation. Body: `{ sessionId }`. |
+| GET | `/candidate/profile` | Candidate | Fetch the caller's candidate profile (404 if absent; auto-created at registration). |
+| POST | `/candidate/profile` | Candidate | Upsert profile keyed by `user_id`. Partial-update semantics via field presence. Optional multipart `resume` file (PDF/DOCX/DOC/TXT ≤10MB) triggers text extraction + Gemini parse; JSON fields may be sent directly or as a `data` JSON string alongside the file. |
+| PATCH | `/auth/email` | Authenticated | Change the login email on `User` (409 if already in use); re-issues access/refresh cookies with the new identity. |
 
 ---
 

@@ -9,8 +9,7 @@ import Image from 'next/image';
 
 import { usePathname } from 'next/navigation';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { getScopedStorage } from '@/lib/storage';
-import { useNotifications } from '@/hooks/queries';
+import { useNotifications, useCandidateProfile } from '@/hooks/queries';
 
 interface ApiNotification {
   id: string;
@@ -33,14 +32,21 @@ export default function CandidateLayout({
   const [name, setName] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  const { data: profileData } = useCandidateProfile();
+
   useEffect(() => {
-    
     setMounted(true);
-    const savedAvatar = getScopedStorage(user?.id, 'candidate_avatar');
-    const savedName = getScopedStorage(user?.id, 'candidate_name');
-    if (savedAvatar) setAvatar(savedAvatar);
-    if (savedName) setName(savedName);
-  }, [user?.id]);
+  }, []);
+
+  useEffect(() => {
+    const profile = profileData?.profile as
+      | { avatar_url?: string | null; full_name?: string | null }
+      | null
+      | undefined;
+    if (!profile) return;
+    if (profile.avatar_url) setAvatar(profile.avatar_url);
+    if (profile.full_name) setName(profile.full_name);
+  }, [profileData]);
 
   const displayName = mounted ? (name || (user?.email ? user.email.split('@')[0] : 'Candidate')) : 'Candidate';
 
@@ -53,23 +59,6 @@ export default function CandidateLayout({
     () => (Array.isArray(list) ? list : []),
     [list]
   );
-
-  useEffect(() => {
-    const handleStorageChange = () => {
-      const updatedAvatar = getScopedStorage(user?.id, 'candidate_avatar');
-      const updatedName = getScopedStorage(user?.id, 'candidate_name');
-      if (updatedAvatar) setAvatar(updatedAvatar);
-      if (updatedName) setName(updatedName);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('profile_update', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('profile_update', handleStorageChange);
-    };
-  }, [user?.id]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

@@ -23,7 +23,7 @@ import { SUGGESTED_COMPANIES, SUGGESTED_ROLES } from '@/lib/suggestedOptions';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/apiClient';
 import { useHrProfile } from '@/hooks/queries';
-import { getScopedStorage, setScopedStorage } from '@/lib/storage';
+import { useQueryClient } from '@tanstack/react-query';
 
 export default function HrProfile() {
   const { user } = useAuthContext();
@@ -41,7 +41,8 @@ export default function HrProfile() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
 
-  const { data: profile, isError: profileError } = useHrProfile();
+  const { data: profile } = useHrProfile();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (user?.email) {
@@ -55,48 +56,28 @@ export default function HrProfile() {
       if (typeof profileObj.full_name === 'string') setName(profileObj.full_name);
       if (typeof profileObj.email === 'string') setEmail(profileObj.email);
       if (typeof profileObj.role === 'string') setRole(profileObj.role);
+      if (typeof profileObj.title === 'string') setRole(profileObj.title);
       if (typeof profileObj.company === 'string') setCompany(profileObj.company);
       if (typeof profileObj.org_name === 'string') setCompany(profileObj.org_name);
       if (typeof profileObj.linkedin_url === 'string') setLinkedinUrl(profileObj.linkedin_url);
       if (typeof profileObj.avatar === 'string') setAvatar(profileObj.avatar);
       if (Array.isArray(profileObj.specialties)) setSpecialties(profileObj.specialties);
-    } else if (profileError) {
-      const savedName = getScopedStorage(user?.id, 'hr_name');
-      const savedEmail = getScopedStorage(user?.id, 'hr_email');
-      const savedRole = getScopedStorage(user?.id, 'hr_role');
-      const savedCompany = getScopedStorage(user?.id, 'hr_company');
-      const savedLinkedin = getScopedStorage(user?.id, 'hr_linkedin');
-      const savedAvatar = getScopedStorage(user?.id, 'hr_avatar');
-      
-      if (savedName) setName(savedName);
-      if (savedEmail) setEmail(savedEmail);
-      if (savedRole) setRole(savedRole);
-      if (savedCompany) setCompany(savedCompany);
-      if (savedLinkedin) setLinkedinUrl(savedLinkedin);
-      if (savedAvatar) setAvatar(savedAvatar);
     }
-  }, [user, profile, profileError]);
+  }, [user, profile]);
 
   const handleSave = async () => {
-    
     try {
       await apiClient.patch('/hr/profile', {
         name,
+        title: role,
         linkedinUrl: linkedinUrl || null,
         avatarUrl: avatar,
         specialties,
       });
-    } catch {}
-
-    setScopedStorage(user?.id, 'hr_name', name);
-    setScopedStorage(user?.id, 'hr_email', email);
-    setScopedStorage(user?.id, 'hr_role', role);
-    setScopedStorage(user?.id, 'hr_company', company);
-    setScopedStorage(user?.id, 'hr_linkedin', linkedinUrl);
-    setScopedStorage(user?.id, 'hr_avatar', avatar);
-
-    
-    window.dispatchEvent(new Event('hr_profile_update'));
+      await queryClient.invalidateQueries({ queryKey: ['profile', 'hr'] });
+    } catch (err) {
+      console.error('Failed to save HR profile:', err);
+    }
 
     setDetailsSaved(true);
     setTimeout(() => setDetailsSaved(false), 2000);

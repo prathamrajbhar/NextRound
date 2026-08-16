@@ -7,6 +7,7 @@ import {
   ForgotPasswordSchema,
   ResetPasswordSchema,
   ChangePasswordSchema,
+  UpdateEmailSchema,
 } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
 import {
@@ -420,6 +421,55 @@ authRouter.patch('/change-password', authenticate, async (req: Request, res: Res
     return res.json({
       success: true,
       data: { message: 'Password changed successfully' },
+    });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+
+authRouter.patch('/email', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const validated = UpdateEmailSchema.parse(req.body);
+    const newEmail = validated.email.toLowerCase();
+
+    const existing = await prisma.user.findUnique({
+      where: { email: newEmail },
+    });
+
+    if (existing && existing.id !== req.user.userId) {
+      return res.status(409).json({ success: false, error: 'That email address is already in use' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { email: newEmail },
+    });
+
+    const jwtPayload: JwtPayload = {
+      userId: user.id,
+      email: user.email,
+      role: user.role === 'hr' ? 'hr' : 'candidate',
+      orgId: user.org_id,
+    };
+
+    setAuthCookies(res, jwtPayload);
+
+    return res.json({
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          org_id: user.org_id,
+          created_at: user.created_at.toISOString(),
+        },
+      },
     });
   } catch (err) {
     return next(err);

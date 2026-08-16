@@ -12,14 +12,17 @@ import {
 } from '@/lib/lucide-google-icons';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/apiClient';
-import { getScopedStorage, setScopedStorage } from '@/lib/storage';
+import { useCandidateProfile } from '@/hooks/queries';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface CandidateProfileTabProps {
   onSave: () => void;
 }
 
 export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
-  const { user } = useAuthContext();
+  const { user, refreshUser } = useAuthContext();
+  const queryClient = useQueryClient();
+  const { data: profileRes, status: profileStatus } = useCandidateProfile();
   const [fullName, setFullName] = useState(() => (user?.email ? user.email.split('@')[0] : ''));
   const [headline, setHeadline] = useState('');
   const [email, setEmail] = useState(() => user?.email || '');
@@ -30,54 +33,29 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [bio, setBio] = useState('');
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
-    async function loadProfile() {
-      if (user?.email) {
-        setEmail(user.email);
-        setFullName((prev) => prev || (user.email ? user.email.split('@')[0] : ''));
-      }
-
-      try {
-        const res = await apiClient.get<{ profile?: Record<string, unknown> }>('/candidate/profile').catch(() => null);
-        if (res && res.profile) {
-          const p = res.profile;
-          if (typeof p.full_name === 'string') setFullName(p.full_name);
-          if (typeof p.email === 'string') setEmail(p.email);
-          if (typeof p.phone === 'string') setPhone(p.phone);
-          if (typeof p.location === 'string') setLocation(p.location);
-          if (typeof p.headline === 'string') setHeadline(p.headline);
-          if (typeof p.portfolio_url === 'string') setPortfolioUrl(p.portfolio_url);
-          if (typeof p.github_url === 'string') setGithubUrl(p.github_url);
-          if (typeof p.linkedin_url === 'string') setLinkedinUrl(p.linkedin_url);
-          if (typeof p.bio === 'string') setBio(p.bio);
-        } else {
-          
-          const savedName = getScopedStorage(user?.id, 'candidate_name');
-          const savedEmail = getScopedStorage(user?.id, 'candidate_email');
-          const savedPhone = getScopedStorage(user?.id, 'candidate_phone');
-          const savedLoc = getScopedStorage(user?.id, 'candidate_location');
-          const savedHeadline = getScopedStorage(user?.id, 'candidate_headline');
-          const savedPortfolio = getScopedStorage(user?.id, 'candidate_portfolio');
-          const savedGithub = getScopedStorage(user?.id, 'candidate_github');
-          const savedLinkedin = getScopedStorage(user?.id, 'candidate_linkedin');
-          const savedBio = getScopedStorage(user?.id, 'candidate_bio');
-
-          if (savedName) setFullName(savedName);
-          if (savedEmail) setEmail(savedEmail);
-          if (savedPhone) setPhone(savedPhone);
-          if (savedLoc) setLocation(savedLoc);
-          if (savedHeadline) setHeadline(savedHeadline);
-          if (savedPortfolio) setPortfolioUrl(savedPortfolio);
-          if (savedGithub) setGithubUrl(savedGithub);
-          if (savedLinkedin) setLinkedinUrl(savedLinkedin);
-          if (savedBio) setBio(savedBio);
-        }
-      } catch {}
+    if (user?.email) {
+      setEmail(user.email);
+      setFullName((prev) => prev || (user.email ? user.email.split('@')[0] : ''));
     }
-
-    loadProfile();
   }, [user]);
+
+  useEffect(() => {
+    if (profileStatus === 'pending') return;
+
+    const p = (profileRes?.profile ?? null) as Record<string, unknown> | null;
+    if (!p) return;
+    if (typeof p.full_name === 'string' && p.full_name.trim()) setFullName(p.full_name);
+    if (typeof p.phone === 'string') setPhone(p.phone);
+    if (typeof p.location === 'string') setLocation(p.location);
+    if (typeof p.headline === 'string') setHeadline(p.headline);
+    if (typeof p.portfolio_url === 'string') setPortfolioUrl(p.portfolio_url);
+    if (typeof p.github_url === 'string') setGithubUrl(p.github_url);
+    if (typeof p.linkedin_url === 'string') setLinkedinUrl(p.linkedin_url);
+    if (typeof p.bio === 'string') setBio(p.bio);
+  }, [profileStatus, profileRes]);
 
   const initials = fullName
     ? fullName
@@ -91,30 +69,30 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
 
   const handleSave = async () => {
     setSaving(true);
-    setScopedStorage(user?.id, 'candidate_name', fullName);
-    setScopedStorage(user?.id, 'candidate_email', email);
-    setScopedStorage(user?.id, 'candidate_phone', phone);
-    setScopedStorage(user?.id, 'candidate_location', location);
-    setScopedStorage(user?.id, 'candidate_headline', headline);
-    setScopedStorage(user?.id, 'candidate_portfolio', portfolioUrl);
-    setScopedStorage(user?.id, 'candidate_github', githubUrl);
-    setScopedStorage(user?.id, 'candidate_linkedin', linkedinUrl);
-    setScopedStorage(user?.id, 'candidate_bio', bio);
+    setSaveError('');
 
     try {
+      if (email.trim() && email.trim().toLowerCase() !== (user?.email || '').toLowerCase()) {
+        await apiClient.patch<{ user: { email: string } }>('/auth/email', { email: email.trim() });
+        await refreshUser();
+      }
+
       await apiClient.post('/candidate/profile', {
         fullName,
-        phone,
-        location,
-        headline,
+        phone: phone || null,
+        location: location || null,
+        headline: headline || null,
         portfolioUrl: portfolioUrl || null,
         githubUrl: githubUrl || null,
         linkedinUrl: linkedinUrl || null,
-        bio,
-      }).catch(() => null);
-    } catch {}
+        bio: bio || null,
+      });
 
-    window.dispatchEvent(new Event('profile_update'));
+      queryClient.invalidateQueries({ queryKey: ['profile', 'candidate'] });
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save profile. Please try again.');
+    }
+
     setSaving(false);
     onSave();
   };
@@ -274,12 +252,15 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
           />
         </div>
 
-        <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-end">
+        <div className="pt-3 border-t border-slate-200/60 dark:border-slate-800 flex justify-end items-center gap-3">
+          {saveError && (
+            <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400">{saveError}</span>
+          )}
           <button
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="px-5 py-2.5 rounded-2xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center gap-2"
+            className="px-5 py-2.5 rounded-2xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <Save className="h-4 w-4" />
             {saving ? 'Saving to DB...' : 'Save Profile Details'}

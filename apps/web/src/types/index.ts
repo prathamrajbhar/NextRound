@@ -97,6 +97,15 @@ export interface Application {
   decision?: 'hire' | 'reject' | 'hold';
   transcript?: { question: string; answer: string; score: number; feedback: string }[];
   audioUrl?: string;
+  assessments?: {
+    id: string;
+    applicationId: string;
+    assessmentName: string;
+    category: 'aptitude' | 'coding';
+    status: 'in_progress' | 'completed' | 'not_started';
+    completedDate?: string;
+    overallScore?: number;
+  }[];
   proctorFlags?: { timestamp: string; type: string; severity: 'low' | 'medium' | 'high'; description: string }[];
   engagementSignal?: { eyeContact: number; speakingRate: string; confidenceScore: number };
   scheduledSlots?: string[];
@@ -226,19 +235,32 @@ export interface OnboardingRecord {
 
 export interface CandidateProfileData {
   id: string;
-  email: string;
-  fullName: string;
-  avatarUrl?: string;
-  phone?: string;
-  location?: string;
-  bio?: string;
+  user_id: string;
+  full_name?: string | null;
+  headline?: string | null;
+  phone?: string | null;
+  location?: string | null;
+  timezone?: string | null;
+  avatar_url?: string | null;
+  resume_url?: string | null;
+  raw_resume_text?: string | null;
+  linkedin_url?: string | null;
+  github_url?: string | null;
+  portfolio_url?: string | null;
+  bio?: string | null;
   skills: string[];
-  githubUrl?: string;
-  linkedinUrl?: string;
-  websiteUrl?: string;
-  targetCompensation?: string;
-  workAuthorization?: string;
-  resumeUrl?: string;
+  target_roles: string[];
+  years_of_experience?: number | null;
+  work_mode?: string | null;
+  current_ctc?: number | null;
+  target_locations: string[];
+  expected_salary?: number | null;
+  notice_period?: string | null;
+  work_authorization?: string | null;
+  proud_project?: string | null;
+  work_values: string[];
+  availability?: Record<string, unknown>;
+  created_at: string;
 }
 
 export interface HRDashboardData {

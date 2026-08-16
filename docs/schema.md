@@ -163,6 +163,7 @@ model Job {
 model CandidateProfile {
   id                 String                       @id @default(uuid())
   user_id            String                       @unique
+  avatar_url         String?                      // Candidate avatar (preset asset path or base64 data URL)
   resume_url         String?                      // Storage URL to uploaded PDF/DOCX
   linkedin_url       String?
   github_url         String?

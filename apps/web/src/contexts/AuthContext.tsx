@@ -4,7 +4,6 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { useRouter } from 'next/navigation';
 import { UserPublic } from '@nextround/shared';
 import { apiClient } from '@/lib/apiClient';
-import { purgeUserState, purgeLegacyState } from '@/lib/storage';
 
 interface AuthContextType {
   user: UserPublic | null;
@@ -50,7 +49,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      purgeLegacyState();
       apiClient.clearCache();
       const data = await apiClient.post<{ user: UserPublic }>('/auth/login', {
         email,
@@ -74,7 +72,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     orgName?: string
   ) => {
     try {
-      purgeLegacyState();
       apiClient.clearCache();
       const data = await apiClient.post<{ user: UserPublic }>('/auth/register', {
         email,
@@ -94,14 +91,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    const currentUserId = user?.id;
     try {
       await apiClient.post('/auth/logout');
     } catch {}
     apiClient.clearCache();
-    if (currentUserId) {
-      purgeUserState(currentUserId);
-    }
     setUser(null);
     router.push('/login');
   };

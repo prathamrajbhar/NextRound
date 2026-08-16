@@ -10,7 +10,6 @@ import {
   CheckCircle2,
 } from '@/lib/lucide-google-icons';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { getScopedStorage } from '@/lib/storage';
 import { useCandidateProfile } from '@/hooks/queries';
 import { CandidateProfileTab } from './_components/CandidateProfileTab';
 import { CandidateNotificationsTab } from './_components/CandidateNotificationsTab';
@@ -29,13 +28,13 @@ export default function CandidateSettingsPage() {
   const calculateReadiness = useCallback(() => {
     const p = (profileRes?.profile ?? null) as Record<string, unknown> | null;
     const profile = p || {};
-    const name = (profile.full_name as string) || getScopedStorage(user?.id, 'candidate_name') || (user?.email ? user.email.split('@')[0] : '');
-    const email = (profile.email as string) || user?.email || getScopedStorage(user?.id, 'candidate_email');
-    const headline = (profile.headline as string) || getScopedStorage(user?.id, 'candidate_headline');
-    const phone = (profile.phone as string) || getScopedStorage(user?.id, 'candidate_phone');
-    const loc = (profile.location as string) || getScopedStorage(user?.id, 'candidate_location');
-    const portfolio = (profile.portfolio_url as string) || getScopedStorage(user?.id, 'candidate_portfolio');
-    const bio = (profile.bio as string) || getScopedStorage(user?.id, 'candidate_bio');
+    const name = (profile.full_name as string) || (user?.email ? user.email.split('@')[0] : '');
+    const email = user?.email || '';
+    const headline = (profile.headline as string) || '';
+    const phone = (profile.phone as string) || '';
+    const loc = (profile.location as string) || '';
+    const portfolio = (profile.portfolio_url as string) || '';
+    const bio = (profile.bio as string) || '';
 
     let score = 20; 
     if (name) score += 15;
@@ -50,19 +49,8 @@ export default function CandidateSettingsPage() {
   }, [profileRes, user]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      calculateReadiness();
-    }, 0);
-    const handleUpdate = () => {
-      refetch();
-      calculateReadiness();
-    };
-    window.addEventListener('profile_update', handleUpdate);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('profile_update', handleUpdate);
-    };
-  }, [calculateReadiness, refetch]);
+    calculateReadiness();
+  }, [calculateReadiness]);
 
   const triggerSaveNotification = () => {
     setSavedToast(true);

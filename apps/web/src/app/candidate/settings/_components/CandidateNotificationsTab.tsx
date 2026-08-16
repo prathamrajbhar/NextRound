@@ -3,15 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Save } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
-import { useAuthContext } from '@/contexts/AuthContext';
-import { getScopedStorageJSON, setScopedStorageJSON } from '@/lib/storage';
 
 interface CandidateNotificationsTabProps {
   onSave: () => void;
 }
 
 export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabProps) {
-  const { user } = useAuthContext();
   const [emailInvites, setEmailInvites] = useState(true);
   const [smsReminders, setSmsReminders] = useState(true);
   const [aiScoreReports, setAiScoreReports] = useState(true);
@@ -23,8 +20,8 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
   useEffect(() => {
     async function loadSettings() {
       try {
-        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings').catch(() => null);
-        if (res && res.settings) {
+        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings');
+        if (res?.settings) {
           const s = res.settings;
           if (typeof s.emailNotifications === 'boolean') setEmailInvites(s.emailNotifications);
           if (typeof s.smsReminders === 'boolean') setSmsReminders(s.smsReminders);
@@ -32,33 +29,14 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
           if (typeof s.dailyDigest === 'boolean') setDailyDigest(s.dailyDigest);
           if (typeof s.statusUpdates === 'boolean') setStatusUpdates(s.statusUpdates);
           if (typeof s.digestFrequency === 'string') setDigestFrequency(s.digestFrequency);
-        } else {
-          const parsed = getScopedStorageJSON<Record<string, unknown>>(user?.id, 'candidate_notification_settings');
-          if (parsed) {
-            if (typeof parsed.emailInvites === 'boolean') setEmailInvites(parsed.emailInvites);
-            if (typeof parsed.smsReminders === 'boolean') setSmsReminders(parsed.smsReminders);
-            if (typeof parsed.aiScoreReports === 'boolean') setAiScoreReports(parsed.aiScoreReports);
-            if (typeof parsed.dailyDigest === 'boolean') setDailyDigest(parsed.dailyDigest);
-            if (typeof parsed.statusUpdates === 'boolean') setStatusUpdates(parsed.statusUpdates);
-            if (typeof parsed.digestFrequency === 'string') setDigestFrequency(parsed.digestFrequency);
-          }
         }
       } catch {}
     }
     loadSettings();
-  }, [user?.id]);
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
-    const settingsData = {
-      emailInvites,
-      smsReminders,
-      aiScoreReports,
-      dailyDigest,
-      statusUpdates,
-      digestFrequency,
-    };
-    setScopedStorageJSON(user?.id, 'candidate_notification_settings', settingsData);
 
     try {
       await apiClient.patch('/candidate/settings', {
@@ -68,7 +46,7 @@ export function CandidateNotificationsTab({ onSave }: CandidateNotificationsTabP
         dailyDigest,
         statusUpdates,
         digestFrequency,
-      }).catch(() => null);
+      });
     } catch {}
 
     setSaving(false);

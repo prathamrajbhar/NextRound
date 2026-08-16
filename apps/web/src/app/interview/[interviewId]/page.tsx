@@ -18,6 +18,14 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
   const { toast } = useToast();
   const [app, setApp] = useState<Application | null>(null);
   const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (typeof document !== 'undefined' && document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+  }, []);
   const [candidateId, setCandidateId] = useState<string | null>(null);
   const [captureStream, setCaptureStream] = useState<MediaStream | null>(null);
 
@@ -72,7 +80,6 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
     role: jobTitle,
     difficulty: 'mid',
     interviewId,
-    storageKey: `candidateInterview_${interviewId}`,
     onComplete: () => {
       router.push(`/candidate/applications/${interviewId}`);
     },

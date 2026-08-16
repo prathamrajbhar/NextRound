@@ -2,6 +2,7 @@ import { ProctoringEventBuffer } from './eventBuffer';
 import { apiClient } from '@/lib/apiClient';
 import { API_BASE_URL } from '@/lib/config';
 import { detectFaces, loadFaceDetector } from './faceDetector';
+import { mediaManager } from '@/lib/media/mediaManager';
 
 interface ProctoringClientConfig {
   sessionId: string;
@@ -165,6 +166,7 @@ export class ProctoringClient {
   }
 
   trackMediaStream(stream: MediaStream) {
+    mediaManager.acquire(stream);
     if (stream.getAudioTracks().length > 0) {
       this.startAudioAnalysis(stream);
       this.startRecording(stream);
@@ -185,6 +187,7 @@ export class ProctoringClient {
       });
 
       track.onended = () => {
+        if (this.isEnded) return;
         this.logEvent(`${track.kind}_stopped`, 'warning', 'browser', {
           trackId: track.id,
           label: track.label,
@@ -736,6 +739,15 @@ export class ProctoringClient {
     }
   }
 
+  private stopTrackedMedia() {
+    for (const track of this.activeTracks) {
+      try {
+        track.stop();
+      } catch {}
+    }
+    this.activeTracks = [];
+  }
+
   async end() {
     this.isEnded = true;
     this.suppressViolations = true;
@@ -756,6 +768,7 @@ export class ProctoringClient {
       clearInterval(this.snapshotIntervalId);
     }
     this.finalizeRecording(true);
+    this.stopTrackedMedia();
     if (this.faceVideoEl) {
       this.faceVideoEl.srcObject = null;
       this.faceVideoEl = null;
@@ -824,6 +837,7 @@ export class ProctoringClient {
       clearInterval(this.snapshotIntervalId);
     }
     this.finalizeRecording(false);
+    this.stopTrackedMedia();
     if (this.faceVideoEl) {
       this.faceVideoEl.srcObject = null;
       this.faceVideoEl = null;

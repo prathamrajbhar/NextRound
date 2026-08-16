@@ -4,8 +4,6 @@ import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import { apiClient } from '@/lib/apiClient';
 import { useApplication } from '@/hooks/queries';
-import { useAuthContext } from '@/contexts/AuthContext';
-import { getScopedStorage } from '@/lib/storage';
 import { Application } from '@/types';
 import {
   ChevronRight,
@@ -21,23 +19,16 @@ import { ProctoringReportCard, type ProctoringReport } from '../components/Proct
 import { EvidenceReviewCard } from '../components/EvidenceReviewCard';
 import { CandidateDetailSkeleton } from '@/components/ui';
 
-interface VoiceData {
-  status?: 'pending_evaluation' | 'pending_review' | 'completed';
-  score?: number;
-  rubric?: { technical?: number; communication?: number; cultureFit?: number };
-  feedback?: string;
-}
-
 interface AssessData {
   overallScore?: number;
   codingScore?: number;
   mcqScore?: number;
+  completedDate?: string;
   [key: string]: unknown;
 }
 
 export default function HrCandidateScoringPage({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
-  const { user } = useAuthContext();
   const [app, setApp] = useState<Application | null>(null);
   const [loading, setLoading] = useState(true);
   const [assessmentData, setAssessmentData] = useState<AssessData | null>(null);
@@ -49,41 +40,25 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
     async function fetchScoringData() {
       try {
         setLoading(true);
-        let appData = fetchedApp ?? null;
-        if (!appData && typeof window !== 'undefined') {
-          const storedHrResult = getScopedStorage(user?.id, `hrRoundResult_${applicationId}`);
-          if (storedHrResult) appData = JSON.parse(storedHrResult);
-        }
+        if (fetchedApp) {
+          setApp({ ...fetchedApp, scores: fetchedApp.scores, reasoning: fetchedApp.reasoning || '' });
 
-        if (appData) {
-          let voiceInterviewData: VoiceData | null = null;
-          if (typeof window !== 'undefined') {
-            const localVoice = getScopedStorage(user?.id, `candidateInterview_${applicationId}`);
-            if (localVoice) voiceInterviewData = JSON.parse(localVoice);
-            
-            const localAssess = getScopedStorage(user?.id, `assessmentResult_${applicationId}`);
-            if (localAssess) setAssessmentData(JSON.parse(localAssess));
+          const assessments = Array.isArray(fetchedApp.assessments) ? fetchedApp.assessments : [];
+          const scored = assessments.filter((a) => typeof a.overallScore === 'number');
+          if (scored.length > 0) {
+            const aptitude = scored.find((a) => a.category === 'aptitude');
+            const coding = scored.find((a) => a.category === 'coding');
+            setAssessmentData({
+              overallScore: aptitude?.overallScore ?? coding?.overallScore,
+              mcqScore: aptitude?.overallScore,
+              codingScore: coding?.overallScore,
+              completedDate: scored[0].completedDate,
+            });
           }
 
-          let mergedScores = appData.scores;
-          let mergedReasoning = appData.reasoning || '';
-
-          if (voiceInterviewData && voiceInterviewData.status === 'completed' && typeof voiceInterviewData.score === 'number') {
-            mergedScores = {
-              composite: voiceInterviewData.score,
-              technical: voiceInterviewData.rubric?.technical ?? 0,
-              communication: voiceInterviewData.rubric?.communication ?? 0,
-              problemSolving: 0,
-              experience: 0,
-              confidence: 0,
-            };
-            mergedReasoning = voiceInterviewData.feedback || mergedReasoning;
-          }
-
-          const finalApp = { ...appData, scores: mergedScores, reasoning: mergedReasoning };
-          setApp(finalApp);
-
-          const report = await apiClient.get<ProctoringReport>(`/proctoring/applications/${applicationId}/report`).catch(() => null);
+          const report = await apiClient
+            .get<ProctoringReport>(`/proctoring/applications/${applicationId}/report`)
+            .catch(() => null);
           if (report) setProctorReport(report);
         }
       } catch (err) {
@@ -93,7 +68,7 @@ export default function HrCandidateScoringPage({ params }: { params: Promise<{ a
       }
     }
     fetchScoringData();
-  }, [fetchedApp, applicationId, user?.id]);
+  }, [fetchedApp, applicationId]);
 
   if (loading) {
     return <CandidateDetailSkeleton />;

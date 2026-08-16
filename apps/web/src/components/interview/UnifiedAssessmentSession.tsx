@@ -42,6 +42,14 @@ export function UnifiedAssessmentSession({
   const { toast } = useToast();
   const { targetCompany, targetRole, difficulty } = useAssessmentDetails({ sessionId, applicationId, company, role });
 
+  useEffect(() => {
+    return () => {
+      if (typeof document !== 'undefined' && document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+  }, []);
+
   const [comprehensiveStep, setComprehensiveStep] = useState<'aptitude' | 'coding' | 'technical'>('aptitude');
   const [pendingNextRound, setPendingNextRound] = useState<InterRoundData | null>(null);
   const [candidateId, setCandidateId] = useState<string | null>(null);
@@ -75,7 +83,6 @@ export function UnifiedAssessmentSession({
     company: targetCompany,
     role: targetRole,
     difficulty,
-    storageKey: `mockSession_${sessionId}`,
     onComplete: (results) => {
       const score = results && typeof results === 'object' && 'score' in results ? (results as { score?: number }).score : undefined;
       handleCompleteWithProctor(score);

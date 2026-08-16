@@ -10,7 +10,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { getScopedStorage } from '@/lib/storage';
+import { useHrProfile } from '@/hooks/queries';
 
 interface ApiNotification {
   id: string;
@@ -29,20 +29,17 @@ export default function HrLayout({
   const pathname = usePathname();
   const { user } = useAuthContext();
   const [mounted, setMounted] = useState(false);
-  const [avatar, setAvatar] = useState('/avatar-boy.jpg');
-  const [name, setName] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  useEffect(() => {
-    
-    setMounted(true);
-    const savedAvatar = getScopedStorage(user?.id, 'hr_avatar');
-    const savedName = getScopedStorage(user?.id, 'hr_name');
-    if (savedAvatar) setAvatar(savedAvatar);
-    if (savedName) setName(savedName);
-  }, [user?.id]);
+  const { data: profileData } = useHrProfile();
+  const avatar = profileData?.profile?.avatar || '/avatar-boy.jpg';
+  const profileName = profileData?.profile?.name || '';
 
-  const displayName = mounted ? (name || (user?.email ? user.email.split('@')[0] : 'Recruiter')) : 'Recruiter';
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const displayName = mounted ? (profileName || (user?.email ? user.email.split('@')[0] : 'Recruiter')) : 'Recruiter';
 
   
   const [notifications, setNotifications] = useState<{ id: number; rawId?: string; text: string; time: string; read: boolean }[]>([]);
@@ -66,22 +63,10 @@ export default function HrLayout({
         console.error('Failed to load notifications:', err);
       });
 
-    const handleStorageChange = () => {
-      const updatedAvatar = getScopedStorage(user?.id, 'hr_avatar');
-      const updatedName = getScopedStorage(user?.id, 'hr_name');
-      if (updatedAvatar) setAvatar(updatedAvatar);
-      if (updatedName) setName(updatedName);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('hr_profile_update', handleStorageChange);
-
     return () => {
       isMounted = false;
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('hr_profile_update', handleStorageChange);
     };
-  }, [user?.id]);
+  }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

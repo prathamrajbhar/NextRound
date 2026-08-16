@@ -4,15 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { Palette, Sun, Moon, CheckCircle2, Save } from '@/lib/lucide-google-icons';
 import { useTheme } from '@/contexts/ThemeContext';
 import { apiClient } from '@/lib/apiClient';
-import { useAuthContext } from '@/contexts/AuthContext';
-import { getScopedStorageJSON, setScopedStorageJSON } from '@/lib/storage';
 
 interface CandidateAppearanceTabProps {
   onSave: () => void;
 }
 
 export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) {
-  const { user } = useAuthContext();
   const { theme, setTheme } = useTheme();
   const [glassmorphism, setGlassmorphism] = useState(true);
   const [compactDensity, setCompactDensity] = useState(false);
@@ -21,34 +18,26 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
   useEffect(() => {
     async function loadUiSettings() {
       try {
-        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings').catch(() => null);
-        if (res && res.settings) {
+        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings');
+        if (res?.settings) {
           const s = res.settings;
           if (typeof s.glassmorphism === 'boolean') setGlassmorphism(s.glassmorphism);
           if (typeof s.compactDensity === 'boolean') setCompactDensity(s.compactDensity);
-        } else {
-          const parsed = getScopedStorageJSON<Record<string, unknown>>(user?.id, 'candidate_ui_settings');
-          if (parsed) {
-            if (typeof parsed.glassmorphism === 'boolean') setGlassmorphism(parsed.glassmorphism);
-            if (typeof parsed.compactDensity === 'boolean') setCompactDensity(parsed.compactDensity);
-          }
         }
       } catch {}
     }
     loadUiSettings();
-  }, [user?.id]);
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
-    const uiData = { glassmorphism, compactDensity };
-    setScopedStorageJSON(user?.id, 'candidate_ui_settings', uiData);
 
     try {
       await apiClient.patch('/candidate/settings', {
         theme,
         glassmorphism,
         compactDensity,
-      }).catch(() => null);
+      });
     } catch {}
 
     setSaving(false);

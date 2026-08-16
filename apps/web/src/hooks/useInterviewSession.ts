@@ -4,8 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { evaluateInterview } from '@/lib/interviewScorer';
 import { apiClient } from '@/lib/apiClient';
 import { siteConfig } from '@/lib/config';
-import { useAuthContext } from '@/contexts/AuthContext';
-import { setScopedStorage } from '@/lib/storage';
 import type { Message, InterviewPhase } from '@/components/interview/console/types';
 
 export type { Message, InterviewPhase };
@@ -14,7 +12,6 @@ interface UseInterviewSessionProps {
   company: string;
   role: string;
   difficulty?: string;
-  storageKey: string;
   interviewId?: string;
   onComplete: (data: unknown) => void;
 }
@@ -22,11 +19,9 @@ interface UseInterviewSessionProps {
 export function useInterviewSession({
   company,
   role,
-  storageKey,
   interviewId,
   onComplete,
 }: UseInterviewSessionProps) {
-  const { user } = useAuthContext();
   const [stage, setStage] = useState<'check' | 'session' | 'fallback'>('check');
   const [phase, setPhase] = useState<InterviewPhase>('Introduction');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -175,7 +170,6 @@ export function useInterviewSession({
       }
     }
     const results = evaluateInterview({ role, transcriptData: transcriptData.current });
-    setScopedStorage(user?.id, storageKey, JSON.stringify(results));
     onComplete(results);
   };
 
@@ -208,7 +202,6 @@ export function useInterviewSession({
         feedback: '',
       })),
     };
-    setScopedStorage(user?.id, storageKey, JSON.stringify(results));
     onComplete(results);
   };
 

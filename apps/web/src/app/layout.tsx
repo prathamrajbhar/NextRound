@@ -32,21 +32,6 @@ export const metadata: Metadata = {
   },
 };
 
-const themeInitScript = `
-  (function() {
-    try {
-      var storedTheme = localStorage.getItem('theme');
-      if (storedTheme === 'light') {
-        document.documentElement.classList.remove('dark');
-      } else {
-        document.documentElement.classList.add('dark');
-      }
-    } catch (e) {
-      document.documentElement.classList.add('dark');
-    }
-  })();
-`;
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -59,7 +44,6 @@ export default function RootLayout({
       className={`dark ${googleSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         <link rel="icon" href="/logo.png" type="image/png" sizes="any" />
         <link rel="shortcut icon" href="/logo.png" type="image/png" />
         <link rel="apple-touch-icon" href="/logo.png" />

@@ -9,6 +9,7 @@ export interface HrProfileData {
   full_name?: string;
   email?: string;
   role?: string;
+  title?: string;
   company?: string;
   org_name?: string;
   linkedin_url?: string;
@@ -27,6 +28,6 @@ export function useCandidateProfile() {
 export function useHrProfile() {
   return useQuery({
     queryKey: ['profile', 'hr'],
-    queryFn: () => apiClient.get<HrProfileData>('/hr/profile'),
+    queryFn: () => apiClient.get<{ profile: HrProfileData }>('/hr/profile'),
   });
 }

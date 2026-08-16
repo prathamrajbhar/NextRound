@@ -46,6 +46,7 @@ export type CandidateProfileMinAggregateOutputType = {
   phone: string | null
   location: string | null
   timezone: string | null
+  avatar_url: string | null
   resume_url: string | null
   raw_resume_text: string | null
   linkedin_url: string | null
@@ -70,6 +71,7 @@ export type CandidateProfileMaxAggregateOutputType = {
   phone: string | null
   location: string | null
   timezone: string | null
+  avatar_url: string | null
   resume_url: string | null
   raw_resume_text: string | null
   linkedin_url: string | null
@@ -94,6 +96,7 @@ export type CandidateProfileCountAggregateOutputType = {
   phone: number
   location: number
   timezone: number
+  avatar_url: number
   resume_url: number
   raw_resume_text: number
   parsed_resume: number
@@ -140,6 +143,7 @@ export type CandidateProfileMinAggregateInputType = {
   phone?: true
   location?: true
   timezone?: true
+  avatar_url?: true
   resume_url?: true
   raw_resume_text?: true
   linkedin_url?: true
@@ -164,6 +168,7 @@ export type CandidateProfileMaxAggregateInputType = {
   phone?: true
   location?: true
   timezone?: true
+  avatar_url?: true
   resume_url?: true
   raw_resume_text?: true
   linkedin_url?: true
@@ -188,6 +193,7 @@ export type CandidateProfileCountAggregateInputType = {
   phone?: true
   location?: true
   timezone?: true
+  avatar_url?: true
   resume_url?: true
   raw_resume_text?: true
   parsed_resume?: true
@@ -307,6 +313,7 @@ export type CandidateProfileGroupByOutputType = {
   phone: string | null
   location: string | null
   timezone: string | null
+  avatar_url: string | null
   resume_url: string | null
   raw_resume_text: string | null
   parsed_resume: runtime.JsonValue
@@ -362,6 +369,7 @@ export type CandidateProfileWhereInput = {
   phone?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
   location?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
   timezone?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
+  avatar_url?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
   resume_url?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
   raw_resume_text?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
   parsed_resume?: Prisma.JsonFilter<"CandidateProfile">
@@ -399,6 +407,7 @@ export type CandidateProfileOrderByWithRelationInput = {
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   location?: Prisma.SortOrderInput | Prisma.SortOrder
   timezone?: Prisma.SortOrderInput | Prisma.SortOrder
+  avatar_url?: Prisma.SortOrderInput | Prisma.SortOrder
   resume_url?: Prisma.SortOrderInput | Prisma.SortOrder
   raw_resume_text?: Prisma.SortOrderInput | Prisma.SortOrder
   parsed_resume?: Prisma.SortOrder
@@ -439,6 +448,7 @@ export type CandidateProfileWhereUniqueInput = Prisma.AtLeast<{
   phone?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
   location?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
   timezone?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
+  avatar_url?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
   resume_url?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
   raw_resume_text?: Prisma.StringNullableFilter<"CandidateProfile"> | string | null
   parsed_resume?: Prisma.JsonFilter<"CandidateProfile">
@@ -476,6 +486,7 @@ export type CandidateProfileOrderByWithAggregationInput = {
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   location?: Prisma.SortOrderInput | Prisma.SortOrder
   timezone?: Prisma.SortOrderInput | Prisma.SortOrder
+  avatar_url?: Prisma.SortOrderInput | Prisma.SortOrder
   resume_url?: Prisma.SortOrderInput | Prisma.SortOrder
   raw_resume_text?: Prisma.SortOrderInput | Prisma.SortOrder
   parsed_resume?: Prisma.SortOrder
@@ -516,6 +527,7 @@ export type CandidateProfileScalarWhereWithAggregatesInput = {
   phone?: Prisma.StringNullableWithAggregatesFilter<"CandidateProfile"> | string | null
   location?: Prisma.StringNullableWithAggregatesFilter<"CandidateProfile"> | string | null
   timezone?: Prisma.StringNullableWithAggregatesFilter<"CandidateProfile"> | string | null
+  avatar_url?: Prisma.StringNullableWithAggregatesFilter<"CandidateProfile"> | string | null
   resume_url?: Prisma.StringNullableWithAggregatesFilter<"CandidateProfile"> | string | null
   raw_resume_text?: Prisma.StringNullableWithAggregatesFilter<"CandidateProfile"> | string | null
   parsed_resume?: Prisma.JsonWithAggregatesFilter<"CandidateProfile">
@@ -547,6 +559,7 @@ export type CandidateProfileCreateInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -584,6 +597,7 @@ export type CandidateProfileUncheckedCreateInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -619,6 +633,7 @@ export type CandidateProfileUpdateInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -656,6 +671,7 @@ export type CandidateProfileUncheckedUpdateInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -692,6 +708,7 @@ export type CandidateProfileCreateManyInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -723,6 +740,7 @@ export type CandidateProfileUpdateManyMutationInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -755,6 +773,7 @@ export type CandidateProfileUncheckedUpdateManyInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -792,6 +811,7 @@ export type CandidateProfileCountOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   location?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  avatar_url?: Prisma.SortOrder
   resume_url?: Prisma.SortOrder
   raw_resume_text?: Prisma.SortOrder
   parsed_resume?: Prisma.SortOrder
@@ -830,6 +850,7 @@ export type CandidateProfileMaxOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   location?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  avatar_url?: Prisma.SortOrder
   resume_url?: Prisma.SortOrder
   raw_resume_text?: Prisma.SortOrder
   linkedin_url?: Prisma.SortOrder
@@ -854,6 +875,7 @@ export type CandidateProfileMinOrderByAggregateInput = {
   phone?: Prisma.SortOrder
   location?: Prisma.SortOrder
   timezone?: Prisma.SortOrder
+  avatar_url?: Prisma.SortOrder
   resume_url?: Prisma.SortOrder
   raw_resume_text?: Prisma.SortOrder
   linkedin_url?: Prisma.SortOrder
@@ -992,6 +1014,7 @@ export type CandidateProfileCreateWithoutUserInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1027,6 +1050,7 @@ export type CandidateProfileUncheckedCreateWithoutUserInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1078,6 +1102,7 @@ export type CandidateProfileUpdateWithoutUserInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1113,6 +1138,7 @@ export type CandidateProfileUncheckedUpdateWithoutUserInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1148,6 +1174,7 @@ export type CandidateProfileCreateWithoutApplicationsInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1184,6 +1211,7 @@ export type CandidateProfileUncheckedCreateWithoutApplicationsInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1234,6 +1262,7 @@ export type CandidateProfileUpdateWithoutApplicationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1270,6 +1299,7 @@ export type CandidateProfileUncheckedUpdateWithoutApplicationsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1304,6 +1334,7 @@ export type CandidateProfileCreateWithoutMock_sessionsInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1340,6 +1371,7 @@ export type CandidateProfileUncheckedCreateWithoutMock_sessionsInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1390,6 +1422,7 @@ export type CandidateProfileUpdateWithoutMock_sessionsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1426,6 +1459,7 @@ export type CandidateProfileUncheckedUpdateWithoutMock_sessionsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1460,6 +1494,7 @@ export type CandidateProfileCreateWithoutTalent_bookmarksInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1496,6 +1531,7 @@ export type CandidateProfileUncheckedCreateWithoutTalent_bookmarksInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1546,6 +1582,7 @@ export type CandidateProfileUpdateWithoutTalent_bookmarksInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1582,6 +1619,7 @@ export type CandidateProfileUncheckedUpdateWithoutTalent_bookmarksInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1616,6 +1654,7 @@ export type CandidateProfileCreateWithoutProctoring_sessionsInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1652,6 +1691,7 @@ export type CandidateProfileUncheckedCreateWithoutProctoring_sessionsInput = {
   phone?: string | null
   location?: string | null
   timezone?: string | null
+  avatar_url?: string | null
   resume_url?: string | null
   raw_resume_text?: string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1702,6 +1742,7 @@ export type CandidateProfileUpdateWithoutProctoring_sessionsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1738,6 +1779,7 @@ export type CandidateProfileUncheckedUpdateWithoutProctoring_sessionsInput = {
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   location?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   timezone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  avatar_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resume_url?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   raw_resume_text?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   parsed_resume?: Prisma.JsonNullValueInput | runtime.InputJsonValue
@@ -1831,6 +1873,7 @@ export type CandidateProfileSelect<ExtArgs extends runtime.Types.Extensions.Inte
   phone?: boolean
   location?: boolean
   timezone?: boolean
+  avatar_url?: boolean
   resume_url?: boolean
   raw_resume_text?: boolean
   parsed_resume?: boolean
@@ -1869,6 +1912,7 @@ export type CandidateProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Ty
   phone?: boolean
   location?: boolean
   timezone?: boolean
+  avatar_url?: boolean
   resume_url?: boolean
   raw_resume_text?: boolean
   parsed_resume?: boolean
@@ -1902,6 +1946,7 @@ export type CandidateProfileSelectUpdateManyAndReturn<ExtArgs extends runtime.Ty
   phone?: boolean
   location?: boolean
   timezone?: boolean
+  avatar_url?: boolean
   resume_url?: boolean
   raw_resume_text?: boolean
   parsed_resume?: boolean
@@ -1935,6 +1980,7 @@ export type CandidateProfileSelectScalar = {
   phone?: boolean
   location?: boolean
   timezone?: boolean
+  avatar_url?: boolean
   resume_url?: boolean
   raw_resume_text?: boolean
   parsed_resume?: boolean
@@ -1959,7 +2005,7 @@ export type CandidateProfileSelectScalar = {
   created_at?: boolean
 }
 
-export type CandidateProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "full_name" | "headline" | "phone" | "location" | "timezone" | "resume_url" | "raw_resume_text" | "parsed_resume" | "social_data" | "linkedin_url" | "github_url" | "portfolio_url" | "bio" | "skills" | "target_roles" | "years_of_experience" | "work_mode" | "current_ctc" | "target_locations" | "expected_salary" | "notice_period" | "work_authorization" | "proud_project" | "work_values" | "availability" | "settings" | "created_at", ExtArgs["result"]["candidateProfile"]>
+export type CandidateProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "user_id" | "full_name" | "headline" | "phone" | "location" | "timezone" | "avatar_url" | "resume_url" | "raw_resume_text" | "parsed_resume" | "social_data" | "linkedin_url" | "github_url" | "portfolio_url" | "bio" | "skills" | "target_roles" | "years_of_experience" | "work_mode" | "current_ctc" | "target_locations" | "expected_salary" | "notice_period" | "work_authorization" | "proud_project" | "work_values" | "availability" | "settings" | "created_at", ExtArgs["result"]["candidateProfile"]>
 export type CandidateProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   applications?: boolean | Prisma.CandidateProfile$applicationsArgs<ExtArgs>
@@ -1992,6 +2038,7 @@ export type $CandidateProfilePayload<ExtArgs extends runtime.Types.Extensions.In
     phone: string | null
     location: string | null
     timezone: string | null
+    avatar_url: string | null
     resume_url: string | null
     raw_resume_text: string | null
     parsed_resume: runtime.JsonValue
@@ -2449,6 +2496,7 @@ export interface CandidateProfileFieldRefs {
   readonly phone: Prisma.FieldRef<"CandidateProfile", 'String'>
   readonly location: Prisma.FieldRef<"CandidateProfile", 'String'>
   readonly timezone: Prisma.FieldRef<"CandidateProfile", 'String'>
+  readonly avatar_url: Prisma.FieldRef<"CandidateProfile", 'String'>
   readonly resume_url: Prisma.FieldRef<"CandidateProfile", 'String'>
   readonly raw_resume_text: Prisma.FieldRef<"CandidateProfile", 'String'>
   readonly parsed_resume: Prisma.FieldRef<"CandidateProfile", 'Json'>

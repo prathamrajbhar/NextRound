@@ -6,6 +6,7 @@ import {
   DEFAULT_THEME_CONFIG,
   applyThemeToElement,
 } from '@nextround/shared';
+import { apiClient } from '@/lib/apiClient';
 
 type Mode = 'light' | 'dark';
 
@@ -30,22 +31,32 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeConfig, setThemeConfigState] = useState<ThemeConfig>(DEFAULT_THEME_CONFIG);
 
   useEffect(() => {
-    const savedMode = typeof window !== 'undefined' ? (localStorage.getItem('theme') as Mode | null) : null;
-    const initialMode = (savedMode === 'light' || savedMode === 'dark') ? savedMode : 'dark';
-    
     const root = document.documentElement;
-    if (initialMode === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    applyThemeToElement(root, DEFAULT_THEME_CONFIG, initialMode);
+    root.classList.add('dark');
+    applyThemeToElement(root, DEFAULT_THEME_CONFIG, 'dark');
+  }, []);
 
-    if (savedMode === 'light' || savedMode === 'dark') {
-      requestAnimationFrame(() => {
-        setThemeState(savedMode);
-      });
-    }
+  useEffect(() => {
+    let mounted = true;
+    apiClient
+      .get<{ settings?: Record<string, unknown> }>('/candidate/settings')
+      .then((res) => {
+        if (!mounted) return;
+        const mode = res?.settings?.theme;
+        if (mode !== 'light' && mode !== 'dark') return;
+        const root = document.documentElement;
+        if (mode === 'dark') {
+          root.classList.add('dark');
+        } else {
+          root.classList.remove('dark');
+        }
+        applyThemeToElement(root, DEFAULT_THEME_CONFIG, mode);
+        setThemeState(mode);
+      })
+      .catch(() => {});
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const applyTheme = (newMode: Mode, config: ThemeConfig = themeConfig) => {
@@ -57,9 +68,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       root.classList.remove('dark');
     }
     applyThemeToElement(root, config, newMode);
-    try {
-      localStorage.setItem('theme', newMode);
-    } catch {}
   };
 
   const toggleTheme = (event?: React.MouseEvent | MouseEvent) => {

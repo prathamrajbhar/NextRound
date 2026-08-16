@@ -15,14 +15,13 @@ import {
   X,
   FileText,
   UploadCloud,
-  AlertTriangle,
-  Trash2,
   Save,
   Zap,
+  AlertCircle,
 } from '@/lib/lucide-google-icons';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/apiClient';
-import { getScopedStorage, setScopedStorage } from '@/lib/storage';
 import { useCandidateProfile, useResumeHistory } from '@/hooks/queries';
 
 const PRESET_SKILLS = [
@@ -47,40 +46,53 @@ const PRESET_ROLES = [
   'AI / ML Engineer',
 ];
 
+const DEFAULT_AVATAR = '/avatar-boy.jpg';
+
+function parseExpectedSalary(value: string): number | null {
+  const parsed = Number(value.replace(/[^0-9]/g, ''));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function formatExpectedSalary(value: number | null | undefined): string {
+  if (value == null || value <= 0) return '';
+  return `$${value.toLocaleString()} / yr`;
+}
+
 export default function CandidateProfile() {
-  const { user } = useAuthContext();
+  const { user, refreshUser } = useAuthContext();
+  const queryClient = useQueryClient();
   const [name, setName] = useState(() => (user?.email ? user.email.split('@')[0] : ''));
   const [email, setEmail] = useState(() => user?.email || '');
   const [phone, setPhone] = useState('');
   const [location, setLocation] = useState('');
   const [headline, setHeadline] = useState('');
-  const [avatar, setAvatar] = useState('/avatar-boy.jpg');
+  const [avatar, setAvatar] = useState(DEFAULT_AVATAR);
   const [customAvatar, setCustomAvatar] = useState<string | null>(null);
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [githubUrl, setGithubUrl] = useState('');
   const [portfolioUrl, setPortfolioUrl] = useState('');
-  const [targetRoles, setTargetRoles] = useState<string[]>(['Full Stack Developer']);
-  const [experienceYears, setExperienceYears] = useState('3');
-  const [expectedSalary, setExpectedSalary] = useState('$120,000 / yr');
+  const [targetRoles, setTargetRoles] = useState<string[]>([]);
+  const [experienceYears, setExperienceYears] = useState('');
+  const [expectedSalary, setExpectedSalary] = useState('');
   const [bio, setBio] = useState('');
   const [resumeName, setResumeName] = useState('No resume uploaded');
   const [resumeDate, setResumeDate] = useState('');
-  const [skills, setSkills] = useState<string[]>(['React', 'TypeScript', 'Node.js']);
+  const [resumeUrl, setResumeUrl] = useState('');
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [skills, setSkills] = useState<string[]>([]);
   const [newSkill, setNewSkill] = useState('');
 
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleted, setDeleted] = useState(false);
   const [detailsSaved, setDetailsSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
-  const { data: profileRes, status: profileStatus } = useCandidateProfile();
+  const { data: profileRes, status: profileStatus, error: profileError } = useCandidateProfile();
   const { data: resumeRes } = useResumeHistory();
   const generatedResumes = resumeRes?.history ?? [];
 
   useEffect(() => {
     if (user?.email) {
       setEmail(user.email);
-      setName(user.email.split('@')[0]);
     }
   }, [user]);
 
@@ -89,48 +101,40 @@ export default function CandidateProfile() {
 
     const p = (profileRes?.profile ?? null) as Record<string, unknown> | null;
     if (p) {
+      if (typeof p.full_name === 'string' && p.full_name.trim()) setName(p.full_name);
+      if (typeof p.phone === 'string') setPhone(p.phone);
       if (typeof p.location === 'string') setLocation(p.location);
       if (typeof p.headline === 'string') setHeadline(p.headline);
+      if (typeof p.avatar_url === 'string') {
+        if (p.avatar_url.startsWith('data:')) {
+          setCustomAvatar(p.avatar_url);
+        } else {
+          setAvatar(p.avatar_url);
+          setCustomAvatar(null);
+        }
+      }
       if (typeof p.linkedin_url === 'string') setLinkedinUrl(p.linkedin_url);
       if (typeof p.github_url === 'string') setGithubUrl(p.github_url);
       if (typeof p.portfolio_url === 'string') setPortfolioUrl(p.portfolio_url);
       if (Array.isArray(p.skills) && p.skills.length > 0) setSkills(p.skills.map(String));
       if (Array.isArray(p.target_roles) && p.target_roles.length > 0) setTargetRoles(p.target_roles.map(String));
       if (p.years_of_experience !== undefined && p.years_of_experience !== null) setExperienceYears(String(p.years_of_experience));
-      if (typeof p.expected_salary === 'string') setExpectedSalary(p.expected_salary);
-      else if (typeof p.expected_salary === 'number') setExpectedSalary(`$${p.expected_salary.toLocaleString()} / yr`);
+      setExpectedSalary(formatExpectedSalary(p.expected_salary as number | null | undefined));
       if (typeof p.bio === 'string') setBio(p.bio);
-      if (typeof p.resume_url === 'string') {
+      if (typeof p.resume_url === 'string' && p.resume_url) {
+        setResumeUrl(p.resume_url);
         setResumeName(p.resume_url.split('/').pop() || 'candidate_resume.pdf');
         setResumeDate('Uploaded recently');
+      } else {
+        setResumeUrl('');
+        setResumeName('No resume uploaded');
+        setResumeDate('');
       }
-    } else {
-      
-      const savedName = getScopedStorage(user?.id, 'candidate_name');
-      const savedEmail = getScopedStorage(user?.id, 'candidate_email');
-      const savedPhone = getScopedStorage(user?.id, 'candidate_phone');
-      const savedLoc = getScopedStorage(user?.id, 'candidate_location');
-      const savedHeadline = getScopedStorage(user?.id, 'candidate_headline');
-      const savedLinkedin = getScopedStorage(user?.id, 'candidate_linkedin');
-      const savedGithub = getScopedStorage(user?.id, 'candidate_github');
-      const savedPortfolio = getScopedStorage(user?.id, 'candidate_portfolio');
-      const savedBio = getScopedStorage(user?.id, 'candidate_bio');
-      
-      if (savedName) setName(savedName);
-      if (savedEmail) setEmail(savedEmail);
-      if (savedPhone) setPhone(savedPhone);
-      if (savedLoc) setLocation(savedLoc);
-      if (savedHeadline) setHeadline(savedHeadline);
-      if (savedLinkedin) setLinkedinUrl(savedLinkedin);
-      if (savedGithub) setGithubUrl(savedGithub);
-      if (savedPortfolio) setPortfolioUrl(savedPortfolio);
-      if (savedBio) setBio(savedBio);
     }
-  }, [profileStatus, profileRes, user]);
+  }, [profileStatus, profileRes]);
 
-  
   const getReadinessScore = () => {
-    let score = 20; 
+    let score = 20;
     if (name.trim()) score += 10;
     if (email.trim()) score += 10;
     if (phone.trim()) score += 10;
@@ -144,52 +148,69 @@ export default function CandidateProfile() {
 
   const readiness = getReadinessScore();
 
+  const buildPayload = () => ({
+    fullName: name,
+    phone: phone || null,
+    location: location || null,
+    headline: headline || null,
+    linkedinUrl: linkedinUrl || null,
+    githubUrl: githubUrl || null,
+    portfolioUrl: portfolioUrl || null,
+    bio: bio || null,
+    skills,
+    targetRoles,
+    yearsOfExperience: parseInt(experienceYears, 10) || null,
+    expectedSalary: parseExpectedSalary(expectedSalary),
+    avatarUrl: customAvatar ?? avatar,
+  });
+
   const handleSaveDetails = async () => {
     setSaving(true);
-    setScopedStorage(user?.id, 'candidate_name', name);
-    setScopedStorage(user?.id, 'candidate_email', email);
-    setScopedStorage(user?.id, 'candidate_phone', phone);
-    setScopedStorage(user?.id, 'candidate_location', location);
-    setScopedStorage(user?.id, 'candidate_headline', headline);
-    setScopedStorage(user?.id, 'candidate_linkedin', linkedinUrl);
-    setScopedStorage(user?.id, 'candidate_github', githubUrl);
-    setScopedStorage(user?.id, 'candidate_portfolio', portfolioUrl);
-    setScopedStorage(user?.id, 'candidate_bio', bio);
+    setSaveError('');
 
     try {
-      await apiClient.post('/candidate/profile', {
-        fullName: name,
-        phone,
-        location,
-        headline,
-        skills,
-        targetRoles,
-        yearsOfExperience: parseInt(experienceYears) || 3,
-        expectedSalary: Number(expectedSalary.replace(/[^0-9]/g, '')) || undefined,
-        linkedinUrl: linkedinUrl || null,
-        githubUrl: githubUrl || null,
-        portfolioUrl: portfolioUrl || null,
-        bio,
-      }).catch(() => null);
-    } catch {}
-    
-    
-    window.dispatchEvent(new Event('profile_update'));
+      if (email.trim() && email.trim().toLowerCase() !== (user?.email || '').toLowerCase()) {
+        await apiClient.patch<{ user: { email: string } }>('/auth/email', { email: email.trim() });
+        await refreshUser();
+      }
 
-    setSaving(false);
-    setDetailsSaved(true);
-    setTimeout(() => setDetailsSaved(false), 2200);
+      const data = buildPayload();
+      const fd = new FormData();
+      fd.append('data', JSON.stringify(data));
+      if (resumeFile) fd.append('resume', resumeFile);
+
+      const res = await apiClient.post<{ profile?: Record<string, unknown> }>(
+        '/candidate/profile',
+        resumeFile ? fd : data
+      );
+
+      const savedResumeUrl = (res?.profile?.resume_url as string | undefined) ?? null;
+      if (savedResumeUrl) {
+        setResumeUrl(savedResumeUrl);
+        setResumeName(savedResumeUrl.split('/').pop() || 'candidate_resume.pdf');
+        setResumeDate('Uploaded just now');
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['profile', 'candidate'] });
+
+      setResumeFile(null);
+      setDetailsSaved(true);
+      setTimeout(() => setDetailsSaved(false), 2200);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save profile. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCustomAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCustomAvatar(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCustomAvatar(reader.result as string);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleAddSkill = (tagToAdd?: string) => {
@@ -212,19 +233,12 @@ export default function CandidateProfile() {
     }
   };
 
-  const handleDeleteData = () => {
-    setIsDeleting(true);
-    setTimeout(() => {
-      setIsDeleting(false);
-      setDeleted(true);
-    }, 1500);
-  };
-
   const handleResumeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setResumeFile(file);
       setResumeName(file.name);
-      setResumeDate('Uploaded just now');
+      setResumeDate('Ready to upload — click Save Profile Details');
     }
   };
 
@@ -240,11 +254,11 @@ export default function CandidateProfile() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12 font-sans">
-      
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <span className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 uppercase tracking-widest block mb-1">
-            Identity Center • Verified Profile
+            Identity Center • Candidate Profile
           </span>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-display">
             My Candidate Profile
@@ -272,16 +286,33 @@ export default function CandidateProfile() {
         )}
       </div>
 
+      {saveError && (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300 text-xs font-bold animate-in fade-in duration-200">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span>{saveError}</span>
+        </div>
+      )}
+
+      {profileStatus === 'error' && (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-900/60 text-amber-700 dark:text-amber-300 text-xs font-bold">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span>
+            Could not load your profile from the server
+            {(profileError as Error | null)?.message ? ` — ${(profileError as Error).message}` : ''}. You can still update it below and save.
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
+
         <div className="lg:col-span-2 space-y-6">
-          
+
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 sm:p-7 shadow-md backdrop-blur-md glass-panel space-y-6">
             <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
               <User className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
               Candidate Details &amp; Contact Info
             </h3>
-            
+
             <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-slate-200/60 dark:border-slate-800 pb-5">
               <div className="relative h-20 w-20 rounded-2xl overflow-hidden bg-gradient-to-br from-brand-500 to-amber-500 dark:from-orange-500 dark:to-amber-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-brand-500/20 dark:shadow-orange-500/20 flex-shrink-0">
                 {customAvatar ? (
@@ -314,7 +345,7 @@ export default function CandidateProfile() {
                   >
                     <Image src="/avatar-girl.jpg" alt="Avatar Girl" width={40} height={40} className="h-full w-full object-cover" unoptimized />
                   </button>
-                  
+
                   <label className="rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold px-3 py-2 cursor-pointer transition-all shadow-sm flex items-center gap-1.5">
                     <UploadCloud className="h-4 w-4 text-slate-500 dark:text-slate-400" />
                     <span>Upload Custom</span>
@@ -343,7 +374,7 @@ export default function CandidateProfile() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-1.5">
                 <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Email Address</label>
                 <div className="relative">
@@ -356,6 +387,9 @@ export default function CandidateProfile() {
                     className="w-full pl-9 pr-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
                   />
                 </div>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold">
+                  Changing your email also updates your login identity.
+                </p>
               </div>
 
               <div className="space-y-1.5">
@@ -436,7 +470,33 @@ export default function CandidateProfile() {
               </div>
             </div>
 
-            <div className="space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-200/60 dark:border-slate-800">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Years of Experience</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={60}
+                  placeholder="e.g. 3"
+                  value={experienceYears}
+                  onChange={(e) => setExperienceYears(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Expected Compensation / Yr</label>
+                <input
+                  type="text"
+                  placeholder="e.g. $120,000"
+                  value={expectedSalary}
+                  onChange={(e) => setExpectedSalary(e.target.value)}
+                  className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-2">
               <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Target Job Roles</label>
               <div className="flex flex-wrap gap-2">
                 {PRESET_ROLES.map((role) => {
@@ -463,7 +523,7 @@ export default function CandidateProfile() {
             <div className="space-y-1.5 pt-2">
               <div className="flex justify-between items-center">
                 <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Professional Bio / Summary</label>
-                <span className="text-[10px] font-semibold text-slate-400">{bio.length} / 500 chars</span>
+                <span className="text-[10px] font-semibold text-slate-400">{bio.length} / 1000 chars</span>
               </div>
               <textarea
                 rows={3}
@@ -479,7 +539,7 @@ export default function CandidateProfile() {
                 type="button"
                 onClick={handleSaveDetails}
                 disabled={saving}
-                className="px-5 py-2.5 rounded-2xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center gap-2"
+                className="px-5 py-2.5 rounded-2xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold text-xs shadow-md transition-all cursor-pointer flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <Save className="h-4 w-4" />
                 {saving ? 'Saving Profile...' : 'Save Profile Details'}
@@ -543,38 +603,13 @@ export default function CandidateProfile() {
               </div>
             </div>
           </div>
-
-          <div className="rounded-3xl border border-rose-200/80 dark:border-rose-900/60 bg-rose-50/20 dark:bg-rose-950/20 p-6 shadow-sm glass-panel space-y-4">
-            <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400">
-              <AlertTriangle className="h-4.5 w-4.5" />
-              <h3 className="text-xs font-extrabold">Data Privacy &amp; Account Purge</h3>
-            </div>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed font-semibold">
-              You have full rights to request instant deletion of your candidate profile, uploaded resumes, and AI evaluation logs.
-            </p>
-            {deleted ? (
-              <div className="text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 p-3 rounded-xl border border-rose-200 dark:border-rose-900/60">
-                Purge request submitted. Account data scheduled for deletion.
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleDeleteData}
-                disabled={isDeleting}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 px-4 py-2 text-xs font-extrabold transition-all cursor-pointer shadow-sm"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-                {isDeleting ? 'Processing purge request...' : 'Purge All Candidate Account Data'}
-              </button>
-            )}
-          </div>
         </div>
 
         <div className="space-y-6">
-          
+
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel text-center space-y-4">
             <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Profile Completeness</span>
-            
+
             <div className="relative h-28 w-28 mx-auto my-2 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                 <path
@@ -612,7 +647,7 @@ export default function CandidateProfile() {
               <span>Active Resume PDF</span>
               <span className="text-[10px] text-emerald-500 font-bold">PDF Format</span>
             </h3>
-            
+
             <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-brand-50/50 dark:bg-orange-950/40 border border-brand-100 dark:border-orange-900/60 text-brand-700 dark:text-orange-300 shadow-sm">
               <FileText className="h-6 w-6 flex-shrink-0 text-brand-600 dark:text-orange-400" />
               <div className="min-w-0 flex-grow">
@@ -623,14 +658,24 @@ export default function CandidateProfile() {
 
             <label className="w-full text-center text-xs font-extrabold text-brand-600 dark:text-orange-400 hover:text-brand-700 dark:hover:text-orange-300 transition-colors py-3 cursor-pointer block border border-dashed border-brand-200 dark:border-orange-900/60 bg-brand-50/10 dark:bg-orange-950/20 rounded-2xl shadow-inner hover:bg-brand-50/20 dark:hover:bg-orange-950/40">
               <UploadCloud className="h-5 w-5 mx-auto mb-1 text-brand-500 dark:text-orange-400" />
-              <span>Replace Resume PDF</span>
+              <span>{resumeFile ? 'Resume Selected — Save to Upload' : 'Replace Resume PDF'}</span>
               <input
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.docx,.doc,.txt"
                 onChange={handleResumeUpload}
                 className="hidden"
               />
             </label>
+            {resumeUrl && (
+              <a
+                href={resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-center text-[11px] font-bold text-brand-600 dark:text-orange-400 hover:underline"
+              >
+                View current resume
+              </a>
+            )}
           </div>
 
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">

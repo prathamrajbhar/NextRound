@@ -3,15 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldCheck, Lock, CheckCircle2, Save } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
-import { useAuthContext } from '@/contexts/AuthContext';
-import { getScopedStorageJSON, setScopedStorageJSON } from '@/lib/storage';
 
 interface CandidateSecurityPrivacyTabProps {
   onSave: () => void;
 }
 
 export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacyTabProps) {
-  const { user } = useAuthContext();
   const [visibility, setVisibility] = useState<'Verified' | 'Public' | 'Private'>('Verified');
   const [hideSalary, setHideSalary] = useState(false);
   const [twoFactor, setTwoFactor] = useState(true);
@@ -24,28 +21,19 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
   useEffect(() => {
     async function loadPrivacySettings() {
       try {
-        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings').catch(() => null);
-        if (res && res.settings) {
+        const res = await apiClient.get<{ settings?: Record<string, unknown> }>('/candidate/settings');
+        if (res?.settings) {
           const s = res.settings;
           if (typeof s.visibility === 'string' && (s.visibility === 'Verified' || s.visibility === 'Public' || s.visibility === 'Private')) {
             setVisibility(s.visibility);
           }
           if (typeof s.hideSalary === 'boolean') setHideSalary(s.hideSalary);
           if (typeof s.twoFactor === 'boolean') setTwoFactor(s.twoFactor);
-        } else {
-          const parsed = getScopedStorageJSON<Record<string, unknown>>(user?.id, 'candidate_privacy_settings');
-          if (parsed) {
-            if (typeof parsed.visibility === 'string' && (parsed.visibility === 'Verified' || parsed.visibility === 'Public' || parsed.visibility === 'Private')) {
-              setVisibility(parsed.visibility);
-            }
-            if (typeof parsed.hideSalary === 'boolean') setHideSalary(parsed.hideSalary);
-            if (typeof parsed.twoFactor === 'boolean') setTwoFactor(parsed.twoFactor);
-          }
         }
       } catch {}
     }
     loadPrivacySettings();
-  }, [user?.id]);
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
@@ -57,11 +45,6 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
           twoFactor,
         },
       });
-      setScopedStorageJSON(
-        user?.id,
-        'candidate_privacy_settings',
-        { visibility, hideSalary, twoFactor }
-      );
       onSave();
     } catch (err) {
       console.error('Failed to save privacy settings:', err);
