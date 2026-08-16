@@ -20,7 +20,7 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('Remote (Worldwide)');
-  const [salary, setSalary] = useState('$140,000 - $180,000');
+  const [salary, setSalary] = useState('₹12 LPA - ₹18 LPA');
   const [experienceLevel, setExperienceLevel] = useState('Senior (5+ yrs)');
   const [skills] = useState<string[]>(['React', 'TypeScript', 'Next.js', 'System Architecture']);
 
@@ -73,7 +73,7 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
           setTitle(data.title || '');
           setDescription(data.description || '');
           setLocation(data.location || 'Remote (Worldwide)');
-          setSalary(data.salary || '$140,000 - $180,000');
+          setSalary(data.salary || '₹12 LPA - ₹18 LPA');
           const rawExp = data.experienceLevel || 'Senior (5+ Years)';
           const normalizedExp = rawExp.includes('Senior')
             ? 'Senior (5+ Years)'
@@ -296,7 +296,7 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
                       value={salary}
                       onChange={(e) => setSalary(e.target.value)}
                       className="w-full bg-transparent text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
-                      placeholder="e.g. $140k - $180k"
+                      placeholder="e.g. ₹12 LPA - ₹18 LPA"
                     />
                   </div>
                 </div>

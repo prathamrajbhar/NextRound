@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DollarSign, Clock, TrendingUp } from '@/lib/lucide-google-icons';
+import { IndianRupee, Clock, TrendingUp } from '@/lib/lucide-google-icons';
 
 export function SavingsCalculator() {
   const [monthlyHires, setMonthlyHires] = useState(5);
@@ -51,7 +51,7 @@ export function SavingsCalculator() {
               <div className="flex justify-between items-center text-xs font-extrabold text-slate-700 dark:text-slate-350">
                 <span>Recruiter Hourly Rate</span>
                 <span className="text-brand-650 dark:text-orange-400 bg-brand-50 dark:bg-orange-950/40 border border-brand-100 dark:border-orange-900/40 px-2 py-0.5 rounded-lg">
-                  ${hourlyRate}/hr
+                  ₹{hourlyRate}/hr
                 </span>
               </div>
               <input
@@ -69,14 +69,14 @@ export function SavingsCalculator() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="p-6 rounded-2xl border border-white/60 dark:border-slate-800 bg-white/50 dark:bg-slate-950/40 relative overflow-hidden flex flex-col justify-between min-h-[140px]">
             <div className="h-8 w-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center text-emerald-650 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40">
-              <DollarSign className="h-4.5 w-4.5" />
+              <IndianRupee className="h-4.5 w-4.5" />
             </div>
             <div>
               <span className="block text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
                 Monthly Cost Savings
               </span>
               <span className="text-3xl font-extrabold text-slate-800 dark:text-emerald-450 mt-1 block">
-                ${totalMoneySaved.toLocaleString()}
+                ₹{totalMoneySaved.toLocaleString()}
               </span>
             </div>
           </div>

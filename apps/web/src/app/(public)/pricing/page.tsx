@@ -20,7 +20,7 @@ export default function PricingPage() {
   const plans = [
     {
       name: 'Free Starter Plan',
-      price: '$0',
+      price: '₹0',
       period: 'forever',
       description: 'Perfect for small teams experiencing automated technical AI recruitment.',
       popular: false,
@@ -38,7 +38,7 @@ export default function PricingPage() {
     },
     {
       name: 'Pro Recruiter',
-      price: billingCycle === 'annual' ? '$39' : '$49',
+      price: billingCycle === 'annual' ? '₹3,299' : '₹4,199',
       period: 'per month',
       description: 'Ideal for growing engineering teams automating high-volume pipelines.',
       popular: true,
@@ -57,7 +57,7 @@ export default function PricingPage() {
     },
     {
       name: 'Enterprise Scale',
-      price: billingCycle === 'annual' ? '$119' : '$149',
+      price: billingCycle === 'annual' ? '₹9,999' : '₹12,499',
       period: 'per month',
       description: 'Custom evaluation rubrics, team collaboration workflows, and multi-user roles.',
       popular: false,

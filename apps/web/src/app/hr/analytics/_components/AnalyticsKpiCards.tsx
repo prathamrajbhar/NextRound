@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Clock, TrendingUp, Award, DollarSign } from '@/lib/lucide-google-icons';
+import { Clock, TrendingUp, Award, IndianRupee } from '@/lib/lucide-google-icons';
 
 interface AnalyticsKpiCardsProps {
   data?: {
@@ -66,7 +66,7 @@ export function AnalyticsKpiCards({ data }: AnalyticsKpiCardsProps) {
           </span>
         </div>
         <div className="h-11 w-11 rounded-2xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-900/60 flex items-center justify-center text-purple-600 dark:text-purple-400 flex-shrink-0">
-          <DollarSign className="h-5.5 w-5.5" />
+          <IndianRupee className="h-5.5 w-5.5" />
         </div>
       </div>
     </div>

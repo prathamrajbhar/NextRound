@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Wallet, ShieldCheck, TrendingUp, DollarSign } from '@/lib/lucide-google-icons';
+import { Wallet, ShieldCheck, TrendingUp, IndianRupee } from '@/lib/lucide-google-icons';
 import { OnboardingStepProps } from './useCandidateOnboarding';
 import { inputCls, labelCls } from './CandidateOnboardingShell';
 
@@ -49,7 +49,7 @@ export function CompensationEligibilityStep({ form, update }: OnboardingStepProp
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-xl space-y-3">
         <label className={labelCls}>Current CTC (₹ LPA)</label>
         <div className="relative">
-          <DollarSign className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+          <IndianRupee className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
           <input
             type="number"
             min={0}

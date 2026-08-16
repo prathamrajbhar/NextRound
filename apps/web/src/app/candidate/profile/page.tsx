@@ -55,7 +55,7 @@ function parseExpectedSalary(value: string): number | null {
 
 function formatExpectedSalary(value: number | null | undefined): string {
   if (value == null || value <= 0) return '';
-  return `$${value.toLocaleString()} / yr`;
+  return `₹${value.toLocaleString()} / yr`;
 }
 
 export default function CandidateProfile() {
@@ -488,7 +488,7 @@ export default function CandidateProfile() {
                 <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Expected Compensation / Yr</label>
                 <input
                   type="text"
-                  placeholder="e.g. $120,000"
+                  placeholder="e.g. ₹1,200,000"
                   value={expectedSalary}
                   onChange={(e) => setExpectedSalary(e.target.value)}
                   className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
