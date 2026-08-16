@@ -99,8 +99,16 @@ accountRouter.patch(
       const updatedUser = await prisma.user.update({
         where: { id: user.id },
         data: { profile: { ...stored, ...updates } as any },
-        include: { organization: { select: { name: true, logo_url: true } } },
+        include: { organization: { select: { id: true, name: true, logo_url: true } } },
       });
+
+      const companyNameInput = typeof req.body.company === 'string' ? req.body.company.trim() : undefined;
+      if (companyNameInput && updatedUser.org_id) {
+        await prisma.organization.update({
+          where: { id: updatedUser.org_id },
+          data: { name: companyNameInput },
+        });
+      }
 
       return res.json({
         success: true,

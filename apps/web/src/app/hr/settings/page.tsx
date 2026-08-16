@@ -34,7 +34,7 @@ export default function HrSettingsPage() {
   const { user } = useAuthContext();
   const [activeTab, setActiveTab] = useState<'general' | 'appearance' | 'notifications' | 'team' | 'emails'>('general');
   const [savedSuccess, setSavedSuccess] = useState(false);
-  const { theme, setTheme } = useTheme();
+  const { theme, setTheme, setBrandColor: setGlobalBrandColor } = useTheme();
 
   
   const [orgName, setOrgName] = useState(DEFAULT_ORG_SETTINGS.orgName);
@@ -337,7 +337,10 @@ export default function HrSettingsPage() {
               theme={theme}
               setTheme={setTheme}
               brandColor={brandColor}
-              setBrandColor={setBrandColor}
+              setBrandColor={(color) => {
+                setBrandColor(color);
+                setGlobalBrandColor?.(color);
+              }}
               glassmorphism={glassmorphism}
               setGlassmorphism={setGlassmorphism}
               compactDensity={compactDensity}

@@ -69,6 +69,7 @@ export default function HrProfile() {
     try {
       await apiClient.patch('/hr/profile', {
         name,
+        company,
         title: role,
         linkedinUrl: linkedinUrl || null,
         avatarUrl: avatar,
