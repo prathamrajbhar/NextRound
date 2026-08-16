@@ -22,6 +22,7 @@ import {
   AnalyticsRawQuerySchema,
   AnalyticsReportSchema,
   InterviewSentimentSchema,
+  CandidateEmbeddingsSchema,
 } from '../../validators/internal.schemas';
 import * as internalService from '../../services/internal.service';
 
@@ -99,6 +100,48 @@ internalRouter.get(
   '/applications/:id/raw',
   asyncHandler(async (req, res) => {
     ok(res, await internalService.getRawApplication(req.params.id as string));
+  })
+);
+
+
+internalRouter.get(
+  '/candidates/:id/sections',
+  asyncHandler(async (req, res) => {
+    ok(res, await internalService.getCandidateSections(req.params.id as string));
+  })
+);
+
+
+internalRouter.post(
+  '/candidates/:id/embeddings',
+  validate(CandidateEmbeddingsSchema),
+  asyncHandler(async (req, res) => {
+    const data = await internalService.saveCandidateEmbeddings(req.params.id as string, req.body);
+    ok(res, data);
+  })
+);
+
+
+internalRouter.delete(
+  '/candidates/:id/social/:source',
+  asyncHandler(async (req, res) => {
+    const data = await internalService.deleteCandidateSocialSource(
+      req.params.id as string,
+      req.params.source as 'github' | 'linkedin'
+    );
+    ok(res, data);
+  })
+);
+
+
+internalRouter.get(
+  '/candidates/:id/context',
+  asyncHandler(async (req, res) => {
+    const jobId = req.query.jobId as string | undefined;
+    if (!jobId) {
+      throw badRequest('jobId is required');
+    }
+    ok(res, await internalService.getCandidateInterviewContextInternal(req.params.id as string, jobId));
   })
 );
 

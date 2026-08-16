@@ -74,6 +74,28 @@ export const CandidateProfileSchema = z.object({
   proudProject: z.string().optional().nullable(),
   workValues: z.array(z.string()).default([]),
   availability: z.record(z.string(), z.any()).optional(),
+  dataConsent: z.boolean().optional().default(false),
+  consentAt: z.string().datetime().optional().nullable(),
+});
+
+export const SocialSyncRequestSchema = z.object({
+  githubUrl: z.string().optional().nullable(),
+  linkedinUrl: z.string().optional().nullable(),
+  githubUsername: z.string().optional().nullable(),
+  linkedinUsername: z.string().optional().nullable(),
+  dataConsent: z.boolean().optional().default(false),
+});
+
+export const CandidateEmbeddingSectionSchema = z.object({
+  sourceType: z.enum(['resume', 'github', 'linkedin', 'profile']),
+  section: z.string().min(1),
+  content: z.string().min(1),
+  contentHash: z.string().min(1),
+  embedding: z.array(z.number()).length(768),
+});
+
+export const CandidateEmbeddingBatchSchema = z.object({
+  sections: z.array(CandidateEmbeddingSectionSchema).max(50),
 });
 
 export const JobCreateSchema = z.object({
@@ -436,6 +458,8 @@ export type OrganizationSettingsInput = z.infer<typeof OrganizationSettingsSchem
 export type MemberInviteInput = z.infer<typeof MemberInviteSchema>;
 export type CandidateProfileInput = z.infer<typeof CandidateProfileSchema>;
 export type CandidateProfileUpdateInput = z.infer<typeof CandidateProfileUpdateSchema>;
+export type SocialSyncRequestInput = z.infer<typeof SocialSyncRequestSchema>;
+export type CandidateEmbeddingBatchInput = z.infer<typeof CandidateEmbeddingBatchSchema>;
 export type JobCreateInput = z.infer<typeof JobCreateSchema>;
 export type JobUpdateInput = z.infer<typeof JobUpdateSchema>;
 export type ApplicationCreateInput = z.infer<typeof ApplicationCreateSchema>;

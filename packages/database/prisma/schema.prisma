@@ -85,6 +85,19 @@ enum AgentStatus {
   failed
 }
 
+enum SocialSource {
+  github
+  linkedin
+}
+
+enum SocialSyncStatus {
+  pending
+  synced
+  failed
+  not_found
+  removed
+}
+
 model User {
   id                 String    @id @default(uuid())
   email              String    @unique
@@ -182,6 +195,8 @@ model CandidateProfile {
 
   settings           Json                       @default("{}")
   resume_embedding   Unsupported("vector(768)")?
+  data_consent       Boolean                    @default(false)
+  data_consent_at    DateTime?
   created_at         DateTime                   @default(now())
 
   user          User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
@@ -189,8 +204,46 @@ model CandidateProfile {
   mock_sessions MockSession[]
   talent_bookmarks TalentBookmark[]
   proctoring_sessions ProctoringSession[]
+  social_syncs  SocialProfileSync[]
+  candidate_embeddings CandidateEmbedding[]
 
   @@index([user_id])
+}
+
+model SocialProfileSync {
+  id              String          @id @default(uuid())
+  candidate_id    String
+  source          SocialSource
+  username        String
+  status          SocialSyncStatus @default(pending)
+  raw_data        Json?
+  normalized_data Json?
+  error           String?         @db.Text
+  synced_at       DateTime?
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+
+  candidate CandidateProfile @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@unique([candidate_id, source])
+  @@index([candidate_id])
+}
+
+model CandidateEmbedding {
+  id           String  @id @default(uuid())
+  candidate_id String
+  source_type  String
+  section      String
+  content      String  @db.Text
+  embedding    Unsupported("vector(768)")
+  content_hash String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  candidate CandidateProfile @relation(fields: [candidate_id], references: [id], onDelete: Cascade)
+
+  @@unique([candidate_id, source_type, section])
+  @@index([candidate_id])
 }
 
 model Application {

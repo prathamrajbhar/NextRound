@@ -40,6 +40,8 @@ export function useInterviewSession({
   const transcriptData = useRef<{ question: string; answer: string; feedback: string }[]>([]);
   const messagesRef = useRef<Message[]>([]);
   const lastAiQuestion = useRef('');
+  const candidateResumeRef = useRef('');
+  const jobTitleRef = useRef(role);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -67,6 +69,14 @@ export function useInterviewSession({
       try {
         await apiClient.post(`/interviews/${interviewId}/consent`, { consent: true });
         await apiClient.post(`/interviews/${interviewId}/session-token`);
+      } catch {}
+      try {
+        const ctx = await apiClient.get<{
+          context?: { job?: { title?: string } };
+          contextText?: string;
+        }>(`/interviews/${interviewId}/context`);
+        if (ctx?.contextText) candidateResumeRef.current = ctx.contextText;
+        if (ctx?.context?.job?.title) jobTitleRef.current = ctx.context.job.title;
       } catch {}
     }
 
@@ -107,7 +117,8 @@ export function useInterviewSession({
           transcript: text,
           turnNumber: messagesRef.current.length + 1,
           stage: phase === 'Introduction' ? 'intro' : phase === 'Core Vetting' ? 'technical' : 'closing',
-          jobTitle: role,
+          jobTitle: jobTitleRef.current || role,
+          candidateResume: candidateResumeRef.current || undefined,
           conversationHistory: messages.map(m => ({ speaker: m.role, text: m.content })),
         }),
       });

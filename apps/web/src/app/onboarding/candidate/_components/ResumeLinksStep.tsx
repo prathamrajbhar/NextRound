@@ -38,6 +38,10 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
   const [syncError, setSyncError] = useState<string | null>(null);
 
   const handleSyncGithub = async () => {
+    if (!form.dataConsent) {
+      setSyncError('Please go back and consent to profile data usage before syncing social profiles.');
+      return;
+    }
     if (!form.githubUrl.trim()) {
       setSyncError('Please enter a GitHub Profile URL first.');
       return;
@@ -51,7 +55,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
       const social = await apiClient.post<{
         github?: { publicRepos?: number; topLanguages?: unknown[] };
         extractedSkills?: string[];
-      } | null>('/candidate/sync-social', { githubUrl: form.githubUrl.trim() });
+      } | null>('/candidate/sync-social', { githubUrl: form.githubUrl.trim(), dataConsent: true });
 
       if (social) {
         if (mergeSocialData) {
@@ -71,6 +75,10 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
   };
 
   const handleSyncLinkedin = async () => {
+    if (!form.dataConsent) {
+      setSyncError('Please go back and consent to profile data usage before syncing social profiles.');
+      return;
+    }
     if (!form.linkedinUrl.trim()) {
       setSyncError('Please enter a LinkedIn Profile URL first.');
       return;
@@ -83,7 +91,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
     try {
       const social = await apiClient.post<{
         extractedSkills?: string[];
-      } | null>('/candidate/sync-social', { linkedinUrl: form.linkedinUrl.trim() });
+      } | null>('/candidate/sync-social', { linkedinUrl: form.linkedinUrl.trim(), dataConsent: true });
 
       if (social) {
         if (mergeSocialData) {
@@ -160,7 +168,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
           <button
             type="button"
             onClick={handleSyncGithub}
-            disabled={syncingGithub || !form.githubUrl.trim()}
+            disabled={syncingGithub || !form.dataConsent || !form.githubUrl.trim()}
             className="px-4 py-2.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md shrink-0 cursor-pointer disabled:cursor-not-allowed"
           >
             {syncingGithub ? (
@@ -202,7 +210,7 @@ export function ResumeLinksStep({ form, update, mergeSocialData }: OnboardingSte
           <button
             type="button"
             onClick={handleSyncLinkedin}
-            disabled={syncingLinkedin || !form.linkedinUrl.trim()}
+            disabled={syncingLinkedin || !form.dataConsent || !form.linkedinUrl.trim()}
             className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs rounded-xl flex items-center gap-2 transition-all shadow-md shrink-0 cursor-pointer disabled:cursor-not-allowed"
           >
             {syncingLinkedin ? (

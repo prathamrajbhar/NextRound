@@ -38,6 +38,16 @@ export type Job = Prisma.JobModel
  */
 export type CandidateProfile = Prisma.CandidateProfileModel
 /**
+ * Model SocialProfileSync
+ * 
+ */
+export type SocialProfileSync = Prisma.SocialProfileSyncModel
+/**
+ * Model CandidateEmbedding
+ * 
+ */
+export type CandidateEmbedding = Prisma.CandidateEmbeddingModel
+/**
  * Model Application
  * 
  */
