@@ -159,7 +159,7 @@ export default function CandidateProfile() {
     bio: bio || null,
     skills,
     targetRoles,
-    yearsOfExperience: parseInt(experienceYears, 10) || null,
+    yearsOfExperience: experienceYears.trim() !== '' && !isNaN(Number(experienceYears)) ? Number(experienceYears) : null,
     expectedSalary: parseExpectedSalary(expectedSalary),
     avatarUrl: customAvatar ?? avatar,
   });

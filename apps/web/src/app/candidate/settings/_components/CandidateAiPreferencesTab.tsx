@@ -27,6 +27,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
   const [camTesting, setCamTesting] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     async function loadAiSettings() {
@@ -86,12 +87,52 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
   }, [micTesting, start]);
 
   const handleTestAudio = () => {
-    setIsPlayingAudio(true);
-    setTimeout(() => setIsPlayingAudio(false), 2500);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      if (isPlayingAudio) {
+        window.speechSynthesis.cancel();
+        setIsPlayingAudio(false);
+      } else {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(
+          `Hello! This is a sample of the ${selectedVoice} voice. I will be conducting your NextRound AI interview.`
+        );
+        
+        // Try to match voice properties based on choice
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+          const lowerVoiceName = selectedVoice.toLowerCase();
+          const matchedVoice = voices.find(v => {
+            const name = v.name.toLowerCase();
+            return name.includes(lowerVoiceName) || 
+                   (lowerVoiceName === 'serena' && (name.includes('google us english') || name.includes('samantha') || name.includes('zira'))) ||
+                   (lowerVoiceName === 'alloy' && (name.includes('natural') || name.includes('english') || name.includes('david'))) ||
+                   (lowerVoiceName === 'echo' && (name.includes('microsoft david') || name.includes('daniel') || name.includes('male'))) ||
+                   (lowerVoiceName === 'nova' && (name.includes('hazel') || name.includes('female') || name.includes('google'))) ||
+                   (lowerVoiceName === 'onyx' && (name.includes('deep') || name.includes('premium') || name.includes('male')));
+          });
+          if (matchedVoice) {
+            utterance.voice = matchedVoice;
+          }
+        }
+
+        utterance.onend = () => {
+          setIsPlayingAudio(false);
+        };
+        utterance.onerror = () => {
+          setIsPlayingAudio(false);
+        };
+        setIsPlayingAudio(true);
+        window.speechSynthesis.speak(utterance);
+      }
+    } else {
+      setIsPlayingAudio(true);
+      setTimeout(() => setIsPlayingAudio(false), 2500);
+    }
   };
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError('');
     try {
       await apiClient.patch('/candidate/settings', {
         defaultVoice: selectedVoice,
@@ -99,7 +140,9 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         autoSubmitTranscript,
       });
       onSave();
-    } catch {} finally {
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save AI preferences.');
+    } finally {
       setSaving(false);
     }
   };
@@ -286,7 +329,12 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-3">
+        {saveError && (
+          <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-900/60">
+            ⚠️ {saveError}
+          </span>
+        )}
         <button
           type="button"
           onClick={handleSave}

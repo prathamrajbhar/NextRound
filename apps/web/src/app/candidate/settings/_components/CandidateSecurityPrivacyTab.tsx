@@ -17,6 +17,9 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
   const [confirmPass, setConfirmPass] = useState('');
   const [passUpdated, setPassUpdated] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [passError, setPassError] = useState('');
+  const [updatingPass, setUpdatingPass] = useState(false);
 
   useEffect(() => {
     async function loadPrivacySettings() {
@@ -37,31 +40,44 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError('');
     try {
       await apiClient.patch('/candidate/settings', {
-        settings: {
-          visibility,
-          hideSalary,
-          twoFactor,
-        },
+        visibility,
+        hideSalary,
+        twoFactor,
       });
       onSave();
     } catch (err) {
-      console.error('Failed to save privacy settings:', err);
+      setSaveError(err instanceof Error ? err.message : 'Failed to save settings.');
     } finally {
       setSaving(false);
     }
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentPass || !newPass || newPass !== confirmPass) return;
 
-    setPassUpdated(true);
-    setCurrentPass('');
-    setNewPass('');
-    setConfirmPass('');
-    setTimeout(() => setPassUpdated(false), 2500);
+    setUpdatingPass(true);
+    setPassError('');
+    setPassUpdated(false);
+
+    try {
+      await apiClient.patch('/auth/change-password', {
+        currentPassword: currentPass,
+        newPassword: newPass,
+      });
+      setPassUpdated(true);
+      setCurrentPass('');
+      setNewPass('');
+      setConfirmPass('');
+      setTimeout(() => setPassUpdated(false), 2500);
+    } catch (err) {
+      setPassError(err instanceof Error ? err.message : 'Failed to change password.');
+    } finally {
+      setUpdatingPass(false);
+    }
   };
 
   return (
@@ -161,11 +177,18 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
         <form onSubmit={handlePasswordSubmit} className="space-y-4 pt-1">
           <div className="flex justify-between items-center">
             <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Update Account Password</span>
-            {passUpdated && (
-              <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-900 flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3" /> Password Updated!
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {passUpdated && (
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-900 flex items-center gap-1">
+                  <CheckCircle2 className="h-3 w-3" /> Password Updated!
+                </span>
+              )}
+              {passError && (
+                <span className="text-[10px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-900/60">
+                  ⚠️ {passError}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -195,16 +218,21 @@ export function CandidateSecurityPrivacyTab({ onSave }: CandidateSecurityPrivacy
           <div className="flex justify-end">
             <button
               type="submit"
-              disabled={!newPass || newPass !== confirmPass}
-              className="px-4 py-2 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 disabled:opacity-50 text-white font-extrabold text-xs shadow-sm transition-all cursor-pointer"
+              disabled={updatingPass || !newPass || newPass !== confirmPass}
+              className="px-4 py-2 rounded-xl bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 dark:hover:bg-slate-600 disabled:opacity-50 text-white font-extrabold text-xs shadow-sm transition-all cursor-pointer flex items-center gap-2"
             >
-              Update Password
+              {updatingPass ? 'Updating...' : 'Update Password'}
             </button>
           </div>
         </form>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-3">
+        {saveError && (
+          <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-900/60">
+            ⚠️ {saveError}
+          </span>
+        )}
         <button
           type="button"
           onClick={handleSave}

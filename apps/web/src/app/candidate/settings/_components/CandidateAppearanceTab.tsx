@@ -14,6 +14,7 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
   const [glassmorphism, setGlassmorphism] = useState(true);
   const [compactDensity, setCompactDensity] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     async function loadUiSettings() {
@@ -23,14 +24,18 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
           const s = res.settings;
           if (typeof s.glassmorphism === 'boolean') setGlassmorphism(s.glassmorphism);
           if (typeof s.compactDensity === 'boolean') setCompactDensity(s.compactDensity);
+          if (typeof s.theme === 'string' && (s.theme === 'light' || s.theme === 'dark')) {
+            setTheme(s.theme as 'light' | 'dark');
+          }
         }
       } catch {}
     }
     loadUiSettings();
-  }, []);
+  }, [setTheme]);
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError('');
 
     try {
       await apiClient.patch('/candidate/settings', {
@@ -38,10 +43,12 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
         glassmorphism,
         compactDensity,
       });
-    } catch {}
-
-    setSaving(false);
-    onSave();
+      onSave();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Failed to save appearance preferences.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -145,7 +152,12 @@ export function CandidateAppearanceTab({ onSave }: CandidateAppearanceTabProps) 
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end items-center gap-3">
+        {saveError && (
+          <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-900/60">
+            ⚠️ {saveError}
+          </span>
+        )}
         <button
           type="button"
           onClick={handleSave}
