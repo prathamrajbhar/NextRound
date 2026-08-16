@@ -7,7 +7,8 @@ interface UseLocalMediaStreamOptions {
   videoRef: React.RefObject<HTMLVideoElement | null>;
   camActive: boolean;
   micActive: boolean;
-  
+  selectedVideoDeviceId?: string;
+  selectedAudioDeviceId?: string;
   enabled?: boolean;
   onStreamCreated?: (stream: MediaStream) => void;
 }
@@ -24,6 +25,8 @@ export function useLocalMediaStream({
   videoRef,
   camActive,
   micActive,
+  selectedVideoDeviceId,
+  selectedAudioDeviceId,
   enabled = true,
   onStreamCreated,
 }: UseLocalMediaStreamOptions) {
@@ -83,9 +86,23 @@ export function useLocalMediaStream({
           return;
         }
 
+        const videoConstraints = camActive
+          ? {
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+              ...(selectedVideoDeviceId ? { deviceId: { exact: selectedVideoDeviceId } } : {}),
+            }
+          : false;
+
+        const audioConstraints = micActive
+          ? {
+              ...(selectedAudioDeviceId ? { deviceId: { exact: selectedAudioDeviceId } } : {}),
+            }
+          : false;
+
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: camActive ? { width: { ideal: 1280 }, height: { ideal: 720 } } : false,
-          audio: micActive,
+          video: videoConstraints,
+          audio: audioConstraints,
         });
 
         
@@ -141,7 +158,15 @@ export function useLocalMediaStream({
     return () => {
       stopLocalStream();
     };
-  }, [camActive, micActive, enabled, stopLocalStream, videoRef]);
+  }, [
+    camActive,
+    micActive,
+    enabled,
+    stopLocalStream,
+    videoRef,
+    selectedVideoDeviceId,
+    selectedAudioDeviceId,
+  ]);
 
   
   
