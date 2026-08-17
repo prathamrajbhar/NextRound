@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/apiClient';
 import {
   Activity,
   ArrowRight,
@@ -74,7 +75,39 @@ export default function LoginPage() {
 
     if (result.success && result.user) {
       toast({ title: 'Signed in successfully', variant: 'success' });
-      router.push(result.user.role === 'candidate' ? '/candidate/dashboard' : '/hr/dashboard');
+      
+      if (result.user.role === 'candidate') {
+        try {
+          const profileData = await apiClient.get<{ profile?: any }>('/candidate/profile');
+          const profile = profileData?.profile;
+          const isProfileIncomplete = !profile || !profile.full_name || !profile.data_consent;
+          if (isProfileIncomplete) {
+            router.push('/onboarding/candidate');
+            return;
+          }
+
+          // Check if there are accepted applications with incomplete tasks
+          const apps = await apiClient.get<any[]>('/candidate/applications');
+          const acceptedApp = apps?.find(app => app.status === 'accepted');
+          if (acceptedApp) {
+            const isCompleted = localStorage.getItem('onboarding_completed_' + acceptedApp.id) === 'true';
+            if (!isCompleted) {
+              router.push(`/candidate/applications/${acceptedApp.id}/onboarding`);
+              return;
+            }
+          }
+        } catch (err) {
+          router.push('/onboarding/candidate');
+          return;
+        }
+        router.push('/candidate/dashboard');
+      } else {
+        if (!result.user.org_id) {
+          router.push('/onboarding/company');
+          return;
+        }
+        router.push('/hr/dashboard');
+      }
     } else {
       setFormError(result.error || 'Unable to sign in. Please try again.');
     }
