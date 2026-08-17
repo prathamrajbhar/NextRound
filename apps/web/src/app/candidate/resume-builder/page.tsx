@@ -9,6 +9,9 @@ import { useResumeVoiceSession } from './_hooks/useResumeVoiceSession';
 import { ATSResumeData } from '@/types';
 import { apiClient } from '@/lib/apiClient';
 
+import { Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+
 interface RawResumeData {
   name?: string;
   title?: string;
@@ -72,22 +75,6 @@ interface RawResumeData {
 }
 import { Sparkles, Loader2, AlertCircle, RotateCcw } from '@/lib/lucide-google-icons';
 
-// inside CandidateResumeBuilder component:
-  const handleRetryGeneration = async () => {
-    if (!sessionId) return;
-    setResumeStatus('generating');
-    try {
-      await apiClient.post(`/resume-builder/${sessionId}/end`, {
-        transcript: conversationHistory.map((h) => ({
-          speaker: h.role,
-          text: h.content,
-        })),
-      });
-    } catch (err) {
-      console.warn('Retry end-call request warning:', err);
-    }
-  };
-
 const DEFAULT_GENERATED_RESUME: ATSResumeData = {
   name: '',
   title: '',
@@ -110,7 +97,10 @@ const DEFAULT_GENERATED_RESUME: ATSResumeData = {
 type Stage = 'setup' | 'interview' | 'resume';
 type ResumeStatus = 'idle' | 'generating' | 'completed' | 'error';
 
-export default function AIResumeBuilderPage() {
+function ResumeBuilderContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
   const [stage, setStage] = useState<Stage>('setup');
 
   const [targetRole, setTargetRole] = useState('Senior Full Stack Engineer');
@@ -151,6 +141,34 @@ export default function AIResumeBuilderPage() {
       setResumeStatus('generating');
     },
   });
+
+  // URL Syncing
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const activeSession = sessionId || searchParams.get('sessionId');
+    if (stage === 'setup') {
+      if (window.location.search) {
+        window.history.replaceState(null, '', '/candidate/resume-builder');
+      }
+    } else if (activeSession) {
+      const search = `?sessionId=${activeSession}&stage=${stage}`;
+      if (window.location.search !== search) {
+        window.history.pushState(null, '', `/candidate/resume-builder${search}`);
+      }
+    }
+  }, [stage, sessionId, searchParams]);
+
+  // Initial Mount Deep-Link Rehydration
+  useEffect(() => {
+    const sessionParam = searchParams.get('sessionId');
+    const stageParam = searchParams.get('stage') as Stage | null;
+    if (sessionParam && stageParam) {
+      setStage(stageParam);
+      if (stageParam === 'resume' && resumeStatus === 'idle') {
+        setResumeStatus('generating');
+      }
+    }
+  }, []);
 
   const lastAiMessage = [...conversationHistory]
     .reverse()
@@ -400,6 +418,20 @@ export default function AIResumeBuilderPage() {
         </>
       )}
     </div>
+  );
+}
+
+export default function AIResumeBuilderPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex-1 flex flex-col items-center justify-center space-y-4 min-h-[500px]">
+          <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
+        </div>
+      }
+    >
+      <ResumeBuilderContent />
+    </Suspense>
   );
 }
 
