@@ -256,6 +256,12 @@ export default function AIResumeBuilderPage() {
     endCall();
   };
 
+  const handleCancelCall = () => {
+    setIsTimerRunning(false);
+    endCall();
+    setStage('setup');
+  };
+
   const handleCopyResumeText = () => {
     const fullText = `${resumeData.name}\n${resumeData.title} | ${resumeData.email} | ${resumeData.phone}\n${resumeData.location}\n\nSUMMARY\n${resumeData.summary}\n\nEXPERIENCE\n` +
       resumeData.experience.map(e => `${e.role} - ${e.company} (${e.period})\n` + e.highlights.map(h => `• ${h}`).join('\n')).join('\n\n');
@@ -297,6 +303,7 @@ export default function AIResumeBuilderPage() {
           onReplayAudio={replayLastAudio}
           onSubmitResponse={submitResponse}
           onEndCall={handleEndCall}
+          onCancelCall={handleCancelCall}
         />
       )}
 

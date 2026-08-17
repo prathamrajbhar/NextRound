@@ -16,6 +16,7 @@ import {
   Volume2,
   MessageSquare,
   X,
+  ArrowLeft,
 } from '@/lib/lucide-google-icons';
 
 interface ConversationTurn {
@@ -44,6 +45,7 @@ interface InterviewStageProps {
   onReplayAudio?: () => void;
   onSubmitResponse?: (text: string) => void;
   onEndCall: () => void;
+  onCancelCall?: () => void;
 }
 
 export function InterviewStage({
@@ -66,6 +68,7 @@ export function InterviewStage({
   onReplayAudio,
   onSubmitResponse,
   onEndCall,
+  onCancelCall,
 }: InterviewStageProps) {
   const [textInput, setTextInput] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -94,6 +97,18 @@ export function InterviewStage({
       {/* Top Header */}
       <div className="flex items-center justify-between border-b border-white/10 pb-4">
         <div className="flex items-center gap-3.5">
+          {onCancelCall && (
+            <button
+              type="button"
+              onClick={onCancelCall}
+              className="p-2 rounded-xl bg-slate-900/80 border border-white/10 text-slate-300 hover:text-white hover:bg-slate-800 transition-all cursor-pointer backdrop-blur-md flex items-center gap-1.5 text-xs font-semibold shadow-sm active:scale-95 mr-1"
+              title="Cancel interview & return to setup"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Back</span>
+            </button>
+          )}
+
           <div className="h-10 w-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 flex-shrink-0 shadow-inner">
             <Bot className="h-5 w-5" />
           </div>
@@ -413,6 +428,18 @@ export function InterviewStage({
         >
           <MessageSquare className="h-4 w-4" />
         </button>
+
+        {onCancelCall && (
+          <button
+            type="button"
+            onClick={onCancelCall}
+            className="p-2.5 rounded-xl border border-rose-500/20 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 active:scale-95"
+            title="Cancel Call & Exit"
+          >
+            <X className="h-4 w-4" />
+            <span className="hidden sm:inline">Cancel</span>
+          </button>
+        )}
 
         <div className="h-4 w-px bg-white/10 mx-1" />
 
