@@ -9,7 +9,20 @@ class Settings(BaseSettings):
     environment: str = Field("development", validation_alias="AI_ENVIRONMENT")
     internal_service_secret: str = "internal_secret_key_change_in_production"
     api_base_url: str = "http://localhost:4000/api/v1"
-    redis_url: str = "redis://localhost:6379"
+    redis_provider: str = Field("local", validation_alias="REDIS_PROVIDER")
+    local_redis_url: str = Field("redis://localhost:6379", validation_alias="LOCAL_REDIS_URL")
+    upstash_redis_url: str = Field("", validation_alias="UPSTASH_REDIS_URL")
+    redis_url_raw: str = Field("redis://localhost:6379", validation_alias="REDIS_URL")
+
+    @property
+    def redis_url(self) -> str:
+        provider = (self.redis_provider or "local").lower()
+        if provider == "upstash" and self.upstash_redis_url:
+            return self.upstash_redis_url
+        if provider == "local" and self.local_redis_url:
+            return self.local_redis_url
+        return self.redis_url_raw or "redis://localhost:6379"
+
     llm_provider: str = "gemini"
     gemini_api_key: str = ""
     groq_api_key: str = ""

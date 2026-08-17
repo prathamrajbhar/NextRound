@@ -109,18 +109,13 @@ class AgentWorkerManager:
                         else:
                             await handler(payload)
                 else:
-                    await asyncio.sleep(5)
+                    await asyncio.sleep(2)
 
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                err_msg = str(e)
-                if "max requests limit" in err_msg.lower() or "limit exceeded" in err_msg.lower():
-                    logger.warning(f"Upstash Redis request limit reached for queue {queue_name}. Pausing polling for 60s.")
-                    await asyncio.sleep(60)
-                else:
-                    logger.error(f"Error in BullMQ worker loop for queue {queue_name}: {e}")
-                    await asyncio.sleep(5)
+                logger.error(f"Error in BullMQ worker loop for queue {queue_name}: {e}")
+                await asyncio.sleep(3)
 
     async def stop_workers(self):
         self.running = False

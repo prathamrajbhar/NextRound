@@ -2,7 +2,11 @@ import { Queue, type JobsOptions } from 'bullmq';
 import Redis from 'ioredis';
 import { env } from './env';
 
-const redisUrlString = env('REDIS_URL');
+const provider = (process.env.REDIS_PROVIDER || 'local').toLowerCase();
+const redisUrlString =
+  provider === 'upstash'
+    ? process.env.UPSTASH_REDIS_URL || process.env.REDIS_URL || 'redis://localhost:6379'
+    : process.env.LOCAL_REDIS_URL || process.env.REDIS_URL || 'redis://localhost:6379';
 
 const connection = new Redis(redisUrlString, {
   maxRetriesPerRequest: null,
