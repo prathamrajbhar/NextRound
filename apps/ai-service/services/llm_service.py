@@ -1,15 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
 import json
 import logging
 from typing import Any, List, Optional
@@ -23,7 +11,6 @@ _client_initialized = False
 
 _groq_client: Optional[Any] = None
 _groq_client_initialized = False
-
 
 def get_client() -> Optional[Any]:
     """Return a lazily-initialized Google GenAI client, or None if unavailable."""
@@ -41,7 +28,6 @@ def get_client() -> Optional[Any]:
         _client = None
     return _client
 
-
 def get_groq_client() -> Optional[Any]:
     """Return a lazily-initialized Groq client, or None if unavailable."""
     global _groq_client, _groq_client_initialized
@@ -57,7 +43,6 @@ def get_groq_client() -> Optional[Any]:
         logger.warning(f"Failed to initialize Groq client: {e}")
         _groq_client = None
     return _groq_client
-
 
 def _generate_text_ollama(prompt: str) -> Optional[str]:
     """Generate text using Ollama's configured instance as a fallback."""
@@ -84,7 +69,6 @@ def _generate_text_ollama(prompt: str) -> Optional[str]:
         logger.error(f"Ollama generate_content failed: {e}")
         raise
 
-
 def _generate_text_groq(prompt: str) -> Optional[str]:
     """Generate text using Groq API."""
     client = get_groq_client()
@@ -103,7 +87,6 @@ def _generate_text_groq(prompt: str) -> Optional[str]:
         logger.error(f"Groq generate_content failed: {e}")
         raise
 
-
 def generate_text(prompt: str, force_provider: Optional[str] = None) -> Optional[str]:
     """Generate a text completion from the configured provider/model.
 
@@ -115,10 +98,10 @@ def generate_text(prompt: str, force_provider: Optional[str] = None) -> Optional
         return None
 
     provider = (force_provider or settings.llm_provider).lower()
-    
+
     if provider == "groq":
         return _generate_text_groq(prompt)
-        
+
     elif provider == "gemini":
         client = get_client()
         if not client:
@@ -137,58 +120,67 @@ def generate_text(prompt: str, force_provider: Optional[str] = None) -> Optional
 
     return None
 
-
 def extract_json_object(text: str) -> Optional[dict]:
-    """Extract the first JSON object ({...}) from an LLM response using bracket matching.
-    
-    More efficient than greedy regex for large responses. Matches opening {
-    and counts brackets until balance is reached.
+    """Extract the first JSON object ({...}) from an LLM response.
+
+    Bracket matching is string-aware: braces inside JSON string literals are
+    ignored, so content like {"response": "use braces {} in prose"} parses
+    correctly instead of truncating at the first inner brace.
     """
     if not text:
         return None
-    
+
     start = text.find('{')
     if start == -1:
         return None
-    
-    depth = 0
-    for i, char in enumerate(text[start:], start):
-        if char == '{':
-            depth += 1
-        elif char == '}':
-            depth -= 1
-            if depth == 0:
-                try:
-                    data = json.loads(text[start:i+1])
-                    return data if isinstance(data, dict) else None
-                except (ValueError, TypeError):
-                    return None
-    return None
 
+    return _extract_balanced(text, start, '{', '}', dict)
 
 def extract_json_array(text: str) -> Optional[List[Any]]:
-    """Extract the first JSON array ([...]) from an LLM response using bracket matching.
-    
-    More efficient than greedy regex for large responses. Matches opening [
-    and counts brackets until balance is reached.
+    """Extract the first JSON array ([...]) from an LLM response.
+
+    Bracket matching is string-aware: brackets inside JSON string literals are
+    ignored, so arrays containing text like "[we handle [nested] cases]" parse
+    correctly instead of truncating at the first inner bracket.
     """
     if not text:
         return None
-    
+
     start = text.find('[')
     if start == -1:
         return None
-    
+
+    return _extract_balanced(text, start, '[', ']', list)
+
+def _extract_balanced(text: str, start: int, open_ch: str, close_ch: str, target_type) -> Optional[Any]:
+    """Find the first balanced open/close region starting at ``start`` and parse it.
+
+    Skips delimiters that appear inside quoted strings, honoring backslash
+    escapes, so LLM prose containing JSON-like delimiters never breaks parsing.
+    """
     depth = 0
-    for i, char in enumerate(text[start:], start):
-        if char == '[':
+    in_string = False
+    escaped = False
+    for i in range(start, len(text)):
+        char = text[i]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == '\\':
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char == open_ch:
             depth += 1
-        elif char == ']':
+        elif char == close_ch:
             depth -= 1
             if depth == 0:
                 try:
-                    data = json.loads(text[start:i+1])
-                    return data if isinstance(data, list) else None
+                    data = json.loads(text[start:i + 1])
+                    return data if isinstance(data, target_type) else None
                 except (ValueError, TypeError):
                     return None
     return None

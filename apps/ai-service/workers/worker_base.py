@@ -1,20 +1,5 @@
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import logging
 from typing import Awaitable, Callable, Dict, Optional
 
@@ -22,10 +7,7 @@ from core.http_client import callback_client
 
 logger = logging.getLogger("worker_base")
 
-
-
 WorkFn = Callable[[], Awaitable[Dict]]
-
 
 class AgentJobSkip(Exception):
     """Raised by a work function to abort a job without recording a failure.
@@ -33,7 +15,6 @@ class AgentJobSkip(Exception):
     Use for expected, non-fatal outcomes (e.g. an agent produced no scorecard)
     that currently exit the worker without posting a ``failed`` audit record.
     """
-
 
 async def fetch_internal(endpoint: str) -> dict:
     """GET a payload from the Express internal API, unwrapping the data envelope.
@@ -43,7 +24,6 @@ async def fetch_internal(endpoint: str) -> dict:
     response = await callback_client.get(endpoint)
     payload = response.json()
     return payload.get("data", {}) if isinstance(payload, dict) else {}
-
 
 async def run_agent_job(
     agent_name: str,
@@ -94,7 +74,6 @@ async def run_agent_job(
         except Exception:
             pass
         return False
-
 
 async def post_internal(method: str, endpoint: str, payload: dict, *, context: str) -> bool:
     """POST/PATCH a payload to the internal API; return True on any 2xx.

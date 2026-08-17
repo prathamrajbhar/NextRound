@@ -9,7 +9,6 @@
     "clean": "rm -rf dist",
     "generate": "prisma generate",
     "lint": "tsc --noEmit",
-    "test": "echo 'No tests in database package'",
     "migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "seed": "prisma db seed"

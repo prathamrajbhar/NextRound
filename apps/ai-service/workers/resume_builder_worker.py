@@ -6,8 +6,6 @@ from workers.worker_base import post_internal
 
 logger = logging.getLogger("resume_builder_worker")
 
-
-
 async def process_resume_builder_job(job_data: dict) -> bool:
     """
     Process AI Voice Resume Builder job:
@@ -30,15 +28,19 @@ async def process_resume_builder_job(job_data: dict) -> bool:
     transcript = job_data.get("transcript")
     if not transcript:
         logger.error(f"No transcript available for resume builder session {session_id}. Failing without a fabricated resume.")
+        await _mark_failed(session_id)
         return False
 
     target_role = job_data.get("targetRole")
     target_company = job_data.get("targetCompany")
 
+    role_json = json.dumps(str(target_role or ""))
+    transcript_json = json.dumps(transcript, ensure_ascii=False)
+
     prompt = (
         f"Extract and generate an ATS-optimized resume JSON and compliance evaluation scorecard from this voice interview transcript.\n"
         f"Target Role: {target_role or ''} at {target_company or ''}\n"
-        f"Transcript: {json.dumps(transcript)}\n\n"
+        f"Transcript: {transcript_json}\n\n"
         f"Requirements:\n"
         f"1. Contact details: Fill in candidate details. If missing in transcript, infer professional placeholders (e.g. email, phone, location, links).\n"
         f"2. Experience/Work History: Quantify work history bullet points with metrics (percentages, revenue, time saved, scale).\n"
@@ -54,7 +56,7 @@ async def process_resume_builder_job(job_data: dict) -> bool:
         f"    \"github\": \"github.com/candidate\",\n"
         f"    \"portfolio\": \"candidate.dev\"\n"
         f"  }},\n"
-        f"  \"title\": \"{target_role or ''}\",\n"
+        f"  \"title\": {role_json},\n"
         f"  \"summary\": \"Professional summary focusing on target role capabilities.\",\n"
         f"  \"atsScore\": 88,\n"
         f"  \"scoreBreakdown\": [\n"
@@ -98,14 +100,32 @@ async def process_resume_builder_job(job_data: dict) -> bool:
     generated_resume = extract_json_object(generate_text(prompt))
     if not generated_resume:
         logger.error(f"LLM returned no usable resume JSON for session {session_id}. Failing without fabricated content.")
+        await _mark_failed(session_id)
         return False
 
+    try:
+        pdf_url = generate_resume_pdf(generated_resume)
 
-    pdf_url = generate_resume_pdf(generated_resume)
+        return await post_internal(
+            "PATCH",
+            f"/internal/resume-builder/{session_id}/result",
+            {"generatedResume": generated_resume, "resumePdfUrl": pdf_url, "status": "completed"},
+            context=f"resume result for session {session_id}",
+        )
+    except Exception as e:
+        logger.error(f"Resume builder job failed for session {session_id}: {e}")
+        await _mark_failed(session_id)
+        return False
 
-    return await post_internal(
-        "PATCH",
-        f"/internal/resume-builder/{session_id}/result",
-        {"generatedResume": generated_resume, "resumePdfUrl": pdf_url, "status": "completed"},
-        context=f"resume result for session {session_id}",
-    )
+async def _mark_failed(session_id: str) -> None:
+    """Best-effort notify Express so the session leaves 'scoring' and the
+    frontend can surface the error instead of polling forever."""
+    try:
+        await post_internal(
+            "PATCH",
+            f"/internal/resume-builder/{session_id}/result",
+            {"status": "failed"},
+            context=f"resume failure for session {session_id}",
+        )
+    except Exception as e:
+        logger.error(f"Failed to mark resume builder session {session_id} as failed: {e}")

@@ -15,7 +15,6 @@
 - `npm run dev` — Start web + api via turbo (ai-service has no package.json; run it separately with `cd apps/ai-service && .venv/bin/uvicorn main:app --reload`)
 - `npm run build` — Build all workspace apps and packages
 - `npm run lint` — Lint and typecheck monorepo
-- `npm run test` — Execute test suite
 - `npx prisma migrate dev` / `npx prisma generate` — Manage DB migrations and client generation
 
 ## Folder conventions
@@ -54,7 +53,7 @@
 - TypeScript strict mode (`noImplicitAny`, zero `any` usage).
 - Maximum 200 lines per component file; separate concerns into routes, components, lib, hooks, types, services.
 
-## Verification (nothing ships untested)
+## Verification
 - Run `npm run lint` and `npm run build` prior to shipping.
 - Verify multi-tenant org isolation boundaries and zero CV signal leakage into decision scoring functions.
 

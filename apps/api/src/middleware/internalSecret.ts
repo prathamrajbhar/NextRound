@@ -3,9 +3,6 @@ import { env } from '../lib/env';
 
 const DEFAULT_INTERNAL_SERVICE_SECRET = 'internal_secret_key_change_in_production';
 
-
-
-
 if (process.env.NODE_ENV === 'production') {
   const secret = process.env.INTERNAL_SERVICE_SECRET;
   if (!secret || secret === DEFAULT_INTERNAL_SERVICE_SECRET) {

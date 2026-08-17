@@ -1,25 +1,33 @@
 import os
+import shutil
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any, List
+from typing import Dict, Any
 from xml.sax.saxutils import escape as xml_escape
 import httpx
 from core.config import settings
 
 logger = logging.getLogger("pdf_generator")
 
+# Directory Express statically serves at /uploads (must match
+# UPLOAD_ROOT_DIR in apps/api/src/lib/storage.ts). Files are copied here so
+# the returned /uploads/... URL actually resolves.
+LOCAL_UPLOADS_DIR = "/tmp/nextround-uploads"
 
 def upload_to_supabase(file_path: str, key: str, content_type: str = "application/pdf") -> str:
     if not settings.supabase_url or not settings.supabase_service_role_key:
-        logger.warning("Supabase credentials not configured in settings. Returning local fallback path.")
+        logger.warning("Supabase credentials not configured in settings. Persisting PDF to local /uploads dir.")
+        dest = os.path.join(LOCAL_UPLOADS_DIR, key)
+        os.makedirs(os.path.dirname(dest), exist_ok=True)
+        shutil.copy2(file_path, dest)
         return f"/uploads/{key}"
 
     with open(file_path, "rb") as f:
         file_data = f.read()
 
     url = f"{settings.supabase_url}/storage/v1/object/{settings.supabase_storage_bucket}/{key}"
-    
+
     headers = {
         "apikey": settings.supabase_service_role_key,
         "Authorization": f"Bearer {settings.supabase_service_role_key}",
@@ -35,13 +43,11 @@ def upload_to_supabase(file_path: str, key: str, content_type: str = "applicatio
 
     return f"{settings.supabase_url}/storage/v1/object/public/{settings.supabase_storage_bucket}/{key}"
 
-
 def _esc(value: Any) -> str:
     """Escape XML markup characters in dynamic resume text before it reaches
     ReportLab Paragraph (which parses input as mini-XML and would fail on
     unescaped &, <, > from LLM-generated content)."""
     return xml_escape(str(value))
-
 
 REPORTLAB_AVAILABLE = False
 try:
@@ -53,15 +59,14 @@ try:
 except ImportError:
     logger.warning("ReportLab not installed. PDF generation will fail with an explicit error — no mock PDF is produced.")
 
-
-def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> str:
+def generate_resume_pdf(resume_data: Dict[str, Any]) -> str:
     """
     Generates an ATS-friendly single/two-page resume PDF from structured resume JSON.
     Uploads the generated PDF to Supabase Storage and returns the public URL.
     """
     file_id = str(uuid.uuid4())[:8]
     filename = f"resume_{file_id}.pdf"
-    
+
     # Use temporary directory for intermediate generation
     temp_dir = "/tmp/nextround-resumes"
     os.makedirs(temp_dir, exist_ok=True)
@@ -136,18 +141,15 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
 
             story = []
 
-
             story.append(Paragraph(_esc(name), name_style))
             contact_info = f"{_esc(email)} | {_esc(phone)} | {_esc(location)}"
             story.append(Paragraph(contact_info, contact_style))
             story.append(Spacer(1, 8))
             story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#CBD5E1'), spaceBefore=0, spaceAfter=8))
 
-
             story.append(Paragraph("PROFESSIONAL SUMMARY", heading_style))
             story.append(Paragraph(_esc(summary), body_style))
             story.append(Spacer(1, 6))
-
 
             if work_history:
                 story.append(Paragraph("WORK EXPERIENCE", heading_style))
@@ -161,12 +163,10 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
                         story.append(Paragraph(f"• {_esc(b)}", bullet_style))
                     story.append(Spacer(1, 4))
 
-
             if skills:
                 story.append(Paragraph("CORE SKILLS &amp; TECHNOLOGIES", heading_style))
                 story.append(Paragraph(_esc(", ".join(skills)), body_style))
                 story.append(Spacer(1, 6))
-
 
             if projects:
                 story.append(Paragraph("KEY PROJECTS", heading_style))
@@ -174,7 +174,6 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
                     pname = proj.get("name", "")
                     pdesc = proj.get("description", "")
                     story.append(Paragraph(f"<b>{_esc(pname)}</b>: {_esc(pdesc)}", body_style))
-
 
             if education:
                 story.append(Paragraph("EDUCATION", heading_style))
@@ -185,7 +184,7 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
 
             doc.build(story)
             logger.info(f"Resume PDF generated successfully at {file_path}")
-            
+
             # Upload to Supabase and clean up
             key = f"resumes/{filename}"
             try:
@@ -202,13 +201,11 @@ def generate_resume_pdf(resume_data: Dict[str, Any], output_dir: str = None) -> 
 
     raise RuntimeError("ReportLab is required to generate a real resume PDF. No mock PDF is written.")
 
-
 def generate_analytics_pdf(
     metrics: Dict[str, Any],
     conversions: Dict[str, Any],
     narrative: str,
     org_id: str = "",
-    output_dir: str = None,
 ) -> str:
     """
     Generates a real executive analytics report PDF from funnel metrics,
@@ -217,7 +214,7 @@ def generate_analytics_pdf(
     """
     file_id = str(uuid.uuid4())[:8]
     filename = f"analytics_{file_id}.pdf"
-    
+
     # Use temporary directory for intermediate generation
     temp_dir = "/tmp/nextround-analytics"
     os.makedirs(temp_dir, exist_ok=True)
@@ -283,7 +280,6 @@ def generate_analytics_pdf(
         story.append(Spacer(1, 8))
         story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#CBD5E1'), spaceBefore=0, spaceAfter=8))
 
-
         funnel_rows = [["Stage", "Candidates", "Conversion"]]
         stages = [
             ("Applied", metrics.get("applied", 0), None),
@@ -309,13 +305,11 @@ def generate_analytics_pdf(
         story.append(Paragraph("RECRUITMENT FUNNEL", heading_style))
         story.append(table)
 
-
         time_to_hire = metrics.get("time_to_hire_days")
         if isinstance(time_to_hire, (int, float)) and not isinstance(time_to_hire, bool):
             story.append(Paragraph(f"Average time to hire: {round(time_to_hire)} days", body_style))
         else:
             story.append(Paragraph("Average time to hire: not available (no terminal offer/acceptance timestamps recorded)", body_style))
-
 
         story.append(Paragraph("EXECUTIVE SUMMARY", heading_style))
         if narrative and narrative.strip():
@@ -325,7 +319,7 @@ def generate_analytics_pdf(
 
         doc.build(story)
         logger.info(f"Analytics PDF generated successfully at {file_path}")
-        
+
         # Upload to Supabase and clean up
         key = f"analytics/{filename}"
         try:

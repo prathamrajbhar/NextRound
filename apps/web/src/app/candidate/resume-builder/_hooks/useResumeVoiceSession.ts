@@ -11,7 +11,6 @@ export interface ConversationTurn {
   timestamp: string;
 }
 
-
 interface SpeechRecognitionEvent {
   resultIndex: number;
   results: {
@@ -73,7 +72,6 @@ export function useResumeVoiceSession({
   const [error, setError] = useState<string | null>(null);
   const [memory, setMemory] = useState<Record<string, unknown>>({});
 
-  
   const conversationHistoryRef = useRef<ConversationTurn[]>([]);
   const turnIndexRef = useRef(0);
   const stageRef = useRef('intro');
@@ -82,7 +80,6 @@ export function useResumeVoiceSession({
   const speechStartRef = useRef(0);
   const recognitionActiveRef = useRef(false);
 
-  
   useEffect(() => {
     conversationHistoryRef.current = conversationHistory;
   }, [conversationHistory]);
@@ -112,7 +109,6 @@ export function useResumeVoiceSession({
 
   const submitResponseRef = useRef<((text: string) => Promise<void>) | null>(null);
 
-  
   useEffect(() => {
     return () => {
       stopAudio();
@@ -125,7 +121,6 @@ export function useResumeVoiceSession({
     };
   }, []);
 
-  
   const startSpeechRecognition = useCallback(() => {
     if (!SpeechRecognitionClass || !micActive) return;
 
@@ -175,7 +170,7 @@ export function useResumeVoiceSession({
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      
+
       if (event.error === 'aborted' || event.error === 'no-speech' || event.error === 'network') {
         return;
       }
@@ -188,13 +183,13 @@ export function useResumeVoiceSession({
 
     recognition.onend = () => {
       recognitionActiveRef.current = false;
-      
+
       if (aiStateRef.current === 'listening') {
         const spokenText = candidateSpeechTextRef.current;
         if (spokenText && spokenText.trim().length > 1) {
           submitResponseRef.current?.(spokenText);
         } else {
-          
+
           try {
             recognitionRef.current?.start();
             recognitionActiveRef.current = true;
@@ -211,7 +206,6 @@ export function useResumeVoiceSession({
     }
   }, [micActive]);
 
-  
   const speakText = useCallback((text: string, audioUrl?: string, callback?: () => void) => {
     setAiState('speaking');
     speechStartRef.current = Date.now();
@@ -236,7 +230,6 @@ export function useResumeVoiceSession({
     });
   }, []);
 
-  
   const stopSpeechRecognition = useCallback(() => {
     recognitionActiveRef.current = false;
     if (recognitionRef.current) {
@@ -247,7 +240,6 @@ export function useResumeVoiceSession({
     }
   }, []);
 
-  
   const handleFinalize = useCallback(
     async (activeSessionId: string, finalHistory: ConversationTurn[]) => {
       stopSpeechRecognition();
@@ -261,13 +253,15 @@ export function useResumeVoiceSession({
         onComplete(activeSessionId, finalHistory);
       } catch (err) {
         console.error('Failed to end session:', err);
-        onComplete(activeSessionId, finalHistory);
+        // Don't advance: if we proceed without the backend having enqueued the
+        // job, the resume stage would poll forever. Surface the error and let
+        // the candidate retry via the "Finish & Build Resume" button.
+        setError('Failed to finish the session. Please try again.');
       }
     },
     [stopSpeechRecognition, onComplete]
   );
 
-  
   const getAIResponse = useCallback(
     async (
       candidateResponse: string,
@@ -320,11 +314,11 @@ export function useResumeVoiceSession({
           memory?: Record<string, unknown>;
           audioUrl?: string;
         };
-        
+
         if (data.memory) {
           setMemory(data.memory);
         }
-        
+
         const updatedHistory = [
           ...newHistory,
           {
@@ -361,7 +355,6 @@ export function useResumeVoiceSession({
     [targetRole, speakText, startSpeechRecognition, stopSpeechRecognition, handleFinalize]
   );
 
-  
   const startCall = useCallback(async () => {
     unlockAudio();
     setError(null);
@@ -393,7 +386,6 @@ export function useResumeVoiceSession({
     }
   }, [targetRole, experienceLevel, getAIResponse]);
 
-  
   const submitResponse = useCallback(
     async (text: string) => {
       if (aiState !== 'listening' || !sessionId) return;
@@ -407,20 +399,17 @@ export function useResumeVoiceSession({
     submitResponseRef.current = submitResponse;
   }, [submitResponse]);
 
-  
   const submitVoiceResponse = useCallback(() => {
     if (aiState !== 'listening' || !candidateSpeechText.trim()) return;
     submitResponse(candidateSpeechText);
   }, [aiState, candidateSpeechText, submitResponse]);
 
-  
   const endCall = useCallback(async () => {
     if (!sessionId) return;
     stopAudio();
     await handleFinalize(sessionId, conversationHistoryRef.current);
   }, [sessionId, handleFinalize]);
 
-  
   const handleToggleMic = useCallback(() => {
     setMicActive((prev) => {
       const next = !prev;

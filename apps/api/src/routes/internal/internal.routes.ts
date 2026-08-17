@@ -28,9 +28,7 @@ import * as internalService from '../../services/internal.service';
 
 export const internalRouter = Router();
 
-
 internalRouter.use(requireInternalSecret);
-
 
 internalRouter.patch(
   '/jobs/:id/ai-assist-result',
@@ -39,7 +37,6 @@ internalRouter.patch(
     ok(res, await internalService.recordAiAssistResult(req.params.id as string, req.body));
   })
 );
-
 
 internalRouter.patch(
   '/applications/:id/screening-result',
@@ -50,7 +47,6 @@ internalRouter.patch(
   })
 );
 
-
 internalRouter.post(
   '/sourcing/:jobId/candidates',
   validate(SourcedCandidatesSchema),
@@ -59,7 +55,6 @@ internalRouter.post(
     ok(res, job);
   })
 );
-
 
 internalRouter.patch(
   '/candidate/:id/embedding',
@@ -70,7 +65,6 @@ internalRouter.patch(
   })
 );
 
-
 internalRouter.post(
   '/agent-logs',
   validate(AgentLogCreateSchema),
@@ -79,14 +73,12 @@ internalRouter.post(
   })
 );
 
-
 internalRouter.get(
   '/agent-logs',
   asyncHandler(async (_req, res) => {
     ok(res, await internalService.listAgentLogs());
   })
 );
-
 
 internalRouter.get(
   '/jobs/:id/raw',
@@ -95,7 +87,6 @@ internalRouter.get(
   })
 );
 
-
 internalRouter.get(
   '/applications/:id/raw',
   asyncHandler(async (req, res) => {
@@ -103,14 +94,12 @@ internalRouter.get(
   })
 );
 
-
 internalRouter.get(
   '/candidates/:id/sections',
   asyncHandler(async (req, res) => {
     ok(res, await internalService.getCandidateSections(req.params.id as string));
   })
 );
-
 
 internalRouter.post(
   '/candidates/:id/embeddings',
@@ -120,7 +109,6 @@ internalRouter.post(
     ok(res, data);
   })
 );
-
 
 internalRouter.delete(
   '/candidates/:id/social/:source',
@@ -133,7 +121,6 @@ internalRouter.delete(
   })
 );
 
-
 internalRouter.get(
   '/candidates/:id/context',
   asyncHandler(async (req, res) => {
@@ -145,7 +132,6 @@ internalRouter.get(
   })
 );
 
-
 internalRouter.post(
   '/interviews/:id/schedule-slots',
   validate(ScheduleSlotsSchema),
@@ -154,7 +140,6 @@ internalRouter.post(
     ok(res, data);
   })
 );
-
 
 internalRouter.patch(
   '/interviews/:id/confirmed-slot',
@@ -165,7 +150,6 @@ internalRouter.patch(
   })
 );
 
-
 internalRouter.patch(
   '/applications/:id/assessment-result',
   validate(AssessmentResultSchema),
@@ -175,7 +159,6 @@ internalRouter.patch(
   })
 );
 
-
 internalRouter.get(
   '/applications/:id/assessment-data',
   asyncHandler(async (req, res) => {
@@ -183,7 +166,6 @@ internalRouter.get(
     ok(res, await internalService.getAssessmentData(req.params.id as string, testType));
   })
 );
-
 
 internalRouter.patch(
   '/applications/:id/coding-result',
@@ -194,7 +176,6 @@ internalRouter.patch(
   })
 );
 
-
 internalRouter.patch(
   '/interviews/:id/result',
   validate(InterviewResultSchema),
@@ -204,7 +185,6 @@ internalRouter.patch(
   })
 );
 
-
 internalRouter.patch(
   '/evaluations/:id',
   validate(FinalEvaluationSchema),
@@ -212,7 +192,6 @@ internalRouter.patch(
     ok(res, await internalService.recordFinalEvaluation(req.body));
   })
 );
-
 
 internalRouter.patch(
   '/evaluations/:id/decision',
@@ -223,7 +202,6 @@ internalRouter.patch(
   })
 );
 
-
 internalRouter.post(
   '/offers',
   validate(InternalOfferCreateSchema),
@@ -231,7 +209,6 @@ internalRouter.post(
     ok(res, await internalService.createInternalOffer(req.body), 201);
   })
 );
-
 
 internalRouter.patch(
   '/mock/sessions/:id/feedback',
@@ -241,7 +218,6 @@ internalRouter.patch(
     ok(res, data);
   })
 );
-
 
 internalRouter.patch(
   '/resume-builder/:sessionId/result',
@@ -255,7 +231,6 @@ internalRouter.patch(
   })
 );
 
-
 internalRouter.post(
   '/prep/generate',
   validate(PrepGenerateSchema),
@@ -263,7 +238,6 @@ internalRouter.post(
     ok(res, await internalService.generatePrepContent(req.body));
   })
 );
-
 
 internalRouter.get(
   '/analytics/raw',
@@ -277,7 +251,6 @@ internalRouter.get(
   })
 );
 
-
 internalRouter.post(
   '/analytics/reports',
   validate(AnalyticsReportSchema),
@@ -285,7 +258,6 @@ internalRouter.post(
     ok(res, await internalService.recordAnalyticsReport(req.body), 201);
   })
 );
-
 
 internalRouter.patch(
   '/interviews/:id/sentiment',

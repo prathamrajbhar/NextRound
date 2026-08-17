@@ -11,7 +11,6 @@
     "build": "turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
-    "test": "turbo test",
     "clean": "turbo clean",
     "check:ml-bypass": "grep -rn \"ML_BYPASS\" apps/ packages/",
     "db:generate": "npm run generate --workspace=@nextround/database",

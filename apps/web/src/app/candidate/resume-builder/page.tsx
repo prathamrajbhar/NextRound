@@ -161,6 +161,10 @@ export default function AIResumeBuilderPage() {
   useEffect(() => {
     if (stage !== 'resume' || !sessionId || resumeStatus !== 'generating') return;
 
+    // Hard ceiling on how long we wait for the worker before surfacing an error,
+    // so a dead queue or lost job can never leave the candidate polling forever.
+    const deadline = Date.now() + 120_000;
+
     const pollInterval = setInterval(async () => {
       try {
         const res = await apiClient.get<{
@@ -220,8 +224,15 @@ export default function AIResumeBuilderPage() {
         } else if (res && res.status === 'failed') {
           clearInterval(pollInterval);
           setResumeStatus('error');
+        } else if (Date.now() > deadline) {
+          clearInterval(pollInterval);
+          setResumeStatus('error');
         }
       } catch (err) {
+        if (Date.now() > deadline) {
+          clearInterval(pollInterval);
+          setResumeStatus('error');
+        }
         console.error('Error polling resume result:', err);
       }
     }, 3000);

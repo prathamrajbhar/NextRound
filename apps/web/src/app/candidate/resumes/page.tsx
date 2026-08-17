@@ -59,17 +59,18 @@ export default function CandidateResumesPage() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    
+
+    const contact = r.contact || {};
     const contactInfo = [
-      r.phone,
-      r.email,
-      r.location,
-      r.linkedin,
-      r.github,
-      r.portfolio
+      contact.phone ?? r.phone,
+      contact.email ?? r.email,
+      contact.location ?? r.location,
+      contact.linkedin ?? r.linkedin,
+      contact.github ?? r.github,
+      contact.portfolio ?? r.portfolio
     ].filter(Boolean).join(' • ');
 
-    
+
     let skillsHtml = '';
     const skillsList = r.skills || [];
     if (skillsList.length > 0) {
@@ -95,7 +96,7 @@ export default function CandidateResumesPage() {
       }
     }
 
-    
+
     const experienceList = r.experience || [];
     let experienceHtml = '';
     if (experienceList.length > 0) {
@@ -121,7 +122,7 @@ export default function CandidateResumesPage() {
       `;
     }
 
-    
+
     const projectsList = r.projects || [];
     let projectsHtml = '';
     if (projectsList.length > 0) {
@@ -146,7 +147,7 @@ export default function CandidateResumesPage() {
       `;
     }
 
-    
+
     const educationList = r.education || [];
     let educationHtml = '';
     if (educationList.length > 0) {
@@ -167,7 +168,7 @@ export default function CandidateResumesPage() {
       `;
     }
 
-    
+
     const certList = r.certifications || [];
     let certsHtml = '';
     if (certList.length > 0) {
@@ -196,9 +197,9 @@ export default function CandidateResumesPage() {
         </style>
       </head>
       <body>
-        <h1>${r.name || 'Candidate Name'}</h1>
+        <h1>${(contact.name ?? r.name) || 'Candidate Name'}</h1>
         <div class="subtitle">${contactInfo}</div>
-        
+
         ${r.summary ? `
           <div class="section-title">Professional Summary</div>
           <p style="margin: 0 0 12px 0; color: #334155;">${r.summary}</p>
@@ -254,7 +255,7 @@ export default function CandidateResumesPage() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300 pb-12 font-sans">
-      
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold text-brand-600 dark:text-orange-400 bg-brand-50 dark:bg-orange-950/80 border border-brand-200/60 dark:border-orange-900/60 mb-1.5">
@@ -347,7 +348,9 @@ export default function CandidateResumesPage() {
                     </div>
 
                     <span className="px-2 py-0.5 rounded-lg text-[9px] font-extrabold bg-brand-50 dark:bg-orange-950/80 text-brand-600 dark:text-orange-400 border border-brand-200 dark:border-orange-900 flex-shrink-0">
-                      ATS 98%
+                      {typeof item.generatedResume?.atsScore === 'number'
+                        ? `ATS ${Math.round(item.generatedResume.atsScore)}%`
+                        : 'ATS'}
                     </span>
                   </div>
 

@@ -8,7 +8,6 @@ import { getCandidateProfileId } from '../../lib/candidate-profile';
 
 export const resumeBuilderRouter = Router();
 
-
 resumeBuilderRouter.get(
   '/history',
   authenticate,
@@ -47,7 +46,6 @@ resumeBuilderRouter.get(
     }
   }
 );
-
 
 resumeBuilderRouter.post(
   '/sessions',
@@ -88,7 +86,6 @@ resumeBuilderRouter.post(
   }
 );
 
-
 resumeBuilderRouter.get(
   '/:sessionId',
   authenticate,
@@ -118,7 +115,6 @@ resumeBuilderRouter.get(
   }
 );
 
-
 resumeBuilderRouter.post(
   '/:sessionId/end',
   authenticate,
@@ -136,6 +132,16 @@ resumeBuilderRouter.post(
 
       if (!session) {
         return res.status(404).json({ success: false, error: 'Resume builder session not found' });
+      }
+
+      // Idempotency guard: once the session has left 'active' (job enqueued or
+      // already finished), re-running /end must not overwrite the transcript or
+      // enqueue a duplicate generation job.
+      if (session.status !== 'active') {
+        return res.json({
+          success: true,
+          data: { session, status: session.status },
+        });
       }
 
       const updated = await prisma.mockSession.update({
@@ -164,7 +170,6 @@ resumeBuilderRouter.post(
     }
   }
 );
-
 
 resumeBuilderRouter.get(
   '/:sessionId/result',
@@ -202,7 +207,6 @@ resumeBuilderRouter.get(
     }
   }
 );
-
 
 resumeBuilderRouter.delete(
   '/:sessionId',
