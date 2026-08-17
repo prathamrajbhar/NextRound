@@ -2475,8 +2475,8 @@ async function seedApplicationDetails(
         scheduled_at: status === 'interview_scheduled' ? randomFutureDate(1, 5) : randomPastDate(2, 14),
         transcript: [],
         status: status === 'interview_scheduled' ? 'scheduled' : 'completed',
-        sentiment_report: null,
-        engagement_signal: null,
+        sentiment_report: Prisma.DbNull,
+        engagement_signal: Prisma.DbNull,
       },
     });
   }
