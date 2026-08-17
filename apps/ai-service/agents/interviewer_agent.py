@@ -179,13 +179,6 @@ def _build_greeting_prompt(state: InterviewerState) -> str:
         '"skills_demonstrated": [], "missing_details": [], "skills_still_needed": []}'
     )
 
-def _build_retry_prompt(state: InterviewerState, previous: dict) -> str:
-    return (
-        _build_turn_prompt(state)
-        + "\n\nYour previous answer produced a question that duplicates one already asked. Ask a DIFFERENT "
-        f"question about '{previous.get('target_skill') or state.get('current_skill')}'. Keep the same action, "
-        "spoken_response tone, and JSON shape."
-    )
 
 def _normalize_question(q: str) -> str:
     if not q:
@@ -234,12 +227,7 @@ def _guard_duplicates(state: InterviewerState, analysis: dict) -> dict:
     if not question or not _is_duplicate(str(question), state.get("asked_questions") or []):
         return analysis
 
-    logger.info("InterviewerAgent: generated question duplicates a previous one; retrying once.")
-    retry = extract_json_object(generate_text(_build_retry_prompt(state, analysis), force_provider="groq"))
-    if retry:
-        retry_q = retry.get("next_question")
-        if retry_q and not _is_duplicate(str(retry_q), state.get("asked_questions") or []):
-            return retry
+    logger.info("InterviewerAgent: generated question duplicates a previous one; forcing next topic.")
     return _force_next_topic(state, analysis)
 
 def _heuristic_analysis(state: InterviewerState) -> dict:

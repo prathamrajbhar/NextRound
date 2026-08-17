@@ -336,25 +336,6 @@ def _generate_turn(
     parsed = extract_json_object(raw) if raw else None
     return _validate_analysis(parsed)
 
-def _retry_turn(
-    state: ResumeBuilderState,
-    memory: Dict[str, Any],
-    asked: List[str],
-    analysis: Dict[str, Any],
-    target_role: str,
-    target_company: str,
-) -> Optional[Dict[str, Any]]:
-    prompt = (
-        _build_turn_prompt(state, memory, asked, target_role, target_company)
-        + "\n\nYour next_question duplicates one already asked. Ask a DIFFERENT question grounded in the "
-        "candidate's exact answer. Keep the same action and JSON shape."
-    )
-    raw = generate_text(prompt)
-    retry = extract_json_object(raw) if raw else None
-    retry = _validate_analysis(retry)
-    if retry and retry.get("next_question") and not _is_duplicate(str(retry["next_question"]), asked):
-        return retry
-    return None
 
 def _compose_response(analysis: Dict[str, Any]) -> str:
     parts = []
@@ -482,12 +463,8 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
         analysis = _heuristic_turn(state, memory, current_stage)
 
     if analysis.get("next_question") and _is_duplicate(str(analysis["next_question"]), asked):
-        logger.info("ResumeBuilderAgent: generated question duplicates a previous one; retrying once.")
-        retried = _retry_turn(state, memory, asked, analysis, target_role, target_company)
-        if retried:
-            analysis = retried
-        else:
-            analysis = _force_next_topic(state, memory, analysis, current_stage)
+        logger.info("ResumeBuilderAgent: generated question duplicates a previous one; forcing next topic.")
+        analysis = _force_next_topic(state, memory, analysis, current_stage)
 
     state["last_analysis"] = analysis
     state["next_action"] = str(analysis.get("action") or "")
