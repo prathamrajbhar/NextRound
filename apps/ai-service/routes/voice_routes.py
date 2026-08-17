@@ -2,11 +2,22 @@ import logging
 import asyncio
 import base64
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, HTTPException, File, UploadFile, Body, Request
+from fastapi import APIRouter, HTTPException, File, UploadFile, Body, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse
 import json
 from pydantic import BaseModel, Field
 from agents.interviewer_agent import run_interviewer_agent, InterviewerState
+from workers.resume_builder_worker import process_resume_builder_job
+
+logger = logging.getLogger("voice_routes")
+
+voice_router = APIRouter(prefix="/api/v1/ai/interview", tags=["voice-interview"])
+
+class GenerateResumeRequest(BaseModel):
+    sessionId: str
+    targetRole: Optional[str] = None
+    targetCompany: Optional[str] = None
+    transcript: Optional[List[Dict[str, Any]]] = None
 from services.stt_service import transcribe_audio_bytes
 from services.tts_service import generate_tts_audio_base64, stream_sentence_tts
 from core.config import settings
@@ -170,4 +181,17 @@ async def voice_stream_response(request: InterviewRespondRequest):
             yield f"data: {json.dumps(chunk)}\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+@voice_router.post("/resume-builder/generate")
+async def generate_resume_endpoint(request: GenerateResumeRequest, background_tasks: BackgroundTasks):
+    logger.info(f"Triggering direct resume generation background task for session: {request.sessionId}")
+    job_payload = {
+        "sessionId": request.sessionId,
+        "targetRole": request.targetRole,
+        "targetCompany": request.targetCompany,
+        "transcript": request.transcript,
+    }
+    background_tasks.add_task(process_resume_builder_job, job_payload)
+    return {"success": True, "message": "Resume generation background task initialized"}
+
 

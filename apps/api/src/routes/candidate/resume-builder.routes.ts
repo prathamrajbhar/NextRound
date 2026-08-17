@@ -165,8 +165,23 @@ resumeBuilderRouter.post(
           updated.target_company
         );
       } catch (queueErr) {
-        console.warn('BullMQ enqueue warning (fallback generation active):', queueErr);
+        console.warn('BullMQ enqueue warning:', queueErr);
       }
+
+      // Trigger direct background generation on Python AI Service for 100% processing reliability
+      const aiServiceUrl = process.env.AI_BASE_URL || 'http://localhost:8000';
+      fetch(`${aiServiceUrl}/api/v1/ai/interview/resume-builder/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: updated.id,
+          targetRole: updated.target_role,
+          targetCompany: updated.target_company,
+          transcript: updated.transcript,
+        }),
+      }).catch((aiErr) => {
+        console.warn('Direct AI service background trigger warning:', aiErr);
+      });
 
       return res.json({
         success: true,
