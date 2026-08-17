@@ -9,8 +9,6 @@ import { useResumeVoiceSession } from './_hooks/useResumeVoiceSession';
 import { ATSResumeData } from '@/types';
 import { apiClient } from '@/lib/apiClient';
 
-import { Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
 
 interface RawResumeData {
   name?: string;
@@ -98,8 +96,7 @@ type Stage = 'setup' | 'interview' | 'resume';
 type ResumeStatus = 'idle' | 'generating' | 'completed' | 'error';
 
 function ResumeBuilderContent() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
+
 
   const [stage, setStage] = useState<Stage>('setup');
 
@@ -142,33 +139,7 @@ function ResumeBuilderContent() {
     },
   });
 
-  // URL Syncing
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const activeSession = sessionId || searchParams.get('sessionId');
-    if (stage === 'setup') {
-      if (window.location.search) {
-        window.history.replaceState(null, '', '/candidate/resume-builder');
-      }
-    } else if (activeSession) {
-      const search = `?sessionId=${activeSession}&stage=${stage}`;
-      if (window.location.search !== search) {
-        window.history.pushState(null, '', `/candidate/resume-builder${search}`);
-      }
-    }
-  }, [stage, sessionId, searchParams]);
 
-  // Initial Mount Deep-Link Rehydration
-  useEffect(() => {
-    const sessionParam = searchParams.get('sessionId');
-    const stageParam = searchParams.get('stage') as Stage | null;
-    if (sessionParam && stageParam) {
-      setStage(stageParam);
-      if (stageParam === 'resume' && resumeStatus === 'idle') {
-        setResumeStatus('generating');
-      }
-    }
-  }, []);
 
   const lastAiMessage = [...conversationHistory]
     .reverse()
@@ -422,16 +393,6 @@ function ResumeBuilderContent() {
 }
 
 export default function AIResumeBuilderPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="flex-1 flex flex-col items-center justify-center space-y-4 min-h-[500px]">
-          <Loader2 className="h-10 w-10 text-orange-500 animate-spin" />
-        </div>
-      }
-    >
-      <ResumeBuilderContent />
-    </Suspense>
-  );
+  return <ResumeBuilderContent />;
 }
 
