@@ -11,7 +11,14 @@ interface ThemeToggleProps {
 
 export function ThemeToggle({ className = '', showLabel = false }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme();
-  const isDark = theme === 'dark';
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Default to dark theme classes during SSR and initial client hydration
+  const isDark = mounted ? theme === 'dark' : true;
 
   return (
     <button
