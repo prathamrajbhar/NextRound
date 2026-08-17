@@ -246,37 +246,56 @@ export function SetupStage({
 
         <div className="lg:col-span-4 space-y-6">
           
-          <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-3">
-              <div className="flex items-center gap-2">
-                <Mic className={`h-4 w-4 ${micTesting ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`} />
-                <span className="text-xs font-extrabold text-slate-800 dark:text-white">Microphone Pre-Check</span>
+          <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-lg space-y-4 hover:shadow-xl transition-all duration-300">
+            {/* Premium Header Layout */}
+            <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-900 pb-3.5">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all ${
+                  micTesting 
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/40 dark:border-emerald-900/40 dark:text-emerald-400' 
+                    : 'bg-slate-50 border-slate-200 text-slate-400 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-500'
+                }`}>
+                  <Mic className="h-4 w-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-white block leading-tight">Microphone Pre-Check</span>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className={`relative flex h-1.5 w-1.5 rounded-full ${micTesting ? 'bg-emerald-500' : 'bg-slate-400'}`}>
+                      {micTesting && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      {micTesting ? 'Testing Live' : 'Hardware Idle'}
+                    </span>
+                  </div>
+                </div>
               </div>
+
               <button
                 type="button"
                 onClick={() => setMicTesting(!micTesting)}
-                className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold border transition-colors cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full text-[10px] font-bold shadow-xs transition-all cursor-pointer ${
                   micTesting
-                    ? 'border-red-200 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400'
-                    : 'border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 dark:border-white/5 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-900'
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : 'bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900'
                 }`}
               >
                 {micTesting ? 'Stop' : 'Test Mic'}
               </button>
             </div>
 
-            <div className="h-12 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-white/5 px-4 flex items-end gap-[3px] overflow-hidden">
-              {[...Array(18)].map((_, i) => {
+            {/* Premium Hardware Scope Audio Visualizer */}
+            <div className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-850 px-4 flex items-center justify-between gap-[5px] overflow-hidden">
+              {[...Array(16)].map((_, i) => {
                 const barHeight = micTesting
-                  ? Math.min(100, Math.max(10, audioLevel + Math.abs(Math.sin(i * 1.2)) * Math.min(audioLevel * 0.4, 25)))
+                  ? Math.min(100, Math.max(12, audioLevel + Math.abs(Math.sin(i * 1.5)) * Math.min(audioLevel * 0.45, 30)))
                   : 12;
                 return (
                   <div
                     key={i}
-                    className={`flex-1 rounded-sm transition-all duration-75 ${
+                    className={`flex-1 rounded-full transition-all duration-75 ${
                       micTesting && audioLevel > 5
-                        ? 'bg-emerald-500 dark:bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.3)]'
-                        : 'bg-slate-300 dark:bg-slate-800'
+                        ? 'bg-gradient-to-t from-emerald-500 via-emerald-400 to-teal-300 dark:from-emerald-600 dark:to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
+                        : 'bg-slate-200 dark:bg-slate-800'
                     }`}
                     style={{ height: `${barHeight}%` }}
                   />
@@ -284,13 +303,23 @@ export function SetupStage({
               })}
             </div>
 
-            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 leading-relaxed">
-              {micTesting
-                ? audioLevel > 5
-                  ? 'Signal detected — your microphone is working.'
-                  : 'Listening… speak to test your microphone.'
-                : 'Test your microphone hardware before starting the call.'}
-            </p>
+            {/* Interactive Status Footer */}
+            <div className="flex items-center gap-2 pt-1">
+              <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${
+                micTesting
+                  ? audioLevel > 5
+                    ? 'bg-emerald-500 animate-pulse'
+                    : 'bg-amber-400 animate-pulse'
+                  : 'bg-slate-300'
+              }`} />
+              <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-normal">
+                {micTesting
+                  ? audioLevel > 5
+                    ? 'Signal detected — your microphone is working.'
+                    : 'Listening… speak to test your microphone.'
+                  : 'Test your microphone hardware before starting the call.'}
+              </p>
+            </div>
           </div>
 
         </div>
