@@ -154,9 +154,32 @@ export function SetupStage({
                 type="text"
                 value={targetRole}
                 onChange={(e) => setTargetRole(e.target.value)}
+                list="preset-roles"
                 placeholder="Enter job position (e.g. Senior Full Stack Engineer)..."
                 className="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-slate-950/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-semibold focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-1 focus:ring-orange-500 shadow-inner"
               />
+              <datalist id="preset-roles">
+                {[
+                  'Senior Full Stack Engineer',
+                  'AI Product Engineer',
+                  'Backend Architect',
+                  'Frontend Lead',
+                  'DevOps & Infrastructure Lead',
+                  'Software Engineer',
+                  'React Developer',
+                  'Node.js Developer',
+                  'Python Developer',
+                  'Data Scientist',
+                  'Machine Learning Engineer',
+                  'Product Manager',
+                  'UI/UX Designer',
+                  'QA Automation Engineer',
+                  'Mobile App Developer (iOS/Android)',
+                  'Cloud Solutions Architect',
+                ].map((role) => (
+                  <option key={role} value={role} />
+                ))}
+              </datalist>
             </div>
 
             <div className="space-y-2">
