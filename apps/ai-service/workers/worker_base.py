@@ -1,4 +1,3 @@
-
 import logging
 from typing import Awaitable, Callable, Dict, Optional
 
@@ -9,6 +8,7 @@ logger = logging.getLogger("worker_base")
 WorkFn = Callable[[], Awaitable[Dict]]
 
 class AgentJobSkip(Exception):
+    pass
 
 async def fetch_internal(endpoint: str) -> dict:
     response = await callback_client.get(endpoint)
