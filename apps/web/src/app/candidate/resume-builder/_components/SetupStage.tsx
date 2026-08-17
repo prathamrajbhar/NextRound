@@ -39,7 +39,7 @@ const EXPERIENCE_OPTIONS = [
   { id: 'Staff / Lead (8+ Years)', label: 'Staff / Tech Lead', sub: '8+ Yrs Exp' },
 ];
 
-const INDUSTRY_DOMAINS = ['SaaS & Enterprise', 'AI & Machine Learning', 'FinTech & Trading', 'Cloud Infrastructure'];
+
 
 const SUGGESTED_ROLES = [
   'Senior Full Stack Engineer',
@@ -68,7 +68,7 @@ export function SetupStage({
   setExperienceLevel,
   onStartCall,
 }: SetupStageProps) {
-  const [selectedIndustry, setSelectedIndustry] = useState('SaaS & Enterprise');
+
   const [micTesting, setMicTesting] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -272,27 +272,6 @@ export function SetupStage({
               </div>
             </div>
 
-            <div className="space-y-2 pt-3 border-t border-slate-200 dark:border-white/5">
-              <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
-                Domain Industry Focus
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {INDUSTRY_DOMAINS.map((domain) => (
-                  <button
-                    key={domain}
-                    type="button"
-                    onClick={() => setSelectedIndustry(domain)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
-                      selectedIndustry === domain
-                        ? 'bg-slate-100 dark:bg-slate-950 border border-orange-500 text-orange-600 dark:text-orange-400'
-                        : 'bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 dark:bg-slate-950/70 dark:border-white/5 dark:text-slate-300 dark:hover:bg-slate-900'
-                    }`}
-                  >
-                    {domain}
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
         </div>
