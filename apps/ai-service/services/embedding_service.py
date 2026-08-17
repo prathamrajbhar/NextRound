@@ -1,5 +1,6 @@
 import math
 import logging
+import os
 
 logger = logging.getLogger("embedding_service")
 
@@ -8,8 +9,15 @@ onnx_embedding_model = None
 try:
     from fastembed import TextEmbedding
 
-    onnx_embedding_model = TextEmbedding(model_name="BAAI/bge-base-en-v1.5")
-    logger.info("Successfully initialized ONNX Vector Embedding Engine (BAAI/bge-base-en-v1.5)")
+    # Store models in apps/ai-service/local_models
+    local_models_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "local_models")
+    )
+    onnx_embedding_model = TextEmbedding(
+        model_name="BAAI/bge-base-en-v1.5",
+        cache_dir=local_models_path
+    )
+    logger.info(f"Successfully initialized ONNX Vector Embedding Engine (BAAI/bge-base-en-v1.5) from {local_models_path}")
 except Exception as e:
     logger.warning(f"Failed to initialize FastEmbed ONNX model: {e}")
 

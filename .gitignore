@@ -74,3 +74,6 @@ docs/reviewer-prep.md
 
 # Playwright MCP session artifacts
 .playwright-mcp/
+
+# Local FastEmbed models
+apps/ai-service/local_models/
