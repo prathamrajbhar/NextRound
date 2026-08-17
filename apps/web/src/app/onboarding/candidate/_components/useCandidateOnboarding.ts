@@ -60,7 +60,7 @@ export const DEFAULT_FORM: CandidateForm = {
   linkedinUrl: '',
   githubUrl: '',
   portfolioUrl: '',
-  dataConsent: false,
+  dataConsent: true,
   yearsOfExperience: '',
   targetRoles: [],
   skills: [],
