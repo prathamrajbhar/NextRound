@@ -117,15 +117,17 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
                 <span className="truncate max-w-[140px]">{form.resumeFile.name}</span>
               </span>
             )}
-            <button
-              type="button"
-              onClick={triggerReParse}
-              disabled={parsing}
-              className="text-slate-400 hover:text-orange-400 p-1 transition-colors cursor-pointer disabled:opacity-50 focus:outline-none"
-              title="Re-generate profile fields from resume with AI"
-            >
-              <RefreshCw className={`h-4 w-4 transition-transform duration-500 ease-in-out ${parsing ? 'animate-spin' : 'hover:rotate-180 active:rotate-180'}`} />
-            </button>
+            {!parsing && (
+              <button
+                type="button"
+                onClick={triggerReParse}
+                disabled={parsing}
+                className="text-slate-400 hover:text-orange-400 p-1 transition-colors cursor-pointer disabled:opacity-50 focus:outline-none"
+                title="Re-generate profile fields from resume with AI"
+              >
+                <RefreshCw className="h-4 w-4 hover:rotate-180 active:rotate-180 transition-transform duration-500 ease-in-out" />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
