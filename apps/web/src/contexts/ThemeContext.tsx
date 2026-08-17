@@ -29,26 +29,20 @@ const ThemeContext = createContext<ThemeContextValue>({
 });
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Mode>('dark');
+  const [theme, setThemeState] = useState<Mode>(() => {
+    if (typeof window !== 'undefined') {
+      return document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+    }
+    return 'dark';
+  });
   const [themeConfig, setThemeConfigState] = useState<ThemeConfig>(DEFAULT_THEME_CONFIG);
 
   useEffect(() => {
-    let initialMode: Mode = 'dark';
-    try {
-      const saved = localStorage.getItem('hireos_theme');
-      if (saved === 'light' || saved === 'dark') {
-        initialMode = saved;
-      }
-    } catch (e) {}
-
-    setThemeState(initialMode);
     const root = document.documentElement;
-    if (initialMode === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    applyThemeToElement(root, DEFAULT_THEME_CONFIG, initialMode);
+    const isDark = root.classList.contains('dark');
+    const mode: Mode = isDark ? 'dark' : 'light';
+    setThemeState(mode);
+    applyThemeToElement(root, DEFAULT_THEME_CONFIG, mode);
   }, []);
 
   useEffect(() => {
