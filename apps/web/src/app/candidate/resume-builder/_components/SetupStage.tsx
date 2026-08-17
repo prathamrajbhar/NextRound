@@ -246,80 +246,66 @@ export function SetupStage({
 
         <div className="lg:col-span-4 space-y-6">
           
-          <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-lg space-y-4 hover:shadow-xl transition-all duration-300">
-            {/* Premium Header Layout */}
-            <div className="flex items-start justify-between border-b border-slate-100 dark:border-slate-900 pb-3.5">
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center border transition-all ${
-                  micTesting 
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-600 dark:bg-emerald-950/40 dark:border-emerald-900/40 dark:text-emerald-400' 
-                    : 'bg-slate-50 border-slate-200 text-slate-400 dark:bg-slate-900 dark:border-slate-800 dark:text-slate-500'
-                }`}>
-                  <Mic className="h-4 w-4" />
-                </div>
-                <div>
-                  <span className="text-xs font-extrabold text-slate-900 dark:text-white block leading-tight">Microphone Pre-Check</span>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className={`relative flex h-1.5 w-1.5 rounded-full ${micTesting ? 'bg-emerald-500' : 'bg-slate-400'}`}>
-                      {micTesting && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
-                    </span>
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      {micTesting ? 'Testing Live' : 'Hardware Idle'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setMicTesting(!micTesting)}
-                className={`px-3 py-1.5 rounded-full text-[10px] font-bold shadow-xs transition-all cursor-pointer ${
-                  micTesting
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:hover:bg-white dark:text-slate-900'
-                }`}
-              >
-                {micTesting ? 'Stop' : 'Test Mic'}
-              </button>
+          <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-4">
+            {/* Header / Info */}
+            <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider select-none border-b border-slate-200/80 dark:border-white/5 pb-3">
+              <span className="flex items-center gap-1.5 text-xs font-extrabold text-slate-800 dark:text-white">
+                <Mic className={`h-4 w-4 ${micTesting ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                Microphone Pre-Check
+              </span>
+              <span className={`font-mono font-black ${micTesting ? 'text-slate-700 dark:text-slate-200' : 'text-slate-400'}`}>
+                {micTesting ? `${audioLevel}%` : 'Muted'}
+              </span>
             </div>
 
-            {/* Premium Hardware Scope Audio Visualizer */}
-            <div className="h-14 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-850 px-4 flex items-center justify-between gap-[5px] overflow-hidden">
-              {[...Array(16)].map((_, i) => {
-                const barHeight = micTesting
-                  ? Math.min(100, Math.max(12, audioLevel + Math.abs(Math.sin(i * 1.5)) * Math.min(audioLevel * 0.45, 30)))
-                  : 12;
+            {/* Simple block VU meter */}
+            <div className="flex gap-1 items-center h-3 px-0.5 my-2">
+              {Array.from({ length: 18 }).map((_, index) => {
+                const activeBars = Math.round((audioLevel / 100) * 18);
+                const isActive = micTesting && index < activeBars;
+                let barColor = 'bg-slate-200 dark:bg-slate-800/80';
+                if (isActive) {
+                  if (index > 14) {
+                    barColor = 'bg-rose-500 dark:bg-rose-400';
+                  } else if (index > 11) {
+                    barColor = 'bg-amber-500 dark:bg-amber-400';
+                  } else {
+                    barColor = 'bg-emerald-500 dark:bg-emerald-400';
+                  }
+                }
                 return (
                   <div
-                    key={i}
-                    className={`flex-1 rounded-full transition-all duration-75 ${
-                      micTesting && audioLevel > 5
-                        ? 'bg-gradient-to-t from-emerald-500 via-emerald-400 to-teal-300 dark:from-emerald-600 dark:to-teal-400 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
-                        : 'bg-slate-200 dark:bg-slate-800'
+                    key={index}
+                    className={`h-full flex-1 rounded-[1.5px] transition-all duration-75 ${barColor} ${
+                      isActive ? 'opacity-100 shadow-[0_0_6px_rgba(16,185,129,0.3)]' : 'opacity-40 dark:opacity-20'
                     }`}
-                    style={{ height: `${barHeight}%` }}
                   />
                 );
               })}
             </div>
 
-            {/* Interactive Status Footer */}
-            <div className="flex items-center gap-2 pt-1">
-              <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${
+            {/* Status explanation */}
+            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 leading-relaxed">
+              {micTesting
+                ? audioLevel > 5
+                  ? 'Signal detected — your microphone is working.'
+                  : 'Listening… speak to test your microphone.'
+                : 'Test your microphone hardware before starting the call.'}
+            </p>
+
+            {/* Calibration style button */}
+            <button
+              type="button"
+              onClick={() => setMicTesting(!micTesting)}
+              className={`w-full py-2.5 px-4 rounded-xl border text-[11px] font-black tracking-wide uppercase transition-all duration-200 cursor-pointer flex items-center justify-center gap-2 shadow-xs focus:outline-none focus:ring-2 focus:ring-offset-2 active:scale-[0.97] disabled:opacity-50 ${
                 micTesting
-                  ? audioLevel > 5
-                    ? 'bg-emerald-500 animate-pulse'
-                    : 'bg-amber-400 animate-pulse'
-                  : 'bg-slate-300'
-              }`} />
-              <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-normal">
-                {micTesting
-                  ? audioLevel > 5
-                    ? 'Signal detected — your microphone is working.'
-                    : 'Listening… speak to test your microphone.'
-                  : 'Test your microphone hardware before starting the call.'}
-              </p>
-            </div>
+                  ? 'bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-350 focus:ring-slate-500'
+                  : 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-250 dark:border-emerald-900/60 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:border-emerald-350 focus:ring-emerald-500'
+              }`}
+            >
+              <Mic className="h-3.5 w-3.5" />
+              {micTesting ? 'Stop Test' : 'Test Microphone'}
+            </button>
           </div>
 
         </div>
