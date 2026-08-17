@@ -97,6 +97,44 @@ export function SetupStage({
     };
   }, [micTesting, start]);
 
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const SUGGESTED_ROLES = [
+    'Senior Full Stack Engineer',
+    'AI Product Engineer',
+    'Backend Architect',
+    'Frontend Lead',
+    'DevOps & Infrastructure Lead',
+    'Software Engineer',
+    'React Developer',
+    'Node.js Developer',
+    'Python Developer',
+    'Data Scientist',
+    'Machine Learning Engineer',
+    'Product Manager',
+    'UI/UX Designer',
+    'QA Automation Engineer',
+    'Mobile App Developer (iOS/Android)',
+    'Cloud Solutions Architect',
+  ];
+
+  const filteredSuggestions = SUGGESTED_ROLES.filter((role) =>
+    role.toLowerCase().includes(targetRole.toLowerCase())
+  );
+
   return (
     <div className="relative w-full space-y-6 animate-in fade-in duration-300 font-sans p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800/40 bg-white dark:bg-slate-950 text-slate-800 dark:text-white shadow-xl dark:shadow-2xl overflow-hidden">
 
@@ -146,40 +184,38 @@ export function SetupStage({
               Target Position &amp; Role Focus
             </h2>
 
-            <div className="space-y-2">
+            <div className="space-y-2 relative" ref={suggestionsRef}>
               <label className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
                 Target Job Title
               </label>
               <input
                 type="text"
                 value={targetRole}
-                onChange={(e) => setTargetRole(e.target.value)}
-                list="preset-roles"
+                onChange={(e) => {
+                  setTargetRole(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
                 placeholder="Enter job position (e.g. Senior Full Stack Engineer)..."
                 className="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100 dark:bg-slate-950/80 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-semibold focus:outline-none focus:border-orange-500 dark:focus:border-orange-500 focus:ring-1 focus:ring-orange-500 shadow-inner"
               />
-              <datalist id="preset-roles">
-                {[
-                  'Senior Full Stack Engineer',
-                  'AI Product Engineer',
-                  'Backend Architect',
-                  'Frontend Lead',
-                  'DevOps & Infrastructure Lead',
-                  'Software Engineer',
-                  'React Developer',
-                  'Node.js Developer',
-                  'Python Developer',
-                  'Data Scientist',
-                  'Machine Learning Engineer',
-                  'Product Manager',
-                  'UI/UX Designer',
-                  'QA Automation Engineer',
-                  'Mobile App Developer (iOS/Android)',
-                  'Cloud Solutions Architect',
-                ].map((role) => (
-                  <option key={role} value={role} />
-                ))}
-              </datalist>
+              {showSuggestions && filteredSuggestions.length > 0 && (
+                <div className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-slate-250 dark:border-slate-800/80 bg-white/95 dark:bg-slate-955/95 backdrop-blur-md shadow-2xl p-1.5 space-y-0.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                  {filteredSuggestions.map((role) => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => {
+                        setTargetRole(role);
+                        setShowSuggestions(false);
+                      }}
+                      className="w-full text-left px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-orange-500/10 hover:text-orange-600 dark:hover:text-orange-400 rounded-lg transition-colors cursor-pointer"
+                    >
+                      {role}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
