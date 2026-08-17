@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#fcfbf8" />
+  <meta name="theme-color" content="#ffffff" />
   <title>You're offline — HireOS</title>
   <link rel="icon" href="/logo.png" type="image/png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -17,18 +17,13 @@
     }
 
     :root {
-      --bg-canvas: #fcfbf8;
+      --bg-canvas: #fafafa;
       --card-bg: #ffffff;
-      --card-border: rgba(212, 175, 55, 0.22);
-      --text-heading: #1e1b18;
-      --text-body: #6b655b;
-      --text-muted: #9e978c;
-      --gold-400: #f59e0b;
-      --gold-500: #d97706;
-      --gold-600: #b45309;
-      --gold-700: #92400e;
-      --gold-light: rgba(217, 119, 6, 0.08);
-      --gold-glow: rgba(217, 119, 6, 0.25);
+      --card-border: #e7e5e4;
+      --text-heading: #1c1917;
+      --text-body: #57534e;
+      --text-muted: #a8a29e;
+      --gold-600: #d97706;
       --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
@@ -42,71 +37,23 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 32px 20px;
+      padding: 24px 20px;
       background: var(--bg-canvas);
       color: var(--text-body);
       font-family: var(--font-sans);
-      line-height: 1.6;
+      line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      position: relative;
-      overflow-x: hidden;
     }
 
-    /* Ambient Background Circles & Orbs */
-    .bg-circle {
-      position: fixed;
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .circle-1 {
-      top: -80px;
-      left: -80px;
-      width: 320px;
-      height: 320px;
-      background: radial-gradient(circle, rgba(217, 119, 6, 0.08) 0%, rgba(245, 158, 11, 0.02) 70%, transparent 100%);
-    }
-
-    .circle-2 {
-      bottom: -100px;
-      right: -100px;
-      width: 420px;
-      height: 420px;
-      background: radial-gradient(circle, rgba(212, 175, 55, 0.12) 0%, rgba(217, 119, 6, 0.03) 70%, transparent 100%);
-    }
-
-    .circle-ring-1 {
-      top: 10%;
-      right: 8%;
-      width: 140px;
-      height: 140px;
-      border: 12px solid rgba(217, 119, 6, 0.06);
-    }
-
-    .circle-ring-2 {
-      bottom: 12%;
-      left: 6%;
-      width: 200px;
-      height: 200px;
-      border: 16px solid rgba(212, 175, 55, 0.08);
-    }
-
-    /* Card Container */
     .card {
-      position: relative;
-      z-index: 1;
       width: 100%;
-      max-width: 900px;
+      max-width: 800px;
       background: var(--card-bg);
       border: 1px solid var(--card-border);
-      border-radius: 32px;
-      box-shadow: 
-        0 24px 48px -12px rgba(180, 83, 9, 0.08),
-        0 12px 24px -8px rgba(0, 0, 0, 0.03),
-        0 2px 4px rgba(0, 0, 0, 0.02);
-      animation: card-appear 500ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.02);
+      animation: card-appear 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
       overflow: hidden;
     }
 
@@ -114,8 +61,7 @@
       display: flex;
       flex-direction: row;
       align-items: stretch;
-      justify-content: space-between;
-      padding: 52px 48px;
+      padding: 48px;
       gap: 48px;
     }
 
@@ -130,7 +76,7 @@
 
     .card-divider {
       width: 1px;
-      background: linear-gradient(to bottom, transparent, rgba(212, 175, 55, 0.2) 20%, rgba(212, 175, 55, 0.2) 80%, transparent);
+      background-color: #f5f5f4;
       align-self: stretch;
     }
 
@@ -143,207 +89,146 @@
       text-align: center;
     }
 
-    /* Icon Badge */
+    /* Left Column Elements */
     .icon-wrapper {
+      color: #78716c;
+      margin-bottom: 24px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 88px;
-      height: 88px;
-      border-radius: 26px;
-      background: linear-gradient(135deg, rgba(217, 119, 6, 0.1) 0%, rgba(245, 158, 11, 0.04) 100%);
-      border: 1.5px solid rgba(217, 119, 6, 0.22);
-      color: var(--gold-500);
-      margin-bottom: 28px;
-      box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.15);
-      animation: soft-pulse 3s ease-in-out infinite;
     }
-
     .icon-wrapper svg {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
     }
 
-    /* Status Pill */
     .status-badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 16px;
-      background: rgba(217, 119, 6, 0.08);
-      border: 1px solid rgba(217, 119, 6, 0.2);
+      gap: 6px;
+      padding: 4px 12px;
+      background: #f5f5f4;
       border-radius: 9999px;
-      font-size: 0.8rem;
+      font-size: 0.72rem;
       font-weight: 600;
-      letter-spacing: 0.03em;
-      color: var(--gold-600);
-      margin-bottom: 20px;
+      color: #78716c;
+      margin-bottom: 16px;
       text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
-
     .status-dot {
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background-color: var(--gold-500);
-      position: relative;
+      background-color: #a8a29e;
     }
 
-    .status-dot::after {
-      content: "";
-      position: absolute;
-      inset: -2px;
-      border-radius: 50%;
-      background: var(--gold-500);
-      animation: ping-dot 1.8s ease-in-out infinite;
-    }
-
-    /* Typography */
     h1 {
       color: var(--text-heading);
-      font-size: 2rem;
+      font-size: 1.75rem;
       font-weight: 700;
-      letter-spacing: -0.025em;
-      line-height: 1.3;
-      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      margin-bottom: 8px;
     }
 
     .description {
-      font-size: 1rem;
+      font-size: 0.92rem;
       color: var(--text-body);
-      max-width: 420px;
-      margin: 0 auto 36px;
-      line-height: 1.6;
+      max-width: 320px;
+      margin: 0 auto 32px;
+      line-height: 1.5;
     }
 
-    /* Actions */
     .btn-retry {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       width: 100%;
-      max-width: 320px;
-      height: 54px;
-      padding: 0 28px;
-      border-radius: 9999px;
+      max-width: 240px;
+      height: 44px;
+      border-radius: 8px;
       border: none;
-      background: linear-gradient(135deg, var(--gold-500) 0%, var(--gold-600) 100%);
+      background: var(--text-heading);
       color: #ffffff;
       font-family: var(--font-sans);
-      font-size: 1rem;
+      font-size: 0.88rem;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 10px 25px -4px rgba(217, 119, 6, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color 0.2s ease, transform 0.1s ease;
     }
-
     .btn-retry:hover {
-      background: linear-gradient(135deg, var(--gold-400) 0%, var(--gold-500) 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 14px 30px -4px rgba(217, 119, 6, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      background: #2e2a27;
     }
-
     .btn-retry:active {
-      transform: translateY(0);
-      box-shadow: 0 6px 16px -2px rgba(217, 119, 6, 0.35);
+      transform: scale(0.98);
     }
-
-    .btn-retry:focus-visible {
-      outline: 3px solid var(--gold-glow);
-      outline-offset: 3px;
-    }
-
-    .btn-retry:disabled {
-      opacity: 0.8;
-      cursor: not-allowed;
-      transform: none;
-    }
-
     .btn-retry svg {
-      width: 20px;
-      height: 20px;
+      width: 16px;
+      height: 16px;
     }
 
-    .card-footer {
-      background: rgba(245, 158, 11, 0.02);
-      border-top: 1px solid rgba(212, 175, 55, 0.08);
-      padding: 16px;
-      text-align: center;
-      width: 100%;
-    }
-
-    .footer {
-      font-size: 0.775rem;
-      color: var(--text-muted);
-      letter-spacing: 0.02em;
-      margin: 0;
-    }
-
-    /* Tic-Tac-Toe Game styles */
+    /* Right Column: Game Elements */
     .game-header {
       margin-bottom: 16px;
     }
     .game-header h2 {
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: var(--text-heading);
       margin-bottom: 4px;
     }
     .game-header p {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
     }
 
     .game-controls {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 240px;
+      margin-bottom: 12px;
     }
 
     .difficulty-selector {
-      display: inline-flex;
-      background: rgba(217, 119, 6, 0.04);
-      padding: 3px;
-      border-radius: 12px;
-      border: 1px solid rgba(212, 175, 55, 0.12);
+      display: flex;
+      gap: 12px;
     }
     .difficulty-btn {
       border: none;
       background: transparent;
-      padding: 6px 14px;
-      border-radius: 9px;
+      padding: 4px 0;
       font-family: var(--font-sans);
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: var(--text-body);
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-muted);
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: color 0.2s ease, border-color 0.2s ease;
+      border-bottom: 2px solid transparent;
     }
     .difficulty-btn.active {
-      background: #ffffff;
-      color: var(--gold-700);
-      box-shadow: 0 2px 6px rgba(217, 119, 6, 0.08);
+      color: var(--text-heading);
+      border-bottom: 2px solid var(--text-heading);
+      font-weight: 600;
     }
 
     .sound-toggle {
-      border: 1px solid rgba(212, 175, 55, 0.2);
+      border: none;
       background: transparent;
-      color: var(--text-body);
-      width: 32px;
-      height: 32px;
-      border-radius: 10px;
+      color: var(--text-muted);
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: color 0.2s ease;
     }
     .sound-toggle:hover {
-      background: rgba(217, 119, 6, 0.04);
-      color: var(--gold-600);
-      border-color: var(--gold-400);
+      color: var(--text-heading);
     }
     .sound-toggle svg {
       width: 16px;
@@ -352,93 +237,71 @@
 
     .scoreboard {
       display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 20px;
+      justify-content: space-around;
       width: 100%;
-      max-width: 300px;
+      max-width: 240px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #f5f5f4;
+      padding-bottom: 12px;
     }
     .score-item {
-      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      background: rgba(245, 158, 11, 0.02);
-      border: 1px solid rgba(212, 175, 55, 0.1);
-      padding: 6px 10px;
-      border-radius: 12px;
-      transition: border-color 0.3s ease;
-    }
-    .score-item.active {
-      border-color: rgba(217, 119, 6, 0.4);
-      background: rgba(217, 119, 6, 0.02);
     }
     .score-label {
-      font-size: 0.72rem;
-      font-weight: 600;
+      font-size: 0.65rem;
+      font-weight: 500;
       color: var(--text-muted);
       margin-bottom: 2px;
       text-transform: uppercase;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.05em;
     }
     .score-val {
       font-size: 1.15rem;
-      font-weight: 700;
+      font-weight: 600;
       color: var(--text-heading);
     }
     .score-item.player .score-val {
       color: var(--gold-600);
     }
-    .score-item.ai .score-val {
-      color: var(--text-heading);
-    }
 
     .game-board {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
+      gap: 0;
       width: 100%;
-      max-width: 250px;
+      max-width: 220px;
       aspect-ratio: 1;
       margin-bottom: 16px;
     }
     .cell {
-      background: rgba(255, 255, 255, 0.6);
-      border: 1px solid rgba(212, 175, 55, 0.18);
-      border-radius: 16px;
+      border: none;
+      background: transparent;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: background-color 0.15s ease;
       position: relative;
     }
     .cell:hover:not(:disabled) {
-      background: rgba(217, 119, 6, 0.04);
-      border-color: rgba(217, 119, 6, 0.35);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(217, 119, 6, 0.06);
-    }
-    .cell:active:not(:disabled) {
-      transform: translateY(0) scale(0.96);
+      background-color: #f5f5f4;
     }
     .cell:disabled {
       cursor: default;
     }
-    .cell.winning-cell {
-      background: rgba(217, 119, 6, 0.12) !important;
-      border-color: var(--gold-500) !important;
-      animation: cell-win-pulse 1.2s ease-in-out infinite alternate;
+    
+    /* Grid borders only inside the board */
+    .cell:nth-child(3n+1), .cell:nth-child(3n+2) {
+      border-right: 1px solid #e7e5e4;
     }
-    @keyframes cell-win-pulse {
-      from {
-        transform: scale(1);
-        box-shadow: 0 0 8px rgba(217, 119, 6, 0.15);
-      }
-      to {
-        transform: scale(1.04);
-        box-shadow: 0 0 16px rgba(217, 119, 6, 0.3);
-      }
+    .cell:nth-child(-n+6) {
+      border-bottom: 1px solid #e7e5e4;
+    }
+
+    .cell.winning-cell {
+      background-color: #fef08a !important; /* Soft yellow highlight */
     }
 
     .cell-x {
@@ -449,93 +312,92 @@
     }
 
     .cell svg {
-      width: 48%;
-      height: 48%;
+      width: 44%;
+      height: 44%;
       stroke: currentColor;
-      stroke-width: 3.5;
+      stroke-width: 2.8;
       stroke-linecap: round;
       stroke-linejoin: round;
       fill: none;
-      animation: icon-scale-in 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+      animation: icon-scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
     }
     @keyframes icon-scale-in {
       from {
         opacity: 0;
-        transform: scale(0.3) rotate(-15deg);
+        transform: scale(0.4);
       }
       to {
         opacity: 1;
-        transform: scale(1) rotate(0);
+        transform: scale(1);
       }
     }
 
     .game-status {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--text-heading);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-body);
       margin-bottom: 12px;
-      height: 20px;
-      letter-spacing: 0.01em;
+      height: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
     .btn-reset {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      border: 1px solid rgba(212, 175, 55, 0.25);
-      background: transparent;
-      color: var(--gold-600);
-      padding: 8px 18px;
-      border-radius: 9999px;
+      gap: 6px;
+      border: 1px solid #e7e5e4;
+      background: #ffffff;
+      color: var(--text-body);
+      padding: 6px 14px;
+      border-radius: 6px;
       font-family: var(--font-sans);
-      font-size: 0.82rem;
-      font-weight: 600;
+      font-size: 0.78rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: all 0.15s ease;
     }
     .btn-reset:hover {
-      background: rgba(217, 119, 6, 0.04);
-      border-color: var(--gold-500);
-      color: var(--gold-700);
-      transform: translateY(-1px);
+      background: #f5f5f4;
+      border-color: #d6d3d1;
+      color: var(--text-heading);
     }
     .btn-reset:active {
-      transform: translateY(0);
+      transform: scale(0.97);
     }
     .btn-reset svg {
-      width: 14px;
-      height: 14px;
-      transition: transform 0.4s ease;
+      width: 12px;
+      height: 12px;
+      transition: transform 0.3s ease;
     }
     .btn-reset:hover svg {
       transform: rotate(180deg);
     }
 
-    /* Keyframes */
+    .card-footer {
+      background: #fafafa;
+      border-top: 1px solid #f5f5f4;
+      padding: 12px;
+      text-align: center;
+      width: 100%;
+    }
+    .footer {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.01em;
+      margin: 0;
+    }
+
     @keyframes card-appear {
       from {
         opacity: 0;
-        transform: translateY(16px) scale(0.98);
+        transform: translateY(8px);
       }
       to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
       }
-    }
-
-    @keyframes soft-pulse {
-      0%, 100% {
-        box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.15);
-      }
-      50% {
-        box-shadow: 0 14px 28px -2px rgba(217, 119, 6, 0.28);
-      }
-    }
-
-    @keyframes ping-dot {
-      0% { transform: scale(1); opacity: 0.8; }
-      80%, 100% { transform: scale(2.2); opacity: 0; }
     }
 
     @keyframes spin {
@@ -547,62 +409,23 @@
       animation: spin 0.9s linear infinite;
     }
 
-    /* Dark Mode Support */
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg-canvas: #0c0a09;
-        --card-bg: #1c1917;
-        --card-border: rgba(212, 175, 55, 0.15);
-        --text-heading: #f5f5f4;
-        --text-body: #d6d3d1;
-        --text-muted: #78716c;
-        --gold-light: rgba(217, 119, 6, 0.12);
-        --gold-glow: rgba(217, 119, 6, 0.35);
-      }
-      
-      .cell {
-        background: rgba(28, 25, 23, 0.6);
-        border: 1px solid rgba(212, 175, 55, 0.15);
-      }
-      
-      .cell:hover:not(:disabled) {
-        background: rgba(217, 119, 6, 0.08);
-        border-color: rgba(217, 119, 6, 0.5);
-      }
-      
-      .difficulty-selector {
-        background: rgba(217, 119, 6, 0.08);
-      }
-      
-      .difficulty-btn.active {
-        background: #2e2a24;
-        color: #f59e0b;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-      }
-      
-      .score-item {
-        background: rgba(217, 119, 6, 0.02);
-      }
-    }
-
     /* Responsive */
-    @media (max-width: 820px) {
+    @media (max-width: 768px) {
       .card {
-        max-width: 480px;
+        max-width: 440px;
       }
       .card-content {
         flex-direction: column;
-        padding: 40px 24px 32px;
-        gap: 36px;
+        padding: 40px 24px;
+        gap: 32px;
       }
       .card-divider {
         width: 100%;
         height: 1px;
-        background: linear-gradient(to right, transparent, rgba(212, 175, 55, 0.2) 20%, rgba(212, 175, 55, 0.2) 80%, transparent);
         align-self: auto;
       }
       h1 {
-        font-size: 1.65rem;
+        font-size: 1.5rem;
       }
       .btn-retry {
         max-width: 100%;
@@ -610,33 +433,26 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .card, .icon-wrapper, .status-dot::after, .is-loading svg, .cell.winning-cell, .cell svg {
+      .card, .is-loading svg, .cell svg {
         animation: none !important;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Ambient Gold & Light Elements -->
-  <div class="bg-circle circle-1"></div>
-  <div class="bg-circle circle-2"></div>
-  <div class="bg-circle circle-ring-1"></div>
-  <div class="bg-circle circle-ring-2"></div>
-
   <main class="card" role="main" aria-labelledby="offline-title">
     <div class="card-content">
       <!-- Left Column: Status -->
       <div class="status-column">
-        <!-- Gold Wi-Fi Off Icon Badge -->
+        <!-- Wi-Fi Off Icon -->
         <div class="icon-wrapper" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="2" y1="2" x2="22" y2="22" />
-            <path d="M8.5 16.5a5 5 0 0 1 7 0" />
-            <path d="M2 8.82a15 15 0 0 1 4.17-2.65" />
-            <path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76" />
-            <path d="M16.85 11.25a10 10 0 0 1 2.22 1.68" />
-            <path d="M5 13a10 10 0 0 1 5.24-2.76" />
-            <circle cx="12" cy="20" r="1" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="1" y1="1" x2="23" y2="23" />
+            <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.5" />
+            <path d="M5 12.5a10.94 10.94 0 0 1 5.83-2.84" />
+            <path d="M7.34 6.34A16.85 16.85 0 0 1 12 5c2.2 0 4.3.4 6.2 1.15" />
+            <path d="M1 8.5a16.94 16.94 0 0 1 2.34-1.84" />
+            <circle cx="12" cy="19" r="1" />
           </svg>
         </div>
 
@@ -644,22 +460,19 @@
         <div>
           <div class="status-badge" role="status">
             <span class="status-dot" aria-hidden="true"></span>
-            <span id="status-text">No Internet Connection</span>
+            <span id="status-text">Offline</span>
           </div>
         </div>
 
         <h1 id="offline-title">Oops! You're offline</h1>
         <p class="description">
-          Looks like you are facing a temporary network interruption. Everything is saved — check your connection and try again.
+          Looks like you are facing a temporary network interruption. Check your connection and try again.
         </p>
 
-        <!-- Single Clean Action Button -->
+        <!-- Retry Button -->
         <button type="button" class="btn-retry" id="retry-btn">
-          <svg id="retry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-            <path d="M8 16H3v5" />
-            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-            <path d="M21 3v5h-5" />
+          <svg id="retry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
           </svg>
           <span id="retry-label">Try Again</span>
         </button>
@@ -702,7 +515,7 @@
             <span class="score-label">You (X)</span>
             <span class="score-val" id="score-player">0</span>
           </div>
-          <div class="score-item" style="flex: 0.8;">
+          <div class="score-item">
             <span class="score-label">Ties</span>
             <span class="score-val" id="score-ties">0</span>
           </div>
@@ -730,7 +543,7 @@
 
         <!-- Reset Button -->
         <button type="button" class="btn-reset" id="reset-btn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
           </svg>
           <span>Reset Match</span>
@@ -756,8 +569,8 @@
         checking = true;
         btn.disabled = true;
         btn.classList.add("is-loading");
-        label.textContent = "Checking Connection...";
-        statusText.textContent = "Testing Network...";
+        label.textContent = "Checking...";
+        statusText.textContent = "Testing...";
       }
 
       function setIdle() {
@@ -765,7 +578,7 @@
         btn.disabled = false;
         btn.classList.remove("is-loading");
         label.textContent = "Try Again";
-        statusText.textContent = "No Internet Connection";
+        statusText.textContent = "Offline";
       }
 
       function refresh() {
@@ -817,8 +630,6 @@
       var scorePlayerEl = document.getElementById('score-player');
       var scoreTiesEl = document.getElementById('score-ties');
       var scoreAiEl = document.getElementById('score-ai');
-      var scorePlayerCard = document.getElementById('score-player-card');
-      var scoreAiCard = document.getElementById('score-ai-card');
 
       // Audio setup (using Web Audio API)
       var audioCtx = null;
@@ -840,53 +651,53 @@
 
           if (type === 'x') {
             osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); // A5
-            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08); // A5
+            gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+          } else if (type === 'o') {
+            osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+            osc.frequency.exponentialRampToValueAtTime(554.37, audioCtx.currentTime + 0.1); // C#5
+            gain.gain.setValueAtTime(0.03, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
             osc.start();
             osc.stop(audioCtx.currentTime + 0.1);
-          } else if (type === 'o') {
-            osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
-            osc.frequency.exponentialRampToValueAtTime(554.37, audioCtx.currentTime + 0.12); // C#5
-            gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.12);
           } else if (type === 'win') {
             var now = audioCtx.currentTime;
             osc.frequency.setValueAtTime(523.25, now); // C5
-            osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-            osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
-            osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
-            gain.gain.setValueAtTime(0.05, now);
-            gain.gain.linearRampToValueAtTime(0.05, now + 0.24);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+            osc.frequency.setValueAtTime(659.25, now + 0.06); // E5
+            osc.frequency.setValueAtTime(783.99, now + 0.12); // G5
+            osc.frequency.setValueAtTime(1046.50, now + 0.18); // C6
+            gain.gain.setValueAtTime(0.04, now);
+            gain.gain.linearRampToValueAtTime(0.04, now + 0.18);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
             osc.start();
-            osc.stop(now + 0.38);
+            osc.stop(now + 0.3);
           } else if (type === 'lose') {
             var now = audioCtx.currentTime;
             osc.frequency.setValueAtTime(349.23, now); // F4
-            osc.frequency.setValueAtTime(311.13, now + 0.15); // Eb4
-            osc.frequency.setValueAtTime(261.63, now + 0.3); // C4
-            gain.gain.setValueAtTime(0.05, now);
-            gain.gain.linearRampToValueAtTime(0.05, now + 0.3);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.48);
+            osc.frequency.setValueAtTime(311.13, now + 0.12); // Eb4
+            osc.frequency.setValueAtTime(261.63, now + 0.24); // C4
+            gain.gain.setValueAtTime(0.04, now);
+            gain.gain.linearRampToValueAtTime(0.04, now + 0.24);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
             osc.start();
-            osc.stop(now + 0.48);
+            osc.stop(now + 0.4);
           } else if (type === 'draw') {
             var now = audioCtx.currentTime;
             osc.frequency.setValueAtTime(392.00, now); // G4
-            osc.frequency.setValueAtTime(392.00, now + 0.1);
-            gain.gain.setValueAtTime(0.04, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+            osc.frequency.setValueAtTime(392.00, now + 0.08);
+            gain.gain.setValueAtTime(0.03, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
             osc.start();
-            osc.stop(now + 0.22);
+            osc.stop(now + 0.18);
           } else if (type === 'click') {
             osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+            gain.gain.setValueAtTime(0.01, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.04);
+            osc.stop(audioCtx.currentTime + 0.03);
           }
         } catch (e) {
           // Fail silently
@@ -1029,19 +840,13 @@
       function updateTurnIndicator() {
         if (currentPlayer === 'X') {
           gameStatus.textContent = 'Your turn (X)';
-          scorePlayerCard.classList.add('active');
-          scoreAiCard.classList.remove('active');
         } else {
           gameStatus.textContent = 'AI thinking...';
-          scorePlayerCard.classList.remove('active');
-          scoreAiCard.classList.add('active');
         }
       }
 
       function endGame(result, winCombo) {
         isGameActive = false;
-        scorePlayerCard.classList.remove('active');
-        scoreAiCard.classList.remove('active');
 
         if (result === 'X') {
           gameStatus.textContent = 'You Win!';
@@ -1119,9 +924,6 @@
           playSound('click');
         }
       });
-
-      // Initial active tab styling
-      scorePlayerCard.classList.add('active');
     })();
   </script>
 </body>
