@@ -141,6 +141,7 @@ export default function AIResumeBuilderPage() {
     submitResponse,
     replayLastAudio,
     endCall,
+    abortCall,
   } = useResumeVoiceSession({
     targetRole,
     experienceLevel,
@@ -274,7 +275,7 @@ export default function AIResumeBuilderPage() {
 
   const handleCancelCall = () => {
     setIsTimerRunning(false);
-    endCall();
+    abortCall();
     setStage('setup');
   };
 

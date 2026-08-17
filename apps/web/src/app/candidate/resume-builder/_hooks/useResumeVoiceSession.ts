@@ -417,6 +417,24 @@ export function useResumeVoiceSession({
     });
   }, [aiState, stopSpeechRecognition, startSpeechRecognition]);
 
+  const abortCall = useCallback(() => {
+    stopAudio();
+    stopSpeechRecognition();
+    setSessionId(null);
+    setTurnIndex(0);
+    setStage('intro');
+    setConversationHistory([]);
+    setAiState('speaking');
+    setCandidateSpeechText('');
+    setRealtimeInsight(null);
+    setError(null);
+    setMemory({});
+    conversationHistoryRef.current = [];
+    turnIndexRef.current = 0;
+    stageRef.current = 'intro';
+    memoryRef.current = {};
+  }, [stopSpeechRecognition]);
+
   return {
     sessionId,
     stage,
@@ -435,5 +453,6 @@ export function useResumeVoiceSession({
     submitVoiceResponse,
     replayLastAudio,
     endCall,
+    abortCall,
   };
 }
