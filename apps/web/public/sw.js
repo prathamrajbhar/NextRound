@@ -1,11 +1,16 @@
-const CACHE_NAME = "hireos-offline-v1";
+const CACHE_NAME = "hireos-offline-v2";
 const OFFLINE_URL = "/offline.html";
+const LOTTIE_CDN = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.0/lottie.min.js";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE_NAME)
-      .then((cache) => cache.add(OFFLINE_URL))
+      .then((cache) => {
+        return cache.addAll([OFFLINE_URL, LOTTIE_CDN]).catch(() => {
+          return cache.add(OFFLINE_URL);
+        });
+      })
       .then(() => self.skipWaiting())
   );
 });
