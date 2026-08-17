@@ -33,9 +33,22 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeConfig, setThemeConfigState] = useState<ThemeConfig>(DEFAULT_THEME_CONFIG);
 
   useEffect(() => {
+    let initialMode: Mode = 'dark';
+    try {
+      const saved = localStorage.getItem('hireos_theme');
+      if (saved === 'light' || saved === 'dark') {
+        initialMode = saved;
+      }
+    } catch (e) {}
+
+    setThemeState(initialMode);
     const root = document.documentElement;
-    root.classList.add('dark');
-    applyThemeToElement(root, DEFAULT_THEME_CONFIG, 'dark');
+    if (initialMode === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    applyThemeToElement(root, DEFAULT_THEME_CONFIG, initialMode);
   }, []);
 
   useEffect(() => {
@@ -46,14 +59,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
         const mode = res?.settings?.theme;
         if (mode !== 'light' && mode !== 'dark') return;
-        const root = document.documentElement;
-        if (mode === 'dark') {
-          root.classList.add('dark');
-        } else {
-          root.classList.remove('dark');
-        }
-        applyThemeToElement(root, DEFAULT_THEME_CONFIG, mode);
-        setThemeState(mode);
+        applyTheme(mode);
       })
       .catch(() => {});
     return () => {
@@ -63,6 +69,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const applyTheme = (newMode: Mode, config: ThemeConfig = themeConfig) => {
     setThemeState(newMode);
+    try {
+      localStorage.setItem('hireos_theme', newMode);
+    } catch (e) {}
     const root = document.documentElement;
     if (newMode === 'dark') {
       root.classList.add('dark');

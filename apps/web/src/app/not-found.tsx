@@ -1,9 +1,15 @@
 import Link from 'next/link';
-import { ArrowLeft, Search, Home, Briefcase, Sparkles, Compass } from '@/lib/lucide-google-icons';
+import { ArrowLeft, Search, Home, Briefcase, Sparkles } from '@/lib/lucide-google-icons';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export default function NotFound() {
   return (
     <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-8 relative overflow-hidden">
+      {/* Top Bar Theme Toggle */}
+      <div className="absolute top-6 right-6 z-20">
+        <ThemeToggle />
+      </div>
+
       {/* Background Ambient Glows */}
       <div 
         className="absolute -top-32 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-brand-500/15 via-amber-500/10 to-transparent blur-[90px] pointer-events-none rounded-full" 
