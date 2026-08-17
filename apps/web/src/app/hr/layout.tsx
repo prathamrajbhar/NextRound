@@ -7,7 +7,7 @@ import { Bell, Menu, X } from '@/lib/lucide-google-icons';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import Image from 'next/image';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { useHrProfile } from '@/hooks/queries';
@@ -27,6 +27,7 @@ export default function HrLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuthContext();
   const [mounted, setMounted] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -38,6 +39,16 @@ export default function HrLayout({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Enforce company onboarding check
+  useEffect(() => {
+    if (!mounted) return;
+    if (!user) return;
+
+    if (!user.org_id) {
+      router.push('/onboarding/company');
+    }
+  }, [mounted, user, router]);
 
   const displayName = mounted ? (profileName || (user?.email ? user.email.split('@')[0] : 'Recruiter')) : 'Recruiter';
 

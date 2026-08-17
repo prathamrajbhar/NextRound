@@ -8,6 +8,7 @@ from core.config import settings
 logger = logging.getLogger("sourcing_service")
 
 EXTERNAL_SCRAPER_BASE_URL = settings.profile_scraper_base_url
+EXTERNAL_SCRAPER_TIMEOUT = settings.profile_scraper_timeout_ms / 1000.0
 
 async def fetch_github_profile(github_id: str) -> Dict[str, Any]:
     if not github_id or not github_id.strip():
@@ -17,7 +18,7 @@ async def fetch_github_profile(github_id: str) -> Dict[str, Any]:
     url = f"{EXTERNAL_SCRAPER_BASE_URL}/github/{clean_id}"
 
     try:
-        async with httpx.AsyncClient(timeout=15.0, verify=False, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=EXTERNAL_SCRAPER_TIMEOUT, verify=False, follow_redirects=True) as client:
 
             resp = await client.get(url)
             if resp.status_code == 404:
@@ -59,7 +60,7 @@ async def fetch_linkedin_profile(linkedin_id: str) -> Dict[str, Any]:
     url = f"{EXTERNAL_SCRAPER_BASE_URL}/linkedin/{clean_id}"
 
     try:
-        async with httpx.AsyncClient(timeout=15.0, verify=False, follow_redirects=True) as client:
+        async with httpx.AsyncClient(timeout=EXTERNAL_SCRAPER_TIMEOUT, verify=False, follow_redirects=True) as client:
 
             resp = await client.get(url)
             if resp.status_code == 404:

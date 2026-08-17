@@ -38,6 +38,17 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
     );
   }
 
+  // Sync localStorage with progressPercent
+  React.useEffect(() => {
+    if (onboard) {
+      if (onboard.progressPercent === 100) {
+        localStorage.setItem('onboarding_completed_' + applicationId, 'true');
+      } else {
+        localStorage.removeItem('onboarding_completed_' + applicationId);
+      }
+    }
+  }, [onboard, applicationId]);
+
   const handleToggleTask = (taskId: string) => {
     const updatedTasks = onboard.tasks.map((task) => {
       if (task.id === taskId) {
@@ -51,6 +62,12 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
 
     const completedCount = updatedTasks.filter((t) => t.status === 'completed').length;
     const progressPercent = Math.round((completedCount / updatedTasks.length) * 100);
+
+    if (progressPercent === 100) {
+      localStorage.setItem('onboarding_completed_' + applicationId, 'true');
+    } else {
+      localStorage.removeItem('onboarding_completed_' + applicationId);
+    }
 
     queryClient.setQueryData<OnboardingRecord>(['onboarding', applicationId], (prev) =>
       prev ? { ...prev, tasks: updatedTasks, progressPercent } : prev
@@ -66,21 +83,54 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
       case 'access':
         return 'bg-blue-50 text-blue-700 border-blue-105';
       case 'training':
-        return 'bg-indigo-50 text-indigo-705 border-indigo-100';
+        return 'bg-indigo-50 text-indigo-75 border-indigo-100';
       default:
-        return 'bg-emerald-50 text-emerald-705 border-emerald-100';
+        return 'bg-emerald-50 text-emerald-75 border-emerald-100';
     }
   };
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-16 animate-in fade-in duration-200">
       <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500">
-        <Link href="/candidate/applications" className="hover:text-indigo-650 transition-colors">Applications</Link>
+        {onboard.progressPercent < 100 ? (
+          <>
+            <span className="text-slate-400">Applications</span>
+            <ChevronRight className="h-3 w-3 text-slate-300" />
+            <span className="text-slate-400">{onboard.jobTitle}</span>
+          </>
+        ) : (
+          <>
+            <Link href="/candidate/applications" className="hover:text-indigo-650 transition-colors">Applications</Link>
+            <ChevronRight className="h-3 w-3 text-slate-300" />
+            <Link href={`/candidate/applications/${applicationId}`} className="hover:text-indigo-655 transition-colors">{onboard.jobTitle}</Link>
+          </>
+        )}
         <ChevronRight className="h-3 w-3 text-slate-300" />
-        <Link href={`/candidate/applications/${applicationId}`} className="hover:text-indigo-655 transition-colors">{onboard.jobTitle}</Link>
-        <ChevronRight className="h-3 w-3 text-slate-300" />
-        <span className="text-slate-800">Onboarding checklist</span>
+        <span className="text-slate-800 dark:text-slate-200 font-bold">Onboarding checklist</span>
       </div>
+
+      {onboard.progressPercent < 100 && (
+        <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-3xl flex items-start gap-3 text-amber-800 dark:text-amber-300 text-xs font-semibold shadow-sm animate-in slide-in-from-top-4 duration-300">
+          <span className="text-base select-none">⚠️</span>
+          <div>
+            <p className="font-bold">Onboarding Checklist Incomplete</p>
+            <p className="mt-0.5 opacity-90">Please complete all tasks to unlock access to the candidate portal dashboard, job board, and your profile sections.</p>
+          </div>
+        </div>
+      )}
+
+      {onboard.progressPercent === 100 && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/25 rounded-3xl flex items-start gap-3 text-emerald-800 dark:text-emerald-300 text-xs font-semibold shadow-sm animate-in slide-in-from-top-4 duration-300">
+          <span className="text-base select-none">✅</span>
+          <div>
+            <p className="font-bold">All Onboarding Tasks Complete!</p>
+            <p className="mt-0.5 opacity-90">Outstanding job! You have completed all initial checklist tasks. Your workspace access has been fully restored.</p>
+            <Link href="/candidate/dashboard" className="inline-flex items-center gap-1.5 mt-2 bg-emerald-600 dark:bg-emerald-500 hover:bg-emerald-700 dark:hover:bg-emerald-650 text-white px-3.5 py-1.5 rounded-xl font-bold transition-all shadow-sm">
+              Proceed to Dashboard →
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="rounded-3xl border border-white/60 bg-white/45 p-6 sm:p-8 shadow-md backdrop-blur-md glass-panel space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

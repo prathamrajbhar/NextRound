@@ -12,7 +12,8 @@ import {
   FileText,
   User,
   Settings,
-  LogOut
+  LogOut,
+  Lock
 } from '@/lib/lucide-google-icons';
 
 import { useAuthContext } from '@/contexts/AuthContext';
@@ -20,9 +21,10 @@ import { useAuthContext } from '@/contexts/AuthContext';
 interface CandidateSidebarProps {
   avatar?: string;
   name?: string;
+  isOnboardingBlocked?: boolean;
 }
 
-export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = 'Candidate User' }: CandidateSidebarProps) {
+export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = 'Candidate User', isOnboardingBlocked = false }: CandidateSidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuthContext();
 
@@ -54,7 +56,7 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
   return (
     <aside className="w-64 border-r border-white/60 dark:border-slate-800/80 bg-white/30 dark:bg-slate-900/60 backdrop-blur-md flex flex-col p-4 h-screen transition-colors duration-300">
       <div className="mb-6 px-2">
-        <Link href="/" className="flex items-center gap-2.5 group">
+        <Link href="/" className={isOnboardingBlocked ? 'flex items-center gap-2.5 group pointer-events-none' : 'flex items-center gap-2.5 group'}>
           <div className="relative h-9 w-9 rounded-full overflow-hidden group-hover:scale-105 transition-transform duration-200 flex-shrink-0 select-none">
             <Image
               src="/logo.png"
@@ -81,11 +83,35 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
             </span>
             <div className="space-y-0.5">
               {group.items.map((item) => {
-
                 const isActive = pathname === item.path ||
                   (item.path !== '/candidate/dashboard' && pathname.startsWith(item.path)) ||
                   (item.path === '/candidate/mock/new' && pathname.startsWith('/candidate/mock'));
                 const Icon = item.icon;
+                const isBlocked = isOnboardingBlocked && !isActive;
+                const content = (
+                  <>
+                    <Icon className={`h-4.5 w-4.5 transition-transform duration-200 ease-out ${!isBlocked ? 'group-hover:scale-110' : ''} ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'
+                      }`} />
+                    <span className="flex-1">{item.name}</span>
+                    {isBlocked ? (
+                      <Lock className="h-3.5 w-3.5 text-slate-400 dark:text-slate-650" />
+                    ) : isActive && (
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 opacity-80" />
+                    )}
+                  </>
+                );
+
+                if (isBlocked) {
+                  return (
+                    <div
+                      key={item.path}
+                      className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold border-l-2 border-transparent text-slate-350 dark:text-slate-600 cursor-not-allowed select-none"
+                    >
+                      {content}
+                    </div>
+                  );
+                }
+
                 return (
                   <Link
                     key={item.path}
@@ -96,12 +122,7 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
                       : 'text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-100/50 dark:hover:bg-slate-800/50 hover:text-slate-800 dark:hover:text-slate-200'
                       }`}
                   >
-                    <Icon className={`h-4.5 w-4.5 transition-transform duration-200 ease-out group-hover:scale-110 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'
-                      }`} />
-                    <span className="flex-1">{item.name}</span>
-                    {isActive && (
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 opacity-80" />
-                    )}
+                    {content}
                   </Link>
                 );
               })}

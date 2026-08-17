@@ -7,9 +7,9 @@ import { Bell, Menu, X } from '@/lib/lucide-google-icons';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import Image from 'next/image';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuthContext } from '@/contexts/AuthContext';
-import { useNotifications, useCandidateProfile } from '@/hooks/queries';
+import { useNotifications, useCandidateProfile, useCandidateApplications } from '@/hooks/queries';
 
 interface ApiNotification {
   id: string;
@@ -26,13 +26,16 @@ export default function CandidateLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user } = useAuthContext();
   const [mounted, setMounted] = useState(false);
   const [avatar, setAvatar] = useState('/avatar-girl.jpg');
   const [name, setName] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isOnboardingBlocked, setIsOnboardingBlocked] = useState(false);
 
-  const { data: profileData } = useCandidateProfile();
+  const { data: profileData, isLoading: isProfileLoading } = useCandidateProfile();
+  const { data: applicationsRes } = useCandidateApplications();
 
   useEffect(() => {
     setMounted(true);
@@ -47,6 +50,37 @@ export default function CandidateLayout({
     if (profile.avatar_url) setAvatar(profile.avatar_url);
     if (profile.full_name) setName(profile.full_name);
   }, [profileData]);
+
+  // Unified redirection logic for candidate profile and task onboarding
+  useEffect(() => {
+    if (!mounted) return;
+    if (isProfileLoading) return;
+
+    // 1. Initial Candidate Profile Onboarding Enforcement
+    const profile = profileData?.profile;
+    const isProfileIncomplete = !profile || !profile.full_name || !profile.data_consent;
+    if (isProfileIncomplete) {
+      router.push('/onboarding/candidate');
+      return;
+    }
+
+    // 2. Pending Application Onboarding Checklist Enforcement
+    if (applicationsRes) {
+      const acceptedApp = applicationsRes.find(app => app.status === 'accepted');
+      if (acceptedApp) {
+        const isCompleted = localStorage.getItem('onboarding_completed_' + acceptedApp.id) === 'true';
+        if (!isCompleted) {
+          setIsOnboardingBlocked(true);
+          const onboardingPath = `/candidate/applications/${acceptedApp.id}/onboarding`;
+          if (pathname !== onboardingPath) {
+            router.push(onboardingPath);
+          }
+          return;
+        }
+      }
+    }
+    setIsOnboardingBlocked(false);
+  }, [mounted, isProfileLoading, profileData, applicationsRes, pathname, router]);
 
   const displayName = mounted ? (name || (user?.email ? user.email.split('@')[0] : 'Candidate')) : 'Candidate';
 
@@ -83,7 +117,7 @@ export default function CandidateLayout({
 
       <div className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
-        <CandidateSidebar avatar={avatar} name={displayName} />
+        <CandidateSidebar avatar={avatar} name={displayName} isOnboardingBlocked={isOnboardingBlocked} />
       </div>
 
       <div className="flex-1 flex flex-col min-w-0">
@@ -101,16 +135,25 @@ export default function CandidateLayout({
           <div className="flex items-center gap-3 md:gap-4">
             <ThemeToggle />
 
-            <Link
-              href="/candidate/notifications"
-              className="relative p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-all block"
-              aria-label="View notifications"
-            >
-              <Bell className="h-4.5 w-4.5" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-brand-500 animate-pulse"></span>
-              )}
-            </Link>
+            {isOnboardingBlocked ? (
+              <div
+                className="relative p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-350 dark:text-slate-650 cursor-not-allowed"
+                title="Notifications locked during onboarding"
+              >
+                <Bell className="h-4.5 w-4.5" />
+              </div>
+            ) : (
+              <Link
+                href="/candidate/notifications"
+                className="relative p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white dark:hover:bg-slate-700 transition-all block"
+                aria-label="View notifications"
+              >
+                <Bell className="h-4.5 w-4.5" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-brand-500 animate-pulse"></span>
+                )}
+              </Link>
+            )}
 
             <div className="flex items-center gap-3">
               <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{displayName}</span>
