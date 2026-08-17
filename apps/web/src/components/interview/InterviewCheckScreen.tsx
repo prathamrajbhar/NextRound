@@ -28,7 +28,7 @@ interface Props {
   company: string;
   role: string;
   camActive?: boolean;
-  onJoin: (bypassed?: boolean) => void;
+  onJoin: () => void;
 }
 
 async function queryPerm(name: string): Promise<PermissionState | null> {
@@ -63,7 +63,6 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
 
   const [allPassed, setAllPassed] = useState(false);
   const [consentAll, setConsentAll] = useState(false);
-  const [bypassed, setBypassed] = useState(false);
 
   const streamRef   = useRef<MediaStream | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -283,7 +282,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
   useEffect(() => { runAll(); }, [runAll]);
 
   const launch = () => {
-    if (!bypassed && !consentAll) return;
+    if (!consentAll) return;
 
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
@@ -297,10 +296,10 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     camStop();
     streamRef.current = null;
 
-    if (!bypassed && document.documentElement.requestFullscreen) {
+    if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen().catch(() => {});
     }
-    onJoin(bypassed);
+    onJoin();
   };
 
   const activeStep = (['mic', 'camera', 'connection'] as StepKey[]).find(
@@ -425,60 +424,32 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
 
         {allPassed && (
           <div className="w-full space-y-4 pt-1 animate-in fade-in duration-300">
-            {!bypassed ? (
-              <>
-                <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-1.5 mb-2">
-                  Proctoring Consent
-                </div>
-
-                <div className="space-y-2.5">
-                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={consentAll}
-                      onChange={e => setConsentAll(e.target.checked)}
-                      className="mt-0.5 rounded border-slate-600 bg-slate-800 text-emerald-500 h-4 w-4 cursor-pointer flex-shrink-0"
-                    />
-                    <span className="text-[11px] text-slate-400 font-semibold leading-relaxed">
-                      I consent to full-screen mode, camera &amp; microphone streaming, and automated proctoring verification during this assessment.
-                    </span>
-                  </label>
-                </div>
-
-                <button
-                  disabled={!consentAll}
-                  onClick={launch}
-                  className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer disabled:cursor-not-allowed mt-2"
-                >
-                  <Maximize2 className="h-4 w-4" />
-                  Start Secure Assessment
-                </button>
-              </>
-            ) : (
-              <div className="p-4 rounded-2xl border border-sky-800/40 bg-sky-950/20 text-sky-300 space-y-3">
-                <p className="text-xs leading-relaxed font-semibold">
-                  <strong>Alternative Integrity Flow Enabled:</strong> Proctoring telemetry analysis will be deactivated for this session. Manual HR identity check and post-assessment verification will be performed instead.
-                </p>
-                <button
-                  onClick={launch}
-                  className="w-full py-3 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-extrabold text-xs uppercase tracking-wider transition-all cursor-pointer"
-                >
-                  Start Assessment (Bypassed)
-                </button>
-              </div>
-            )}
-
-            <div className="text-center pt-2 border-t border-slate-850 mt-2">
-              <button
-                type="button"
-                onClick={() => setBypassed(!bypassed)}
-                className="text-[10px] font-bold text-slate-500 hover:text-slate-350 underline transition-colors cursor-pointer"
-              >
-                {bypassed
-                  ? 'Return to Standard Proctoring Flow'
-                  : 'Need accessibility or technical accommodation? Request alternate flow'}
-              </button>
+            <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-1.5 mb-2">
+              Proctoring Consent
             </div>
+
+            <div className="space-y-2.5">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={consentAll}
+                  onChange={e => setConsentAll(e.target.checked)}
+                  className="mt-0.5 rounded border-slate-600 bg-slate-800 text-emerald-500 h-4 w-4 cursor-pointer flex-shrink-0"
+                />
+                <span className="text-[11px] text-slate-400 font-semibold leading-relaxed">
+                  I consent to full-screen mode, camera &amp; microphone streaming, and automated proctoring verification during this assessment.
+                </span>
+              </label>
+            </div>
+
+            <button
+              disabled={!consentAll}
+              onClick={launch}
+              className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer disabled:cursor-not-allowed mt-2"
+            >
+              <Maximize2 className="h-4 w-4" />
+              Start Secure Assessment
+            </button>
           </div>
         )}
       </div>
