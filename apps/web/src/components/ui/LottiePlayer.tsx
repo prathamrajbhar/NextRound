@@ -17,7 +17,7 @@ declare global {
         loop: boolean;
         autoplay: boolean;
         path?: string;
-        animationData?: any;
+        animationData?: unknown;
       }) => {
         destroy: () => void;
         stop: () => void;

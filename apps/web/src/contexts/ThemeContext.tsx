@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import {
   ThemeConfig,
   DEFAULT_THEME_CONFIG,
@@ -37,6 +37,22 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   });
   const [themeConfig, setThemeConfigState] = useState<ThemeConfig>(DEFAULT_THEME_CONFIG);
 
+  const applyTheme = useCallback((newMode: Mode, config: ThemeConfig = themeConfig) => {
+    setThemeState(newMode);
+    try {
+      localStorage.setItem('hireos_theme', newMode);
+    } catch {
+      // Ignore
+    }
+    const root = document.documentElement;
+    if (newMode === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    applyThemeToElement(root, config, newMode);
+  }, [themeConfig]);
+
   useEffect(() => {
     const root = document.documentElement;
     const isDark = root.classList.contains('dark');
@@ -59,21 +75,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, []);
-
-  const applyTheme = (newMode: Mode, config: ThemeConfig = themeConfig) => {
-    setThemeState(newMode);
-    try {
-      localStorage.setItem('hireos_theme', newMode);
-    } catch (e) {}
-    const root = document.documentElement;
-    if (newMode === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    applyThemeToElement(root, config, newMode);
-  };
+  }, [applyTheme]);
 
   const toggleTheme = (event?: React.MouseEvent | MouseEvent) => {
     const nextTheme = theme === 'dark' ? 'light' : 'dark';
