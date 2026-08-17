@@ -15,6 +15,17 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
 
   const { data: onboard, isLoading, isError, error, refetch } = useOnboarding(applicationId);
 
+  // Sync localStorage with progressPercent
+  React.useEffect(() => {
+    if (onboard) {
+      if (onboard.progressPercent === 100) {
+        localStorage.setItem('onboarding_completed_' + applicationId, 'true');
+      } else {
+        localStorage.removeItem('onboarding_completed_' + applicationId);
+      }
+    }
+  }, [onboard, applicationId]);
+
   if (isError) {
     return (
       <div className="flex items-center justify-center min-h-[60vh] p-4">
@@ -37,17 +48,6 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
       </div>
     );
   }
-
-  // Sync localStorage with progressPercent
-  React.useEffect(() => {
-    if (onboard) {
-      if (onboard.progressPercent === 100) {
-        localStorage.setItem('onboarding_completed_' + applicationId, 'true');
-      } else {
-        localStorage.removeItem('onboarding_completed_' + applicationId);
-      }
-    }
-  }, [onboard, applicationId]);
 
   const handleToggleTask = (taskId: string) => {
     const updatedTasks = onboard.tasks.map((task) => {

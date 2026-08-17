@@ -20,6 +20,7 @@ import AuthShell, { AuthBenefit } from '@/components/auth/AuthShell';
 import AuthField from '@/components/auth/AuthField';
 import { useToast } from '@/contexts/ToastContext';
 import { useAuth } from '@/hooks/useAuth';
+import type { CandidateProfileData, Application } from '@/types';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -78,7 +79,7 @@ export default function LoginPage() {
       
       if (result.user.role === 'candidate') {
         try {
-          const profileData = await apiClient.get<{ profile?: any }>('/candidate/profile');
+          const profileData = await apiClient.get<{ profile?: CandidateProfileData }>('/candidate/profile');
           const profile = profileData?.profile;
           const isProfileIncomplete = !profile || !profile.full_name || !profile.data_consent;
           if (isProfileIncomplete) {
@@ -87,7 +88,7 @@ export default function LoginPage() {
           }
 
           // Check if there are accepted applications with incomplete tasks
-          const apps = await apiClient.get<any[]>('/candidate/applications');
+          const apps = await apiClient.get<Application[]>('/candidate/applications');
           const acceptedApp = apps?.find(app => app.status === 'accepted');
           if (acceptedApp) {
             const isCompleted = localStorage.getItem('onboarding_completed_' + acceptedApp.id) === 'true';
@@ -96,7 +97,7 @@ export default function LoginPage() {
               return;
             }
           }
-        } catch (err) {
+        } catch {
           router.push('/onboarding/candidate');
           return;
         }

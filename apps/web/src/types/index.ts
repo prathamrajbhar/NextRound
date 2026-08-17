@@ -259,6 +259,8 @@ export interface CandidateProfileData {
   proud_project?: string | null;
   work_values: string[];
   availability?: Record<string, unknown>;
+  data_consent?: boolean;
+  data_consent_at?: string | null;
   created_at: string;
 }
 

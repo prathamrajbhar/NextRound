@@ -11,22 +11,29 @@ export function proxy(request: NextRequest) {
 
   const targetDashboard = userRole === 'hr' ? '/hr/dashboard' : '/candidate/dashboard';
 
-  const redirectToLogin = (pathname: string) => {
+  const redirectToLogin = (path: string) => {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('from', pathname);
+    loginUrl.searchParams.set('from', path);
     return NextResponse.redirect(loginUrl);
   };
 
-  if (pathname.startsWith('/hr')) {
+  // Protect HR routes and HR onboarding
+  if (pathname.startsWith('/hr') || pathname.startsWith('/onboarding/company')) {
     if (!hasToken) return redirectToLogin(pathname);
-    if (userRole !== 'hr') return NextResponse.redirect(new URL('/candidate/dashboard', request.url));
+    if (userRole !== 'hr') {
+      return NextResponse.redirect(new URL('/candidate/dashboard', request.url));
+    }
   }
 
-  if (pathname.startsWith('/candidate')) {
+  // Protect Candidate routes and Candidate onboarding
+  if (pathname.startsWith('/candidate') || pathname.startsWith('/onboarding/candidate')) {
     if (!hasToken) return redirectToLogin(pathname);
-    if (userRole !== 'candidate') return NextResponse.redirect(new URL('/hr/dashboard', request.url));
+    if (userRole !== 'candidate') {
+      return NextResponse.redirect(new URL('/hr/dashboard', request.url));
+    }
   }
 
+  // Redirect authenticated users away from login/signup
   if (hasToken && (pathname === '/login' || pathname === '/signup')) {
     return NextResponse.redirect(new URL(targetDashboard, request.url));
   }
@@ -35,5 +42,11 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/hr/:path*', '/candidate/:path*', '/login', '/signup'],
+  matcher: [
+    '/hr/:path*',
+    '/candidate/:path*',
+    '/login',
+    '/signup',
+    '/onboarding/:path*',
+  ],
 };
