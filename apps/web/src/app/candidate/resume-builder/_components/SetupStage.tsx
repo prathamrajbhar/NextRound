@@ -166,7 +166,7 @@ export function SetupStage({
 
         <div className="lg:col-span-8 space-y-6">
 
-          <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-5">
+          <div className="relative z-20 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-5">
             <h2 className="text-xs font-extrabold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-white/5 pb-3">
               <Target className="h-4.5 w-4.5 text-orange-500 dark:text-orange-400" />
               Target Position &amp; Role Focus
@@ -237,7 +237,7 @@ export function SetupStage({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-5">
+          <div className="relative z-10 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-5">
             <h2 className="text-xs font-extrabold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-white/5 pb-3">
               <Layers className="h-4.5 w-4.5 text-orange-500 dark:text-orange-400" />
               Seniority &amp; Domain Focus
