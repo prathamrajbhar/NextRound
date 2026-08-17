@@ -439,8 +439,6 @@ export const EnvConfigSchema = z.object({
   INTERNAL_SERVICE_SECRET: z.string().min(16, 'INTERNAL_SERVICE_SECRET must be at least 16 characters'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
   AI_BASE_URL: z.string().default('http://localhost:8000'),
-  UPSTASH_REDIS_REST_URL: z.string().optional(),
-  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
   SUPABASE_URL: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   SUPABASE_STORAGE_BUCKET: z.string().optional(),

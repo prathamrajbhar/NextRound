@@ -2,10 +2,7 @@
   "name": "@nextround/config",
   "version": "1.0.0",
   "private": true,
-  "main": "index.js",
   "files": [
-    "tsconfig.base.json",
-    "eslint.config.mjs",
-    "tailwind.config.ts"
+    "tsconfig.base.json"
   ]
 }

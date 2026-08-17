@@ -85,6 +85,5 @@ export const mockQueue = getQueue('mock');
 export const resumeBuilderQueue = getQueue('resume-builder');
 export const schedulingQueue = getQueue('scheduling');
 export const assessmentQueue = getQueue('assessment');
-export const codingQueue = getQueue('coding');
 export const analyticsQueue = getQueue('analytics');
 export const candidateEmbeddingQueue = getQueue('candidate');
