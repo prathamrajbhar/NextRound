@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_service_role_key: str = ""
     supabase_storage_bucket: str = "nextround-storage"
+    profile_scraper_base_url: str = Field("http://127.0.0.1:18273", validation_alias="PROFILE_SCRAPER_BASE_URL")
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parent.parent.parent.parent / ".env",

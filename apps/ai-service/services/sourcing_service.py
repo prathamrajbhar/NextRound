@@ -3,10 +3,11 @@ import logging
 import httpx
 from typing import Dict, Any, Optional, List
 from services.embedding_service import embed_text_with_source, cosine_similarity
+from core.config import settings
 
 logger = logging.getLogger("sourcing_service")
 
-EXTERNAL_SCRAPER_BASE_URL = "https://social_scraper.bytemap.in"
+EXTERNAL_SCRAPER_BASE_URL = settings.profile_scraper_base_url
 
 async def fetch_github_profile(github_id: str) -> Dict[str, Any]:
     if not github_id or not github_id.strip():
