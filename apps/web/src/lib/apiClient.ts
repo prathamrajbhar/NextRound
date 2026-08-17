@@ -2,21 +2,37 @@ import { fetchApi, clearApiCache } from './api-fetcher';
 import { AppError, type AppErrorCode } from './errors';
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const result = await fetchApi<T>(endpoint, options);
+  let attempts = 0;
+  const maxAttempts = 2;
 
-  if (!result.success) {
+  while (attempts < maxAttempts) {
+    attempts++;
+    const result = await fetchApi<T>(endpoint, options);
+
+    if (result.success) {
+      return result.data as T;
+    }
+
     const errorMsg =
       typeof result.error === 'string'
         ? result.error
         : (result.error as { message?: string })?.message || 'API request failed';
+
+    const isTimeoutOr500 = result.status === undefined || result.status >= 500 || errorMsg.includes('timeout');
+
+    if (isTimeoutOr500 && attempts < maxAttempts) {
+      await new Promise((res) => setTimeout(res, 1200));
+      continue;
+    }
+
     throw new AppError(errorMsg, {
       status: result.status,
       code: (result.errorCode as AppErrorCode) ?? undefined,
-      retryable: result.status === undefined || result.status >= 500,
+      retryable: isTimeoutOr500,
     });
   }
 
-  return result.data as T;
+  throw new AppError('API request failed after retries');
 }
 
 function serializeBody(body: unknown): BodyInit | undefined {
