@@ -71,12 +71,16 @@ export function useResumeVoiceSession({
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [memory, setMemory] = useState<Record<string, unknown>>({});
 
   
   const conversationHistoryRef = useRef<ConversationTurn[]>([]);
   const turnIndexRef = useRef(0);
   const stageRef = useRef('intro');
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const memoryRef = useRef<Record<string, unknown>>({});
+  const speechStartRef = useRef(0);
+  const recognitionActiveRef = useRef(false);
 
   
   useEffect(() => {
@@ -90,6 +94,10 @@ export function useResumeVoiceSession({
   useEffect(() => {
     stageRef.current = stage;
   }, [stage]);
+
+  useEffect(() => {
+    memoryRef.current = memory;
+  }, [memory]);
 
   const candidateSpeechTextRef = useRef('');
   const aiStateRef = useRef<'speaking' | 'listening' | 'evaluating'>('speaking');
@@ -118,35 +126,10 @@ export function useResumeVoiceSession({
   }, []);
 
   
-  const speakText = useCallback((text: string, audioUrl?: string, callback?: () => void) => {
-    setAiState('speaking');
-    playAudio(text, audioUrl, () => {
-      setAiState('listening');
-      if (callback) callback();
-    });
-  }, []);
-
-  const replayLastAudio = useCallback(() => {
-    setAiState('speaking');
-    replayAudioManager(() => {
-      setAiState('listening');
-    });
-  }, []);
-
-  
-  const stopSpeechRecognition = useCallback(() => {
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {}
-      recognitionRef.current = null;
-    }
-  }, []);
-
-  
   const startSpeechRecognition = useCallback(() => {
     if (!SpeechRecognitionClass || !micActive) return;
 
+    if (recognitionActiveRef.current) return;
     if (recognitionRef.current) {
       try {
         recognitionRef.current.stop();
@@ -155,12 +138,12 @@ export function useResumeVoiceSession({
 
     const recognition = new SpeechRecognitionClass();
     recognitionRef.current = recognition;
+    recognitionActiveRef.current = true;
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
     recognition.onstart = () => {
-      setAiState('listening');
       setCandidateSpeechText('');
     };
 
@@ -179,6 +162,16 @@ export function useResumeVoiceSession({
       if (displayTranscript) {
         setCandidateSpeechText(displayTranscript);
       }
+
+      // Guarded barge-in: if the AI is still speaking and the candidate has clearly
+      // started talking (past the echo window), interrupt the AI.
+      if (aiStateRef.current === 'speaking') {
+        const elapsed = Date.now() - (speechStartRef.current || 0);
+        const isSubstantial = (finalTranscript || interimTranscript).trim().length >= 5;
+        if (elapsed > 900 && isSubstantial) {
+          stopAudio();
+        }
+      }
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -194,6 +187,7 @@ export function useResumeVoiceSession({
     };
 
     recognition.onend = () => {
+      recognitionActiveRef.current = false;
       
       if (aiStateRef.current === 'listening') {
         const spokenText = candidateSpeechTextRef.current;
@@ -203,6 +197,7 @@ export function useResumeVoiceSession({
           
           try {
             recognitionRef.current?.start();
+            recognitionActiveRef.current = true;
           } catch {}
         }
       }
@@ -211,9 +206,46 @@ export function useResumeVoiceSession({
     try {
       recognition.start();
     } catch (e) {
+      recognitionActiveRef.current = false;
       console.error('Failed to start SpeechRecognition:', e);
     }
   }, [micActive]);
+
+  
+  const speakText = useCallback((text: string, audioUrl?: string, callback?: () => void) => {
+    setAiState('speaking');
+    speechStartRef.current = Date.now();
+    // Listen while the AI speaks so the candidate can interrupt (guarded barge-in).
+    startSpeechRecognition();
+    playAudio(text, audioUrl, () => {
+      // Short pause before opening the mic again, so the turn feels human-paced.
+      setTimeout(() => {
+        setAiState('listening');
+        if (callback) callback();
+        if (!recognitionActiveRef.current) {
+          startSpeechRecognition();
+        }
+      }, 600);
+    });
+  }, [startSpeechRecognition]);
+
+  const replayLastAudio = useCallback(() => {
+    setAiState('speaking');
+    replayAudioManager(() => {
+      setAiState('listening');
+    });
+  }, []);
+
+  
+  const stopSpeechRecognition = useCallback(() => {
+    recognitionActiveRef.current = false;
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+      recognitionRef.current = null;
+    }
+  }, []);
 
   
   const handleFinalize = useCallback(
@@ -271,6 +303,7 @@ export function useResumeVoiceSession({
               speaker: h.role,
               text: h.content,
             })),
+            memory: memoryRef.current,
           }),
         });
 
@@ -284,8 +317,13 @@ export function useResumeVoiceSession({
           turnNumber: number;
           isComplete: boolean;
           realtimeInsight?: string;
+          memory?: Record<string, unknown>;
           audioUrl?: string;
         };
+        
+        if (data.memory) {
+          setMemory(data.memory);
+        }
         
         const updatedHistory = [
           ...newHistory,
@@ -331,6 +369,8 @@ export function useResumeVoiceSession({
     setTurnIndex(0);
     setStage('intro');
     setAiState('speaking');
+    setMemory({});
+    memoryRef.current = {};
 
     try {
       const sessionRes = await apiClient.post<{ sessionId: string }>('/resume-builder/sessions', {

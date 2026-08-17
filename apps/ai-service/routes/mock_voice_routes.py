@@ -37,6 +37,7 @@ class ResumeBuilderRespondRequest(BaseModel):
     stage: Optional[str] = None
     turnNumber: int = 0
     conversationHistory: List[Dict[str, Any]] = Field(default_factory=list)
+    memory: Optional[Dict[str, Any]] = None
     voice: Optional[str] = "en-US-ChristopherNeural"
 
 
@@ -46,6 +47,7 @@ class ResumeBuilderRespondResponse(BaseModel):
     stage: str
     turnNumber: int
     isComplete: bool = False
+    memory: Optional[Dict[str, Any]] = None
     audioUrl: Optional[str] = None
 
 
@@ -90,6 +92,7 @@ async def generate_resume_builder_response(request: ResumeBuilderRespondRequest)
         "turn_number": request.turnNumber,
         "latest_candidate_response": request.transcript,
         "conversation_history": request.conversationHistory or [],
+        "memory": request.memory or {},
     }
 
     output = await asyncio.to_thread(run_resume_builder_agent, state)
@@ -105,5 +108,6 @@ async def generate_resume_builder_response(request: ResumeBuilderRespondRequest)
         stage=output.get("current_stage") or request.stage or "",
         turnNumber=output.get("turn_number", request.turnNumber + 1),
         isComplete=output.get("is_complete", False),
+        memory=output.get("memory") or {},
         audioUrl=audio_url,
     )
