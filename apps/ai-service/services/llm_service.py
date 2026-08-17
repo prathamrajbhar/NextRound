@@ -83,30 +83,49 @@ def _generate_text_groq(prompt: str) -> Optional[str]:
         logger.error(f"Groq generate_content failed: {e}")
         raise
 
+import time
+
 def generate_text(prompt: str, force_provider: Optional[str] = None) -> Optional[str]:
     if not prompt:
         return None
 
     provider = (force_provider or settings.llm_provider).lower()
+    max_retries = 3
+    delay = 2.0
 
-    if provider == "groq":
-        return _generate_text_groq(prompt)
-
-    elif provider == "gemini":
-        client = get_client()
-        if not client:
-            logger.error("Gemini API key is not configured.")
-            return None
+    for attempt in range(max_retries):
         try:
-            response = client.models.generate_content(model=settings.gemini_model, contents=prompt)
-            text = getattr(response, "text", None)
-            return text.strip() if text else None
-        except Exception as e:
-            logger.error(f"Gemini generate_content failed: {e}")
-            raise
+            if provider == "groq":
+                return _generate_text_groq(prompt)
 
-    elif provider == "ollama":
-        return _generate_text_ollama(prompt)
+            elif provider == "gemini":
+                client = get_client()
+                if not client:
+                    logger.error("Gemini API key is not configured.")
+                    return None
+                response = client.models.generate_content(model=settings.gemini_model, contents=prompt)
+                text = getattr(response, "text", None)
+                return text.strip() if text else None
+
+            elif provider == "ollama":
+                return _generate_text_ollama(prompt)
+
+        except Exception as e:
+            is_rate_limit = False
+            err_str = str(e).lower()
+            if "429" in err_str or "resource_exhausted" in err_str or "too many requests" in err_str:
+                is_rate_limit = True
+
+            if is_rate_limit and attempt < max_retries - 1:
+                logger.warning(
+                    f"LLM generation rate limited (429). Retrying in {delay}s... (Attempt {attempt + 1}/{max_retries})"
+                )
+                time.sleep(delay)
+                delay *= 2
+                continue
+
+            logger.error(f"LLM generation failed: {e}")
+            raise e
 
     return None
 

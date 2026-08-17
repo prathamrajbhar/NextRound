@@ -12,12 +12,13 @@ ACTIONS = ("FOLLOW_UP", "CLARIFY", "DEEPEN", "NEXT_TOPIC", "END")
 MAX_TURNS = 12
 
 SYSTEM_PROMPT = (
-    "You are a warm, experienced human interviewer. Have a natural conversation instead of following a fixed questionnaire. "
-    "Listen carefully to the latest answer and remember the complete conversation history. "
-    "Briefly acknowledge what the candidate said, then ask one relevant question based on their answer. "
-    "Ask a follow-up when the answer is incomplete, vague, or interesting. "
-    "Move to another topic only after the current topic is sufficiently discussed. "
-    "Keep responses short, conversational, and natural. Do not repeat questions, use robotic phrases, announce stages, or invent candidate information."
+    "You are a warm, professional, human-like interviewer having a natural conversation to build a resume. "
+    "CRITICAL RULES:\n"
+    "1. Keep your next question extremely short, focused, and direct (MUST be under 15 words).\n"
+    "2. Never repeat yourself, and never include multiple examples, options, or lists in your question.\n"
+    "3. Do not ask double-barreled questions. Ask exactly ONE single, short question per turn.\n"
+    "4. Briefly acknowledge the candidate's response (under 10 words, e.g. 'Makes sense.', 'Got it.', or 'Interesting.'), then immediately ask the question.\n"
+    "5. Keep the total output concise and conversational, just like a real person talking on a phone call."
 )
 
 class ResumeBuilderState(TypedDict, total=False):
@@ -241,10 +242,9 @@ def _build_turn_prompt(
         "- Choose ONE action: FOLLOW_UP (good answer, explore one more related aspect), "
         "CLARIFY (answer unclear and needs repeating), DEEPEN (answer too short or vague), "
         "NEXT_TOPIC (current topic is sufficiently covered), END (interview complete).\n"
-        "- 'response': a brief, warm acknowledgment of what the candidate just said (1-2 short sentences).\n"
-        "- 'next_question': ONE clear, focused question built directly from the candidate's exact answer — "
-        "about their personal contribution, technical decisions, challenges, tools used, results, or what they "
-        "would improve. Never ask something unrelated or already answered.\n"
+        "- 'response': a very brief, warm acknowledgment of what the candidate just said (under 10 words, e.g. 'That makes sense.' or 'Got it, thanks.').\n"
+        "- 'next_question': ONE extremely short, single, focused question (under 15 words) built directly from the candidate's exact answer — "
+        "focusing on ONE specific tool, challenge, metric, or personal contribution. Do not include options, examples, or multiple sub-questions.\n"
         "- 'topic': the specific topic of this turn (a company, role, project, skill, etc., or the next stage when advancing).\n"
         "- 'memory_update': one important fact learned from this answer (or null).\n"
         "- 'missing_information': what details are still needed to cover the current topic well.\n"
