@@ -246,5 +246,6 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
           </div>
         </div>
       </div>
+    </div>
   );
 }
