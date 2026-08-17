@@ -9,6 +9,10 @@ from pydantic import BaseModel, Field
 from agents.interviewer_agent import run_interviewer_agent, InterviewerState
 from workers.resume_builder_worker import process_resume_builder_job
 
+from services.stt_service import transcribe_audio_bytes
+from services.tts_service import generate_tts_audio_base64, stream_sentence_tts
+from core.config import settings
+
 logger = logging.getLogger("voice_routes")
 
 voice_router = APIRouter(prefix="/api/v1/ai/interview", tags=["voice-interview"])
@@ -18,13 +22,6 @@ class GenerateResumeRequest(BaseModel):
     targetRole: Optional[str] = None
     targetCompany: Optional[str] = None
     transcript: Optional[List[Dict[str, Any]]] = None
-from services.stt_service import transcribe_audio_bytes
-from services.tts_service import generate_tts_audio_base64, stream_sentence_tts
-from core.config import settings
-
-logger = logging.getLogger("voice_routes")
-
-voice_router = APIRouter(prefix="/api/v1/ai/interview", tags=["voice-interview"])
 
 class TranscribeRequest(BaseModel):
     audio_base64: Optional[str] = None
