@@ -9,7 +9,8 @@
     "start": "node dist/index.js",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test:social-sync": "tsx src/scripts/test-social-sync.ts"
+    "test:social-sync": "tsx src/scripts/test-social-sync.ts",
+    "test:resume-builder": "node --env-file=../../.env node_modules/tsx/dist/cli.mjs src/scripts/test-resume-builder.ts"
   },
   "dependencies": {
     "@google/genai": "^2.16.0",
