@@ -1,6 +1,9 @@
+'use client';
+
 import Link from 'next/link';
-import { ArrowLeft, Search, Home, Briefcase, Sparkles } from '@/lib/lucide-google-icons';
+import { ArrowLeft, Search, Home, Briefcase, Sparkles, AlertCircle } from '@/lib/lucide-google-icons';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LottiePlayer } from '@/components/ui/LottiePlayer';
 
 export default function NotFound() {
   return (
@@ -27,9 +30,19 @@ export default function NotFound() {
       />
 
       {/* Card Container */}
-      <div className="relative z-10 w-full max-w-lg text-center rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-8 sm:p-12 shadow-xl shadow-slate-200/40 dark:shadow-none transition-all">
+      <div className="relative z-10 w-full max-w-lg text-center rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-8 sm:p-10 shadow-xl shadow-slate-200/40 dark:shadow-none transition-all">
+        
+        {/* Lottie Animation Display */}
+        <div className="w-52 h-52 sm:w-60 sm:h-60 mx-auto -mt-2 mb-1 relative flex items-center justify-center">
+          <LottiePlayer 
+            src="/404-animation.json" 
+            className="w-full h-full"
+            fallbackIcon={<AlertCircle className="w-16 h-16 text-amber-500 animate-pulse" />}
+          />
+        </div>
+
         {/* Status Pill */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold tracking-wide uppercase bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 mb-6 shadow-xs">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-extrabold tracking-wide uppercase bg-amber-500/10 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 mb-4 shadow-xs">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
@@ -37,16 +50,11 @@ export default function NotFound() {
           404 ERROR &bull; PAGE NOT FOUND
         </div>
 
-        {/* 404 Typography */}
-        <p className="font-mono text-7xl sm:text-9xl leading-none font-black tracking-tight bg-gradient-to-r from-brand-600 via-amber-500 to-amber-600 dark:from-brand-400 dark:via-amber-400 dark:to-amber-500 bg-clip-text text-transparent select-none drop-shadow-xs">
-          404
-        </p>
-
         {/* Heading & Subtext */}
-        <h1 className="mt-4 text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
           Lost in Space?
         </h1>
-        <p className="mt-2.5 text-sm sm:text-base font-medium text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+        <p className="mt-2 text-sm sm:text-base font-medium text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
           The page you&apos;re looking for doesn&apos;t exist, was moved, or has taken an unexpected sabbatical.
         </p>
 
@@ -101,4 +109,3 @@ export default function NotFound() {
     </div>
   );
 }
-
