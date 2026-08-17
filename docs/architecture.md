@@ -89,7 +89,7 @@ NextRound/
 ### 3.4 Python 3.13 AI Service (`apps/ai-service`)
 
 - Executes LangGraph state machine agent graphs for all AI pipeline stages.
-- Performs Gemini 2.10 reasoning and resume vector embedding generation.
+- Performs Gemini 2.10 reasoning and local resume vector embedding generation (FastEmbed ONNX `BAAI/bge-base-en-v1.5`).
 - Runs isolated code execution sandboxes for coding assessment submissions.
 - Does **not** write to Postgres directly — all DB persistence flows through Express internal callbacks.
 

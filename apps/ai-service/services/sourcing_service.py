@@ -163,7 +163,7 @@ async def aggregate_external_profile(
     if job_description or target_role:
         target_text = f"{target_role}. {job_description}".strip()
         job_vector, job_source = embed_text_with_source(target_text)
-        if profile_source in ("onnx", "gemini") and job_source in ("onnx", "gemini"):
+        if profile_source == "onnx" and job_source == "onnx":
             cosine_sim = cosine_similarity(profile_vector, job_vector)
             similarity_score = round(max(0.0, min(100.0, cosine_sim * 100.0)), 1)
 

@@ -15,7 +15,6 @@ embedding_router = APIRouter(prefix="/api/v1/embeddings", tags=["embeddings"])
 
 SOURCE_MODEL_LABELS = {
     "onnx": "BAAI/bge-base-en-v1.5 (ONNX)",
-    "gemini": "Gemini text-embedding-004",
     "empty": "Empty input (zero vector)",
 }
 
@@ -62,10 +61,10 @@ async def compute_similarity(req: SimilarityRequest):
     vec_b, src_b = embed_text_with_source(req.text_b)
     elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
-    semantic = {"onnx", "gemini"}
+    semantic = {"onnx"}
     if src_a in semantic and src_b in semantic:
         score = cosine_similarity(vec_a, vec_b)
-        model_name = SOURCE_MODEL_LABELS.get("onnx" if src_a == "onnx" or src_b == "onnx" else "gemini")
+        model_name = SOURCE_MODEL_LABELS.get("onnx")
     else:
         score = None
         model_name = None

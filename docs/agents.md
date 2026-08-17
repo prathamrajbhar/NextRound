@@ -167,7 +167,7 @@ Each agent defines a typed `AgentState` TypedDict passed between nodes. Nodes ar
 **Node Details:**
 - `load_resume_and_job` — Fetches `CandidateProfile.resume_url` from storage service, downloads PDF/DOCX.
 - `parse_resume_text` — Extracts structured text (skills, work history, education, projects) using PDF parser.
-- `generate_resume_embedding` — Generates 768-dim embedding using Gemini embedding model.
+- `generate_resume_embedding` — Generates 768-dim embedding using the local FastEmbed ONNX model `BAAI/bge-base-en-v1.5`.
 - `cosine_similarity_match` — Runs pgvector query: `1 - (resume_embedding <=> job_rubric_embedding)` → `semantic_match_score`.
 - `llm_gap_analysis` — Gemini prompt: compares extracted resume skills against job rubric dimensions, identifies missing skills.
 - `compute_resume_score` — Weighted combination of `semantic_match_score` and LLM dimension alignment.
