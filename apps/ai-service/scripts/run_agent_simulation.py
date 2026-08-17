@@ -3,14 +3,14 @@ import sys
 import shutil
 import json
 import logging
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 # Setup python path to include parent directory
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from agents.resume_builder_agent import run_resume_builder_agent, SYSTEM_PROMPT
-from services.llm_service import generate_text, extract_json_object
-from services.pdf_generator import generate_resume_pdf
+from agents.resume_builder_agent import run_resume_builder_agent
+from services.llm_service import generate_text
+from workers.resume_builder_worker import process_resume_builder_job
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
@@ -78,81 +78,36 @@ async def main():
         
     print("\n--- Interview Simulation Finished Successfully ---\n")
 
-    # 4. Generate the ATS Resume JSON from the simulated transcript
-    transcript_text = "\n".join([
-        f"{h['speaker'].upper()}: {h['text']}" for h in state["conversation_history"]
-    ])
+    # 4. Trigger the existing process_resume_builder_job pipeline
+    transcript = [{"speaker": h["speaker"], "text": h["text"]} for h in state["conversation_history"]]
     
-    print("🧠 Extracting ATS Resume JSON from conversation transcript...")
-    extraction_prompt = (
-        "You are an ATS Resume Builder agent. Parse the following voice interview transcript and extract the actual candidate profile details. "
-        "Do NOT invent or fabricate any details. Use the exact candidate name, companies, metrics, and technical details discussed in the transcript.\n\n"
-        f"Transcript:\n{transcript_text}\n\n"
-        "Return exactly in this JSON format (no surrounding markdown codeblocks, just raw JSON):\n"
-        "{\n"
-        "  \"contact\": {\n"
-        "    \"name\": \"<extracted candidate name>\",\n"
-        "    \"email\": \"<extracted or inferred email from candidate name>\",\n"
-        "    \"phone\": \"<extracted or inferred phone>\",\n"
-        "    \"location\": \"<extracted or inferred location>\",\n"
-        "    \"linkedin\": \"<linkedin url matching candidate name>\",\n"
-        "    \"github\": \"<github url matching candidate name>\",\n"
-        "    \"portfolio\": \"<portfolio url matching candidate name>\"\n"
-        "  },\n"
-        "  \"title\": \"<extracted target role title>\",\n"
-        "  \"summary\": \"<extracted summary of candidate capabilities>\",\n"
-        "  \"atsScore\": 92,\n"
-        "  \"work_history\": [\n"
-        "    {\n"
-        "      \"title\": \"<role title>\",\n"
-        "      \"company\": \"<company name>\",\n"
-        "      \"dates\": \"<dates/period>\",\n"
-        "      \"location\": \"<location if any>\",\n"
-        "      \"bullets\": [\"<quantified achievement bullet points from transcript>\"]\n"
-        "    }\n"
-        "  ],\n"
-        "  \"skills\": [\"<list of skills discussed in transcript>\"],\n"
-        "  \"projects\": [\n"
-        "    {\n"
-        "      \"name\": \"<project name if any>\",\n"
-        "      \"description\": \"<project description/impact from transcript>\"\n"
-        "    }\n"
-        "  ],\n"
-        "  \"education\": [\n"
-        "    {\n"
-        "      \"degree\": \"<degree if any>\",\n"
-        "      \"institution\": \"<institution if any>\",\n"
-        "      \"year\": \"<graduation year if any>\"\n"
-        "    }\n"
-        "  ]\n"
-        "}"
-    )
-    
-    extracted_json_str = generate_text(extraction_prompt)
-    resume_data = extract_json_object(extracted_json_str)
-    
-    if not resume_data:
-        print("❌ Failed to parse/extract resume JSON from LLM response.")
-        sys.exit(1)
-        
-    print("✅ ATS Resume JSON extracted successfully.")
+    job_payload = {
+        "sessionId": "simulated-session-123",
+        "targetRole": "Senior Full Stack Engineer",
+        "targetCompany": "Innovative Tech Corp",
+        "transcript": transcript
+    }
 
-    # 5. Compile PDF with ReportLab and save directly to project root
+    print("📄 Triggering the production resume-builder worker pipeline...")
     root_pdf_path = "/home/pratham/Disk1/NextRound/generated_resume.pdf"
     
     # Custom mock function to copy the generated PDF to project root before deletion
     def mock_upload_to_supabase(file_path, key, content_type="application/pdf"):
-        print(f"💾 Intercepted PDF file at: {file_path}")
+        print(f"💾 Intercepted PDF file from production pipeline at: {file_path}")
         shutil.copy(file_path, root_pdf_path)
         print(f"🎉 PDF Resume successfully saved to root folder at: {root_pdf_path}")
         return "https://mock-supabase-storage-url/generated_resume.pdf"
 
-    print("📄 Compiling ReportLab PDF and copying to project root...")
-    with patch("services.pdf_generator.upload_to_supabase", side_effect=mock_upload_to_supabase):
-        generate_resume_pdf(resume_data)
+    # Async mock for post_internal API backend update
+    mock_post_internal = AsyncMock(return_value=True)
 
-    # 6. Verify PDF exists and is valid
-    if os.path.exists(root_pdf_path) and os.path.getsize(root_pdf_path) > 0:
+    with patch("services.pdf_generator.upload_to_supabase", side_effect=mock_upload_to_supabase), \
+         patch("workers.resume_builder_worker.post_internal", mock_post_internal):
+        
+        success = await process_resume_builder_job(job_payload)
+
+    # 5. Verify PDF exists and is valid
+    if success and os.path.exists(root_pdf_path) and os.path.getsize(root_pdf_path) > 0:
         print(f"\n🏆 Verification Succeeded! PDF size: {os.path.getsize(root_pdf_path)} bytes.")
         print(f"File Location: {root_pdf_path}")
         print("\n🎉 ALL PIPELINE CHECKS PASSED SUCCESSFULLY!")
