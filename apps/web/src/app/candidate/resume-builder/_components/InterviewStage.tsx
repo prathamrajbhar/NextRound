@@ -143,9 +143,9 @@ export function InterviewStage({
             </div>
           </div>
 
-          <div className="flex-1 flex items-center justify-center my-4 relative">
+          <div className="flex-1 flex items-center justify-center my-3 relative min-h-[320px]">
             {camActive ? (
-              <div className="relative w-full h-full max-h-[270px] overflow-hidden rounded-xl bg-slate-950 border border-slate-800 shadow-lg">
+              <div className="relative w-full h-full overflow-hidden rounded-xl bg-slate-950 border border-slate-800 shadow-md">
                 <video
                   ref={videoRef}
                   autoPlay
