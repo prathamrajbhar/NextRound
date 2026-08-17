@@ -52,15 +52,17 @@ const SpeechRecognitionClass =
 interface UseResumeVoiceSessionProps {
   targetRole: string;
   experienceLevel: string;
+  initialSessionId?: string | null;
   onComplete: (sessionId: string, transcript: ConversationTurn[]) => void;
 }
 
 export function useResumeVoiceSession({
   targetRole,
   experienceLevel,
+  initialSessionId = null,
   onComplete,
 }: UseResumeVoiceSessionProps) {
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(initialSessionId);
   const [turnIndex, setTurnIndex] = useState(0);
   const [stage, setStage] = useState<string>('intro');
   const [conversationHistory, setConversationHistory] = useState<ConversationTurn[]>([]);
@@ -361,17 +363,21 @@ export function useResumeVoiceSession({
     memoryRef.current = {};
 
     try {
-      const sessionRes = await apiClient.post<{ sessionId: string }>('/resume-builder/sessions', {
-        targetRole,
-        experienceLevel,
-      });
+      let activeSessionId = initialSessionId;
 
-      if (!sessionRes?.sessionId) {
-        throw new Error('Failed to obtain session ID from backend.');
+      if (!activeSessionId) {
+        const sessionRes = await apiClient.post<{ sessionId: string }>('/resume-builder/sessions', {
+          targetRole,
+          experienceLevel,
+        });
+
+        if (!sessionRes?.sessionId) {
+          throw new Error('Failed to obtain session ID from backend.');
+        }
+
+        activeSessionId = sessionRes.sessionId;
+        setSessionId(activeSessionId);
       }
-
-      const activeSessionId = sessionRes.sessionId;
-      setSessionId(activeSessionId);
 
       await getAIResponse('', activeSessionId, 0, 'intro');
     } catch (err: unknown) {
@@ -379,7 +385,7 @@ export function useResumeVoiceSession({
       console.error('Start call failed:', err);
       setError(message || 'Failed to start resume builder session.');
     }
-  }, [targetRole, experienceLevel, getAIResponse]);
+  }, [targetRole, experienceLevel, initialSessionId, getAIResponse]);
 
   const submitResponse = useCallback(
     async (text: string) => {
