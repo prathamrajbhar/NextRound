@@ -9,7 +9,7 @@ interface AptitudeStateCardProps {
   subtitle?: string;
   actionLabel?: string;
   onAction?: () => void;
-  
+
   spinningIcon?: boolean;
 }
 

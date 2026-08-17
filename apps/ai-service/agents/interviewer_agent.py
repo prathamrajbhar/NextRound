@@ -8,13 +8,9 @@ logger = logging.getLogger("interviewer_agent")
 
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
-
-# Structured action set the interviewer chooses after every answer.
 ACTIONS = ("FOLLOW_UP", "DEEPEN", "CLARIFY", "VERIFY", "NEXT_TOPIC", "END")
 
-# Safety cap: never let the interview drift past this many turns.
 MAX_TURNS = 12
-
 
 class InterviewerState(TypedDict, total=False):
     interview_id: str
@@ -45,14 +41,7 @@ class InterviewerState(TypedDict, total=False):
     turn_records: List[dict]
     evidence_used: List[str]
 
-
-# ---------------------------------------------------------------------------
-# Context helpers
-# ---------------------------------------------------------------------------
-
-
 def _derive_required_skills(state: InterviewerState) -> List[str]:
-    """Skills to evaluate: job required skills > rubric dims > candidate skills."""
     ctx = state.get("candidate_context") or {}
     job = ctx.get("job") or {}
     job_skills = [str(s) for s in (job.get("skills") or []) if str(s).strip()]
@@ -71,9 +60,7 @@ def _derive_required_skills(state: InterviewerState) -> List[str]:
 
     return ["technical depth", "communication", "problem solving"]
 
-
 def _build_profile_text(state: InterviewerState) -> str:
-    """Rich factual profile text from structured context (or legacy resume string)."""
     ctx = state.get("candidate_context") or {}
     if not ctx:
         return state.get("candidate_resume") or ""
@@ -122,21 +109,13 @@ def _build_profile_text(state: InterviewerState) -> str:
 
     return "\n\n".join(parts)
 
-
 def _stage_for_skill(skill: str) -> str:
-    """Map a skill to a conversational stage for the voice console phase UI."""
     s = skill.lower()
     if any(k in s for k in ("communication", "behavioral", "culture", "team", "collab", "leadership")):
         return "behavioral"
     if any(k in s for k in ("project", "architecture", "github", "portfolio", "system design")):
         return "project"
     return "technical"
-
-
-# ---------------------------------------------------------------------------
-# Prompt builders
-# ---------------------------------------------------------------------------
-
 
 def _base_prompt(state: InterviewerState) -> str:
     job_title = state.get("job_title") or "an open role"
@@ -150,20 +129,17 @@ def _base_prompt(state: InterviewerState) -> str:
         f"{_build_profile_text(state)}\n"
     )
 
-
 def _history_text(state: InterviewerState) -> str:
     history = state.get("conversation_history") or []
     if not history:
         return "(none — this is the very start of the conversation)"
     return json.dumps(history, ensure_ascii=False)[:8000]
 
-
 def _asked_questions_text(state: InterviewerState) -> str:
     asked = state.get("asked_questions") or []
     if not asked:
         return "(none)"
     return json.dumps(asked, ensure_ascii=False)[:3000]
-
 
 def _build_turn_prompt(state: InterviewerState) -> str:
     return (
@@ -190,7 +166,6 @@ def _build_turn_prompt(state: InterviewerState) -> str:
         '"skills_demonstrated": [str], "missing_details": [str], "skills_still_needed": [str]}'
     )
 
-
 def _build_greeting_prompt(state: InterviewerState) -> str:
     return (
         _base_prompt(state)
@@ -204,7 +179,6 @@ def _build_greeting_prompt(state: InterviewerState) -> str:
         '"skills_demonstrated": [], "missing_details": [], "skills_still_needed": []}'
     )
 
-
 def _build_retry_prompt(state: InterviewerState, previous: dict) -> str:
     return (
         _build_turn_prompt(state)
@@ -213,19 +187,12 @@ def _build_retry_prompt(state: InterviewerState, previous: dict) -> str:
         "spoken_response tone, and JSON shape."
     )
 
-
-# ---------------------------------------------------------------------------
-# Duplicate-question prevention
-# ---------------------------------------------------------------------------
-
-
 def _normalize_question(q: str) -> str:
     if not q:
         return ""
     q = q.lower()
     q = re.sub(r"[^a-z0-9\s]", " ", q)
     return " ".join(q.split())
-
 
 def _is_duplicate(candidate_q: str, asked: List[str]) -> bool:
     nq = _normalize_question(candidate_q)
@@ -244,9 +211,7 @@ def _is_duplicate(candidate_q: str, asked: List[str]) -> bool:
             return True
     return False
 
-
 def _force_next_topic(state: InterviewerState, analysis: dict) -> dict:
-    """When the LLM keeps producing duplicates, advance to the next skill naturally."""
     remaining = state.get("skills_to_evaluate") or []
     current = state.get("current_skill")
     target = next((s for s in remaining if s != current), None) or current
@@ -258,7 +223,6 @@ def _force_next_topic(state: InterviewerState, analysis: dict) -> dict:
     )
     analysis["evidence_used"] = list(set(analysis.get("evidence_used") or []) | {"conversation"})
     return analysis
-
 
 def _guard_duplicates(state: InterviewerState, analysis: dict) -> dict:
     if not analysis:
@@ -277,12 +241,6 @@ def _guard_duplicates(state: InterviewerState, analysis: dict) -> dict:
         if retry_q and not _is_duplicate(str(retry_q), state.get("asked_questions") or []):
             return retry
     return _force_next_topic(state, analysis)
-
-
-# ---------------------------------------------------------------------------
-# Heuristic fallback for evaluation (keeps the interview moving if the LLM fails)
-# ---------------------------------------------------------------------------
-
 
 def _heuristic_analysis(state: InterviewerState) -> dict:
     ans = (state.get("latest_candidate_response") or "").strip()
@@ -313,14 +271,7 @@ def _heuristic_analysis(state: InterviewerState) -> dict:
         "skills_still_needed": remaining,
     }
 
-
-# ---------------------------------------------------------------------------
-# Nodes
-# ---------------------------------------------------------------------------
-
-
 def load_context_node(state: InterviewerState) -> InterviewerState:
-    """Node 1: Initialize context, skills, memory, and asked-question list."""
     logger.info(f"InterviewerAgent: Loading context for interview {state.get('interview_id')}")
     state["conversation_history"] = state.get("conversation_history") or []
     state["current_stage"] = state.get("current_stage") or "intro"
@@ -346,14 +297,7 @@ def load_context_node(state: InterviewerState) -> InterviewerState:
             state["asked_questions"].append(str(entry_text))
     return state
 
-
 def evaluate_last_answer_node(state: InterviewerState) -> InterviewerState:
-    """Node 2: Analyze the candidate's complete answer and decide the next action.
-
-    Produces `last_analysis`, a structured JSON turn with action, spoken_response,
-    next_question, target_skill, answer_summary, and evidence_used.
-    """
-    # Worker/evaluation path: full transcript already present, no live answer.
     if state.get("current_stage") == "closing" and not state.get("latest_candidate_response"):
         return state
 
@@ -404,9 +348,7 @@ def evaluate_last_answer_node(state: InterviewerState) -> InterviewerState:
     state["evidence_used"] = analysis.get("evidence_used") or []
     return state
 
-
 def decide_next_action_node(state: InterviewerState) -> InterviewerState:
-    """Node 3: Route on the chosen action."""
     if state.get("current_stage") == "closing" or state.get("turn_number", 0) >= MAX_TURNS:
         state["next_action"] = "close_interview"
         return state
@@ -423,9 +365,7 @@ def decide_next_action_node(state: InterviewerState) -> InterviewerState:
         state["next_action"] = "generate_question"
     return state
 
-
 def _persist_turn(state: InterviewerState) -> InterviewerState:
-    """Record the AI turn into conversation history, asked questions, and turn records."""
     analysis = state.get("last_analysis") or {}
     spoken = str(analysis.get("spoken_response") or "").strip()
     question = str(analysis.get("next_question") or "").strip()
@@ -464,28 +404,21 @@ def _persist_turn(state: InterviewerState) -> InterviewerState:
     state["turn_records"] = turn_records
     return state
 
-
 def generate_question_node(state: InterviewerState) -> InterviewerState:
-    """Node 4: Emit the main stage question (greeting or next-topic)."""
     _persist_turn(state)
     return state
 
-
 def generate_follow_up_node(state: InterviewerState) -> InterviewerState:
-    """Node 5: Emit a targeted follow-up / deepen / clarify / verify question."""
     state["follow_up_depth"] = state.get("follow_up_depth", 0) + 1
     _persist_turn(state)
     return state
 
-
 def advance_skill_node(state: InterviewerState) -> InterviewerState:
-    """Node 6: Mark the current skill evaluated and move to the next required skill."""
     analysis = state.get("last_analysis") or {}
     target = analysis.get("target_skill") or state.get("current_skill")
     current = state.get("current_skill")
     is_greeting = not (state.get("latest_candidate_response") or "").strip()
 
-    # On the greeting turn nothing has been answered yet, so never mark a skill evaluated.
     if current and not is_greeting and str(current) != str(target):
         evaluated = state.get("evaluated_skills") or []
         if str(current) not in evaluated:
@@ -504,9 +437,7 @@ def advance_skill_node(state: InterviewerState) -> InterviewerState:
     state["current_stage"] = _stage_for_skill(str(target or ""))
     return generate_question_node(state)
 
-
 def close_interview_node(state: InterviewerState) -> InterviewerState:
-    """Node 7: Close the interview with a real, non-fabricated farewell."""
     analysis = state.get("last_analysis") or {}
     history = state.get("conversation_history") or []
 
@@ -528,13 +459,7 @@ def close_interview_node(state: InterviewerState) -> InterviewerState:
     state["conversation_history"] = history
     return finalize_scores_node(state)
 
-
 def _collect_transcript_text(history: Any) -> tuple:
-    """Extract candidate/ai transcript text and count turns from conversation history.
-
-    Accepts both the agent's internal shape ({speaker, text}) and the frontend's
-    persisted Message shape ({role, content}).
-    """
     if not isinstance(history, list):
         return "", 0
     candidate_lines = []
@@ -551,13 +476,7 @@ def _collect_transcript_text(history: Any) -> tuple:
             candidate_lines.append(text.strip())
     return "\n".join(line for line in candidate_lines if line), total
 
-
 def _gemini_score_transcript(history: Any, job_title: str) -> Optional[Dict[str, Any]]:
-    """Score the full interview transcript with the LLM against the role rubric.
-
-    Returns a dict with technical/communication/problem_solving scores or None
-    when the LLM is unavailable, the transcript is too thin, or parsing fails.
-    """
     transcript_text, _ = _collect_transcript_text(history)
     if len(transcript_text.strip()) < 40:
         return None
@@ -571,13 +490,7 @@ def _gemini_score_transcript(history: Any, job_title: str) -> Optional[Dict[str,
     )
     return extract_json_object(generate_text(prompt, force_provider="groq"))
 
-
 def finalize_scores_node(state: InterviewerState) -> InterviewerState:
-    """Node 8: Aggregate real turn scores into a final evaluation scorecard.
-
-    Every score is either a full-transcript LLM score or a real per-turn LLM
-    score recorded during the interview. No fabricated baseline is ever used.
-    """
     scores = state.get("scores_so_far", {})
     history = state.get("conversation_history", [])
     _, turn_count = _collect_transcript_text(history)
@@ -623,12 +536,6 @@ def finalize_scores_node(state: InterviewerState) -> InterviewerState:
     }
     return state
 
-
-# ---------------------------------------------------------------------------
-# LangGraph wiring
-# ---------------------------------------------------------------------------
-
-
 if LANGGRAPH_AVAILABLE:
     graph_builder = StateGraph(InterviewerState)
 
@@ -669,9 +576,7 @@ if LANGGRAPH_AVAILABLE:
 else:
     interviewer_graph = None
 
-
 def run_interviewer_agent(state: InterviewerState) -> InterviewerState:
-    """Entry point function to execute one turn of the interviewer agent."""
     if interviewer_graph:
         try:
             return interviewer_graph.invoke(state)

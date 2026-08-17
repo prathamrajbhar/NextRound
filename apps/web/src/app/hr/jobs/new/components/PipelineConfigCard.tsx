@@ -14,7 +14,7 @@ interface PipelineConfigCardProps {
   setEnableSourcing: (val: boolean) => void;
   voiceProfile: string;
   setVoiceProfile: (val: string) => void;
-  
+
   stages: ('screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision')[];
   setStages: (val: ('screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision')[]) => void;
   assessmentConfig: {

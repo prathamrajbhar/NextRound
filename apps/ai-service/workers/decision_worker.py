@@ -6,13 +6,7 @@ from workers.worker_base import fetch_internal, run_agent_job
 
 logger = logging.getLogger("decision_worker")
 
-
 def _coerce_optional_float(value):
-    """Coerce a number/string to float; None stays None.
-
-    A missing composite is never rewritten to 0.0 — coercing an unknown score to
-    zero would silently turn it into an auto-reject downstream.
-    """
     if value is None:
         return None
     try:
@@ -20,9 +14,7 @@ def _coerce_optional_float(value):
     except (TypeError, ValueError):
         return None
 
-
 def _extract_equity(job: dict) -> Optional[str]:
-    """Read equity from the job's thresholds JSON, mirroring the API deriveEquity helper."""
     thresholds = job.get("thresholds")
     if isinstance(thresholds, dict):
         equity = thresholds.get("equity")
@@ -30,15 +22,7 @@ def _extract_equity(job: dict) -> Optional[str]:
             return equity
     return None
 
-
 async def process_decision_job(job_data: dict) -> bool:
-    """
-    Process decision job.
-    1. Extract applicationId, evaluationId, compositeScore, confidence.
-    2. Execute Decision LangGraph agent.
-    3. Send decision result & drafted content back to Express internal endpoint.
-    4. Log agent audit record.
-    """
     application_id = job_data.get("applicationId")
     if not application_id:
         logger.error("Missing applicationId in decision job payload.")
@@ -50,9 +34,6 @@ async def process_decision_job(job_data: dict) -> bool:
         evaluation_id = job_data.get("evaluationId")
         composite_score = job_data.get("compositeScore")
         confidence = job_data.get("confidence")
-
-
-
 
         job_terms = {}
         try:
@@ -73,14 +54,8 @@ async def process_decision_job(job_data: dict) -> bool:
         except Exception as fetch_err:
             logger.warning(f"Failed to fetch stored application for decision context: {fetch_err}")
 
-
-
-
-
-
         composite_score = _coerce_optional_float(composite_score)
         confidence = _coerce_optional_float(confidence)
-
 
         result = await run_decision_agent(
             application_id=application_id,
@@ -92,16 +67,12 @@ async def process_decision_job(job_data: dict) -> bool:
             equity=job_terms.get("equity"),
         )
 
-
-
-
         if not evaluation_id:
             raise RuntimeError(
                 f"No evaluation id available for decision job on application {application_id}. "
                 "Refusing to write a decision to a fabricated evaluation."
             )
         eval_id = evaluation_id
-
 
         await callback_client.patch(
             f"internal/evaluations/{eval_id}/decision",

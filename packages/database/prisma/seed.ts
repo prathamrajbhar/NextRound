@@ -1808,12 +1808,12 @@ async function main(): Promise<void> {
   const razorFlowBackendJob = jobList.find(j => j.title === 'Senior Backend Engineer (Payments Core)' && j.orgName === 'RazorFlow Technologies')!;
   const razorFlowFullStackJob = jobList.find(j => j.title === 'Lead Full-Stack Engineer (Merchant Portal)' && j.orgName === 'RazorFlow Technologies')!;
   const razorFlowSecurityJob = jobList.find(j => j.title === 'Staff Security Engineer (AppSec & Cloud)' && j.orgName === 'RazorFlow Technologies')!;
-  
+
   const nexusCloudDistributedJob = jobList.find(j => j.title === 'Distributed Systems Engineer (Serverless Cloud)' && j.orgName === 'NexusCloud Labs')!;
   const nexusCloudAiJob = jobList.find(j => j.title === 'Senior AI Systems Architect' && j.orgName === 'NexusCloud Labs')!;
-  
+
   const zomatoFrontendJob = jobList.find(j => j.title === 'Senior Frontend Architect (Consumer Web & Mobile Web)' && j.orgName === 'ZomatoScale QuickCommerce')!;
-  
+
   const googleCloudK8sJob = jobList.find(j => j.title === 'Cloud Infrastructure Engineer (Kubernetes Core)' && j.orgName === 'Google Cloud India')!;
 
   const getCand = (email: string) => candidateList.find(c => c.email === email)!;
@@ -1924,7 +1924,6 @@ async function main(): Promise<void> {
     evaluationReasoning: 'Candidate demonstrated strong backend skills but lacked deep low-latency Rust experience required for this specific role.',
   });
   totalApps++;
-
 
   const appPriya = await prisma.application.create({
     data: {

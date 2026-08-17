@@ -6,10 +6,6 @@ export interface ScoreContract {
   score: number;
 }
 
-
-
-
-
 export async function updateApplicationCodingScore(
   applicationId: string,
   passRatePercent: number
@@ -21,7 +17,7 @@ export async function updateApplicationCodingScore(
     update: {
       coding_score: passRatePercent,
       stage: 'assessment_completed',
-      
+
       reasoning: `Coding assessment evaluated: ${passRatePercent}% pass rate (${passRateRatio.toFixed(2)} ratio). Pending human review.`,
     },
     create: {

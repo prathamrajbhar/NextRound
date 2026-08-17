@@ -269,11 +269,6 @@ export const CandidateProfileUpdateSchema = z.object({
   githubUrl: z.string().url().optional().nullable(),
 });
 
-
-
-
-
-
 export const CandidateSettingsSchema = z
   .object({
     emailNotifications: z.boolean().optional(),
@@ -281,8 +276,6 @@ export const CandidateSettingsSchema = z
     timezone: z.string().optional(),
   })
   .passthrough();
-
-
 
 export const HRProfileUpdateSchema = z.object({
   name: z.string().min(2).optional(),
@@ -370,11 +363,6 @@ export const CodingExecutionRequestSchema = z.object({
   idempotencyKey: z.string().optional(),
 });
 
-
-
-
-
-
 export const MockAptitudeChunkQuerySchema = z.object({
   chunkIndex: z.coerce.number().int().min(0).default(0),
   chunkSize: z.coerce.number().int().min(1).max(10).default(3),
@@ -385,14 +373,12 @@ export const MockAptitudeAnswerSchema = z.object({
   selectedIndex: z.number().int().min(0),
 });
 
-
 export const MockAptitudeChunkSubmitSchema = z.object({
   chunkIndex: z.coerce.number().int().min(0),
   chunkSize: z.coerce.number().int().min(1).max(10).default(3),
   answers: z.array(MockAptitudeAnswerSchema).default([]),
   clientRequestId: z.string().min(1).max(128).optional(),
 });
-
 
 export const MockAptitudeSubmitSchema = z.object({
   answers: z.array(MockAptitudeAnswerSchema).default([]),
@@ -401,13 +387,11 @@ export const MockAptitudeSubmitSchema = z.object({
   idempotencyKey: z.string().min(1).max(128).optional(),
 });
 
-
 export const MockCodingSubmitSchema = z.object({
   code: z.string().min(1, 'Code cannot be empty').max(200_000, 'Code is too large'),
   language: z.enum(['python', 'javascript', 'typescript', 'java', 'cpp']),
   idempotencyKey: z.string().min(1).max(128).optional(),
 });
-
 
 export const MockVideoSubmitSchema = z.object({
   videoUrl: z.string().url().min(1),
@@ -416,7 +400,6 @@ export const MockVideoSubmitSchema = z.object({
   promptIndex: z.number().int().min(0).optional(),
   idempotencyKey: z.string().min(1).max(128).optional(),
 });
-
 
 export const MockCompleteSchema = z.object({}).passthrough();
 
@@ -480,5 +463,4 @@ export type MockCompleteInput = z.infer<typeof MockCompleteSchema>;
 export type AptitudeQuestionInput = z.infer<typeof AptitudeQuestionSchema>;
 export type AptitudeChunkInput = z.infer<typeof AptitudeChunkSchema>;
 export type AptitudeChunkRequestInput = z.infer<typeof AptitudeChunkRequestSchema>;
-
 

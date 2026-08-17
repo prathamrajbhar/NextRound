@@ -15,9 +15,7 @@ import { extractRequirementsFromJd } from '../../services/jd-extractor.service';
 
 export const jobRouter = Router();
 
-
 jobRouter.use(rejectOrgIdParam);
-
 
 jobRouter.post(
   '/',
@@ -70,14 +68,12 @@ jobRouter.post(
   }
 );
 
-
 jobRouter.get(
   '/',
   authenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
 
-      
       if (req.user && req.user.role === 'hr' && req.user.orgId) {
         const { status } = req.query;
         const statusFilter = status && typeof status === 'string' ? status : undefined;
@@ -107,7 +103,6 @@ jobRouter.get(
         });
       }
 
-      
       const jobs = await prisma.job.findMany({
         where: {
           status: { in: ['published', 'active'] as any },
@@ -129,7 +124,6 @@ jobRouter.get(
     }
   }
 );
-
 
 jobRouter.get(
   '/org',
@@ -174,7 +168,6 @@ jobRouter.get(
   }
 );
 
-
 jobRouter.get(
   '/:id',
   authenticate,
@@ -198,13 +191,12 @@ jobRouter.get(
         return res.status(404).json({ success: false, error: 'Job not found' });
       }
 
-      
       if (req.user && req.user.role === 'hr') {
         if (job.org_id !== req.user.orgId) {
           return res.status(403).json({ success: false, error: 'Forbidden: Access denied to job' });
         }
       } else {
-        
+
         if (job.status !== 'published' && job.status !== 'active') {
           return res.status(404).json({ success: false, error: 'Job not found' });
         }
@@ -265,12 +257,9 @@ async function handleJobUpdate(req: Request, res: Response, next: NextFunction) 
   }
 }
 
-
 jobRouter.patch('/:id', authenticate, requireRole('hr'), requireOrgScope, handleJobUpdate);
 
-
 jobRouter.put('/:id', authenticate, requireRole('hr'), requireOrgScope, handleJobUpdate);
-
 
 jobRouter.post(
   '/:id/publish',
@@ -298,7 +287,6 @@ jobRouter.post(
         data: { status: 'published' },
       });
 
-      
       try {
         await enqueueSourcing(updatedJob.id, 'sourcing_index', {
           orgId: updatedJob.org_id,
@@ -317,7 +305,6 @@ jobRouter.post(
     }
   }
 );
-
 
 jobRouter.post(
   '/:id/close',
@@ -355,7 +342,6 @@ jobRouter.post(
   }
 );
 
-
 jobRouter.delete(
   '/:id',
   authenticate,
@@ -392,7 +378,6 @@ jobRouter.delete(
   }
 );
 
-
 jobRouter.post(
   '/extract-requirements',
   authenticate,
@@ -414,7 +399,6 @@ jobRouter.post(
     }
   }
 );
-
 
 jobRouter.post(
   '/:id/ai-assist',
@@ -439,7 +423,6 @@ jobRouter.post(
 
       const extracted = await extractRequirementsFromJd(existingJob.description, existingJob.title);
 
-      
       const updatedJob = await prisma.job.update({
         where: { id: jobId },
         data: {
@@ -449,7 +432,6 @@ jobRouter.post(
         },
       });
 
-      
       try {
         await enqueueSourcing(existingJob.id, 'ai-jd-assist', {
           orgId: existingJob.org_id,
@@ -473,7 +455,6 @@ jobRouter.post(
     }
   }
 );
-
 
 jobRouter.get(
   '/:id/pipeline',
@@ -506,7 +487,6 @@ jobRouter.get(
         orderBy: { applied_at: 'desc' },
       });
 
-      
       const pipeline: Record<string, typeof applications> = {
         applied: [],
         screening: [],
@@ -544,7 +524,6 @@ jobRouter.get(
     }
   }
 );
-
 
 jobRouter.get(
   '/:id/applications',

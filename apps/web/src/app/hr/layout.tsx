@@ -41,7 +41,6 @@ export default function HrLayout({
 
   const displayName = mounted ? (profileName || (user?.email ? user.email.split('@')[0] : 'Recruiter')) : 'Recruiter';
 
-  
   const [notifications, setNotifications] = useState<{ id: number; rawId?: string; text: string; time: string; read: boolean }[]>([]);
 
   useEffect(() => {

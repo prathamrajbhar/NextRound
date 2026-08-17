@@ -33,9 +33,6 @@ export interface ExecutionSummary {
 
 const RUNNER_VERSION = '2.0.0-unified-sandbox';
 
-
-
-
 export function compareOutputs(actual: any, expected: any): boolean {
   if (actual === expected) return true;
   if (typeof actual === 'number' && typeof expected === 'number') {
@@ -53,9 +50,6 @@ export function compareOutputs(actual: any, expected: any): boolean {
   }
   return String(actual).trim() === String(expected).trim();
 }
-
-
-
 
 export function executeCodingSubmission(
   code: string,
@@ -151,9 +145,6 @@ export function executeCodingSubmission(
   };
 }
 
-
-
-
 function executePythonSubprocess(code: string, entryPoint: string, args: any[]): { actual: any; error?: string; timedOut?: boolean } {
   const runnerScript = `
 import sys, json
@@ -206,9 +197,6 @@ except Exception as e:
     return { actual: null, error: err?.message || 'Python execution failed' };
   }
 }
-
-
-
 
 function executeNodeSubprocess(code: string, entryPoint: string, args: any[]): { actual: any; error?: string; timedOut?: boolean } {
   const runnerScript = `
@@ -271,9 +259,6 @@ process.stdin.on('end', () => {
   }
 }
 
-
-
-
 function executeCppSubprocess(code: string, entryPoint: string, args: any[]): { actual: any; error?: string; timedOut?: boolean } {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nextround-cpp-'));
   const srcPath = path.join(tmpDir, 'solution.cpp');
@@ -318,9 +303,6 @@ int main() {
     } catch {}
   }
 }
-
-
-
 
 function executeJavaSubprocess(code: string, entryPoint: string, args: any[]): { actual: any; error?: string; timedOut?: boolean } {
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'nextround-java-'));

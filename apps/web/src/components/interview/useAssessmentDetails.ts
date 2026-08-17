@@ -11,11 +11,6 @@ interface UseAssessmentDetailsOptions {
   role?: string;
 }
 
-
-
-
-
-
 export function useAssessmentDetails({ sessionId, applicationId, company, role }: UseAssessmentDetailsOptions) {
   const [session, setSession] = useState<Partial<MockSession>>({
     id: sessionId,

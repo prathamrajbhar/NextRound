@@ -42,10 +42,6 @@ export const ALTERNATE_EMERALD_THEME_CONFIG: ThemeConfig = {
   },
 };
 
-
-
-
-
 export function generateThemeCssVariables(
   theme: ThemeConfig,
   mode: 'light' | 'dark' = 'light'
@@ -68,12 +64,10 @@ export function generateThemeCssVariables(
     '--glass-shadow': semantic.glassShadow,
   };
 
-  
   Object.entries(theme.brand).forEach(([shade, value]) => {
     vars[`--brand-${shade}`] = value;
   });
 
-  
   Object.entries(theme.success).forEach(([shade, value]) => {
     vars[`--success-${shade}`] = value;
   });
@@ -89,9 +83,6 @@ export function generateThemeCssVariables(
 
   return vars;
 }
-
-
-
 
 export function applyThemeToElement(
   element: HTMLElement,

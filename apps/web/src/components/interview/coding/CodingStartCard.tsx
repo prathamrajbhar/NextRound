@@ -25,7 +25,7 @@ export function CodingStartCard({
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-slate-50/50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
       <div className="w-full max-w-xl p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-2xl space-y-6 text-center backdrop-blur-md">
-        
+
         <div className="mx-auto h-16 w-16 rounded-2xl flex items-center justify-center bg-indigo-500/10 border border-indigo-500/30 text-indigo-500 shadow-sm animate-pulse">
           <Terminal className="h-8 w-8" />
         </div>

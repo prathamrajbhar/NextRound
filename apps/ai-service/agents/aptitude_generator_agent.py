@@ -6,13 +6,7 @@ from services.llm_service import generate_text, extract_json_array
 
 logger = logging.getLogger("aptitude_generator_agent")
 
-
-
-
-
-
 def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[Dict[str, Any]]:
-    """Clean and validate raw LLM text payload into a valid question array."""
     parsed = extract_json_array(raw_text)
     if not parsed:
         return []
@@ -27,14 +21,10 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
             opts = q.get("options")
             correct_idx = q.get("correctIndex")
             explanation = q.get("explanation", "")
-            
 
             if not cat or not diff:
                 logger.debug(f"Skipping question {q_id}: missing category or difficulty")
                 continue
-            
-
-
 
             if not stem or not isinstance(opts, list) or len(opts) < 2:
                 continue
@@ -52,7 +42,6 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
                 "correctIndex": correct_idx,
                 "explanation": str(explanation) if explanation else "",
 
-
                 "source": "ai-generated",
             })
 
@@ -61,16 +50,11 @@ def _parse_llm_json_response(raw_text: str, count: int, job_title: str) -> List[
         logger.warning(f"JSON parse error in LLM payload for {job_title}: {parse_err}")
         return []
 
-
 async def generate_aptitude_questions(
     job_title: str = "Software Engineer",
     job_description: str = "",
     count: int = 5
 ) -> List[Dict[str, Any]]:
-    """
-    Dynamically generate N role-customized aptitude questions using Gemini:
-    1. Gemini (primary model: GEMINI_MODEL in .env, default gemini-2.5-flash)
-    """
     prompt = f"""You are an expert recruiter and assessment engineer. Generate a set of {count} high-quality, non-standard cognitive aptitude test questions tailored for a candidate applying for the position of:
 
 Job Title: {job_title}
@@ -103,45 +87,10 @@ JSON Format required:
     "correctIndex": 0
   }}
 ]
-"""
-
-
-    gemini_text = generate_text(prompt)
-    if gemini_text:
-        questions = _parse_llm_json_response(gemini_text, count, job_title)
-        if questions:
-            logger.info(f"Successfully generated {len(questions)} dynamic aptitude questions via Gemini ({settings.gemini_model}) for {job_title}.")
-            return questions
-
-    raise RuntimeError(
-        f"AI aptitude question generation failed via Gemini for '{job_title}'."
-    )
-
-
-async def generate_aptitude_chunk(
-    job_title: str = "Software Engineer",
-    job_description: str = "",
-    difficulty: str = "medium",
-    chunk_index: int = 0,
-    chunk_size: int = 3,
-    previous_questions: List[str] = None,
-    category: str = None,
-) -> List[Dict[str, Any]]:
-    """
     Generates a single progressive chunk (section) of aptitude questions.
     Passes previously generated question stems to prevent repetition across chunks.
     Supports category-targeted generation per chunk.
-    """
-    categories = [
-        "Quantitative Reasoning",
-        "Logical Deduction",
-        "Verbal & Communication Ability",
-        "Pattern Recognition & Data Interpretation",
-    ]
-    target_category = category or categories[chunk_index % len(categories)]
-    prev_stems = "\n- ".join((previous_questions or [])[-15:])
-
-    prompt = f"""You are a principal assessment architect generating a PROGRESSIVE CHUNK of aptitude questions.
+    You are a principal assessment architect generating a PROGRESSIVE CHUNK of aptitude questions.
 
 <JOB_TITLE>{job_title}</JOB_TITLE>
 <JOB_DESCRIPTION>{(job_description or "").strip()[:800]}</JOB_DESCRIPTION>
@@ -181,7 +130,6 @@ Return ONLY raw JSON array:
   }}
 ]"""
 
-
     gemini_text = generate_text(prompt)
     if gemini_text:
         questions = _parse_llm_json_response(gemini_text, chunk_size, job_title)
@@ -196,6 +144,4 @@ Return ONLY raw JSON array:
     raise RuntimeError(
         f"AI aptitude chunk generation failed via Gemini for chunk {chunk_index} of '{job_title}'."
     )
-
-
 

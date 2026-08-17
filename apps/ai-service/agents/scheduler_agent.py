@@ -7,7 +7,6 @@ logger = logging.getLogger("scheduler_agent")
 
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
-
 class SchedulerState(TypedDict, total=False):
     application_id: str
     interview_id: str
@@ -22,11 +21,6 @@ class SchedulerState(TypedDict, total=False):
     status: str
     slot_source: str
 
-
-
-
-
-
 BAND_TIMES = {
     "morning": (10, 0),
     "afternoon": (14, 0),
@@ -34,12 +28,9 @@ BAND_TIMES = {
 }
 
 def _day_category(dt: datetime) -> str:
-    """Monday-Friday -> 'weekday', Saturday/Sunday -> 'weekend'."""
     return "weekday" if dt.weekday() < 5 else "weekend"
 
-
 def _enabled_bands(availability: Any, category: str) -> List[str]:
-    """Return enabled band keys (morning/afternoon/evening) for a day category."""
     if not isinstance(availability, dict):
         return []
     day_cfg = availability.get(category)
@@ -47,12 +38,7 @@ def _enabled_bands(availability: Any, category: str) -> List[str]:
         return []
     return [band for band, enabled in day_cfg.items() if enabled is True and band in BAND_TIMES]
 
-
 def compute_available_slots(now: datetime, availability: Any, count: int = 3) -> List[str]:
-    """Generate up to ``count`` real future UTC slots within the org's configured
-    availability windows (Organization.settings.availabilityHours). Returns an
-    empty list when the config yields no valid future slot.
-    """
     slots: List[str] = []
     day_offset = 1
     while len(slots) < count and day_offset <= 14:
@@ -67,14 +53,7 @@ def compute_available_slots(now: datetime, availability: Any, count: int = 3) ->
         day_offset += 1
     return slots
 
-
 def generate_slots_node(state: SchedulerState) -> SchedulerState:
-    """Node 1: Generate 3 prospective interview time slots.
-
-    Slots are driven by the org's real availability config when present. When it
-    is absent (or yields no valid future time) the node reports no slots and an
-    honest status instead of fabricating a hardcoded schedule.
-    """
     logger.info(f"Generating interview time slots for application {state.get('application_id')}")
 
     now = datetime.now(timezone.utc).replace(tzinfo=None)
@@ -99,14 +78,7 @@ def generate_slots_node(state: SchedulerState) -> SchedulerState:
     state["available_slots"] = slots
     return state
 
-
 def format_invitation_email_node(state: SchedulerState) -> SchedulerState:
-    """Node 2: Format professional AI interview invitation email with slot options.
-
-    Honesty guard: without a real candidate email there is no recipient, and
-    without real slots there is nothing to offer. In both cases no invitation is
-    drafted (no placeholder address or fabricated content is produced).
-    """
     job_title = state.get("job_title") or ""
     email = state.get("candidate_email") or ""
     slots = state.get("available_slots") or []
@@ -138,9 +110,7 @@ def format_invitation_email_node(state: SchedulerState) -> SchedulerState:
     state["formatted_email"] = generated_email
     return state
 
-
 def build_scheduler_graph():
-    """Build LangGraph workflow graph for Scheduler Agent."""
     if not LANGGRAPH_AVAILABLE:
         return None
 
@@ -154,9 +124,7 @@ def build_scheduler_graph():
 
     return builder.compile()
 
-
 _scheduler_app = build_scheduler_graph()
-
 
 async def run_scheduler_agent(
     application_id: str,
@@ -167,7 +135,6 @@ async def run_scheduler_agent(
     org_id: str = "",
     availability_hours: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Execute Scheduler Agent pipeline."""
     initial_state: SchedulerState = {
         "application_id": application_id,
         "interview_id": interview_id,

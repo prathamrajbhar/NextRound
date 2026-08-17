@@ -150,7 +150,6 @@ export function useInterviewSession({
   const submitAnswer = async (text: string) => {
     if (!text.trim() || isAnalyzing) return;
 
-    
     const currentTimestamp = Date.now();
     const timestamp = new Date(currentTimestamp).toLocaleTimeString();
     setMessages((prev) => [...prev, { id: `c-${currentTimestamp}`, role: 'candidate', content: text, timestamp }]);

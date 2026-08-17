@@ -13,7 +13,6 @@ async function bootstrap() {
     ensureUploadDirsExist();
     setupWeeklyAnalyticsCron();
 
-    // Pre-warm DB connection pool and cache metadata prior to accepting HTTP traffic
     logger.info('Connecting and pre-warming database connection pool...');
     const startTime = Date.now();
     await prisma.$connect();

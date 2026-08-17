@@ -1,12 +1,6 @@
-"""Readable, consistent logging for the AI service.
-
-A single colored formatter with timestamps and level tags so worker and route
-logs share one clean shape, matching the Express logger's look.
-"""
 
 import logging
 import sys
-
 
 class ReadableFormatter(logging.Formatter):
     COLORS = {
@@ -43,7 +37,6 @@ class ReadableFormatter(logging.Formatter):
             line = f"{line}\n{traceback}"
 
         return line
-
 
 def configure_logging(level: int = logging.INFO) -> None:
     handler = logging.StreamHandler(sys.stderr)

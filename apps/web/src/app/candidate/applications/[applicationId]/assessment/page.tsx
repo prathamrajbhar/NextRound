@@ -8,7 +8,7 @@ import { CandidateDashboardSkeleton } from '@/app/candidate/dashboard/_component
 function CandidateAssessmentContent({ params }: { params: Promise<{ applicationId: string }> }) {
   const { applicationId } = use(params);
   const searchParams = useSearchParams();
-  
+
   const track = searchParams.get('track') || 'aptitude';
 
   return (

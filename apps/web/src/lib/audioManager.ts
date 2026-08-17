@@ -1,8 +1,4 @@
 
-
-
-
-
 let globalAudioInstance: HTMLAudioElement | null = null;
 let lastAudioUrl: string | null = null;
 let lastText = '';
@@ -27,9 +23,6 @@ export function getAudioInstance(): HTMLAudioElement {
   return globalAudioInstance;
 }
 
-
-
-
 export function unlockAudio() {
   try {
     const AudioCtx = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -39,7 +32,7 @@ export function unlockAudio() {
     }
 
     const audio = getAudioInstance();
-    
+
     audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAP//';
     audio.play().then(() => audio.pause()).catch(() => {});
 
@@ -50,9 +43,6 @@ export function unlockAudio() {
     console.warn('Failed to pre-unlock audio:', err);
   }
 }
-
-
-
 
 export function dataUriToBlobUrl(dataUri: string): string {
   try {
@@ -74,9 +64,6 @@ export function dataUriToBlobUrl(dataUri: string): string {
     return dataUri;
   }
 }
-
-
-
 
 export function playSpeechSynthesis(text: string, onEnd?: () => void) {
   if (typeof window === 'undefined' || !window.speechSynthesis) {
@@ -115,16 +102,12 @@ export function playSpeechSynthesis(text: string, onEnd?: () => void) {
   }
 }
 
-
-
-
 export function playAudio(text: string, audioUrl?: string, onEnd?: () => void) {
   lastText = text;
   if (audioUrl) {
     lastAudioUrl = audioUrl;
   }
 
-  
   stopAudio();
 
   if (audioUrl) {
@@ -161,9 +144,6 @@ export function playAudio(text: string, audioUrl?: string, onEnd?: () => void) {
   playSpeechSynthesis(text, onEnd);
 }
 
-
-
-
 export function stopAudio() {
   if (typeof window !== 'undefined') {
     window.speechSynthesis?.cancel();
@@ -176,9 +156,6 @@ export function stopAudio() {
     }
   }
 }
-
-
-
 
 export function replayLastAudio(onEnd?: () => void) {
   if (lastText) {

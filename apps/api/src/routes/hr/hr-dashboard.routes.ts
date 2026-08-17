@@ -7,9 +7,7 @@ import { serializeApplicationList } from '../../lib/serializers';
 
 export const hrDashboardRouter = Router();
 
-
 hrDashboardRouter.use(rejectOrgIdParam);
-
 
 hrDashboardRouter.get(
   '/dashboard',
@@ -20,7 +18,6 @@ hrDashboardRouter.get(
     try {
       const orgId = req.user!.orgId!;
 
-      
       const activeJobsCount = await prisma.job.count({
         where: {
           org_id: orgId,
@@ -28,14 +25,12 @@ hrDashboardRouter.get(
         },
       });
 
-      
       const totalApplicantsCount = await prisma.application.count({
         where: {
           job: { org_id: orgId },
         },
       });
 
-      
       const pendingInterviewsCount = await prisma.interview.count({
         where: {
           status: 'scheduled',
@@ -45,7 +40,6 @@ hrDashboardRouter.get(
         },
       });
 
-      
       const applications = await prisma.application.findMany({
         where: {
           job: { org_id: orgId },
@@ -74,7 +68,6 @@ hrDashboardRouter.get(
         stageDistribution[stageKey] = (stageDistribution[stageKey] || 0) + 1;
       });
 
-      
       const agentLogs = await prisma.agentLog.findMany({
         where: { org_id: orgId },
         orderBy: { created_at: 'desc' },
@@ -88,7 +81,6 @@ hrDashboardRouter.get(
         timestamp: log.created_at.toISOString(),
       }));
 
-      
       const hrCompletedApps = await prisma.application.findMany({
         where: {
           job: { org_id: orgId },
@@ -106,7 +98,6 @@ hrDashboardRouter.get(
           ? Math.round(hireTimes.reduce((acc, val) => acc + val, 0) / hireTimes.length / (1000 * 60 * 60 * 24))
           : 0;
 
-      
       const decidedEvals = await prisma.evaluation.findMany({
         where: {
           application: { job: { org_id: orgId } },
@@ -121,7 +112,6 @@ hrDashboardRouter.get(
         reject: decidedEvals.filter((e) => e.decision === 'reject').length,
       };
 
-      
       const recentApps = await prisma.application.findMany({
         where: { job: { org_id: orgId } },
         include: {

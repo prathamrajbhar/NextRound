@@ -42,7 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       localStorage.setItem('hireos_theme', newMode);
     } catch {
-      // Ignore
+
     }
     const root = document.documentElement;
     if (newMode === 'dark') {

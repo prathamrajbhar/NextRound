@@ -21,7 +21,7 @@ export default function SkillsScorecard({ scores }: SkillsScorecardProps) {
         <Award className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
         Skills Scorecard
       </h3>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[
           { name: 'Technical Knowledge', val: scores.technical },

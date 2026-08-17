@@ -32,9 +32,7 @@ const evidenceUpload = multer({
   },
 });
 
-
 proctoringRouter.use(authenticate);
-
 
 proctoringRouter.post(
   '/sessions',
@@ -44,7 +42,6 @@ proctoringRouter.post(
     ok(res, session, 201);
   })
 );
-
 
 proctoringRouter.post(
   '/sessions/:id/events',
@@ -59,7 +56,6 @@ proctoringRouter.post(
   })
 );
 
-
 proctoringRouter.post(
   '/sessions/:id/heartbeat',
   asyncHandler(async (req, res) => {
@@ -67,7 +63,6 @@ proctoringRouter.post(
     ok(res, session);
   })
 );
-
 
 proctoringRouter.post(
   '/sessions/:id/pause',
@@ -77,7 +72,6 @@ proctoringRouter.post(
   })
 );
 
-
 proctoringRouter.post(
   '/sessions/:id/resume',
   asyncHandler(async (req, res) => {
@@ -86,7 +80,6 @@ proctoringRouter.post(
   })
 );
 
-
 proctoringRouter.post(
   '/sessions/:id/end',
   asyncHandler(async (req, res) => {
@@ -94,7 +87,6 @@ proctoringRouter.post(
     ok(res, session);
   })
 );
-
 
 proctoringRouter.post(
   '/sessions/:id/recording',
@@ -128,7 +120,6 @@ proctoringRouter.post(
     ok(res, { session_id: session.id, recording_url: session.recording_url }, 201);
   })
 );
-
 
 proctoringRouter.post(
   '/sessions/:id/evidence',
@@ -164,7 +155,6 @@ proctoringRouter.post(
   })
 );
 
-
 proctoringRouter.get(
   '/sessions/:id/report',
   asyncHandler(async (req, res) => {
@@ -177,7 +167,6 @@ proctoringRouter.get(
     ok(res, report);
   })
 );
-
 
 proctoringRouter.get(
   '/applications/:applicationId/report',
@@ -195,7 +184,6 @@ proctoringRouter.get(
     }
   })
 );
-
 
 proctoringRouter.post(
   '/violations/:id/review',

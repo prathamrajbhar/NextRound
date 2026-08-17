@@ -6,7 +6,6 @@ import { serializeApplicationList, serializeJobList } from '../../lib/serializer
 
 export const candidateDashboardRouter = Router();
 
-
 candidateDashboardRouter.get(
   '/dashboard',
   authenticate,
@@ -85,7 +84,6 @@ candidateDashboardRouter.get(
     }
   }
 );
-
 
 candidateDashboardRouter.get(
   '/applications',

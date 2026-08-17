@@ -19,7 +19,7 @@ interface RawApiQuestion {
   question?: string;
   options?: string[];
   difficulty?: string;
-  
+
   correctIndex?: number;
   correct_index?: number;
 }
@@ -75,11 +75,6 @@ export function normalizeQuestion(q: RawApiQuestion): AptitudeQuestion {
   };
 }
 
-
-
-
-
-
 export function useAptitudeQuestions({
   applicationId,
   sessionId,
@@ -120,7 +115,7 @@ export function useAptitudeQuestions({
       } catch (err) {
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : 'Failed to load questions.';
-          
+
           const isAuth = msg.toLowerCase().includes('401') || msg.toLowerCase().includes('authentication') || msg.toLowerCase().includes('token');
           setFetchError(isAuth
             ? 'Your session has expired. Please log in again to start the assessment.'
@@ -137,6 +132,5 @@ export function useAptitudeQuestions({
     return () => { cancelled = true; };
   }, [applicationId, sessionId, role, company]);
 
-  
   return { questions, mcqDistribution, isLoading, fetchError };
 }

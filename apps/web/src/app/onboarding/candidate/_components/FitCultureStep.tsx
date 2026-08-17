@@ -29,7 +29,6 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
         currentValue: form[field],
       };
 
-      
       const regenerated = await apiClient
         .post<{ text?: string }>('/candidate/regenerate-field', payload)
         .catch(() => undefined);
@@ -168,7 +167,7 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
           <label className={labelCls}>Work Values — Drag &amp; Drop Priority Ranking</label>
         </div>
         <p className="text-xs text-slate-400 font-medium mb-3">Drag handles or use arrows to reorder values based on your personal priority.</p>
-        
+
         <div className="space-y-2.5">
           {form.workValues.map((val, idx) => {
             const isDragging = draggedIdx === idx;

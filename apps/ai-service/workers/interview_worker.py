@@ -6,9 +6,7 @@ from workers.worker_base import fetch_internal, run_agent_job, AgentJobSkip
 
 logger = logging.getLogger("interview_worker")
 
-
 def _build_context_text(context: dict, max_length: int = 3000) -> str:
-    """Compose a factual candidate + job context string for the interviewer agent."""
     parts = []
     candidate = context.get("candidate") or {}
     parts.append(f"Candidate: {candidate.get('fullName') or 'N/A'}")
@@ -62,7 +60,6 @@ def _build_context_text(context: dict, max_length: int = 3000) -> str:
 
     text = "\n\n".join(part for part in parts if part)
     return text[:max_length]
-
 
 async def process_interview_job(job_data: dict) -> bool:
     interview_id = job_data.get("interviewId")

@@ -11,7 +11,6 @@ export interface ApiError {
   details?: unknown;
 }
 
-
 export interface Job {
   id: string;
   orgId: string;
@@ -226,7 +225,7 @@ export interface OnboardingRecord {
   jobTitle: string;
   orgName: string;
   startDate: string;
-  
+
   buddyName: string | null;
   managerName: string | null;
   progressPercent: number;

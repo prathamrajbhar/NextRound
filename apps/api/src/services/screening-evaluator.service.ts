@@ -16,14 +16,6 @@ export interface ScreeningEvaluationResult {
   reasoning: string;
 }
 
-
-
-
-
-
-
-
-
 export async function evaluateApplicationScreening(
   applicationId: string
 ): Promise<{ application: any; evaluation: any }> {
@@ -49,8 +41,6 @@ export async function evaluateApplicationScreening(
   const candidateRawText = app.candidate.raw_resume_text || app.candidate.bio || '';
   const candidateExp = app.candidate.years_of_experience || 0;
 
-  
-  
   const thresholds = (app.job.thresholds as any) || {};
   const minScore = typeof thresholds.minScore === 'number' ? thresholds.minScore : null;
   if (minScore === null) {
@@ -130,7 +120,6 @@ Return ONLY a JSON object matching:
     reasoning,
   };
 
-  
   const updatedApp = await prisma.application.update({
     where: { id: applicationId },
     data: {
@@ -144,7 +133,6 @@ Return ONLY a JSON object matching:
     },
   });
 
-  
   const evaluation = await prisma.evaluation.upsert({
     where: { application_id: applicationId },
     create: {
@@ -164,8 +152,6 @@ Return ONLY a JSON object matching:
     },
   });
 
-  
-  
   if (result.status !== 'rejected') {
     await ensureInterviewAndSchedule(applicationId);
   }

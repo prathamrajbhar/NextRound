@@ -4,14 +4,7 @@ from workers.worker_base import run_agent_job
 
 logger = logging.getLogger("analytics_worker")
 
-
 async def process_analytics_job(job_data: dict) -> bool:
-    """
-    Process Analytics Agent BullMQ job:
-    1. Extract org_id.
-    2. Execute Analytics Agent pipeline.
-    3. Register report metadata and log audit record.
-    """
     org_id = job_data.get("orgId") or job_data.get("org_id")
     if not org_id:
         logger.error("Missing org_id in analytics job payload. No default org is assumed.")

@@ -16,7 +16,7 @@ export const UPLOAD_ROOT_DIR = '/tmp/nextround-uploads';
 export const SUB_DIRECTORIES = ['resumes', 'audio', 'video', 'offers', 'misc'];
 
 export function ensureUploadDirsExist(): void {
-  // Cloud storage doesn't need local directories created
+
   return;
 }
 

@@ -8,7 +8,6 @@ import { advanceAssessmentStage } from '../../lib/pipeline';
 
 export const candidateApplicationsRouter = Router();
 
-
 candidateApplicationsRouter.get(
   '/applications/:id/offer',
   authenticate,
@@ -45,7 +44,6 @@ candidateApplicationsRouter.get(
     }
   }
 );
-
 
 candidateApplicationsRouter.get(
   '/applications/:id/onboarding',
@@ -132,9 +130,6 @@ candidateApplicationsRouter.get(
       const completedCount = defaultTasks.filter((t) => t.status === 'completed').length;
       const progressPercent = Math.round((completedCount / defaultTasks.length) * 100);
 
-      
-      
-      
       const onboardingRecord = {
         id: `onboard-${application.id}`,
         applicationId: application.id,
@@ -158,7 +153,6 @@ candidateApplicationsRouter.get(
     }
   }
 );
-
 
 candidateApplicationsRouter.get(
   '/applications/:id/take-home',
@@ -192,8 +186,7 @@ candidateApplicationsRouter.get(
         id: `project-${application.id}`,
         applicationId: application.id,
         candidateName,
-        
-        
+
         title: `Technical Assessment: ${application.job.title}`,
         description: `Build a production-ready reactive dashboard showcasing state management, clean component modularity, strict error handling, and unit test coverage.`,
         status: 'assigned' as const,
@@ -217,7 +210,6 @@ candidateApplicationsRouter.get(
   }
 );
 
-
 candidateApplicationsRouter.post(
   '/applications/:id/take-home/submit',
   authenticate,
@@ -240,8 +232,6 @@ candidateApplicationsRouter.post(
         return res.status(404).json({ success: false, error: 'Application not found' });
       }
 
-      
-      
       await prisma.application.update({
         where: { id: appId },
         data: { status: 'screening_completed' },

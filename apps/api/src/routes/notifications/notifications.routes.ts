@@ -5,7 +5,6 @@ import { notificationService } from '../../services/notification.service';
 
 export const notificationsRouter = Router();
 
-
 notificationsRouter.get(
   '/stream',
   authenticate,
@@ -20,7 +19,6 @@ notificationsRouter.get(
     notificationService.addClient(userId, res);
   }
 );
-
 
 notificationsRouter.get(
   '/',
@@ -51,7 +49,6 @@ notificationsRouter.get(
     }
   }
 );
-
 
 notificationsRouter.patch(
   '/:id/read',
@@ -84,7 +81,6 @@ notificationsRouter.patch(
   }
 );
 
-
 notificationsRouter.post(
   '/read-all',
   authenticate,
@@ -106,7 +102,6 @@ notificationsRouter.post(
     }
   }
 );
-
 
 notificationsRouter.delete(
   '/:id',
@@ -135,7 +130,6 @@ notificationsRouter.delete(
     }
   }
 );
-
 
 notificationsRouter.delete(
   '/',

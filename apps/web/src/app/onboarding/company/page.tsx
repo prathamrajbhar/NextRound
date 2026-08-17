@@ -51,7 +51,7 @@ export default function CompanyOnboarding() {
       const orgId = organization?.id;
 
       if (orgId && form.invites.length > 0) {
-        
+
         await Promise.all(
           form.invites.map((email) =>
             apiClient.post(`/organizations/${orgId}/members/invite`, { email }).catch(() => null)

@@ -2,17 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import type { ZodTypeAny } from 'zod';
 import type { ApiEnvelope } from '@nextround/shared';
 
-
-
-
-
-
-
-
-
-
 type Handler = (req: Request, res: Response, next: NextFunction) => Promise<unknown>;
-
 
 export function asyncHandler(fn: Handler) {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -20,12 +10,10 @@ export function asyncHandler(fn: Handler) {
   };
 }
 
-
 export function ok<T>(res: Response, data: T, status = 200): Response {
   const body: ApiEnvelope<T> = { success: true, data };
   return res.status(status).json(body);
 }
-
 
 export function fail(
   res: Response,
@@ -37,11 +25,6 @@ export function fail(
   const body: ApiEnvelope<never> = { success: false, error: { code, message, details } };
   return res.status(status).json(body);
 }
-
-
-
-
-
 
 export function validate<S extends ZodTypeAny>(
   schema: S,

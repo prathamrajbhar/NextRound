@@ -13,9 +13,7 @@ import { emailService } from '../../services/email.service';
 
 export const organizationRouter = Router();
 
-
 organizationRouter.use(rejectOrgIdParam);
-
 
 function enforceOrgMatch(req: Request, res: Response, targetOrgId: string): boolean {
   if (req.user?.orgId !== targetOrgId) {
@@ -24,7 +22,6 @@ function enforceOrgMatch(req: Request, res: Response, targetOrgId: string): bool
   }
   return true;
 }
-
 
 organizationRouter.post(
   '/',
@@ -41,7 +38,7 @@ organizationRouter.post(
       let orgId = req.user.orgId;
 
       if (!orgId) {
-        
+
         const newOrg = await prisma.organization.create({
           data: {
             name: validated.name,
@@ -64,7 +61,6 @@ organizationRouter.post(
         });
       }
 
-      
       const updatedOrg = await prisma.organization.update({
         where: { id: orgId },
         data: {
@@ -85,7 +81,6 @@ organizationRouter.post(
     }
   }
 );
-
 
 organizationRouter.get(
   '/me',
@@ -111,7 +106,6 @@ organizationRouter.get(
     }
   }
 );
-
 
 organizationRouter.get(
   '/:id',
@@ -140,7 +134,6 @@ organizationRouter.get(
     }
   }
 );
-
 
 organizationRouter.patch(
   '/:id',
@@ -191,7 +184,6 @@ organizationRouter.patch(
   }
 );
 
-
 organizationRouter.get(
   '/:id/settings',
   authenticate,
@@ -220,7 +212,6 @@ organizationRouter.get(
     }
   }
 );
-
 
 organizationRouter.patch(
   '/:id/settings',
@@ -262,7 +253,6 @@ organizationRouter.patch(
   }
 );
 
-
 organizationRouter.get(
   '/:id/members',
   authenticate,
@@ -293,7 +283,6 @@ organizationRouter.get(
   }
 );
 
-
 organizationRouter.post(
   '/:id/members/invite',
   authenticate,
@@ -306,7 +295,6 @@ organizationRouter.post(
 
       const validated = MemberInviteSchema.parse(req.body);
 
-      
       const existingUser = await prisma.user.findUnique({
         where: { email: validated.email },
       });
@@ -315,7 +303,7 @@ organizationRouter.post(
         if (existingUser.org_id === id) {
           return res.status(400).json({ success: false, error: 'User is already a member of this organization' });
         }
-        
+
         if (!existingUser.org_id) {
           const updatedUser = await prisma.user.update({
             where: { id: existingUser.id },
@@ -330,11 +318,6 @@ organizationRouter.post(
         return res.status(400).json({ success: false, error: 'User belongs to another organization' });
       }
 
-      
-      
-      
-      
-      
       const invited = await emailService.sendMemberInvite(
         validated.email,
         id,
@@ -360,7 +343,6 @@ organizationRouter.post(
     }
   }
 );
-
 
 organizationRouter.delete(
   '/:id/members/:userId',

@@ -15,16 +15,13 @@ logger = logging.getLogger("voice_routes")
 
 voice_router = APIRouter(prefix="/api/v1/ai/interview", tags=["voice-interview"])
 
-
 class TranscribeRequest(BaseModel):
     audio_base64: Optional[str] = None
     language: Optional[str] = "en"
 
-
 class TranscribeResponse(BaseModel):
     transcript: str
     confidence: Optional[float] = None
-
 
 class InterviewRespondRequest(BaseModel):
     interviewId: str
@@ -40,7 +37,6 @@ class InterviewRespondRequest(BaseModel):
     conversationHistory: List[Dict[str, Any]] = Field(default_factory=list)
     voice: Optional[str] = "en-US-ChristopherNeural"
 
-
 class InterviewRespondResponse(BaseModel):
     text: str
     audioUrl: Optional[str] = None
@@ -53,23 +49,19 @@ class InterviewRespondResponse(BaseModel):
     remainingSkills: Optional[List[str]] = None
     currentSkill: Optional[str] = None
 
-
 class TTSRequest(BaseModel):
     text: str
     voice: Optional[str] = "en-US-ChristopherNeural"
 
-
 class TTSResponse(BaseModel):
     audio_url: str
     audio_format: str = "mp3"
-
 
 @voice_router.post("/transcribe", response_model=TranscribeResponse)
 async def transcribe_audio(
     request: Request,
     file: Optional[UploadFile] = File(None),
 ):
-    """STT Speech-to-Text endpoint using Groq Whisper API (whisper-large-v3-turbo)."""
     logger.info("Voice: Received audio transcription request")
 
     audio_bytes = None
@@ -96,12 +88,9 @@ async def transcribe_audio(
     transcript, confidence = transcribe_audio_bytes(audio_bytes, filename=filename)
     return TranscribeResponse(transcript=transcript, confidence=confidence)
 
-
 @voice_router.post("/respond", response_model=InterviewRespondResponse)
 async def generate_interview_response(request: InterviewRespondRequest):
-    """Generate next interviewer turn using LangGraph Interviewer Agent & synthesize audio."""
     logger.info(f"Voice: Generating turn response for interview {request.interviewId}, stage {request.stage}")
-
 
     state: InterviewerState = {
         "interview_id": request.interviewId,
@@ -118,7 +107,6 @@ async def generate_interview_response(request: InterviewRespondRequest):
     if request.requiredSkills:
         state["required_skills"] = request.requiredSkills
 
-
     output_state = await asyncio.to_thread(run_interviewer_agent, state)
 
     ai_text = output_state.get("latest_ai_response")
@@ -130,7 +118,6 @@ async def generate_interview_response(request: InterviewRespondRequest):
     analysis = output_state.get("last_analysis")
     turn_records = output_state.get("turn_records") or []
     turn_record = turn_records[-1] if turn_records else None
-
 
     audio_url = await generate_tts_audio_base64(ai_text, voice=request.voice or "en-US-ChristopherNeural")
 
@@ -147,10 +134,8 @@ async def generate_interview_response(request: InterviewRespondRequest):
         currentSkill=output_state.get("current_skill"),
     )
 
-
 @voice_router.post("/tts", response_model=TTSResponse)
 async def generate_tts(request: TTSRequest):
-    """Text-to-Speech endpoint using Edge TTS neural synthesis."""
     logger.info(f"Voice: Generating TTS for text length {len(request.text)}")
     if not request.text or not request.text.strip():
         raise HTTPException(status_code=400, detail="Text parameter cannot be empty.")
@@ -158,12 +143,8 @@ async def generate_tts(request: TTSRequest):
     audio_url = await generate_tts_audio_base64(request.text, voice=request.voice or "en-US-ChristopherNeural")
     return TTSResponse(audio_url=audio_url, audio_format="mp3")
 
-
 @voice_router.post("/voice-stream")
 async def voice_stream_response(request: InterviewRespondRequest):
-    """
-    Low-latency streaming endpoint yielding chunked sentence audio segments for sub-500ms voice interaction.
-    """
     state: InterviewerState = {
         "interview_id": request.interviewId,
         "application_id": request.applicationId or request.interviewId,

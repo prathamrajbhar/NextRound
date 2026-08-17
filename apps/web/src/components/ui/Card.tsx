@@ -16,7 +16,7 @@ const accentClass: Record<CardAccent, string> = {
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   accent?: CardAccent;
-  
+
   hoverable?: boolean;
   padding?: 'none' | 'sm' | 'md' | 'lg';
 }

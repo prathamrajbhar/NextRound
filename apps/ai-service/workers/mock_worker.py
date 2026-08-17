@@ -5,14 +5,7 @@ from workers.worker_base import post_internal
 
 logger = logging.getLogger("mock_worker")
 
-
 async def process_mock_job(job_data: dict) -> bool:
-    """
-    Process Mock Interview evaluation job:
-    1. Extract session_id, candidate_id, transcript, topic, difficulty.
-    2. Compute comprehensive STAR feedback report and score via Gemini API.
-    3. Call back Express internal endpoint /internal/mock/sessions/:id/feedback.
-    """
     session_id = job_data.get("sessionId")
     if not session_id:
         logger.error("Missing sessionId in mock job payload.")

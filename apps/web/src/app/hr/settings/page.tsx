@@ -36,7 +36,6 @@ export default function HrSettingsPage() {
   const [savedSuccess, setSavedSuccess] = useState(false);
   const { theme, setTheme, setBrandColor: setGlobalBrandColor } = useTheme();
 
-  
   const [orgName, setOrgName] = useState(DEFAULT_ORG_SETTINGS.orgName);
   const [orgDomain, setOrgDomain] = useState(DEFAULT_ORG_SETTINGS.domain);
   const [supportEmail, setSupportEmail] = useState(DEFAULT_ORG_SETTINGS.supportEmail);
@@ -70,17 +69,14 @@ export default function HrSettingsPage() {
     fetchSettings();
   }, []);
 
-  
   const [brandColor, setBrandColor] = useState('orange');
   const [glassmorphism, setGlassmorphism] = useState(true);
   const [compactDensity, setCompactDensity] = useState(false);
 
-  
   const [notifyShortlist, setNotifyShortlist] = useState(true);
   const [notifyHighScore, setNotifyHighScore] = useState(true);
   const [dailyDigest, setDailyDigest] = useState(true);
 
-  
   const [team, setTeam] = useState<{ id: string; name: string; email: string; role: string; status: string }[]>(() => {
     if (user?.email) {
       return [{ id: user?.id || 'me', name: user.email.split('@')[0], email: user.email, role: 'Owner', status: 'Active' }];
@@ -91,7 +87,6 @@ export default function HrSettingsPage() {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'Admin' | 'Recruiter' | 'Reviewer'>('Recruiter');
 
-  
   const [activeTemplate, setActiveTemplate] = useState<'interview' | 'assessment' | 'offer' | 'rejection'>('interview');
   const [templates, setTemplates] = useState({
     interview: {
@@ -117,7 +112,6 @@ export default function HrSettingsPage() {
     setTimeout(() => setSavedSuccess(false), 2000);
   };
 
-  
   useEffect(() => {
     async function loadMembers() {
       if (!orgId) return;

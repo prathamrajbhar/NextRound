@@ -4,9 +4,9 @@ import { deriveSalary, deriveEquity } from '../lib/offer-terms';
 
 export interface OfferDraftInput {
   applicationId: string;
-  
+
   job: { title: string; salary: string | null | undefined; thresholds?: unknown };
-  
+
   roleTitle?: string | null;
   salary?: number | null;
   equity?: string | null;
@@ -16,23 +16,13 @@ export interface OfferDraftInput {
 
 export interface OfferDraftResult {
   offer: Awaited<ReturnType<typeof prisma.offer.upsert>>;
-  
+
   isNew: boolean;
 }
 
 export class NoSalaryConfiguredError extends Error {
   statusCode = 422;
 }
-
-
-
-
-
-
-
-
-
-
 
 export async function upsertOffer(input: OfferDraftInput): Promise<OfferDraftResult> {
   const { applicationId, job } = input;

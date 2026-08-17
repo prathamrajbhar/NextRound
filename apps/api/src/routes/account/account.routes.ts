@@ -6,9 +6,6 @@ import { requireRole } from '../../middleware/rbac';
 
 export const accountRouter = Router();
 
-
-
-
 function serializeHrProfile(user: {
   id: string;
   email: string;
@@ -38,7 +35,6 @@ function serializeHrProfile(user: {
   };
 }
 
-
 accountRouter.get(
   '/hr/profile',
   authenticate,
@@ -66,7 +62,6 @@ accountRouter.get(
   }
 );
 
-
 accountRouter.patch(
   '/hr/profile',
   authenticate,
@@ -85,8 +80,6 @@ accountRouter.patch(
 
       const stored = (user.profile as Record<string, unknown>) || {};
 
-      
-      
       const updates: Record<string, unknown> = {};
       const bodyHas = (key: string) => Object.prototype.hasOwnProperty.call(validated, key);
       if (bodyHas('name')) updates.name = validated.name;
@@ -120,7 +113,6 @@ accountRouter.patch(
   }
 );
 
-
 accountRouter.get(
   '/candidate/settings',
   authenticate,
@@ -151,7 +143,6 @@ accountRouter.get(
   }
 );
 
-
 accountRouter.patch(
   '/candidate/settings',
   authenticate,
@@ -160,8 +151,6 @@ accountRouter.patch(
     try {
       const validated = CandidateSettingsSchema.parse(req.body);
 
-      
-      
       const incoming: Record<string, unknown> = { ...validated };
       const nested = incoming.settings;
       if (nested && typeof nested === 'object' && !Array.isArray(nested)) {
@@ -174,8 +163,6 @@ accountRouter.patch(
         select: { id: true, settings: true },
       });
 
-      
-      
       const merged = {
         ...((existing?.settings as Record<string, unknown>) || {}),
         ...incoming,

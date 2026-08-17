@@ -7,9 +7,7 @@ export function SavingsCalculator() {
   const [monthlyHires, setMonthlyHires] = useState(5);
   const [hourlyRate, setHourlyRate] = useState(45);
 
-  
-  
-  const hoursSavedPerHire = 8; 
+  const hoursSavedPerHire = 8;
   const totalHoursSaved = monthlyHires * hoursSavedPerHire;
   const totalMoneySaved = totalHoursSaved * hourlyRate;
 

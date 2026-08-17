@@ -88,7 +88,6 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     );
   }
 
-  
   if (!joined) {
     return (
       <div className="fixed inset-0 z-50 w-screen h-screen bg-slate-950 text-slate-100 flex flex-col font-sans p-6 items-center justify-center overflow-y-auto">
@@ -178,7 +177,6 @@ export default function CandidateHrRoundRoom({ params }: { params: Promise<{ app
     );
   }
 
-  
   return (
     <UnifiedInterviewConsole
       applicationId={applicationId}

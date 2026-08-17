@@ -10,7 +10,7 @@ export function ServiceWorkerRegistration() {
       navigator.serviceWorker
         .register("/sw.js", { scope: "/", updateViaCache: "none" })
         .catch(() => {
-          // SW registration is non-critical; fail silently.
+
         });
     };
 

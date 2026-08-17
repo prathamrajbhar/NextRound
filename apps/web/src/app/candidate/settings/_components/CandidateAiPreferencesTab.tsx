@@ -24,31 +24,27 @@ interface CandidateAiPreferencesTabProps {
 }
 
 export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabProps) {
-  // Settings saved to backend
+
   const [liveTranscript, setLiveTranscript] = useState(true);
   const [autoSubmitTranscript, setAutoSubmitTranscript] = useState(true);
-  
-  // Diagnostics UI states
+
   const [micTesting, setMicTesting] = useState(false);
   const [camTesting, setCamTesting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
-  // Device enumeration states
   const [videoDevices, setVideoDevices] = useState<MediaDeviceInfo[]>([]);
   const [audioDevices, setAudioDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedVideoDeviceId, setSelectedVideoDeviceId] = useState<string>('');
   const [selectedAudioDeviceId, setSelectedAudioDeviceId] = useState<string>('');
 
-  // Proctoring tests states
   const [screenShareVerified, setScreenShareVerified] = useState<'idle' | 'checking' | 'verified' | 'failed'>('idle');
   const [screenShareError, setScreenShareError] = useState('');
-  
+
   const [latencyStatus, setLatencyStatus] = useState<'idle' | 'checking' | 'passed' | 'failed'>('idle');
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [jitterMs, setJitterMs] = useState<number | null>(null);
 
-  // Load preferences on mount
   useEffect(() => {
     async function loadAiSettings() {
       try {
@@ -63,11 +59,10 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
     loadAiSettings();
   }, []);
 
-  // Enumerate hardware devices
   useEffect(() => {
     async function enumerateDevices() {
       try {
-        // Request temporary stream permissions so labels are populated
+
         if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
           await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
             .then((stream) => {
@@ -78,10 +73,10 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
           const devices = await navigator.mediaDevices.enumerateDevices();
           const vDevices = devices.filter((d) => d.kind === 'videoinput');
           const aDevices = devices.filter((d) => d.kind === 'audioinput');
-          
+
           setVideoDevices(vDevices);
           setAudioDevices(aDevices);
-          
+
           if (vDevices.length > 0) setSelectedVideoDeviceId(vDevices[0].deviceId);
           if (aDevices.length > 0) setSelectedAudioDeviceId(aDevices[0].deviceId);
         }
@@ -92,7 +87,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
     enumerateDevices();
   }, []);
 
-  // Set up live media stream hook
   const videoRef = useRef<HTMLVideoElement>(null);
   const { hasCamPermission, micLevel } = useLocalMediaStream({
     videoRef,
@@ -103,7 +97,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
     enabled: camTesting || micTesting,
   });
 
-  // Screen share check handler
   const handleScreenShareTest = async () => {
     setScreenShareVerified('checking');
     setScreenShareError('');
@@ -121,7 +114,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
     }
   };
 
-  // Latency speed check handler
   const handleLatencyTest = async () => {
     setLatencyStatus('checking');
     setLatencyMs(null);
@@ -150,7 +142,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
       setJitterMs(calculatedJitter);
       setLatencyStatus(avgLatency < 250 ? 'passed' : 'failed');
     } catch {
-      // Fallback latency check simulation
+
       setTimeout(() => {
         const randomLatency = Math.floor(Math.random() * 30) + 15;
         const randomJitter = Math.floor(Math.random() * 3) + 1;
@@ -161,7 +153,6 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
     }
   };
 
-  // Save settings preference handler
   const handleSave = async () => {
     setSaving(true);
     setSaveError('');
@@ -180,7 +171,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200 pb-8">
-      {/* Header section */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel">
         <h2 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
           <Activity className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -192,9 +183,9 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Column 1: A/V Diagnostics */}
+        {}
         <div className="space-y-6">
-          {/* Camera Diagnostics Card */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -214,7 +205,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
               </button>
             </div>
 
-            {/* Video preview container (clean, raw feed) */}
+            {}
             <div className="relative aspect-video rounded-2xl bg-slate-950 overflow-hidden border border-slate-200/20 dark:border-slate-800 flex items-center justify-center">
               {camTesting && hasCamPermission !== false ? (
                 <>
@@ -241,7 +232,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
               )}
             </div>
 
-            {/* Source selector */}
+            {}
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">Camera Source Device</label>
               {videoDevices.length > 0 ? (
@@ -267,7 +258,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
             </div>
           </div>
 
-          {/* Microphone Diagnostics Card */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -287,7 +278,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
               </button>
             </div>
 
-            {/* Audio level meter visualizer (clean, simple progress bar) */}
+            {}
             <div className="space-y-2">
               <div className="h-6 rounded-xl bg-slate-950/80 border border-slate-200/10 dark:border-slate-800 px-3.5 flex items-center w-full">
                 <div className="h-2 w-full rounded-full bg-slate-800 overflow-hidden relative">
@@ -302,7 +293,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
               </p>
             </div>
 
-            {/* Source selector */}
+            {}
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase block">Microphone Source Device</label>
               {audioDevices.length > 0 ? (
@@ -329,9 +320,9 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
           </div>
         </div>
 
-        {/* Column 2: Proctoring & Speed Check */}
+        {}
         <div className="space-y-6">
-          {/* Screen Share Verification Card */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
               <Monitor className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -386,7 +377,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
             )}
           </div>
 
-          {/* Network Latency Ping Test Card */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3 flex items-center gap-2">
               <Wifi className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
@@ -432,7 +423,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
             </div>
           </div>
 
-          {/* System Clearance Status */}
+          {}
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-4 shadow-sm backdrop-blur-md glass-panel flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <Sliders className="h-4.5 w-4.5 text-emerald-500" />
@@ -449,7 +440,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         </div>
       </div>
 
-      {/* Subtitles & Transcripts tab */}
+      {}
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
         <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-3">
           Session Subtitles &amp; Transcripts
@@ -498,7 +489,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
         </div>
       </div>
 
-      {/* Save settings control */}
+      {}
       <div className="flex justify-end items-center gap-3">
         {saveError && (
           <span className="text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 px-2.5 py-1 rounded-lg border border-rose-200 dark:border-rose-900/60">

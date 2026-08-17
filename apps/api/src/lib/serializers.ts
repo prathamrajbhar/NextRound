@@ -1,7 +1,4 @@
 
-
-
-
 export type Rec = Record<string, unknown>;
 
 function isObject(v: unknown): v is Rec {
@@ -87,9 +84,9 @@ function defaultThresholds(): Rec {
 }
 
 function defaultAssessmentConfig(): Rec {
-  return { 
-    mcqCount: 20, 
-    codingProblemId: 'virtualized-list', 
+  return {
+    mcqCount: 20,
+    codingProblemId: 'virtualized-list',
     passingScore: 80,
     mcqDistribution: {
       'Quantitative Aptitude': 5,

@@ -44,8 +44,7 @@ export default function JobDescriptionCard({
     const replacement = prefix + (selectedText || 'text') + suffix;
 
     setJd(text.substring(0, start) + replacement + text.substring(end));
-    
-    
+
     setTimeout(() => {
       textarea.focus();
       textarea.setSelectionRange(start + prefix.length, start + prefix.length + (selectedText || 'text').length);

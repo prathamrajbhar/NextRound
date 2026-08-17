@@ -144,7 +144,7 @@ export function CandidateProfileTab({ onSave }: CandidateProfileTabProps) {
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">{headline || email || 'Configure profile details below'}</p>
             </div>
-            
+
             <div className="flex flex-col items-center sm:items-start gap-1.5">
               <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Avatar Selection</span>
               <div className="flex items-center gap-2">

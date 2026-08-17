@@ -81,7 +81,7 @@ export default function CandidateSidebar({ avatar = '/avatar-girl.jpg', name = '
             </span>
             <div className="space-y-0.5">
               {group.items.map((item) => {
-                
+
                 const isActive = pathname === item.path ||
                   (item.path !== '/candidate/dashboard' && pathname.startsWith(item.path)) ||
                   (item.path === '/candidate/mock/new' && pathname.startsWith('/candidate/mock'));

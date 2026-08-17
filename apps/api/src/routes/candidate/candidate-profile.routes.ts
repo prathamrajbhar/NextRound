@@ -19,10 +19,10 @@ import { logger } from '../../lib/logger';
 export const candidateProfileRouter = Router();
 
 const upload = multer({
-  limits: { 
+  limits: {
     fileSize: 10 * 1024 * 1024,
-    fieldSize: 30 * 1024 * 1024 // Allow up to 30MB text fields for Base64 image payloads inside stringified JSON data
-  }, 
+    fieldSize: 30 * 1024 * 1024
+  },
   fileFilter: (_req, file, cb) => {
     const ext = (file.originalname || '').toLowerCase();
     const isAllowedExt = ext.endsWith('.pdf') || ext.endsWith('.docx') || ext.endsWith('.doc') || ext.endsWith('.txt');
@@ -31,13 +31,11 @@ const upload = multer({
     if (isAllowedExt || isAllowedMime || !file.mimetype) {
       cb(null, true);
     } else {
-      
-      
+
       cb(null, false);
     }
   },
 });
-
 
 candidateProfileRouter.post(
   '/regenerate-field',
@@ -76,7 +74,6 @@ candidateProfileRouter.post(
     }
   }
 );
-
 
 candidateProfileRouter.post(
   '/sync-social',
@@ -159,7 +156,6 @@ candidateProfileRouter.post(
   }
 );
 
-
 candidateProfileRouter.get(
   '/social/syncs',
   authenticate,
@@ -177,7 +173,6 @@ candidateProfileRouter.get(
     }
   }
 );
-
 
 candidateProfileRouter.delete(
   '/social/:source',
@@ -203,7 +198,6 @@ candidateProfileRouter.delete(
     }
   }
 );
-
 
 candidateProfileRouter.post(
   '/profile',
@@ -243,14 +237,12 @@ candidateProfileRouter.post(
         try {
           bodyData = JSON.parse(req.body.data);
         } catch (e) {
-          
+
         }
       }
 
       const validated = CandidateProfileSchema.parse(bodyData);
 
-      
-      
       const bodyHas = (key: string) => Object.prototype.hasOwnProperty.call(bodyData, key);
 
       const profile = await prisma.candidateProfile.upsert({
@@ -337,7 +329,6 @@ candidateProfileRouter.post(
     }
   }
 );
-
 
 candidateProfileRouter.get(
   '/profile',

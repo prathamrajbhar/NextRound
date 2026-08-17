@@ -39,7 +39,7 @@ export default function RubricWeightingCard({
           <Sliders className="h-5 w-5" />
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Candidate Scoring Weights</h3>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <span className="text-[11px] text-slate-600 dark:text-slate-400 font-extrabold select-none">Auto-Balance</span>
           <label className="relative inline-flex items-center cursor-pointer">
@@ -83,8 +83,8 @@ export default function RubricWeightingCard({
       </div>
 
       <div className={`p-3 rounded-2xl border flex items-center justify-between gap-2 text-[11px] font-extrabold ${
-        isBalanced 
-          ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300' 
+        isBalanced
+          ? 'bg-emerald-50/70 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60 text-emerald-700 dark:text-emerald-300'
           : 'bg-rose-50/70 dark:bg-rose-950/40 border-rose-200 dark:border-rose-900/60 text-rose-700 dark:text-rose-300'
       }`}>
         <div className="flex items-center gap-2">

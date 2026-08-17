@@ -78,7 +78,7 @@ class MediaManager {
       try {
         URL.revokeObjectURL(url);
       } catch {
-        // ignore
+
       }
     }
     this.blobUrls.clear();

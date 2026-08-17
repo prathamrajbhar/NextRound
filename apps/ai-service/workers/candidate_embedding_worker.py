@@ -4,17 +4,7 @@ from workers.worker_base import fetch_internal, run_agent_job, callback_client
 
 logger = logging.getLogger("candidate_embedding_worker")
 
-
 async def process_candidate_embedding_job(job_data: dict) -> bool:
-    """
-    Build and store per-section candidate embeddings (resume, github, linkedin,
-    profile) for vector search and AI interviewer context.
-
-    1. Fetch candidate context sections from the Express internal API.
-    2. Embed each section (skipping unchanged content hashes).
-    3. Callback the new embeddings to the internal API, which upserts rows
-       and keeps CandidateProfile.resume_embedding in sync.
-    """
     candidate_id = job_data.get("candidateId")
     if not candidate_id:
         logger.error("Missing candidateId in candidate embedding job payload.")

@@ -5,7 +5,6 @@ from workers.worker_base import run_agent_job
 
 logger = logging.getLogger("evaluator_worker")
 
-
 async def process_evaluator_job(job_data: dict) -> bool:
     application_id = job_data.get("applicationId")
     if not application_id:

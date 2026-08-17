@@ -8,19 +8,19 @@ export interface AvailabilitySlots {
 }
 
 export interface CompanyForm {
-  
+
   name: string;
   website: string;
   industry: string;
   size: string;
   hqLocation: string;
-  
+
   hiringVelocity: string;
   primaryRoles: string[];
   autoOffer: boolean;
-  
+
   availabilityHours: AvailabilitySlots;
-  
+
   invites: string[];
 }
 

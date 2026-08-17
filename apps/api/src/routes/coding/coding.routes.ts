@@ -10,7 +10,6 @@ import crypto from 'crypto';
 
 export const codingRouter = Router();
 
-
 codingRouter.get('/problem', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const difficulty = (req.query.difficulty as 'easy' | 'medium' | 'hard') || undefined;
@@ -18,7 +17,6 @@ codingRouter.get('/problem', authenticate, async (req: Request, res: Response, n
 
     const problem = await selectCodingProblem({ difficulty, category });
 
-    
     const sanitized = {
       ...problem,
       testCases: problem.testCases.filter(tc => !tc.hidden),
@@ -29,7 +27,6 @@ codingRouter.get('/problem', authenticate, async (req: Request, res: Response, n
     return next(err);
   }
 });
-
 
 codingRouter.post('/execute', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -58,7 +55,6 @@ codingRouter.post('/execute', authenticate, async (req: Request, res: Response, 
   }
 });
 
-
 codingRouter.post('/run', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { code, language, problemId } = req.body;
@@ -75,8 +71,7 @@ codingRouter.post('/run', authenticate, async (req: Request, res: Response, next
     }
 
     const publicTests = (problem.public_tests as any[]) || [];
-    
-    
+
     const summary = executeCodingSubmission(code, language, publicTests, problem.entry_point || 'solution');
 
     const testResults = summary.results.map((res) => ({
@@ -98,7 +93,6 @@ codingRouter.post('/run', authenticate, async (req: Request, res: Response, next
   }
 });
 
-
 codingRouter.post('/submit', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { code, language, problemId, applicationId } = req.body;
@@ -118,7 +112,6 @@ codingRouter.post('/submit', authenticate, async (req: Request, res: Response, n
     const hiddenTests = (problem.hidden_tests as any[]) || [];
     const testCases = [...publicTests, ...hiddenTests];
 
-    
     const summary = executeCodingSubmission(code, language, testCases, problem.entry_point || 'solution');
 
     const testResults = summary.results.map((res) => ({
@@ -132,7 +125,6 @@ codingRouter.post('/submit', authenticate, async (req: Request, res: Response, n
 
     const finalStatus = summary.allPassed ? 'passed' : 'failed';
 
-    
     if (applicationId) {
       const attemptCount = await prisma.codingSubmission.count({
         where: { application_id: applicationId },

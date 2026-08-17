@@ -82,10 +82,8 @@ export default function HrAnalyticsDashboard() {
   const safeFunnel = Array.isArray(analyticsData?.funnel) ? analyticsData.funnel : INITIAL_ANALYTICS.funnel;
   const safeTrends = Array.isArray(analyticsData?.monthlyTrends) ? analyticsData.monthlyTrends : INITIAL_ANALYTICS.monthlyTrends;
 
-  
   const funnelSteps = safeFunnel.map((f) => ({ name: f.stage, count: f.count, pct: f.pct }));
 
-  
   const trendData = safeTrends.map((t) => ({ month: t.month, count: t.applicants, hires: t.hires }));
 
   const getSvgCoordinates = () => {

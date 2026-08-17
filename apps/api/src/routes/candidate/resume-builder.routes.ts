@@ -134,9 +134,6 @@ resumeBuilderRouter.post(
         return res.status(404).json({ success: false, error: 'Resume builder session not found' });
       }
 
-      // Idempotency guard: once the session has left 'active' (job enqueued or
-      // already finished), re-running /end must not overwrite the transcript or
-      // enqueue a duplicate generation job.
       if (session.status !== 'active') {
         return res.json({
           success: true,

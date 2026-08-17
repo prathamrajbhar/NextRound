@@ -7,7 +7,7 @@ import { logger } from '../../lib/logger';
 export const resumeParserRouter = Router();
 
 const upload = multer({
-  limits: { fileSize: 10 * 1024 * 1024 }, 
+  limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const ext = (file.originalname || '').toLowerCase();
     const isAllowedExt = ext.endsWith('.pdf') || ext.endsWith('.docx') || ext.endsWith('.doc') || ext.endsWith('.txt');
@@ -16,13 +16,11 @@ const upload = multer({
     if (isAllowedExt || isAllowedMime || !file.mimetype) {
       cb(null, true);
     } else {
-      
-      
+
       cb(null, false);
     }
   },
 });
-
 
 resumeParserRouter.post(
   '/parse-resume',

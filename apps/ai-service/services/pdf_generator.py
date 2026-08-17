@@ -10,9 +10,6 @@ from core.config import settings
 
 logger = logging.getLogger("pdf_generator")
 
-# Directory Express statically serves at /uploads (must match
-# UPLOAD_ROOT_DIR in apps/api/src/lib/storage.ts). Files are copied here so
-# the returned /uploads/... URL actually resolves.
 LOCAL_UPLOADS_DIR = "/tmp/nextround-uploads"
 
 def upload_to_supabase(file_path: str, key: str, content_type: str = "application/pdf") -> str:
@@ -44,9 +41,6 @@ def upload_to_supabase(file_path: str, key: str, content_type: str = "applicatio
     return f"{settings.supabase_url}/storage/v1/object/public/{settings.supabase_storage_bucket}/{key}"
 
 def _esc(value: Any) -> str:
-    """Escape XML markup characters in dynamic resume text before it reaches
-    ReportLab Paragraph (which parses input as mini-XML and would fail on
-    unescaped &, <, > from LLM-generated content)."""
     return xml_escape(str(value))
 
 REPORTLAB_AVAILABLE = False
@@ -60,14 +54,9 @@ except ImportError:
     logger.warning("ReportLab not installed. PDF generation will fail with an explicit error — no mock PDF is produced.")
 
 def generate_resume_pdf(resume_data: Dict[str, Any]) -> str:
-    """
-    Generates an ATS-friendly single/two-page resume PDF from structured resume JSON.
-    Uploads the generated PDF to Supabase Storage and returns the public URL.
-    """
     file_id = str(uuid.uuid4())[:8]
     filename = f"resume_{file_id}.pdf"
 
-    # Use temporary directory for intermediate generation
     temp_dir = "/tmp/nextround-resumes"
     os.makedirs(temp_dir, exist_ok=True)
     file_path = os.path.join(temp_dir, filename)
@@ -185,7 +174,6 @@ def generate_resume_pdf(resume_data: Dict[str, Any]) -> str:
             doc.build(story)
             logger.info(f"Resume PDF generated successfully at {file_path}")
 
-            # Upload to Supabase and clean up
             key = f"resumes/{filename}"
             try:
                 public_url = upload_to_supabase(file_path, key, "application/pdf")
@@ -207,15 +195,9 @@ def generate_analytics_pdf(
     narrative: str,
     org_id: str = "",
 ) -> str:
-    """
-    Generates a real executive analytics report PDF from funnel metrics,
-    conversion rates, and the narrative summary. Uploads the generated PDF
-    to Supabase Storage and returns the public URL.
-    """
     file_id = str(uuid.uuid4())[:8]
     filename = f"analytics_{file_id}.pdf"
 
-    # Use temporary directory for intermediate generation
     temp_dir = "/tmp/nextround-analytics"
     os.makedirs(temp_dir, exist_ok=True)
     file_path = os.path.join(temp_dir, filename)
@@ -320,7 +302,6 @@ def generate_analytics_pdf(
         doc.build(story)
         logger.info(f"Analytics PDF generated successfully at {file_path}")
 
-        # Upload to Supabase and clean up
         key = f"analytics/{filename}"
         try:
             public_url = upload_to_supabase(file_path, key, "application/pdf")

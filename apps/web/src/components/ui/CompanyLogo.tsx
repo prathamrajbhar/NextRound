@@ -100,7 +100,6 @@ export function CompanyLogo({ name, logoUrl, size = 'md', className }: CompanyLo
   const [imageError, setImageError] = useState(false);
   const normalizedName = name.toLowerCase().trim();
 
-  
   const BuiltInSvg = brandSvgMap[normalizedName];
 
   return (

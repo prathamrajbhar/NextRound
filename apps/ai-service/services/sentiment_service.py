@@ -27,9 +27,7 @@ WINDOW_SEC = 60.0
 VOICED_RMS_THRESHOLD = 0.01
 MIN_VOICED_FRAMES = 5
 
-
 def _resolve_audio_bytes(audio_url: str) -> Optional[bytes]:
-    """Fetch the interview audio from ``audio_url`` (HTTP(S) URL or local upload path)."""
     if not audio_url or not audio_url.strip():
         return None
 
@@ -52,9 +50,7 @@ def _resolve_audio_bytes(audio_url: str) -> Optional[bytes]:
         logger.error(f"Failed to read interview audio file {path}: {err}")
         return None
 
-
 def _decode_to_mono_pcm(audio_bytes: bytes) -> Optional[np.ndarray]:
-    """Decode audio bytes into mono 16 kHz float32 PCM via ffmpeg."""
     if not audio_bytes:
         return None
     try:
@@ -85,9 +81,7 @@ def _decode_to_mono_pcm(audio_bytes: bytes) -> Optional[np.ndarray]:
     pcm = np.frombuffer(result.stdout, dtype=np.int16)
     return pcm.astype(np.float32) / 32768.0
 
-
 def _estimate_f0(frame: np.ndarray, sample_rate: int) -> Optional[float]:
-    """Estimate fundamental frequency (Hz) of a single voiced frame via autocorrelation."""
     centered = frame - frame.mean()
     power = float(np.dot(centered, centered))
     if power <= 0.0:
@@ -108,9 +102,7 @@ def _estimate_f0(frame: np.ndarray, sample_rate: int) -> Optional[float]:
         return None
     return sample_rate / lag
 
-
 def _compute_pitch_metrics(wave: np.ndarray) -> Optional[Dict[str, float]]:
-    """Compute pitch mean/std-dev, tremor and steady percentages from raw PCM."""
     if wave is None or len(wave) < FRAME_SIZE:
         return None
 
@@ -142,9 +134,7 @@ def _compute_pitch_metrics(wave: np.ndarray) -> Optional[Dict[str, float]]:
         "voicedRatio": round(len(f0_array) / max(total_frames, 1), 3),
     }
 
-
 def _compute_timing_metrics(words: List[Dict[str, Any]]) -> Optional[Dict[str, float]]:
-    """Derive speaking rate and pause metrics from word-level timestamps."""
     if not words:
         return None
     start = float(words[0]["start"])
@@ -168,15 +158,12 @@ def _compute_timing_metrics(words: List[Dict[str, Any]]) -> Optional[Dict[str, f
         "speechDurationSec": round(speech_duration, 1),
     }
 
-
 def _clamp_percent(value: float) -> int:
     return int(round(max(0.0, min(value, 100.0))))
-
 
 def _derive_overall(
     pitch: Dict[str, float], timing: Dict[str, float]
 ) -> Dict[str, Any]:
-    """Combine pitch and timing metrics into stress/confidence/clarity/tone scores."""
     rate_deviation = abs(timing["speakingRateWpm"] - IDEAL_WPM) / IDEAL_WPM
     pause_density = min(timing["pausesPerMinute"] / PAUSE_DENSITY_NORM, 1.0)
     tremor_fraction = pitch.get("tremorPercent", 0.0) / 100.0
@@ -208,9 +195,7 @@ def _derive_overall(
         "tone": tone,
     }
 
-
 def _window_scores(metrics: Dict[str, float]) -> Tuple[int, int, int, str]:
-    """Per-window stress/confidence/hesitation/tone-label from audio timing features."""
     rate_deviation = abs(metrics["speakingRateWpm"] - IDEAL_WPM) / IDEAL_WPM
     pause_density = min(metrics["pausesPerMinute"] / PAUSE_DENSITY_NORM, 1.0)
     stress = _clamp_percent(rate_deviation * 55 + pause_density * 45)
@@ -227,15 +212,12 @@ def _window_scores(metrics: Dict[str, float]) -> Tuple[int, int, int, str]:
         label = "Neutral"
     return stress, confidence, hesitation, label
 
-
 def _format_time(seconds: float) -> str:
     minutes = int(seconds // 60)
     secs = int(seconds % 60)
     return f"{minutes:02d}:{secs:02d}"
 
-
 def _build_journey(words: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Partition word timings into time windows and score each audio window."""
     if not words:
         return []
 
@@ -263,7 +245,6 @@ def _build_journey(words: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         window_start += WINDOW_SEC
     return journey
 
-
 def _build_narrative(overall: Dict[str, Any], timing: Dict[str, float]) -> str:
     return (
         f"Audio prosody analysis of the candidate's voice detected a "
@@ -274,7 +255,6 @@ def _build_narrative(overall: Dict[str, Any], timing: Dict[str, float]) -> str:
         f"{overall['tone']}."
     )
 
-
 def _unavailable(interview_id: str, reason: str) -> Dict[str, Any]:
     return {
         "interviewId": interview_id,
@@ -283,11 +263,9 @@ def _unavailable(interview_id: str, reason: str) -> Dict[str, Any]:
         "reason": reason,
     }
 
-
 def _transcribe_word_timings(
     audio_bytes: bytes, filename: str = "interview_audio.webm"
 ) -> Optional[List[Dict[str, Any]]]:
-    """Transcribe audio to word-level timestamps (Whisper) for rate/pause analysis."""
     if not settings.groq_api_key or settings.groq_api_key == "your_groq_api_key_here":
         return None
     try:
@@ -316,16 +294,7 @@ def _transcribe_word_timings(
         logger.error(f"Whisper word-timing transcription failed: {err}")
         return None
 
-
 def analyze_interview_sentiment(interview_id: str, audio_url: str) -> Dict[str, Any]:
-    """Analyze an interview recording for sentiment strictly from audio-derived metrics.
-
-    Derives tone, pitch, speaking rate, pauses, stress, and confidence from the audio
-    file referenced by ``audio_url`` (pitch via autocorrelation on decoded PCM, rate and
-    pause features via word-level transcription timings). Never inspects the interview
-    transcript. Returns ``status: "unavailable"`` with no fabricated metrics when the
-    audio cannot be fetched, decoded, or contains no analyzable speech.
-    """
     audio_bytes = _resolve_audio_bytes(audio_url)
     if audio_bytes is None:
         logger.info(f"Sentiment analysis unavailable for interview {interview_id}: no audio at audio_url.")

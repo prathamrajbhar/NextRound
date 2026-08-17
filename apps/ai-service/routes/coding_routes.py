@@ -9,10 +9,7 @@ logger = logging.getLogger("coding_routes")
 
 coding_router = APIRouter(prefix="/api/v1/ai/coding", tags=["coding-sandbox"])
 
-
-
 SUPPORTED_LANGUAGES = {"python", "py", "python3"}
-
 
 class CodeExecutionRequest(BaseModel):
     applicationId: Optional[str] = "app-sandbox-eval"
@@ -21,7 +18,6 @@ class CodeExecutionRequest(BaseModel):
     language: Optional[str] = "python"
     submissionId: Optional[str] = ""
     testCases: Optional[List[Dict[str, Any]]] = None
-
 
 class CodeExecutionResponse(BaseModel):
     success: bool
@@ -37,12 +33,8 @@ class CodeExecutionResponse(BaseModel):
     security_passed: bool = True
     test_results: Optional[List[Dict[str, Any]]] = None
 
-
 @coding_router.post("/execute", response_model=CodeExecutionResponse)
 async def execute_coding_submission(request: CodeExecutionRequest):
-    """
-    Execute candidate code submission in secure AST-inspected OS resource-capped sandbox.
-    """
     if not request.code or not request.code.strip():
         raise HTTPException(status_code=400, detail="Code string cannot be empty")
 
@@ -56,14 +48,12 @@ async def execute_coding_submission(request: CodeExecutionRequest):
 
     logger.info(f"Coding Sandbox: Executing submission for problem {request.problemId}")
 
-
     if request.testCases:
         sandbox_res = execute_code_sandbox(
             code=request.code,
             language=language,
             test_cases=request.testCases
         )
-
 
         return CodeExecutionResponse(
             success=sandbox_res.get("success", False),
@@ -79,7 +69,6 @@ async def execute_coding_submission(request: CodeExecutionRequest):
             security_passed=sandbox_res.get("security_passed", True),
             test_results=sandbox_res.get("test_results", [])
         )
-
 
     output = await run_coding_agent(
         application_id=request.applicationId or "app-sandbox-eval",

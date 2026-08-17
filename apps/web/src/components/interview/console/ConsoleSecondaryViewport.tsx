@@ -89,7 +89,7 @@ export function ConsoleSecondaryViewport({
           </button>
         </div>
       ) : (
-        
+
         <div className="relative w-full h-full bg-slate-950 flex items-center justify-center overflow-hidden">
           {camActive && hasCamPermission !== false ? (
             <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover transform -scale-x-100" />

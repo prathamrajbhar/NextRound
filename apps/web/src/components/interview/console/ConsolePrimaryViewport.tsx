@@ -47,7 +47,6 @@ export function ConsolePrimaryViewport({
   const isVideoCall = mode === 'hr-candidate' || mode === 'hr-recruiter';
   const hasRemoteTracks = remoteStream && remoteStream.getVideoTracks().some(t => t.readyState === 'live');
 
-  
   let callStatusText = 'Waiting for peer to join...';
   if (connectionState === 'connecting') {
     callStatusText = 'Establishing secure 1:1 WebRTC tunnel...';
@@ -106,7 +105,7 @@ export function ConsolePrimaryViewport({
           </div>
         </div>
       ) : (
-        
+
         <div className="relative w-full h-full bg-slate-950 flex flex-col items-center justify-center overflow-hidden">
           {connectionState === 'connected' && hasRemoteTracks ? (
             <video
@@ -116,7 +115,7 @@ export function ConsolePrimaryViewport({
               className="w-full h-full object-cover"
             />
           ) : (
-            
+
             <div className="flex flex-col items-center justify-center p-6 text-center space-y-4 select-none">
               <div className="h-24 w-24 rounded-full bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-slate-400 shadow-inner relative">
                 <User className="h-12 w-12" />

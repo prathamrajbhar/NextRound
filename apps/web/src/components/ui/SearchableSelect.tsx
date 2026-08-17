@@ -6,8 +6,8 @@ import { cn } from '@/lib/cn';
 import { CompanyLogo } from './CompanyLogo';
 
 export interface SearchableSelectOption {
-  value: string; 
-  label: string; 
+  value: string;
+  label: string;
   logoUrl?: string;
   sublabel?: string;
 }

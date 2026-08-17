@@ -4,7 +4,6 @@ from workers.worker_base import AgentJobSkip, fetch_internal, run_agent_job
 
 logger = logging.getLogger("sourcing_worker")
 
-
 async def process_sourcing_job(job_data: dict) -> bool:
     job_id = job_data.get("jobId")
     if not job_id:

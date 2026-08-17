@@ -9,11 +9,7 @@ import { env } from '../../lib/env';
 
 export const talentPoolRouter = Router();
 
-
 talentPoolRouter.use(rejectOrgIdParam);
-
-
-
 
 interface VectorMatchRow {
   candidateId: string;
@@ -56,13 +52,6 @@ function toStringList(value: unknown): string[] {
   return [];
 }
 
-
-
-
-
-
-
-
 async function generateQueryEmbedding(queryText: string): Promise<number[] | null> {
   const aiServiceUrl = env('AI_BASE_URL');
 
@@ -100,9 +89,6 @@ async function generateQueryEmbedding(queryText: string): Promise<number[] | nul
   return embedding as number[];
 }
 
-
-
-
 talentPoolRouter.get(
   '/',
   authenticate,
@@ -117,15 +103,12 @@ talentPoolRouter.get(
       const parsed = TalentPoolSearchSchema.safeParse(req.query);
       const queryText = parsed.success && parsed.data.query ? parsed.data.query.toLowerCase() : '';
 
-      
       const bookmarks = await prisma.talentBookmark.findMany({
         where: { org_id: orgId },
         select: { id: true, candidate_id: true },
       });
       const bookmarkMap = new Map(bookmarks.map((b) => [b.candidate_id, b.id]));
 
-      
-      
       const applications = await prisma.application.findMany({
         where: {
           job: { org_id: orgId },
@@ -165,9 +148,6 @@ talentPoolRouter.get(
         };
       };
 
-      
-      
-      
       let semanticMatch = false;
       let results: TalentPoolCandidateResult[] = [];
 
@@ -216,8 +196,7 @@ talentPoolRouter.get(
       }
 
       if (!semanticMatch) {
-        
-        
+
         const candidates = await prisma.candidateProfile.findMany({
           where: {
             applications: {
@@ -257,7 +236,6 @@ talentPoolRouter.get(
     }
   }
 );
-
 
 talentPoolRouter.post(
   '/bookmarks',
@@ -313,7 +291,6 @@ talentPoolRouter.post(
   }
 );
 
-
 talentPoolRouter.get(
   '/bookmarks',
   authenticate,
@@ -348,7 +325,6 @@ talentPoolRouter.get(
   }
 );
 
-
 talentPoolRouter.delete(
   '/bookmarks/:id',
   authenticate,
@@ -382,7 +358,6 @@ talentPoolRouter.delete(
   }
 );
 
-
 talentPoolRouter.post(
   '/outreach',
   authenticate,
@@ -410,7 +385,6 @@ talentPoolRouter.post(
         return res.status(404).json({ success: false, error: 'Candidate profile not found' });
       }
 
-      
       await notificationService.createNotification(
         candidate.user.id,
         `New Opportunity Outreach: ${subject}`,
@@ -432,7 +406,6 @@ talentPoolRouter.post(
     }
   }
 );
-
 
 talentPoolRouter.post(
   '/external-source',

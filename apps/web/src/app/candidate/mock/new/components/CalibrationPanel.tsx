@@ -27,7 +27,6 @@ export default function CalibrationPanel({
 }: CalibrationPanelProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  
   const { hasCamPermission, micLevel: realMicLevel } = useLocalMediaStream({
     videoRef,
     camActive,
@@ -59,7 +58,7 @@ export default function CalibrationPanel({
 
   return (
     <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-5 shadow-lg backdrop-blur-md glass-panel space-y-5 transition-colors duration-300">
-      
+
       <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3.5">
         <div>
           <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">Hardware Setup</h3>
@@ -129,7 +128,7 @@ export default function CalibrationPanel({
             {micActive ? `${displayMicLevel}%` : 'Muted'}
           </span>
         </div>
-        
+
         <div className="flex gap-1 items-center h-3 px-0.5">
           {Array.from({ length: 18 }).map((_, index) => {
             const isActive = micActive && index < activeBars;

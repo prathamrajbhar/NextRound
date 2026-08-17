@@ -39,23 +39,19 @@ export function UnifiedInterviewConsole({
   onEliminate,
   proctoringClient,
 }: UnifiedInterviewConsoleProps) {
-  
+
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
 
-  
   const [textInput, setTextInput] = useState('');
   const [showTranscriptDrawer, setShowTranscriptDrawer] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  
   const [hrNotes, setHrNotes] = useState('');
   const [hrDecision, setHrDecision] = useState<'pass' | 'fail' | null>(null);
 
-  
-  
   const { stopLocalStream, hasCamPermission, micLevel, localStream } = useLocalMediaStream({
     videoRef,
     camActive,
@@ -73,7 +69,6 @@ export function UnifiedInterviewConsole({
     localStream,
   });
 
-  
   useEffect(() => {
     if (showTranscriptDrawer) {
       transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -104,7 +99,6 @@ export function UnifiedInterviewConsole({
     }
   };
 
-  
   const handleEndSession = () => {
     stopLocalStream();
     onEndSession();

@@ -1,10 +1,4 @@
 
-
-
-
-
-
-
 import logging
 from datetime import datetime, timezone
 from typing import TypedDict
@@ -13,14 +7,12 @@ from services.pdf_generator import generate_analytics_pdf
 
 logger = logging.getLogger("analytics_agent")
 
-
 _SCREENED_STATUSES = [
     "screening_completed", "assessment", "interview_scheduled", "interviewed",
     "evaluation", "hr_round", "decided", "offered", "accepted",
 ]
 _INTERVIEWED_STATUSES = ["interviewed", "evaluation", "hr_round", "decided", "offered", "accepted"]
 _OFFERED_STATUSES = ["offered", "accepted"]
-
 
 class AnalyticsState(TypedDict, total=False):
     org_id: str
@@ -31,9 +23,7 @@ class AnalyticsState(TypedDict, total=False):
     executive_narrative: str
     report_pdf_url: str
 
-
 async def fetch_raw_data_node(state: AnalyticsState) -> AnalyticsState:
-    """Node 1: Fetch raw aggregated hiring data from Express internal endpoint."""
     org_id = state.get("org_id")
     logger.info(f"AnalyticsAgent: Fetching raw data for org {org_id}")
 
@@ -49,9 +39,7 @@ async def fetch_raw_data_node(state: AnalyticsState) -> AnalyticsState:
 
     return state
 
-
 def compute_funnel_node(state: AnalyticsState) -> AnalyticsState:
-    """Node 2: Calculate recruitment funnel stages and conversion percentages."""
     raw = state.get("raw_data", {})
     jobs = raw.get("jobs", [])
 
@@ -90,9 +78,6 @@ def compute_funnel_node(state: AnalyticsState) -> AnalyticsState:
         "offerAcceptanceRate": round((accepted / offered * 100) if offered else 0),
     }
 
-
-
-
     hire_deltas_days = []
     for job in jobs:
         for app in job.get("applications", []):
@@ -118,13 +103,7 @@ def compute_funnel_node(state: AnalyticsState) -> AnalyticsState:
     )
     return state
 
-
 def generate_narrative_node(state: AnalyticsState) -> AnalyticsState:
-    """Node 3: Synthesize executive summary narrative for HR leadership.
-
-    Builds the narrative strictly from the computed funnel metrics so the report
-    always carries a meaningful, factual summary (previously always empty).
-    """
     metrics = state.get("funnel_metrics", {})
     conversions = state.get("conversions", {})
 
@@ -142,9 +121,7 @@ def generate_narrative_node(state: AnalyticsState) -> AnalyticsState:
     )
     return state
 
-
 async def export_pdf_node(state: AnalyticsState) -> AnalyticsState:
-    """Node 4: Generate a real executive analytics PDF and register it internally."""
     org_id = state.get("org_id")
     if not org_id:
         state["report_pdf_url"] = ""
@@ -184,9 +161,7 @@ async def export_pdf_node(state: AnalyticsState) -> AnalyticsState:
 
     return state
 
-
 async def run_analytics_agent(state: AnalyticsState) -> AnalyticsState:
-    """Execute the Analytics Agent pipeline over the provided initial state."""
     state = await fetch_raw_data_node(state)
     state = compute_funnel_node(state)
     state = generate_narrative_node(state)

@@ -7,7 +7,6 @@ logger = logging.getLogger("decision_agent")
 
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
-
 class DecisionState(TypedDict, total=False):
     application_id: str
     evaluation_id: Optional[str]
@@ -20,24 +19,13 @@ class DecisionState(TypedDict, total=False):
     hold_notice_content: str
     reasoning: str
 
-
     job_title: Optional[str]
     salary: Optional[str]
     equity: Optional[str]
 
-
 def threshold_match_node(state: DecisionState) -> DecisionState:
-    """Node 1: Compare composite score and confidence rating against target decision thresholds."""
     score = state.get("composite_score")
     conf = state.get("confidence")
-
-
-
-
-
-
-
-
 
     if score is None:
         decision = "hold_for_review"
@@ -60,16 +48,7 @@ def threshold_match_node(state: DecisionState) -> DecisionState:
     logger.info(f"Threshold match result for application {state.get('application_id')}: Decision = {decision} (Score: {score}, Conf: {conf})")
     return state
 
-
 def draft_offer_node(state: DecisionState) -> DecisionState:
-    """Node 2: Draft personalized offer letter from the job payload when decision is HIRE.
-
-    Job title, salary, and equity come from the job payload that reaches the
-    agent. When a term is absent it is carried as pending ("To be confirmed")
-    rather than inventing a value. The letter body is ALWAYS produced by the
-    LLM — a canned template is never substituted for real AI output. If the LLM
-    is unavailable the decision fails instead of drafting a fabricated offer.
-    """
     if state.get("decision") != "hire":
         return state
 
@@ -96,14 +75,7 @@ def draft_offer_node(state: DecisionState) -> DecisionState:
     state["offer_letter_content"] = offer_text
     return state
 
-
 def draft_rejection_node(state: DecisionState) -> DecisionState:
-    """Node 3: Draft constructive rejection feedback email when decision is REJECT.
-
-    The rejection body is ALWAYS produced by the LLM — a canned template is
-    never substituted for real AI output. If the LLM is unavailable the decision
-    fails instead of drafting a fabricated rejection email.
-    """
     if state.get("decision") != "reject":
         return state
 
@@ -121,9 +93,7 @@ def draft_rejection_node(state: DecisionState) -> DecisionState:
     state["rejection_email_content"] = rejection_text
     return state
 
-
 def draft_hold_notice_node(state: DecisionState) -> DecisionState:
-    """Node 4: Draft HR review hold notice when decision is HOLD_FOR_REVIEW."""
     if state.get("decision") != "hold_for_review":
         return state
 
@@ -142,15 +112,11 @@ def draft_hold_notice_node(state: DecisionState) -> DecisionState:
     state["hold_notice_content"] = content
     return state
 
-
 def emit_decision_node(state: DecisionState) -> DecisionState:
-    """Node 5: Emit decision summary."""
     logger.info(f"Emitting final decision for application {state.get('application_id')}: {state.get('decision')}")
     return state
 
-
 def route_decision_branch(state: DecisionState) -> str:
-    """Routing function for conditional graph edges."""
     dec = state.get("decision")
     if dec == "hire":
         return "draft_offer"
@@ -159,9 +125,7 @@ def route_decision_branch(state: DecisionState) -> str:
     else:
         return "draft_hold_notice"
 
-
 def build_decision_graph():
-    """Build LangGraph workflow for Decision Agent."""
     if not LANGGRAPH_AVAILABLE:
         return None
 
@@ -189,9 +153,7 @@ def build_decision_graph():
 
     return builder.compile()
 
-
 _decision_app = build_decision_graph()
-
 
 async def run_decision_agent(
     application_id: str,
@@ -202,13 +164,6 @@ async def run_decision_agent(
     salary: Optional[str] = None,
     equity: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """
-    Execute Decision Agent workflow to produce threshold-gated decision and draft assets.
-
-    ``job_title``/``salary``/``equity`` are the job terms used to draft the offer
-    letter; they must come from the job payload, never from constants. Absent
-    terms are carried as pending rather than invented.
-    """
     initial_state: DecisionState = {
         "application_id": application_id,
         "evaluation_id": evaluation_id,
@@ -234,7 +189,6 @@ async def run_decision_agent(
             }
         except Exception as e:
             logger.error(f"LangGraph decision execution failed: {e}")
-
 
     s1 = threshold_match_node(initial_state)
     branch = route_decision_branch(s1)

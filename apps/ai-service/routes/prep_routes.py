@@ -7,17 +7,14 @@ logger = logging.getLogger("prep_routes")
 
 prep_router = APIRouter(prefix="/prep", tags=["Prep Content"])
 
-
 class PrepGenerateRequest(BaseModel):
     job_id: str
     org_id: str
     job_title: str
     job_description: str
 
-
 @prep_router.post("/generate")
 async def generate_prep_content(request: PrepGenerateRequest):
-    """Directly trigger AI prep content generation for a job posting."""
     try:
         payload = {
             "action": "prep-generate",
@@ -33,7 +30,6 @@ async def generate_prep_content(request: PrepGenerateRequest):
     except Exception as e:
         logger.error(f"Prep content generation failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @prep_router.get("/health")
 async def prep_health():

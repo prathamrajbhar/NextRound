@@ -12,7 +12,6 @@ if (!connectionString) {
   throw new Error('DATABASE_URL environment variable is required.');
 }
 
-// Global caching pattern prevents connection leaks during local dev hot-reloads
 const pool = globalThis.pgPoolGlobal ?? (globalThis.pgPoolGlobal = new Pool({
   connectionString,
   max: 20,

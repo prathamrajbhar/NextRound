@@ -18,10 +18,6 @@ export function errorHandler(
 
   const statusCode = (err as any).statusCode || 500;
 
-  
-  
-  
-  
   if (statusCode >= 500) {
     logger.error(`Unhandled error on ${req.method} ${req.originalUrl}`, err, {
       name: err.name,
@@ -39,7 +35,6 @@ export function errorHandler(
     error: message,
   });
 }
-
 
 export function notFoundHandler(req: Request, res: Response) {
   res.status(404).json({

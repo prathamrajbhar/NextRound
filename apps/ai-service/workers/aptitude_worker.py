@@ -9,15 +9,7 @@ from workers.worker_base import run_agent_job
 
 logger = logging.getLogger("aptitude_worker")
 
-
 async def process_aptitude_job(job_data: dict) -> bool:
-    """
-    Process aptitude test scoring job.
-    1. Extract candidate answers & test session telemetry.
-    2. Run Assessment Agent to score answers against threshold (using cached questions).
-    3. Post result back to Express internal endpoint.
-    4. Log agent audit record.
-    """
     application_id = job_data.get("applicationId")
     answers = job_data.get("answers", [])
     if not application_id:
@@ -30,15 +22,12 @@ async def process_aptitude_job(job_data: dict) -> bool:
 
         stored_questions = []
         min_score = None
-        
+
         cached_data = get_cached_assessment_data(application_id)
         if cached_data:
             stored_questions, min_score = cached_data
             logger.info(f"Using cached assessment data for {application_id}")
         else:
-
-
-
 
             try:
                 response = await callback_client.get(
@@ -51,7 +40,6 @@ async def process_aptitude_job(job_data: dict) -> bool:
                 threshold = data.get("minScore")
                 if isinstance(threshold, (int, float)):
                     min_score = float(threshold)
-                
 
                 if stored_questions and min_score is not None:
                     set_cached_assessment_data(application_id, stored_questions, min_score)
@@ -62,7 +50,6 @@ async def process_aptitude_job(job_data: dict) -> bool:
         if min_score is None:
             raise RuntimeError(f"Aptitude job for application {application_id} has no pass threshold configured.")
 
-
         result = await run_assessment_agent(
             application_id=application_id,
             answers=answers,
@@ -71,7 +58,6 @@ async def process_aptitude_job(job_data: dict) -> bool:
             tab_switch_count=job_data.get("tabSwitchCount", 0),
             min_score=min_score,
         )
-
 
         await callback_client.patch(
             f"internal/applications/{application_id}/assessment-result",

@@ -11,7 +11,6 @@ import { getCandidateProfileId } from '../../lib/candidate-profile';
 
 export const mockRouter = Router();
 
-
 mockRouter.get('/topics', async (req: Request, res: Response) => {
   const topics = [
     { id: 'system-design', name: 'System Design & Architecture', category: 'technical', icon: 'Cpu' },
@@ -23,7 +22,6 @@ mockRouter.get('/topics', async (req: Request, res: Response) => {
   ];
   return res.json({ success: true, data: { topics } });
 });
-
 
 mockRouter.post(
   '/sessions',
@@ -73,7 +71,6 @@ mockRouter.post(
   }
 );
 
-
 mockRouter.get(
   '/sessions',
   authenticate,
@@ -98,7 +95,6 @@ mockRouter.get(
     }
   }
 );
-
 
 mockRouter.get(
   '/sessions/:id',
@@ -128,7 +124,6 @@ mockRouter.get(
   }
 );
 
-
 function normalizeDifficulty(raw: string | undefined | null): string {
   const map: Record<string, string> = {
     junior: 'easy',
@@ -141,7 +136,6 @@ function normalizeDifficulty(raw: string | undefined | null): string {
   };
   return map[(raw || '').toLowerCase()] || 'medium';
 }
-
 
 mockRouter.get(
   '/sessions/:id/aptitude/chunk',
@@ -160,7 +154,6 @@ mockRouter.get(
       const chunkIndex = Math.max(0, parseInt(req.query.chunkIndex as string, 10) || 0);
       const chunkSize  = Math.max(1, Math.min(10, parseInt(req.query.chunkSize as string, 10) || 4));
 
-      
       let assessment = await prisma.assessment.findFirst({
         where: { session_id: session.id, test_type: 'aptitude' },
       });
@@ -169,7 +162,6 @@ mockRouter.get(
         ? (assessment!.questions as any[])
         : [];
 
-      
       const job = await prisma.job.findFirst({
         where: {
           title: { equals: session.target_role, mode: 'insensitive' },
@@ -187,7 +179,7 @@ mockRouter.get(
         : 16;
 
       if (allQuestions.length !== totalCount) {
-        
+
         const rawDiff   = normalizeDifficulty(session.difficulty);
 
         const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
@@ -217,7 +209,7 @@ mockRouter.get(
 
       const start = chunkIndex * chunkSize;
       const end   = start + chunkSize;
-      
+
       const chunk = allQuestions.slice(start, end).map((q: any) => ({
         id: q.id,
         category: q.category,
@@ -238,7 +230,6 @@ mockRouter.get(
   }
 );
 
-
 mockRouter.get(
   '/sessions/:id/aptitude',
   authenticate,
@@ -253,12 +244,10 @@ mockRouter.get(
         return res.status(404).json({ success: false, error: 'Mock session not found' });
       }
 
-      
       let assessment = await prisma.assessment.findFirst({
         where: { session_id: session.id, test_type: 'aptitude' },
       });
 
-      
       const job = await prisma.job.findFirst({
         where: {
           title: { equals: session.target_role, mode: 'insensitive' },
@@ -275,8 +264,6 @@ mockRouter.get(
         ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
         : 16;
 
-      
-      
       const isCompleted = assessment?.status === 'completed';
       let allQuestions: any[] = [];
 
@@ -309,7 +296,6 @@ mockRouter.get(
         }
       }
 
-      
       const questions = allQuestions.map((q: any) => ({
         id: q.id,
         category: q.category,
@@ -338,7 +324,6 @@ mockRouter.get(
   }
 );
 
-
 mockRouter.get(
   '/sessions/:id/coding',
   authenticate,
@@ -352,7 +337,6 @@ mockRouter.get(
 
       const rawDiff = normalizeDifficulty(session?.difficulty);
 
-      
       const existing = await prisma.assessment.findFirst({
         where: { session_id: session?.id, test_type: 'coding' },
       });
@@ -390,8 +374,6 @@ mockRouter.get(
   }
 );
 
-
-
 mockRouter.post(
   '/sessions/:id/end',
   authenticate,
@@ -411,9 +393,7 @@ mockRouter.post(
       }
 
       const transcript = req.body.transcript;
-      
-      
-      
+
       const safeTranscript = Array.isArray(transcript) && transcript.length > 0 ? transcript : [];
 
       const score = typeof req.body.score === 'number' ? req.body.score : null;
@@ -428,8 +408,6 @@ mockRouter.post(
         },
       });
 
-      
-      
       if (safeTranscript.length === 0 && score !== null) {
         const pct = Math.max(0, Math.min(100, score));
         const basicFeedback = {
@@ -471,8 +449,6 @@ mockRouter.post(
         });
       }
 
-      
-      
       if (safeTranscript.length > 0) {
         try {
           await enqueueMockEvaluation(
@@ -484,7 +460,7 @@ mockRouter.post(
           );
         } catch (e) {
           logger.child('Mock').error(`Failed to enqueue mock evaluation job for session ${updated.id || ''}:`, e);
-          
+
         }
       }
 
@@ -504,7 +480,6 @@ mockRouter.post(
   }
 );
 
-
 mockRouter.get(
   '/sessions/:id/feedback',
   authenticate,
@@ -523,7 +498,6 @@ mockRouter.get(
         return res.status(404).json({ success: false, error: 'Mock session not found' });
       }
 
-      
       if (!session.feedback || typeof session.feedback !== 'object' || Object.keys(session.feedback).length === 0) {
         return res.status(404).json({
           success: false,
@@ -533,15 +507,13 @@ mockRouter.get(
 
       const feedbackObj = (session.feedback && typeof session.feedback === 'object') ? (session.feedback as Record<string, any>) : {};
 
-      
-      const rawScore = typeof feedbackObj.overallScore === 'number' 
-        ? feedbackObj.overallScore 
-        : typeof session.score === 'number' 
-        ? session.score 
+      const rawScore = typeof feedbackObj.overallScore === 'number'
+        ? feedbackObj.overallScore
+        : typeof session.score === 'number'
+        ? session.score
         : 0;
       const score = Math.max(0, Math.min(100, rawScore));
 
-      
       let depth = score;
       let clarity = score;
       let examples = score;

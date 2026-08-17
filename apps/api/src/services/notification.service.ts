@@ -5,16 +5,12 @@ import { logger } from '../lib/logger';
 class NotificationService {
   private sseClients: Map<string, Set<Response>> = new Map();
 
-  
-
-
   public addClient(userId: string, res: Response) {
     if (!this.sseClients.has(userId)) {
       this.sseClients.set(userId, new Set());
     }
     this.sseClients.get(userId)!.add(res);
 
-    
     const interval = setInterval(() => {
       if (res.writableEnded) {
         clearInterval(interval);
@@ -29,9 +25,6 @@ class NotificationService {
     });
   }
 
-  
-
-
   public removeClient(userId: string, res: Response) {
     const clients = this.sseClients.get(userId);
     if (clients) {
@@ -41,9 +34,6 @@ class NotificationService {
       }
     }
   }
-
-  
-
 
   public async createNotification(
     userId: string,
@@ -61,7 +51,6 @@ class NotificationService {
         },
       });
 
-      
       const clients = this.sseClients.get(userId);
       if (clients && clients.size > 0) {
         const payload = `data: ${JSON.stringify(notification)}\n\n`;
@@ -78,9 +67,6 @@ class NotificationService {
       return null;
     }
   }
-
-  
-
 
   public async createOrgNotification(
     orgId: string,

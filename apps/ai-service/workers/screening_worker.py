@@ -6,18 +6,12 @@ from workers.worker_base import fetch_internal, run_agent_job
 
 logger = logging.getLogger("screening_worker")
 
-
 def _as_list(value) -> list:
     if isinstance(value, list):
         return [str(x) for x in value if x is not None]
     return []
 
-
 def build_profile_summary(candidate_info: dict) -> str:
-    """Build a factual candidate profile summary when raw resume text is unavailable.
-
-    Feeds the LLM real, structured profile data (never a file path or URL).
-    """
     parts = []
     full_name = candidate_info.get("full_name")
     headline = candidate_info.get("headline")
@@ -43,25 +37,13 @@ def build_profile_summary(candidate_info: dict) -> str:
         return "\n".join(parts)
     return "Candidate profile available for screening."
 
-
-
 async def process_screening_job(job_data: dict) -> bool:
-    """
-    Process candidate screening evaluation job.
-    1. Fetch raw application and candidate resume details from Express internal endpoint.
-    2. Compute & store candidate 768-dim resume embedding via internal endpoint.
-    3. Execute Screening LangGraph Agent.
-    4. Post screening evaluation result & gap analysis back to Express internal endpoint.
-    5. Log agent audit record.
-    """
     application_id = job_data.get("applicationId")
     if not application_id:
         logger.error("Missing applicationId in screening job payload.")
         return False
 
     logger.info(f"Processing screening job for applicationId: {application_id}")
-
-
 
     log_extra: dict = {}
 
@@ -74,13 +56,10 @@ async def process_screening_job(job_data: dict) -> bool:
         log_extra["job_id"] = job_id
         log_extra["org_id"] = job_info.get("org_id")
 
-
         resume_text = (candidate_info.get("raw_resume_text") or "").strip()
         if not resume_text:
             resume_text = build_profile_summary(candidate_info)
         job_desc = job_info.get("description", "")
-
-
 
         rubric = job_info.get("rubric")
         thresholds = job_info.get("thresholds") or {}
@@ -89,7 +68,6 @@ async def process_screening_job(job_data: dict) -> bool:
             raise RuntimeError(f"Screening job for application {application_id} has no scoring rubric configured.")
         if min_score is None:
             raise RuntimeError(f"Screening job for application {application_id} has no minScore threshold configured.")
-
 
         if candidate_id:
             try:
@@ -101,7 +79,6 @@ async def process_screening_job(job_data: dict) -> bool:
             except Exception as embed_err:
                 logger.warning(f"Failed to update candidate embedding vector: {embed_err}")
 
-
         result = await run_screening_agent(
             application_id=application_id,
             candidate_id=candidate_id or "",
@@ -111,7 +88,6 @@ async def process_screening_job(job_data: dict) -> bool:
             rubric=rubric,
             min_score=float(min_score),
         )
-
 
         await callback_client.patch(
             f"internal/applications/{application_id}/screening-result",

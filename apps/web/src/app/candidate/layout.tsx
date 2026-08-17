@@ -50,7 +50,6 @@ export default function CandidateLayout({
 
   const displayName = mounted ? (name || (user?.email ? user.email.split('@')[0] : 'Candidate')) : 'Candidate';
 
-  
   const { data } = useNotifications();
 
   const rawData = data as { notifications?: ApiNotification[] } | ApiNotification[] | undefined;

@@ -20,7 +20,7 @@ type StepStatus = 'idle' | 'checking' | 'pass' | 'fail';
 
 interface StepState {
   status: StepStatus;
-  label: string;   
+  label: string;
   error: string;
 }
 
@@ -46,29 +46,25 @@ function apiOrigin(): string {
 }
 
 export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
-  
+
   const [steps, setSteps] = useState<Record<StepKey, StepState>>({
     mic:        { status: 'idle', label: '', error: '' },
     camera:     { status: 'idle', label: '', error: '' },
     connection: { status: 'idle', label: '', error: '' },
   });
 
-  
   const [micLevel, setMicLevel] = useState(0);
 
-  
   const [connResult, setConnResult] = useState<{
     downloadMbps: number;
     latencyMs: number;
     quality: 'Excellent' | 'Good' | 'Fair' | 'Poor';
   } | null>(null);
 
-  
   const [allPassed, setAllPassed] = useState(false);
   const [consentAll, setConsentAll] = useState(false);
   const [bypassed, setBypassed] = useState(false);
 
-  
   const streamRef   = useRef<MediaStream | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -77,7 +73,6 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
   const { start: audioStart, stop: audioStop } = useSafeMediaStream({ constraints: { audio: true }, enabled: true });
   const { start: camStart, stop: camStop } = useSafeMediaStream({ constraints: { video: true, audio: false }, enabled: true });
 
-  
   useEffect(() => {
     return () => {
       if (rafRef.current)      cancelAnimationFrame(rafRef.current);
@@ -86,8 +81,6 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
       camStop();
     };
   }, [audioStop, camStop]);
-
-  
 
   const setStep = useCallback((key: StepKey, patch: Partial<StepState>) => {
     setSteps(prev => ({ ...prev, [key]: { ...prev[key], ...patch } }));
@@ -121,8 +114,6 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     setMicLevel(0);
   }, []);
 
-  
-
   const checkMic = useCallback(async (): Promise<boolean> => {
     setStep('mic', { status: 'checking', error: '' });
 
@@ -136,7 +127,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     }
 
     try {
-      
+
       streamRef.current?.getTracks().forEach(t => t.stop());
       stopMicMeter();
 
@@ -188,7 +179,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
         return false;
       }
       const cfg    = stream.getVideoTracks()[0]?.getSettings() ?? {};
-      stream.getTracks().forEach(t => t.stop()); 
+      stream.getTracks().forEach(t => t.stop());
 
       const label = `${cfg.width ?? '?'}×${cfg.height ?? '?'} @ ${Math.round(cfg.frameRate ?? 0)} fps`;
       setStep('camera', { status: 'pass', label, error: '' });
@@ -211,7 +202,6 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
 
     const origin = apiOrigin();
 
-    
     const getLatency = async (): Promise<number> => {
       const samples: number[] = [];
       for (let i = 0; i < 3; i++) {
@@ -230,9 +220,8 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
       return samples[Math.floor(samples.length / 2)];
     };
 
-    
     const getDownload = async (): Promise<number> => {
-      const BYTES = 1024 * 1024; 
+      const BYTES = 1024 * 1024;
       const ctrl  = new AbortController();
       const tid   = setTimeout(() => ctrl.abort(), 20000);
       try {
@@ -251,7 +240,6 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
 
     const [latencyMs, downloadMbps] = await Promise.all([getLatency(), getDownload()]);
 
-    
     if (latencyMs === 9999 && downloadMbps === 0) {
       setStep('connection', {
         status: 'fail',
@@ -275,8 +263,6 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     return true;
   }, [setStep]);
 
-  
-
   const runAll = useCallback(async (from: StepKey = 'mic') => {
     const order: StepKey[] = ['mic', 'camera', 'connection'];
     const runners: Record<StepKey, () => Promise<boolean>> = {
@@ -288,22 +274,17 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     for (let i = order.indexOf(from); i < order.length; i++) {
       const key = order[i];
       const ok  = await runners[key]();
-      if (!ok) return; 
-      await new Promise(r => setTimeout(r, 300)); 
+      if (!ok) return;
+      await new Promise(r => setTimeout(r, 300));
     }
     setAllPassed(true);
   }, [checkMic, checkCamera, checkConnection]);
 
-  
-  
   useEffect(() => { runAll(); }, [runAll]);
-
-  
 
   const launch = () => {
     if (!bypassed && !consentAll) return;
-    
-    
+
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
@@ -322,9 +303,6 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
     onJoin(bypassed);
   };
 
-  
-
-  
   const activeStep = (['mic', 'camera', 'connection'] as StepKey[]).find(
     k => steps[k].status === 'checking'
   );
@@ -452,7 +430,7 @@ export default function InterviewCheckScreen({ company, role, onJoin }: Props) {
                 <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-800 pb-1.5 mb-2">
                   Proctoring Consent
                 </div>
-                
+
                 <div className="space-y-2.5">
                   <label className="flex items-start gap-2.5 cursor-pointer select-none">
                     <input

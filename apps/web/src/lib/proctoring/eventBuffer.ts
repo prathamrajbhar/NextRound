@@ -38,7 +38,6 @@ export class ProctoringEventBuffer {
     if (this.uploading || this.buffer.length === 0) return;
     this.uploading = true;
 
-    // defer so events added synchronously in the same tick are coalesced
     await Promise.resolve();
     const batch = [...this.buffer];
     try {
@@ -57,18 +56,16 @@ export class ProctoringEventBuffer {
         throw new Error(`Upload failed with HTTP ${response.status}: ${response.statusText}`);
       }
 
-      
       this.buffer = this.buffer.slice(batch.length);
       this.uploading = false;
-      
-      
+
       if (this.buffer.length > 0) {
         this.triggerUpload();
       }
     } catch (err) {
       console.warn('[ProctoringEventBuffer] Event batch upload failed, will retry:', err);
       this.uploading = false;
-      
+
       setTimeout(() => this.triggerUpload(), 5000);
     }
   }

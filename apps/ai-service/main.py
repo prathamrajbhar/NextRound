@@ -55,10 +55,6 @@ app.include_router(sourcing_router)
 app.include_router(video_analysis_router)
 app.include_router(assessment_router)
 
-
-
-
-
 @app.get("/health")
 async def health_check():
     return {

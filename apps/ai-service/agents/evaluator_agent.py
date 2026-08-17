@@ -6,18 +6,10 @@ logger = logging.getLogger("evaluator_agent")
 
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
-
 class ScoringIsolationError(Exception):
-    """Raised when computer vision or proctoring signals leak into scoring functions or LLM prompts."""
     pass
 
-
 def _as_optional_float(value):
-    """Coerce a score to float; None for missing/non-numeric stage scores.
-
-    A missing stage score must never be rewritten to a fabricated default — it
-    stays None so the composite is only computed over real signals.
-    """
     if value is None:
         return None
     try:
@@ -25,19 +17,12 @@ def _as_optional_float(value):
     except (TypeError, ValueError):
         return None
 
-
 def _weighted_score(pairs):
-    """Weighted mean over present (value, weight) pairs; None when none present.
-
-    Renormalizes the weights to the stages that actually produced a score so a
-    partially-measured candidate is not scored against fabricated stages.
-    """
     present = [(v, w) for v, w in pairs if v is not None]
     total = sum(w for _, w in present)
     if not present or total <= 0:
         return None
     return round(sum(v * w for v, w in present) / total, 2)
-
 
 class EvaluatorState(TypedDict, total=False):
     application_id: str
@@ -58,20 +43,11 @@ class EvaluatorState(TypedDict, total=False):
     scoring_inputs_used: Dict[str, Any]
     error: Optional[str]
 
-
 def aggregate_scores_node(state: EvaluatorState) -> EvaluatorState:
-    """Node 1: Aggregate multi-stage evaluation scores into a weighted composite score.
-
-    Missing stage scores are never fabricated. The composite and each dimension
-    are renormalized over only the stages that actually produced a score; if no
-    stage has a real score the composite is None (downstream decision logic must
-    route that to HR review, never to an auto-reject).
-    """
     scr = _as_optional_float(state.get("screening_score"))
     apt = _as_optional_float(state.get("aptitude_score"))
     cod = _as_optional_float(state.get("coding_score"))
     inv = _as_optional_float(state.get("interview_score"))
-
 
     composite_score = _weighted_score([(scr, 0.20), (apt, 0.20), (cod, 0.30), (inv, 0.30)])
 
@@ -81,7 +57,6 @@ def aggregate_scores_node(state: EvaluatorState) -> EvaluatorState:
         "communication": _weighted_score([(inv, 0.8), (scr, 0.2)]),
         "foundational_readiness": _weighted_score([(scr, 0.5), (apt, 0.5)]),
     }
-
 
     state["scoring_inputs_used"] = {
         "screening_score": scr,
@@ -96,26 +71,15 @@ def aggregate_scores_node(state: EvaluatorState) -> EvaluatorState:
 
     return state
 
-
-
-
-
 def validate_isolation_node(state: EvaluatorState) -> EvaluatorState:
-    """
-    Node 3: PROGRAMMATIC SCORING ISOLATION ASSERTION.
-    Throws ScoringIsolationError if proctor flags or computer vision signals are present
-    in decision scoring functions or LLM prompts.
-    """
     scoring_inputs = state.get("scoring_inputs_used", {})
     prompt_payload = state.get("prompt_payload_used", "")
 
     forbidden_keys = ["proctor_flags", "proctor_telemetry", "gaze_centered", "face_count", "tab_switches", "eye_contact"]
 
-
     for key in forbidden_keys:
         if key in scoring_inputs:
             raise ScoringIsolationError(f"Scoring Isolation Violation: '{key}' found in scoring inputs!")
-
 
     for key in forbidden_keys:
         if key in prompt_payload.lower():
@@ -125,9 +89,7 @@ def validate_isolation_node(state: EvaluatorState) -> EvaluatorState:
     logger.info(f"Scoring isolation assertion PASSED for application {state.get('application_id')}")
     return state
 
-
 def compute_confidence_node(state: EvaluatorState) -> EvaluatorState:
-    """Node 4: Calculate evaluation confidence rating (0.0 to 1.0) based on score variance & data completeness."""
 
     dim_scores = [
         x for x in state.get("dimension_scores", {}).values()
@@ -138,7 +100,6 @@ def compute_confidence_node(state: EvaluatorState) -> EvaluatorState:
         avg = sum(dim_scores) / len(dim_scores)
         variance = sum((x - avg) ** 2 for x in dim_scores) / len(dim_scores)
         std_dev = variance ** 0.5
-
 
         if std_dev < 10.0:
             confidence = 0.95
@@ -158,15 +119,11 @@ def compute_confidence_node(state: EvaluatorState) -> EvaluatorState:
     )
     return state
 
-
 def finalize_report_node(state: EvaluatorState) -> EvaluatorState:
-    """Node 5: Finalize report state."""
     logger.info(f"Finalized evaluation report for application {state.get('application_id')} (Confidence: {state.get('confidence')})")
     return state
 
-
 def build_evaluator_graph():
-    """Build LangGraph workflow for Evaluator Agent."""
     if not LANGGRAPH_AVAILABLE:
         return None
 
@@ -184,10 +141,7 @@ def build_evaluator_graph():
 
     return builder.compile()
 
-
-
 _evaluator_app = build_evaluator_graph()
-
 
 async def run_evaluator_agent(
     application_id: str,
@@ -200,10 +154,6 @@ async def run_evaluator_agent(
     proctor_flags: Optional[List[str]] = None,
     proctor_telemetry: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """
-    Execute Evaluator Agent workflow.
-    Guarantees zero-leakage scoring isolation assertion.
-    """
     initial_state: EvaluatorState = {
         "application_id": application_id,
         "interview_id": interview_id,
@@ -232,7 +182,6 @@ async def run_evaluator_agent(
             raise sie
         except Exception as e:
             logger.error(f"LangGraph evaluator execution failed: {e}")
-
 
     s1 = aggregate_scores_node(initial_state)
     s2 = validate_isolation_node(s1)

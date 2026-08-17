@@ -13,14 +13,6 @@ interface UseLocalMediaStreamOptions {
   onStreamCreated?: (stream: MediaStream) => void;
 }
 
-
-
-
-
-
-
-
-
 export function useLocalMediaStream({
   videoRef,
   camActive,
@@ -45,7 +37,7 @@ export function useLocalMediaStream({
   }, [onStreamCreated]);
 
   const stopLocalStream = useCallback(() => {
-    
+
     setupGenerationRef.current += 1;
 
     if (rafRef.current !== null) {
@@ -105,7 +97,6 @@ export function useLocalMediaStream({
           audio: audioConstraints,
         });
 
-        
         if (gen !== setupGenerationRef.current) {
           stream.getTracks().forEach((track) => track.stop());
           return;
@@ -168,8 +159,6 @@ export function useLocalMediaStream({
     selectedAudioDeviceId,
   ]);
 
-  
-  
   useEffect(() => {
     const onPageHide = () => stopLocalStream();
     window.addEventListener('pagehide', onPageHide);

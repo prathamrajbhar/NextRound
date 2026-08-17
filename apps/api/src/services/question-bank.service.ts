@@ -129,22 +129,22 @@ export function buildAptitudeDistribution(
   if (mcqDistribution && Object.keys(mcqDistribution).length > 0) {
     return mcqDistribution;
   }
-  
+
   const CATS = [
     'Quantitative Aptitude',
-    'Logical Reasoning', 
+    'Logical Reasoning',
     'Verbal Ability',
     'Data Interpretation',
   ] as const;
-  
+
   const base = Math.floor(totalCount / 4);
   const rem = totalCount % 4;
   const dist: Record<string, number> = {};
-  
-  CATS.forEach((cat, i) => { 
-    dist[cat] = base + (i < rem ? 1 : 0); 
+
+  CATS.forEach((cat, i) => {
+    dist[cat] = base + (i < rem ? 1 : 0);
   });
-  
+
   return dist;
 }
 

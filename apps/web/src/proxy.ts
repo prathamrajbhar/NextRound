@@ -17,19 +17,16 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   };
 
-  
   if (pathname.startsWith('/hr')) {
     if (!hasToken) return redirectToLogin(pathname);
     if (userRole !== 'hr') return NextResponse.redirect(new URL('/candidate/dashboard', request.url));
   }
 
-  
   if (pathname.startsWith('/candidate')) {
     if (!hasToken) return redirectToLogin(pathname);
     if (userRole !== 'candidate') return NextResponse.redirect(new URL('/hr/dashboard', request.url));
   }
 
-  
   if (hasToken && (pathname === '/login' || pathname === '/signup')) {
     return NextResponse.redirect(new URL(targetDashboard, request.url));
   }

@@ -20,14 +20,14 @@ export function HeroSection({ hrHref, candidateHref, isLoggedIn }: HeroSectionPr
           <Sparkles className="h-3.5 w-3.5 animate-pulse" />
           <span>AI-Powered Voice Screening</span>
         </div>
-        
+
         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl leading-tight">
           Automate your first-round <br />
           <span className="bg-gradient-to-r from-brand-600 to-indigo-600 dark:from-emerald-400 dark:to-orange-400 bg-clip-text text-transparent">
             candidate calls.
           </span>
         </h1>
-        
+
         <p className="text-base sm:text-lg text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed font-medium">
           An AI recruiter that calls and interviews your candidates, asks structured questions, and grades responses. Zero scheduling required.
         </p>

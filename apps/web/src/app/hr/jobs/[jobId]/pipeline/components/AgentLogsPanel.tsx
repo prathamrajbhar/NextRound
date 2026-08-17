@@ -24,8 +24,8 @@ export default function AgentLogsPanel({ logs }: AgentLogsPanelProps) {
       <div className="rounded-2xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-4 shadow-md backdrop-blur-md glass-panel text-[10px] text-slate-700 dark:text-slate-200 space-y-2 h-[350px] overflow-y-auto font-mono scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
         {logs.length > 0 ? (
           logs.map((log, idx) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               className="leading-relaxed border-b border-slate-200/60 dark:border-slate-800 pb-2 last:border-0 font-semibold animate-in slide-in-from-top-1 duration-150"
             >
               <span className="text-purple-600 dark:text-orange-400 font-extrabold select-none">&gt;&nbsp;</span>

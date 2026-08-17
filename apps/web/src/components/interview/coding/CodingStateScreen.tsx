@@ -4,9 +4,9 @@ import React from 'react';
 import { XCircle } from '@/lib/lucide-google-icons';
 
 interface CodingStateScreenProps {
-  
+
   error?: string | null;
-  
+
   loadingLabel?: string;
 }
 

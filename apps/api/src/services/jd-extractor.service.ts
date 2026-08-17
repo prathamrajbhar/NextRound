@@ -14,10 +14,6 @@ export interface ExtractedRequirements {
   enhancedDescription?: string;
 }
 
-
-
-
-
 export async function extractRequirementsFromJd(
   description: string,
   title?: string
@@ -57,7 +53,6 @@ Return ONLY a valid JSON object matching this schema:
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]);
 
-        
         let tech = Math.max(10, Math.min(80, Number(parsed.rubric?.technical) || 30));
         let comm = Math.max(10, Math.min(80, Number(parsed.rubric?.communication) || 20));
         let prob = Math.max(10, Math.min(80, Number(parsed.rubric?.problemSolving) || 25));
@@ -86,18 +81,12 @@ Return ONLY a valid JSON object matching this schema:
     }
   }
 
-  
   return extractNlpFallback(description, title);
 }
-
-
-
-
 
 function extractNlpFallback(description: string, title?: string): ExtractedRequirements {
   const combinedText = `${title || ''} ${description}`;
 
-  
   const knownTech = [
     'React', 'TypeScript', 'JavaScript', 'Next.js', 'Node.js', 'Express', 'Python', 'PyTorch',
     'TensorFlow', 'LLM', 'LLMs', 'Generative AI', 'RAG', 'Vector Database', 'Vector DB', 'Pinecone',
@@ -116,7 +105,6 @@ function extractNlpFallback(description: string, title?: string): ExtractedRequi
     }
   });
 
-  
   const regexPatterns = [
     /\b(AI\/ML|NLP|LLM|RAG|REST API|GraphQL|CI\/CD|UI\/UX|MLOps|DevOps)\b/gi,
     /\b(Machine Learning|Deep Learning|Artificial Intelligence|Prompt Engineering|Vector Databases)\b/gi
@@ -133,7 +121,6 @@ function extractNlpFallback(description: string, title?: string): ExtractedRequi
     }
   });
 
-  
   const softSkillCatalog = [
     'Collaboration', 'Cross-functional Collaboration', 'Problem Solving', 'Technical Leadership',
     'Stakeholder Management', 'Communication', 'Public Speaking', 'Analytical Thinking',
@@ -154,7 +141,6 @@ function extractNlpFallback(description: string, title?: string): ExtractedRequi
     }
   }
 
-  
   const cultureCatalog = [
     'Innovation', 'Customer Obsessed', 'High Performance', 'Metrics-Driven', 'Detail Oriented',
     'Fast Execution', 'Design Excellence', 'Continuous Learning', 'User Centricity'
@@ -170,7 +156,6 @@ function extractNlpFallback(description: string, title?: string): ExtractedRequi
     extractedCulture.push('Innovation', 'Continuous Learning', 'High Performance');
   }
 
-  
   let techWeight = 30;
   if (extractedTech.length > 5) techWeight = 35;
   if (combinedText.toLowerCase().includes('ai') || combinedText.toLowerCase().includes('architecture')) techWeight = 35;

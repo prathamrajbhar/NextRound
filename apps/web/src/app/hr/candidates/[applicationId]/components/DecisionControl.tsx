@@ -50,7 +50,7 @@ export default function DecisionControl({
         <ShieldCheck className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
         Decision Control
       </h3>
-      
+
       <div className="space-y-4">
         <div>
           <label className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase block mb-2">Outcome Picker</label>

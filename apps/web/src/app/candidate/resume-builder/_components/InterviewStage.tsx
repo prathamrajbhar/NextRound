@@ -68,19 +68,17 @@ export function InterviewStage({
   const [textInput, setTextInput] = useState('');
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
-  
   useEffect(() => {
     if (chatScrollRef.current) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
     }
   }, [conversationHistory, candidateSpeechText]);
 
-  
   const soundScale = micActive ? 1 + (micLevel / 100) * 0.5 : 1;
 
   return (
     <div className="relative w-full h-[calc(100vh-6rem)] rounded-3xl overflow-hidden border border-slate-200 dark:border-slate-800/40 bg-white dark:bg-slate-950 text-slate-800 dark:text-white shadow-xl dark:shadow-2xl flex flex-col justify-between p-6 sm:p-8 font-sans">
-      
+
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/5 dark:bg-orange-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-600/5 dark:bg-amber-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
 
@@ -117,9 +115,9 @@ export function InterviewStage({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 my-5 flex-1 min-h-0 relative z-10">
-        
+
         <div className="lg:col-span-7 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 flex flex-col justify-between shadow-inner">
-          
+
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800/80 text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
               <span className={`h-1.5 w-1.5 rounded-full ${aiState === 'speaking' ? 'bg-orange-500 animate-pulse' : aiState === 'evaluating' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
@@ -160,7 +158,7 @@ export function InterviewStage({
                   muted
                   className="h-full w-full object-cover transform -scale-x-100"
                 />
-                
+
                 {micActive && (
                   <div className="absolute bottom-4 right-4 flex items-center gap-1.5 bg-slate-100/90 dark:bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/10 text-[10px] font-black text-emerald-600 dark:text-emerald-400 shadow-md">
                     <Mic className="h-3.5 w-3.5 animate-pulse" />
@@ -169,7 +167,7 @@ export function InterviewStage({
                 )}
               </div>
             ) : (
-              
+
               <div className="relative flex flex-col items-center justify-center">
                 <div
                   className="absolute h-44 w-44 sm:h-56 sm:w-56 rounded-full bg-orange-500/5 border border-orange-500/10 transition-transform duration-100 ease-out"
@@ -237,7 +235,7 @@ export function InterviewStage({
         </div>
 
         <div className="lg:col-span-5 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-4 flex flex-col justify-between shadow-inner overflow-hidden">
-          
+
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 pb-2 mb-3">
             <span className="text-xs font-bold text-slate-800 dark:text-slate-300 font-display">
               Conversation History
@@ -349,7 +347,7 @@ export function InterviewStage({
       </div>
 
       <div className="mx-auto z-30 px-6 py-2.5 rounded-full border border-slate-200 dark:border-white/10 bg-slate-100/90 dark:bg-slate-900/90 backdrop-blur-xl shadow-2xl flex items-center gap-4 select-none">
-        
+
         <button
           type="button"
           onClick={() => setMicActive(!micActive)}

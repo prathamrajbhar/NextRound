@@ -99,7 +99,7 @@ export function SetupStage({
 
   return (
     <div className="relative w-full space-y-6 animate-in fade-in duration-300 font-sans p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800/40 bg-white dark:bg-slate-950 text-slate-800 dark:text-white shadow-xl dark:shadow-2xl overflow-hidden">
-      
+
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-orange-600/5 dark:bg-orange-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-amber-600/5 dark:bg-amber-600/10 rounded-full blur-[120px] pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
 
@@ -137,9 +137,9 @@ export function SetupStage({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start z-10 relative">
-        
+
         <div className="lg:col-span-8 space-y-6">
-          
+
           <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-5">
             <h2 className="text-xs font-extrabold text-slate-800 dark:text-white flex items-center gap-2 border-b border-slate-200 dark:border-white/5 pb-3">
               <Target className="h-4.5 w-4.5 text-orange-500 dark:text-orange-400" />
@@ -245,9 +245,9 @@ export function SetupStage({
         </div>
 
         <div className="lg:col-span-4 space-y-6">
-          
+
           <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-4">
-            {/* Header / Info */}
+            {}
             <div className="flex justify-between items-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider select-none border-b border-slate-200/80 dark:border-white/5 pb-3">
               <span className="flex items-center gap-1.5 text-xs font-extrabold text-slate-800 dark:text-white">
                 <Mic className={`h-4 w-4 ${micTesting ? 'text-emerald-500 dark:text-emerald-400' : 'text-slate-400 dark:text-slate-500'}`} />
@@ -258,7 +258,7 @@ export function SetupStage({
               </span>
             </div>
 
-            {/* Simple block VU meter */}
+            {}
             <div className="flex gap-1 items-center h-3 px-0.5 my-2">
               {Array.from({ length: 18 }).map((_, index) => {
                 const activeBars = Math.round((audioLevel / 100) * 18);
@@ -284,7 +284,7 @@ export function SetupStage({
               })}
             </div>
 
-            {/* Status explanation */}
+            {}
             <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 leading-relaxed">
               {micTesting
                 ? audioLevel > 5
@@ -293,7 +293,7 @@ export function SetupStage({
                 : 'Test your microphone hardware before starting the call.'}
             </p>
 
-            {/* Calibration style button */}
+            {}
             <button
               type="button"
               onClick={() => setMicTesting(!micTesting)}

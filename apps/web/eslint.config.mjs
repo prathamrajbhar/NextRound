@@ -5,9 +5,9 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  
+
   globalIgnores([
-    
+
     ".next/**",
     "out/**",
     "build/**",
@@ -17,8 +17,7 @@ const eslintConfig = defineConfig([
   {
     settings: {
       react: {
-        
-        
+
         version: "19.2.8",
       },
     },

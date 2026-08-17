@@ -1,10 +1,5 @@
 import type { ProctoringClient } from '@/lib/proctoring/ProctoringClient';
 
-
-
-
-
-
 export interface Message {
   id: string;
   role: 'ai' | 'candidate';
@@ -54,7 +49,6 @@ export interface UnifiedInterviewConsoleProps {
   timeRemaining?: number;
   callDuration?: number;
 
-  
   messages?: Message[];
   phase?: InterviewPhase;
   isAnalyzing?: boolean;
@@ -62,13 +56,11 @@ export interface UnifiedInterviewConsoleProps {
   onSubmitAnswer?: (text: string) => void;
   onEndSession: () => void;
 
-  
   strikeCount?: number;
   showWarningModal?: boolean;
   onResumeFullscreen?: () => void;
   onEliminate?: () => void;
   proctoringClient?: ProctoringClient | null;
 
-  
   onCompleteHRRound?: (result: 'pass' | 'fail', notes: string) => void;
 }

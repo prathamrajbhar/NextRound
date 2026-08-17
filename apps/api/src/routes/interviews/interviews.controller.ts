@@ -17,16 +17,6 @@ import {
 } from './interviews.helpers';
 import { getCandidateInterviewContext, buildContextText } from '../../services/candidate-context.service';
 
-
-
-
-
-
-
-
-
-
-
 export async function recordConsent(req: Request, res: Response, next: NextFunction) {
   try {
     const id = String(req.params['id']);
@@ -44,7 +34,6 @@ export async function recordConsent(req: Request, res: Response, next: NextFunct
       return res.status(404).json({ success: false, error: 'Interview session not found' });
     }
 
-    
     if (
       req.user?.role === 'candidate' &&
       interview.application.candidate.user_id !== req.user.userId
@@ -88,14 +77,6 @@ export async function recordConsent(req: Request, res: Response, next: NextFunct
   }
 }
 
-
-
-
-
-
-
-
-
 export async function getSessionToken(req: Request, res: Response, next: NextFunction) {
   try {
     const id = String(req.params['id']);
@@ -128,8 +109,7 @@ export async function getSessionToken(req: Request, res: Response, next: NextFun
       data: {
         interviewId: interview.id,
         applicationId: interview.application_id,
-        
-        
+
         sessionToken: null,
         expiresInSeconds: null,
         iceServers: loadIceServers(),
@@ -141,14 +121,6 @@ export async function getSessionToken(req: Request, res: Response, next: NextFun
     return next(error);
   }
 }
-
-
-
-
-
-
-
-
 
 export async function endInterview(req: Request, res: Response, next: NextFunction) {
   try {
@@ -173,7 +145,7 @@ export async function endInterview(req: Request, res: Response, next: NextFuncti
       where: { id: interview.id },
       data: {
         status: 'completed',
-        
+
         ...(transcript !== undefined ? { transcript: transcript as Prisma.InputJsonValue } : {}),
         ...(audio_url ? { audio_url } : {}),
       },
@@ -197,15 +169,6 @@ export async function endInterview(req: Request, res: Response, next: NextFuncti
     return next(error);
   }
 }
-
-
-
-
-
-
-
-
-
 
 export async function recordProctoringFlag(req: Request, res: Response, next: NextFunction) {
   try {
@@ -260,14 +223,6 @@ export async function recordProctoringFlag(req: Request, res: Response, next: Ne
   }
 }
 
-
-
-
-
-
-
-
-
 export async function getTranscript(req: Request, res: Response, next: NextFunction) {
   try {
     const id = String(req.params['id']);
@@ -289,7 +244,6 @@ export async function getTranscript(req: Request, res: Response, next: NextFunct
       return res.status(404).json({ success: false, error: 'Interview session not found' });
     }
 
-    
     if (req.user?.role === 'hr') {
       if (!req.user.orgId || interview.application.job.org_id !== req.user.orgId) {
         return res
@@ -324,15 +278,6 @@ export async function getTranscript(req: Request, res: Response, next: NextFunct
   }
 }
 
-
-
-
-
-
-
-
-
-
 export async function saveHrResult(req: Request, res: Response, next: NextFunction) {
   try {
     const applicationId = String(req.params['applicationId']);
@@ -351,7 +296,6 @@ export async function saveHrResult(req: Request, res: Response, next: NextFuncti
 
     const { decision, notes } = body.data;
 
-    
     const application = await prisma.application.findFirst({
       where: { id: applicationId, job: { org_id: orgId } },
       include: { job: true },
@@ -414,9 +358,6 @@ export async function saveHrResult(req: Request, res: Response, next: NextFuncti
   }
 }
 
-
-
-
 export async function sendSignal(req: Request, res: Response, next: NextFunction) {
   try {
     const applicationId = String(req.params['id']);
@@ -440,9 +381,6 @@ export async function sendSignal(req: Request, res: Response, next: NextFunction
   }
 }
 
-
-
-
 export async function getSignals(req: Request, res: Response, next: NextFunction) {
   try {
     const applicationId = String(req.params['id']);
@@ -456,7 +394,6 @@ export async function getSignals(req: Request, res: Response, next: NextFunction
       orderBy: { created_at: 'asc' },
     });
 
-    
     prisma.webRTCSignal.deleteMany({
       where: {
         application_id: applicationId,
@@ -469,7 +406,6 @@ export async function getSignals(req: Request, res: Response, next: NextFunction
     return next(error);
   }
 }
-
 
 export async function getInterviewContext(req: Request, res: Response, next: NextFunction) {
   try {

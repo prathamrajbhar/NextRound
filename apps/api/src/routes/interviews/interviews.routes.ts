@@ -16,8 +16,6 @@ import {
 
 export const interviewRouter = Router();
 
-
-
 interviewRouter.use(authenticate);
 interviewRouter.use(rejectOrgIdParam);
 

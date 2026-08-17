@@ -27,7 +27,6 @@ export function CompensationEligibilityStep({ form, update }: OnboardingStepProp
   const minSalNum = Number(form.expectedSalaryMin) || Number(form.expectedSalary) || 0;
   const maxSalNum = Number(form.expectedSalaryMax) || minSalNum || 0;
 
-  
   const minHikePercent =
     currentCtcNum > 0 && minSalNum > currentCtcNum
       ? Math.round(((minSalNum - currentCtcNum) / currentCtcNum) * 100)

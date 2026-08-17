@@ -14,20 +14,6 @@ import { buildContextSections, hashContent } from './candidate-embedding.service
 import { getCandidateInterviewContext } from './candidate-context.service';
 import { deleteCandidateSocialSource as removeCandidateSocialSource } from './social-sync.service';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 export async function recordAiAssistResult(jobId: string, body: Record<string, unknown>) {
   const existingJob = await prisma.job.findUnique({ where: { id: jobId } });
   if (!existingJob) {
@@ -47,7 +33,6 @@ export async function recordAiAssistResult(jobId: string, body: Record<string, u
     },
   });
 }
-
 
 export async function recordSourcedCandidates(jobId: string, body: Record<string, unknown>) {
   const job = await prisma.job.findUnique({ where: { id: jobId } });
@@ -72,11 +57,6 @@ export async function recordSourcedCandidates(jobId: string, body: Record<string
     },
   });
 }
-
-
-
-
-
 
 export async function recordScreeningResult(applicationId: string, body: Record<string, unknown>) {
   const id = applicationId;
@@ -143,7 +123,6 @@ export async function recordScreeningResult(applicationId: string, body: Record<
     },
   });
 
-  
   if (updatedApp.status === 'rejected' && app.candidate.user.email) {
     const candidateName = app.candidate.user.email.split('@')[0];
     await emailService
@@ -157,13 +136,11 @@ export async function recordScreeningResult(applicationId: string, body: Record<
       .catch((err) => logger.child('Internal').error(`Failed to send rejection email for application ${id}:`, err));
   }
 
-  
-  
   if (updatedApp.status !== 'rejected') {
     await ensureInterviewAndSchedule(id).catch((err) =>
       logger.child('Internal').error(`Failed to create interview/schedule for application ${id}:`, err)
     );
-    
+
     await advanceAssessmentStage(id).catch((err) =>
       logger.child('Internal').error(`advanceAssessmentStage failed during screening completion for ${id}:`, err)
     );
@@ -171,7 +148,6 @@ export async function recordScreeningResult(applicationId: string, body: Record<
 
   return { application: updatedApp, evaluation };
 }
-
 
 export async function recordAssessmentResult(applicationId: string, body: Record<string, unknown>) {
   const id = applicationId;
@@ -182,11 +158,6 @@ export async function recordAssessmentResult(applicationId: string, body: Record
     throw notFound('Application not found');
   }
 
-  
-  
-  
-  
-  
   let updatedStatus: ApplicationStatus | null = null;
   if (passed) {
     updatedStatus =
@@ -216,7 +187,6 @@ export async function recordAssessmentResult(applicationId: string, body: Record
     },
   });
 
-  
   await prisma.assessment
     .updateMany({
       where: { application_id: id, test_type: 'aptitude' },
@@ -240,7 +210,6 @@ export async function recordAssessmentResult(applicationId: string, body: Record
   return { application: updatedApp, evaluation };
 }
 
-
 export async function recordCodingResult(applicationId: string, body: Record<string, unknown>) {
   const id = applicationId;
   const {
@@ -259,7 +228,6 @@ export async function recordCodingResult(applicationId: string, body: Record<str
     throw notFound('Application not found');
   }
 
-  
   if (submissionId) {
     await prisma.codingSubmission
       .update({
@@ -280,10 +248,6 @@ export async function recordCodingResult(applicationId: string, body: Record<str
       .catch((err) => logger.child('Internal').warn(`Could not update coding submission for application ${id}:`, err));
   }
 
-  
-  
-  
-  
   let updatedStatus: ApplicationStatus | null = null;
   if (passed) {
     updatedStatus =
@@ -326,7 +290,6 @@ export async function recordCodingResult(applicationId: string, body: Record<str
   return { application: updatedApp, evaluation };
 }
 
-
 export async function getAssessmentData(applicationId: string, testType: string) {
   const id = applicationId;
   const assessment = await prisma.assessment.findFirst({
@@ -334,10 +297,6 @@ export async function getAssessmentData(applicationId: string, testType: string)
     orderBy: { created_at: 'desc' },
   });
 
-  
-  
-  
-  
   let minScore: number | null = null;
   try {
     const app = await prisma.application.findUnique({
@@ -346,7 +305,7 @@ export async function getAssessmentData(applicationId: string, testType: string)
     });
     const assessmentConfig = (app?.job?.assessmentConfig ?? {}) as { passingScore?: number };
     const thresholds = (app?.job?.thresholds ?? {}) as { minScore?: number };
-    
+
     minScore =
       typeof assessmentConfig.passingScore === 'number'
         ? assessmentConfig.passingScore
@@ -365,7 +324,6 @@ export async function getAssessmentData(applicationId: string, testType: string)
     minScore,
   };
 }
-
 
 export async function recordInterviewResult(interviewId: string, body: Record<string, unknown>) {
   const id = interviewId;
@@ -389,9 +347,6 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
     },
   });
 
-  
-  
-  
   const scoreNum =
     typeof interview_score === 'number'
       ? interview_score
@@ -428,8 +383,6 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
     },
   });
 
-  
-  
   if (scoreNum != null) {
     await prisma.application.update({
       where: { id: interview.application_id },
@@ -440,10 +393,6 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
     });
   }
 
-  
-  
-  
-  
   if (scoreNum != null && scoreNum >= 70) {
     await enqueueEvaluation(
       interview.application_id,
@@ -467,7 +416,6 @@ export async function recordInterviewResult(interviewId: string, body: Record<st
 
   return { interview: updatedInterview, evaluation };
 }
-
 
 export async function confirmInterviewSlot(interviewId: string, body: Record<string, unknown>) {
   const id = interviewId;
@@ -504,7 +452,6 @@ export async function confirmInterviewSlot(interviewId: string, body: Record<str
   return { interview: updatedInterview };
 }
 
-
 export async function recordScheduleSlots(interviewId: string, body: Record<string, unknown>) {
   const id = interviewId;
   const { slots, formatted_email } = body;
@@ -521,7 +468,6 @@ export async function recordScheduleSlots(interviewId: string, body: Record<stri
     },
   });
 
-  
   await prisma.agentLog.create({
     data: {
       job_id: null,
@@ -535,11 +481,6 @@ export async function recordScheduleSlots(interviewId: string, body: Record<stri
 
   return { interview: updatedInterview, slots, formatted_email };
 }
-
-
-
-
-
 
 export async function recordFinalEvaluation(body: Record<string, unknown>) {
   const { application_id, composite_score, confidence, reasoning } = body;
@@ -568,7 +509,6 @@ export async function recordFinalEvaluation(body: Record<string, unknown>) {
         },
       });
 
-  
   const conf = typeof confidence === 'number' ? confidence : 1.0;
   if (conf < 0.7) {
     const app = await prisma.application.findUnique({
@@ -592,7 +532,6 @@ export async function recordFinalEvaluation(body: Record<string, unknown>) {
 
   return { evaluation, status: 'hr_round', queuedDecision: false };
 }
-
 
 export async function applyDecision(evaluationId: string, body: Record<string, unknown>) {
   const id = evaluationId;
@@ -653,8 +592,7 @@ export async function applyDecision(evaluationId: string, body: Record<string, u
   }
 
   if (decision === 'hire') {
-    
-    
+
     const { offer, isNew } = await upsertOffer({
       applicationId: app.id,
       job: app.job,
@@ -666,7 +604,6 @@ export async function applyDecision(evaluationId: string, body: Record<string, u
       data: { status: 'offered' },
     });
 
-    
     if (isNew) {
       const candidateName = app.candidate.user.email.split('@')[0];
       await emailService.sendOfferEmail(app.candidate.user.email, candidateName, app.job.title, {
@@ -704,7 +641,6 @@ export async function applyDecision(evaluationId: string, body: Record<string, u
   }
 }
 
-
 export async function createInternalOffer(body: Record<string, unknown>) {
   const {
     application_id,
@@ -719,9 +655,6 @@ export async function createInternalOffer(body: Record<string, unknown>) {
     throw badRequest('application_id is required');
   }
 
-  
-  
-  
   const app = await prisma.application.findUnique({
     where: { id: application_id as string },
     include: { job: true },
@@ -731,9 +664,6 @@ export async function createInternalOffer(body: Record<string, unknown>) {
     throw notFound('Application not found');
   }
 
-  
-  
-  
   const { offer } = await upsertOffer({
     applicationId: application_id as string,
     job: app.job,
@@ -747,11 +677,6 @@ export async function createInternalOffer(body: Record<string, unknown>) {
 
   return offer;
 }
-
-
-
-
-
 
 export async function recordMockFeedback(sessionId: string, body: Record<string, unknown>) {
   const id = sessionId;
@@ -777,7 +702,6 @@ export async function recordMockFeedback(sessionId: string, body: Record<string,
   return { session: updated };
 }
 
-
 export async function recordResumeBuilderResult(sessionId: string, body: Record<string, unknown>) {
   const { generatedResume, resumePdfUrl, status } = body;
 
@@ -800,7 +724,6 @@ export async function recordResumeBuilderResult(sessionId: string, body: Record<
 
   return { session: updated };
 }
-
 
 export async function generatePrepContent(body: Record<string, unknown>) {
   const {
@@ -839,8 +762,7 @@ export async function generatePrepContent(body: Record<string, unknown>) {
       },
     });
   } else {
-    
-    
+
     if (!companyName || !roleArchetype) {
       throw badRequest('companyName and roleArchetype are required to generate prep content');
     }
@@ -860,11 +782,6 @@ export async function generatePrepContent(body: Record<string, unknown>) {
   return { prepContent };
 }
 
-
-
-
-
-
 export async function createAgentLog(body: Record<string, unknown>) {
   const { job_id, org_id, agent_name, action, input, output, status, error } = body;
 
@@ -882,14 +799,12 @@ export async function createAgentLog(body: Record<string, unknown>) {
   });
 }
 
-
 export async function listAgentLogs() {
   return prisma.agentLog.findMany({
     orderBy: { created_at: 'desc' },
     take: 50,
   });
 }
-
 
 export async function getRawJob(jobId: string) {
   const job = await prisma.job.findUnique({
@@ -901,7 +816,6 @@ export async function getRawJob(jobId: string) {
   }
   return job;
 }
-
 
 export async function getRawApplication(applicationId: string) {
   const app = await prisma.application.findUnique({
@@ -922,7 +836,6 @@ export async function getRawApplication(applicationId: string) {
   return app;
 }
 
-
 export async function updateCandidateEmbedding(candidateId: string, body: Record<string, unknown>) {
   const id = candidateId;
   const { embedding } = body;
@@ -936,7 +849,6 @@ export async function updateCandidateEmbedding(candidateId: string, body: Record
 
   return { message: 'Candidate embedding updated successfully' };
 }
-
 
 export async function getCandidateSections(candidateId: string) {
   const profile = await prisma.candidateProfile.findUnique({
@@ -968,7 +880,6 @@ export async function getCandidateSections(candidateId: string) {
     }),
   };
 }
-
 
 export async function saveCandidateEmbeddings(candidateId: string, body: Record<string, unknown>) {
   const sections = Array.isArray(body.sections) ? body.sections : [];
@@ -1041,7 +952,6 @@ async function fetchProfileEmbedding(text: string): Promise<number[] | null> {
   }
 }
 
-
 export async function deleteCandidateSocialSource(candidateId: string, source: string) {
   if (source !== 'github' && source !== 'linkedin') {
     throw badRequest('source must be "github" or "linkedin"');
@@ -1050,11 +960,9 @@ export async function deleteCandidateSocialSource(candidateId: string, source: s
   return { message: `Removed ${source} social data` };
 }
 
-
 export async function getCandidateInterviewContextInternal(candidateId: string, jobId: string) {
   return getCandidateInterviewContext(candidateId, jobId);
 }
-
 
 export async function getRawAnalytics(orgId: string) {
   const jobs = await prisma.job.findMany({
@@ -1063,10 +971,9 @@ export async function getRawAnalytics(orgId: string) {
       applications: {
         include: {
           evaluations: true,
-          
+
           interview: true,
-          
-          
+
           offer: true,
         },
       },
@@ -1075,7 +982,6 @@ export async function getRawAnalytics(orgId: string) {
 
   return { orgId, jobs };
 }
-
 
 export async function recordAnalyticsReport(body: Record<string, unknown>) {
   const { org_id, report_url, summary, generated_at } = body;
@@ -1091,7 +997,6 @@ export async function recordAnalyticsReport(body: Record<string, unknown>) {
     },
   });
 }
-
 
 export async function updateInterviewSentiment(interviewId: string, body: Record<string, unknown>) {
   const id = interviewId;

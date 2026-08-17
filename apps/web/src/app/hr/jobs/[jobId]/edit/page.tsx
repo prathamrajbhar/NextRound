@@ -16,7 +16,6 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
 
   const [loading, setLoading] = useState(true);
 
-  
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState('Remote (Worldwide)');
@@ -112,7 +111,7 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
             }
             setAssessmentConfig(config);
           } else {
-            
+
             setAssessmentConfig({
               mcqCount: 20,
               codingProblemId: 'virtualized-list',

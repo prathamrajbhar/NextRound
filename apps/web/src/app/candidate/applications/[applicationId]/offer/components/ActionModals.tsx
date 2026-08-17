@@ -69,7 +69,7 @@ export function ActionModals({
       const pathsXml = paths.map((p) => `<path d="${p}" stroke="#059669" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round" />`).join('');
       return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120">${pathsXml}</svg>`;
     }
-    
+
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120"><text x="20" y="70" font-family="serif" font-size="32" font-style="italic" fill="#059669">${signatureText || candidateName}</text></svg>`;
   };
 

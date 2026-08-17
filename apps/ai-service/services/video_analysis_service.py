@@ -6,23 +6,15 @@ logger = logging.getLogger("video_analysis_service")
 
 EMOTIONS = ["confident", "focused", "neutral", "stressed", "confused", "hesitant"]
 
-
 def analyze_frame_expression(
     image_base64: str = "",
     landmark_data: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """
-    Analyze single webcam frame image or landmark telemetry to compute facial emotion distribution,
-    gaze direction, eye contact status, and instant engagement metrics.
-    """
     if not image_base64 and not landmark_data:
         return {
             "success": False,
             "error": "Either image_base64 or landmark_data must be provided"
         }
-
-
-
 
     if not landmark_data:
         return {
@@ -39,15 +31,11 @@ def analyze_frame_expression(
             "soft_skills_confidence": None,
         }
 
-
-
-
     yaw = float(landmark_data.get("yaw", 0.0))
     pitch = float(landmark_data.get("pitch", 0.0))
     roll = float(landmark_data.get("roll", 0.0))
     smile_ratio = float(landmark_data.get("smile_ratio", 0.2))
     eye_openness = float(landmark_data.get("eye_openness", 0.8))
-
 
     abs_yaw = abs(yaw)
     abs_pitch = abs(pitch)
@@ -68,7 +56,6 @@ def analyze_frame_expression(
         gaze_direction = "down"
         eye_contact = False
 
-
     if smile_ratio > 0.4 and eye_contact:
         emotions_dist = {"confident": 0.55, "focused": 0.30, "neutral": 0.10, "stressed": 0.03, "confused": 0.01, "hesitant": 0.01}
         primary_emotion = "confident"
@@ -85,13 +72,9 @@ def analyze_frame_expression(
         emotions_dist = {"neutral": 0.50, "focused": 0.30, "confident": 0.10, "stressed": 0.05, "confused": 0.03, "hesitant": 0.02}
         primary_emotion = "neutral"
 
-
-
-
     base_engagement = 85.0 if eye_contact else 55.0
     engagement_score = round(min(100.0, max(0.0, base_engagement - (abs_yaw * 1.2) + (smile_ratio * 15.0))), 1)
     soft_skills_confidence = round(min(100.0, max(0.0, (emotions_dist["confident"] * 40.0) + (emotions_dist["focused"] * 35.0) + (emotions_dist["neutral"] * 25.0) + (engagement_score * 0.2))), 1)
-
 
     return {
         "success": True,
@@ -106,12 +89,7 @@ def analyze_frame_expression(
         "soft_skills_confidence": soft_skills_confidence,
     }
 
-
 def analyze_video_session(frames: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Aggregate multi-frame interview video telemetry to calculate overall session statistics,
-    emotion distribution trajectory, eye contact percentage, and focus stability score.
-    """
     if not frames:
         return {
             "success": False,
@@ -129,8 +107,6 @@ def analyze_video_session(frames: List[Dict[str, Any]]) -> Dict[str, Any]:
 
     for f in frames:
         img_b64 = f.get("image_base64", "")
-
-
 
         landmarks = f.get("landmark_data")
         if not landmarks:
@@ -160,7 +136,6 @@ def analyze_video_session(frames: List[Dict[str, Any]]) -> Dict[str, Any]:
         total_engagement += analysis.get("engagement_score", 0.0)
         total_confidence += analysis.get("soft_skills_confidence", 0.0)
 
-
     num_valid = len(frame_results) - no_signal_frames
     if num_valid <= 0:
         return {
@@ -182,11 +157,9 @@ def analyze_video_session(frames: List[Dict[str, Any]]) -> Dict[str, Any]:
     avg_engagement = round(total_engagement / num_valid, 1)
     avg_confidence = round(total_confidence / num_valid, 1)
 
-
     overall_emotion_percentages = {
         e: round((count / num_valid) * 100.0, 1) for e, count in emotion_counts.items()
     }
-
 
     focus_stability = round(min(100.0, max(0.0, eye_contact_percentage - (off_screen_flags * 5.0))), 1)
 

@@ -22,7 +22,6 @@ export default function ContactPage() {
   const [message, setMessage] = useState('');
   const [activeFaq, setActiveFaq] = useState<number | null>(0);
 
-  
   const quickPrompts = [
     'We want to test AI voice screening for 50 applicants.',
     'How do I set up automated coding tests for frontend roles?',

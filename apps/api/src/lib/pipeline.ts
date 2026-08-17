@@ -10,10 +10,6 @@ type JobLike = {
   org_id?: string | null;
 };
 
-
-
-
-
 export const PAST_ASSESSMENT: string[] = [
   'interview_scheduled',
   'interviewed',
@@ -35,11 +31,6 @@ function boolFlag(cfg: Record<string, unknown>, key: string, fallback: boolean):
   return fallback;
 }
 
-
-
-
-
-
 function enabledModalities(job: JobLike): { aptitude: boolean; coding: boolean } {
   const cfg = isObject(job.assessmentConfig) ? job.assessmentConfig : {};
   const thr = isObject(job.thresholds) ? job.thresholds : {};
@@ -48,11 +39,6 @@ function enabledModalities(job: JobLike): { aptitude: boolean; coding: boolean }
     coding: boolFlag(cfg, 'coding_enabled', false) || boolFlag(thr, 'coding_enabled', false),
   };
 }
-
-
-
-
-
 
 export async function ensureInterviewAndSchedule(
   applicationId: string
@@ -83,11 +69,6 @@ export async function ensureInterviewAndSchedule(
 
   const candidateEmail = app.candidate?.user?.email ?? '';
 
-  
-  
-  
-  
-  
   const orgSettings = isObject(app.job.organization?.settings) ? app.job.organization.settings : {};
   const availabilityHours = isObject(orgSettings.availabilityHours)
     ? (orgSettings.availabilityHours as Record<string, unknown>)
@@ -108,13 +89,6 @@ export async function ensureInterviewAndSchedule(
 
   return { interviewId: interview.id };
 }
-
-
-
-
-
-
-
 
 export async function advanceAssessmentStage(applicationId: string): Promise<string | null> {
   const app = await prisma.application.findUnique({
@@ -138,7 +112,6 @@ export async function advanceAssessmentStage(applicationId: string): Promise<str
 
   if (!allDone) return null;
 
-  
   const jobStages = Array.isArray(app.job?.stages) ? (app.job.stages as string[]) : [];
   const voiceScreenEnabled = jobStages.includes('voice_screen');
 
@@ -148,7 +121,7 @@ export async function advanceAssessmentStage(applicationId: string): Promise<str
     await prisma.application.update({ where: { id: applicationId }, data: { status: next } });
     return next;
   } else {
-    
+
     const next = 'hr_round';
     await prisma.application.update({
       where: { id: applicationId },

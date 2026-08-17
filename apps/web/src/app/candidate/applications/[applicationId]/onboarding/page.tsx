@@ -107,10 +107,10 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         <div className="lg:col-span-2 space-y-4">
           <h3 className="text-xs font-bold text-slate-805">Your Checklist Items</h3>
-          
+
           <div className="space-y-3">
             {onboard.tasks.map((task) => {
               const isCompleted = task.status === 'completed';
@@ -119,14 +119,14 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
                   key={task.id}
                   onClick={() => handleToggleTask(task.id)}
                   className={`p-4 rounded-3xl border transition-all cursor-pointer flex gap-3.5 items-start ${
-                    isCompleted 
-                      ? 'bg-slate-50 border-slate-200/60 opacity-70' 
+                    isCompleted
+                      ? 'bg-slate-50 border-slate-200/60 opacity-70'
                       : 'bg-white/45 border-white/60 hover:bg-white/70 shadow-sm'
                   }`}
                 >
                   <div className={`flex-shrink-0 mt-0.5 h-5 w-5 rounded border flex items-center justify-center transition-all ${
-                    isCompleted 
-                      ? 'bg-indigo-600 border-indigo-650 text-white' 
+                    isCompleted
+                      ? 'bg-indigo-600 border-indigo-650 text-white'
                       : 'border-slate-300 bg-white/40 hover:border-slate-400'
                   }`}>
                     {isCompleted && <span className="text-[10px] font-bold">✓</span>}
@@ -154,7 +154,7 @@ export default function CandidateOnboardingPage({ params }: { params: Promise<{ 
         <div className="space-y-6">
           <div className="rounded-3xl border border-white/60 bg-white/45 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h4 className="text-xs font-bold text-slate-805 border-b border-slate-100 pb-2">Support Team</h4>
-            
+
             <div className="space-y-3 text-xs font-semibold text-slate-700">
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100">

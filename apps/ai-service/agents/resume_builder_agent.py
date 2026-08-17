@@ -9,7 +9,6 @@ logger = logging.getLogger("resume_builder_agent")
 STAGES = ["intro", "work_history", "skills", "projects", "education", "closing"]
 ACTIONS = ("FOLLOW_UP", "CLARIFY", "DEEPEN", "NEXT_TOPIC", "END")
 
-# Safety cap: never let the conversation drift past this many turns.
 MAX_TURNS = 12
 
 SYSTEM_PROMPT = (
@@ -20,7 +19,6 @@ SYSTEM_PROMPT = (
     "Move to another topic only after the current topic is sufficiently discussed. "
     "Keep responses short, conversational, and natural. Do not repeat questions, use robotic phrases, announce stages, or invent candidate information."
 )
-
 
 class ResumeBuilderState(TypedDict, total=False):
     session_id: str
@@ -37,19 +35,12 @@ class ResumeBuilderState(TypedDict, total=False):
     next_action: str
     last_analysis: Dict[str, Any]
 
-
-# ---------------------------------------------------------------------------
-# Question utilities (duplicate-question prevention)
-# ---------------------------------------------------------------------------
-
-
 def _normalize_question(q: str) -> str:
     if not q:
         return ""
     q = q.lower()
     q = re.sub(r"[^a-z0-9\s]", " ", q)
     return " ".join(q.split())
-
 
 def _is_duplicate(candidate_q: str, asked: List[str]) -> bool:
     nq = _normalize_question(candidate_q)
@@ -67,12 +58,6 @@ def _is_duplicate(candidate_q: str, asked: List[str]) -> bool:
         if tokens and len(tokens & set(na.split())) / len(tokens) >= 0.9:
             return True
     return False
-
-
-# ---------------------------------------------------------------------------
-# Memory helpers
-# ---------------------------------------------------------------------------
-
 
 def _normalize_memory(memory: Any) -> Dict[str, Any]:
     if not isinstance(memory, dict):
@@ -93,7 +78,6 @@ def _normalize_memory(memory: Any) -> Dict[str, Any]:
             memory[key] = []
     return memory
 
-
 def _collect_asked_questions(memory: Dict[str, Any], history: List[Dict[str, Any]]) -> List[str]:
     asked = list(memory.get("previous_questions") or [])
     for entry in history:
@@ -112,7 +96,6 @@ def _collect_asked_questions(memory: Dict[str, Any], history: List[Dict[str, Any
             out.append(q)
     return out
 
-
 def _contains_similar(facts: List[str], fact: str) -> bool:
     f = fact.lower().strip()
     if not f:
@@ -124,7 +107,6 @@ def _contains_similar(facts: List[str], fact: str) -> bool:
         if e == f or e in f or f in e:
             return True
     return False
-
 
 def _update_memory(memory: Dict[str, Any], analysis: Dict[str, Any], candidate_input: str) -> Dict[str, Any]:
     answer = candidate_input.strip()
@@ -152,7 +134,6 @@ def _update_memory(memory: Dict[str, Any], analysis: Dict[str, Any], candidate_i
         memory["previous_questions"].append(question)
     return memory
 
-
 def _derive_insight(missing_information: List[str]) -> Optional[str]:
     if not missing_information:
         return None
@@ -160,12 +141,6 @@ def _derive_insight(missing_information: List[str]) -> Optional[str]:
     if not detail:
         return None
     return f"Tip: mention {detail} to make this section stronger."
-
-
-# ---------------------------------------------------------------------------
-# Stage helpers
-# ---------------------------------------------------------------------------
-
 
 def _next_stage(current_stage: str) -> Optional[str]:
     try:
@@ -176,7 +151,6 @@ def _next_stage(current_stage: str) -> Optional[str]:
         return None
     return STAGES[idx + 1]
 
-
 def _stage_fallback_question(stage: Optional[str]) -> Optional[str]:
     return {
         "intro": "What's your full name and what kind of role are you aiming for?",
@@ -186,12 +160,6 @@ def _stage_fallback_question(stage: Optional[str]) -> Optional[str]:
         "education": "Where did you study and what was your focus?",
         "closing": None,
     }.get(stage or "intro")
-
-
-# ---------------------------------------------------------------------------
-# Analysis validation
-# ---------------------------------------------------------------------------
-
 
 def _validate_analysis(parsed: Any) -> Optional[Dict[str, Any]]:
     if not isinstance(parsed, dict):
@@ -225,12 +193,6 @@ def _validate_analysis(parsed: Any) -> Optional[Dict[str, Any]]:
     parsed["missing_information"] = [str(m).strip() for m in missing if str(m).strip()]
     return parsed
 
-
-# ---------------------------------------------------------------------------
-# Prompt builders
-# ---------------------------------------------------------------------------
-
-
 def _build_greeting_prompt(state: ResumeBuilderState, target_role: str, target_company: str) -> str:
     return (
         f"{SYSTEM_PROMPT}\n\n"
@@ -242,7 +204,6 @@ def _build_greeting_prompt(state: ResumeBuilderState, target_role: str, target_c
         '{"response": str, "next_question": str, "action": "NEXT_TOPIC", "topic": "intro", '
         '"memory_update": null, "missing_information": []}'
     )
-
 
 def _build_turn_prompt(
     state: ResumeBuilderState,
@@ -296,7 +257,6 @@ def _build_turn_prompt(
         '"topic": str, "memory_update": str or null, "missing_information": [str]}'
     )
 
-
 def _build_closing_prompt(state: ResumeBuilderState, target_role: str, target_company: str) -> str:
     history = state.get("conversation_history") or []
     history_text = json.dumps(history[-4:], ensure_ascii=False)[:3000] if history else "(none yet)"
@@ -310,12 +270,6 @@ def _build_closing_prompt(state: ResumeBuilderState, target_role: str, target_co
         "Return ONLY the spoken text."
     )
 
-
-# ---------------------------------------------------------------------------
-# Heuristic fallbacks (keep the conversation moving if the LLM fails)
-# ---------------------------------------------------------------------------
-
-
 def _is_unclear_input(text: str) -> bool:
     if not text:
         return True
@@ -326,7 +280,6 @@ def _is_unclear_input(text: str) -> bool:
     )):
         return True
     return False
-
 
 def _heuristic_turn(state: ResumeBuilderState, memory: Dict[str, Any], current_stage: str) -> Dict[str, Any]:
     answer = (state.get("latest_candidate_response") or "").strip()
@@ -360,7 +313,6 @@ def _heuristic_turn(state: ResumeBuilderState, memory: Dict[str, Any], current_s
         "missing_information": [],
     }
 
-
 def _force_next_topic(state: ResumeBuilderState, memory: Dict[str, Any], analysis: Dict[str, Any], current_stage: str) -> Dict[str, Any]:
     next_stage = _next_stage(current_stage)
     if next_stage == "closing":
@@ -373,12 +325,6 @@ def _force_next_topic(state: ResumeBuilderState, memory: Dict[str, Any], analysi
     analysis["topic"] = next_stage or "closing"
     return analysis
 
-
-# ---------------------------------------------------------------------------
-# Turn generation
-# ---------------------------------------------------------------------------
-
-
 def _generate_turn(
     state: ResumeBuilderState,
     memory: Dict[str, Any],
@@ -389,7 +335,6 @@ def _generate_turn(
     raw = generate_text(_build_turn_prompt(state, memory, asked, target_role, target_company))
     parsed = extract_json_object(raw) if raw else None
     return _validate_analysis(parsed)
-
 
 def _retry_turn(
     state: ResumeBuilderState,
@@ -411,7 +356,6 @@ def _retry_turn(
         return retry
     return None
 
-
 def _compose_response(analysis: Dict[str, Any]) -> str:
     parts = []
     if analysis.get("response"):
@@ -420,18 +364,11 @@ def _compose_response(analysis: Dict[str, Any]) -> str:
         parts.append(analysis["next_question"].strip())
     return " ".join(p for p in parts if p).strip()
 
-
 def _generate_closing(state: ResumeBuilderState, target_role: str, target_company: str) -> str:
     closing = generate_text(_build_closing_prompt(state, target_role, target_company))
     if closing and closing.strip():
         return closing.strip()
     return "Thanks so much for your time today — I'm preparing your professional resume now."
-
-
-# ---------------------------------------------------------------------------
-# Turn handlers
-# ---------------------------------------------------------------------------
-
 
 def _handle_greeting(
     state: ResumeBuilderState,
@@ -450,7 +387,6 @@ def _handle_greeting(
             "memory_update": None,
             "missing_information": [],
         }
-    # The greeting never advances past intro.
     analysis["action"] = "NEXT_TOPIC"
     analysis["topic"] = "intro"
     state["last_analysis"] = analysis
@@ -461,7 +397,6 @@ def _handle_greeting(
     state["is_complete"] = False
     _update_memory(memory, analysis, "")
     return state
-
 
 def _handle_unclear(state: ResumeBuilderState, memory: Dict[str, Any], current_stage: str) -> ResumeBuilderState:
     answer = (state.get("latest_candidate_response") or "").strip().lower()
@@ -496,7 +431,6 @@ def _handle_unclear(state: ResumeBuilderState, memory: Dict[str, Any], current_s
     state["is_complete"] = False
     return state
 
-
 def _route_action(state: ResumeBuilderState, analysis: Dict[str, Any]) -> ResumeBuilderState:
     action = str(analysis.get("action") or "").upper()
     current_stage = state.get("current_stage") or "intro"
@@ -512,20 +446,11 @@ def _route_action(state: ResumeBuilderState, analysis: Dict[str, Any]) -> Resume
             state["current_stage"] = next_stage
             state["is_complete"] = next_stage == "closing"
     else:
-        # FOLLOW_UP / CLARIFY / DEEPEN keep the current topic.
         state["current_stage"] = current_stage
         state["is_complete"] = bool(state.get("is_complete")) or current_stage == "closing"
     return state
 
-
 def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
-    """Runs one conversational turn for the AI Voice Resume Builder Agent.
-
-    The turn is driven by analyzing the candidate's latest answer (via the LLM
-    with the full conversation memory) and choosing one of FOLLOW_UP, CLARIFY,
-    DEEPEN, NEXT_TOPIC, or END. Stage advancement happens only when the current
-    topic is sufficiently covered — never by turn count.
-    """
     target_role = state.get("target_role")
     target_company = state.get("target_company")
     current_stage = state.get("current_stage") or "intro"

@@ -1,20 +1,16 @@
 import { z } from 'zod';
 
-
 export const ConsentBodySchema = z.object({
   videoConsent: z.boolean().default(true),
   audioConsent: z.boolean().default(true),
 });
 
-
 export const SessionTokenBodySchema = z.object({}).passthrough();
-
 
 export const EndInterviewBodySchema = z.object({
   transcript: z.unknown().optional(),
   audio_url: z.string().url().optional().or(z.literal('').transform(() => undefined)),
 });
-
 
 export const ProctoringFlagBodySchema = z.object({
   face_count: z.number().optional(),
@@ -23,7 +19,6 @@ export const ProctoringFlagBodySchema = z.object({
   multiple_faces_detected: z.boolean().optional(),
   tab_switch_count: z.number().int().nonnegative().optional(),
 });
-
 
 export const HrResultBodySchema = z.object({
   decision: z.enum(['pass', 'fail'] as const).refine(

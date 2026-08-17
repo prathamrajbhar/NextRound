@@ -7,7 +7,6 @@ logger = logging.getLogger("coding_agent")
 
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
-
 class CodingState(TypedDict, total=False):
     application_id: str
     problem_id: str
@@ -22,17 +21,13 @@ class CodingState(TypedDict, total=False):
     memory_kb: Optional[int]
     complexity: Optional[str]
 
-
     complexity_source: Optional[str]
     passed: bool
     feedback: str
 
-
 from services.code_executor_service import execute_code_sandbox
 
-
 def execute_sandbox_node(state: CodingState) -> CodingState:
-    """Node 1: Execute candidate code in AST-inspected, resource-capped sandbox across all test cases."""
     code = state.get("code", "")
     language = state.get("language", "python")
     problem_id = state.get("problem_id", "virtualized-list")
@@ -61,7 +56,6 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
     state["pass_rate"] = exec_res.get("pass_rate", 0.0)
     state["execution_time_ms"] = exec_res.get("execution_time_ms", 0.0)
 
-
     state["memory_kb"] = exec_res.get("memory_kb")
 
     if not exec_res.get("security_passed", True):
@@ -69,12 +63,9 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
 
     return state
 
-
-
 def analyze_complexity_node(state: CodingState) -> CodingState:
-    """Node 2: Analyze time/space complexity using Gemini LLM or static heuristic."""
     from services.complexity_cache_service import get_cached_complexity, set_cached_complexity
-    
+
     code = state.get("code", "")
     pass_rate = state.get("pass_rate", 0.0)
 
@@ -103,10 +94,6 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
 
                     set_cached_complexity(code, complexity, complexity_source)
 
-
-
-
-
     if complexity is None and code:
         complexity_source = "heuristic"
         if "for " in code and "while " in code:
@@ -118,7 +105,6 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
         else:
             complexity = "O(1) estimated (heuristic)"
             feedback = "No iteration detected. Estimated O(1) — heuristic only."
-        
 
         set_cached_complexity(code, complexity, complexity_source)
 
@@ -132,9 +118,7 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
     state["feedback"] = f"Passed {state.get('passed_cases')}/{state.get('total_cases')} test cases ({score}%). Complexity: {complexity_label}. {feedback}"
     return state
 
-
 def build_coding_graph():
-    """Build LangGraph workflow graph for Coding Agent."""
     if not LANGGRAPH_AVAILABLE:
         return None
 
@@ -148,9 +132,7 @@ def build_coding_graph():
 
     return builder.compile()
 
-
 _coding_app = build_coding_graph()
-
 
 async def run_coding_agent(
     application_id: str,
@@ -161,7 +143,6 @@ async def run_coding_agent(
     test_cases: List[dict] = None,
     entry_function: str = ""
 ) -> Dict[str, Any]:
-    """Execute Coding Agent pipeline."""
     initial_state: CodingState = {
         "application_id": application_id,
         "problem_id": problem_id,

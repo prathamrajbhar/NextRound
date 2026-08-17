@@ -1,5 +1,4 @@
 
-
 import logging
 from typing import Awaitable, Callable, Dict, Optional
 
@@ -10,17 +9,8 @@ logger = logging.getLogger("worker_base")
 WorkFn = Callable[[], Awaitable[Dict]]
 
 class AgentJobSkip(Exception):
-    """Raised by a work function to abort a job without recording a failure.
-
-    Use for expected, non-fatal outcomes (e.g. an agent produced no scorecard)
-    that currently exit the worker without posting a ``failed`` audit record.
-    """
 
 async def fetch_internal(endpoint: str) -> dict:
-    """GET a payload from the Express internal API, unwrapping the data envelope.
-
-    Raises on non-2xx so failures are handled by the caller's audit try/except.
-    """
     response = await callback_client.get(endpoint)
     payload = response.json()
     return payload.get("data", {}) if isinstance(payload, dict) else {}
@@ -33,17 +23,6 @@ async def run_agent_job(
     *,
     log_extra: Optional[dict] = None,
 ) -> bool:
-    """Run an agent job and record a completed/failed audit record.
-
-    ``work`` performs the actual agent execution and internal result callback and
-    returns the audit ``output``. ``log_extra`` carries optional job/org ids for
-    the completed record; workers whose ids are only known after a fetch pass a
-    dict that ``work`` populates before returning (it is merged after ``work``
-    awaits, so the closure always populates it in time).
-
-    Returns True on success and False on failure. A ``failed`` audit record is
-    posted best-effort and never re-raises; ``AgentJobSkip`` aborts without one.
-    """
     try:
         output = await work()
         audit_payload = {
@@ -76,11 +55,6 @@ async def run_agent_job(
         return False
 
 async def post_internal(method: str, endpoint: str, payload: dict, *, context: str) -> bool:
-    """POST/PATCH a payload to the internal API; return True on any 2xx.
-
-    ``method`` must be ``"POST"`` or ``"PATCH"``. Used by workers that post a
-    result without an agent audit trail (mock, prep-content, resume-builder).
-    """
     try:
         response = await (
             callback_client.post(endpoint, json=payload)

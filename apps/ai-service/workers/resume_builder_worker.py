@@ -7,17 +7,6 @@ from workers.worker_base import post_internal
 logger = logging.getLogger("resume_builder_worker")
 
 async def process_resume_builder_job(job_data: dict) -> bool:
-    """
-    Process AI Voice Resume Builder job:
-    1. Parse Q&A transcript.
-    2. Quantify bullet points with impact metrics using Gemini API.
-    3. Generate ATS-optimized PDF via pdf_generator.
-    4. Call back Express internal endpoint /internal/resume-builder/:sessionId/result.
-
-    The resume is derived ONLY from the real transcript via the LLM. When the
-    transcript or the LLM output is missing, the job fails — no fabricated
-    resume is ever produced.
-    """
     session_id = job_data.get("sessionId")
     if not session_id:
         logger.error("Missing sessionId in resume builder job payload.")
@@ -118,8 +107,6 @@ async def process_resume_builder_job(job_data: dict) -> bool:
         return False
 
 async def _mark_failed(session_id: str) -> None:
-    """Best-effort notify Express so the session leaves 'scoring' and the
-    frontend can surface the error instead of polling forever."""
     try:
         await post_internal(
             "PATCH",

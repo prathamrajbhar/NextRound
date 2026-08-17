@@ -59,7 +59,6 @@ export default function CandidateResumesPage() {
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-
     const contact = r.contact || {};
     const contactInfo = [
       contact.phone ?? r.phone,
@@ -69,7 +68,6 @@ export default function CandidateResumesPage() {
       contact.github ?? r.github,
       contact.portfolio ?? r.portfolio
     ].filter(Boolean).join(' • ');
-
 
     let skillsHtml = '';
     const skillsList = r.skills || [];
@@ -96,7 +94,6 @@ export default function CandidateResumesPage() {
       }
     }
 
-
     const experienceList = r.experience || [];
     let experienceHtml = '';
     if (experienceList.length > 0) {
@@ -122,7 +119,6 @@ export default function CandidateResumesPage() {
       `;
     }
 
-
     const projectsList = r.projects || [];
     let projectsHtml = '';
     if (projectsList.length > 0) {
@@ -147,7 +143,6 @@ export default function CandidateResumesPage() {
       `;
     }
 
-
     const educationList = r.education || [];
     let educationHtml = '';
     if (educationList.length > 0) {
@@ -167,7 +162,6 @@ export default function CandidateResumesPage() {
         }).join('')}
       `;
     }
-
 
     const certList = r.certifications || [];
     let certsHtml = '';

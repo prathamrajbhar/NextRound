@@ -4,11 +4,11 @@ import React from 'react';
 import { cn } from '@/lib/cn';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  
+
   icon?: React.ReactNode;
-  
+
   error?: string;
-  
+
   hint?: string;
   label?: string;
   wrapperClassName?: string;

@@ -5,14 +5,11 @@ logger = logging.getLogger("assessment_agent")
 
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
-
 def _to_int(value, default: int = 0) -> int:
-    """Coerce a value to int, tolerating Gemini's stringified numbers."""
     try:
         return int(value)
     except (TypeError, ValueError):
         return default
-
 
 class AssessmentState(TypedDict, total=False):
     application_id: str
@@ -28,15 +25,12 @@ class AssessmentState(TypedDict, total=False):
     passed: bool
     feedback: str
 
-
 def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
-    """Node 1: Compare candidate answers against session key and calculate category breakdown."""
     answers = state.get("answers", [])
     stored_q = state.get("stored_questions", [])
     logger.info(f"Evaluating aptitude answers for application {state.get('application_id')}")
 
     answer_key = {}
-
 
     if stored_q and isinstance(stored_q, list):
         for q in stored_q:
@@ -47,7 +41,6 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
                     "correctIndex": _to_int(correct_idx, -1),
                     "category": q.get("category"),
                 }
-
 
     if not answer_key:
         raise ValueError("Aptitude evaluation requires stored_questions to be populated. Fallback is disabled.")
@@ -60,10 +53,7 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
     for ans in answers:
         q_id = ans.get("questionId")
 
-
         selected = _to_int(ans.get("selectedOption") if ans.get("selectedOption") is not None else ans.get("selectedOptionIndex"), -1)
-
-
 
         cat = ans.get("category") or (answer_key.get(q_id, {}).get("category") if q_id in answer_key else None) or "Uncategorized"
 
@@ -76,7 +66,6 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
         if correct_idx is not None and correct_idx >= 0 and selected == correct_idx:
             categories[cat]["correct"] += 1
             total_correct += 1
-
 
     category_scores = {
         cat_name: round((stats["correct"] / stats["total"]) * 100.0, 1)
@@ -93,9 +82,7 @@ def evaluate_answers_node(state: AssessmentState) -> AssessmentState:
 
     return state
 
-
 def compute_verdict_node(state: AssessmentState) -> AssessmentState:
-    """Node 2: Compare composite aptitude score against job passing threshold."""
     score = state.get("score")
     min_score = state.get("min_score")
     if score is None or min_score is None:
@@ -114,9 +101,7 @@ def compute_verdict_node(state: AssessmentState) -> AssessmentState:
     state["feedback"] = reasoning
     return state
 
-
 def build_assessment_graph():
-    """Build LangGraph workflow graph for Assessment Agent."""
     if not LANGGRAPH_AVAILABLE:
         return None
 
@@ -130,9 +115,7 @@ def build_assessment_graph():
 
     return builder.compile()
 
-
 _assessment_app = build_assessment_graph()
-
 
 async def run_assessment_agent(
     application_id: str,
@@ -142,7 +125,6 @@ async def run_assessment_agent(
     tab_switch_count: int = 0,
     min_score: float = 70.0
 ) -> Dict[str, Any]:
-    """Execute Assessment Agent pipeline."""
     initial_state: AssessmentState = {
         "application_id": application_id,
         "answers": answers,

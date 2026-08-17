@@ -32,7 +32,6 @@ const createMaterialIcon = (iconName: string) => {
         }
       }
 
-      
       if (!fontSize) {
         fontSize = '20px';
       }

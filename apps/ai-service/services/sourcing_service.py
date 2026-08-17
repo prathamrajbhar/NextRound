@@ -8,12 +8,7 @@ logger = logging.getLogger("sourcing_service")
 
 EXTERNAL_SCRAPER_BASE_URL = "https://social_scraper.bytemap.in"
 
-
 async def fetch_github_profile(github_id: str) -> Dict[str, Any]:
-    """
-    Fetch GitHub profile details, pinned/recent repositories, and AI repo summaries
-    from social_scraper.bytemap.in/github/{github_id}.
-    """
     if not github_id or not github_id.strip():
         return {"success": False, "error": "GitHub ID cannot be empty"}
 
@@ -33,9 +28,8 @@ async def fetch_github_profile(github_id: str) -> Dict[str, Any]:
             recent_repos = data.get("recent_repositories", [])
             pinned_repos = data.get("pinned_repositories", [])
 
-
             repo_languages = list({r.get("language") for r in recent_repos + pinned_repos if r.get("language")})
-            
+
             return {
                 "success": True,
                 "platform": "github",
@@ -56,12 +50,7 @@ async def fetch_github_profile(github_id: str) -> Dict[str, Any]:
         logger.error(f"Failed to fetch GitHub profile for {clean_id}: {e}")
         return {"success": False, "error": f"Failed to fetch GitHub profile: {str(e)}"}
 
-
 async def fetch_linkedin_profile(linkedin_id: str) -> Dict[str, Any]:
-    """
-    Fetch LinkedIn profile details, experiences, skills, and recent activity
-    from social_scraper.bytemap.in/linkedin/{linkedin_id}.
-    """
     if not linkedin_id or not linkedin_id.strip():
         return {"success": False, "error": "LinkedIn ID cannot be empty"}
 
@@ -101,17 +90,12 @@ async def fetch_linkedin_profile(linkedin_id: str) -> Dict[str, Any]:
         logger.error(f"Failed to fetch LinkedIn profile for {clean_id}: {e}")
         return {"success": False, "error": f"Failed to fetch LinkedIn profile: {str(e)}"}
 
-
 async def aggregate_external_profile(
     github_id: Optional[str] = None,
     linkedin_id: Optional[str] = None,
     job_description: str = "",
     target_role: str = ""
 ) -> Dict[str, Any]:
-    """
-    Fetch GitHub and/or LinkedIn candidate profiles concurrently, aggregate skills and experience,
-    generate a 768-dim vector embedding, and compute job match similarity.
-    """
     tasks = []
     if github_id:
         tasks.append(fetch_github_profile(github_id))
@@ -125,8 +109,6 @@ async def aggregate_external_profile(
 
     gh_res, li_res = await asyncio.gather(*tasks)
 
-
-
     name = None
     headline = ""
     bio_summary = ""
@@ -139,7 +121,6 @@ async def aggregate_external_profile(
         bio_summary += f"GitHub Bio: {gh_res.get('bio')}\n"
         all_skills.update(gh_res.get("extracted_skills", []))
 
-
         for r in gh_res.get("repositories", [])[:3]:
             if r.get("summary"):
                 bio_summary += f"Project {r.get('name')}: {r.get('summary')}\n"
@@ -151,13 +132,8 @@ async def aggregate_external_profile(
         bio_summary += f"LinkedIn Headline: {headline}\nAbout: {li_res.get('about')}\n"
         all_skills.update(li_res.get("extracted_skills", []))
 
-
     profile_text = f"Candidate: {name}. Headline: {headline}. Skills: {', '.join(all_skills)}. Bio: {bio_summary}"
     profile_vector, profile_source = embed_text_with_source(profile_text)
-
-
-
-
 
     similarity_score = None
     if job_description or target_role:

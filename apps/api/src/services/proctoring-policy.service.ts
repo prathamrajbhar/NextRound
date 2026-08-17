@@ -63,7 +63,6 @@ export function evaluateSessionPolicy(
 ): { violations: PolicyViolationResult[]; summary: ProctoringSummary } {
   const violations: PolicyViolationResult[] = [];
 
-  
   const sorted = [...events].sort(
     (a, b) => a.client_timestamp.getTime() - b.client_timestamp.getTime()
   );
@@ -95,7 +94,7 @@ export function evaluateSessionPolicy(
   let copyPasteActivityCount = 0;
 
   for (const event of sorted) {
-    
+
     if (event.kind === 'tab_hidden') {
       if (!hiddenStart) hiddenStart = event.client_timestamp;
     } else if (event.kind === 'tab_visible') {
@@ -107,7 +106,6 @@ export function evaluateSessionPolicy(
       }
     }
 
-    
     if (event.kind === 'fullscreen_exit') {
       if (!exitStart) {
         exitStart = event.client_timestamp;
@@ -121,7 +119,6 @@ export function evaluateSessionPolicy(
       }
     }
 
-    
     if (event.kind === 'heartbeat') {
       if (lastHeartbeatTime) {
         const gap = event.client_timestamp.getTime() - lastHeartbeatTime.getTime();
@@ -132,7 +129,6 @@ export function evaluateSessionPolicy(
       lastHeartbeatTime = event.client_timestamp;
     }
 
-    
     if (event.kind === 'camera_stopped' || event.kind === 'video_stopped') {
       if (!cameraStoppedAt) cameraStoppedAt = event.client_timestamp;
     } else if (event.kind === 'camera_started' || event.kind === 'video_started') {
@@ -151,7 +147,6 @@ export function evaluateSessionPolicy(
       }
     }
 
-    
     if (event.kind === 'face_count_changed') {
       const newCount = event.payload_json?.newFaceCount ?? 1;
       if (newCount === 0) {
@@ -191,7 +186,6 @@ export function evaluateSessionPolicy(
       }
     }
 
-    
     if (event.kind === 'multiple_voices_detected') {
       multipleVoicesCount++;
     }
@@ -203,7 +197,6 @@ export function evaluateSessionPolicy(
     }
   }
 
-  
   if (sorted.length > 0) {
     const lastEventTime = sorted[sorted.length - 1].client_timestamp;
     if (hiddenStart) {
@@ -230,9 +223,6 @@ export function evaluateSessionPolicy(
   const sessionStart = sorted[0]?.client_timestamp || new Date();
   const sessionEnd = sorted[sorted.length - 1]?.client_timestamp || new Date();
 
-  
-
-  
   if (tabSwitchCount >= policy.hiddenReviewCount) {
     violations.push({
       rule_code: 'repeated_tab_switch',
@@ -243,7 +233,6 @@ export function evaluateSessionPolicy(
     });
   }
 
-  
   if (policy.fullscreenRequired && totalOutsideFullscreenMs > 0) {
     const totalSecs = totalOutsideFullscreenMs / 1000;
     if (totalSecs >= policy.outsideFullscreenReviewSeconds) {
@@ -265,7 +254,6 @@ export function evaluateSessionPolicy(
     }
   }
 
-  
   const maxGapSecs = maxHeartbeatGapMs / 1000;
   if (maxGapSecs >= policy.heartbeatReviewSeconds) {
     violations.push({
@@ -277,7 +265,6 @@ export function evaluateSessionPolicy(
     });
   }
 
-  
   const camSecs = cameraOffDurationMs / 1000;
   const micSecs = micOffDurationMs / 1000;
   if (camSecs > 10 || micSecs > 10) {
@@ -290,7 +277,6 @@ export function evaluateSessionPolicy(
     });
   }
 
-  
   const faceMissingSecs = totalFaceMissingMs / 1000;
   if (faceMissingSecs >= 10) {
     violations.push({
@@ -302,7 +288,6 @@ export function evaluateSessionPolicy(
     });
   }
 
-  
   const multipleFacesSecs = totalMultipleFacesMs / 1000;
   if (multipleFacesSecs >= 5) {
     violations.push({
@@ -314,7 +299,6 @@ export function evaluateSessionPolicy(
     });
   }
 
-  
   if (multipleVoicesCount >= 2) {
     violations.push({
       rule_code: 'multiple_voices_detected',
@@ -325,7 +309,6 @@ export function evaluateSessionPolicy(
     });
   }
 
-  
   if (copyPasteActivityCount >= 5) {
     violations.push({
       rule_code: 'copy_paste_abuse',
@@ -336,8 +319,6 @@ export function evaluateSessionPolicy(
     });
   }
 
-  
-  
   const warningEvents = sorted.filter(e => e.severity === 'warning' || e.severity === 'high');
   let hasRapidWarnings = false;
   for (let i = 0; i < warningEvents.length; i++) {

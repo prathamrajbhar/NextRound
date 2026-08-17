@@ -5,9 +5,7 @@ from services.llm_service import generate_text, extract_json_array
 
 logger = logging.getLogger("jd_parser_agent")
 
-
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
-
 
 class RubricWeights(BaseModel):
     technical: int = Field(default=30, ge=0, le=100)
@@ -15,18 +13,15 @@ class RubricWeights(BaseModel):
     problemSolving: int = Field(default=25, ge=0, le=100)
     experience: int = Field(default=25, ge=0, le=100)
 
-
 class JobThresholds(BaseModel):
     minScore: int = Field(default=70, ge=0, le=100)
     autoOffer: bool = Field(default=False)
     qCount: int = Field(default=5)
 
-
 class JDParserOutput(BaseModel):
     description: str
     rubric: RubricWeights
     thresholds: JobThresholds
-
 
 class JDParserState(TypedDict, total=False):
     job_id: str
@@ -37,9 +32,7 @@ class JDParserState(TypedDict, total=False):
     thresholds: dict
     status: str
 
-
 def parse_requirements_node(state: JDParserState) -> JDParserState:
-    """Node 1: Extract technical & soft skills from raw job description prompt."""
     raw = state.get("raw_description", "")
     logger.info(f"Parsing requirements for job {state.get('job_id')}")
 
@@ -51,9 +44,7 @@ def parse_requirements_node(state: JDParserState) -> JDParserState:
     state["extracted_skills"] = skills
     return state
 
-
 def generate_description_node(state: JDParserState) -> JDParserState:
-    """Node 2: Generate structured, ATS-optimized markdown job description."""
     raw = state.get("raw_description", "")
     skills = state.get("extracted_skills", [])
 
@@ -71,11 +62,8 @@ def generate_description_node(state: JDParserState) -> JDParserState:
     state["generated_description"] = ""
     return state
 
-
 def compute_rubric_node(state: JDParserState) -> JDParserState:
-    """Node 3: Compute balanced rubric weights (sum = 100%) and thresholds."""
     skills = state.get("extracted_skills", [])
-
 
     tech_weight = 35 if len(skills) > 4 else 30
     comm_weight = 20
@@ -97,9 +85,7 @@ def compute_rubric_node(state: JDParserState) -> JDParserState:
 
     return state
 
-
 def validate_output_node(state: JDParserState) -> JDParserState:
-    """Node 4: Validate agent state against Pydantic schema."""
     output = JDParserOutput(
         description=state.get("generated_description", ""),
         rubric=RubricWeights(**state.get("rubric", {})),
@@ -108,9 +94,7 @@ def validate_output_node(state: JDParserState) -> JDParserState:
     state["status"] = "validated"
     return state
 
-
 def build_jd_parser_graph():
-    """Build LangGraph workflow graph for JD Parser Agent."""
     if not LANGGRAPH_AVAILABLE:
         return None
 
@@ -128,16 +112,9 @@ def build_jd_parser_graph():
 
     return builder.compile()
 
-
-
 _jd_parser_app = build_jd_parser_graph()
 
-
 async def run_jd_parser_agent(job_id: str, raw_description: str) -> Dict[str, Any]:
-    """
-    Execute JD Parser Agent pipeline on a job description prompt.
-    Returns dict containing generated description, rubric, thresholds, and extracted skills.
-    """
     initial_state: JDParserState = {
         "job_id": job_id,
         "raw_description": raw_description,
@@ -154,7 +131,6 @@ async def run_jd_parser_agent(job_id: str, raw_description: str) -> Dict[str, An
             }
         except Exception as e:
             logger.error(f"LangGraph execution error in JD Parser Agent: {e}")
-
 
     s1 = parse_requirements_node(initial_state)
     s2 = generate_description_node(s1)

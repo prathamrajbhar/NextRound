@@ -71,8 +71,7 @@ export default function CandidateSchedulePage({ params }: { params: Promise<{ ap
       }, 1500);
     } catch (err) {
       console.warn('API slot confirmation warning:', err);
-      
-      
+
       setConfirmed(false);
       setConfirmError('We could not confirm this slot right now. Please try again.');
     }

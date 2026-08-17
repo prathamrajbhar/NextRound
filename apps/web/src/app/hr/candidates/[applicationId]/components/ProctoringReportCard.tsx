@@ -115,7 +115,6 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
     }
   };
 
-  
   const formatElapsed = (ms: number) => {
     const totalSecs = Math.floor(ms / 1000);
     const mins = Math.floor(totalSecs / 60);
@@ -123,7 +122,6 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  
   const getRuleName = (code: string) => {
     switch (code) {
       case 'repeated_tab_switch':
@@ -141,7 +139,6 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
     }
   };
 
-  
   const severityColors = {
     high: 'text-rose-500 bg-rose-500/10 border-rose-500/30',
     medium: 'text-amber-500 bg-amber-500/10 border-amber-500/30',
@@ -167,14 +164,13 @@ export function ProctoringReportCard({ report }: ProctoringReportCardProps) {
       ? 'bg-amber-500/10 text-amber-500 border-amber-500/30'
       : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30';
 
-  
   const tabSwitches = events.filter((e) => e.kind === 'tab_hidden').length;
   const fsExits = events.filter((e) => e.kind === 'fullscreen_exit').length;
   const mediaStops = events.filter((e) => e.kind.endsWith('_stopped')).length;
 
   return (
     <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-5 font-sans">
-      
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-brand-600 dark:text-orange-400" />

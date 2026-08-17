@@ -7,7 +7,6 @@ import { enqueueSourcing } from '../../lib/queues/sourcing.queue';
 
 export const prepRouter = Router();
 
-
 prepRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { company, role } = req.query;
@@ -44,7 +43,6 @@ prepRouter.get('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
-
 prepRouter.post(
   '/generate',
   authenticate,
@@ -64,7 +62,6 @@ prepRouter.post(
         return res.status(404).json({ success: false, error: 'Job not found or access denied' });
       }
 
-      
       await enqueueSourcing(jobId, 'prep-generate', {
         orgId,
         jobTitle: job.title,
@@ -81,7 +78,6 @@ prepRouter.post(
     }
   }
 );
-
 
 prepRouter.get('/jobs/:jobId', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -105,7 +101,6 @@ prepRouter.get('/jobs/:jobId', async (req: Request, res: Response, next: NextFun
       });
     }
 
-    
     const data = prepContent || null;
 
     return res.json({
@@ -116,7 +111,6 @@ prepRouter.get('/jobs/:jobId', async (req: Request, res: Response, next: NextFun
     return next(err);
   }
 });
-
 
 prepRouter.get('/:orgId', async (req: Request, res: Response, next: NextFunction) => {
   try {

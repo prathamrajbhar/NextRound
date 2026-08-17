@@ -5,16 +5,7 @@ from workers.worker_base import run_agent_job
 
 logger = logging.getLogger("coding_worker")
 
-
-
 async def process_coding_job(job_data: dict) -> bool:
-    """
-    Process coding assessment evaluation job.
-    1. Extract candidate code, problemId, submissionId.
-    2. Run Coding Agent in Python subprocess sandbox.
-    3. Post test case pass rate & complexity analysis back to Express internal endpoint.
-    4. Log agent audit record.
-    """
     application_id = job_data.get("applicationId")
     problem_id = job_data.get("problemId", "virtualized-list")
     code = job_data.get("code", "")
@@ -37,7 +28,6 @@ async def process_coding_job(job_data: dict) -> bool:
             test_cases=job_data.get("testCases"),
             entry_function=job_data.get("entryPoint", "solution"),
         )
-
 
         await callback_client.patch(
             f"internal/applications/{application_id}/coding-result",

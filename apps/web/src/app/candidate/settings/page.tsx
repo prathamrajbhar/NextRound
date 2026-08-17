@@ -36,7 +36,7 @@ export default function CandidateSettingsPage() {
     const portfolio = (profile.portfolio_url as string) || '';
     const bio = (profile.bio as string) || '';
 
-    let score = 20; 
+    let score = 20;
     if (name) score += 15;
     if (email) score += 15;
     if (headline) score += 15;

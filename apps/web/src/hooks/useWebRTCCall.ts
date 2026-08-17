@@ -38,7 +38,6 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       return;
     }
 
-    
     const postSignal = async (msg: WebRTCSignalMessage) => {
       try {
         await apiClient.post(`/interviews/${applicationId}/signal`, {
@@ -50,7 +49,6 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     };
 
-    
     const configuration: RTCConfiguration = {
       iceServers: [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -62,7 +60,6 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
 
     const polite = mode === 'hr-candidate';
 
-    
     pc.onnegotiationneeded = async () => {
       try {
         makingOfferRef.current = true;
@@ -95,14 +92,12 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       });
     };
 
-    
     pc.ontrack = (event) => {
       if (event.streams && event.streams[0]) {
         setRemoteStream(event.streams[0]);
       }
     };
 
-    
     pc.onconnectionstatechange = () => {
       setConnectionState(pc.connectionState);
       if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed') {
@@ -110,7 +105,6 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     };
 
-    
     const handleIncomingSignal = async (data: WebRTCSignalMessage) => {
       try {
         const { type, description, candidate } = data;
@@ -145,7 +139,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
             }
           }
         } else if (type === 'ready' || type === 'ready_reply') {
-          
+
           if (!polite && pc.signalingState === 'stable') {
             try {
               makingOfferRef.current = true;
@@ -163,7 +157,7 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
               makingOfferRef.current = false;
             }
           } else if (polite && type === 'ready') {
-            
+
             await postSignal({ type: 'ready_reply' });
           }
         }
@@ -172,7 +166,6 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     };
 
-    
     let lastPolledTime = new Date(Date.now() - 5000);
     const pollInterval = setInterval(async () => {
       try {
@@ -181,14 +174,14 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
         );
         if (res && Array.isArray(res)) {
           for (const signal of res) {
-            
+
             const isSelf = signal.sender === (mode === 'hr-candidate' ? 'candidate' : 'recruiter');
             if (!isSelf) {
               await handleIncomingSignal(signal.message);
             }
           }
           if (res.length > 0) {
-            
+
             const maxTime = new Date(res[res.length - 1].created_at);
             lastPolledTime = maxTime;
           }
@@ -198,7 +191,6 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     }, 1200);
 
-    
     postSignal({ type: 'ready' });
 
     return () => {
@@ -209,7 +201,6 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
     };
   }, [isVideoCallMode, applicationId, mode]);
 
-  
   useEffect(() => {
     if (!isVideoCallMode || !pcRef.current || !localStream) {
       return;
@@ -218,7 +209,6 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
     const pc = pcRef.current;
     const currentSenders = pc.getSenders();
 
-    
     currentSenders.forEach((sender) => {
       try {
         pc.removeTrack(sender);
@@ -227,7 +217,6 @@ export function useWebRTCCall({ applicationId, mode, localStream }: UseWebRTCCal
       }
     });
 
-    
     localStream.getTracks().forEach((track) => {
       pc.addTrack(track, localStream);
     });

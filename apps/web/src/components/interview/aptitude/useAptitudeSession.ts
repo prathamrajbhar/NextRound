@@ -10,8 +10,8 @@ import {
 } from './useAptitudeQuestions';
 import { computeAptitudeScore, resolveCategoryQuestionCount } from './scoring';
 
-export const QUESTION_TIME_LIMIT = 60; 
-export const TOTAL_TIME_LIMIT = 900; 
+export const QUESTION_TIME_LIMIT = 60;
+export const TOTAL_TIME_LIMIT = 900;
 
 interface UseAptitudeSessionOptions {
   questions?: AptitudeQuestion[];
@@ -22,12 +22,6 @@ interface UseAptitudeSessionOptions {
   onComplete: (score: number) => void;
   disableProctoring?: boolean;
 }
-
-
-
-
-
-
 
 export function useAptitudeSession({
   questions = [],
@@ -45,7 +39,6 @@ export function useAptitudeSession({
     company,
   });
 
-  
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [completedCategoryScores, setCompletedCategoryScores] = useState<Record<string, number>>({});
   const [isStarted, setIsStarted] = useState(false);
@@ -61,8 +54,6 @@ export function useAptitudeSession({
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [strikeCount, setStrikeCount] = useState(0);
 
-
-  
   const activeQuestions = useMemo(() => {
     const list = fetchedQuestions.length > 0 ? fetchedQuestions : questions;
     const mapped = list.map((q) => ({
@@ -77,20 +68,14 @@ export function useAptitudeSession({
     });
   }, [fetchedQuestions, questions]);
 
-  
-  
   const availableCategories = useMemo(() => {
     return [...STANDARD_CATEGORIES] as string[];
   }, []);
 
-  
-  
-  
   const getCategoryQuestionCount = useCallback((category: string): number => {
     return resolveCategoryQuestionCount(mcqDistribution, activeQuestions, category);
   }, [activeQuestions, mcqDistribution]);
 
-  
   const activeCategoryQuestions = useMemo(() => {
     if (!selectedCategory) return [];
     const filtered = activeQuestions.filter((q) => q.category === selectedCategory);
@@ -130,7 +115,6 @@ export function useAptitudeSession({
     setIsSubmitting(false);
   }, [answers, applicationId, activeQuestions, strikeCount, timeLeft]);
 
-  
   const handleCategorySubmit = useCallback(async () => {
     if (!selectedCategory) return;
 
@@ -147,7 +131,7 @@ export function useAptitudeSession({
 
     setCompletedCategoryScores((prev) => {
       const nextScores = { ...prev, [selectedCategory]: catScore };
-      
+
       const allDone = availableCategories.every((cat) => nextScores[cat] !== undefined);
       if (allDone) setTimeout(() => handleFinalSubmit(), 100);
       return nextScores;
@@ -157,8 +141,6 @@ export function useAptitudeSession({
     setIsStarted(false);
   }, [selectedCategory, activeCategoryQuestions, answers, availableCategories, handleFinalSubmit]);
 
-  
-  
   useEffect(() => {
     if (disableProctoring || submitted || !isStarted || !selectedCategory) return;
 
@@ -175,7 +157,6 @@ export function useAptitudeSession({
     return () => document.removeEventListener('visibilitychange', handleVisibilityViolation);
   }, [disableProctoring, submitted, isStarted, selectedCategory]);
 
-  
   useEffect(() => {
     if (!isStarted || !selectedCategory) return;
     const timer = setTimeout(() => {
@@ -185,7 +166,6 @@ export function useAptitudeSession({
     return () => clearTimeout(timer);
   }, [currentIndex, isStarted, selectedCategory]);
 
-  
   useEffect(() => {
     if (submitted || showWarningModal || !isStarted || !selectedCategory) return;
 
@@ -208,7 +188,6 @@ export function useAptitudeSession({
     return () => clearInterval(interval);
   }, [submitted, showWarningModal, isStarted, selectedCategory, currentIndex, activeCategoryQuestions.length, handleCategorySubmit]);
 
-  
   useEffect(() => {
     if (submitted || showWarningModal || !isStarted) return;
 

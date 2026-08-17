@@ -2,12 +2,11 @@ import type { Job } from '@/types';
 import type { SearchableSelectOption } from '@/components/ui';
 
 export interface DerivedJobOptions {
-  
+
   companies: SearchableSelectOption[];
-  
+
   rolesByOrgId: Record<string, string[]>;
 }
-
 
 export function normalizeJobs(raw: unknown): Job[] {
   if (Array.isArray(raw)) return raw as Job[];
@@ -16,7 +15,6 @@ export function normalizeJobs(raw: unknown): Job[] {
   }
   return [];
 }
-
 
 export function deriveJobOptions(jobs: Job[]): DerivedJobOptions {
   const byOrg = new Map<string, { name: string; logoUrl: string; roles: Set<string> }>();

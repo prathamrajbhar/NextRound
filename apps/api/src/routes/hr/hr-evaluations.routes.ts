@@ -9,9 +9,7 @@ import { emailService } from '../../services/email.service';
 
 export const hrEvaluationsRouter = Router();
 
-
 hrEvaluationsRouter.use(rejectOrgIdParam);
-
 
 hrEvaluationsRouter.patch(
   '/evaluations/:id/hr-override',
@@ -22,7 +20,7 @@ hrEvaluationsRouter.patch(
     try {
       const orgId = req.user!.orgId!;
       const evalId = req.params.id as string;
-      const { decision, notes } = req.body; 
+      const { decision, notes } = req.body;
 
       if (!decision || !['hire', 'reject'].includes(decision)) {
         return res.status(400).json({ success: false, error: 'decision must be hire or reject' });
@@ -48,7 +46,6 @@ hrEvaluationsRouter.patch(
         return res.status(403).json({ success: false, error: 'Forbidden: Access denied' });
       }
 
-      
       const updatedEvaluation = await prisma.evaluation.update({
         where: { id: evalId },
         data: {
@@ -60,8 +57,6 @@ hrEvaluationsRouter.patch(
       const appId = evaluation.application_id;
       const nextStatus = decision === 'hire' ? 'offered' : 'rejected';
 
-      
-      
       const job = evaluation.application.job;
       const offerSalary = decision === 'hire' ? deriveSalary(job.salary) : null;
 
@@ -85,7 +80,6 @@ hrEvaluationsRouter.patch(
           offerLetterContent: `Official Job Offer for ${job.title} (Approved by HR Override)`,
         });
 
-        
         if (isNew) {
           const candidateName = evaluation.application.candidate.user.email.split('@')[0];
           await emailService.sendOfferEmail(

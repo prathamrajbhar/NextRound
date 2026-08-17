@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { 
-  User, 
-  Check, 
-  Plus, 
-  Mail, 
-  Briefcase, 
-  Building2, 
+import {
+  User,
+  Check,
+  Plus,
+  Mail,
+  Briefcase,
+  Building2,
   Link as LinkIcon,
   X,
   FileText,
@@ -36,7 +36,7 @@ export default function HrProfile() {
   const [licenseName, setLicenseName] = useState('Verification Pending');
   const [specialties, setSpecialties] = useState<string[]>([]);
   const [newSpecialty, setNewSpecialty] = useState('');
-  
+
   const [detailsSaved, setDetailsSaved] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleted, setDeleted] = useState(false);
@@ -124,7 +124,7 @@ export default function HrProfile() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      
+
       <div className="border-b border-slate-200/60 dark:border-slate-800 pb-4">
         <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest block mb-1">
           Identity Center
@@ -136,9 +136,9 @@ export default function HrProfile() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-        
+
         <div className="lg:col-span-2 space-y-6">
-          
+
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 sm:p-8 shadow-xl backdrop-blur-md glass-panel space-y-6">
             <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2.5 flex items-center gap-1.5">
               <User className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400" />
@@ -170,7 +170,7 @@ export default function HrProfile() {
                   >
                     <Image src="/avatar-girl.jpg" alt="Avatar Girl" width={40} height={40} className="h-full w-full object-cover" unoptimized />
                   </button>
-                  
+
                   <label className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[10px] font-extrabold px-3 py-2 cursor-pointer transition-all shadow-sm flex items-center gap-1.5">
                     <Plus className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
                     <span>Upload Custom</span>
@@ -198,7 +198,7 @@ export default function HrProfile() {
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-1.5">
                 <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Email Address</label>
                 <div className="relative">
@@ -269,7 +269,7 @@ export default function HrProfile() {
               <Sparkles className="h-4.5 w-4.5 text-purple-600 dark:text-purple-400 animate-pulse" />
               Focus Hiring Specialties
             </h3>
-            
+
             <div className="flex flex-wrap gap-1.5 mb-2">
               {specialties.map((s) => (
                 <span
@@ -283,7 +283,7 @@ export default function HrProfile() {
                 </span>
               ))}
             </div>
-            
+
             <form onSubmit={handleAddSpecialty} className="flex gap-2">
               <input
                 type="text"
@@ -327,7 +327,7 @@ export default function HrProfile() {
         </div>
 
         <div className="space-y-6">
-          
+
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel text-center">
             <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">Workspace Integrity</span>
             <div className="relative h-24 w-24 mx-auto my-4 flex items-center justify-center">
@@ -361,7 +361,7 @@ export default function HrProfile() {
 
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-md backdrop-blur-md glass-panel space-y-4">
             <h3 className="text-xs font-black text-slate-900 dark:text-slate-100 border-b border-slate-200/60 dark:border-slate-800 pb-2">Active License</h3>
-            
+
             <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/40 border border-purple-100 dark:border-purple-900/60 text-purple-700 dark:text-purple-300 shadow-sm">
               <FileText className="h-5 w-5 flex-shrink-0" />
               <div className="min-w-0 flex-grow">

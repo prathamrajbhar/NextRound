@@ -15,7 +15,6 @@ import PipelineConfigCard from './components/PipelineConfigCard';
 export default function HrCreateJob() {
   const router = useRouter();
 
-  
   const [title, setTitle] = useState('');
   const [department, setDepartment] = useState('Engineering');
   const [locationType, setLocationType] = useState('Remote');
@@ -23,7 +22,6 @@ export default function HrCreateJob() {
   const [minSalary, setMinSalary] = useState(1300000);
   const [maxSalary, setMaxSalary] = useState(1800000);
 
-  
   const [jd, setJd] = useState('');
   const [assisting, setAssisting] = useState(false);
   const [assisted, setAssisted] = useState(false);
@@ -32,7 +30,6 @@ export default function HrCreateJob() {
   const [softSkills, setSoftSkills] = useState<string[]>([]);
   const [cultureKeywords, setCultureKeywords] = useState<string[]>([]);
 
-  
   const [rubric, setRubric] = useState({
     technical: 25,
     communication: 25,
@@ -41,7 +38,6 @@ export default function HrCreateJob() {
   });
   const [autoBalance, setAutoBalance] = useState(true);
 
-  
   const [minScore, setMinScore] = useState(80);
   const [autoOffer, setAutoOffer] = useState(false);
   const [qCount, setQCount] = useState(5);

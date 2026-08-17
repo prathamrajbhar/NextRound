@@ -8,15 +8,11 @@ logger = logging.getLogger("screening_agent")
 
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
 
-
 class GapAnalysis(BaseModel):
     missing_skills: List[str] = Field(default_factory=list)
     experience_gaps: List[str] = Field(default_factory=list)
     strengths: List[str] = Field(default_factory=list)
     feedback: str = ""
-
-
-
 
 class ScreeningOutput(BaseModel):
     status: str
@@ -26,7 +22,6 @@ class ScreeningOutput(BaseModel):
     gap_analysis: GapAnalysis
     reasoning: str
     rejection_feedback: str = ""
-
 
 class ScreeningState(TypedDict, total=False):
     application_id: str
@@ -47,10 +42,7 @@ class ScreeningState(TypedDict, total=False):
     rejection_feedback: str
     reasoning: str
 
-
-
 def parse_resume_node(state: ScreeningState) -> ScreeningState:
-    """Node 1: Extract technical skills, experience, and projects from candidate resume."""
     resume_text = state.get("resume_text", "")
     logger.info(f"Parsing resume for application {state.get('application_id')}")
 
@@ -61,28 +53,15 @@ def parse_resume_node(state: ScreeningState) -> ScreeningState:
 
     if not skills and resume_text:
 
-
         common = ["Python", "TypeScript", "JavaScript", "React", "Node.js", "SQL", "PostgreSQL", "Docker", "AWS", "GraphQL", "REST API", "Git", "System Design"]
         skills = [s for s in common if s.lower() in resume_text.lower()]
-
-
-
-
-
 
     skills = [str(s).strip() for s in skills if s is not None and str(s).strip()]
 
     state["parsed_skills"] = skills
     return state
 
-
-
 def _score_rubric_dimensions_with_llm(resume_text: str, job_description: str) -> dict:
-    """Ask Gemini to score the resume against the job on each rubric dimension.
-
-    Returns a dict of dimension -> score (0-100) or None if Gemini is unavailable
-    or the response cannot be parsed.
-    """
     if not resume_text:
         return None
     prompt = (
@@ -94,21 +73,12 @@ def _score_rubric_dimensions_with_llm(resume_text: str, job_description: str) ->
     )
     return extract_json_object(generate_text(prompt))
 
-
 def score_against_rubric_node(state: ScreeningState) -> ScreeningState:
-    """Node 2: Evaluate candidate against job rubric & compute vector embedding cosine similarity.
-
-    Rubric dimension scores come exclusively from a real LLM evaluation of the
-    resume against the job. No heuristic or default-0 scores are used — if the
-    LLM cannot produce a complete score set, screening fails rather than
-    fabricating a score.
-    """
     resume_text = state.get("resume_text", "")
     job_description = state.get("job_description", "")
     rubric = state.get("rubric")
     if not rubric:
         raise RuntimeError("Screening rubric is missing; cannot score the application.")
-
 
     job_vector = embed_text(job_description)
     resume_vector = embed_resume(resume_text)
@@ -144,12 +114,9 @@ def score_against_rubric_node(state: ScreeningState) -> ScreeningState:
 
     return state
 
-
 def compute_gaps_node(state: ScreeningState) -> ScreeningState:
-    """Node 3: Identify skill gaps, experience mismatches, and strengths."""
     skills = state.get("parsed_skills", [])
     job_desc = state.get("job_description", "").lower()
-
 
     key_jd_terms = ["system architecture", "postgresql", "redis", "bullmq", "webrtc", "docker", "kubernetes", "microservices"]
     missing = [term.title() for term in key_jd_terms if term in job_desc and term not in [s.lower() for s in skills]]
@@ -171,9 +138,7 @@ def compute_gaps_node(state: ScreeningState) -> ScreeningState:
     }
     return state
 
-
 def make_decision_node(state: ScreeningState) -> ScreeningState:
-    """Node 4: Gate decision by comparing composite score against job threshold."""
     composite_score = state.get("composite_score")
     min_score = state.get("min_score")
     if composite_score is None or min_score is None:
@@ -190,9 +155,7 @@ def make_decision_node(state: ScreeningState) -> ScreeningState:
     state["reasoning"] = reasoning
     return state
 
-
 def generate_feedback_node(state: ScreeningState) -> ScreeningState:
-    """Node 5: Generate gap-rich constructive rejection feedback if rejected."""
     decision = state.get("decision")
     if decision == "rejected":
         gaps = state.get("gap_analysis", {})
@@ -214,9 +177,7 @@ def generate_feedback_node(state: ScreeningState) -> ScreeningState:
 
     return state
 
-
 def build_screening_graph():
-    """Build LangGraph workflow graph for Screening Agent."""
     if not LANGGRAPH_AVAILABLE:
         return None
 
@@ -236,9 +197,7 @@ def build_screening_graph():
 
     return builder.compile()
 
-
 _screening_app = build_screening_graph()
-
 
 async def run_screening_agent(
     application_id: str,
@@ -249,10 +208,6 @@ async def run_screening_agent(
     rubric: dict,
     min_score: float = 70.0
 ) -> Dict[str, Any]:
-    """
-    Execute Screening Agent pipeline on a candidate application.
-    Returns dict containing screening decision, composite scores, and gap analysis.
-    """
     initial_state: ScreeningState = {
         "application_id": application_id,
         "candidate_id": candidate_id,
@@ -277,7 +232,6 @@ async def run_screening_agent(
             }
         except Exception as e:
             logger.error(f"LangGraph execution error in Screening Agent: {e}")
-
 
     s1 = parse_resume_node(initial_state)
     s2 = score_against_rubric_node(s1)

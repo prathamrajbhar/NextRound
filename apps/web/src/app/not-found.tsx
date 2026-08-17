@@ -8,45 +8,45 @@ import { LottiePlayer } from '@/components/ui/LottiePlayer';
 export default function NotFound() {
   return (
     <div className="fixed inset-0 z-[9999] overflow-y-auto bg-[#faf9f6] text-slate-900 flex flex-col items-center justify-center p-4 sm:p-8 font-sans selection:bg-lime-100 selection:text-slate-900">
-      
-      {/* Soft Lime & Emerald Ambient Glows */}
-      <div 
-        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[550px] h-[350px] bg-gradient-to-tr from-lime-200/40 via-emerald-100/30 to-transparent blur-[110px] pointer-events-none rounded-full" 
+
+      {}
+      <div
+        className="absolute -top-32 left-1/2 -translate-x-1/2 w-[550px] h-[350px] bg-gradient-to-tr from-lime-200/40 via-emerald-100/30 to-transparent blur-[110px] pointer-events-none rounded-full"
         aria-hidden="true"
       />
-      <div 
-        className="absolute -bottom-32 right-1/3 w-[450px] h-[300px] bg-gradient-to-br from-amber-100/30 via-lime-200/20 to-transparent blur-[110px] pointer-events-none rounded-full" 
+      <div
+        className="absolute -bottom-32 right-1/3 w-[450px] h-[300px] bg-gradient-to-br from-amber-100/30 via-lime-200/20 to-transparent blur-[110px] pointer-events-none rounded-full"
         aria-hidden="true"
       />
 
-      {/* Subtle Dot Grid Backdrop */}
-      <div 
-        className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,#000_80%,transparent_100%)] pointer-events-none opacity-50" 
+      {}
+      <div
+        className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,#000_80%,transparent_100%)] pointer-events-none opacity-50"
         aria-hidden="true"
       />
 
-      {/* Clean Card Container */}
+      {}
       <main className="relative z-10 w-full max-w-md text-center rounded-3xl border border-slate-200/90 bg-white backdrop-blur-2xl p-8 sm:p-12 shadow-2xl shadow-slate-200/60 my-auto">
-        
-        {/* Centered Lottie Illustration */}
+
+        {}
         <div className="w-56 h-56 mx-auto -mt-2 mb-2 relative flex items-center justify-center">
-          <LottiePlayer 
-            src="/404-animation.json" 
+          <LottiePlayer
+            src="/404-animation.json"
             className="w-full h-full"
           />
         </div>
 
-        {/* Heading */}
+        {}
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight leading-tight mb-2.5">
           Page Not Found
         </h1>
 
-        {/* Description */}
+        {}
         <p className="text-sm font-medium text-slate-600 leading-relaxed max-w-xs mx-auto mb-8">
           The page you&apos;re looking for doesn&apos;t exist, was removed, or is no longer available.
         </p>
 
-        {/* Action Buttons with High-End SaaS Color Harmony */}
+        {}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             href="/"

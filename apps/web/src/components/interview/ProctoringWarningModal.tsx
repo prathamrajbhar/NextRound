@@ -29,7 +29,7 @@ export function ProctoringWarningModal({
           ? 'bg-rose-950/90 border-rose-800 text-rose-100 ring-2 ring-rose-500/50'
           : 'bg-slate-900 border-amber-500/40 text-slate-100 ring-2 ring-amber-500/30'
       }`}>
-        
+
         <div className="mx-auto h-16 w-16 rounded-3xl flex items-center justify-center shadow-lg border animate-bounce" style={{
           backgroundColor: isEliminated ? 'rgba(225, 29, 72, 0.2)' : 'rgba(245, 158, 11, 0.2)',
           borderColor: isEliminated ? 'rgba(225, 29, 72, 0.6)' : 'rgba(245, 158, 11, 0.6)',

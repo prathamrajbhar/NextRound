@@ -18,16 +18,13 @@ SOURCE_MODEL_LABELS = {
     "empty": "Empty input (zero vector)",
 }
 
-
 class EmbeddingRequest(BaseModel):
     text: str = Field(..., description="Text string to generate 768-dimensional vector embedding for")
     type: Optional[str] = Field("text", description="Embedding type: 'text' or 'resume'")
 
-
 class SimilarityRequest(BaseModel):
     text_a: str = Field(..., description="First text string")
     text_b: str = Field(..., description="Second text string")
-
 
 @embedding_router.post("/generate")
 async def generate_embedding(req: EmbeddingRequest):
@@ -52,7 +49,6 @@ async def generate_embedding(req: EmbeddingRequest):
             "latency_ms": elapsed_ms,
         },
     }
-
 
 @embedding_router.post("/similarity")
 async def compute_similarity(req: SimilarityRequest):

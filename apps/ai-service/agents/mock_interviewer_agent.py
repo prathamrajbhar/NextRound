@@ -5,7 +5,6 @@ from services.llm_service import generate_text, extract_json_object
 
 logger = logging.getLogger("mock_interviewer_agent")
 
-
 class MockInterviewerState(TypedDict, total=False):
     session_id: str
     topic: str
@@ -22,9 +21,7 @@ class MockInterviewerState(TypedDict, total=False):
     is_complete: bool
     final_feedback: Optional[Dict[str, Any]]
 
-
 def run_mock_interviewer_agent(state: MockInterviewerState) -> MockInterviewerState:
-    """Runs a turn of the Mock Interviewer Agent with real-time coaching hints."""
     topic = state.get("topic")
     difficulty = state.get("difficulty")
     target_role = state.get("target_role")
@@ -50,8 +47,6 @@ def run_mock_interviewer_agent(state: MockInterviewerState) -> MockInterviewerSt
     parsed = extract_json_object(generate_text(prompt))
     ai_response = (parsed or {}).get("response")
     hint = (parsed or {}).get("coaching_hint") if parsed else None
-
-
 
     if not ai_response:
         raise RuntimeError("Mock interviewer LLM returned no response for this turn.")

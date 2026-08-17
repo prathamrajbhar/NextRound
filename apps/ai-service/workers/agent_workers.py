@@ -21,11 +21,7 @@ from workers.candidate_embedding_worker import process_candidate_embedding_job
 
 logger = logging.getLogger("ai_service_workers")
 
-
 JobHandler = Callable[[dict], Awaitable[bool]]
-
-
-
 
 QUEUE_HANDLERS: Dict[str, JobHandler] = {
     "screening": process_screening_job,
@@ -42,29 +38,19 @@ QUEUE_HANDLERS: Dict[str, JobHandler] = {
     "candidate": process_candidate_embedding_job,
 }
 
-
-
 SOURCING_ACTIONS: Dict[str, JobHandler] = {
     "ai-jd-assist": process_jd_parser_job,
     "sourcing_index": process_sourcing_job,
 
-
-
-
-
     "prep-generate": process_prep_job,
 }
 
-
 AGENT_QUEUES = list(QUEUE_HANDLERS) + ["sourcing"]
 
-
 def _dispatch(queue_name: str, payload: dict) -> Optional[JobHandler]:
-    """Resolve the handler for a dequeued job, or None if none is registered."""
     if queue_name == "sourcing":
         return SOURCING_ACTIONS.get(payload.get("action"), process_sourcing_job)
     return QUEUE_HANDLERS.get(queue_name)
-
 
 class AgentWorkerManager:
     def __init__(self):
@@ -79,12 +65,6 @@ class AgentWorkerManager:
             self.tasks.append(task)
 
     async def _acknowledge_and_clean_job(self, redis, queue_name: str, job_id: str):
-        """Acknowledge a dequeued BullMQ job by cleaning up its Redis tracking keys.
-        
-        Since the Python service consumes queue items directly from Redis lists, we must
-        immediately clear the job hash and state structures. This prevents Node.js BullMQ
-        stalled-job checkers from thinking the worker died and re-enqueueing the job.
-        """
         job_key = f"bull:{queue_name}:{job_id}"
         try:
             await redis.delete(job_key)
@@ -103,7 +83,6 @@ class AgentWorkerManager:
                     await asyncio.sleep(3)
                     continue
 
-
                 job_id = await redis.rpop(f"bull:{queue_name}:wait")
 
                 if not job_id:
@@ -117,7 +96,6 @@ class AgentWorkerManager:
 
                     job_key = f"bull:{queue_name}:{job_id}"
                     job_data_raw = await redis.hget(job_key, "data")
-
 
                     await self._acknowledge_and_clean_job(redis, queue_name, job_id)
 
@@ -145,6 +123,5 @@ class AgentWorkerManager:
             task.cancel()
         await asyncio.gather(*self.tasks, return_exceptions=True)
         logger.info("Background AI agent queue workers stopped.")
-
 
 worker_manager = AgentWorkerManager()

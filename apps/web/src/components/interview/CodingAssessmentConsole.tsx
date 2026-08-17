@@ -58,7 +58,6 @@ export default function CodingAssessmentConsole({
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
 
-  
   useEffect(() => {
     if (proctoringClient || !problem || submitted || !isStarted) return;
 
@@ -106,10 +105,9 @@ export default function CodingAssessmentConsole({
     }
   };
 
-  
   useEffect(() => {
     if (problem?.starterCode[language]) {
-      
+
       setCode(problem.starterCode[language]);
     }
   }, [problem, language]);

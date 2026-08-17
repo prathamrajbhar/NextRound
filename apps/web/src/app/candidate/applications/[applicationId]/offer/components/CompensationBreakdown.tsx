@@ -12,7 +12,6 @@ interface CompensationProps {
 export function CompensationBreakdown({ baseSalary, bonus, equity }: CompensationProps) {
   const [isMonthly, setIsMonthly] = useState(false);
 
-  
   const parseLakhs = (valStr: string) => {
     const match = valStr.match(/₹?(\d+(\.\d+)?)L/i);
     return match ? parseFloat(match[1]) : 0;

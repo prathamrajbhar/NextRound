@@ -26,8 +26,6 @@ export const authRouter = Router();
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-
-
 if (isProduction && !process.env.APP_URL) {
   throw new Error(
     'Refusing to start in production: APP_URL is required for generating password reset and verification links. Set it in the environment.'
@@ -42,21 +40,21 @@ function setAuthCookies(res: Response, payload: JwtPayload) {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
-    maxAge: 60 * 60 * 1000, 
+    maxAge: 60 * 60 * 1000,
   });
 
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, 
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
   res.cookie('user_role', payload.role, {
     httpOnly: true,
     secure: isProduction,
     sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000, 
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 }
 
@@ -77,7 +75,6 @@ function clearAuthCookies(res: Response) {
     sameSite: 'lax',
   });
 }
-
 
 authRouter.post('/register', authRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -150,7 +147,6 @@ authRouter.post('/register', authRateLimiter, async (req: Request, res: Response
   }
 });
 
-
 authRouter.post('/login', authRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validated = LoginSchema.parse(req.body);
@@ -200,7 +196,6 @@ authRouter.post('/login', authRateLimiter, async (req: Request, res: Response, n
   }
 });
 
-
 authRouter.post('/logout', (req: Request, res: Response) => {
   clearAuthCookies(res);
   return res.json({
@@ -208,7 +203,6 @@ authRouter.post('/logout', (req: Request, res: Response) => {
     data: { message: 'Logged out successfully' },
   });
 });
-
 
 authRouter.post('/refresh', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -265,7 +259,6 @@ authRouter.post('/refresh', async (req: Request, res: Response, next: NextFuncti
   }
 });
 
-
 authRouter.get('/me', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
@@ -301,7 +294,6 @@ authRouter.get('/me', authenticate, async (req: Request, res: Response, next: Ne
   }
 });
 
-
 authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const validated = ForgotPasswordSchema.parse(req.body);
@@ -313,7 +305,7 @@ authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Reque
     if (user) {
       const resetToken = crypto.randomBytes(32).toString('hex');
       const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
-      const resetExpires = new Date(Date.now() + 60 * 60 * 1000); 
+      const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
 
       await prisma.user.update({
         where: { id: user.id },
@@ -348,7 +340,6 @@ authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Reque
     return next(err);
   }
 });
-
 
 authRouter.post('/reset-password', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -391,7 +382,6 @@ authRouter.post('/reset-password', async (req: Request, res: Response, next: Nex
   }
 });
 
-
 authRouter.patch('/change-password', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
@@ -427,7 +417,6 @@ authRouter.patch('/change-password', authenticate, async (req: Request, res: Res
     return next(err);
   }
 });
-
 
 authRouter.patch('/email', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {

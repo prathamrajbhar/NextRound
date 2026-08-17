@@ -18,11 +18,6 @@ export function requireOrgScope(req: Request, res: Response, next: NextFunction)
   return next();
 }
 
-
-
-
-
-
 export function rejectOrgIdParam(req: Request, res: Response, next: NextFunction) {
   const polluted =
     Boolean(req.body && (req.body.org_id || req.body.orgId)) ||

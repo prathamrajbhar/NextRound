@@ -20,18 +20,13 @@ const generateUUID = () => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
-  
+
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
     const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 };
-
-
-
-
-
 
 const normalizeToUUID = (id: string): string => {
   const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
@@ -48,10 +43,9 @@ export class ProctoringClient {
   private isEnded = false;
   private suppressViolations = false;
   private activeTracks: MediaStreamTrack[] = [];
-  
+
   private apiSessionId: string;
-  
-  
+
   private audioContext: AudioContext | null = null;
   private audioAnalyser: AnalyserNode | null = null;
   private audioIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -61,7 +55,6 @@ export class ProctoringClient {
   private voiceActivityStreak = 0;
   private silenceStreak = 0;
 
-  
   private faceVideoEl: HTMLVideoElement | null = null;
   private faceCanvasEl: HTMLCanvasElement | null = null;
   private faceIntervalId: ReturnType<typeof setInterval> | null = null;
@@ -110,7 +103,6 @@ export class ProctoringClient {
 
     this.addEventListeners();
 
-    
     this.heartbeatIntervalId = setInterval(() => this.sendHeartbeat(), 10000);
 
     this.logEvent('session_started', 'info', 'system');
@@ -177,7 +169,7 @@ export class ProctoringClient {
     }
 
     stream.getTracks().forEach((track) => {
-      
+
       if (this.activeTracks.some((t) => t.id === track.id)) return;
       this.activeTracks.push(track);
 
@@ -195,7 +187,6 @@ export class ProctoringClient {
         this.config.onViolation(`${track.kind}_stopped`);
       };
 
-      
       track.onmute = () => {
         this.logEvent(`${track.kind}_muted`, 'warning', 'browser', {
           trackId: track.id,
@@ -249,8 +240,8 @@ export class ProctoringClient {
 
         let voiceBandEnergy = 0;
         let voiceBandCount = 0;
-        const voiceStartBin = 2; 
-        const voiceEndBin = 35;  
+        const voiceStartBin = 2;
+        const voiceEndBin = 35;
         for (let i = voiceStartBin; i <= voiceEndBin; i++) {
           voiceBandEnergy += dataArray[i];
           voiceBandCount++;
@@ -789,7 +780,7 @@ export class ProctoringClient {
       this.faceVideoEl = null;
     }
     this.logEvent('session_ended', 'info', 'system');
-    
+
     await this.buffer.flush();
     try {
       await apiClient.post(`/proctoring/sessions/${this.apiSessionId}/end`);

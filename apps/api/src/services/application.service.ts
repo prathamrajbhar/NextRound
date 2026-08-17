@@ -16,22 +16,12 @@ import {
 import { executeCodingSubmission } from './coding-executor.service';
 import { notFound, forbidden, badRequest } from '../lib/http-errors';
 
-
-
-
-
-
-
-
-
-
 export interface AppUserCtx {
   userId: string;
   role: string;
   orgId?: string | null;
   email?: string | null;
 }
-
 
 export async function candidateOwnsApplication(applicationId: string, userId: string): Promise<boolean> {
   const app = await prisma.application.findFirst({
@@ -41,15 +31,9 @@ export async function candidateOwnsApplication(applicationId: string, userId: st
   return Boolean(app);
 }
 
-
-
-
-
-
 export async function applyToJob(user: AppUserCtx, body: { jobId: string; resumeUrl?: string | null }) {
   const { jobId, resumeUrl } = body;
 
-  
   let profile = await prisma.candidateProfile.findUnique({
     where: { user_id: user.userId },
   });
@@ -68,7 +52,6 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
     });
   }
 
-  
   const job = await prisma.job.findUnique({
     where: { id: jobId },
   });
@@ -77,7 +60,6 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
     throw badRequest('Job is not open for applications');
   }
 
-  
   const existingApp = await prisma.application.findUnique({
     where: {
       candidate_id_job_id: {
@@ -91,7 +73,6 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
     throw badRequest('You have already applied for this job');
   }
 
-  
   const application = await prisma.application.create({
     data: {
       candidate_id: profile.id,
@@ -105,7 +86,6 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
     },
   });
 
-  
   if (user.email) {
     const candidateName = user.email.split('@')[0];
     emailService
@@ -113,7 +93,6 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
       .catch((err) => logger.child('Applications').error(`Failed to send confirmation email to ${user.email}:`, err));
   }
 
-  
   try {
     await enqueueScreening(application.id, {
       candidateId: profile.id,
@@ -128,7 +107,6 @@ export async function applyToJob(user: AppUserCtx, body: { jobId: string; resume
 
   return { application };
 }
-
 
 export async function listCandidateApplications(userId: string): Promise<Rec[] | null> {
   const profile = await prisma.candidateProfile.findUnique({
@@ -166,10 +144,9 @@ export async function listCandidateApplications(userId: string): Promise<Rec[] |
   });
 }
 
-
 export async function listOrgApplications(orgId: string, jobId?: string) {
   if (jobId) {
-    
+
     const job = await prisma.job.findUnique({ where: { id: jobId } });
     if (!job || job.org_id !== orgId) {
       throw forbidden('Forbidden: Access denied to job applications');
@@ -201,7 +178,6 @@ export async function listOrgApplications(orgId: string, jobId?: string) {
   });
 }
 
-
 export async function getApplication(appId: string, user: AppUserCtx) {
   const application = await prisma.application.findUnique({
     where: { id: appId },
@@ -228,7 +204,6 @@ export async function getApplication(appId: string, user: AppUserCtx) {
     throw notFound('Application not found');
   }
 
-  
   if (user.role === 'hr') {
     if (!user.orgId || application.job.org_id !== user.orgId) {
       throw forbidden('Forbidden: Access denied to application');
@@ -239,11 +214,6 @@ export async function getApplication(appId: string, user: AppUserCtx) {
     }
   }
 
-  
-  
-  
-  
-  
   let scheduledSlots: string[] = [];
   if (application.interview) {
     const slotLog = await prisma.agentLog.findFirst({
@@ -263,8 +233,6 @@ export async function getApplication(appId: string, user: AppUserCtx) {
     }
   }
 
-  
-  
   if (application.status === 'screening_completed' || application.status === 'assessment') {
     const nextStatus = await advanceAssessmentStage(application.id);
     if (nextStatus) {
@@ -274,11 +242,6 @@ export async function getApplication(appId: string, user: AppUserCtx) {
 
   return { application, scheduledSlots };
 }
-
-
-
-
-
 
 export async function runScreening(appId: string, user: AppUserCtx) {
   const application = await prisma.application.findUnique({
@@ -290,7 +253,6 @@ export async function runScreening(appId: string, user: AppUserCtx) {
     throw notFound('Application not found');
   }
 
-  
   if (user.role === 'hr') {
     if (application.job.org_id !== user.orgId) {
       throw forbidden('Forbidden: Access denied to application');
@@ -303,7 +265,6 @@ export async function runScreening(appId: string, user: AppUserCtx) {
 
   return evaluateApplicationScreening(appId);
 }
-
 
 export async function overrideStatus(
   appId: string,
@@ -330,7 +291,6 @@ export async function overrideStatus(
     },
   });
 
-  
   if (body.reasoning) {
     await prisma.evaluation.upsert({
       where: { application_id: appId },
@@ -375,7 +335,6 @@ const VALID_STATUSES = [
   'withdrawn',
 ];
 
-
 export async function advanceStage(
   appId: string,
   orgId: string,
@@ -418,7 +377,6 @@ export async function advanceStage(
   };
 }
 
-
 export async function scheduleInterview(
   appId: string,
   user: AppUserCtx,
@@ -433,7 +391,6 @@ export async function scheduleInterview(
     throw notFound('Application not found');
   }
 
-  
   if (user.role === 'hr') {
     if (application.job.org_id !== user.orgId) {
       throw forbidden('Forbidden: Access denied');
@@ -446,7 +403,6 @@ export async function scheduleInterview(
 
   const scheduledTime = body.scheduledAt ? new Date(body.scheduledAt) : new Date();
 
-  
   const updatedApp = await prisma.application.update({
     where: { id: appId },
     data: {
@@ -456,7 +412,6 @@ export async function scheduleInterview(
     },
   });
 
-  
   const interview = await prisma.interview.upsert({
     where: { application_id: appId },
     create: {
@@ -472,7 +427,6 @@ export async function scheduleInterview(
 
   return { application: updatedApp, interview };
 }
-
 
 export async function withdrawApplication(appId: string, userId: string) {
   const application = await prisma.application.findUnique({
@@ -496,18 +450,12 @@ export async function withdrawApplication(appId: string, userId: string) {
   return { application: updatedApp, message: 'Application withdrawn successfully' };
 }
 
-
-
-
-
-
 function getAppForCandidate(appId: string, userId: string) {
   return prisma.application.findUnique({
     where: { id: appId },
     include: { candidate: true, job: true },
   });
 }
-
 
 export async function getAptitudeChunk(
   appId: string,
@@ -526,7 +474,6 @@ export async function getAptitudeChunk(
     orderBy: { created_at: 'desc' },
   });
 
-  
   const existingQuestions: any[] = Array.isArray(assessment?.questions)
     ? (assessment!.questions as any[])
     : [];
@@ -545,7 +492,6 @@ export async function getAptitudeChunk(
     return { assessmentId: assessment?.id, chunkIndex, chunkSize, questions: chunkQs, hasMore: existingQuestions.length > endIndex };
   }
 
-  
   const assessmentConfig = (app.job?.assessmentConfig as any) || {};
   const mcqDistribution  = assessmentConfig.mcqDistribution as Record<string, number> | undefined;
   const totalCount = mcqDistribution
@@ -555,7 +501,6 @@ export async function getAptitudeChunk(
   const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
   const allQuestions = await selectAptitudeQuestions({ distribution });
 
-  
   if (assessment) {
     assessment = await prisma.assessment.update({
       where: { id: assessment.id },
@@ -591,7 +536,6 @@ export async function getAptitudeChunk(
   };
 }
 
-
 export async function submitAptitudeChunk(
   appId: string,
   userId: string,
@@ -609,7 +553,6 @@ export async function submitAptitudeChunk(
     orderBy: { created_at: 'desc' },
   });
 
-  
   if (assessment) {
     const existingResponses = Array.isArray(assessment.responses) ? (assessment.responses as any[]) : [];
     const mergedResponses = [...existingResponses, ...(Array.isArray(answers) ? answers : [])];
@@ -624,8 +567,6 @@ export async function submitAptitudeChunk(
     ? (assessment!.questions as any[])
     : [];
 
-  
-  
   const startOfNext = nextChunkIndex * Number(chunkSize);
   const endOfNext   = startOfNext + Number(chunkSize);
   const nextQs = existingQuestions.slice(startOfNext, endOfNext).map((q: any) => ({
@@ -645,7 +586,6 @@ export async function submitAptitudeChunk(
   };
 }
 
-
 export async function getAptitudeAssessment(appId: string, userId: string) {
   const app = await getAppForCandidate(appId, userId);
   if (!app || app.candidate.user_id !== userId) {
@@ -658,7 +598,6 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
     ? Object.values(mcqDistribution).reduce((s: number, v: unknown) => s + Number(v), 0)
     : Math.max(1, Math.min(100, Number(assessmentConfig.mcqCount) || 20));
 
-  
   let assessment = await prisma.assessment.findFirst({
     where: { application_id: appId, test_type: 'aptitude' },
     orderBy: { created_at: 'desc' },
@@ -666,9 +605,6 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
 
   let allQuestions: any[] = [];
 
-  
-  
-  
   const isCompleted = assessment?.status === 'completed';
   const storedCount = Array.isArray(assessment?.questions) ? (assessment!.questions as any[]).length : 0;
   const countMatchesConfig = storedCount === totalCount;
@@ -698,7 +634,6 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
     }
   }
 
-  
   const sanitizedQuestions = allQuestions.map((q: any) => ({
     id: q.id,
     category: q.category,
@@ -721,7 +656,6 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
   };
 }
 
-
 export async function submitAptitude(
   appId: string,
   userId: string,
@@ -734,7 +668,6 @@ export async function submitAptitude(
 
   const { answers, totalTimeSeconds, tabSwitchCount } = body;
 
-  
   await prisma.assessment
     .updateMany({
       where: { application_id: appId, test_type: 'aptitude' },
@@ -747,9 +680,6 @@ export async function submitAptitude(
       logger.child('Applications').error(`Failed to update assessment responses for application ${appId}:`, err);
     });
 
-  
-  
-  
   const storedAssessment = await prisma.assessment.findFirst({
     where: { application_id: appId, test_type: 'aptitude' },
     orderBy: { created_at: 'desc' },
@@ -766,18 +696,15 @@ export async function submitAptitude(
   for (const q of storedQuestions) {
     const correctIdx = q.correctIndex !== undefined ? q.correctIndex : q.correct_index;
     if (typeof correctIdx !== 'number') continue;
-    
+
     if (!answerMap.has(q.id)) continue;
     totalScored++;
     if (answerMap.get(q.id) === correctIdx) correctCount++;
   }
   const computedScore = totalScored > 0 ? Math.round((correctCount / totalScored) * 100) : null;
 
-  
   await enqueueAssessment(appId, (answers as any[]) || [], { totalTimeSeconds, tabSwitchCount });
 
-  
-  
   return {
     score: computedScore,
     correctAnswers: correctCount,
@@ -786,18 +713,12 @@ export async function submitAptitude(
   };
 }
 
-
-
-
-
-
 export async function getCodingAssessment(appId: string, userId: string) {
   const app = await getAppForCandidate(appId, userId);
   if (!app || app.candidate.user_id !== userId) {
     throw forbidden('Forbidden: Access denied');
   }
 
-  
   let assessment = await prisma.assessment.findFirst({
     where: { application_id: appId, test_type: 'coding' },
   });
@@ -823,7 +744,6 @@ export async function getCodingAssessment(appId: string, userId: string) {
     });
   }
 
-  
   const sanitizedProblem = {
     ...problem,
     testCases: (problem.testCases || []).filter((tc: any) => !tc.hidden),
@@ -831,7 +751,6 @@ export async function getCodingAssessment(appId: string, userId: string) {
 
   return { problem: sanitizedProblem };
 }
-
 
 export async function submitCoding(
   appId: string,
@@ -845,7 +764,6 @@ export async function submitCoding(
 
   const { code, language } = body;
 
-  
   const assessment = await prisma.assessment.findFirst({
     where: { application_id: appId, test_type: 'coding' },
   });
@@ -883,7 +801,6 @@ export async function submitCoding(
     },
   });
 
-  
   await prisma.assessment.update({
     where: { id: assessment.id },
     data: {
@@ -892,7 +809,6 @@ export async function submitCoding(
     },
   });
 
-  
   await prisma.evaluation.upsert({
     where: { application_id: appId },
     create: {
@@ -915,7 +831,6 @@ export async function submitCoding(
   };
 }
 
-
 export async function getCodingSubmission(submissionId: string) {
   const submission = await prisma.codingSubmission.findUnique({
     where: { id: submissionId },
@@ -927,11 +842,6 @@ export async function getCodingSubmission(submissionId: string) {
 
   return { submission };
 }
-
-
-
-
-
 
 export async function requestReschedule(appId: string, userId: string) {
   const app = await prisma.application.findUnique({
@@ -949,14 +859,8 @@ export async function requestReschedule(appId: string, userId: string) {
     jobTitle: app.job.title,
   });
 
-  
   return { message: 'Reschedule request submitted. AI Scheduler is negotiating new slots...' };
 }
-
-
-
-
-
 
 export async function getOfferByToken(token: string) {
   const offer = await prisma.offer.findFirst({
@@ -986,7 +890,6 @@ export async function getOfferByToken(token: string) {
   return { offer };
 }
 
-
 export async function getApplicationOffer(appId: string, user: AppUserCtx) {
   const application = await prisma.application.findUnique({
     where: { id: appId },
@@ -1001,7 +904,6 @@ export async function getApplicationOffer(appId: string, user: AppUserCtx) {
     throw notFound('No offer found for application');
   }
 
-  
   if (user.role === 'candidate' && application.candidate.user_id !== user.userId) {
     throw forbidden('Forbidden: Access denied');
   }
@@ -1011,10 +913,6 @@ export async function getApplicationOffer(appId: string, user: AppUserCtx) {
 
   return { application, offer: application.offer };
 }
-
-
-
-
 
 export async function signOffer(
   appId: string,
@@ -1041,7 +939,6 @@ export async function signOffer(
     throw notFound('Offer not found for application');
   }
 
-  
   const isOwner =
     user?.role === 'candidate' && (await candidateOwnsApplication(offer.application_id, user.userId));
   const tokenValid =
@@ -1053,7 +950,6 @@ export async function signOffer(
     throw forbidden('Forbidden: offer ownership could not be verified');
   }
 
-  
   const updatedOffer = await prisma.offer.update({
     where: { id: offer.id },
     data: {
@@ -1062,7 +958,6 @@ export async function signOffer(
     },
   });
 
-  
   await prisma.application.update({
     where: { id: offer.application_id },
     data: { status: 'accepted' },
@@ -1070,10 +965,6 @@ export async function signOffer(
 
   return { offer: updatedOffer, status: 'accepted' };
 }
-
-
-
-
 
 export async function declineOffer(
   appId: string,
@@ -1096,7 +987,6 @@ export async function declineOffer(
     throw notFound('Offer not found for application');
   }
 
-  
   const isOwner =
     user?.role === 'candidate' && (await candidateOwnsApplication(offer.application_id, user.userId));
   const tokenValid =
@@ -1108,7 +998,6 @@ export async function declineOffer(
     throw forbidden('Forbidden: offer ownership could not be verified');
   }
 
-  
   const updatedOffer = await prisma.offer.update({
     where: { id: offer.id },
     data: {

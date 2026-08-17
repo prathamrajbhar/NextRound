@@ -1,8 +1,5 @@
 import { z } from 'zod';
 
-
-
-
 export const ColorPaletteSchema = z.object({
   50: z.string(),
   100: z.string(),
@@ -19,9 +16,6 @@ export const ColorPaletteSchema = z.object({
 
 export type ColorPalette = z.infer<typeof ColorPaletteSchema>;
 
-
-
-
 export const StatusPaletteSchema = z.object({
   50: z.string(),
   100: z.string(),
@@ -32,9 +26,6 @@ export const StatusPaletteSchema = z.object({
 });
 
 export type StatusPalette = z.infer<typeof StatusPaletteSchema>;
-
-
-
 
 export const SemanticTokensSchema = z.object({
   background: z.string(),
@@ -54,9 +45,6 @@ export const SemanticTokensSchema = z.object({
 
 export type SemanticTokens = z.infer<typeof SemanticTokensSchema>;
 
-
-
-
 export const ThemeConfigSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -71,9 +59,6 @@ export const ThemeConfigSchema = z.object({
 });
 
 export type ThemeConfig = z.infer<typeof ThemeConfigSchema>;
-
-
-
 
 export const DEFAULT_BRAND_PALETTE: ColorPalette = {
   50: '#fff7ed',

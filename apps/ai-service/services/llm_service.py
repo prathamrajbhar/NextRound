@@ -13,7 +13,6 @@ _groq_client: Optional[Any] = None
 _groq_client_initialized = False
 
 def get_client() -> Optional[Any]:
-    """Return a lazily-initialized Google GenAI client, or None if unavailable."""
     global _client, _client_initialized
     if _client_initialized:
         return _client
@@ -29,7 +28,6 @@ def get_client() -> Optional[Any]:
     return _client
 
 def get_groq_client() -> Optional[Any]:
-    """Return a lazily-initialized Groq client, or None if unavailable."""
     global _groq_client, _groq_client_initialized
     if _groq_client_initialized:
         return _groq_client
@@ -45,7 +43,6 @@ def get_groq_client() -> Optional[Any]:
     return _groq_client
 
 def _generate_text_ollama(prompt: str) -> Optional[str]:
-    """Generate text using Ollama's configured instance as a fallback."""
     if not settings.ollama_base_url or not prompt:
         return None
     try:
@@ -70,7 +67,6 @@ def _generate_text_ollama(prompt: str) -> Optional[str]:
         raise
 
 def _generate_text_groq(prompt: str) -> Optional[str]:
-    """Generate text using Groq API."""
     client = get_groq_client()
     if not client or not prompt:
         return None
@@ -88,12 +84,6 @@ def _generate_text_groq(prompt: str) -> Optional[str]:
         raise
 
 def generate_text(prompt: str, force_provider: Optional[str] = None) -> Optional[str]:
-    """Generate a text completion from the configured provider/model.
-
-    Honors settings.llm_provider ("gemini", "groq", or "ollama").
-    If the preferred provider fails or is not configured, it propagates the failure
-    without any fallback or static retry logic.
-    """
     if not prompt:
         return None
 
@@ -121,12 +111,6 @@ def generate_text(prompt: str, force_provider: Optional[str] = None) -> Optional
     return None
 
 def extract_json_object(text: str) -> Optional[dict]:
-    """Extract the first JSON object ({...}) from an LLM response.
-
-    Bracket matching is string-aware: braces inside JSON string literals are
-    ignored, so content like {"response": "use braces {} in prose"} parses
-    correctly instead of truncating at the first inner brace.
-    """
     if not text:
         return None
 
@@ -137,12 +121,6 @@ def extract_json_object(text: str) -> Optional[dict]:
     return _extract_balanced(text, start, '{', '}', dict)
 
 def extract_json_array(text: str) -> Optional[List[Any]]:
-    """Extract the first JSON array ([...]) from an LLM response.
-
-    Bracket matching is string-aware: brackets inside JSON string literals are
-    ignored, so arrays containing text like "[we handle [nested] cases]" parse
-    correctly instead of truncating at the first inner bracket.
-    """
     if not text:
         return None
 
@@ -153,11 +131,6 @@ def extract_json_array(text: str) -> Optional[List[Any]]:
     return _extract_balanced(text, start, '[', ']', list)
 
 def _extract_balanced(text: str, start: int, open_ch: str, close_ch: str, target_type) -> Optional[Any]:
-    """Find the first balanced open/close region starting at ``start`` and parse it.
-
-    Skips delimiters that appear inside quoted strings, honoring backslash
-    escapes, so LLM prose containing JSON-like delimiters never breaks parsing.
-    """
     depth = 0
     in_string = False
     escaped = False

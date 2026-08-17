@@ -12,16 +12,7 @@ DEFAULT_RUBRIC_DIMENSIONS = [
     "Technical Excellence & Testing",
 ]
 
-
 async def process_prep_job(job_data: dict) -> bool:
-    """
-    Process Company Prep Content Generation job:
-    1. Resolve the job + org from the real Job record (internal/jobs/:id/raw).
-    2. Generate questions (targeting 20+ total across dimensions), culture notes, and skill checklist via Gemini API.
-    3. Call back Express internal endpoint /internal/prep/generate.
-    """
-
-
 
     extra = job_data.get("extraData") or {}
     job_id = job_data.get("jobId") or extra.get("jobId")
@@ -41,12 +32,6 @@ async def process_prep_job(job_data: dict) -> bool:
     description = extra.get("jobDescription") or job_data.get("jobDescription") or ""
 
     logger.info(f"Processing prep content generation for job {job_id}")
-
-
-
-
-
-
 
     job_title = payload_title
     company_name = payload_company

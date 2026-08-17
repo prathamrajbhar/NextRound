@@ -14,15 +14,12 @@ import type { AppUserCtx } from '../../services/application.service';
 
 export const applicationRouter = Router();
 
-
 applicationRouter.use(rejectOrgIdParam);
-
 
 function userCtx(req: Request): AppUserCtx {
   const u = req.user!;
   return { userId: u.userId, role: u.role, orgId: u.orgId, email: u.email };
 }
-
 
 applicationRouter.post(
   '/',
@@ -33,7 +30,6 @@ applicationRouter.post(
     ok(res, await applicationService.applyToJob(userCtx(req), req.body), 201);
   })
 );
-
 
 applicationRouter.get(
   '/my',
@@ -48,7 +44,6 @@ applicationRouter.get(
   })
 );
 
-
 applicationRouter.get(
   '/',
   authenticate,
@@ -59,7 +54,6 @@ applicationRouter.get(
     ok(res, serializeApplicationList(await applicationService.listOrgApplications(orgId, jobId)));
   })
 );
-
 
 applicationRouter.get(
   '/:id',
@@ -73,7 +67,6 @@ applicationRouter.get(
   })
 );
 
-
 applicationRouter.post(
   '/:id/run-screening',
   authenticate,
@@ -86,7 +79,6 @@ applicationRouter.post(
   })
 );
 
-
 applicationRouter.patch(
   '/:id/status',
   authenticate,
@@ -97,7 +89,6 @@ applicationRouter.patch(
     ok(res, await applicationService.overrideStatus(req.params.id as string, req.user!.orgId!, req.body));
   })
 );
-
 
 applicationRouter.patch(
   '/:id',
@@ -114,7 +105,6 @@ applicationRouter.patch(
   })
 );
 
-
 applicationRouter.post(
   '/:id/schedule',
   authenticate,
@@ -127,7 +117,6 @@ applicationRouter.post(
   })
 );
 
-
 applicationRouter.post(
   '/:id/withdraw',
   authenticate,
@@ -136,7 +125,6 @@ applicationRouter.post(
     ok(res, await applicationService.withdrawApplication(req.params.id as string, req.user!.userId));
   })
 );
-
 
 applicationRouter.get(
   '/:id/assessment/aptitude/chunk',
@@ -155,7 +143,6 @@ applicationRouter.get(
   })
 );
 
-
 applicationRouter.post(
   '/:id/assessment/aptitude/chunk',
   authenticate,
@@ -168,7 +155,6 @@ applicationRouter.post(
   })
 );
 
-
 applicationRouter.get(
   '/:id/assessment/aptitude',
   authenticate,
@@ -178,20 +164,16 @@ applicationRouter.get(
   })
 );
 
-
-
-
 applicationRouter.post(
   '/:id/assessment/aptitude',
   authenticate,
   requireRole('candidate'),
   asyncHandler(async (req, res) => {
     const data = await applicationService.submitAptitude(req.params.id as string, req.user!.userId, req.body);
-    
+
     res.json({ success: true, data });
   })
 );
-
 
 applicationRouter.get(
   '/:id/assessment/coding',
@@ -202,7 +184,6 @@ applicationRouter.get(
   })
 );
 
-
 applicationRouter.post(
   '/:id/assessment/coding',
   authenticate,
@@ -212,7 +193,6 @@ applicationRouter.post(
   })
 );
 
-
 applicationRouter.get(
   '/:id/assessment/coding/:submissionId',
   authenticate,
@@ -220,8 +200,6 @@ applicationRouter.get(
     ok(res, await applicationService.getCodingSubmission(req.params.submissionId as string));
   })
 );
-
-
 
 applicationRouter.post(
   '/:id/reschedule',
@@ -233,14 +211,12 @@ applicationRouter.post(
   })
 );
 
-
 applicationRouter.get(
   '/offer/token/:token',
   asyncHandler(async (req, res) => {
     ok(res, await applicationService.getOfferByToken(req.params.token as string));
   })
 );
-
 
 applicationRouter.get(
   '/:id/offer',
@@ -254,8 +230,6 @@ applicationRouter.get(
   })
 );
 
-
-
 applicationRouter.post(
   '/:id/offer/sign',
   optionalAuthenticate,
@@ -266,8 +240,6 @@ applicationRouter.post(
     );
   })
 );
-
-
 
 applicationRouter.post(
   '/:id/offer/decline',

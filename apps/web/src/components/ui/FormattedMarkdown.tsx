@@ -11,19 +11,16 @@ interface FormattedMarkdownProps {
 export function FormattedMarkdown({ content, className = '' }: FormattedMarkdownProps) {
   if (!content) return null;
 
-  
   const preprocessed = content
-    
+
     .replace(/([^\n])\s*(##+)/g, '$1\n\n$2')
-    
+
     .replace(/(##+\s+[^*\n]+?)\s*(\*|-)\s+/g, '$1\n\n* ')
-    
+
     .replace(/([^\n])\s*(\*|-)\s+/g, '$1\n* ');
 
-  
   const rawBlocks = preprocessed.split(/\n\s*\n/);
 
-  
   const parseInline = (text: string): React.ReactNode[] => {
     const parts: React.ReactNode[] = [];
     const regex = /(\*\*.*?\*\*|\*.*?\*)/g;
@@ -64,12 +61,10 @@ export function FormattedMarkdown({ content, className = '' }: FormattedMarkdown
         const trimmed = block.trim();
         if (!trimmed) return null;
 
-        
         if (trimmed.startsWith('##')) {
           let rawHeading = trimmed.replace(/^##+\s*/, '').trim();
           let bodyAfterHeading = '';
 
-          
           const wordCount = rawHeading.split(/\s+/).length;
           if (wordCount > 5) {
             const splitMatch = rawHeading.match(
@@ -103,7 +98,6 @@ export function FormattedMarkdown({ content, className = '' }: FormattedMarkdown
           );
         }
 
-        
         const lines = trimmed.split('\n').map((l) => l.trim()).filter(Boolean);
         const hasBullets = lines.some((l) => l.startsWith('*') || l.startsWith('-'));
 
@@ -111,7 +105,6 @@ export function FormattedMarkdown({ content, className = '' }: FormattedMarkdown
           return <BulletListBlock key={bIdx} text={trimmed} parseInline={parseInline} />;
         }
 
-        
         return (
           <p key={bIdx} className="font-normal leading-relaxed text-slate-700 dark:text-slate-300">
             {parseInline(trimmed)}

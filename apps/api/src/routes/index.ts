@@ -25,7 +25,6 @@ import { proctoringRouter } from './proctoring/proctoring.routes';
 
 export const apiRouter = Router();
 
-
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/organizations', organizationRouter);
 apiRouter.use('/jobs', jobRouter);

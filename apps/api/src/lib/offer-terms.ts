@@ -1,17 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 function parseSalaryBand(jobSalary: string): number | null {
   const matches = jobSalary.match(/[\d,]+(?:\.\d+)?\s*(?:k|cr|l|lakh|lpa)?/gi);
   if (!matches || matches.length === 0) return null;

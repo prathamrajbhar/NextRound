@@ -16,7 +16,7 @@ interface CacheEntry {
 }
 
 const apiCache = new Map<string, CacheEntry>();
-const CACHE_TTL_MS = 20000; 
+const CACHE_TTL_MS = 20000;
 
 export function clearApiCache(endpointPattern?: string) {
   if (!endpointPattern) {
@@ -38,18 +38,15 @@ export async function fetchApi<T>(
   const method = (options.method || 'GET').toUpperCase();
   const cacheKey = `${method}:${endpoint}`;
 
-  
-  
   if (method !== 'GET') {
     const resource = endpoint.replace(/^\//, '').split('/')[0];
     if (resource) clearApiCache(resource);
   }
 
-  
   if (method === 'GET' && !isRetry) {
     const cached = apiCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-      
+
       fetchNetworkApi<T>(endpoint, options, isRetry).then((freshData) => {
         if (freshData.success) {
           apiCache.set(cacheKey, { data: freshData, timestamp: Date.now() });
@@ -92,8 +89,7 @@ async function fetchNetworkApi<T>(
   options: RequestInit = {},
   isRetry = false
 ): Promise<ApiResult<T>> {
-  
-  
+
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const headers: Record<string, string> = {
     ...(!isFormData ? { 'Content-Type': 'application/json' } : {}),
@@ -110,8 +106,7 @@ async function fetchNetworkApi<T>(
     });
 
     if (res.status === 401 && !isRetry && !endpoint.includes('/auth/refresh') && !endpoint.includes('/auth/login')) {
-      
-      
+
       if (!refreshPromise) {
         refreshPromise = refreshAccessToken().finally(() => {
           refreshPromise = null;
@@ -127,8 +122,7 @@ async function fetchNetworkApi<T>(
 
     if (contentType.includes('application/json')) {
       const data: ApiEnvelope<T> = await res.json();
-      
-      
+
       if (!res.ok) {
         const apiError = typeof data.error === 'string' ? null : data.error;
         return {

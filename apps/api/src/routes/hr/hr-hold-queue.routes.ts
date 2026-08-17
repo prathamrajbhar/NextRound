@@ -6,9 +6,7 @@ import { requireOrgScope, rejectOrgIdParam } from '../../middleware/orgScope';
 
 export const hrHoldQueueRouter = Router();
 
-
 hrHoldQueueRouter.use(rejectOrgIdParam);
-
 
 hrHoldQueueRouter.get(
   '/hold-queue',

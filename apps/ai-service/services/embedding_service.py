@@ -4,12 +4,10 @@ import os
 
 logger = logging.getLogger("embedding_service")
 
-
 onnx_embedding_model = None
 try:
     from fastembed import TextEmbedding
 
-    # Store models in apps/ai-service/local_models
     local_models_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "..", "local_models")
     )
@@ -21,14 +19,7 @@ try:
 except Exception as e:
     logger.warning(f"Failed to initialize FastEmbed ONNX model: {e}")
 
-
 def embed_text_with_source(text: str) -> tuple[list[float], str]:
-    """
-    Generate 768-dimensional vector embedding for input text and report which
-    engine produced it. Returns (embedding, source) where source is one of:
-      'onnx'          - self-hosted FastEmbed BAAI/bge-base-en-v1.5 (only model)
-      'empty'         - empty/whitespace input -> zero vector (NOT semantic)
-    """
     if not text or not text.strip():
         return [0.0] * 768, "empty"
 
@@ -53,25 +44,11 @@ def embed_text_with_source(text: str) -> tuple[list[float], str]:
         "or non-768-dimensional embedding vector."
     )
 
-
 def embed_text(text: str) -> list[float]:
-    """
-    Generate 768-dimensional vector embedding for input text using
-    the self-hosted FastEmbed ONNX model (BAAI/bge-base-en-v1.5).
-    """
     vec, _ = embed_text_with_source(text)
     return vec
 
-
-
-
 def embed_resume_with_source(resume_text: str, chunk_size: int = 500) -> tuple[list[float], str]:
-    """
-    Chunk resume text into ~500 word segments, embed each segment,
-    and average pool into a single 768-dimensional float vector.
-    Returns (embedding, source) where source reports the embedding engine used
-    across chunks ('onnx' for FastEmbed BAAI/bge-base-en-v1.5).
-    """
     if not resume_text or not resume_text.strip():
         return [0.0] * 768, "empty"
 
@@ -89,7 +66,6 @@ def embed_resume_with_source(resume_text: str, chunk_size: int = 500) -> tuple[l
     if not chunk_embeddings:
         return [0.0] * 768, "empty"
 
-
     avg_vec = [0.0] * 768
     for vec in chunk_embeddings:
         for idx in range(768):
@@ -98,27 +74,17 @@ def embed_resume_with_source(resume_text: str, chunk_size: int = 500) -> tuple[l
     num_chunks = len(chunk_embeddings)
     avg_vec = [x / num_chunks for x in avg_vec]
 
-
     norm = math.sqrt(sum(x * x for x in avg_vec))
     if norm > 0:
         avg_vec = [x / norm for x in avg_vec]
 
     return avg_vec, "onnx"
 
-
 def embed_resume(resume_text: str, chunk_size: int = 500) -> list[float]:
-    """
-    Chunk resume text into ~500 word segments, embed each segment,
-    and average pool into a single 768-dimensional float vector.
-    """
     vec, _ = embed_resume_with_source(resume_text, chunk_size)
     return vec
 
-
 def cosine_similarity(a: list[float], b: list[float]) -> float:
-    """
-    Compute cosine similarity score (0.0 to 1.0) between two 768-dim float vectors.
-    """
     if not a or not b or len(a) != len(b):
         return 0.0
 

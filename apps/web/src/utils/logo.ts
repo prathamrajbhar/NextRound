@@ -19,12 +19,11 @@ export const getCompanyDomain = (name: string): string => {
     meta: 'meta.com',
     facebook: 'facebook.com',
   };
-  
+
   if (companyDomains[normalized]) {
     return companyDomains[normalized];
   }
-  
-  
+
   const cleanName = normalized.replace(/[^a-z0-9]/g, '');
   return cleanName ? `${cleanName}.com` : 'google.com';
 };

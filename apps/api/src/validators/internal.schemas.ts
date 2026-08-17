@@ -1,20 +1,6 @@
 import { z } from 'zod';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 const nullable = <T extends z.ZodTypeAny>(schema: T) => schema.nullable().optional();
-
 
 export const AiAssistResultSchema = z
   .object({
@@ -25,7 +11,6 @@ export const AiAssistResultSchema = z
     skills: z.unknown().optional(),
   })
   .passthrough();
-
 
 export const ScreeningResultSchema = z
   .object({
@@ -39,20 +24,17 @@ export const ScreeningResultSchema = z
   })
   .passthrough();
 
-
 export const SourcedCandidatesSchema = z
   .object({
     candidates: z.array(z.unknown()).optional(),
   })
   .passthrough();
 
-
 export const CandidateEmbeddingSchema = z
   .object({
     embedding: z.array(z.number()).length(768).optional(),
   })
   .passthrough();
-
 
 export const AgentLogCreateSchema = z
   .object({
@@ -67,7 +49,6 @@ export const AgentLogCreateSchema = z
   })
   .passthrough();
 
-
 export const ScheduleSlotsSchema = z
   .object({
     slots: z.array(z.unknown()).optional(),
@@ -75,14 +56,12 @@ export const ScheduleSlotsSchema = z
   })
   .passthrough();
 
-
 export const ConfirmedSlotSchema = z
   .object({
     scheduled_at: nullable(z.string()),
     confirmed_by: nullable(z.string()),
   })
   .passthrough();
-
 
 export const AssessmentResultSchema = z
   .object({
@@ -96,7 +75,6 @@ export const AssessmentResultSchema = z
   })
   .passthrough();
 
-
 export const CodingResultSchema = z
   .object({
     submissionId: nullable(z.string()),
@@ -109,7 +87,6 @@ export const CodingResultSchema = z
     memory_kb: nullable(z.number()),
   })
   .passthrough();
-
 
 export const InterviewResultSchema = z
   .object({
@@ -130,7 +107,6 @@ export const InterviewResultSchema = z
   })
   .passthrough();
 
-
 export const FinalEvaluationSchema = z
   .object({
     application_id: nullable(z.string()),
@@ -139,7 +115,6 @@ export const FinalEvaluationSchema = z
     reasoning: nullable(z.string()),
   })
   .passthrough();
-
 
 export const DecisionSchema = z
   .object({
@@ -152,7 +127,6 @@ export const DecisionSchema = z
   })
   .passthrough();
 
-
 export const InternalOfferCreateSchema = z
   .object({
     application_id: nullable(z.string()),
@@ -164,7 +138,6 @@ export const InternalOfferCreateSchema = z
   })
   .passthrough();
 
-
 export const MockFeedbackSchema = z
   .object({
     score: nullable(z.number()),
@@ -173,7 +146,6 @@ export const MockFeedbackSchema = z
   })
   .passthrough();
 
-
 export const ResumeBuilderResultSchema = z
   .object({
     generatedResume: z.unknown().optional(),
@@ -181,7 +153,6 @@ export const ResumeBuilderResultSchema = z
     status: z.string().optional(),
   })
   .passthrough();
-
 
 export const PrepGenerateSchema = z
   .object({
@@ -195,13 +166,11 @@ export const PrepGenerateSchema = z
   })
   .passthrough();
 
-
 export const AnalyticsRawQuerySchema = z
   .object({
     org_id: z.string().optional(),
   })
   .passthrough();
-
 
 export const AnalyticsReportSchema = z
   .object({
@@ -211,7 +180,6 @@ export const AnalyticsReportSchema = z
     generated_at: z.string().optional(),
   })
   .passthrough();
-
 
 export const SentimentAudioMetricsSchema = z
   .object({
@@ -229,7 +197,6 @@ export const SentimentAudioMetricsSchema = z
   })
   .passthrough();
 
-
 export const SentimentJourneyPointSchema = z
   .object({
     timeLabel: z.string().optional(),
@@ -240,7 +207,6 @@ export const SentimentJourneyPointSchema = z
     emotionLabel: z.string().optional(),
   })
   .passthrough();
-
 
 export const SentimentReportSchema = z
   .object({
@@ -263,13 +229,11 @@ export const SentimentReportSchema = z
   })
   .passthrough();
 
-
 export const InterviewSentimentSchema = z
   .object({
     sentiment_report: SentimentReportSchema.optional(),
   })
   .passthrough();
-
 
 export const CandidateEmbeddingsSchema = z
   .object({

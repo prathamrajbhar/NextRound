@@ -28,7 +28,7 @@ interface EventInput {
 }
 
 export async function createProctoringSession(input: CreateSessionInput, userId: string) {
-  
+
   const candidateProfile = await prisma.candidateProfile.findUnique({
     where: { user_id: userId },
   });
@@ -37,7 +37,6 @@ export async function createProctoringSession(input: CreateSessionInput, userId:
     throw forbidden('Access denied: Candidate profile mismatch');
   }
 
-  
   if (input.application_id) {
     const app = await prisma.application.findUnique({
       where: { id: input.application_id },
@@ -65,7 +64,6 @@ export async function createProctoringSession(input: CreateSessionInput, userId:
     }
   }
 
-  
   const session = await prisma.proctoringSession.upsert({
     where: { id: input.id },
     create: {
@@ -90,7 +88,7 @@ export async function createProctoringSession(input: CreateSessionInput, userId:
 }
 
 export async function logProctoringEvents(sessionId: string, events: EventInput[], userId: string) {
-  
+
   const session = await prisma.proctoringSession.findUnique({
     where: { id: sessionId },
     include: { candidate: true },
@@ -108,7 +106,6 @@ export async function logProctoringEvents(sessionId: string, events: EventInput[
     throw badRequest('Cannot log events: Proctoring session has already ended');
   }
 
-  
   const clientEventIds = events.map((e) => e.client_event_id);
   const existingEvents = await prisma.proctoringEvent.findMany({
     where: {
@@ -125,14 +122,12 @@ export async function logProctoringEvents(sessionId: string, events: EventInput[
     return { count: 0 };
   }
 
-  
   const maxSeqAggregate = await prisma.proctoringEvent.aggregate({
     where: { proctoring_session_id: sessionId },
     _max: { server_sequence: true },
   });
   const startSeq = (maxSeqAggregate._max.server_sequence ?? 0) + 1;
 
-  
   const dataToInsert = newEvents.map((event, idx) => ({
     proctoring_session_id: sessionId,
     client_event_id: event.client_event_id,
@@ -236,7 +231,6 @@ export async function endProctoringSession(sessionId: string, userId: string) {
     },
   });
 
-  
   analyzeSessionRisk(sessionId).catch((err) => {
     logger.child('Proctoring').error(`Background risk analysis error for session ${sessionId}:`, err);
   });
@@ -339,7 +333,6 @@ export async function analyzeSessionRisk(sessionId: string) {
   const policy = getPolicy(session.policy_version);
   const { violations, summary } = evaluateSessionPolicy(policy, session.events);
 
-  
   if (violations.length > 0) {
     await prisma.$transaction(
       violations.map((v) =>
@@ -412,7 +405,6 @@ export async function getProctoringReport(sessionId: string, role: string, userO
     throw notFound('Proctoring session not found');
   }
 
-  
   if (role === 'hr') {
     if (!userOrgId || session.application?.job.org_id !== userOrgId) {
       throw forbidden('Access denied: Org isolation violation');
@@ -467,7 +459,7 @@ export async function getProctoringReport(sessionId: string, role: string, userO
 }
 
 export async function getProctoringReportByApplicationId(applicationId: string, role: string, userOrgId?: string | null, userId?: string) {
-  
+
   const session = await prisma.proctoringSession.findFirst({
     where: { application_id: applicationId },
     orderBy: { started_at: 'desc' },
@@ -506,13 +498,11 @@ export async function reviewProctoringViolation(
     throw notFound('Proctoring violation not found');
   }
 
-  
   const violationOrgId = violation.proctoring_session.application?.job.org_id;
   if (!userOrgId || violationOrgId !== userOrgId) {
     throw forbidden('Access denied: Org isolation violation');
   }
 
-  
   const updatedViolation = await prisma.proctoringViolation.update({
     where: { id: violationId },
     data: {

@@ -17,12 +17,11 @@ export async function enqueueAnalyticsReport(payload: AnalyticsJobPayload) {
   return job;
 }
 
-
 export async function setupWeeklyAnalyticsCron() {
   try {
     await analyticsQueue.upsertJobScheduler(
       'weekly_analytics_cron',
-      { pattern: '0 0 * * 1' }, 
+      { pattern: '0 0 * * 1' },
       {
         name: 'weekly_analytics_cron',
         data: { type: 'weekly_report' },

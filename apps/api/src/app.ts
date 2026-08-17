@@ -23,9 +23,7 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-
 app.use('/uploads', express.static(UPLOAD_ROOT_DIR));
-
 
 app.get('/api/v1/health', (_req, res) => {
   res.json({
@@ -38,13 +36,9 @@ app.get('/api/v1/health', (_req, res) => {
   });
 });
 
-
 app.get('/api/v1/ping', (_req, res) => {
   res.json({ pong: true, ts: Date.now() });
 });
-
-
-
 
 app.get('/api/v1/speedtest', async (_req, res) => {
   res.setHeader('Content-Type', 'application/octet-stream');
@@ -56,7 +50,6 @@ app.get('/api/v1/speedtest', async (_req, res) => {
     });
     if (!upstream.ok || !upstream.body) throw new Error('upstream failed');
 
-    
     const reader = upstream.body.getReader();
     while (true) {
       const { done, value } = await reader.read();
@@ -65,7 +58,7 @@ app.get('/api/v1/speedtest', async (_req, res) => {
     }
     res.end();
   } catch {
-    
+
     const SIZE = 1024 * 1024;
     const buf = Buffer.allocUnsafe(SIZE);
     for (let i = 0; i < SIZE; i += 4) buf.writeUInt32BE((Math.random() * 0xffffffff) >>> 0, i);
@@ -74,9 +67,7 @@ app.get('/api/v1/speedtest', async (_req, res) => {
   }
 });
 
-
 app.use('/api/v1', apiRouter);
-
 
 app.use(notFoundHandler);
 

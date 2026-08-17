@@ -17,7 +17,6 @@ export function ThemeToggle({ className = '', showLabel = false }: ThemeTogglePr
     setMounted(true);
   }, []);
 
-  // Default to dark theme classes during SSR and initial client hydration
   const isDark = mounted ? theme === 'dark' : true;
 
   return (

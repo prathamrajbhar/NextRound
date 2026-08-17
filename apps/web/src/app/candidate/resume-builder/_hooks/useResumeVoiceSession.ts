@@ -158,8 +158,6 @@ export function useResumeVoiceSession({
         setCandidateSpeechText(displayTranscript);
       }
 
-      // Guarded barge-in: if the AI is still speaking and the candidate has clearly
-      // started talking (past the echo window), interrupt the AI.
       if (aiStateRef.current === 'speaking') {
         const elapsed = Date.now() - (speechStartRef.current || 0);
         const isSubstantial = (finalTranscript || interimTranscript).trim().length >= 5;
@@ -209,10 +207,10 @@ export function useResumeVoiceSession({
   const speakText = useCallback((text: string, audioUrl?: string, callback?: () => void) => {
     setAiState('speaking');
     speechStartRef.current = Date.now();
-    // Listen while the AI speaks so the candidate can interrupt (guarded barge-in).
+
     startSpeechRecognition();
     playAudio(text, audioUrl, () => {
-      // Short pause before opening the mic again, so the turn feels human-paced.
+
       setTimeout(() => {
         setAiState('listening');
         if (callback) callback();
@@ -253,9 +251,7 @@ export function useResumeVoiceSession({
         onComplete(activeSessionId, finalHistory);
       } catch (err) {
         console.error('Failed to end session:', err);
-        // Don't advance: if we proceed without the backend having enqueued the
-        // job, the resume stage would poll forever. Surface the error and let
-        // the candidate retry via the "Finish & Build Resume" button.
+
         setError('Failed to finish the session. Please try again.');
       }
     },

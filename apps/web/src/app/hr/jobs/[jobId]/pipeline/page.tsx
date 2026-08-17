@@ -18,12 +18,10 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
   const [candidates, setCandidates] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
-  
   const [minScore, setMinScore] = useState(80);
   const [autoOffer, setAutoOffer] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  
   const [selectedCandidate, setSelectedCandidate] = useState<Application | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -87,7 +85,6 @@ export default function HrJobPipeline({ params }: { params: Promise<{ jobId: str
     return <div className="text-center p-8 text-xs font-bold text-slate-400">Job not found</div>;
   }
 
-  
   const columns: { id: 'Sourced' | 'Screened' | 'Assessment' | 'Interview' | 'HR Round' | 'Panel' | 'Decision'; name: string }[] = [
     { id: 'Sourced', name: 'Applied' }
   ];
