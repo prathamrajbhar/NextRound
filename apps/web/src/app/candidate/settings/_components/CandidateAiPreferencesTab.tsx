@@ -2,9 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Volume2,
   Mic,
-  MicOff,
   Video,
   VideoOff,
   CheckCircle2,
@@ -237,7 +235,7 @@ export function CandidateAiPreferencesTab({ onSave }: CandidateAiPreferencesTabP
                   <VideoOff className="h-6 w-6 text-slate-500 mx-auto" />
                   <div>
                     <span className="text-xs font-bold text-slate-300 block">Webcam Feed Inactive</span>
-                    <span className="text-[10px] text-slate-500 block max-w-[200px] mx-auto mt-0.5">Click "Preview Cam" to check your hardware feed.</span>
+                    <span className="text-[10px] text-slate-500 block max-w-[200px] mx-auto mt-0.5">Click &quot;Preview Cam&quot; to check your hardware feed.</span>
                   </div>
                 </div>
               )}

@@ -371,7 +371,7 @@ export default function CandidateProfile() {
     setUploadingResume(true);
     setSaveError('');
     try {
-      const currentData = buildPayload() as any;
+      const currentData = buildPayload() as Record<string, unknown>;
       currentData.resumeUrl = null;
       currentData.rawResumeText = null;
       currentData.parsedResume = {};
