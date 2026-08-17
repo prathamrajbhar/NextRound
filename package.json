@@ -7,8 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently --kill-others \"turbo dev\" \"node scripts/run-ai-service.js\"",
-    "build": "turbo build",
+    "dev": "concurrently --kill-others \"node --env-file=.env node_modules/turbo/bin/turbo dev\" \"node --env-file=.env scripts/run-ai-service.js\"",
+    "build": "node --env-file=.env node_modules/turbo/bin/turbo build",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "clean": "turbo clean",

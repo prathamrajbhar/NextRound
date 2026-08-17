@@ -86,24 +86,14 @@ npm install
 
 ### 2. Configure Environment Variables (`.env`)
 
-Each workspace loads its own `.env`. Copy each `.env.example` and fill in real values:
+A single `.env` file at the root folder configures all services in the monorepo. Copy the root `.env.example` and fill in the real values:
 
 ```bash
-# API (apps/api) — ports, DB, Redis, JWT secrets, SMTP, scraper
-cp apps/api/.env.example apps/api/.env
-
-# Web (apps/web) — public app/API/AI URLs
-cp apps/web/.env.example apps/web/.env
-
-# AI Service (apps/ai-service) — LLM keys, Redis, internal secret
-cp apps/ai-service/.env.example apps/ai-service/.env
-
-# Database package (packages/database) — Prisma DATABASE_URL
-cp packages/database/.env.example packages/database/.env
+# Copy the example file at the root
+cp .env.example .env
 ```
 
 > Secrets must be at least 16 characters; generate with `openssl rand -hex 32`.
-> `INTERNAL_SERVICE_SECRET` must match between `apps/api/.env` and `apps/ai-service/.env`.
 
 ### 3. Setup Database Schema & Seed Data
 
