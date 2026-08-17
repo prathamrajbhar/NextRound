@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#080b11" />
+  <title>You're offline — HireOS</title>
+  <link rel="icon" href="/logo.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-canvas: #080b11;
+      --card-bg: rgba(15, 23, 42, 0.65);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --card-border-glow: rgba(249, 115, 22, 0.25);
+      --text-heading: #f8fafc;
+      --text-body: #94a3b8;
+      --text-muted: #64748b;
+      --brand-500: #f97316;
+      --brand-600: #ea580c;
+      --brand-400: #fb923c;
+      --brand-glow: rgba(249, 115, 22, 0.22);
+      --danger-500: #ef4444;
+      --danger-glow: rgba(239, 68, 68, 0.2);
+      --success-500: #22c55e;
+      --warning-500: #f59e0b;
+      --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    html {
+      height: 100%;
+      background-color: var(--bg-canvas);
+    }
+
+    body {
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      background: var(--bg-canvas);
+      color: var(--text-body);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Background Effects */
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 80%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .ambient-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(140px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.7;
+    }
+
+    .orb-1 {
+      top: -12%;
+      left: 20%;
+      width: 50vmax;
+      height: 50vmax;
+      background: radial-gradient(circle, rgba(249, 115, 22, 0.12) 0%, rgba(234, 88, 12, 0.03) 70%, transparent 100%);
+    }
+
+    .orb-2 {
+      bottom: -15%;
+      right: 15%;
+      width: 55vmax;
+      height: 55vmax;
+      background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(59, 130, 246, 0.02) 70%, transparent 100%);
+    }
+
+    /* Card Container */
+    .card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 680px;
+      padding: 52px 44px 40px;
+      background: var(--card-bg);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      box-shadow: 
+        0 30px 60px -12px rgba(0, 0, 0, 0.6),
+        0 18px 36px -18px rgba(0, 0, 0, 0.4),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1);
+      text-align: center;
+      animation: card-appear 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    /* Header Signal Visualizer */
+    .radar-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+
+    .radar-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(249, 115, 22, 0.25);
+      animation: radar-ping 3s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+      pointer-events: none;
+    }
+
+    .radar-ring:nth-child(1) {
+      width: 100px;
+      height: 100px;
+      animation-delay: 0s;
+    }
+
+    .radar-ring:nth-child(2) {
+      width: 130px;
+      height: 130px;
+      animation-delay: 1s;
+    }
+
+    .icon-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 84px;
+      height: 84px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(234, 88, 12, 0.06) 100%);
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      color: var(--brand-400);
+      box-shadow: 0 12px 24px -6px rgba(249, 115, 22, 0.25);
+      z-index: 2;
+    }
+
+    .icon-container svg {
+      width: 36px;
+      height: 36px;
+    }
+
+    /* Status Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.22);
+      border-radius: 9999px;
+      font-size: 0.825rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #fca5a5;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--danger-500);
+      position: relative;
+      box-shadow: 0 0 10px var(--danger-500);
+    }
+
+    .badge-dot::after {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      background: var(--danger-500);
+      animation: pulse-dot 1.8s ease-in-out infinite;
+    }
+
+    /* Content Typography */
+    h1 {
+      color: var(--text-heading);
+      font-size: 2.1rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.25;
+      margin-bottom: 12px;
+    }
+
+    .description {
+      font-size: 1.025rem;
+      color: var(--text-body);
+      max-width: 520px;
+      margin: 0 auto 36px;
+      line-height: 1.65;
+    }
+
+    /* Diagnostic Telemetry Grid */
+    .telemetry-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .telemetry-card {
+      padding: 16px 14px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      text-align: left;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .telemetry-card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .telemetry-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .telemetry-value {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-heading);
+    }
+
+    .telemetry-indicator {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .telemetry-indicator.off { background: var(--danger-500); box-shadow: 0 0 6px var(--danger-500); }
+    .telemetry-indicator.warn { background: var(--warning-500); box-shadow: 0 0 6px var(--warning-500); }
+    .telemetry-indicator.on { background: var(--success-500); box-shadow: 0 0 6px var(--success-500); }
+
+    /* Session Safe Notice */
+    .safe-notice {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background: rgba(249, 115, 22, 0.06);
+      border: 1px solid rgba(249, 115, 22, 0.15);
+      border-radius: 14px;
+      font-size: 0.875rem;
+      color: #fed7aa;
+      margin-bottom: 36px;
+    }
+
+    .safe-notice svg {
+      width: 18px;
+      height: 18px;
+      color: var(--brand-400);
+      flex-shrink: 0;
+    }
+
+    /* Actions Row */
+    .actions-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .btn-primary {
+      flex: 2;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      height: 52px;
+      padding: 0 24px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: linear-gradient(135deg, var(--brand-500) 0%, var(--brand-600) 100%);
+      color: #ffffff;
+      font-family: var(--font-sans);
+      font-size: 0.975rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 20px -4px rgba(234, 88, 12, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #fb923c 0%, var(--brand-500) 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 12px 24px -4px rgba(234, 88, 12, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 12px -2px rgba(234, 88, 12, 0.4);
+    }
+
+    .btn-primary:focus-visible {
+      outline: 2px solid var(--brand-400);
+      outline-offset: 3px;
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.75;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 52px;
+      padding: 0 18px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-heading);
+      font-family: var(--font-sans);
+      font-size: 0.925rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+
+    .btn-secondary:active {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .btn-secondary svg {
+      width: 17px;
+      height: 17px;
+      color: var(--text-body);
+    }
+
+    /* Auto Retry Progress Bar */
+    .auto-retry-box {
+      margin-top: 16px;
+    }
+
+    .auto-retry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-family: var(--font-mono);
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--brand-500), var(--brand-400));
+      border-radius: 999px;
+      transform-origin: left;
+      transition: transform 1s linear;
+    }
+
+    /* Toast Message */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      opacity: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      color: #f8fafc;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .footer {
+      margin-top: 32px;
+      font-size: 0.775rem;
+      color: var(--text-muted);
+      letter-spacing: 0.01em;
+    }
+
+    /* Keyframes */
+    @keyframes card-appear {
+      from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes radar-ping {
+      0% {
+        transform: scale(0.6);
+        opacity: 0.8;
+      }
+      70%, 100% {
+        transform: scale(1.6);
+        opacity: 0;
+      }
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.8); opacity: 0; }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .spin {
+      animation: spin 0.9s linear infinite;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 640px) {
+      .card {
+        padding: 36px 24px 28px;
+        border-radius: 22px;
+      }
+
+      h1 {
+        font-size: 1.65rem;
+      }
+
+      .description {
+        font-size: 0.95rem;
+      }
+
+      .telemetry-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .actions-row {
+        flex-direction: column;
+      }
+
+      .btn-primary, .btn-secondary {
+        width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card, .radar-ring, .badge-dot::after, .progress-fill, .spin {
+        animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="ambient-orb orb-1"></div>
+  <div class="ambient-orb orb-2"></div>
+
+  <main class="card" role="main" aria-labelledby="offline-title">
+    <!-- Signal Radar Visualizer -->
+    <div class="radar-wrapper" aria-hidden="true">
+      <div class="radar-ring"></div>
+      <div class="radar-ring"></div>
+      <div class="icon-container">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="2" y1="2" x2="22" y2="22" />
+          <path d="M8.5 16.5a5 5 0 0 1 7 0" />
+          <path d="M2 8.82a15 15 0 0 1 4.17-2.65" />
+          <path d="M10.66 5c4.01-.36 8.14.9 11.34 3.76" />
+          <path d="M16.85 11.25a10 10 0 0 1 2.22 1.68" />
+          <path d="M5 13a10 10 0 0 1 5.24-2.76" />
+          <circle cx="12" cy="20" r="1" />
+        </svg>
+      </div>
+    </div>
+
+    <!-- Offline Status Badge -->
+    <div>
+      <div class="badge" role="status">
+        <span class="badge-dot" aria-hidden="true"></span>
+        <span id="status-badge-text">Connection Interrupted</span>
+      </div>
+    </div>
+
+    <h1 id="offline-title">You're currently offline</h1>
+    <p class="description">
+      We lost connection to the server. Your current interview progress and workspace state are saved locally on this machine.
+    </p>
+
+    <!-- Telemetry Cards Grid -->
+    <div class="telemetry-grid">
+      <div class="telemetry-card">
+        <div class="telemetry-label">Local Interface</div>
+        <div class="telemetry-value">
+          <span class="telemetry-indicator warn" id="indicator-local"></span>
+          <span id="val-local">Checking...</span>
+        </div>
+      </div>
+
+      <div class="telemetry-card">
+        <div class="telemetry-label">Gateway Ping</div>
+        <div class="telemetry-value">
+          <span class="telemetry-indicator off" id="indicator-gateway"></span>
+          <span id="val-gateway">Unreachable</span>
+        </div>
+      </div>
+
+      <div class="telemetry-card">
+        <div class="telemetry-label">HireOS Cloud</div>
+        <div class="telemetry-value">
+          <span class="telemetry-indicator off" id="indicator-cloud"></span>
+          <span id="val-cloud">Offline Standby</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Reassurance Box -->
+    <div class="safe-notice">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      </svg>
+      <span>Session progress auto-saved. No data will be lost when reconnecting.</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="actions-row">
+      <button type="button" class="btn-primary" id="retry-btn">
+        <svg id="retry-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px;">
+          <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+          <path d="M8 16H3v5" />
+          <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+          <path d="M21 3v5h-5" />
+        </svg>
+        <span id="retry-label">Reconnect Now</span>
+      </button>
+
+      <button type="button" class="btn-secondary" id="copy-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+        <span>Copy Logs</span>
+      </button>
+    </div>
+
+    <!-- Auto Retry Bar -->
+    <div class="auto-retry-box">
+      <div class="auto-retry-header">
+        <span>AUTO-RECONNECT TELEMETRY</span>
+        <span id="countdown-text">Retrying in 10s</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-bar"></div>
+      </div>
+    </div>
+
+    <p class="footer">HireOS &middot; AI-Native Hiring Infrastructure</p>
+  </main>
+
+  <!-- Toast Element -->
+  <div class="toast" id="toast-msg">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 16px; height: 16px;">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+    <span>Diagnostic details copied to clipboard</span>
+  </div>
+
+  <script>
+    (function () {
+      var btn = document.getElementById("retry-btn");
+      var label = document.getElementById("retry-label");
+      var icon = document.getElementById("retry-icon");
+      var copyBtn = document.getElementById("copy-btn");
+      var toast = document.getElementById("toast-msg");
+      var progressBar = document.getElementById("progress-bar");
+      var countdownText = document.getElementById("countdown-text");
+      
+      var indicatorLocal = document.getElementById("indicator-local");
+      var valLocal = document.getElementById("val-local");
+
+      var autoRetryInterval = 10;
+      var countdown = autoRetryInterval;
+      var timerId = null;
+      var checking = false;
+
+      function updateTelemetry() {
+        if (navigator.onLine) {
+          indicatorLocal.className = "telemetry-indicator on";
+          valLocal.textContent = "Online";
+        } else {
+          indicatorLocal.className = "telemetry-indicator warn";
+          valLocal.textContent = "Disconnected";
+        }
+      }
+
+      function resetCountdown() {
+        countdown = autoRetryInterval;
+        updateProgress();
+      }
+
+      function updateProgress() {
+        var percentage = (countdown / autoRetryInterval);
+        progressBar.style.transform = "scaleX(" + percentage + ")";
+        countdownText.textContent = "Retrying in " + countdown + "s";
+      }
+
+      function startTimer() {
+        if (timerId) clearInterval(timerId);
+        resetCountdown();
+        timerId = setInterval(function () {
+          if (checking) return;
+          countdown--;
+          if (countdown <= 0) {
+            triggerRetry();
+          } else {
+            updateProgress();
+          }
+        }, 1000);
+      }
+
+      function setCheckingState() {
+        checking = true;
+        btn.disabled = true;
+        icon.classList.add("spin");
+        label.textContent = "Testing Connection...";
+      }
+
+      function setIdleState() {
+        checking = false;
+        btn.disabled = false;
+        icon.classList.remove("spin");
+        label.textContent = "Reconnect Now";
+        resetCountdown();
+      }
+
+      function refreshPage() {
+        window.location.reload();
+      }
+
+      function triggerRetry() {
+        if (checking) return;
+        setCheckingState();
+
+        if (navigator.onLine) {
+          refreshPage();
+          return;
+        }
+
+        setTimeout(function () {
+          updateTelemetry();
+          if (navigator.onLine) {
+            refreshPage();
+          } else {
+            setIdleState();
+          }
+        }, 1200);
+      }
+
+      btn.addEventListener("click", function () {
+        triggerRetry();
+      });
+
+      copyBtn.addEventListener("click", function () {
+        var diagData = [
+          "--- HireOS Offline Diagnostic ---",
+          "Timestamp: " + new Date().toISOString(),
+          "Browser Online Status: " + (navigator.onLine ? "Online" : "Offline"),
+          "UserAgent: " + navigator.userAgent,
+          "URL: " + window.location.href
+        ].join("\n");
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(diagData).then(showToast);
+        } else {
+          showToast();
+        }
+      });
+
+      function showToast() {
+        toast.classList.add("show");
+        setTimeout(function () {
+          toast.classList.remove("show");
+        }, 2800);
+      }
+
+      window.addEventListener("online", refreshPage);
+      window.addEventListener("offline", updateTelemetry);
+
+      updateTelemetry();
+      startTimer();
+    })();
+  </script>
+</body>
+</html>
