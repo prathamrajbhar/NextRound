@@ -443,15 +443,13 @@ export function InterviewStage({
 
         <div className="h-4 w-px bg-white/10 mx-1" />
 
-        <button
-          type="button"
-          onClick={onEndCall}
-          className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-md active:scale-95"
+        <div
+          className="px-4 py-2 rounded-xl bg-slate-800/40 border border-white/10 text-slate-400 text-xs font-semibold flex items-center gap-2 select-none cursor-not-allowed shadow-inner opacity-80"
+          title="The AI Agent will automatically complete the call once all resume details are gathered"
         >
-          <PhoneOff className="h-3.5 w-3.5" />
-          <span>Finish &amp; Build Resume</span>
-          <ArrowRight className="h-3.5 w-3.5" />
-        </button>
+          <Sparkles className="h-3.5 w-3.5 text-orange-400 animate-pulse" />
+          <span>AI Agent Auto-Finish Active</span>
+        </div>
       </div>
 
     </div>
