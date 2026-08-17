@@ -70,7 +70,23 @@ interface RawResumeData {
   }[];
   certifications?: string[];
 }
-import { Sparkles, Loader2, AlertCircle } from '@/lib/lucide-google-icons';
+import { Sparkles, Loader2, AlertCircle, RotateCcw } from '@/lib/lucide-google-icons';
+
+// inside CandidateResumeBuilder component:
+  const handleRetryGeneration = async () => {
+    if (!sessionId) return;
+    setResumeStatus('generating');
+    try {
+      await apiClient.post(`/resume-builder/${sessionId}/end`, {
+        transcript: conversationHistory.map((h) => ({
+          speaker: h.role,
+          text: h.content,
+        })),
+      });
+    } catch (err) {
+      console.warn('Retry end-call request warning:', err);
+    }
+  };
 
 const DEFAULT_GENERATED_RESUME: ATSResumeData = {
   name: '',
@@ -270,6 +286,21 @@ export default function AIResumeBuilderPage() {
     setTimeout(() => setCopiedText(false), 2000);
   };
 
+  const handleRetryGeneration = async () => {
+    if (!sessionId) return;
+    setResumeStatus('generating');
+    try {
+      await apiClient.post(`/resume-builder/${sessionId}/end`, {
+        transcript: conversationHistory.map((h) => ({
+          speaker: h.role,
+          text: h.content,
+        })),
+      });
+    } catch (err) {
+      console.warn('Retry end-call request warning:', err);
+    }
+  };
+
   return (
     <div className="w-full flex-1 flex flex-col justify-between pb-2 animate-in fade-in duration-300">
       {stage === 'setup' && (
@@ -329,20 +360,29 @@ export default function AIResumeBuilderPage() {
           {resumeStatus === 'error' && (
             <div className="flex-1 flex flex-col items-center justify-center space-y-4 min-h-[500px]">
               <AlertCircle className="h-14 w-14 text-rose-500" />
-              <div className="text-center space-y-1">
+              <div className="text-center space-y-1 max-w-md">
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100">
-                  Generation Failed
+                  Generation Timed Out
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
-                  We encountered an error generating your resume from the interview. Please try again.
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                  The AI worker experienced a temporary timeout or connection delay. You can retry generating your ATS resumé directly without losing your interview transcript.
                 </p>
               </div>
-              <button
-                onClick={() => setStage('setup')}
-                className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-all"
-              >
-                Restart Session
-              </button>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={handleRetryGeneration}
+                  className="px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition-all shadow-md flex items-center gap-2"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Retry Generation
+                </button>
+                <button
+                  onClick={() => setStage('setup')}
+                  className="px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all"
+                >
+                  Start New Session
+                </button>
+              </div>
             </div>
           )}
 
