@@ -444,11 +444,11 @@ export function InterviewStage({
         <div className="h-4 w-px bg-white/10 mx-1" />
 
         <div
-          className="px-4 py-2 rounded-xl bg-slate-800/40 border border-white/10 text-slate-400 text-xs font-semibold flex items-center gap-2 select-none cursor-not-allowed shadow-inner opacity-80"
-          title="The AI Agent will automatically complete the call once all resume details are gathered"
+          className="px-3.5 py-2 rounded-xl bg-slate-900/60 border border-white/10 text-slate-300 text-xs font-medium flex items-center gap-2 select-none backdrop-blur-md shadow-sm"
+          title="Session automatically completes once interview wrap-up is reached"
         >
-          <Sparkles className="h-3.5 w-3.5 text-orange-400 animate-pulse" />
-          <span>AI Agent Auto-Finish Active</span>
+          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Auto-completes when finished</span>
         </div>
       </div>
 
