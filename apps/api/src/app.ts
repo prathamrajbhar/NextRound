@@ -3,7 +3,7 @@ import path from 'path';
 import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
-import { UPLOAD_ROOT_DIR } from './lib/storage';
+
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
 import { apiRouter } from './routes';
@@ -23,7 +23,7 @@ app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/uploads', express.static(UPLOAD_ROOT_DIR));
+
 
 app.get('/api/v1/health', (_req, res) => {
   res.json({

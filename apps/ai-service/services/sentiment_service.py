@@ -31,23 +31,16 @@ def _resolve_audio_bytes(audio_url: str) -> Optional[bytes]:
     if not audio_url or not audio_url.strip():
         return None
 
-    if audio_url.startswith(("http://", "https://")):
-        try:
-            response = httpx.get(audio_url, timeout=60)
-            response.raise_for_status()
-            return response.content
-        except Exception as err:
-            logger.error(f"Failed to fetch interview audio from URL: {err}")
-            return None
+    if not audio_url.startswith(("http://", "https://")):
+        logger.error(f"Local audio fallback is disabled. Invalid audio URL: {audio_url}")
+        return None
 
-    path = audio_url
-    if not os.path.isabs(path):
-        path = os.path.join(settings.upload_dir, path)
     try:
-        with open(path, "rb") as audio_file:
-            return audio_file.read()
+        response = httpx.get(audio_url, timeout=60)
+        response.raise_for_status()
+        return response.content
     except Exception as err:
-        logger.error(f"Failed to read interview audio file {path}: {err}")
+        logger.error(f"Failed to fetch interview audio from URL: {err}")
         return None
 
 def _decode_to_mono_pcm(audio_bytes: bytes) -> Optional[np.ndarray]:

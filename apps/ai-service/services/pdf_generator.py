@@ -10,15 +10,9 @@ from core.config import settings
 
 logger = logging.getLogger("pdf_generator")
 
-LOCAL_UPLOADS_DIR = "/tmp/nextround-uploads"
-
 def upload_to_supabase(file_path: str, key: str, content_type: str = "application/pdf") -> str:
     if not settings.supabase_url or not settings.supabase_service_role_key:
-        logger.warning("Supabase credentials not configured in settings. Persisting PDF to local /uploads dir.")
-        dest = os.path.join(LOCAL_UPLOADS_DIR, key)
-        os.makedirs(os.path.dirname(dest), exist_ok=True)
-        shutil.copy2(file_path, dest)
-        return f"/uploads/{key}"
+        raise RuntimeError("Supabase credentials not configured in settings. Local storage fallback is disabled.")
 
     with open(file_path, "rb") as f:
         file_data = f.read()

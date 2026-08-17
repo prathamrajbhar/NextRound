@@ -12,14 +12,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
   },
 });
 
-export const UPLOAD_ROOT_DIR = '/tmp/nextround-uploads';
-export const SUB_DIRECTORIES = ['resumes', 'audio', 'video', 'offers', 'misc'];
-
-export function ensureUploadDirsExist(): void {
-
-  return;
-}
-
 export async function uploadFile(
   key: string,
   body: Buffer,

@@ -20,10 +20,6 @@ class Settings(BaseSettings):
     supabase_url: str = ""
     supabase_service_role_key: str = ""
     supabase_storage_bucket: str = "nextround-storage"
-    upload_dir: str = os.getenv(
-        "UPLOAD_DIR",
-        os.path.abspath(os.path.join(os.path.dirname(__file__), "../../api/uploads"))
-    )
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parent.parent / ".env",
