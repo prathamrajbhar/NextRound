@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../../lib/prisma';
-import { authenticate } from '../../middleware/auth';
+import { authenticate, optionalAuthenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { ResumeBuilderSessionCreateSchema } from '@nextround/shared';
 import { enqueueResumeBuilder } from '../../lib/queues/resume-builder.queue';
@@ -49,8 +49,7 @@ resumeBuilderRouter.get(
 
 resumeBuilderRouter.post(
   '/sessions',
-  authenticate,
-  requireRole('candidate'),
+  optionalAuthenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const parsed = ResumeBuilderSessionCreateSchema.safeParse(req.body);
@@ -58,7 +57,13 @@ resumeBuilderRouter.post(
         return res.status(400).json({ success: false, error: parsed.error.issues[0]?.message || 'Invalid payload' });
       }
 
-      const candidateId = await getCandidateProfileId(req.user!.userId);
+      let candidateId: string | undefined = undefined;
+      if (req.user) {
+        try {
+          candidateId = await getCandidateProfileId(req.user.userId);
+        } catch {}
+      }
+
       const { targetRole, targetCompany, existingResumeText, careerGoals } = parsed.data;
 
       const session = await prisma.mockSession.create({
@@ -88,15 +93,12 @@ resumeBuilderRouter.post(
 
 resumeBuilderRouter.get(
   '/:sessionId',
-  authenticate,
-  requireRole('candidate'),
+  optionalAuthenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const candidateId = await getCandidateProfileId(req.user!.userId);
       const session = await prisma.mockSession.findFirst({
         where: {
           id: req.params.sessionId as string,
-          candidate_id: candidateId,
           type: 'resume_builder',
         },
       });
@@ -117,15 +119,12 @@ resumeBuilderRouter.get(
 
 resumeBuilderRouter.post(
   '/:sessionId/end',
-  authenticate,
-  requireRole('candidate'),
+  optionalAuthenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const candidateId = await getCandidateProfileId(req.user!.userId);
       const session = await prisma.mockSession.findFirst({
         where: {
           id: req.params.sessionId as string,
-          candidate_id: candidateId,
           type: 'resume_builder',
         },
       });
@@ -170,15 +169,12 @@ resumeBuilderRouter.post(
 
 resumeBuilderRouter.get(
   '/:sessionId/result',
-  authenticate,
-  requireRole('candidate'),
+  optionalAuthenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const candidateId = await getCandidateProfileId(req.user!.userId);
       const session = await prisma.mockSession.findFirst({
         where: {
           id: req.params.sessionId as string,
-          candidate_id: candidateId,
           type: 'resume_builder',
         },
       });

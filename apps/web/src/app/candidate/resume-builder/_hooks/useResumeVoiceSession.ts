@@ -248,11 +248,10 @@ export function useResumeVoiceSession({
             text: h.content,
           })),
         });
-        onComplete(activeSessionId, finalHistory);
       } catch (err) {
-        console.error('Failed to end session:', err);
-
-        setError('Failed to finish the session. Please try again.');
+        console.warn('Backend end-session call warning (proceeding to resume stage):', err);
+      } finally {
+        onComplete(activeSessionId, finalHistory);
       }
     },
     [stopSpeechRecognition, onComplete]
