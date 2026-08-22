@@ -9,7 +9,7 @@ import { Loader2 } from '@/lib/lucide-google-icons';
 export default function AIResumeBuilderSetupPage() {
   const router = useRouter();
   const [targetRole, setTargetRole] = useState('Senior Full Stack Engineer');
-  const [experienceLevel, setExperienceLevel] = useState('Senior (5+ Years)');
+  const [experienceLevel, setExperienceLevel] = useState('Fresher (0-2 Years)');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

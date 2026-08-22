@@ -147,6 +147,7 @@ export const MockSessionCreateSchema = z.object({
 export const ResumeBuilderSessionCreateSchema = z.object({
   targetRole: z.string().min(2, 'Target role is required'),
   targetCompany: z.string().optional().nullable(),
+  experienceLevel: z.string().optional().nullable(),
   existingResumeText: z.string().optional(),
   careerGoals: z.string().optional(),
 });

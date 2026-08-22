@@ -60,7 +60,7 @@ resumeBuilderRouter.post(
 
       const candidateId = await getCandidateProfileId(req.user!.userId);
 
-      const { targetRole, targetCompany, existingResumeText, careerGoals } = parsed.data;
+      const { targetRole, targetCompany, existingResumeText, careerGoals, experienceLevel } = parsed.data;
 
       const session = await prisma.mockSession.create({
         data: {
@@ -69,6 +69,7 @@ resumeBuilderRouter.post(
           status: 'active',
           target_role: targetRole,
           target_company: targetCompany || 'Target Enterprise',
+          difficulty: experienceLevel || null,
           focus_areas: careerGoals ? [careerGoals] : [],
           rubric: existingResumeText ? { rawText: existingResumeText } : {},
         },

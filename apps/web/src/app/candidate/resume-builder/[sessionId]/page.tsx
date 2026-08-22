@@ -116,29 +116,31 @@ export default function AIResumeBuilderSessionPage({ params }: { params: Promise
   const videoRef = useRef<HTMLVideoElement>(null);
   const callStartedRef = useRef(false);
 
-  // Fetch session details on mount
   useEffect(() => {
     let active = true;
     apiClient.get<{
-      target_company?: string;
-      target_role?: string;
-      difficulty?: string;
-      status?: string;
-      generated_resume?: RawResumeData;
-      resume_pdf_url?: string;
+      session: {
+        target_company?: string;
+        target_role?: string;
+        difficulty?: string;
+        status?: string;
+        generated_resume?: RawResumeData;
+        resume_pdf_url?: string;
+      };
     }>(`/resume-builder/${sessionId}`)
       .then((res) => {
         if (!active) return;
-        if (!res) {
+        const s = res?.session;
+        if (!s) {
           throw new Error('Session not found');
         }
 
-        const role = res.target_role || 'Senior Full Stack Engineer';
-        const level = res.difficulty || 'Senior (5+ Years)';
+        const role = s.target_role || 'Senior Full Stack Engineer';
+        const level = s.difficulty || 'Fresher (0-2 Years)';
         setTargetRole(role);
         setExperienceLevel(level);
 
-        const status = res.status || 'created';
+        const status = s.status || 'created';
         if (status === 'active' || status === 'created') {
           setStage('interview');
         } else {

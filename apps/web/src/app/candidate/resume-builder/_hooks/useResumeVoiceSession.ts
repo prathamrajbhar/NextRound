@@ -288,6 +288,7 @@ export function useResumeVoiceSession({
             transcript: candidateResponse,
             targetRole,
             targetCompany: 'Target Enterprise',
+            experienceLevel,
             stage: currentStage,
             turnNumber: currentTurnIndex,
             conversationHistory: newHistory.map((h) => ({
@@ -349,7 +350,7 @@ export function useResumeVoiceSession({
         setAiState('listening');
       }
     },
-    [targetRole, speakText, startSpeechRecognition, stopSpeechRecognition, handleFinalize]
+    [targetRole, experienceLevel, speakText, startSpeechRecognition, stopSpeechRecognition, handleFinalize]
   );
 
   const startCall = useCallback(async () => {
