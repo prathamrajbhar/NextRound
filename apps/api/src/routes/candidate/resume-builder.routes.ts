@@ -149,35 +149,45 @@ resumeBuilderRouter.post(
           status: 'scoring',
           ended_at: new Date(),
           transcript: req.body.transcript || session.transcript || [],
+          rubric: {
+            ...(typeof session.rubric === 'object' && session.rubric !== null ? session.rubric as object : {}),
+            ...(req.body.memory ? { memory: req.body.memory } : {}),
+          },
         },
       });
 
+      let bullmqSuccess = false;
       try {
         await enqueueResumeBuilder(
           updated.id,
           candidateId,
           updated.transcript,
           updated.target_role,
-          updated.target_company
+          updated.target_company,
+          req.body.memory || null
         );
+        bullmqSuccess = true;
       } catch (queueErr) {
-        console.warn('BullMQ enqueue warning:', queueErr);
+        console.warn('BullMQ enqueue warning (falling back to direct HTTP trigger):', queueErr);
       }
 
-      // Trigger direct background generation on Python AI Service for 100% processing reliability
-      const aiServiceUrl = process.env.AI_BASE_URL || 'http://localhost:8000';
-      fetch(`${aiServiceUrl}/api/v1/ai/interview/resume-builder/generate`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: updated.id,
-          targetRole: updated.target_role,
-          targetCompany: updated.target_company,
-          transcript: updated.transcript,
-        }),
-      }).catch((aiErr) => {
-        console.warn('Direct AI service background trigger warning:', aiErr);
-      });
+      // Only trigger direct background generation on Python AI Service if BullMQ fails
+      if (!bullmqSuccess) {
+        const aiServiceUrl = process.env.AI_BASE_URL || 'http://localhost:8000';
+        fetch(`${aiServiceUrl}/api/v1/ai/interview/resume-builder/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: updated.id,
+            targetRole: updated.target_role,
+            targetCompany: updated.target_company,
+            transcript: updated.transcript,
+            memory: req.body.memory || null,
+          }),
+        }).catch((aiErr) => {
+          console.warn('Direct AI service background trigger warning:', aiErr);
+        });
+      }
 
       return res.json({
         success: true,

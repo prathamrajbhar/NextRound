@@ -81,6 +81,12 @@ export function useResumeVoiceSession({
   const memoryRef = useRef<Record<string, unknown>>({});
   const speechStartRef = useRef(0);
   const recognitionActiveRef = useRef(false);
+  // Lock: prevents concurrent AI calls from overlapping (e.g. speech onend firing mid-fetch)
+  const isProcessingRef = useRef(false);
+  // Tracks component mount state so stale fetch callbacks don't mutate unmounted state
+  const mountedRef = useRef(true);
+  // Holds the AbortController for the current in-flight AI request
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     conversationHistoryRef.current = conversationHistory;
@@ -112,7 +118,11 @@ export function useResumeVoiceSession({
   const submitResponseRef = useRef<((text: string) => Promise<void>) | null>(null);
 
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
+      // Cancel any in-flight AI request so its callback can't play audio after navigation
+      abortControllerRef.current?.abort();
       stopAudio();
       const recognition = recognitionRef.current;
       if (recognition) {
@@ -189,11 +199,8 @@ export function useResumeVoiceSession({
         if (spokenText && spokenText.trim().length > 1) {
           submitResponseRef.current?.(spokenText);
         } else {
-
-          try {
-            recognitionRef.current?.start();
-            recognitionActiveRef.current = true;
-          } catch {}
+          // Create a FRESH recognition instance — the ended one can't be restarted
+          setTimeout(() => startSpeechRecognition(), 100);
         }
       }
     };
@@ -249,6 +256,8 @@ export function useResumeVoiceSession({
             speaker: h.role,
             text: h.content,
           })),
+          // Pass the structured memory so the resume generator uses real facts, not hallucinations
+          memory: memoryRef.current,
         });
       } catch (err) {
         console.warn('Backend end-session call warning (proceeding to resume stage):', err);
@@ -266,6 +275,10 @@ export function useResumeVoiceSession({
       currentTurnIndex: number,
       currentStage: string
     ) => {
+      // Prevent concurrent AI calls (e.g. speech onend firing while a fetch is in-flight)
+      if (isProcessingRef.current) return;
+      isProcessingRef.current = true;
+
       setAiState('evaluating');
       stopSpeechRecognition();
 
@@ -279,10 +292,16 @@ export function useResumeVoiceSession({
         setConversationHistory(newHistory);
       }
 
+      // Create a fresh AbortController for this request
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
       try {
         const res = await fetch(`${siteConfig.aiServiceUrl}/api/v1/ai/resume-builder/respond`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
           body: JSON.stringify({
             sessionId: currentSessionId,
             transcript: candidateResponse,
@@ -299,6 +318,9 @@ export function useResumeVoiceSession({
           }),
         });
 
+        // If the component unmounted while we were waiting, bail out silently
+        if (!mountedRef.current) return;
+
         if (!res.ok) {
           throw new Error(`AI Service error: ${res.statusText}`);
         }
@@ -312,6 +334,8 @@ export function useResumeVoiceSession({
           memory?: Record<string, unknown>;
           audioUrl?: string;
         };
+
+        if (!mountedRef.current) return;
 
         if (data.memory) {
           setMemory(data.memory);
@@ -335,19 +359,27 @@ export function useResumeVoiceSession({
         if (data.isComplete) {
           setAiState('speaking');
           speakText(data.text, data.audioUrl, () => {
-            handleFinalize(currentSessionId, updatedHistory);
+            if (mountedRef.current) handleFinalize(currentSessionId, updatedHistory);
           });
         } else {
           speakText(data.text, data.audioUrl, () => {
+            if (!mountedRef.current) return;
             setAiState('listening');
             startSpeechRecognition();
           });
         }
       } catch (err: unknown) {
+        // Ignore AbortError — these happen on intentional navigation / cleanup
+        if (err instanceof Error && err.name === 'AbortError') return;
+        if (!mountedRef.current) return;
         const message = err instanceof Error ? err.message : 'Unknown error';
         console.error('Failed to get AI respond turn:', err);
         setError(message || 'Error communicating with AI voice agent.');
+        // Clear stale speech text so recognition onend doesn't immediately re-submit it
+        setCandidateSpeechText('');
         setAiState('listening');
+      } finally {
+        isProcessingRef.current = false;
       }
     },
     [targetRole, experienceLevel, speakText, startSpeechRecognition, stopSpeechRecognition, handleFinalize]
@@ -425,6 +457,10 @@ export function useResumeVoiceSession({
   }, [aiState, stopSpeechRecognition, startSpeechRecognition]);
 
   const abortCall = useCallback(() => {
+    // Cancel any in-flight request and release the processing lock
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    isProcessingRef.current = false;
     stopAudio();
     stopSpeechRecognition();
     setSessionId(null);

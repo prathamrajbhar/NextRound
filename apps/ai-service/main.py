@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from core.config import settings
 from core.logging_config import configure_logging
 from core.redis_client import get_redis_client, close_redis_client
@@ -28,7 +29,7 @@ async def lifespan(app: FastAPI):
     await worker_manager.stop_workers()
     await close_redis_client()
 
-from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI(
     title="NextRound AI Service",
@@ -39,9 +40,9 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

@@ -26,7 +26,7 @@ def upload_to_supabase(file_path: str, key: str, content_type: str = "applicatio
         "x-upsert": "true"
     }
 
-    with httpx.Client() as client:
+    with httpx.Client(timeout=30.0) as client:
         response = client.post(url, content=file_data, headers=headers)
         if response.status_code != 200:
             logger.error(f"Failed to upload to Supabase Storage: {response.status_code} - {response.text}")

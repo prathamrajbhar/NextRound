@@ -31,6 +31,7 @@ class ResumeBuilderRespondRequest(BaseModel):
     transcript: str
     targetRole: Optional[str] = None
     targetCompany: Optional[str] = None
+    experienceLevel: Optional[str] = None
     stage: Optional[str] = None
     turnNumber: int = 0
     conversationHistory: List[Dict[str, Any]] = Field(default_factory=list)
@@ -80,6 +81,7 @@ async def generate_resume_builder_response(request: ResumeBuilderRespondRequest)
         "session_id": request.sessionId,
         "target_role": request.targetRole,
         "target_company": request.targetCompany,
+        "experience_level": request.experienceLevel,
         "current_stage": request.stage,
         "turn_number": request.turnNumber,
         "latest_candidate_response": request.transcript,

@@ -74,6 +74,43 @@ export function InterviewStage({
   const [isChatOpen, setIsChatOpen] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
+  // Dragging state for the control bar
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return; // Only left click
+    const target = e.target as HTMLElement;
+    if (target.closest('button')) return; // Don't drag if clicking a button
+
+    setIsDragging(true);
+    dragStartPos.current = {
+      x: e.clientX - dragOffset.x,
+      y: e.clientY - dragOffset.y,
+    };
+    target.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    setDragOffset({
+      x: e.clientX - dragStartPos.current.x,
+      y: e.clientY - dragStartPos.current.y,
+    });
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    setIsDragging(false);
+    const target = e.target as HTMLElement;
+    try {
+      target.releasePointerCapture(e.pointerId);
+    } catch (err) {
+      // Ignore if pointer capture already released
+    }
+  };
+
   useEffect(() => {
     if (chatScrollRef.current && isChatOpen) {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
@@ -389,7 +426,19 @@ export function InterviewStage({
       </div>
 
       {/* Floating Bottom Control Bar */}
-      <div className="mx-auto px-5 py-2.5 rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-xl flex items-center gap-3 select-none shadow-2xl">
+      <div
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        style={{
+          transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
+          touchAction: 'none'
+        }}
+        className={`mx-auto px-5 py-2.5 rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-xl flex items-center gap-3 select-none shadow-2xl relative z-50 ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        }`}
+      >
         <button
           type="button"
           onClick={() => setMicActive(!micActive)}

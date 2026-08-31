@@ -25,6 +25,7 @@ class ResumeBuilderState(TypedDict, total=False):
     session_id: str
     target_role: str
     target_company: str
+    experience_level: Optional[str]
     current_stage: str
     turn_number: int
     latest_candidate_response: str
@@ -195,12 +196,15 @@ def _validate_analysis(parsed: Any) -> Optional[Dict[str, Any]]:
     return parsed
 
 def _build_greeting_prompt(state: ResumeBuilderState, target_role: str, target_company: str) -> str:
+    experience_level = state.get("experience_level") or ""
+    exp_context = f" The candidate has self-identified as {experience_level} level." if experience_level else ""
     return (
         f"{SYSTEM_PROMPT}\n\n"
         f"Context: helping the candidate build a resume for a {target_role or 'software engineering'} role "
-        f"at {target_company or 'target company'}.\n"
+        f"at {target_company or 'target company'}.{exp_context}\n"
         "This is the very first moment of the conversation. Greet the candidate warmly and briefly, then ask ONE "
-        "clear opening question to collect their name, current role, and experience level.\n"
+        "clear opening question to collect their name and current role "
+        + ("(you already know their experience level, so do not ask for it again)." if experience_level else "and experience level.") + "\n"
         "Return ONLY valid JSON (no prose, no markdown), exactly:\n"
         '{"response": str, "next_question": str, "action": "NEXT_TOPIC", "topic": "intro", '
         '"memory_update": null, "missing_information": []}'
@@ -212,6 +216,7 @@ def _build_turn_prompt(
     asked: List[str],
     target_role: str,
     target_company: str,
+    experience_level: Optional[str] = None,
 ) -> str:
     history = state.get("conversation_history") or []
     history_text = json.dumps(history[-10:], ensure_ascii=False)[:6000] if history else "(none yet)"
@@ -225,9 +230,10 @@ def _build_turn_prompt(
     stage = state.get("current_stage") or "intro"
     turn = state.get("turn_number", 0)
 
+    exp_context = f" Candidate experience level: {experience_level}." if experience_level else ""
     return (
         f"{SYSTEM_PROMPT}\n\n"
-        f"Context: {target_role or 'software engineering'} role at {target_company or 'target company'}.\n"
+        f"Context: {target_role or 'software engineering'} role at {target_company or 'target company'}.{exp_context}\n"
         f"Current topic: {stage} (turn {turn})\n"
         f"Stage order: {' -> '.join(STAGES)}.\n\n"
         f"CONVERSATION HISTORY:\n{history_text}\n\n"
@@ -331,8 +337,9 @@ def _generate_turn(
     asked: List[str],
     target_role: str,
     target_company: str,
+    experience_level: Optional[str] = None,
 ) -> Optional[Dict[str, Any]]:
-    raw = generate_text(_build_turn_prompt(state, memory, asked, target_role, target_company))
+    raw = generate_text(_build_turn_prompt(state, memory, asked, target_role, target_company, experience_level))
     parsed = extract_json_object(raw) if raw else None
     return _validate_analysis(parsed)
 
@@ -434,6 +441,7 @@ def _route_action(state: ResumeBuilderState, analysis: Dict[str, Any]) -> Resume
 def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
     target_role = state.get("target_role")
     target_company = state.get("target_company")
+    experience_level = state.get("experience_level") or None
     current_stage = state.get("current_stage") or "intro"
     turn = state.get("turn_number", 0) + 1
     state["turn_number"] = turn
@@ -457,7 +465,7 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
         return _handle_unclear(state, memory, current_stage)
 
     asked = _collect_asked_questions(memory, history)
-    analysis = _generate_turn(state, memory, asked, target_role, target_company)
+    analysis = _generate_turn(state, memory, asked, target_role, target_company, experience_level)
     if not analysis:
         logger.warning("ResumeBuilderAgent: LLM returned invalid or missing JSON; using heuristic fallback.")
         analysis = _heuristic_turn(state, memory, current_stage)

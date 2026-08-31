@@ -7,6 +7,20 @@ class Settings(BaseSettings):
     port: int = Field(8000, validation_alias="AI_PORT")
     host: str = Field("0.0.0.0", validation_alias="AI_HOST")
     environment: str = Field("development", validation_alias="AI_ENVIRONMENT")
+    # Stored as a raw comma-separated string to prevent pydantic-settings from
+    # attempting JSON-decode on the env var before any validator can intercept it
+    # (list[str]-typed fields trigger automatic JSON parsing at the source level).
+    # The public `cors_origins` property below splits it at access time.
+    cors_origins_raw: str = Field(
+        default="http://localhost:3000",
+        validation_alias="CORS_ORIGINS",
+    )
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Returns the allowed CORS origins as a list, split from CORS_ORIGINS env var."""
+        return [o.strip() for o in self.cors_origins_raw.split(",") if o.strip()]
+
     internal_service_secret: str = "internal_secret_key_change_in_production"
     api_base_url: str = "http://localhost:4000/api/v1"
     redis_provider: str = Field("local", validation_alias="REDIS_PROVIDER")
