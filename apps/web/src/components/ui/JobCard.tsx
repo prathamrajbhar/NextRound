@@ -59,7 +59,7 @@ export function JobCard({
   compact = false,
 }: JobCardProps) {
   const detailsUrl = viewHref || `/candidate/jobs/${id}`;
-  const applyUrl = applyHref || `/signup?role=candidate&jobId=${id}`;
+  const applyUrl = applyHref || `/candidate/jobs/${id}`;
 
   return (
     <div
