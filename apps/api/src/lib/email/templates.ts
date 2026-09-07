@@ -161,13 +161,34 @@ export function buildWelcomeCandidateEmail(params: {
     },
     secondaryText,
   });
-  const text = `Hello ${params.name},
+  const text = `Hello ${params.name},\n\nWelcome to NextRound. Your candidate account is active.\n\nAccess your portal here: ${params.loginUrl}\n\nNextRound Team`;
+  return { subject, html, text };
+}
 
-Welcome to NextRound. Your candidate account is active.
-
-Access your portal here: ${params.loginUrl}
-
-NextRound Team`;
+export function buildWelcomeHREmail(params: {
+  name: string;
+  orgName?: string;
+  dashboardUrl: string;
+}): { subject: string; html: string; text: string } {
+  const org = params.orgName ? ` at ${params.orgName}` : '';
+  const title = `Welcome to NextRound${org}`;
+  const subject = `Welcome to NextRound — Your Hiring Workspace is Ready`;
+  const contentHtml = `
+    <p style="margin:0 0 14px 0;">Hello <strong>${escapeHtml(params.name)}</strong>,</p>
+    <p style="margin:0 0 14px 0;">Your HR recruiter workspace has been created${params.orgName ? ` for <strong>${escapeHtml(params.orgName)}</strong>` : ''}. NextRound empowers your team to configure hiring rubrics, schedule autonomous voice assessments, and review AI candidate evaluations with zero human bottlenecks.</p>
+    <p style="margin:0;">You can access your recruiter dashboard below to create job requisitions, configure assessment criteria, or invite team members.</p>
+  `;
+  const secondaryText = 'If you did not create this workspace, please reach out to support immediately.';
+  const html = renderProfessionalEmailLayout({
+    title,
+    contentHtml,
+    actionButton: {
+      text: 'Open Recruiter Dashboard',
+      url: params.dashboardUrl,
+    },
+    secondaryText,
+  });
+  const text = `Hello ${params.name},\n\nWelcome to NextRound. Your HR workspace is ready.\n\nOpen your dashboard here: ${params.dashboardUrl}\n\nNextRound Team`;
   return { subject, html, text };
 }
 

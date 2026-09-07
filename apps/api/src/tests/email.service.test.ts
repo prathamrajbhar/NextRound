@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {
   renderProfessionalEmailLayout,
   buildWelcomeCandidateEmail,
+  buildWelcomeHREmail,
   buildPasswordResetEmail,
   buildMemberInviteEmail,
   buildApplicationReceivedEmail,
@@ -32,15 +33,24 @@ async function runTests() {
   assert.ok(layout.includes('https://nextround.ai/action'), 'Layout must include button url');
   assert.ok(layout.includes('Secondary disclaimer notice'), 'Layout must include secondary notice');
 
-  // 2. Test Welcome Candidate Template
-  console.log('  Testing buildWelcomeCandidateEmail...');
-  const welcome = buildWelcomeCandidateEmail({
+  // 2. Test Welcome Candidate & HR Templates
+  console.log('  Testing buildWelcomeCandidateEmail & buildWelcomeHREmail...');
+  const welcomeCand = buildWelcomeCandidateEmail({
     name: 'Alice Smith',
     loginUrl: 'https://nextround.ai/login',
   });
-  assert.ok(welcome.subject.includes('Welcome to NextRound'));
-  assert.ok(welcome.html.includes('Alice Smith'));
-  assert.ok(welcome.text.includes('Alice Smith'));
+  assert.ok(welcomeCand.subject.includes('Welcome to NextRound'));
+  assert.ok(welcomeCand.html.includes('Alice Smith'));
+  assert.ok(welcomeCand.text.includes('Alice Smith'));
+
+  const welcomeHR = buildWelcomeHREmail({
+    name: 'Robert Recruiter',
+    orgName: 'Acme Talent',
+    dashboardUrl: 'https://nextround.ai/hr/dashboard',
+  });
+  assert.ok(welcomeHR.subject.includes('Hiring Workspace is Ready'));
+  assert.ok(welcomeHR.html.includes('Robert Recruiter'));
+  assert.ok(welcomeHR.html.includes('Acme Talent'));
 
   // 3. Test Password Reset Template
   console.log('  Testing buildPasswordResetEmail...');

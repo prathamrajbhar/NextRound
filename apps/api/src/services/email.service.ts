@@ -4,6 +4,7 @@ import { logger } from '../lib/logger';
 import { enqueueEmail, EmailJobPayload } from '../lib/queues/email.queue';
 import {
   buildWelcomeCandidateEmail,
+  buildWelcomeHREmail,
   buildPasswordResetEmail,
   buildMemberInviteEmail,
   buildApplicationReceivedEmail,
@@ -111,6 +112,13 @@ export class EmailService {
     const appUrl = env('APP_URL');
     const loginUrl = `${appUrl}/login`;
     const email = buildWelcomeCandidateEmail({ name: candidateName, loginUrl });
+    return this.sendEmail({ to: toEmail, ...email });
+  }
+
+  public async sendWelcomeHR(toEmail: string, recruiterName: string, orgName?: string): Promise<boolean> {
+    const appUrl = env('APP_URL');
+    const dashboardUrl = `${appUrl}/hr/dashboard`;
+    const email = buildWelcomeHREmail({ name: recruiterName, orgName, dashboardUrl });
     return this.sendEmail({ to: toEmail, ...email });
   }
 
