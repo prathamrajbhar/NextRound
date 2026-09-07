@@ -91,8 +91,10 @@ def validate_output_node(state: JDParserState) -> JDParserState:
         rubric=RubricWeights(**state.get("rubric", {})),
         thresholds=JobThresholds(**state.get("thresholds", {})),
     )
+    state["validated_output"] = output.model_dump() if hasattr(output, "model_dump") else output.dict()
     state["status"] = "validated"
     return state
+
 
 def build_jd_parser_graph():
     if not LANGGRAPH_AVAILABLE:

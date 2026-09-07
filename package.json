@@ -9,8 +9,9 @@
   "scripts": {
     "dev": "concurrently --kill-others \"node --env-file=.env node_modules/turbo/bin/turbo dev\" \"node --env-file=.env scripts/run-ai-service.js\"",
     "build": "node --env-file=.env node_modules/turbo/bin/turbo build",
-    "lint": "turbo lint",
+    "lint": "turbo lint && node scripts/lint-python.js",
     "typecheck": "turbo typecheck",
+
     "clean": "turbo clean",
     "db:generate": "npm run generate --workspace=@nextround/database",
     "db:migrate": "npm run migrate --workspace=@nextround/database",
