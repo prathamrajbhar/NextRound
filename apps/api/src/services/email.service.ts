@@ -13,6 +13,9 @@ import {
   buildConstructiveRejectionEmail,
   buildHRAlertEmail,
   buildAssessmentReminderEmail,
+  buildInterviewConfirmationEmail,
+  buildOfferResponseAlertEmail,
+  buildProctoringAnomalyAlertEmail,
 } from '../lib/email/templates';
 
 export interface EmailOptions {
@@ -276,6 +279,75 @@ export class EmailService {
       expiresInHours,
     });
     return this.sendEmail({ to: toEmail, ...email });
+  }
+
+  public async sendInterviewConfirmation(
+    toEmail: string,
+    candidateName: string,
+    jobTitle: string,
+    scheduledAt: string,
+    applicationId: string
+  ): Promise<boolean> {
+    const appUrl = env('APP_URL');
+    const sessionUrl = `${appUrl}/candidate/interview/${applicationId}`;
+    const email = buildInterviewConfirmationEmail({
+      candidateName,
+      jobTitle,
+      scheduledAt,
+      sessionUrl,
+    });
+    return this.sendEmail({ to: toEmail, ...email });
+  }
+
+  public async sendOfferResponseAlert(
+    hrEmails: string[],
+    candidateName: string,
+    candidateEmail: string,
+    jobTitle: string,
+    status: 'accepted' | 'declined',
+    applicationId: string,
+    reason?: string
+  ): Promise<boolean> {
+    const appUrl = env('APP_URL');
+    const reviewUrl = `${appUrl}/hr/candidates/${applicationId}`;
+    const email = buildOfferResponseAlertEmail({
+      candidateName,
+      candidateEmail,
+      jobTitle,
+      status,
+      reason,
+      reviewUrl,
+    });
+    const promises = hrEmails.map((emailAddr) =>
+      this.sendEmail({ to: emailAddr, ...email })
+    );
+    const results = await Promise.all(promises);
+    return results.every(Boolean);
+  }
+
+  public async sendProctoringAnomalyAlert(
+    hrEmails: string[],
+    candidateName: string,
+    jobTitle: string,
+    applicationId: string,
+    interviewId: string,
+    anomalyDescription: string
+  ): Promise<boolean> {
+    const appUrl = env('APP_URL');
+    const reviewUrl = `${appUrl}/hr/candidates/${applicationId}`;
+    const email = buildProctoringAnomalyAlertEmail({
+      candidateName,
+      jobTitle,
+      applicationId,
+      interviewId,
+      anomalyDescription,
+      reviewUrl,
+    });
+    const promises = hrEmails.map((emailAddr) =>
+      this.sendEmail({ to: emailAddr, ...email })
+    );
+    const results = await Promise.all(promises);
+    return results.every(Boolean);
   }
 }
 

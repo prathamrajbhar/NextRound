@@ -16,6 +16,7 @@ import {
   loadIceServers,
 } from './interviews.helpers';
 import { getCandidateInterviewContext, buildContextText } from '../../services/candidate-context.service';
+import { emailService } from '../../services/email.service';
 
 export async function recordConsent(req: Request, res: Response, next: NextFunction) {
   try {
@@ -209,7 +210,49 @@ export async function recordProctoringFlag(req: Request, res: Response, next: Ne
           total_events: updatedFlags.length,
         } as Prisma.InputJsonValue,
       },
+      include: {
+        application: {
+          include: {
+            job: { include: { organization: { include: { users: true } } } },
+            candidate: { include: { user: true } },
+          },
+        },
+      },
     });
+
+    const isSevereAnomaly =
+      Boolean(newFlag.multiple_faces_detected) ||
+      (typeof newFlag.tab_switch_count === 'number' && newFlag.tab_switch_count >= 5) ||
+      (newFlag.face_count === 0 && updatedFlags.length % 5 === 0);
+
+    if (isSevereAnomaly && updated.application?.job?.organization?.users) {
+      const hrEmails = updated.application.job.organization.users
+        .filter((u) => u.role === 'hr')
+        .map((u) => u.email);
+
+      if (hrEmails.length > 0) {
+        const candidateEmail = updated.application.candidate.user?.email || 'Candidate';
+        const candidateName = candidateEmail.split('@')[0];
+        const anomalyDescription = newFlag.multiple_faces_detected
+          ? 'Multiple faces detected in camera frame during interview session'
+          : typeof newFlag.tab_switch_count === 'number' && newFlag.tab_switch_count >= 5
+          ? `Candidate exceeded browser tab switch limit (${newFlag.tab_switch_count} switches)`
+          : 'Candidate face absent from video feed';
+
+        emailService
+          .sendProctoringAnomalyAlert(
+            hrEmails,
+            candidateName,
+            updated.application.job.title,
+            updated.application.id,
+            updated.id,
+            anomalyDescription
+          )
+          .catch((err) =>
+            logger.child('Interviews').warn(`Failed to dispatch proctor anomaly alert:`, err)
+          );
+      }
+    }
 
     return res.json({
       success: true,

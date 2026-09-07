@@ -423,7 +423,14 @@ export async function confirmInterviewSlot(interviewId: string, body: Record<str
 
   const interview = await prisma.interview.findUnique({
     where: { id },
-    include: { application: true },
+    include: {
+      application: {
+        include: {
+          job: true,
+          candidate: { include: { user: true } },
+        },
+      },
+    },
   });
 
   if (!interview) {
@@ -448,6 +455,23 @@ export async function confirmInterviewSlot(interviewId: string, body: Record<str
       hr_round_scheduled_at: scheduledDate,
     },
   });
+
+  const candidateEmail = interview.application.candidate.user?.email;
+  if (candidateEmail) {
+    const candidateName = candidateEmail.split('@')[0];
+    const formattedDate = scheduledDate.toUTCString();
+    emailService
+      .sendInterviewConfirmation(
+        candidateEmail,
+        candidateName,
+        interview.application.job.title,
+        formattedDate,
+        interview.application_id
+      )
+      .catch((err) =>
+        logger.child('Internal').error(`Failed to send interview confirmation email for interview ${id}:`, err)
+      );
+  }
 
   return { interview: updatedInterview };
 }

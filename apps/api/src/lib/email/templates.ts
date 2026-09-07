@@ -480,10 +480,114 @@ export function buildAssessmentReminderEmail(params: {
       url: params.assessmentUrl,
     },
   });
-  const text = `Hello ${params.candidateName},
+  const text = `Hello ${params.candidateName},\n\nReminder to complete your ${params.assessmentType} assessment for ${params.jobTitle}.\n\nStart assessment: ${params.assessmentUrl}`;
+  return { subject, html, text };
+}
 
-Reminder to complete your ${params.assessmentType} assessment for ${params.jobTitle}.
+export function buildInterviewConfirmationEmail(params: {
+  candidateName: string;
+  jobTitle: string;
+  scheduledAt: string;
+  sessionUrl: string;
+}): { subject: string; html: string; text: string } {
+  const title = `Interview Confirmed: ${params.jobTitle}`;
+  const subject = `Confirmed: Autonomous Interview for ${params.jobTitle}`;
+  const contentHtml = `
+    <p style="margin:0 0 14px 0;">Hello <strong>${escapeHtml(params.candidateName)}</strong>,</p>
+    <p style="margin:0 0 14px 0;">Your autonomous interview session for <strong>${escapeHtml(params.jobTitle)}</strong> is officially confirmed.</p>
+    
+    <div style="background-color:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:16px;margin:20px 0;">
+      <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="4">
+        <tr>
+          <td style="font-size:14px;color:#64748b;width:130px;">Scheduled Time:</td>
+          <td style="font-size:14px;font-weight:600;color:#0f172a;">${escapeHtml(params.scheduledAt)}</td>
+        </tr>
+        <tr>
+          <td style="font-size:14px;color:#64748b;">Format:</td>
+          <td style="font-size:14px;font-weight:600;color:#0f172a;">AI Voice & Video Session</td>
+        </tr>
+      </table>
+    </div>
+    
+    <p style="margin:0 0 14px 0;">Please ensure you are using a Chromium-based browser (Chrome, Edge, Brave) with camera and microphone permissions enabled.</p>
+  `;
+  const html = renderProfessionalEmailLayout({
+    title,
+    contentHtml,
+    actionButton: {
+      text: 'Go to Interview Room',
+      url: params.sessionUrl,
+    },
+  });
+  const text = `Hello ${params.candidateName},\n\nYour interview for ${params.jobTitle} is confirmed for ${params.scheduledAt}.\nAccess the interview room: ${params.sessionUrl}\n\nNextRound Team`;
+  return { subject, html, text };
+}
 
-Start assessment: ${params.assessmentUrl}`;
+export function buildOfferResponseAlertEmail(params: {
+  candidateName: string;
+  candidateEmail: string;
+  jobTitle: string;
+  status: 'accepted' | 'declined';
+  reason?: string;
+  reviewUrl: string;
+}): { subject: string; html: string; text: string } {
+  const isAccepted = params.status === 'accepted';
+  const title = `Offer ${isAccepted ? 'Accepted' : 'Declined'}: ${params.candidateName}`;
+  const subject = `[Offer Update] ${params.candidateName} has ${isAccepted ? 'ACCEPTED' : 'DECLINED'} offer for ${params.jobTitle}`;
+  const contentHtml = `
+    <p style="margin:0 0 14px 0;">Candidate <strong>${escapeHtml(params.candidateName)}</strong> (${escapeHtml(params.candidateEmail)}) has recorded a decision on their offer letter for <strong>${escapeHtml(params.jobTitle)}</strong>.</p>
+    
+    <div style="background-color:${isAccepted ? '#ecfdf5' : '#fff1f2'};border:1px solid ${isAccepted ? '#a7f3d0' : '#fecdd3'};border-left:4px solid ${isAccepted ? '#059669' : '#e11d48'};border-radius:4px;padding:14px 16px;margin:20px 0;">
+      <div style="font-size:14px;font-weight:600;color:${isAccepted ? '#065f46' : '#9f1239'};">Decision: ${isAccepted ? 'Offer Accepted & Digitally Signed' : 'Offer Declined'}</div>
+      ${params.reason ? `<div style="font-size:13px;color:#475569;margin-top:6px;">Candidate Note: "${escapeHtml(params.reason)}"</div>` : ''}
+    </div>
+    
+    <p style="margin:0;">You can review the updated candidate application and onboarding details in the HR dashboard.</p>
+  `;
+  const html = renderProfessionalEmailLayout({
+    title,
+    contentHtml,
+    actionButton: {
+      text: 'View Candidate in Dashboard',
+      url: params.reviewUrl,
+    },
+  });
+  const text = `Candidate ${params.candidateName} has ${isAccepted ? 'accepted' : 'declined'} the offer for ${params.jobTitle}.\nReview at: ${params.reviewUrl}`;
+  return { subject, html, text };
+}
+
+export function buildProctoringAnomalyAlertEmail(params: {
+  candidateName: string;
+  jobTitle: string;
+  applicationId: string;
+  interviewId: string;
+  anomalyDescription: string;
+  reviewUrl: string;
+}): { subject: string; html: string; text: string } {
+  const title = `Integrity Alert: ${params.candidateName}`;
+  const subject = `[Urgent Proctor Alert] Integrity Anomaly Detected: ${params.candidateName}`;
+  const contentHtml = `
+    <p style="margin:0 0 14px 0;">Our client-side vision proctoring engine has flagged a significant integrity anomaly during an active evaluation session.</p>
+    
+    <div style="background-color:#fff1f2;border:1px solid #fecdd3;border-left:4px solid #e11d48;border-radius:4px;padding:14px 16px;margin:20px 0;">
+      <div style="font-size:13px;font-weight:600;color:#9f1239;margin-bottom:4px;">Proctoring Flag Triggered</div>
+      <div style="font-size:13px;color:#881337;line-height:1.4;">
+        Candidate: <strong>${escapeHtml(params.candidateName)}</strong><br/>
+        Role: <strong>${escapeHtml(params.jobTitle)}</strong><br/>
+        Detail: ${escapeHtml(params.anomalyDescription)}
+      </div>
+    </div>
+    
+    <p style="margin:0;">Please inspect the telemetry logs and proctor flags recorded for this session.</p>
+  `;
+  const html = renderProfessionalEmailLayout({
+    title,
+    contentHtml,
+    actionButton: {
+      text: 'Inspect Proctoring Telemetry',
+      url: params.reviewUrl,
+    },
+  });
+  const text = `Integrity Alert for ${params.candidateName} (${params.jobTitle}): ${params.anomalyDescription}.\nInspect at: ${params.reviewUrl}`;
   return { subject, html, text };
 }

@@ -958,10 +958,36 @@ export async function signOffer(
     },
   });
 
-  await prisma.application.update({
+  const updatedApp = await prisma.application.update({
     where: { id: offer.application_id },
     data: { status: 'accepted' },
+    include: {
+      job: { include: { organization: { include: { users: true } } } },
+      candidate: { include: { user: true } },
+    },
   });
+
+  if (updatedApp.candidate?.user?.email) {
+    const hrEmails = updatedApp.job.organization.users
+      .filter((u) => u.role === 'hr')
+      .map((u) => u.email);
+    if (hrEmails.length > 0) {
+      const candidateEmail = updatedApp.candidate.user.email;
+      const candidateName = candidateEmail.split('@')[0];
+      emailService
+        .sendOfferResponseAlert(
+          hrEmails,
+          candidateName,
+          candidateEmail,
+          updatedApp.job.title,
+          'accepted',
+          updatedApp.id
+        )
+        .catch((err) =>
+          logger.child('Applications').error(`Failed to dispatch offer acceptance alert for ${updatedApp.id}:`, err)
+        );
+    }
+  }
 
   return { offer: updatedOffer, status: 'accepted' };
 }
@@ -1008,10 +1034,37 @@ export async function declineOffer(
     },
   });
 
-  await prisma.application.update({
+  const updatedApp = await prisma.application.update({
     where: { id: offer.application_id },
     data: { status: 'rejected' },
+    include: {
+      job: { include: { organization: { include: { users: true } } } },
+      candidate: { include: { user: true } },
+    },
   });
+
+  if (updatedApp.candidate?.user?.email) {
+    const hrEmails = updatedApp.job.organization.users
+      .filter((u) => u.role === 'hr')
+      .map((u) => u.email);
+    if (hrEmails.length > 0) {
+      const candidateEmail = updatedApp.candidate.user.email;
+      const candidateName = candidateEmail.split('@')[0];
+      emailService
+        .sendOfferResponseAlert(
+          hrEmails,
+          candidateName,
+          candidateEmail,
+          updatedApp.job.title,
+          'declined',
+          updatedApp.id,
+          reason
+        )
+        .catch((err) =>
+          logger.child('Applications').error(`Failed to dispatch offer decline alert for ${updatedApp.id}:`, err)
+        );
+    }
+  }
 
   return { offer: updatedOffer, status: 'declined' };
 }
