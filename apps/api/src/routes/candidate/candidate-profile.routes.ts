@@ -13,6 +13,7 @@ import {
   deleteCandidateSocialSource,
 } from '../../services/social-sync.service';
 import { enqueueEmbeddingRebuild } from '../../services/candidate-embedding.service';
+import { emailService } from '../../services/email.service';
 import { getCandidateProfileId } from '../../lib/candidate-profile';
 import { logger } from '../../lib/logger';
 
@@ -245,6 +246,12 @@ candidateProfileRouter.post(
 
       const bodyHas = (key: string) => Object.prototype.hasOwnProperty.call(bodyData, key);
 
+      const existingProfile = await prisma.candidateProfile.findUnique({
+        where: { user_id: req.user.userId },
+        select: { full_name: true },
+      });
+      const isFirstOnboarding = !existingProfile?.full_name && Boolean(validated.fullName);
+
       const profile = await prisma.candidateProfile.upsert({
         where: { user_id: req.user.userId },
         create: {
@@ -318,6 +325,16 @@ candidateProfileRouter.post(
         enqueueEmbeddingRebuild(profile.id).catch((err) =>
           logger.child('Profile').error(`Failed to enqueue embedding rebuild for candidate ${profile.id}:`, err)
         );
+      }
+
+      if (isFirstOnboarding && req.user?.email) {
+        const candidateEmail = req.user.email;
+        const candidateName = profile.full_name || candidateEmail.split('@')[0];
+        emailService
+          .sendWelcomeCandidate(candidateEmail, candidateName)
+          .catch((emailErr) =>
+            logger.child('Profile').error(`Failed to dispatch candidate welcome email to ${candidateEmail}:`, emailErr)
+          );
       }
 
       return res.json({

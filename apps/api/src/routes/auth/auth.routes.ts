@@ -131,11 +131,7 @@ authRouter.post('/register', authRateLimiter, async (req: Request, res: Response
     setAuthCookies(res, jwtPayload);
 
     const displayName = user.email.split('@')[0];
-    if (user.role === 'candidate') {
-      emailService
-        .sendWelcomeCandidate(user.email, displayName)
-        .catch((emailErr) => logger.child('Auth').error(`Failed to dispatch candidate welcome email to ${user.email}:`, emailErr));
-    } else {
+    if (user.role === 'hr') {
       emailService
         .sendWelcomeHR(user.email, displayName, validated.orgName)
         .catch((emailErr) => logger.child('Auth').error(`Failed to dispatch HR welcome email to ${user.email}:`, emailErr));

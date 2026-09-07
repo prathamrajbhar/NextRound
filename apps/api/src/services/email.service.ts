@@ -113,8 +113,8 @@ export class EmailService {
 
   public async sendWelcomeCandidate(toEmail: string, candidateName: string): Promise<boolean> {
     const appUrl = env('APP_URL');
-    const loginUrl = `${appUrl}/login`;
-    const email = buildWelcomeCandidateEmail({ name: candidateName, loginUrl });
+    const dashboardUrl = `${appUrl}/candidate/dashboard`;
+    const email = buildWelcomeCandidateEmail({ name: candidateName, loginUrl: dashboardUrl });
     return this.sendEmail({ to: toEmail, ...email });
   }
 

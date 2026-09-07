@@ -145,23 +145,24 @@ export function buildWelcomeCandidateEmail(params: {
   loginUrl: string;
 }): { subject: string; html: string; text: string } {
   const title = `Welcome to NextRound, ${params.name}`;
-  const subject = 'Welcome to NextRound — Your Autonomous Interview Platform';
+  const subject = 'Welcome to NextRound — Your Profile is Active';
   const contentHtml = `
     <p style="margin:0 0 14px 0;">Hello <strong>${escapeHtml(params.name)}</strong>,</p>
-    <p style="margin:0 0 14px 0;">Your candidate account has been successfully created. With NextRound, you can participate in role-specific voice assessments, complete technical evaluation challenges, and track all your applications with full transparency.</p>
-    <p style="margin:0;">You can access your candidate portal below to set up your profile, test your microphone and camera, or explore practice sessions.</p>
+    <p style="margin:0 0 14px 0;">Congratulations on completing your candidate onboarding profile! Your profile is now active on the NextRound platform.</p>
+    <p style="margin:0 0 14px 0;">You can now participate in role-specific voice assessments, complete technical evaluation challenges, and track all your applications with full transparency.</p>
+    <p style="margin:0;">Head over to your candidate dashboard below to explore active job openings, schedule practice sessions, or test your audio and video setup.</p>
   `;
-  const secondaryText = 'If you did not sign up for this account, please disregard this email or notify security.';
+  const secondaryText = 'If you did not create an account on NextRound, please disregard this email or notify security.';
   const html = renderProfessionalEmailLayout({
     title,
     contentHtml,
     actionButton: {
-      text: 'Sign In to Candidate Portal',
+      text: 'Go to Candidate Dashboard',
       url: params.loginUrl,
     },
     secondaryText,
   });
-  const text = `Hello ${params.name},\n\nWelcome to NextRound. Your candidate account is active.\n\nAccess your portal here: ${params.loginUrl}\n\nNextRound Team`;
+  const text = `Hello ${params.name},\n\nCongratulations on completing your profile! Your candidate account is active.\n\nAccess your dashboard here: ${params.loginUrl}\n\nNextRound Team`;
   return { subject, html, text };
 }
 
