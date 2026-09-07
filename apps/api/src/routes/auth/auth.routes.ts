@@ -319,12 +319,7 @@ authRouter.post('/forgot-password', forgotPasswordRateLimiter, async (req: Reque
       const resetUrl = `${appBaseUrl}/reset-password/${resetToken}`;
 
       try {
-        await emailService.sendEmail({
-          to: user.email,
-          subject: 'Reset your NextRound password',
-          html: `<p>You requested a password reset. Click <a href="${resetUrl}">here</a> to reset your password. Link expires in 1 hour.</p>`,
-          text: `Reset your password at: ${resetUrl}`,
-        });
+        await emailService.sendPasswordReset(user.email, resetUrl);
       } catch (emailErr) {
         logger.child('Auth').error('Failed to send password reset email:', emailErr);
       }
