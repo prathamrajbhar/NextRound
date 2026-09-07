@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocalMediaStream } from '@/hooks/useLocalMediaStream';
 
 export function useHardwareDiagnostics() {
@@ -22,30 +22,34 @@ export function useHardwareDiagnostics() {
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [jitterMs, setJitterMs] = useState<number | null>(null);
 
-  useEffect(() => {
-    async function enumerateDevices() {
-      try {
-        if (typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
-          await navigator.mediaDevices
-            .getUserMedia({ audio: true, video: true })
-            .then((stream) => stream.getTracks().forEach((track) => track.stop()))
-            .catch(() => {});
+  const refreshDevices = useCallback(async () => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.mediaDevices?.enumerateDevices) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const vDevices = devices.filter((d) => d.kind === 'videoinput');
+        const aDevices = devices.filter((d) => d.kind === 'audioinput');
 
-          const devices = await navigator.mediaDevices.enumerateDevices();
-          const vDevices = devices.filter((d) => d.kind === 'videoinput');
-          const aDevices = devices.filter((d) => d.kind === 'audioinput');
+        setVideoDevices(vDevices);
+        setAudioDevices(aDevices);
 
-          setVideoDevices(vDevices);
-          setAudioDevices(aDevices);
-
-          if (vDevices.length > 0) setSelectedVideoDeviceId(vDevices[0].deviceId);
-          if (aDevices.length > 0) setSelectedAudioDeviceId(aDevices[0].deviceId);
-        }
-      } catch {
-        // Non-blocking device enumeration
+        if (vDevices.length > 0 && !selectedVideoDeviceId) setSelectedVideoDeviceId(vDevices[0].deviceId);
+        if (aDevices.length > 0 && !selectedAudioDeviceId) setSelectedAudioDeviceId(aDevices[0].deviceId);
       }
+    } catch {
+      // Non-blocking device enumeration
     }
-    enumerateDevices();
+  }, [selectedVideoDeviceId, selectedAudioDeviceId]);
+
+  useEffect(() => {
+    void refreshDevices();
+  }, [refreshDevices]);
+
+  // Cleanup testing states on unmount
+  useEffect(() => {
+    return () => {
+      setMicTesting(false);
+      setCamTesting(false);
+    };
   }, []);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -56,6 +60,10 @@ export function useHardwareDiagnostics() {
     selectedVideoDeviceId,
     selectedAudioDeviceId,
     enabled: camTesting || micTesting,
+    onStreamCreated: () => {
+      // Re-enumerate devices with newly granted permissions to get human-readable labels
+      void refreshDevices();
+    },
   });
 
   const handleScreenShareTest = async () => {

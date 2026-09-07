@@ -37,7 +37,6 @@ export function useLocalMediaStream({
   }, [onStreamCreated]);
 
   const stopLocalStream = useCallback(() => {
-
     setupGenerationRef.current += 1;
 
     if (rafRef.current !== null) {
@@ -45,15 +44,14 @@ export function useLocalMediaStream({
       rafRef.current = null;
     }
 
-    if (audioCtxRef.current) {
-      audioCtxRef.current.close().catch((err) => {
-        console.error('Failed to close audio context:', err);
-      });
+    if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+      audioCtxRef.current.close().catch(() => {});
       audioCtxRef.current = null;
     }
 
     const stream = streamRef.current;
     if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
       mediaManager.release(stream);
       streamRef.current = null;
       setLocalStream(null);
@@ -76,6 +74,13 @@ export function useLocalMediaStream({
         if (!navigator.mediaDevices?.getUserMedia) {
           setHasCamPermission(false);
           return;
+        }
+
+        // Release any existing stream before creating a new one to avoid leaks
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop());
+          mediaManager.release(streamRef.current);
+          streamRef.current = null;
         }
 
         const videoConstraints = camActive

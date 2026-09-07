@@ -28,15 +28,32 @@ export function useSafeMediaStream({ constraints, enabled = true, onStream }: Us
     onStreamRef.current = onStream;
   }, [onStream]);
 
+  const stop = useCallback(() => {
+    cancelledRef.current = true;
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      mediaManager.release(streamRef.current);
+      streamRef.current = null;
+    }
+  }, []);
+
   const start = useCallback(async (): Promise<MediaStream | null> => {
     if (!enabledRef.current || typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       return null;
     }
 
     cancelledRef.current = false;
+
+    // Release any previously held stream before opening a new one
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      mediaManager.release(streamRef.current);
+      streamRef.current = null;
+    }
+
     const stream = await navigator.mediaDevices.getUserMedia(constraintsRef.current);
 
-    if (cancelledRef.current) {
+    if (cancelledRef.current || !enabledRef.current) {
       stream.getTracks().forEach((track) => track.stop());
       return null;
     }
@@ -47,24 +64,12 @@ export function useSafeMediaStream({ constraints, enabled = true, onStream }: Us
     return stream;
   }, []);
 
-  const stop = useCallback(() => {
-    cancelledRef.current = true;
-    if (streamRef.current) {
-      mediaManager.release(streamRef.current);
-      streamRef.current = null;
-    }
-  }, []);
-
   useEffect(() => {
     if (!enabled) {
       stop();
     }
     return () => {
-      cancelledRef.current = true;
-      if (streamRef.current) {
-        mediaManager.release(streamRef.current);
-        streamRef.current = null;
-      }
+      stop();
     };
   }, [enabled, stop]);
 

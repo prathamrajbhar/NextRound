@@ -4,16 +4,23 @@ import { useState, useEffect } from 'react';
 import { useSafeMediaStream } from '@/hooks/useSafeMediaStream';
 
 export function useMockSetupMic(micActive: boolean) {
-  const [micLevel, setMicLevel] = useState(45);
+  const [micLevel, setMicLevel] = useState(0);
 
-  const { start } = useSafeMediaStream({
+  const { start, stop } = useSafeMediaStream({
     constraints: { audio: true },
     enabled: micActive,
   });
 
   useEffect(() => {
+    return () => {
+      stop();
+    };
+  }, [stop]);
+
+  useEffect(() => {
     if (!micActive) {
-      setTimeout(() => setMicLevel(0), 0);
+      stop();
+      setMicLevel(0);
       return;
     }
     let audioContext: AudioContext | null = null;
@@ -48,10 +55,11 @@ export function useMockSetupMic(micActive: boolean) {
     return () => {
       active = false;
       if (rafId) cancelAnimationFrame(rafId);
-      if (audioContext) void audioContext.close();
+      if (audioContext && audioContext.state !== 'closed') void audioContext.close();
+      stop();
       setMicLevel(0);
     };
-  }, [micActive, start]);
+  }, [micActive, start, stop]);
 
   return micLevel;
 }

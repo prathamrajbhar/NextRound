@@ -30,8 +30,8 @@ function MockInterviewSetupForm() {
     return typeof score === 'number' ? score : null;
   }, [mockSessionsData]);
 
-  const [micActive, setMicActive] = useState(true);
-  const [camActive, setCamActive] = useState(true);
+  const [micActive, setMicActive] = useState(false);
+  const [camActive, setCamActive] = useState(false);
   const [consent, setConsent] = useState(true);
 
   const micLevel = useMockSetupMic(micActive);

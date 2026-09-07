@@ -8,13 +8,23 @@ export function SetupMicPrecheckCard() {
   const [micTesting, setMicTesting] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
 
-  const { start } = useSafeMediaStream({
+  const { start, stop } = useSafeMediaStream({
     constraints: { audio: true },
     enabled: micTesting,
   });
 
   useEffect(() => {
-    if (!micTesting) return;
+    return () => {
+      setMicTesting(false);
+      stop();
+    };
+  }, [stop]);
+
+  useEffect(() => {
+    if (!micTesting) {
+      stop();
+      return;
+    }
     let audioContext: AudioContext | null = null;
     let analyser: AnalyserNode | null = null;
     let rafId: number | null = null;
@@ -47,10 +57,11 @@ export function SetupMicPrecheckCard() {
     return () => {
       active = false;
       if (rafId) cancelAnimationFrame(rafId);
-      if (audioContext) void audioContext.close();
+      if (audioContext && audioContext.state !== 'closed') void audioContext.close();
+      stop();
       setAudioLevel(0);
     };
-  }, [micTesting, start]);
+  }, [micTesting, start, stop]);
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/30 backdrop-blur-md p-6 shadow-md space-y-4">
