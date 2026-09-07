@@ -11,17 +11,18 @@ class Settings(BaseSettings):
     api_base_url: str = "http://localhost:4000/api/v1"
     redis_provider: str = Field("local", validation_alias="REDIS_PROVIDER")
     local_redis_url: str = Field("redis://localhost:6379", validation_alias="LOCAL_REDIS_URL")
-    upstash_redis_url: str = Field("", validation_alias="UPSTASH_REDIS_URL")
     redis_url_raw: str = Field("redis://localhost:6379", validation_alias="REDIS_URL")
 
     @property
     def redis_url(self) -> str:
-        provider = (self.redis_provider or "local").lower()
-        if provider == "upstash" and self.upstash_redis_url:
-            return self.upstash_redis_url
-        if provider == "local" and self.local_redis_url:
-            return self.local_redis_url
-        return self.redis_url_raw or "redis://localhost:6379"
+        raw = (self.local_redis_url or self.redis_url_raw or "redis://localhost:6379").strip()
+        if raw.startswith("http://"):
+            raw = "redis://" + raw[len("http://"):]
+        elif raw.startswith("https://"):
+            raw = "rediss://" + raw[len("https://"):]
+        elif not raw.startswith("redis://") and not raw.startswith("rediss://"):
+            raw = "redis://" + raw
+        return raw.rstrip("/")
 
     llm_provider: str = "gemini"
     gemini_api_key: str = ""
@@ -30,9 +31,11 @@ class Settings(BaseSettings):
     groq_model: str = "llama-3.3-70b-versatile"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2"
-    supabase_url: str = ""
-    supabase_service_role_key: str = ""
-    supabase_storage_bucket: str = "nextround-storage"
+    aws_endpoint_url: str = Field("http://192.168.31.239:4566", validation_alias="AWS_ENDPOINT_URL")
+    aws_default_region: str = Field("us-east-1", validation_alias="AWS_DEFAULT_REGION")
+    aws_access_key_id: str = Field("test", validation_alias="AWS_ACCESS_KEY_ID")
+    aws_secret_access_key: str = Field("test", validation_alias="AWS_SECRET_ACCESS_KEY")
+    aws_s3_bucket: str = Field("nextroundbucket", validation_alias="AWS_S3_BUCKET")
     profile_scraper_base_url: str = Field("http://127.0.0.1:18273", validation_alias="PROFILE_SCRAPER_BASE_URL")
     profile_scraper_timeout_ms: int = Field(90000, validation_alias="PROFILE_SCRAPER_TIMEOUT_MS")
 

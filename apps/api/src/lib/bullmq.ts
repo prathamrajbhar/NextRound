@@ -2,15 +2,25 @@ import { Queue, type JobsOptions } from 'bullmq';
 import Redis from 'ioredis';
 import { env } from './env';
 
-const provider = (process.env.REDIS_PROVIDER || 'local').toLowerCase();
-const redisUrlString =
-  provider === 'upstash'
-    ? process.env.UPSTASH_REDIS_URL || process.env.REDIS_URL || 'redis://localhost:6379'
-    : process.env.LOCAL_REDIS_URL || process.env.REDIS_URL || 'redis://localhost:6379';
+function parseRedisUrl(rawUrl: string): string {
+  let url = rawUrl.trim();
+  if (url.startsWith('http://')) {
+    url = url.replace(/^http:\/\//, 'redis://');
+  } else if (url.startsWith('https://')) {
+    url = url.replace(/^https:\/\//, 'rediss://');
+  } else if (!url.startsWith('redis://') && !url.startsWith('rediss://')) {
+    url = `redis://${url}`;
+  }
+  return url.replace(/\/+$/, '');
+}
+
+const rawRedisUrl = process.env.REDIS_URL || process.env.LOCAL_REDIS_URL || 'redis://localhost:6379';
+const redisUrlString = parseRedisUrl(rawRedisUrl);
 
 const connection = new Redis(redisUrlString, {
   maxRetriesPerRequest: null,
 });
+
 
 export const DEFAULT_JOB_OPTIONS: JobsOptions = {
   attempts: 3,

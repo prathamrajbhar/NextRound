@@ -5,34 +5,37 @@ import uuid
 from datetime import datetime, timezone
 from typing import Dict, Any
 from xml.sax.saxutils import escape as xml_escape
-import httpx
+import boto3
+from botocore.config import Config
 from core.config import settings
 
 logger = logging.getLogger("pdf_generator")
 
-def upload_to_supabase(file_path: str, key: str, content_type: str = "application/pdf") -> str:
-    if not settings.supabase_url or not settings.supabase_service_role_key:
-        raise RuntimeError("Supabase credentials not configured in settings. Local storage fallback is disabled.")
+def get_s3_client():
+    return boto3.client(
+        "s3",
+        endpoint_url=settings.aws_endpoint_url,
+        region_name=settings.aws_default_region,
+        aws_access_key_id=settings.aws_access_key_id,
+        aws_secret_access_key=settings.aws_secret_access_key,
+        config=Config(s3={"addressing_style": "path"}),
+    )
 
+def upload_to_s3(file_path: str, key: str, content_type: str = "application/pdf") -> str:
+    s3 = get_s3_client()
+    normalized_key = key.lstrip("/")
+    
     with open(file_path, "rb") as f:
-        file_data = f.read()
+        s3.put_object(
+            Bucket=settings.aws_s3_bucket,
+            Key=normalized_key,
+            Body=f,
+            ContentType=content_type,
+        )
 
-    url = f"{settings.supabase_url}/storage/v1/object/{settings.supabase_storage_bucket}/{key}"
+    clean_endpoint = settings.aws_endpoint_url.rstrip("/")
+    return f"{clean_endpoint}/{settings.aws_s3_bucket}/{normalized_key}"
 
-    headers = {
-        "apikey": settings.supabase_service_role_key,
-        "Authorization": f"Bearer {settings.supabase_service_role_key}",
-        "Content-Type": content_type,
-        "x-upsert": "true"
-    }
-
-    with httpx.Client() as client:
-        response = client.post(url, content=file_data, headers=headers)
-        if response.status_code != 200:
-            logger.error(f"Failed to upload to Supabase Storage: {response.status_code} - {response.text}")
-            raise RuntimeError(f"Supabase upload failed: {response.text}")
-
-    return f"{settings.supabase_url}/storage/v1/object/public/{settings.supabase_storage_bucket}/{key}"
 
 def _esc(value: Any) -> str:
     return xml_escape(str(value))
@@ -229,9 +232,10 @@ def generate_resume_pdf(resume_data: Dict[str, Any]) -> str:
 
             key = f"resumes/{filename}"
             try:
-                public_url = upload_to_supabase(file_path, key, "application/pdf")
+                public_url = upload_to_s3(file_path, key, "application/pdf")
                 return public_url
             finally:
+
                 if os.path.exists(file_path):
                     os.remove(file_path)
         except Exception as e:
@@ -357,9 +361,10 @@ def generate_analytics_pdf(
 
         key = f"analytics/{filename}"
         try:
-            public_url = upload_to_supabase(file_path, key, "application/pdf")
+            public_url = upload_to_s3(file_path, key, "application/pdf")
             return public_url
         finally:
+
             if os.path.exists(file_path):
                 os.remove(file_path)
     except Exception as e:
