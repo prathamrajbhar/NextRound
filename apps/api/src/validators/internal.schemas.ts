@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+export * from './internal-sentiment.schemas';
+export * from './internal-embedding.schemas';
+
 const nullable = <T extends z.ZodTypeAny>(schema: T) => schema.nullable().optional();
 
 export const AiAssistResultSchema = z
@@ -27,12 +30,6 @@ export const ScreeningResultSchema = z
 export const SourcedCandidatesSchema = z
   .object({
     candidates: z.array(z.unknown()).optional(),
-  })
-  .passthrough();
-
-export const CandidateEmbeddingSchema = z
-  .object({
-    embedding: z.array(z.number()).length(768).optional(),
   })
   .passthrough();
 
@@ -178,79 +175,5 @@ export const AnalyticsReportSchema = z
     report_url: z.string().optional(),
     summary: z.string().optional(),
     generated_at: z.string().optional(),
-  })
-  .passthrough();
-
-export const SentimentAudioMetricsSchema = z
-  .object({
-    speakingRateWpm: z.number().optional(),
-    avgPauseDurationSec: z.number().optional(),
-    pausesPerMinute: z.number().optional(),
-    longPauseCount: z.number().optional(),
-    pitchMeanHz: z.number().optional(),
-    pitchStdDevHz: z.number().optional(),
-    tremorPercent: z.number().optional(),
-    steadyPercent: z.number().optional(),
-    speechDurationSec: z.number().optional(),
-    durationSec: z.number().optional(),
-    voicedRatio: z.number().optional(),
-  })
-  .passthrough();
-
-export const SentimentJourneyPointSchema = z
-  .object({
-    timeLabel: z.string().optional(),
-    minute: z.number().optional(),
-    confidence: z.number().optional(),
-    stress: z.number().optional(),
-    hesitation: z.number().optional(),
-    emotionLabel: z.string().optional(),
-  })
-  .passthrough();
-
-export const SentimentReportSchema = z
-  .object({
-    interviewId: z.string().optional(),
-    status: z.string().optional(),
-    source: z.literal('audio').optional(),
-    audioUrl: z.string().optional(),
-    overall: z
-      .object({
-        tone: z.string().optional(),
-        stressScore: z.number().optional(),
-        confidenceScore: z.number().optional(),
-        clarityScore: z.number().optional(),
-      })
-      .passthrough()
-      .optional(),
-    audio: SentimentAudioMetricsSchema.optional(),
-    journey: z.array(SentimentJourneyPointSchema).optional(),
-    summaryNarrative: z.string().optional(),
-  })
-  .passthrough();
-
-export const InterviewSentimentSchema = z
-  .object({
-    sentiment_report: SentimentReportSchema.optional(),
-  })
-  .passthrough();
-
-export const CandidateEmbeddingsSchema = z
-  .object({
-    sections: z
-      .array(
-        z
-          .object({
-            sourceType: z.enum(['resume', 'github', 'linkedin', 'profile']).optional(),
-            source_type: z.enum(['resume', 'github', 'linkedin', 'profile']).optional(),
-            section: z.string().min(1),
-            content: z.string().min(1),
-            contentHash: z.string().min(1),
-            content_hash: z.string().min(1).optional(),
-            embedding: z.array(z.number()).length(768),
-          })
-          .passthrough()
-      )
-      .max(50),
   })
   .passthrough();

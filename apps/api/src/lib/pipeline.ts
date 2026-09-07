@@ -90,7 +90,7 @@ export async function ensureInterviewAndSchedule(
   return { interviewId: interview.id };
 }
 
-export async function advanceAssessmentStage(applicationId: string): Promise<string | null> {
+export async function advanceAssessmentStage(applicationId: string): Promise<import('@nextround/database').ApplicationStatus | null> {
   const app = await prisma.application.findUnique({
     where: { id: applicationId },
     include: { job: true, interview: true, evaluations: true },
@@ -117,12 +117,11 @@ export async function advanceAssessmentStage(applicationId: string): Promise<str
 
   if (voiceScreenEnabled) {
     const { interviewId } = await ensureInterviewAndSchedule(applicationId);
-    const next = interviewId ? 'interview_scheduled' : 'screening_completed';
+    const next: import('@nextround/database').ApplicationStatus = interviewId ? 'interview_scheduled' : 'screening_completed';
     await prisma.application.update({ where: { id: applicationId }, data: { status: next } });
     return next;
   } else {
-
-    const next = 'hr_round';
+    const next: import('@nextround/database').ApplicationStatus = 'hr_round';
     await prisma.application.update({
       where: { id: applicationId },
       data: { status: next, hr_round_status: 'pending' },

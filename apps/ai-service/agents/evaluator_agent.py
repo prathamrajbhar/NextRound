@@ -1,47 +1,14 @@
 import logging
-from typing import Dict, Any, TypedDict, List, Optional
-from pydantic import BaseModel, Field
+from typing import Dict, Any, List, Optional
+from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
+from agents.evaluator_types import (
+    ScoringIsolationError,
+    _as_optional_float,
+    _weighted_score,
+    EvaluatorState,
+)
 
 logger = logging.getLogger("evaluator_agent")
-
-from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
-
-class ScoringIsolationError(Exception):
-    pass
-
-def _as_optional_float(value):
-    if value is None:
-        return None
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
-
-def _weighted_score(pairs):
-    present = [(v, w) for v, w in pairs if v is not None]
-    total = sum(w for _, w in present)
-    if not present or total <= 0:
-        return None
-    return round(sum(v * w for v, w in present) / total, 2)
-
-class EvaluatorState(TypedDict, total=False):
-    application_id: str
-    interview_id: Optional[str]
-    stage: str
-    screening_score: Optional[float]
-    aptitude_score: Optional[float]
-    coding_score: Optional[float]
-    interview_score: Optional[float]
-    composite_score: Optional[float]
-    dimension_scores: Dict[str, Optional[float]]
-    confidence: float
-    isolation_valid: bool
-    proctor_flags: List[str]
-    proctor_telemetry: Dict[str, Any]
-    prompt_payload_used: str
-    reasoning: str
-    scoring_inputs_used: Dict[str, Any]
-    error: Optional[str]
 
 def aggregate_scores_node(state: EvaluatorState) -> EvaluatorState:
     scr = _as_optional_float(state.get("screening_score"))
@@ -90,7 +57,6 @@ def validate_isolation_node(state: EvaluatorState) -> EvaluatorState:
     return state
 
 def compute_confidence_node(state: EvaluatorState) -> EvaluatorState:
-
     dim_scores = [
         x for x in state.get("dimension_scores", {}).values()
         if isinstance(x, (int, float))
@@ -196,4 +162,3 @@ async def run_evaluator_agent(
         "reasoning": s4.get("reasoning"),
         "isolation_valid": s4.get("isolation_valid"),
     }
-

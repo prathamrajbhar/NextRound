@@ -1,118 +1,35 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { apiClient } from '@/lib/apiClient';
 import {
-  Activity,
   ArrowRight,
   Eye,
   EyeOff,
-  LayoutDashboard,
   Loader2,
   Lock,
   LogIn,
   Mail,
-  ShieldCheck,
 } from '@/lib/lucide-google-icons';
-import AuthShell, { AuthBenefit } from '@/components/auth/AuthShell';
+import AuthShell from '@/components/auth/AuthShell';
 import AuthField from '@/components/auth/AuthField';
-import { useToast } from '@/contexts/ToastContext';
-import { useAuth } from '@/hooks/useAuth';
-import type { CandidateProfileData, Application } from '@/types';
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const BENEFITS: AuthBenefit[] = [
-  {
-    icon: LayoutDashboard,
-    title: 'One workspace for hiring',
-    description: 'Jobs, candidates, interviews and offers — managed from a single dashboard.',
-  },
-  {
-    icon: Activity,
-    title: 'Live multi-stage scorecards',
-    description: 'Follow structured evaluations in real time as every candidate progresses.',
-  },
-  {
-    icon: ShieldCheck,
-    title: 'Org-scoped by design',
-    description: 'Role-based access keeps each tenant’s data isolated and auditable.',
-  },
-];
+import { LOGIN_BENEFITS } from './_components/login.constants';
+import { useLoginForm } from './_components/useLoginForm';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { login } = useAuth();
-  const { toast } = useToast();
-
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [formError, setFormError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const clearError = (key: keyof typeof errors) => setErrors((prev) => ({ ...prev, [key]: undefined }));
-
-  const validate = (): boolean => {
-    const next: typeof errors = {};
-    if (!email.trim()) next.email = 'Email is required.';
-    else if (!EMAIL_RE.test(email.trim())) next.email = 'Enter a valid email address.';
-    if (!password) next.password = 'Password is required.';
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    if (!validate()) return;
-    setLoading(true);
-
-    const result = await login(email.trim(), password);
-    setLoading(false);
-
-    if (result.success && result.user) {
-      toast({ title: 'Signed in successfully', variant: 'success' });
-      
-      if (result.user.role === 'candidate') {
-        try {
-          const profileData = await apiClient.get<{ profile?: CandidateProfileData }>('/candidate/profile');
-          const profile = profileData?.profile;
-          const isProfileIncomplete = !profile || !profile.full_name || !profile.data_consent;
-          if (isProfileIncomplete) {
-            router.push('/onboarding/candidate');
-            return;
-          }
-
-          // Check if there are accepted applications with incomplete tasks
-          const apps = await apiClient.get<Application[]>('/candidate/applications');
-          const acceptedApp = apps?.find(app => app.status === 'accepted');
-          if (acceptedApp) {
-            const isCompleted = localStorage.getItem('onboarding_completed_' + acceptedApp.id) === 'true';
-            if (!isCompleted) {
-              router.push(`/candidate/applications/${acceptedApp.id}/onboarding`);
-              return;
-            }
-          }
-        } catch {
-          router.push('/onboarding/candidate');
-          return;
-        }
-        router.push('/candidate/dashboard');
-      } else {
-        if (!result.user.org_id) {
-          router.push('/onboarding/company');
-          return;
-        }
-        router.push('/hr/dashboard');
-      }
-    } else {
-      setFormError(result.error || 'Unable to sign in. Please try again.');
-    }
-  };
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    showPassword,
+    setShowPassword,
+    errors,
+    clearError,
+    formError,
+    loading,
+    handleSubmit,
+  } = useLoginForm();
 
   return (
     <AuthShell
@@ -123,7 +40,7 @@ export default function LoginPage() {
         </>
       }
       sub="Sourcing, AI screening, voice interviews and automated decisions — all managed from a single workspace."
-      benefits={BENEFITS}
+      benefits={LOGIN_BENEFITS}
     >
       <div className="space-y-6">
         <div className="space-y-1">

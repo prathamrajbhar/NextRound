@@ -1,37 +1,26 @@
 import { prisma } from '../lib/prisma';
 import { notFound } from '../lib/http-errors';
 import { env } from '../lib/env';
-import { buildContextSections, hashContent, type ContextSection } from './candidate-embedding.service';
+import { buildContextSections, type ContextSection } from './candidate-embedding.service';
 import type { CandidateInterviewContext } from '@nextround/shared';
 import { logger } from '../lib/logger';
+import {
+  asRecord,
+  asRecordList,
+  asStringArray,
+  buildContextText,
+  contextHash,
+} from './candidate-context-formatter.service';
+
+export { buildContextText, contextHash };
 
 const EMBEDDING_DIM = 768;
 
-function asList(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
-
-function asRecord(value: unknown): Record<string, unknown> | null {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-  return value as Record<string, unknown>;
-}
-
-function asRecordList(value: unknown): Array<Record<string, unknown>> {
-  return asList(value)
-    .map((item) => asRecord(item))
-    .filter((item): item is Record<string, unknown> => item !== null);
-}
-
-function asStringArray(value: unknown): string[] {
-  if (Array.isArray(value)) return value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
-  return [];
-}
-
 async function generateQueryEmbedding(queryText: string): Promise<number[] | null> {
   const aiServiceUrl = env('AI_BASE_URL');
-  let resp: Awaited<ReturnType<typeof fetch>>;
+  let response: Awaited<ReturnType<typeof fetch>>;
   try {
-    resp = await fetch(`${aiServiceUrl}/api/v1/embeddings/generate`, {
+    response = await fetch(`${aiServiceUrl}/api/v1/embeddings/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: queryText }),
@@ -39,10 +28,10 @@ async function generateQueryEmbedding(queryText: string): Promise<number[] | nul
   } catch {
     return null;
   }
-  if (!resp.ok) return null;
+  if (!response.ok) return null;
   let body: { data?: { embedding?: unknown; model?: unknown } };
   try {
-    body = (await resp.json()) as { data?: { embedding?: unknown; model?: unknown } };
+    body = (await response.json()) as { data?: { embedding?: unknown; model?: unknown } };
   } catch {
     return null;
   }
@@ -71,7 +60,7 @@ export async function getCandidateInterviewContext(
   const job = await prisma.job.findUnique({ where: { id: jobId } });
   if (!job) throw notFound('Job not found');
 
-  const syncs = profile.social_syncs.map((s) => ({ source: s.source, normalized_data: s.normalized_data }));
+  const syncs = profile.social_syncs.map((sync) => ({ source: sync.source, normalized_data: sync.normalized_data }));
   const sections = buildContextSections(profile, syncs);
 
   const parsedRecord = asRecord(profile.parsed_resume) || {};
@@ -80,8 +69,8 @@ export async function getCandidateInterviewContext(
   const education = asRecordList(parsedRecord.education);
   const achievements = asRecordList(parsedRecord.achievements);
 
-  const githubSync = syncs.find((s) => s.source === 'github');
-  const linkedinSync = syncs.find((s) => s.source === 'linkedin');
+  const githubSync = syncs.find((sync) => sync.source === 'github');
+  const linkedinSync = syncs.find((sync) => sync.source === 'linkedin');
   const socialBlob = asRecord(profile.social_data) || {};
 
   const githubData = githubSync?.normalized_data ?? socialBlob.github;
@@ -106,10 +95,10 @@ export async function getCandidateInterviewContext(
           ORDER BY embedding <=> ${vectorStr}::vector ASC
           LIMIT 5
         `;
-        interviewFocus = matches.map((m) => ({
-          sourceType: m.source_type as ContextSection['sourceType'],
-          section: m.section,
-          content: m.content,
+        interviewFocus = matches.map((match) => ({
+          sourceType: match.source_type as ContextSection['sourceType'],
+          section: match.section,
+          content: match.content,
         }));
         logger
           .child('Context')
@@ -142,7 +131,7 @@ export async function getCandidateInterviewContext(
     resume: {
       rawText: profile.raw_resume_text,
       parsed: profile.parsed_resume ? asRecord(profile.parsed_resume) : null,
-      sections: sections.filter((s) => s.sourceType === 'resume' || s.sourceType === 'profile'),
+      sections: sections.filter((section) => section.sourceType === 'resume' || section.sourceType === 'profile'),
     },
     social,
     skills: asStringArray(profile.skills),
@@ -161,54 +150,4 @@ export async function getCandidateInterviewContext(
     },
     interviewFocus,
   };
-}
-
-export function buildContextText(context: CandidateInterviewContext, maxLength = 3000): string {
-  const parts: string[] = [];
-
-  const c = context.candidate;
-  parts.push(
-    `Candidate: ${c.fullName || 'N/A'}`,
-    `Headline: ${c.headline || 'N/A'}`,
-    `Location: ${c.location || 'N/A'}`,
-    `Years of experience: ${c.yearsOfExperience ?? 'N/A'}`,
-    `Target roles: ${(c.targetRoles || []).join(', ') || 'N/A'}`
-  );
-  if (c.bio) parts.push(`Bio: ${c.bio}`);
-
-  if (context.skills.length > 0) parts.push(`Skills: ${context.skills.join(', ')}`);
-
-  if (context.resume.rawText) {
-    parts.push(`RESUME:\n${context.resume.rawText.slice(0, 4000)}`);
-  }
-
-  if (context.social.github) {
-    const gh = context.social.github as Record<string, unknown>;
-    parts.push(`GITHUB: ${JSON.stringify({ name: gh.name, bio: gh.bio, topLanguages: gh.topLanguages, repositories: gh.repositories }, null, 0).slice(0, 2000)}`);
-  }
-  if (context.social.linkedin) {
-    const li = context.social.linkedin as Record<string, unknown>;
-    parts.push(`LINKEDIN: ${JSON.stringify({ headline: li.headline, about: li.about, skills: li.skills, experiences: li.experiences, education: li.education }, null, 0).slice(0, 2000)}`);
-  }
-
-  if (context.experience.length > 0) parts.push(`EXPERIENCE: ${JSON.stringify(context.experience).slice(0, 1500)}`);
-  if (context.projects.length > 0) parts.push(`PROJECTS: ${JSON.stringify(context.projects).slice(0, 1500)}`);
-  if (context.education.length > 0) parts.push(`EDUCATION: ${JSON.stringify(context.education).slice(0, 1000)}`);
-
-  if (context.interviewFocus.length > 0) {
-    parts.push(`MOST RELEVANT PROFILE SECTIONS FOR THE ROLE:\n${context.interviewFocus.map((s) => `[${s.sourceType}/${s.section}]\n${s.content}`).join('\n\n').slice(0, 2500)}`);
-  }
-
-  parts.push(
-    `JOB: ${context.job.title}`,
-    `JOB DESCRIPTION: ${context.job.description.slice(0, 2500)}`
-  );
-
-  let text = parts.join('\n\n');
-  if (text.length > maxLength) text = text.slice(0, maxLength);
-  return text;
-}
-
-export function contextHash(text: string): string {
-  return hashContent(text);
 }
