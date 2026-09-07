@@ -421,11 +421,13 @@ export const EnvConfigSchema = z.object({
   REFRESH_TOKEN_SECRET: z.string().min(16, 'REFRESH_TOKEN_SECRET must be at least 16 characters'),
   INTERNAL_SERVICE_SECRET: z.string().min(16, 'INTERNAL_SERVICE_SECRET must be at least 16 characters'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
-  AI_BASE_URL: z.string().default('http://localhost:8000'),
-  SUPABASE_URL: z.string().optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-  SUPABASE_STORAGE_BUCKET: z.string().optional(),
+  AWS_ENDPOINT_URL: z.string().optional(),
+  AWS_DEFAULT_REGION: z.string().optional(),
+  AWS_ACCESS_KEY_ID: z.string().optional(),
+  AWS_SECRET_ACCESS_KEY: z.string().optional(),
+  AWS_S3_BUCKET: z.string().optional(),
 });
+
 
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type RegisterInput = z.infer<typeof RegisterSchema>;
