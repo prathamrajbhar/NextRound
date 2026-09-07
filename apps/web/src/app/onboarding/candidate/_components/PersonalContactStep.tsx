@@ -5,6 +5,7 @@ import { User, Mail, Phone, MapPin, Compass, Lightbulb, FileUp, Check, Loader2, 
 import { apiClient } from '@/lib/apiClient';
 import { OnboardingStepProps, ParsedProfilePayload } from './useCandidateOnboarding';
 import { inputCls, labelCls, selectCls } from './CandidateOnboardingShell';
+import { SingleCityInput } from './SingleCityInput';
 
 const TIMEZONES = [
   'Asia/Kolkata',
@@ -208,16 +209,11 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
 
         <div>
           <label className={labelCls}>Current Location</label>
-          <div className="relative">
-            <MapPin className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
-            <input
-              type="text"
-              value={form.location}
-              onChange={(e) => update('location', e.target.value)}
-              placeholder="e.g. Bengaluru, India"
-              className={`${inputCls} pl-10`}
-            />
-          </div>
+          <SingleCityInput
+            value={form.location}
+            onChange={(val) => update('location', val)}
+            placeholder="e.g. Bengaluru, India"
+          />
         </div>
 
         <div>
