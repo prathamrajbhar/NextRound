@@ -2,7 +2,7 @@ import logging
 from typing import Optional, Dict, Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from services.sourcing_service import (
+from services.sourcing.sourcing_service import (
     fetch_github_profile,
     fetch_linkedin_profile,
     aggregate_external_profile

@@ -3,7 +3,7 @@ import { prisma } from '../../lib/prisma';
 import { Prisma } from '@nextround/database';
 import { logger } from '../../lib/logger';
 import { enqueueSourcing } from '../../lib/queues/sourcing.queue';
-import { extractRequirementsFromJd } from '../../services/jd-extractor.service';
+import { extractRequirementsFromJd } from '../../services/jd/jd-extractor.service';
 
 export async function extractRequirements(req: Request, res: Response, next: NextFunction) {
   try {

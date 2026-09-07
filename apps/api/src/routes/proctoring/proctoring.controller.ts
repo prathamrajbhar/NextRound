@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { ok } from '../../lib/http';
 import { forbidden } from '../../lib/http-errors';
-import * as proctoringService from '../../services/proctoring.service';
+import * as proctoringService from '../../services/proctoring/proctoring.service';
 
 export async function createSession(req: Request, res: Response) {
   const session = await proctoringService.createProctoringSession(req.body, req.user!.userId);

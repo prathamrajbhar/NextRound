@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { serializeApplication, serializeApplicationList } from '../../lib/serializers';
 import { ok } from '../../lib/http';
-import * as applicationService from '../../services/application.service';
-import type { AppUserCtx } from '../../services/application.service';
+import * as applicationService from '../../services/application/application.service';
+import type { AppUserCtx } from '../../services/application/application.service';
 
 export function userCtx(req: Request): AppUserCtx {
   const u = req.user!;

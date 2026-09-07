@@ -9,8 +9,8 @@ from pydantic import BaseModel, Field
 from agents.interviewer_agent import run_interviewer_agent, InterviewerState
 from workers.resume_builder_worker import process_resume_builder_job
 
-from services.stt_service import transcribe_audio_bytes
-from services.tts_service import generate_tts_audio_base64, stream_sentence_tts
+from services.stt_tts.stt_service import transcribe_audio_bytes
+from services.stt_tts.tts_service import generate_tts_audio_base64, stream_sentence_tts
 from core.config import settings
 
 logger = logging.getLogger("voice_routes")

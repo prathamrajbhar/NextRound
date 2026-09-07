@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { optionalAuthenticate } from '../../middleware/auth';
-import { extractTextFromBuffer, parseResumeWithGemini } from '../../services/resume-parser.service';
+import { extractTextFromBuffer, parseResumeWithGemini } from '../../services/resume/resume-parser.service';
 import { logger } from '../../lib/logger';
 
 export const resumeParserRouter = Router();

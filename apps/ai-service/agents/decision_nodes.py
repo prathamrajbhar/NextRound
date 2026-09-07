@@ -1,5 +1,5 @@
 import logging
-from services.llm_service import generate_text
+from services.llm.llm_service import generate_text
 from agents.decision_types import DecisionState
 
 logger = logging.getLogger("decision_agent")

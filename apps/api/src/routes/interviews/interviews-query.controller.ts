@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { findInterviewByRef } from './interviews.helpers';
-import { getCandidateInterviewContext, buildContextText } from '../../services/candidate-context.service';
+import { getCandidateInterviewContext, buildContextText } from '../../services/candidate/candidate-context.service';
 
 export async function getTranscript(req: Request, res: Response, next: NextFunction) {
   try {

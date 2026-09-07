@@ -9,7 +9,7 @@ from unittest.mock import patch, AsyncMock
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from agents.resume_builder_agent import run_resume_builder_agent
-from services.llm_service import generate_text
+from services.llm.llm_service import generate_text
 from workers.resume_builder_worker import process_resume_builder_job
 
 # Configure logging

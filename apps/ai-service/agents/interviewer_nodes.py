@@ -1,6 +1,6 @@
 import logging
 import json
-from services.llm_service import generate_text, extract_json_object
+from services.llm.llm_service import generate_text, extract_json_object
 from agents.interviewer_types import MAX_TURNS, InterviewerState
 from agents.interviewer_prompts import (
     derive_required_skills,

@@ -3,7 +3,7 @@ import { prisma, Prisma } from '@nextround/database';
 import {
   selectAptitudeQuestions,
   buildAptitudeDistribution,
-} from '../../services/question-bank.service';
+} from '../../services/questions/question-bank.service';
 import { getCandidateProfileId } from '../../lib/candidate-profile';
 
 export function normalizeDifficulty(raw: string | undefined | null): 'easy' | 'medium' | 'hard' {

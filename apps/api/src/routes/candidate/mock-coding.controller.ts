@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma, Prisma } from '@nextround/database';
-import { selectCodingProblem } from '../../services/question-bank.service';
+import { selectCodingProblem } from '../../services/questions/question-bank.service';
 import { getCandidateProfileId } from '../../lib/candidate-profile';
 import { normalizeDifficulty } from './mock-aptitude.controller';
 

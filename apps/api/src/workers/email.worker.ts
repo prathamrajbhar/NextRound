@@ -1,6 +1,6 @@
 import { Worker, Job } from 'bullmq';
 import Redis from 'ioredis';
-import { emailService } from '../services/email.service';
+import { emailService } from '../services/email/email.service';
 import { EmailJobPayload } from '../lib/queues/email.queue';
 import { logger } from '../lib/logger';
 import { prisma } from '@nextround/database';

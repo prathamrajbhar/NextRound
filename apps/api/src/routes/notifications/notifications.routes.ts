@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { prisma } from '../../lib/prisma';
 import { authenticate } from '../../middleware/auth';
-import { notificationService } from '../../services/notification.service';
+import { notificationService } from '../../services/notification/notification.service';
 
 export const notificationsRouter = Router();
 

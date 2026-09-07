@@ -4,7 +4,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from agents.mock_interviewer_agent import run_mock_interviewer_agent, MockInterviewerState
 from agents.resume_builder_agent import run_resume_builder_agent, ResumeBuilderState
-from services.tts_service import generate_tts_audio_base64
+from services.stt_tts.tts_service import generate_tts_audio_base64
 
 mock_voice_router = APIRouter(prefix="/api/v1/ai", tags=["candidate-voice-ai"])
 

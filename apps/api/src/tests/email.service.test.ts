@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { runTemplateTests } from './email.templates.test';
-import { EmailService } from '../services/email.service';
+import { EmailService } from '../services/email/email.service';
 
 async function runTests() {
   console.log('🧪 Running Email Subsystem Tests...');

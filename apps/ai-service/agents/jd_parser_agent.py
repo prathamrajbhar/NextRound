@@ -1,7 +1,7 @@
 import logging
 from typing import Dict, Any, TypedDict
 from pydantic import BaseModel, Field
-from services.llm_service import generate_text, extract_json_array
+from services.llm.llm_service import generate_text, extract_json_array
 
 logger = logging.getLogger("jd_parser_agent")
 

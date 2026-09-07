@@ -4,8 +4,8 @@ import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { requireOrgScope, rejectOrgIdParam } from '../../middleware/orgScope';
 import { deriveSalary } from '../../lib/offer-terms';
-import { upsertOffer } from '../../services/offer.service';
-import { emailService } from '../../services/email.service';
+import { upsertOffer } from '../../services/offer/offer.service';
+import { emailService } from '../../services/email/email.service';
 
 export const hrEvaluationsRouter = Router();
 

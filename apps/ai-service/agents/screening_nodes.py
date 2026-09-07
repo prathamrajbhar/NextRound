@@ -1,6 +1,6 @@
 import logging
-from services.embedding_service import embed_text, embed_resume, cosine_similarity
-from services.llm_service import generate_text, extract_json_array, extract_json_object
+from services.embedding.embedding_service import embed_text, embed_resume, cosine_similarity
+from services.llm.llm_service import generate_text, extract_json_array, extract_json_object
 from agents.screening_types import ScreeningState
 
 logger = logging.getLogger("screening_agent")

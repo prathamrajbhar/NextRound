@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from agents.coding_agent import run_coding_agent
-from services.code_executor_service import execute_code_sandbox
+from services.code.code_executor_service import execute_code_sandbox
 
 logger = logging.getLogger("coding_routes")
 

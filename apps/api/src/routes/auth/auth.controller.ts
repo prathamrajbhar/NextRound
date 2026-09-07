@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { RegisterSchema, LoginSchema } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
 import { verifyRefreshToken, JwtPayload } from '../../lib/jwt';
-import { emailService } from '../../services/email.service';
+import { emailService } from '../../services/email/email.service';
 import { logger } from '../../lib/logger';
 import { setAuthCookies, clearAuthCookies, serializeAuthUser } from './auth-cookies.helper';
 

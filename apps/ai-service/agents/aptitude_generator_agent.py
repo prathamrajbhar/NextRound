@@ -2,7 +2,7 @@ import json
 import logging
 from typing import List, Dict, Any
 from core.config import settings
-from services.llm_service import generate_text, extract_json_array
+from services.llm.llm_service import generate_text, extract_json_array
 
 logger = logging.getLogger("aptitude_generator_agent")
 

@@ -1,5 +1,5 @@
 from typing import Any, Dict, Optional
-from services.llm_service import generate_text, extract_json_object
+from services.llm.llm_service import generate_text, extract_json_object
 from agents.interviewer_types import InterviewerState
 
 def collect_transcript_text(history: Any) -> tuple:

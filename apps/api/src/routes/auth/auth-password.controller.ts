@@ -9,7 +9,7 @@ import {
 } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
 import { JwtPayload } from '../../lib/jwt';
-import { emailService } from '../../services/email.service';
+import { emailService } from '../../services/email/email.service';
 import { logger } from '../../lib/logger';
 import { env } from '../../lib/env';
 import { setAuthCookies, clearAuthCookies } from './auth-cookies.helper';

@@ -6,7 +6,7 @@ import { setupWeeklyAnalyticsCron } from './lib/queues/analytics.queue';
 import { envNumber } from './lib/env';
 import { logger } from './lib/logger';
 import { emailWorker } from './workers/email.worker';
-import { emailService } from './services/email.service';
+import { emailService } from './services/email/email.service';
 
 const PORT = envNumber('PORT');
 

@@ -1,14 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
 import { SocialSyncRequestSchema } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
-import { generateFieldWithGemini } from '../../services/resume-parser.service';
+import { generateFieldWithGemini } from '../../services/resume/resume-parser.service';
 import {
   syncCandidateSocialProfiles,
   persistSocialSyncOutcome,
   listCandidateSocialSyncs,
   deleteCandidateSocialSource,
-} from '../../services/social-sync.service';
-import { enqueueEmbeddingRebuild } from '../../services/candidate-embedding.service';
+} from '../../services/social/social-sync.service';
+import { enqueueEmbeddingRebuild } from '../../services/candidate/candidate-embedding.service';
 import { getCandidateProfileId } from '../../lib/candidate-profile';
 import { logger } from '../../lib/logger';
 

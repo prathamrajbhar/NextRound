@@ -1,7 +1,7 @@
 import logging
 import json
 from typing import Dict, Any, TypedDict, List, Optional
-from services.llm_service import generate_text, extract_json_object
+from services.llm.llm_service import generate_text, extract_json_object
 
 logger = logging.getLogger("mock_interviewer_agent")
 

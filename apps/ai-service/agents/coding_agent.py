@@ -1,9 +1,9 @@
 import json
 import logging
 from typing import Dict, Any, List, Optional
-from services.llm_service import generate_text, extract_json_object
+from services.llm.llm_service import generate_text, extract_json_object
 from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
-from services.code_executor_service import execute_code_sandbox
+from services.code.code_executor_service import execute_code_sandbox
 from agents.coding_types import CodingState
 
 logger = logging.getLogger("coding_agent")
@@ -44,7 +44,7 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
     return state
 
 def analyze_complexity_node(state: CodingState) -> CodingState:
-    from services.complexity_cache_service import get_cached_complexity, set_cached_complexity
+    from services.cache.complexity_cache_service import get_cached_complexity, set_cached_complexity
 
     code = state.get("code", "")
     pass_rate = state.get("pass_rate", 0.0)

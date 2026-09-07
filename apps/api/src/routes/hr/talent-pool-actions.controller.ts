@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../../lib/prisma';
 import { TalentBookmarkCreateSchema, TalentOutreachSchema } from '@nextround/shared';
-import { notificationService } from '../../services/notification.service';
+import { notificationService } from '../../services/notification/notification.service';
 import { env } from '../../lib/env';
 
 export async function createBookmark(req: Request, res: Response, next: NextFunction) {

@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, TypedDict
-from services.llm_service import generate_text
+from services.llm.llm_service import generate_text
 
 logger = logging.getLogger("scheduler_agent")
 

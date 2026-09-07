@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ok } from '../../lib/http';
-import * as internalService from '../../services/internal.service';
+import * as internalService from '../../services/internal/internal.service';
 
 export async function patchAiAssistResult(req: Request, res: Response) {
   ok(res, await internalService.recordAiAssistResult(req.params.id as string, req.body));

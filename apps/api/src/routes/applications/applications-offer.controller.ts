@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { serializeOffer } from '../../lib/serializers';
 import { ok } from '../../lib/http';
-import * as applicationService from '../../services/application.service';
+import * as applicationService from '../../services/application/application.service';
 import { userCtx } from './applications.controller';
 
 export async function getOfferByToken(req: Request, res: Response) {

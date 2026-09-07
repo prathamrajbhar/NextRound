@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { ok } from '../../lib/http';
-import * as applicationService from '../../services/application.service';
+import * as applicationService from '../../services/application/application.service';
 
 export async function getAptitudeChunk(req: Request, res: Response) {
   const chunkIndex = Math.max(0, parseInt(req.query.chunkIndex as string, 10) || 0);

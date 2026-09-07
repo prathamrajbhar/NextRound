@@ -1,6 +1,6 @@
 import logging
 from typing import Dict, Any, List, Optional
-from services.llm_service import generate_text, extract_json_object
+from services.llm.llm_service import generate_text, extract_json_object
 from agents.resume_builder_types import (
     STAGES,
     ACTIONS,

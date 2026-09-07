@@ -1,7 +1,7 @@
 import json
 import logging
-from services.llm_service import generate_text, extract_json_object
-from services.pdf_generator import generate_resume_pdf
+from services.llm.llm_service import generate_text, extract_json_object
+from services.pdf.pdf_generator import generate_resume_pdf
 from workers.worker_base import post_internal
 
 logger = logging.getLogger("resume_builder_worker")

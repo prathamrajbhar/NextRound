@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { MemberInviteSchema } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
-import { emailService } from '../../services/email.service';
+import { emailService } from '../../services/email/email.service';
 import { enforceOrgMatch } from './organization.helpers';
 
 export async function getOrgMembers(req: Request, res: Response, next: NextFunction) {

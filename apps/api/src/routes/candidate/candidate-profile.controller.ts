@@ -3,9 +3,9 @@ import { CandidateProfileSchema } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
 import { Prisma } from '@nextround/database';
 import { uploadFile } from '../../lib/storage';
-import { extractTextFromBuffer, parseResumeWithGemini } from '../../services/resume-parser.service';
-import { enqueueEmbeddingRebuild } from '../../services/candidate-embedding.service';
-import { emailService } from '../../services/email.service';
+import { extractTextFromBuffer, parseResumeWithGemini } from '../../services/resume/resume-parser.service';
+import { enqueueEmbeddingRebuild } from '../../services/candidate/candidate-embedding.service';
+import { emailService } from '../../services/email/email.service';
 import { logger } from '../../lib/logger';
 
 export async function upsertProfile(req: Request, res: Response, next: NextFunction) {

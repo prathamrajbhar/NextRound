@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { Prisma, prisma } from '@nextround/database';
 import { ProctoringFlagBodySchema } from '../../validators/interview.schemas';
 import { findInterviewByRef } from './interviews.helpers';
-import { emailService } from '../../services/email.service';
+import { emailService } from '../../services/email/email.service';
 import { logger } from '../../lib/logger';
 
 export async function recordProctoringFlag(req: Request, res: Response, next: NextFunction) {
