@@ -5,6 +5,7 @@ export interface CitySuggestion {
   name: string;
   state?: string;
   country?: string;
+  countryCode?: string;
   formatted: string;
 }
 
@@ -13,11 +14,31 @@ interface OpenMeteoItem {
   name: string;
   admin1?: string;
   country?: string;
+  country_code?: string;
 }
 
 interface OpenMeteoResponse {
   results?: OpenMeteoItem[];
 }
+
+// Major / top tech & hiring countries
+const TOP_COUNTRY_CODES = new Set([
+  'US', // United States
+  'IN', // India
+  'JP', // Japan
+  'GB', // United Kingdom
+  'CA', // Canada
+  'DE', // Germany
+  'SG', // Singapore
+  'AU', // Australia
+  'FR', // France
+  'NL', // Netherlands
+  'AE', // United Arab Emirates
+  'IE', // Ireland
+  'CH', // Switzerland
+  'SE', // Sweden
+  'IL', // Israel
+]);
 
 export function useCitySearch(query: string, delayMs = 300) {
   const [results, setResults] = useState<CitySuggestion[]>([]);
@@ -39,8 +60,9 @@ export function useCitySearch(query: string, delayMs = 300) {
 
     const timer = setTimeout(async () => {
       try {
+        // Fetch up to 20 results so filtering to top countries leaves high-quality matches
         const response = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=8&language=en&format=json`,
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=20&language=en&format=json`,
           { signal: abortController.signal }
         );
 
@@ -51,16 +73,23 @@ export function useCitySearch(query: string, delayMs = 300) {
         const data: OpenMeteoResponse = await response.json();
         const items = data.results || [];
 
-        const suggestions: CitySuggestion[] = items.map((item) => {
-          const parts = [item.name, item.admin1, item.country].filter(Boolean);
-          return {
-            id: String(item.id),
-            name: item.name,
-            state: item.admin1,
-            country: item.country,
-            formatted: parts.join(', '),
-          };
-        });
+        const suggestions: CitySuggestion[] = items
+          .filter((item) => {
+            const code = item.country_code ? item.country_code.toUpperCase() : '';
+            return TOP_COUNTRY_CODES.has(code);
+          })
+          .slice(0, 8)
+          .map((item) => {
+            const parts = [item.name, item.admin1, item.country].filter(Boolean);
+            return {
+              id: String(item.id),
+              name: item.name,
+              state: item.admin1,
+              country: item.country,
+              countryCode: item.country_code?.toUpperCase(),
+              formatted: parts.join(', '),
+            };
+          });
 
         setResults(suggestions);
       } catch (err: unknown) {
