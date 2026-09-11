@@ -18,11 +18,17 @@ export function AiJdGeneratorModal({
   loading,
 }: AiJdGeneratorModalProps) {
   const [promptText, setPromptText] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!promptText.trim() || loading) return;
-    await onGenerate({ prompt: promptText.trim() });
+    setErrorMessage(null);
+    try {
+      await onGenerate({ prompt: promptText.trim() });
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'Failed to generate job description. Please check connection and try again.');
+    }
   };
 
   return (
@@ -35,13 +41,21 @@ export function AiJdGeneratorModal({
       icon={<Wand2 className="h-5 w-5 text-brand-500" />}
     >
       <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+        {errorMessage && (
+          <div className="p-3 text-xs font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl">
+            {errorMessage}
+          </div>
+        )}
         <div className="space-y-2">
           <textarea
             required
             autoFocus
             rows={5}
             value={promptText}
-            onChange={(e) => setPromptText(e.target.value)}
+            onChange={(e) => {
+              setPromptText(e.target.value);
+              if (errorMessage) setErrorMessage(null);
+            }}
             placeholder="In your own words, describe the role... (e.g. We need a Senior Fullstack React/Next.js and Node engineer with 5+ years experience to build real-time dashboard and AI voice interview interface. Must know PostgreSQL and Tailwind. Fast-paced startup environment.)"
             className="w-full px-4 py-3 text-xs font-normal rounded-2xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all leading-relaxed"
           />

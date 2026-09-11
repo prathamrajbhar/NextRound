@@ -3,12 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
+import { useToast } from '@/contexts/ToastContext';
 import { RubricWeights, DEFAULT_ASSESSMENT_CONFIG, rebalanceRubric } from './rubricBalancing';
 
 export type PipelineStage = 'screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision';
 
 export function useCreateJobForm() {
   const router = useRouter();
+  const { toast } = useToast();
 
   const [title, setTitle] = useState('');
   const [department, setDepartment] = useState('Engineering');
@@ -80,11 +82,21 @@ export function useCreateJobForm() {
           });
         }
         if (res.enhancedDescription) setJd(res.enhancedDescription);
+        setAssisted(true);
+        toast({
+          title: 'Requirements Extracted',
+          description: 'Skills, competencies, and scoring rubric updated from job description.',
+          variant: 'success',
+        });
       }
-    } catch {
-      // Keep UI responsive
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to analyze requirements from job description';
+      toast({
+        title: 'Analysis Failed',
+        description: message,
+        variant: 'error',
+      });
     } finally {
-      setAssisted(true);
       setAssisting(false);
     }
   };
@@ -135,9 +147,20 @@ export function useCreateJobForm() {
           });
         }
         setAssisted(true);
+        toast({
+          title: 'Job Description Generated',
+          description: res.detectedTitle ? `Drafted for ${res.detectedTitle} with curated skills and rubric.` : 'Professional job description generated successfully.',
+          variant: 'success',
+        });
       }
-    } catch {
-      // Keep UI responsive
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to generate job description';
+      toast({
+        title: 'AI Generation Failed',
+        description: message,
+        variant: 'error',
+      });
+      throw err;
     } finally {
       setAssisting(false);
     }

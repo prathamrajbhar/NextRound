@@ -15,7 +15,24 @@ export interface ExtractedRequirements {
   softSkills: string[];
   cultureKeywords: string[];
   rubric: RubricSuggestion;
-  enhancedDescription: string;
+  enhancedDescription?: string;
+}
+
+function extractJsonPayload(text: string): Record<string, any> {
+  const cleaned = text
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/```(?:json)?/gi, '')
+    .replace(/```/g, '')
+    .trim();
+
+  const firstOpen = cleaned.indexOf('{');
+  const lastClose = cleaned.lastIndexOf('}');
+  if (firstOpen === -1 || lastClose === -1 || lastClose <= firstOpen) {
+    throw new Error('AI model did not return a valid JSON object');
+  }
+
+  const jsonStr = cleaned.slice(firstOpen, lastClose + 1);
+  return JSON.parse(jsonStr);
 }
 
 export async function extractRequirementsFromJd(
@@ -30,12 +47,7 @@ export async function extractRequirementsFromJd(
 
   try {
     const text = await generateText(prompt);
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('AI model did not return a valid JSON object for job requirements');
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
+    const parsed = extractJsonPayload(text);
 
     const parseDim = (val: unknown, defaultVal: number): number => {
       const n = Number(val);
@@ -113,12 +125,7 @@ export async function generateProfessionalJd(
 
   try {
     const text = await generateText(prompt);
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('AI model did not return a valid JSON object for generated job description');
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
+    const parsed = extractJsonPayload(text);
 
     const parseDim = (val: unknown, defaultVal: number): number => {
       const n = Number(val);
