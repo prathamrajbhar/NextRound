@@ -37,13 +37,28 @@ export async function extractRequirementsFromJd(
 
     const parsed = JSON.parse(jsonMatch[0]);
 
-    let tech = Math.max(10, Math.min(80, Number(parsed.rubric?.technical) || 30));
-    let comm = Math.max(10, Math.min(80, Number(parsed.rubric?.communication) || 20));
-    let prob = Math.max(10, Math.min(80, Number(parsed.rubric?.problemSolving) || 25));
-    let exp = Math.max(10, Math.min(80, Number(parsed.rubric?.experience) || 25));
+    const parseDim = (val: unknown, defaultVal: number): number => {
+      const n = Number(val);
+      if (val !== undefined && val !== null && !isNaN(n)) {
+        return Math.max(10, Math.min(80, n));
+      }
+      return defaultVal;
+    };
+
+    let tech = parseDim(parsed.rubric?.technical, 30);
+    let comm = parseDim(parsed.rubric?.communication, 20);
+    let prob = parseDim(parsed.rubric?.problemSolving, 25);
+    let exp = parseDim(parsed.rubric?.experience, 25);
     const sum = tech + comm + prob + exp;
     if (sum !== 100) {
-      exp = Math.max(10, 100 - (tech + comm + prob));
+      exp = 100 - (tech + comm + prob);
+      if (exp < 10) {
+        const excess = 10 - exp;
+        exp = 10;
+        if (tech >= comm && tech >= prob) tech -= excess;
+        else if (comm >= prob) comm -= excess;
+        else prob -= excess;
+      }
     }
 
     return {
