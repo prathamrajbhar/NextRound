@@ -1,0 +1,98 @@
+[
+  {
+    "test_id": "CASE-1-CLOUD-DB",
+    "domain": "Cloud Platform & Database Infrastructure",
+    "company": "Signifyd (Greenhouse)",
+    "role": "Staff Software Engineer, Cloud Platform & Database Infrastructure",
+    "pdf_file": "chelsea_dole_resume.pdf",
+    "words_count": 609,
+    "vector_match_pct": 75.42,
+    "skills_extracted_count": 70,
+    "top_skills": [
+      "AWS",
+      "Apache Kafka",
+      "ArgoCD",
+      "Backend applications",
+      "BigQuery",
+      "Business-critical data warehouses"
+    ],
+    "composite_score": 83.69,
+    "threshold": 70.0,
+    "actual_decision": "screening_completed",
+    "expected_decision": "screening_completed",
+    "reasoning": "Composite score of 83.69/100 (exceeds) minimum threshold of 70.0.",
+    "rejection_feedback": ""
+  },
+  {
+    "test_id": "CASE-2-BACKEND-APIS",
+    "domain": "High-Throughput Distributed APIs & Logistics Platform",
+    "company": "DoorDash (Careers/Lever)",
+    "role": "Senior / Staff Software Engineer, Backend & Platform APIs",
+    "pdf_file": "resume_elazar.pdf",
+    "words_count": 863,
+    "vector_match_pct": 72.79,
+    "skills_extracted_count": 90,
+    "top_skills": [
+      "PHP",
+      "TypeScript",
+      "JavaScript",
+      "Node.js",
+      "Python",
+      "SQL"
+    ],
+    "composite_score": 78.44,
+    "threshold": 70.0,
+    "actual_decision": "screening_completed",
+    "expected_decision": "screening_completed",
+    "reasoning": "Composite score of 78.44/100 (exceeds) minimum threshold of 70.0.",
+    "rejection_feedback": ""
+  },
+  {
+    "test_id": "CASE-3-AI-RESEARCH",
+    "domain": "Deep Learning Systems & Foundation Models",
+    "company": "Meta AI (Careers/LinkedIn)",
+    "role": "Research Engineer / Deep Learning Systems",
+    "pdf_file": "resume_ml_arjtala.pdf",
+    "words_count": 1169,
+    "vector_match_pct": 71.95,
+    "skills_extracted_count": 80,
+    "top_skills": [
+      "Machine Learning",
+      "Software Development",
+      "Scala",
+      "Java",
+      "Python",
+      "C++"
+    ],
+    "composite_score": 68.68,
+    "threshold": 65.0,
+    "actual_decision": "screening_completed",
+    "expected_decision": "screening_completed",
+    "reasoning": "Composite score of 68.68/100 (exceeds) minimum threshold of 65.0.",
+    "rejection_feedback": ""
+  },
+  {
+    "test_id": "CASE-4-CROSS-DOMAIN-MISMATCH",
+    "domain": "Intentional Cross-Domain Rejection Test",
+    "company": "DoorDash (Backend Platform)",
+    "role": "Staff Backend Engineer (Postgres/Redis APIs)",
+    "pdf_file": "resume_ml_arjtala.pdf",
+    "words_count": 1169,
+    "vector_match_pct": 62.78,
+    "skills_extracted_count": 92,
+    "top_skills": [
+      "Machine Learning",
+      "Computer Vision",
+      "Deep Learning",
+      "PyTorch",
+      "AWS Batch",
+      "AWS SQS"
+    ],
+    "composite_score": 71.31,
+    "threshold": 75.0,
+    "actual_decision": "rejected",
+    "expected_decision": "rejected",
+    "reasoning": "Composite score of 71.31/100 (does not meet) minimum threshold of 75.0.",
+    "rejection_feedback": "Subject: Your Application at [Company Name]\n\nDear [Applicant\u2019s Name],\n\nThank you for taking the time to apply for the Software Engineer position and for sharing your background with us. We were impressed by the depth of your experience in machine learning, software development, and your strong command of Python and Java. Your portfolio demonstrates a solid foundation in building robust, data\u2011driven applications, and we appreciate the clear passion you bring to the field.\n\nAfter careful consideration, we have decided to move forward with candidates whose current skill set aligns more closely with our immediate needs in containerization and distributed systems. Specifically, we are looking for experience with Docker, Kubernetes, and microservices architecture to support our rapidly scaling product line. While these areas are not the focus of your current expertise, we see great potential for you to grow in these domains. There are many excellent online courses and community resources\u2014such as the Docker and Kubernetes official documentation, as well as microservices design patterns on platforms like Coursera and Udemy\u2014that could help you build these competencies.\n\nWe genuinely value the talent you bring and would welcome the opportunity to revisit your application once you have expanded your experience in these areas. In the meantime, please feel free to stay connected with us through our careers page and LinkedIn updates. Thank you again for your interest in [Company Name], and we wish you every success in your continued professional journey."
+  }
+]

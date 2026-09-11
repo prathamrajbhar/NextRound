@@ -57,7 +57,7 @@ def _generate_text_ollama(prompt: str) -> Optional[str]:
             }
         }
         logger.info(f"Attempting Ollama generation using model {settings.ollama_model} at {url}...")
-        response = httpx.post(url, json=payload, timeout=60.0)
+        response = httpx.post(url, json=payload, timeout=180.0)
         response.raise_for_status()
         data = response.json()
         text = data.get("response")
