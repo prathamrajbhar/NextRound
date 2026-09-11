@@ -46,7 +46,7 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
           </div>
         </div>
 
-        <div>
+        <div className="sm:col-span-2">
           <label className={labelCls}>Professional Headline</label>
           <div className="relative">
             <Lightbulb className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
