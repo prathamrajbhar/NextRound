@@ -14,6 +14,7 @@ import { JobOverviewCard } from './_components/JobOverviewCard';
 import { JobSimilarList } from './_components/JobSimilarList';
 import { JobAboutRoleCard } from './_components/JobAboutRoleCard';
 import { JobDetailSkeleton } from '@/components/ui';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function CandidateJobDetailPage({
   params,
@@ -22,6 +23,7 @@ export default function CandidateJobDetailPage({
 }) {
   const { jobId } = use(params);
   const router = useRouter();
+  const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
   const [job, setJob] = useState<Job | null>(null);
@@ -70,14 +72,24 @@ export default function CandidateJobDetailPage({
         { jobId }
       );
       setApplied(true);
+      toast({
+        title: 'Application submitted',
+        description: 'Your application has been successfully submitted.',
+        variant: 'success',
+      });
       const newId = res?.application?.id || res?.id;
       if (newId) {
         router.push(`/candidate/applications/${newId}`);
       } else {
         router.push('/candidate/applications');
       }
-    } catch {
-      // Ignored
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to submit application. Please try again.';
+      toast({
+        title: 'Application failed',
+        description: message,
+        variant: 'error',
+      });
     } finally {
       setSubmittingApp(false);
     }

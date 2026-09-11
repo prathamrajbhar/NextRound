@@ -24,6 +24,8 @@ export interface JobCardProps {
   hasApplied?: boolean;
   viewHref?: string;
   applyHref?: string;
+  onApply?: (id: string) => void | Promise<void>;
+  isApplying?: boolean;
   className?: string;
   compact?: boolean;
 }
@@ -55,11 +57,13 @@ export function JobCard({
   hasApplied = false,
   viewHref,
   applyHref,
+  onApply,
+  isApplying = false,
   className,
   compact = false,
 }: JobCardProps) {
   const detailsUrl = viewHref || `/candidate/jobs/${id}`;
-  const applyUrl = applyHref || `/signup?role=candidate&jobId=${id}`;
+  const applyUrl = applyHref || detailsUrl;
 
   return (
     <div
@@ -169,14 +173,26 @@ export function JobCard({
             Details
           </Link>
 
-          {!hasApplied && applyUrl && (
-            <Link
-              href={applyUrl}
-              className="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 px-3.5 py-1.5 rounded-full shadow-sm hover:shadow-md transition-all group/btn"
-            >
-              <span>Apply</span>
-              <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
-            </Link>
+          {!hasApplied && (
+            onApply ? (
+              <button
+                type="button"
+                onClick={() => onApply(id)}
+                disabled={isApplying}
+                className="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 px-3.5 py-1.5 rounded-full shadow-sm hover:shadow-md transition-all group/btn disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <span>{isApplying ? 'Applying...' : 'Apply'}</span>
+                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+              </button>
+            ) : applyUrl ? (
+              <Link
+                href={applyUrl}
+                className="inline-flex items-center gap-1 text-xs font-bold text-white bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 px-3.5 py-1.5 rounded-full shadow-sm hover:shadow-md transition-all group/btn"
+              >
+                <span>Apply</span>
+                <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
+              </Link>
+            ) : null
           )}
         </div>
       </div>
