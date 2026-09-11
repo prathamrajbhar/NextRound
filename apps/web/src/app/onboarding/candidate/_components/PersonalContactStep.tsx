@@ -47,11 +47,17 @@ export function PersonalContactStep({ form, update, mergeParsedProfile }: Onboar
         </div>
 
         <div className="sm:col-span-2">
-          <label className={labelCls}>Professional Headline</label>
+          <div className="flex items-center justify-between mb-2">
+            <label className={labelCls.replace('mb-2', '')}>Professional Headline</label>
+            <span className="text-[10px] font-mono text-slate-400">
+              {form.headline.length}/100
+            </span>
+          </div>
           <div className="relative">
             <Lightbulb className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
             <input
               type="text"
+              maxLength={120}
               value={form.headline}
               onChange={(e) => update('headline', e.target.value)}
               placeholder="e.g. Senior Full-Stack Engineer · React & Node"
