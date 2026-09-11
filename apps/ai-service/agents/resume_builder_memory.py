@@ -11,8 +11,27 @@ def _normalize_question(q: str) -> str:
     if not q:
         return ""
     q = q.lower()
+    q = re.sub(r"['\"]", "", q)
     q = re.sub(r"[^a-z0-9\s]", " ", q)
     return " ".join(q.split())
+
+
+def _expand_tokens(tokens: List[str]) -> List[str]:
+    expansions = {
+        "whats": ["what", "is"],
+        "wheres": ["where", "is"],
+        "hows": ["how", "is"],
+        "whos": ["who", "is"],
+        "it": ["it", "is"],
+        "thats": ["that", "is"],
+    }
+    result = []
+    for token in tokens:
+        if token in expansions:
+            result.extend(expansions[token])
+        else:
+            result.append(token)
+    return result
 
 
 def _is_duplicate(candidate_q: str, asked: List[str]) -> bool:
@@ -22,16 +41,18 @@ def _is_duplicate(candidate_q: str, asked: List[str]) -> bool:
     nq = _normalize_question(candidate_q)
     if not nq:
         return False
+    tokens_q = set(_expand_tokens(nq.split()))
     for existing in asked:
         na = _normalize_question(str(existing))
         if not na:
             continue
         if nq == na:
             return True
-        tokens_q = set(nq.split())
-        tokens_a = set(na.split())
+        tokens_a = set(_expand_tokens(na.split()))
         if not tokens_q:
             continue
+        if tokens_q == tokens_a:
+            return True
         overlap = len(tokens_q & tokens_a) / len(tokens_q)
         if overlap >= 0.95:
             return True
@@ -113,6 +134,7 @@ def _update_memory(
     candidate_input: str,
     current_stage: str = "",
 ) -> Dict[str, Any]:
+    memory = _normalize_memory(memory)
     answer = candidate_input.strip()
     if answer:
         fact = str(analysis.get("memory_update") or "").strip() or answer
@@ -175,7 +197,7 @@ def _next_stage(current_stage: str) -> Optional[str]:
     try:
         idx = STAGES.index(current_stage)
     except ValueError:
-        idx = 0
+        return None
     if idx >= len(STAGES) - 1:
         return None
     return STAGES[idx + 1]

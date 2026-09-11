@@ -45,6 +45,10 @@ def _validate_analysis(parsed: Any) -> Optional[Dict[str, Any]]:
     parsed["topic"] = (topic or "").strip() or None
     parsed["memory_update"] = (update or "").strip() or None
     parsed["missing_information"] = [str(m).strip() for m in missing if str(m).strip()]
+    if "user_name" in parsed and isinstance(parsed["user_name"], str):
+        parsed["user_name"] = parsed["user_name"].strip() or None
+    if "profile_type" in parsed and isinstance(parsed["profile_type"], str):
+        parsed["profile_type"] = parsed["profile_type"].strip().lower() or None
     return parsed
 
 
@@ -77,8 +81,8 @@ def _context_block(
     resume_block = ""
     if existing_resume:
         resume_block = (
-            f"\nEXISTING RESUME (candidate provided this — reference it, verify details, and expand on gaps):\n"
-            f"{existing_resume[:3000]}\n"
+            f"\nEXISTING RESUME\n\n"
+            f"{existing_resume[:3000]}\n\n"
         )
     goals_block = ""
     if career_goals:

@@ -14,7 +14,7 @@ def parse_resume_node(state: ScreeningState) -> ScreeningState:
         prompt = f"Extract all technical skills and key competencies from this resume as a JSON list of strings:\n\n{resume_text}"
         skills = extract_json_array(generate_text(prompt)) or []
 
-    skills = [str(s).strip() for s in skills if s is not None and str(s).strip()]
+    skills = [s.strip() for s in skills if isinstance(s, str) and s.strip()]
     state["parsed_skills"] = skills
     return state
 
@@ -75,8 +75,18 @@ def compute_gaps_node(state: ScreeningState) -> ScreeningState:
     skills = state.get("parsed_skills", [])
     job_desc = state.get("job_description", "").lower()
 
-    key_jd_terms = ["system architecture", "postgresql", "redis", "bullmq", "webrtc", "docker", "kubernetes", "microservices"]
-    missing = [term.title() for term in key_jd_terms if term in job_desc and term not in [s.lower() for s in skills]]
+    key_jd_terms = [
+        ("system architecture", "System Architecture"),
+        ("postgresql", "PostgreSQL"),
+        ("redis", "Redis"),
+        ("bullmq", "BullMQ"),
+        ("webrtc", "WebRTC"),
+        ("docker", "Docker"),
+        ("kubernetes", "Kubernetes"),
+        ("microservices", "Microservices"),
+    ]
+    parsed_lower = [s.lower() for s in skills]
+    missing = [label for term, label in key_jd_terms if term in job_desc and term not in parsed_lower]
 
     strengths = skills[:4]
     exp_gaps = []
@@ -102,10 +112,10 @@ def make_decision_node(state: ScreeningState) -> ScreeningState:
         raise RuntimeError("Screening cannot decide without real composite and threshold scores.")
 
     decision = "screening_completed" if composite_score >= min_score else "rejected"
+    verb = "exceeds" if decision == "screening_completed" else "does not meet"
     reasoning = (
         f"Composite score of {composite_score}/100 "
-        f"({'exceeds' if decision == 'screening_completed' else 'does not meet'}) "
-        f"minimum threshold of {min_score}."
+        f"{verb} minimum threshold of {min_score}."
     )
 
     state["decision"] = decision
