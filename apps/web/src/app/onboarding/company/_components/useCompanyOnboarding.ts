@@ -8,14 +8,12 @@ export interface AvailabilitySlots {
 }
 
 export interface CompanyForm {
-
   name: string;
   website: string;
   industry: string;
   size: string;
   hqLocation: string;
 
-  hiringVelocity: string;
   primaryRoles: string[];
   autoOffer: boolean;
 
@@ -30,7 +28,6 @@ export const DEFAULT_FORM: CompanyForm = {
   industry: 'Technology',
   size: '11-50',
   hqLocation: '',
-  hiringVelocity: '3-10',
   primaryRoles: [],
   autoOffer: false,
   availabilityHours: {
@@ -89,7 +86,6 @@ export function buildOrganizationPayload(form: CompanyForm) {
     settings: {
       website: form.website.trim() || undefined,
       hqLocation: form.hqLocation.trim() || undefined,
-      hiringVelocity: form.hiringVelocity,
       primaryRoles: form.primaryRoles,
       availabilityHours: form.availabilityHours,
       autoOffer: form.autoOffer,

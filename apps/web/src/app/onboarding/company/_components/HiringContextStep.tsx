@@ -1,16 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Zap, Briefcase, Plus, X } from '@/lib/lucide-google-icons';
+import { Briefcase, Plus, X } from '@/lib/lucide-google-icons';
 import { CompanyStepProps } from './useCompanyOnboarding';
-import { inputCls, labelCls, selectCls } from './CompanyOnboardingShell';
-
-const VELOCITIES = [
-  { value: '0-2', label: '0-2 hires / quarter' },
-  { value: '3-10', label: '3-10 hires / quarter' },
-  { value: '11-30', label: '11-30 hires / quarter' },
-  { value: '30+', label: '30+ hires / quarter (high volume)' },
-];
+import { inputCls, labelCls } from './CompanyOnboardingShell';
 
 const ROLE_SUGGESTIONS = [
   'Software Engineer',
@@ -45,26 +38,10 @@ export function HiringContextStep({ form, update, addRole, removeRole }: Company
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <div>
-        <label className={labelCls}>Hiring Velocity</label>
-        <div className="relative">
-          <Zap className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500 pointer-events-none" />
-          <select
-            value={form.hiringVelocity}
-            onChange={(e) => update('hiringVelocity', e.target.value)}
-            className={`${selectCls} pl-10`}
-          >
-            {VELOCITIES.map((v) => (
-              <option key={v.value} value={v.value}>
-                {v.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <p className="text-xs text-slate-400 mt-2">Helps us configure the pipeline stages and AI interview agents for your hiring volume.</p>
-      </div>
-
-      <div>
         <label className={labelCls}>Roles You Typically Hire For</label>
+        <p className="text-xs text-slate-400 mb-3">
+          Select or add the typical roles for your company to configure AI screening &amp; matching agents.
+        </p>
         {form.primaryRoles.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3">
             {form.primaryRoles.map((role) => (
