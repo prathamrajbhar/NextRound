@@ -108,6 +108,52 @@ export function useEditJobForm(jobId: string) {
     fetchJob();
   }, [jobId]);
 
+  const handleAiAssist = async () => {
+    if (!jd) return;
+    setAssisting(true);
+    setAssistStep('Analyzing job description with Gemini AI...');
+
+    try {
+      const res = await apiClient.post<{
+        skills?: string[];
+        softSkills?: string[];
+        cultureKeywords?: string[];
+        rubric?: Partial<RubricWeights>;
+        enhancedDescription?: string;
+      }>('/jobs/extract-requirements', { description: jd, title });
+
+      if (res) {
+        if (Array.isArray(res.skills) && res.skills.length > 0) setSkills(res.skills);
+        if (Array.isArray(res.softSkills) && res.softSkills.length > 0) setSoftSkills(res.softSkills);
+        if (Array.isArray(res.cultureKeywords) && res.cultureKeywords.length > 0) setCultureKeywords(res.cultureKeywords);
+        if (res.rubric) {
+          setRubric({
+            technical: res.rubric.technical ?? 30,
+            communication: res.rubric.communication ?? 20,
+            problemSolving: res.rubric.problemSolving ?? 25,
+            experience: res.rubric.experience ?? 25,
+          });
+        }
+        if (res.enhancedDescription) setJd(res.enhancedDescription);
+        setAssisted(true);
+        toast({
+          title: 'Requirements Extracted',
+          description: 'Skills, competencies, and scoring rubric updated from job description.',
+          variant: 'success',
+        });
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to analyze requirements from job description';
+      toast({
+        title: 'Analysis Failed',
+        description: message,
+        variant: 'error',
+      });
+    } finally {
+      setAssisting(false);
+    }
+  };
+
   const handleGenerateJd = async (params: { prompt: string }) => {
     setAssisting(true);
     setAssistStep('AI is crafting professional job description...');
@@ -269,6 +315,7 @@ export function useEditJobForm(jobId: string) {
     assessmentConfig,
     setAssessmentConfig,
     handleGenerateJd,
+    handleAiAssist,
     handleUpdate,
   };
 }

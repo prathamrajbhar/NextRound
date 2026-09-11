@@ -73,6 +73,8 @@ export default function HrCreateJob() {
               setSoftSkills={form.setSoftSkills}
               cultureKeywords={form.cultureKeywords}
               setCultureKeywords={form.setCultureKeywords}
+              onExtractSkills={form.handleAiAssist}
+              canExtract={form.jd.trim().length > 15}
             />
           </section>
 

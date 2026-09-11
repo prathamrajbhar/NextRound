@@ -89,6 +89,8 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
               setSoftSkills={form.setSoftSkills}
               cultureKeywords={form.cultureKeywords}
               setCultureKeywords={form.setCultureKeywords}
+              onExtractSkills={form.handleAiAssist}
+              canExtract={form.jd.trim().length > 15}
             />
           </section>
 

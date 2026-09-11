@@ -182,6 +182,7 @@ export function useCreateJobForm() {
     title: title || (status === 'draft' ? 'Untitled Draft Job' : ''),
     description: jd || (status === 'draft' ? 'Draft job description.' : 'No description provided.'),
     department,
+    skills,
     rubric,
     thresholds: { minScore, autoOffer },
     status,

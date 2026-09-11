@@ -5,7 +5,7 @@ import { Sparkles, Cpu, Award, ShieldAlert, Heart } from '@/lib/lucide-google-ic
 import { AiChipInputSection } from './AiChipInputSection';
 
 interface AiExtractProps {
-  assisted: boolean;
+  assisted?: boolean;
   assisting: boolean;
   assistStep: string;
   skills: string[];
@@ -14,6 +14,8 @@ interface AiExtractProps {
   setSoftSkills: React.Dispatch<React.SetStateAction<string[]>>;
   cultureKeywords: string[];
   setCultureKeywords: React.Dispatch<React.SetStateAction<string[]>>;
+  onExtractSkills?: () => Promise<void>;
+  canExtract?: boolean;
 }
 
 export default function AiExtractPanel({
@@ -26,6 +28,8 @@ export default function AiExtractPanel({
   setSoftSkills,
   cultureKeywords,
   setCultureKeywords,
+  onExtractSkills,
+  canExtract = false,
 }: AiExtractProps) {
   const addChip = (
     setter: React.Dispatch<React.SetStateAction<string[]>>,
@@ -63,20 +67,36 @@ export default function AiExtractPanel({
     );
   }
 
-  if (!assisted) return null;
-
   return (
     <div className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-6 md:p-7 shadow-sm backdrop-blur-md space-y-6 animate-in slide-in-from-bottom-3 duration-250">
-      <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3.5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 dark:border-slate-800 pb-3.5">
         <div className="flex items-center gap-2.5 text-brand-600 dark:text-brand-400">
           <div className="h-8 w-8 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 flex items-center justify-center">
             <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <h2 className="text-sm font-black text-slate-900 dark:text-slate-100 tracking-tight">Extracted Candidate Competencies</h2>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">AI automatically curated requirements from your description</p>
+            <h2 className="text-sm font-black text-slate-900 dark:text-slate-100 tracking-tight">
+              {assisted ? 'Extracted Candidate Competencies' : 'Role Skills & Competencies'}
+            </h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              {assisted
+                ? 'AI automatically curated requirements from your description'
+                : 'Define tech stack, soft skills, and culture keywords or extract from JD'}
+            </p>
           </div>
         </div>
+
+        {onExtractSkills && canExtract && (
+          <button
+            type="button"
+            onClick={onExtractSkills}
+            disabled={assisting}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-brand-50 dark:bg-brand-950/50 hover:bg-brand-100 dark:hover:bg-brand-900/60 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800/80 transition-all cursor-pointer shadow-xs active:scale-95 disabled:opacity-40"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-brand-500" />
+            <span>Auto-Extract from JD</span>
+          </button>
+        )}
       </div>
 
       <div className="space-y-5 text-xs font-semibold">
