@@ -34,30 +34,39 @@ export function useCandidateOnboarding() {
     setForm((f) => ({ ...f, [key]: f[key].filter((v) => v !== value) }));
 
   const mergeParsedProfile = (parsed: ParsedProfilePayload, rawText?: string) => {
-    setForm((f) => ({
-      ...f,
-      rawResumeText: rawText || f.rawResumeText,
-      parsedResume: (parsed as Record<string, unknown>) || f.parsedResume,
-      fullName: parsed.fullName || f.fullName,
-      headline: parsed.headline || f.headline,
-      phone: parsed.phone || f.phone,
-      location: parsed.location || f.location,
-      timezone: parsed.timezone || f.timezone,
-      linkedinUrl: parsed.linkedinUrl || f.linkedinUrl,
-      githubUrl: parsed.githubUrl || f.githubUrl,
-      portfolioUrl: parsed.portfolioUrl || f.portfolioUrl,
-      yearsOfExperience: parsed.yearsOfExperience !== undefined ? String(parsed.yearsOfExperience) : f.yearsOfExperience,
-      skills: parsed.skills && parsed.skills.length > 0 ? Array.from(new Set([...f.skills, ...parsed.skills])) : f.skills,
-      targetRoles: parsed.targetRoles && parsed.targetRoles.length > 0 ? Array.from(new Set([...f.targetRoles, ...parsed.targetRoles])) : f.targetRoles,
-      targetLocations: parsed.targetLocations && parsed.targetLocations.length > 0 ? Array.from(new Set([...f.targetLocations, ...parsed.targetLocations])) : f.targetLocations,
-      workMode: parsed.workMode || f.workMode,
-      expectedSalary: parsed.expectedSalary !== undefined ? String(parsed.expectedSalary) : f.expectedSalary,
-      currentCtc: parsed.currentCtc !== undefined ? String(parsed.currentCtc) : f.currentCtc,
-      noticePeriod: parsed.noticePeriod || f.noticePeriod,
-      workAuthorization: parsed.workAuthorization || f.workAuthorization,
-      bio: parsed.bio || f.bio,
-      proudProject: parsed.proudProject || f.proudProject,
-    }));
+    setForm((f) => {
+      const hasValidExpectedSalary = parsed.expectedSalary !== undefined && Number(parsed.expectedSalary) > 0;
+      const parsedSalaryNum = hasValidExpectedSalary ? Number(parsed.expectedSalary) : undefined;
+      const expectedSalaryMin = parsedSalaryNum ? String(Math.max(1, Math.round(parsedSalaryNum * 0.8))) : f.expectedSalaryMin;
+      const expectedSalaryMax = parsedSalaryNum ? String(Math.round(parsedSalaryNum * 1.3)) : f.expectedSalaryMax;
+
+      return {
+        ...f,
+        rawResumeText: rawText || f.rawResumeText,
+        parsedResume: (parsed as Record<string, unknown>) || f.parsedResume,
+        fullName: parsed.fullName || f.fullName,
+        headline: parsed.headline || f.headline,
+        phone: parsed.phone || f.phone,
+        location: parsed.location || f.location,
+        timezone: parsed.timezone || f.timezone,
+        linkedinUrl: parsed.linkedinUrl || f.linkedinUrl,
+        githubUrl: parsed.githubUrl || f.githubUrl,
+        portfolioUrl: parsed.portfolioUrl || f.portfolioUrl,
+        yearsOfExperience: parsed.yearsOfExperience !== undefined ? String(parsed.yearsOfExperience) : f.yearsOfExperience,
+        skills: parsed.skills && parsed.skills.length > 0 ? Array.from(new Set([...f.skills, ...parsed.skills])) : f.skills,
+        targetRoles: parsed.targetRoles && parsed.targetRoles.length > 0 ? Array.from(new Set([...f.targetRoles, ...parsed.targetRoles])) : f.targetRoles,
+        targetLocations: parsed.targetLocations && parsed.targetLocations.length > 0 ? Array.from(new Set([...f.targetLocations, ...parsed.targetLocations])) : f.targetLocations,
+        workMode: parsed.workMode || f.workMode,
+        expectedSalary: hasValidExpectedSalary ? String(parsed.expectedSalary) : f.expectedSalary,
+        expectedSalaryMin,
+        expectedSalaryMax,
+        currentCtc: parsed.currentCtc !== undefined && Number(parsed.currentCtc) > 0 ? String(parsed.currentCtc) : f.currentCtc,
+        noticePeriod: parsed.noticePeriod || f.noticePeriod,
+        workAuthorization: parsed.workAuthorization || f.workAuthorization,
+        bio: parsed.bio || f.bio,
+        proudProject: parsed.proudProject || f.proudProject,
+      };
+    });
   };
 
   const mergeSocialData = (social: Record<string, unknown>, extractedSkills?: string[]) => {

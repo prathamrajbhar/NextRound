@@ -26,7 +26,23 @@ export function sanitizeParsedData(data: Record<string, unknown>): ParsedResumeD
     return [];
   };
 
-  const fullName = toString(data.fullName, data.full_name, data.name, data.candidateName);
+  let fullName = toString(data.fullName, data.full_name, data.name, data.candidateName);
+  if (fullName) {
+    const lower = fullName.toLowerCase().trim();
+    if (
+      lower.includes('curriculum vitae') ||
+      lower === 'resume' ||
+      lower.startsWith('resume') ||
+      lower.startsWith('page ') ||
+      lower.includes('@') ||
+      lower.includes('http') ||
+      /\d/.test(fullName) ||
+      fullName.length > 50
+    ) {
+      fullName = undefined;
+    }
+  }
+
   const headline = toString(data.headline, data.professionalHeadline, data.title, data.currentRole, data.role);
   const phone = toString(data.phone, data.phone_number, data.phoneNumber, data.mobile);
   const location = toString(data.location, data.currentLocation, data.address, data.city);
@@ -47,24 +63,24 @@ export function sanitizeParsedData(data: Record<string, unknown>): ParsedResumeD
     portfolioUrl = `https://${portfolioUrl}`;
   }
 
-  const skills = Array.from(new Set(toStringArray(data.skills)));
+  const skillsMap = new Map<string, string>();
+  for (const item of toStringArray(data.skills)) {
+    const trimmed = item.trim();
+    const key = trimmed.toLowerCase();
+    if (!skillsMap.has(key)) {
+      skillsMap.set(key, trimmed);
+    }
+  }
+  const skills = Array.from(skillsMap.values());
 
   let targetRoles = toStringArray(data.targetRoles, data.roles);
-  if (targetRoles.length === 0) {
-    if (headline) {
-      targetRoles.push(headline);
-    }
-    if (skills.includes('React') || skills.includes('TypeScript') || skills.includes('Node.js')) {
-      targetRoles.push('Full-Stack Engineer');
-    }
-    if (skills.includes('Python') || skills.includes('FastAPI') || skills.includes('LangChain') || skills.includes('PyTorch')) {
-      targetRoles.push('AI/ML Engineer');
-    }
-    targetRoles = Array.from(new Set(targetRoles));
+  if (targetRoles.length === 0 && headline) {
+    targetRoles = [headline.split('|')[0].trim()];
   }
 
   const targetLocations = toStringArray(data.targetLocations);
-  const yearsOfExperience = toNumber(data.yearsOfExperience, data.experienceYears);
+  const rawYears = toNumber(data.yearsOfExperience, data.experienceYears);
+  const yearsOfExperience = rawYears !== undefined && rawYears >= 0 && rawYears <= 50 ? rawYears : undefined;
 
   const workModeStr = toString(data.workMode);
   const workMode = ['Remote', 'Hybrid', 'Onsite'].includes(workModeStr || '')
@@ -72,19 +88,69 @@ export function sanitizeParsedData(data: Record<string, unknown>): ParsedResumeD
     : undefined;
 
   let bio = toString(data.bio, data.summary, data.professionalSummary);
-  if (bio && (bio.includes('@') || bio.includes('+91') || bio.includes('http'))) {
+  if (bio) {
+    // Remove email addresses, URLs, and phone numbers from the bio
     bio = bio
-      .split('\n')
-      .filter((line) => !line.includes('@') && !line.includes('+') && !line.includes('http') && line.length > 15)
-      .join(' ')
+      .replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '')
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/(?:\+\d{1,3}[-.\s]*)?\(?\d{1,4}\)?[-.\s]*\d{3,5}[-.\s]*\d{3,5}/g, '')
+      .replace(/\s+/g, ' ')
       .trim();
+    if (bio.length === 0) {
+      bio = undefined;
+    }
   }
 
   const proudProject = toString(data.proudProject, data.keyProject, data.featuredProject);
-  const currentCtc = toNumber(data.currentCtc);
-  const expectedSalary = toNumber(data.expectedSalary);
-  const noticePeriod = toString(data.noticePeriod);
-  const workAuthorization = toString(data.workAuthorization);
+
+  const normalizeSalary = (val: unknown): number | undefined => {
+    const num = toNumber(val);
+    if (num === undefined || num <= 0) return undefined;
+    // Reject years like 2020-2029
+    if (num >= 2020 && num <= 2030) return undefined;
+    // If given in full INR (e.g. 1500000 -> 15 LPA)
+    if (num >= 100000) {
+      return Math.round(num / 100000);
+    }
+    // If given in LPA (e.g. 15 or 25)
+    if (num < 500) {
+      return num;
+    }
+    return undefined;
+  };
+
+  const currentCtc = normalizeSalary(data.currentCtc);
+  const expectedSalary = normalizeSalary(data.expectedSalary);
+
+  const rawNoticePeriod = toString(data.noticePeriod);
+  let noticePeriod: string | undefined;
+  if (rawNoticePeriod) {
+    const npLower = rawNoticePeriod.toLowerCase();
+    if (npLower.includes('60') || npLower.includes('2 month') || npLower.includes('8 week')) {
+      noticePeriod = '60 days';
+    } else if (npLower.includes('90') || npLower.includes('3 month') || npLower.includes('12 week')) {
+      noticePeriod = '90 days';
+    } else if (npLower.includes('30') || npLower.includes('1 month') || npLower.includes('4 week')) {
+      noticePeriod = '30 days';
+    } else if (npLower.includes('15') || npLower.includes('1-2 week') || npLower.includes('2 week')) {
+      noticePeriod = '15 days';
+    } else if (npLower.includes('immediate') || npLower.includes('0 day') || npLower.includes('now')) {
+      noticePeriod = 'Immediate';
+    }
+  }
+
+  const rawWorkAuth = toString(data.workAuthorization);
+  let workAuthorization: string | undefined;
+  if (rawWorkAuth) {
+    const waLower = rawWorkAuth.toLowerCase();
+    if (waLower.includes('sponsor')) {
+      workAuthorization = 'Sponsorship Required';
+    } else if (waLower.includes('student') || waLower.includes('permit') || waLower.includes('opt') || waLower.includes('cpt')) {
+      workAuthorization = 'Student / On Work Permit';
+    } else if (waLower.includes('authoriz') || waLower.includes('citizen') || waLower.includes('permanent') || waLower.includes('eligible')) {
+      workAuthorization = 'Authorized';
+    }
+  }
 
   return {
     fullName,

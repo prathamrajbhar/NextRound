@@ -22,35 +22,37 @@ export interface FieldRegenerationPayload {
 export async function generateFieldWithGemini(payload: FieldRegenerationPayload): Promise<string> {
   const { field, rawResumeText, socialData, linkedinUrl, githubUrl, portfolioUrl, skills, targetRoles, yearsOfExperience, currentValue } = payload;
 
-  const contextParts: string[] = [];
+  const profileContextParts: string[] = [];
 
   if (rawResumeText && rawResumeText.trim()) {
-    contextParts.push(`RESUME TEXT:\n${rawResumeText.trim().slice(0, 8000)}`);
+    profileContextParts.push(`RESUME TEXT:\n${rawResumeText.trim().slice(0, 8000)}`);
   }
   if (socialData && Object.keys(socialData).length > 0) {
-    contextParts.push(`GITHUB & LINKEDIN SYNCHRONIZED PROFILES & REPOSITORIES:\n${JSON.stringify(socialData, null, 2).slice(0, 4000)}`);
+    profileContextParts.push(`GITHUB & LINKEDIN SYNCHRONIZED PROFILES & REPOSITORIES:\n${JSON.stringify(socialData, null, 2).slice(0, 4000)}`);
   }
   if (skills && skills.length > 0) {
-    contextParts.push(`TECHNICAL SKILLS: ${skills.join(', ')}`);
+    profileContextParts.push(`TECHNICAL SKILLS: ${skills.join(', ')}`);
   }
   if (targetRoles && targetRoles.length > 0) {
-    contextParts.push(`TARGET ROLES: ${targetRoles.join(', ')}`);
+    profileContextParts.push(`TARGET ROLES: ${targetRoles.join(', ')}`);
   }
   if (yearsOfExperience) {
-    contextParts.push(`YEARS OF EXPERIENCE: ${yearsOfExperience}`);
+    profileContextParts.push(`YEARS OF EXPERIENCE: ${yearsOfExperience}`);
   }
   if (linkedinUrl || githubUrl || portfolioUrl) {
-    contextParts.push(`ONLINE PROFILES: LinkedIn: ${linkedinUrl || 'N/A'}, GitHub: ${githubUrl || 'N/A'}, Portfolio: ${portfolioUrl || 'N/A'}`);
+    profileContextParts.push(`ONLINE PROFILES: LinkedIn: ${linkedinUrl || 'N/A'}, GitHub: ${githubUrl || 'N/A'}, Portfolio: ${portfolioUrl || 'N/A'}`);
   }
+
+  if (profileContextParts.length === 0) {
+    return currentValue || '';
+  }
+
+  const contextParts = [...profileContextParts];
   if (currentValue && currentValue.trim()) {
     contextParts.push(`CURRENT DRAFT: ${currentValue.trim()}`);
   }
 
   const combinedContext = contextParts.join('\n\n');
-
-  if (combinedContext.trim().length === 0) {
-    return currentValue || '';
-  }
 
   try {
     let fieldInstruction = '';
@@ -85,38 +87,46 @@ export async function parseResumeWithGemini(rawText: string): Promise<ParsedResu
     throw new Error('Resume text too short for parsing');
   }
 
-  const prompt = `You are an executive AI recruiter & professional technical resume strategist.
-Analyze the candidate's uploaded raw resume text. DO NOT simply copy-paste raw text snippets ("take and put"). Instead, synthesize, elevate, and craft polished, recruiter-ready profile fields based strictly on the uploaded resume content.
+  const prompt = `You are an elite AI technical recruiter & executive resume strategist.
+Analyze the candidate's raw resume text and extract high-precision profile data.
 
-WRITING & SYNTHESIS DIRECTIVES:
-1. "headline": Synthesize a punchy, modern technical headline highlighting their primary engineering focus and core stack (e.g., "Full-Stack & AI Systems Engineer | React, Node.js & PyTorch").
-2. "bio": Craft a polished, high-impact 2-4 sentence executive professional summary synthesizing candidate's specialization, technical depth, major project accomplishments, and engineering focus. DO NOT include email, phone, address, or raw resume header lines.
-3. "proudProject": Identify their most technically complex or impactful project from the uploaded resume. Rewrite it into an engaging narrative detailing the project objective, key technologies used, candidate's key architectural/code contributions, and measurable results.
-4. "skills": Extract all technical skills, programming languages, frameworks, databases, cloud tools, and libraries found in the resume.
-5. "targetRoles": Infer 2-4 strategic target job titles tailored to their experience and tech stack.
+EXTRACTION & SYNTHESIS RULES:
+1. "fullName": The candidate's actual personal name found at the top of the resume. NEVER output a job title (e.g. "Software Engineer"), degree, section header, or generic phrase. If uncertain, return null.
+2. "headline": Synthesize a punchy, modern technical headline reflecting their actual engineering roles and core stack (e.g. "Full-Stack Engineer | React, Node.js & TypeScript" or "Backend & Cloud Engineer | Go & Kubernetes").
+3. "bio": A polished 2-4 sentence executive summary of the candidate's experience, technical depth, major engineering accomplishments, and domains. Grounded strictly in facts from the resume. NEVER invent past companies or credentials. Do NOT include email, phone, or links.
+4. "proudProject": Identify the most technically complex or impactful project described in the resume. Rewrite into a narrative covering project objective, tech stack, key architectural/coding contributions, and measurable impact.
+5. "skills": Extract all verifiable technical skills, languages, frameworks, libraries, databases, and cloud tools explicitly mentioned in the resume.
+6. "targetRoles": Infer 2-3 realistic target job titles strictly aligned with the candidate's demonstrated skill set and past roles.
+7. "yearsOfExperience": Estimated total numerical years of full-time professional experience. For new graduates/students without full-time roles, return 0.
+8. "currentCtc" & "expectedSalary": Resumes rarely state salary. Return null UNLESS an explicit numerical annual salary/compensation is unambiguously stated in the text. NEVER guess, estimate, or hallucinate salary numbers.
+9. "noticePeriod": Return "Immediate", "15 days", "30 days", "60 days", or "90 days" ONLY if explicitly mentioned in the resume text. Otherwise return null.
+10. "workMode": Return "Remote", "Hybrid", or "Onsite" ONLY if explicitly stated as a preference or current status. Otherwise return null.
+11. "workAuthorization": Return "Authorized", "Sponsorship Required", or "Student / On Work Permit" ONLY if explicitly stated in the resume. Otherwise return null.
 
 JSON SCHEMAS TO RETURN:
-- "fullName": candidate's exact full name (e.g. "Pratham Rajbhar" or "Marcus Vance")
-- "headline": synthesized professional title/headline
-- "location": candidate's city, state, or country
-- "phone": contact phone number
-- "timezone": inferred IANA timezone string (e.g. "Asia/Kolkata", "America/New_York", "Europe/London")
-- "linkedinUrl": complete LinkedIn URL if present
-- "githubUrl": complete GitHub URL if present
-- "portfolioUrl": personal portfolio / blog website URL if present
-- "yearsOfExperience": total numerical years of experience (e.g. 3)
-- "skills": string array of tech skills
-- "targetRoles": string array of 2-4 target job roles
-- "targetLocations": string array of target locations
-- "workMode": "Remote" | "Hybrid" | "Onsite"
-- "bio": synthesized 2-4 sentence executive summary
-- "proudProject": synthesized narrative of their top project
-- "currentCtc": numerical estimated/stated annual salary
-- "expectedSalary": numerical target annual salary based on experience
-- "noticePeriod": "Immediate" | "1-2 weeks" | "30 days" | "60+ days" | "90 days"
-- "workAuthorization": "Authorized" | "Sponsorship Required" | "Student / On Work Permit"
+{
+  "fullName": string | null,
+  "headline": string | null,
+  "location": string | null,
+  "phone": string | null,
+  "timezone": string | null,
+  "linkedinUrl": string | null,
+  "githubUrl": string | null,
+  "portfolioUrl": string | null,
+  "yearsOfExperience": number | null,
+  "skills": string[],
+  "targetRoles": string[],
+  "targetLocations": string[],
+  "workMode": "Remote" | "Hybrid" | "Onsite" | null,
+  "bio": string | null,
+  "proudProject": string | null,
+  "currentCtc": number | null,
+  "expectedSalary": number | null,
+  "noticePeriod": "Immediate" | "15 days" | "30 days" | "60 days" | "90 days" | null,
+  "workAuthorization": "Authorized" | "Sponsorship Required" | "Student / On Work Permit" | null
+}
 
-Return ONLY a valid raw JSON object without markdown formatting.
+Return ONLY a valid raw JSON object without markdown fences, explanation, or conversational filler.
 
 RESUME CONTENT:
 ${rawText.slice(0, 12000)}`;
