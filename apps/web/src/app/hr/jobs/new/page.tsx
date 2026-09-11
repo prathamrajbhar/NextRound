@@ -29,6 +29,8 @@ export default function HrCreateJob() {
         completionScore={completionScore}
         onSaveDraft={form.handleSaveDraft}
         onPublish={form.handlePublish}
+        isSavingDraft={form.isSavingDraft}
+        isPublishing={form.isPublishing}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -56,12 +58,9 @@ export default function HrCreateJob() {
               jd={form.jd}
               setJd={form.setJd}
               title={form.title}
-              department={form.department}
-              experienceLevel={form.experienceLevel}
-              locationType={form.locationType}
-              onAiAssist={form.handleAiAssist}
               onGenerateJd={form.handleGenerateJd}
               assisting={form.assisting}
+              assistStep={form.assistStep}
             />
 
             <AiExtractPanel

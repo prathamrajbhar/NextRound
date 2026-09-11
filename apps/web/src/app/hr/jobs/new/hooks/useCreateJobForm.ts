@@ -192,25 +192,77 @@ export function useCreateJobForm() {
     assessmentConfig,
   });
 
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
+
   const handleSaveDraft = async () => {
+    setIsSavingDraft(true);
     try {
       await apiClient.post('/jobs', buildPayload('draft'));
-    } catch {
-      // Ignored
+      toast({
+        title: 'Draft Saved',
+        description: 'Job draft has been saved successfully.',
+        variant: 'success',
+      });
+      router.push('/hr/jobs');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save job draft';
+      toast({
+        title: 'Save Failed',
+        description: message,
+        variant: 'error',
+      });
+    } finally {
+      setIsSavingDraft(false);
     }
-    router.push('/hr/jobs');
   };
 
-  const handlePublish = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isRubricBalanced) return;
+  const handlePublish = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!title.trim()) {
+      toast({
+        title: 'Job Title Required',
+        description: 'Please enter a job title before publishing.',
+        variant: 'error',
+      });
+      return;
+    }
+    if (jd.trim().length < 15) {
+      toast({
+        title: 'Job Description Incomplete',
+        description: 'Please provide or generate a job description before publishing.',
+        variant: 'error',
+      });
+      return;
+    }
+    if (!isRubricBalanced) {
+      toast({
+        title: 'Rubric Must Total 100%',
+        description: 'Please balance candidate scoring weights to exactly 100%.',
+        variant: 'error',
+      });
+      return;
+    }
 
+    setIsPublishing(true);
     try {
       await apiClient.post('/jobs', buildPayload('active'));
-    } catch {
-      // Ignored
+      toast({
+        title: 'Job Published Successfully',
+        description: `Position "${title}" is now active with automated evaluation stages.`,
+        variant: 'success',
+      });
+      router.push('/hr/jobs');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to publish job opening';
+      toast({
+        title: 'Publishing Failed',
+        description: message,
+        variant: 'error',
+      });
+    } finally {
+      setIsPublishing(false);
     }
-    router.push('/hr/jobs');
   };
 
   return {
@@ -260,6 +312,8 @@ export function useCreateJobForm() {
     isRubricBalanced,
     handleSaveDraft,
     handlePublish,
+    isPublishing,
+    isSavingDraft,
   };
 }
 

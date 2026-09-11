@@ -8,7 +8,9 @@ interface NewJobHeaderProps {
   isRubricBalanced: boolean;
   completionScore?: number;
   onSaveDraft: () => void;
-  onPublish: (e: React.FormEvent) => void;
+  onPublish: (e?: React.FormEvent) => void;
+  isPublishing?: boolean;
+  isSavingDraft?: boolean;
 }
 
 export function NewJobHeader({
@@ -16,6 +18,8 @@ export function NewJobHeader({
   completionScore = 25,
   onSaveDraft,
   onPublish,
+  isPublishing = false,
+  isSavingDraft = false,
 }: NewJobHeaderProps) {
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/70 dark:border-slate-800/80 pb-5">
@@ -69,21 +73,22 @@ export function NewJobHeader({
 
         <button
           type="button"
+          disabled={isSavingDraft || isPublishing}
           onClick={onSaveDraft}
-          className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+          className="inline-flex items-center gap-1.5 bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-750 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer disabled:opacity-50 active:scale-95"
         >
-          <Save className="h-3.5 w-3.5 text-slate-400" />
-          Save Draft
+          <Save className={`h-3.5 w-3.5 ${isSavingDraft ? 'animate-spin text-brand-500' : 'text-slate-400'}`} />
+          <span>{isSavingDraft ? 'Saving...' : 'Save Draft'}</span>
         </button>
 
         <button
           type="button"
-          disabled={!isRubricBalanced}
+          disabled={!isRubricBalanced || isPublishing || isSavingDraft}
           onClick={onPublish}
           className="inline-flex items-center gap-2 rounded-xl bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white font-black px-5 py-2 text-xs shadow-md shadow-brand-500/20 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
         >
-          <Send className="h-3.5 w-3.5" />
-          Publish Role
+          <Send className={`h-3.5 w-3.5 ${isPublishing ? 'animate-spin' : ''}`} />
+          <span>{isPublishing ? 'Publishing...' : 'Publish Role'}</span>
         </button>
       </div>
     </div>
