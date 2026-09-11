@@ -28,6 +28,10 @@ def generate_resume_pdf(resume_data: Dict[str, Any]) -> str:
     skills = resume_data.get("skills", [])
     education = resume_data.get("education", [])
     projects = resume_data.get("projects", [])
+    certifications = resume_data.get("certifications", []) or []
+    languages = resume_data.get("languages", []) or []
+    awards = resume_data.get("awards", []) or []
+    career_objective = (resume_data.get("career_objective") or "").strip()
 
     if not REPORTLAB_AVAILABLE:
         raise RuntimeError("ReportLab is required to generate a real resume PDF. No mock PDF is written.")
@@ -95,6 +99,12 @@ def generate_resume_pdf(resume_data: Dict[str, Any]) -> str:
             story.append(Paragraph("PROFESSIONAL SUMMARY", heading_style))
             story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#CBD5E1'), spaceBefore=1, spaceAfter=4))
             story.append(Paragraph(_esc(summary), body_style))
+            story.append(Spacer(1, 4))
+
+        if career_objective:
+            story.append(Paragraph("CAREER OBJECTIVE", heading_style))
+            story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#CBD5E1'), spaceBefore=1, spaceAfter=4))
+            story.append(Paragraph(_esc(career_objective), body_style))
             story.append(Spacer(1, 4))
 
         if work_history:
@@ -167,6 +177,57 @@ def generate_resume_pdf(resume_data: Dict[str, Any]) -> str:
                 if gpa:
                     edu_text += f" | GPA: {_esc(gpa)}"
                 story.append(Paragraph(edu_text, body_style))
+                story.append(Spacer(1, 4))
+
+        if certifications:
+            story.append(Paragraph("CERTIFICATIONS & COURSES", heading_style))
+            story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#CBD5E1'), spaceBefore=1, spaceAfter=4))
+            for cert in certifications:
+                if isinstance(cert, dict):
+                    cert_name = cert.get("name", "")
+                    issuer = cert.get("issuer", "")
+                    year = cert.get("year", "")
+                    cert_text = f"<b>{_esc(cert_name)}</b>"
+                    if issuer:
+                        cert_text += f" — {_esc(issuer)}"
+                    if year:
+                        cert_text += f" ({_esc(year)})"
+                    story.append(Paragraph(cert_text, body_style))
+                else:
+                    story.append(Paragraph(f"• {_esc(str(cert))}", bullet_style))
+            story.append(Spacer(1, 4))
+
+        if awards:
+            story.append(Paragraph("AWARDS & RECOGNITION", heading_style))
+            story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#CBD5E1'), spaceBefore=1, spaceAfter=4))
+            for award in awards:
+                if isinstance(award, dict):
+                    award_title = award.get("title", "")
+                    issuer = award.get("issuer", "")
+                    year = award.get("year", "")
+                    award_text = f"<b>{_esc(award_title)}</b>"
+                    if issuer:
+                        award_text += f" — {_esc(issuer)}"
+                    if year:
+                        award_text += f" ({_esc(year)})"
+                    story.append(Paragraph(award_text, body_style))
+                else:
+                    story.append(Paragraph(f"• {_esc(str(award))}", bullet_style))
+            story.append(Spacer(1, 4))
+
+        if languages:
+            lang_parts = []
+            for lang in languages:
+                if isinstance(lang, dict):
+                    lname = lang.get("language", "")
+                    prof = lang.get("proficiency", "")
+                    lang_parts.append(f"<b>{_esc(lname)}</b> ({_esc(prof)})" if prof else f"<b>{_esc(lname)}</b>")
+                else:
+                    lang_parts.append(_esc(str(lang)))
+            if lang_parts:
+                story.append(Paragraph("LANGUAGES", heading_style))
+                story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor('#CBD5E1'), spaceBefore=1, spaceAfter=4))
+                story.append(Paragraph(" | ".join(lang_parts), body_style))
                 story.append(Spacer(1, 4))
 
         doc.build(story)

@@ -58,8 +58,12 @@ export interface RawResumeData {
     year?: string;
     dates?: string;
     gpa?: string;
+    relevant_coursework?: string[];
   }[];
-  certifications?: string[];
+  certifications?: string[] | { name?: string; issuer?: string; year?: string }[];
+  languages?: string[] | { language?: string; proficiency?: string }[];
+  awards?: string[] | { title?: string; issuer?: string; year?: string }[];
+  career_objective?: string;
 }
 
 export function mapRawToAtsResume(
@@ -105,7 +109,16 @@ export function mapRawToAtsResume(
       year: edu.year || edu.dates || '',
       gpa: edu.gpa || undefined,
     })),
-    certifications: raw.certifications || [],
+    certifications: (raw.certifications || []).map((c) =>
+      typeof c === 'string' ? c : [c.name, c.issuer, c.year].filter(Boolean).join(' — ')
+    ),
+    languages: (raw.languages || []).map((l) =>
+      typeof l === 'string' ? l : `${l.language || ''}${l.proficiency ? ` (${l.proficiency})` : ''}`
+    ),
+    awards: (raw.awards || []).map((a) =>
+      typeof a === 'string' ? a : [a.title, a.issuer, a.year].filter(Boolean).join(' — ')
+    ),
+    careerObjective: raw.career_objective || undefined,
     pdfUrl: pdfUrl || undefined,
   };
 }

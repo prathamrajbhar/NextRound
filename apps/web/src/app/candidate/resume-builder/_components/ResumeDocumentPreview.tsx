@@ -122,6 +122,49 @@ export function ResumeDocumentPreview({ resumeData }: ResumeDocumentPreviewProps
             </div>
           ))}
         </div>
+
+        {resumeData.certifications && resumeData.certifications.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 border-b border-slate-200 dark:border-slate-800 pb-1">
+              Certifications
+            </h3>
+            <ul className="space-y-0.5 text-xs text-slate-700 dark:text-slate-300">
+              {resumeData.certifications.map((cert, idx) => (
+                <li key={idx} className="flex items-start gap-1.5">
+                  <span className="text-emerald-500 mt-0.5">▸</span>
+                  <span>{cert}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {resumeData.languages && resumeData.languages.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 border-b border-slate-200 dark:border-slate-800 pb-1">
+              Languages
+            </h3>
+            <p className="text-xs text-slate-700 dark:text-slate-300">
+              {resumeData.languages.join(' · ')}
+            </p>
+          </div>
+        )}
+
+        {resumeData.awards && resumeData.awards.length > 0 && (
+          <div className="space-y-2">
+            <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 border-b border-slate-200 dark:border-slate-800 pb-1">
+              Awards & Recognition
+            </h3>
+            <ul className="space-y-0.5 text-xs text-slate-700 dark:text-slate-300">
+              {resumeData.awards.map((award, idx) => (
+                <li key={idx} className="flex items-start gap-1.5">
+                  <span className="text-amber-500 mt-0.5">★</span>
+                  <span>{award}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
     </div>
   );

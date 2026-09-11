@@ -22,6 +22,10 @@ class GenerateResumeRequest(BaseModel):
     targetRole: Optional[str] = None
     targetCompany: Optional[str] = None
     transcript: Optional[List[Dict[str, Any]]] = None
+    memory: Optional[Dict[str, Any]] = None
+    profileType: Optional[str] = None
+    existingResume: Optional[str] = None
+    careerGoals: Optional[str] = None
 
 class TranscribeRequest(BaseModel):
     audio_base64: Optional[str] = None
@@ -187,6 +191,10 @@ async def generate_resume_endpoint(request: GenerateResumeRequest, background_ta
         "targetRole": request.targetRole,
         "targetCompany": request.targetCompany,
         "transcript": request.transcript,
+        "memory": request.memory or {},
+        "profileType": request.profileType,
+        "existingResume": request.existingResume,
+        "careerGoals": request.careerGoals,
     }
     background_tasks.add_task(process_resume_builder_job, job_payload)
     return {"success": True, "message": "Resume generation background task initialized"}

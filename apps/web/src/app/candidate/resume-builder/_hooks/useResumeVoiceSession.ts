@@ -17,6 +17,8 @@ interface UseResumeVoiceSessionProps {
   targetRole: string;
   experienceLevel: string;
   initialSessionId?: string | null;
+  existingResume?: string | null;
+  careerGoals?: string | null;
   onComplete: (sessionId: string, transcript: ConversationTurn[]) => void;
 }
 
@@ -24,6 +26,8 @@ export function useResumeVoiceSession({
   targetRole,
   experienceLevel,
   initialSessionId = null,
+  existingResume = null,
+  careerGoals = null,
   onComplete,
 }: UseResumeVoiceSessionProps) {
   const [aiState, setAiState] = useState<'speaking' | 'listening' | 'evaluating'>('speaking');
@@ -33,6 +37,10 @@ export function useResumeVoiceSession({
 
   const aiStateRef = useRef<'speaking' | 'listening' | 'evaluating'>('speaking');
   const submitResponseRef = useRef<((text: string) => Promise<void>) | null>(null);
+  const finalizeExtrasRef = useRef<{
+    memory: Record<string, unknown>;
+    profileType: string | null;
+  }>({ memory: {}, profileType: null });
 
   useEffect(() => {
     aiStateRef.current = aiState;
@@ -73,16 +81,23 @@ export function useResumeVoiceSession({
   const handleFinalize = useCallback(
     async (activeSessionId: string, finalHistory: ConversationTurn[]) => {
       speech.stopSpeechRecognition();
-      await finalizeResumeSession(activeSessionId, finalHistory);
+      await finalizeResumeSession(activeSessionId, finalHistory, {
+        memory: finalizeExtrasRef.current.memory,
+        profileType: finalizeExtrasRef.current.profileType,
+        existingResume,
+        careerGoals,
+      });
       onComplete(activeSessionId, finalHistory);
     },
-    [speech, onComplete]
+    [speech, existingResume, careerGoals, onComplete]
   );
 
   const turns = useResumeTurnManager({
     targetRole,
     experienceLevel,
     initialSessionId,
+    existingResume,
+    careerGoals,
     onSpeakText: speakText,
     onStopSpeech: speech.stopSpeechRecognition,
     onStartSpeech: speech.startSpeechRecognition,
@@ -90,6 +105,14 @@ export function useResumeVoiceSession({
     setAiState,
     setError,
   });
+
+  // Keep finalize extras ref in sync so handleFinalize always reads latest values
+  useEffect(() => {
+    finalizeExtrasRef.current = {
+      memory: turns.memory,
+      profileType: turns.profileType,
+    };
+  }, [turns.memory, turns.profileType]);
 
   const replayLastAudio = useCallback(() => {
     setAiState('speaking');

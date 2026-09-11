@@ -57,5 +57,8 @@ export interface ATSResumeData {
     gpa?: string;
   }[];
   certifications: string[];
+  languages?: string[];
+  awards?: string[];
+  careerObjective?: string;
   pdfUrl?: string;
 }

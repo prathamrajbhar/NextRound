@@ -35,6 +35,9 @@ class ResumeBuilderRespondRequest(BaseModel):
     turnNumber: int = 0
     conversationHistory: List[Dict[str, Any]] = Field(default_factory=list)
     memory: Optional[Dict[str, Any]] = None
+    existingResume: Optional[str] = None
+    careerGoals: Optional[str] = None
+    profileType: Optional[str] = None
     voice: Optional[str] = "en-US-ChristopherNeural"
 
 class ResumeBuilderRespondResponse(BaseModel):
@@ -85,6 +88,9 @@ async def generate_resume_builder_response(request: ResumeBuilderRespondRequest)
         "latest_candidate_response": request.transcript,
         "conversation_history": request.conversationHistory or [],
         "memory": request.memory or {},
+        "existing_resume": request.existingResume,
+        "career_goals": request.careerGoals,
+        "profile_type": request.profileType,
     }
 
     output = await asyncio.to_thread(run_resume_builder_agent, state)

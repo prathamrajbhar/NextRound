@@ -11,6 +11,8 @@ interface UseResumeTurnManagerProps {
   targetRole: string;
   experienceLevel: string;
   initialSessionId?: string | null;
+  existingResume?: string | null;
+  careerGoals?: string | null;
   onSpeakText: (text: string, audioUrl?: string, callback?: () => void) => void;
   onStopSpeech: () => void;
   onStartSpeech: () => void;
@@ -23,6 +25,8 @@ export function useResumeTurnManager({
   targetRole,
   experienceLevel,
   initialSessionId = null,
+  existingResume = null,
+  careerGoals = null,
   onSpeakText,
   onStopSpeech,
   onStartSpeech,
@@ -36,9 +40,11 @@ export function useResumeTurnManager({
   const [conversationHistory, setConversationHistory] = useState<ConversationTurn[]>([]);
   const [realtimeInsight, setRealtimeInsight] = useState<string | null>(null);
   const [memory, setMemory] = useState<Record<string, unknown>>({});
+  const [profileType, setProfileType] = useState<string | null>(null);
 
   const conversationHistoryRef = useRef<ConversationTurn[]>([]);
   const memoryRef = useRef<Record<string, unknown>>({});
+  const profileTypeRef = useRef<string | null>(null);
 
   useEffect(() => {
     conversationHistoryRef.current = conversationHistory;
@@ -47,6 +53,10 @@ export function useResumeTurnManager({
   useEffect(() => {
     memoryRef.current = memory;
   }, [memory]);
+
+  useEffect(() => {
+    profileTypeRef.current = profileType;
+  }, [profileType]);
 
   const getAIResponse = useCallback(
     async (
@@ -81,9 +91,19 @@ export function useResumeTurnManager({
             text: h.content,
           })),
           memory: memoryRef.current,
+          existingResume,
+          careerGoals,
+          profileType: profileTypeRef.current,
         });
 
-        if (data.memory) setMemory(data.memory);
+        if (data.memory) {
+          setMemory(data.memory);
+          // Track profile type as it gets inferred by the agent
+          const inferredType = (data.memory as Record<string, unknown>).profile_type as string | null;
+          if (inferredType && inferredType !== profileTypeRef.current) {
+            setProfileType(inferredType);
+          }
+        }
 
         const updatedHistory = [
           ...newHistory,
@@ -111,7 +131,7 @@ export function useResumeTurnManager({
         setAiState('listening');
       }
     },
-    [targetRole, onSpeakText, onStopSpeech, onStartSpeech, onFinalize, setAiState, setError]
+    [targetRole, existingResume, careerGoals, onSpeakText, onStopSpeech, onStartSpeech, onFinalize, setAiState, setError]
   );
 
   const startCall = useCallback(async () => {
@@ -121,7 +141,9 @@ export function useResumeTurnManager({
     setStage('intro');
     setAiState('speaking');
     setMemory({});
+    setProfileType(null);
     memoryRef.current = {};
+    profileTypeRef.current = null;
 
     try {
       let activeSessionId = initialSessionId;
@@ -144,8 +166,10 @@ export function useResumeTurnManager({
     setRealtimeInsight(null);
     setError(null);
     setMemory({});
+    setProfileType(null);
     conversationHistoryRef.current = [];
     memoryRef.current = {};
+    profileTypeRef.current = null;
   }, [setError]);
 
   return {
@@ -156,6 +180,7 @@ export function useResumeTurnManager({
     conversationHistoryRef,
     realtimeInsight,
     memory,
+    profileType,
     getAIResponse,
     startCall,
     resetAll,

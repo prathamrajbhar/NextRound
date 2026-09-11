@@ -26,7 +26,7 @@ export default function AIResumeBuilderSessionPage({
 
   const [resumeStatus, setResumeStatus] = useState<ResumeStatus>('idle');
   const details = useResumeSessionDetails({ sessionId, setResumeStatus });
-  const { stage, setStage, targetRole, experienceLevel } = details;
+  const { stage, setStage, targetRole, experienceLevel, existingResumeText, careerGoals } = details;
 
   const [timeRemaining, setTimeRemaining] = useState(900);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
@@ -40,6 +40,8 @@ export default function AIResumeBuilderSessionPage({
     targetRole,
     experienceLevel,
     initialSessionId: sessionId,
+    existingResume: existingResumeText,
+    careerGoals,
     onComplete: () => {
       setIsTimerRunning(false);
       setStage('resume');

@@ -21,6 +21,8 @@ export function useResumeSessionDetails({
   const [stage, setStage] = useState<Stage>('loading');
   const [targetRole, setTargetRole] = useState('');
   const [experienceLevel, setExperienceLevel] = useState('');
+  const [existingResumeText, setExistingResumeText] = useState<string | null>(null);
+  const [careerGoals, setCareerGoals] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -31,6 +33,8 @@ export function useResumeSessionDetails({
         status?: string;
         generated_resume?: RawResumeData;
         resume_pdf_url?: string;
+        rubric?: Record<string, unknown>;
+        focus_areas?: string[];
       }>(`/resume-builder/${sessionId}`)
       .then((res) => {
         if (!active) return;
@@ -38,6 +42,16 @@ export function useResumeSessionDetails({
 
         setTargetRole(res.target_role || 'Senior Full Stack Engineer');
         setExperienceLevel(res.difficulty || 'Senior (5+ Years)');
+
+        // Extract existing resume text and career goals stored in session rubric/focus_areas
+        const rubric = res.rubric as Record<string, unknown> | undefined;
+        if (rubric?.rawText && typeof rubric.rawText === 'string') {
+          setExistingResumeText(rubric.rawText);
+        }
+        const goals = res.focus_areas?.[0];
+        if (goals && typeof goals === 'string') {
+          setCareerGoals(goals);
+        }
 
         const status = res.status || 'created';
         if (status === 'active' || status === 'created') {
@@ -68,5 +82,7 @@ export function useResumeSessionDetails({
     setStage,
     targetRole,
     experienceLevel,
+    existingResumeText,
+    careerGoals,
   };
 }

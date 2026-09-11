@@ -16,6 +16,9 @@ export interface ResumeAiTurnRequest {
   turnNumber: number;
   conversationHistory: { speaker: string; text: string }[];
   memory: Record<string, unknown>;
+  existingResume?: string | null;
+  careerGoals?: string | null;
+  profileType?: string | null;
 }
 
 export interface ResumeAiTurnResponse {
@@ -44,7 +47,13 @@ export async function createResumeSession(
 
 export async function finalizeResumeSession(
   activeSessionId: string,
-  finalHistory: ConversationTurn[]
+  finalHistory: ConversationTurn[],
+  extras?: {
+    memory?: Record<string, unknown>;
+    profileType?: string | null;
+    existingResume?: string | null;
+    careerGoals?: string | null;
+  }
 ): Promise<void> {
   try {
     await apiClient.post(`/resume-builder/${activeSessionId}/end`, {
@@ -52,6 +61,10 @@ export async function finalizeResumeSession(
         speaker: h.role,
         text: h.content,
       })),
+      memory: extras?.memory ?? null,
+      profileType: extras?.profileType ?? null,
+      existingResume: extras?.existingResume ?? null,
+      careerGoals: extras?.careerGoals ?? null,
     });
   } catch {
     // Non-blocking end

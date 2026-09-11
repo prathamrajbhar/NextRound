@@ -107,6 +107,7 @@ export async function endResumeSession(req: Request, res: Response, next: NextFu
     }
 
     const aiServiceUrl = process.env.AI_BASE_URL || 'http://localhost:8000';
+    const sessionRubric = (updated.rubric as Record<string, unknown>) || {};
     fetch(`${aiServiceUrl}/api/v1/ai/interview/resume-builder/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -115,6 +116,10 @@ export async function endResumeSession(req: Request, res: Response, next: NextFu
         targetRole: updated.target_role,
         targetCompany: updated.target_company,
         transcript: updated.transcript,
+        memory: req.body.memory || null,
+        profileType: req.body.profileType || null,
+        existingResume: sessionRubric.rawText || req.body.existingResume || null,
+        careerGoals: req.body.careerGoals || (Array.isArray(updated.focus_areas) ? (updated.focus_areas as string[])[0] : null) || null,
       }),
     }).catch((aiErr) => {
       logger.child('ResumeBuilder').warn('Direct AI service background trigger warning:', aiErr);
