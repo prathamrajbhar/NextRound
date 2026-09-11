@@ -1,125 +1,192 @@
 'use client';
 
 import React from 'react';
-import { Building2, Briefcase, MapPin, IndianRupee } from '@/lib/lucide-google-icons';
+import { Briefcase, Building2, MapPin, Layers, IndianRupee, ShieldCheck } from '@/lib/lucide-google-icons';
 import { Autocomplete } from '@/components/ui';
 import { SUGGESTED_ROLES } from '@/lib/suggestedOptions';
 
 interface EditJobBasicsCardProps {
   title: string;
   setTitle: (val: string) => void;
-  location: string;
-  setLocation: (val: string) => void;
-  salary: string;
-  setSalary: (val: string) => void;
+  department: string;
+  setDepartment: (val: string) => void;
+  locationType: string;
+  setLocationType: (val: string) => void;
   experienceLevel: string;
   setExperienceLevel: (val: string) => void;
+  minSalary: number;
+  setMinSalary: (val: number) => void;
+  maxSalary: number;
+  setMaxSalary: (val: number) => void;
   status: 'active' | 'draft' | 'closed';
   setStatus: (val: 'active' | 'draft' | 'closed') => void;
 }
 
+const DEPARTMENTS = ['Engineering', 'Product Management', 'Design & UX', 'Data & AI', 'Sales & Marketing', 'Operations & People'];
+const EXPERIENCE_LEVELS = ['Entry-Level (0-2 Yrs)', 'Mid-Level (2-5 Yrs)', 'Senior (5-8 Yrs)', 'Lead / Staff (8+ Yrs)', 'Director / VP'];
+
 export function EditJobBasicsCard({
   title,
   setTitle,
-  location,
-  setLocation,
-  salary,
-  setSalary,
+  department,
+  setDepartment,
+  locationType,
+  setLocationType,
   experienceLevel,
   setExperienceLevel,
+  minSalary,
+  setMinSalary,
+  maxSalary,
+  setMaxSalary,
   status,
   setStatus,
 }: EditJobBasicsCardProps) {
   return (
-    <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-5">
-      <div className="flex items-center gap-2 border-b border-slate-200/60 dark:border-slate-800 pb-3">
-        <Building2 className="h-4.5 w-4.5 text-brand-600 dark:text-orange-400" />
-        <h3 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-display">
-          Position Basics &amp; Meta
-        </h3>
+    <div className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/70 p-6 md:p-7 shadow-sm backdrop-blur-md space-y-6">
+      <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-800 pb-3.5">
+        <div className="flex items-center gap-2.5 text-brand-600 dark:text-brand-400">
+          <div className="h-8 w-8 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 flex items-center justify-center">
+            <Briefcase className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-black text-slate-900 dark:text-slate-100 tracking-tight">Role Overview &amp; Compensation</h2>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Core position details and baseline specifications</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Status:</label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as 'active' | 'draft' | 'closed')}
+            className={`px-3 py-1 text-xs font-black rounded-lg border focus:outline-none cursor-pointer transition-colors ${
+              status === 'active'
+                ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
+                : status === 'draft'
+                ? 'bg-amber-500/15 border-amber-500/30 text-amber-600 dark:text-amber-400'
+                : 'bg-rose-500/15 border-rose-500/30 text-rose-600 dark:text-rose-400'
+            }`}
+          >
+            <option value="active" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Active (Published)</option>
+            <option value="draft" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Draft (Unpublished)</option>
+            <option value="closed" className="dark:bg-slate-900 text-slate-900 dark:text-slate-100">Closed</option>
+          </select>
+        </div>
       </div>
 
-      <div className="space-y-4">
-        <div>
-          <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-            Position Title
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="md:col-span-2 space-y-1.5">
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <span>Job Title</span>
+            <span className="text-rose-500 font-bold">*</span>
           </label>
           <Autocomplete
             required
             options={SUGGESTED_ROLES}
             value={title}
             onChange={(val) => setTitle(val)}
+            placeholder="e.g. Senior Fullstack Engineer"
             icon={<Briefcase className="h-4 w-4 text-slate-400" />}
-            className="text-xs font-semibold"
+            className="text-xs font-semibold py-2.5 rounded-xl border-slate-200 dark:border-slate-700 focus:border-brand-500"
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-              Location
-            </label>
-            <div className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50">
-              <MapPin className="h-4 w-4 text-slate-400 flex-shrink-0" />
-              <input
-                type="text"
-                required
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="w-full bg-transparent text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
-                placeholder="e.g. Remote (Worldwide)"
-              />
-            </div>
-          </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <Building2 className="h-3.5 w-3.5 text-slate-400" />
+            <span>Department</span>
+          </label>
+          <select
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            className="w-full px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all cursor-pointer"
+          >
+            {DEPARTMENTS.map((dept) => (
+              <option key={dept} value={dept} className="dark:bg-slate-900">
+                {dept}
+              </option>
+            ))}
+          </select>
+        </div>
 
-          <div>
-            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-              Salary Range
-            </label>
-            <div className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50">
-              <IndianRupee className="h-4 w-4 text-slate-400 flex-shrink-0" />
-              <input
-                type="text"
-                required
-                value={salary}
-                onChange={(e) => setSalary(e.target.value)}
-                className="w-full bg-transparent text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
-                placeholder="e.g. ₹12 LPA - ₹18 LPA"
-              />
-            </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <Layers className="h-3.5 w-3.5 text-slate-400" />
+            <span>Experience Level</span>
+          </label>
+          <select
+            value={experienceLevel}
+            onChange={(e) => setExperienceLevel(e.target.value)}
+            className="w-full px-3.5 py-2.5 text-xs font-semibold rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800/90 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all cursor-pointer"
+          >
+            {EXPERIENCE_LEVELS.map((exp) => (
+              <option key={exp} value={exp} className="dark:bg-slate-900">
+                {exp}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+            <MapPin className="h-3.5 w-3.5 text-slate-400" />
+            <span>Work Location Model</span>
+          </label>
+          <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/60">
+            {['Remote', 'Hybrid', 'On-site'].map((loc) => {
+              const active = locationType === loc;
+              return (
+                <button
+                  key={loc}
+                  type="button"
+                  onClick={() => setLocationType(loc)}
+                  className={`py-2 text-[11px] font-bold rounded-lg transition-all cursor-pointer text-center ${
+                    active
+                      ? 'bg-brand-600 dark:bg-brand-500 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-white/60 dark:hover:bg-slate-700/50'
+                  }`}
+                >
+                  {loc}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-              Experience Level
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center">
+            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <IndianRupee className="h-3.5 w-3.5 text-slate-400" />
+              <span>Annual Compensation (LPA)</span>
             </label>
-            <select
-              value={experienceLevel}
-              onChange={(e) => setExperienceLevel(e.target.value)}
-              className="w-full p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
-            >
-              <option value="Entry-Level">Entry-Level (0-2 Yrs)</option>
-              <option value="Mid-Level">Mid-Level (2-5 Yrs)</option>
-              <option value="Senior (5+ Years)">Senior (5+ Years)</option>
-              <option value="Lead / Principal">Lead / Principal (8+ Yrs)</option>
-            </select>
+            <span className="text-[11px] font-extrabold text-brand-600 dark:text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded-lg">
+              ₹{(minSalary / 100000).toFixed(1)}L - ₹{(maxSalary / 100000).toFixed(1)}L
+            </span>
           </div>
-
-          <div>
-            <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1.5">
-              Job Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as 'active' | 'draft' | 'closed')}
-              className="w-full p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-700/80 bg-white/50 dark:bg-slate-800/50 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
-            >
-              <option value="active">Active (Published)</option>
-              <option value="draft">Draft (Unpublished)</option>
-              <option value="closed">Closed</option>
-            </select>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
+              <input
+                type="number"
+                step="50000"
+                value={minSalary}
+                onChange={(e) => setMinSalary(Number(e.target.value))}
+                placeholder="Min Salary"
+                className="w-full pl-7 pr-3 py-2 text-xs font-bold rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
+              />
+            </div>
+            <span className="text-xs text-slate-400 font-bold dark:text-slate-500">to</span>
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
+              <input
+                type="number"
+                step="50000"
+                value={maxSalary}
+                onChange={(e) => setMaxSalary(Number(e.target.value))}
+                placeholder="Max Salary"
+                className="w-full pl-7 pr-3 py-2 text-xs font-bold rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all"
+              />
+            </div>
           </div>
         </div>
       </div>
