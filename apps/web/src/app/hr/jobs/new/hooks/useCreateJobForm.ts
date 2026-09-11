@@ -89,6 +89,54 @@ export function useCreateJobForm() {
     }
   };
 
+  const handleGenerateJd = async (params: {
+    title: string;
+    department?: string;
+    experienceLevel?: string;
+    locationType?: string;
+    keySkills?: string;
+    objectives?: string;
+    tone?: string;
+  }) => {
+    setAssisting(true);
+    setAssistStep('AI is generating executive job description...');
+
+    try {
+      const res = await apiClient.post<{
+        description?: string;
+        skills?: string[];
+        softSkills?: string[];
+        cultureKeywords?: string[];
+        rubric?: Partial<RubricWeights>;
+      }>('/jobs/generate-jd', params);
+
+      if (res) {
+        if (res.description) setJd(res.description);
+        if (params.title) setTitle(params.title);
+        if (params.department) setDepartment(params.department);
+        if (params.experienceLevel) setExperienceLevel(params.experienceLevel);
+        if (params.locationType) setLocationType(params.locationType);
+
+        if (Array.isArray(res.skills) && res.skills.length > 0) setSkills(res.skills);
+        if (Array.isArray(res.softSkills) && res.softSkills.length > 0) setSoftSkills(res.softSkills);
+        if (Array.isArray(res.cultureKeywords) && res.cultureKeywords.length > 0) setCultureKeywords(res.cultureKeywords);
+        if (res.rubric) {
+          setRubric({
+            technical: res.rubric.technical ?? 30,
+            communication: res.rubric.communication ?? 20,
+            problemSolving: res.rubric.problemSolving ?? 25,
+            experience: res.rubric.experience ?? 25,
+          });
+        }
+        setAssisted(true);
+      }
+    } catch {
+      // Keep UI responsive
+    } finally {
+      setAssisting(false);
+    }
+  };
+
   const handleWeightChange = (key: keyof RubricWeights, newValue: number) => {
     if (!autoBalance) {
       setRubric((prev) => ({ ...prev, [key]: newValue }));
@@ -177,9 +225,11 @@ export function useCreateJobForm() {
     assessmentConfig,
     setAssessmentConfig,
     handleAiAssist,
+    handleGenerateJd,
     handleWeightChange,
     isRubricBalanced,
     handleSaveDraft,
     handlePublish,
   };
 }
+

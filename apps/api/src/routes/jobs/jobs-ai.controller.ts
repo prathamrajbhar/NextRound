@@ -68,3 +68,31 @@ export async function aiAssistJob(req: Request, res: Response, next: NextFunctio
     return next(error);
   }
 }
+
+export async function generateJd(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { title, department, experienceLevel, locationType, keySkills, objectives, tone } = req.body;
+    if (!title || typeof title !== 'string' || title.trim().length === 0) {
+      return res.status(400).json({ success: false, error: 'Role title is required' });
+    }
+
+    const { generateProfessionalJd } = await import('../../services/jd/jd-extractor.service');
+    const result = await generateProfessionalJd({
+      title: title.trim(),
+      department: typeof department === 'string' ? department : undefined,
+      experienceLevel: typeof experienceLevel === 'string' ? experienceLevel : undefined,
+      locationType: typeof locationType === 'string' ? locationType : undefined,
+      keySkills: typeof keySkills === 'string' ? keySkills : undefined,
+      objectives: typeof objectives === 'string' ? objectives : undefined,
+      tone: typeof tone === 'string' ? tone : undefined,
+    });
+
+    return res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+

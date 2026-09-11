@@ -55,7 +55,12 @@ export default function HrCreateJob() {
             <JobDescriptionCard
               jd={form.jd}
               setJd={form.setJd}
+              title={form.title}
+              department={form.department}
+              experienceLevel={form.experienceLevel}
+              locationType={form.locationType}
               onAiAssist={form.handleAiAssist}
+              onGenerateJd={form.handleGenerateJd}
               assisting={form.assisting}
             />
 
