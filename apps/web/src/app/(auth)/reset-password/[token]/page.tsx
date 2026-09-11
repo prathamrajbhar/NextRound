@@ -3,8 +3,32 @@
 import React, { useState, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Lock, ArrowLeft, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Eye,
+  EyeOff,
+  KeyRound,
+  Loader2,
+  Lock,
+  ShieldCheck,
+} from '@/lib/lucide-google-icons';
+import AuthShell, { AuthBenefit } from '@/components/auth/AuthShell';
+import AuthField from '@/components/auth/AuthField';
 import { apiClient } from '@/lib/apiClient';
+
+const RESET_BENEFITS: AuthBenefit[] = [
+  {
+    icon: ShieldCheck,
+    title: 'Bank-grade security',
+    description: 'All passwords are hashed with high-cost salt factors to guarantee workspace isolation.',
+  },
+  {
+    icon: KeyRound,
+    title: 'One-time authorization',
+    description: 'Your recovery token expires immediately upon updating your credentials.',
+  },
+];
 
 export default function ResetPasswordPage({ params }: { params: Promise<{ token: string }> }) {
   const router = useRouter();
@@ -14,21 +38,26 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState<{ password?: string; confirmPassword?: string }>({});
+  const [formError, setFormError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const validate = () => {
+    const errs: { password?: string; confirmPassword?: string } = {};
+    if (!password) errs.password = 'Password is required.';
+    else if (password.length < 8) errs.password = 'Password must be at least 8 characters long.';
+    if (!confirmPassword) errs.confirmPassword = 'Confirm your password.';
+    else if (password !== confirmPassword) errs.confirmPassword = 'Passwords do not match.';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password || !confirmPassword) {
-      setError('Please fill in all fields.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
-    }
-    setError('');
+    setFormError('');
+    if (!validate()) return;
+
     setLoading(true);
 
     try {
@@ -38,97 +67,119 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
         router.push('/login');
       }, 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Password reset failed.');
+      setFormError(err instanceof Error ? err.message : 'Password reset failed.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-6 rounded-3xl border border-white/60 bg-white/45 p-8 shadow-xl backdrop-blur-md glass-panel animate-in zoom-in-95 duration-200">
-        <div className="text-center">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-600 font-bold text-white shadow-md shadow-indigo-200 mx-auto">
-            H
-          </span>
-          <h2 className="mt-6 text-xl font-extrabold text-slate-900 tracking-tight">Create New Password</h2>
-          <p className="mt-1.5 text-xs text-slate-500 font-semibold leading-relaxed">
-            Specify a secure password for your account. Token: <span className="font-mono text-indigo-600 font-bold">{token.slice(0, 8)}...</span>
+    <AuthShell
+      eyebrow="Account Security"
+      headline={
+        <>
+          Create your <span className="text-orange-400">new password.</span>
+        </>
+      }
+      sub="Choose a strong, unique password to secure your NextRound recruitment workspace."
+      benefits={RESET_BENEFITS}
+    >
+      <div className="space-y-6">
+        <div className="space-y-1">
+          <h2 className="font-display text-xl font-black tracking-tight text-white">Create New Password</h2>
+          <p className="text-xs font-medium text-slate-400">
+            Specify a secure password for your account.
           </p>
         </div>
 
+        {formError && (
+          <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-950/40 p-3 text-xs font-semibold text-rose-300">
+            {formError}
+          </div>
+        )}
+
         {success ? (
           <div className="space-y-4 text-center">
-            <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 text-xs font-semibold text-emerald-700 leading-relaxed flex items-center gap-2 justify-center">
-              <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" />
-              Password updated! Redirecting to login...
+            <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/40 p-5 text-center space-y-2">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <p className="text-sm font-bold text-white">Password updated!</p>
+              <p className="text-xs text-slate-300">Redirecting to login…</p>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="rounded-xl border border-rose-100 bg-rose-50/50 p-3 text-xs font-semibold text-rose-600">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">New Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border border-slate-200/80 bg-white/50 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all glass-input"
-                />
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
+            <AuthField
+              id="password"
+              label="New Password"
+              type={showPassword ? 'text' : 'password'}
+              icon={Lock}
+              value={password}
+              onChange={(val) => {
+                setPassword(val);
+                if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+              }}
+              placeholder="••••••••"
+              required
+              autoFocus
+              error={errors.password}
+              rightSlot={
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-500 transition-colors hover:text-slate-200"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
-              </div>
-            </div>
+              }
+            />
 
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">Confirm New Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-400" />
-                <input
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  required
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border border-slate-200/80 bg-white/50 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all glass-input"
-                />
+            <AuthField
+              id="confirmPassword"
+              label="Confirm New Password"
+              type={showConfirmPassword ? 'text' : 'password'}
+              icon={Lock}
+              value={confirmPassword}
+              onChange={(val) => {
+                setConfirmPassword(val);
+                if (errors.confirmPassword) setErrors((prev) => ({ ...prev, confirmPassword: undefined }));
+              }}
+              placeholder="••••••••"
+              required
+              error={errors.confirmPassword}
+              rightSlot={
                 <button
                   type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-slate-500 transition-colors hover:text-slate-200"
                   aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
                 >
-                  {showConfirmPassword ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
-              </div>
-            </div>
+              }
+            />
 
             <div className="pt-2 flex flex-col gap-3">
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-indigo-600 py-3 font-semibold text-white shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:shadow-xl transition-all cursor-pointer text-sm"
+                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-orange-600 text-sm font-extrabold text-white shadow-lg shadow-orange-600/25 transition-all hover:bg-orange-500 hover:shadow-orange-500/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
               >
-                {loading ? 'Updating Password...' : 'Save Password'}
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Updating Password…
+                  </>
+                ) : (
+                  'Save Password'
+                )}
               </button>
+
               <Link
                 href="/login"
-                className="inline-flex items-center justify-center gap-1 text-xs font-bold text-indigo-600 hover:underline"
+                className="inline-flex items-center justify-center gap-1.5 text-center text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
               >
                 <ArrowLeft className="h-3.5 w-3.5" />
                 Return to Login
@@ -137,6 +188,6 @@ export default function ResetPasswordPage({ params }: { params: Promise<{ token:
           </form>
         )}
       </div>
-    </div>
+    </AuthShell>
   );
 }
