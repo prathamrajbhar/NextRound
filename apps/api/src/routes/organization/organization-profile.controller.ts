@@ -6,6 +6,8 @@ import {
 import { prisma } from '../../lib/prisma';
 import { Prisma } from '@nextround/database';
 import { enforceOrgMatch } from './organization.helpers';
+import { uploadFile } from '../../lib/storage';
+import { badRequest } from '../../lib/http-errors';
 
 export async function createOrUpdateOrg(req: Request, res: Response, next: NextFunction) {
   try {
@@ -142,3 +144,32 @@ export async function updateOrg(req: Request, res: Response, next: NextFunction)
     return next(error);
   }
 }
+
+export async function uploadOrgLogo(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.file) {
+      throw badRequest('No logo image file provided');
+    }
+
+    const userId = req.user?.userId || 'unknown';
+    const orgId = req.user?.orgId || 'pending';
+    const fileKey = `org-logos/${orgId}/${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+
+    const logoUrl = await uploadFile(fileKey, req.file.buffer, req.file.mimetype);
+
+    if (req.user?.orgId) {
+      await prisma.organization.update({
+        where: { id: req.user.orgId },
+        data: { logo_url: logoUrl },
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: { logoUrl },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+

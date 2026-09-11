@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 export interface CompanyForm {
   name: string;
+  logoUrl?: string;
   website: string;
   industry: string;
   size: string;
@@ -17,6 +18,7 @@ export interface CompanyForm {
 
 export const DEFAULT_FORM: CompanyForm = {
   name: '',
+  logoUrl: undefined,
   website: '',
   industry: 'Technology',
   size: '11-50',
@@ -70,6 +72,7 @@ export function useCompanyOnboarding() {
 export function buildOrganizationPayload(form: CompanyForm) {
   return {
     name: form.name.trim(),
+    logoUrl: form.logoUrl || undefined,
     industry: form.industry,
     size: form.size,
     settings: {

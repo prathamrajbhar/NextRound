@@ -2,11 +2,13 @@ import { Router } from 'express';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 import { requireOrgScope, rejectOrgIdParam } from '../../middleware/orgScope';
+import multer from 'multer';
 import {
   createOrUpdateOrg,
   getMyOrg,
   getOrgById,
   updateOrg,
+  uploadOrgLogo,
 } from './organization-profile.controller';
 import {
   getOrgSettings,
@@ -18,10 +20,27 @@ import {
   removeOrgMember,
 } from './organization-members.controller';
 
+const logoUpload = multer({
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+  fileFilter: (_req, file, cb) => {
+    const ext = (file.originalname || '').toLowerCase();
+    const isImage = ext.endsWith('.png') || ext.endsWith('.jpg') || ext.endsWith('.jpeg') || ext.endsWith('.svg') || ext.endsWith('.webp');
+    const isMimeImage = (file.mimetype || '').startsWith('image/');
+    if (isImage || isMimeImage) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files (PNG, JPG, SVG, WebP) are allowed for company logo'));
+    }
+  },
+});
+
 export const organizationRouter = Router();
 
 organizationRouter.use(rejectOrgIdParam);
 
+organizationRouter.post('/logo', authenticate, requireRole('hr'), logoUpload.single('logo'), uploadOrgLogo);
 organizationRouter.post('/', authenticate, requireRole('hr'), createOrUpdateOrg);
 organizationRouter.get('/me', authenticate, requireRole('hr'), requireOrgScope, getMyOrg);
 organizationRouter.get('/:id', authenticate, requireRole('hr'), requireOrgScope, getOrgById);

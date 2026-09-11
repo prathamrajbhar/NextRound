@@ -5,6 +5,7 @@ import { Building, Globe } from '@/lib/lucide-google-icons';
 import { CompanyStepProps } from './useCompanyOnboarding';
 import { inputCls, labelCls, selectCls } from './CompanyOnboardingShell';
 import { SingleCityInput } from '../../candidate/_components/SingleCityInput';
+import { CompanyLogoUpload } from './CompanyLogoUpload';
 
 const INDUSTRIES = [
   'Technology',
@@ -23,6 +24,11 @@ const SIZES = ['1-10', '11-50', '51-200', '201-1000', '1000+'];
 export function CompanyDetailsStep({ form, update }: CompanyStepProps) {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
+      <CompanyLogoUpload
+        logoUrl={form.logoUrl}
+        onLogoChange={(url) => update('logoUrl', url)}
+      />
+
       <div>
         <label className={labelCls}>
           Organization Name <span className="text-orange-400">*</span>
