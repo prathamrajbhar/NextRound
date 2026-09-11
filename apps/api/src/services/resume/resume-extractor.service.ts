@@ -20,18 +20,18 @@ export async function extractTextFromBuffer(
   const isPdf = mimeType.includes('pdf') || filename.toLowerCase().endsWith('.pdf');
 
   if (isPdf) {
-    try {
-      const parser = new PDFParse({ data: buffer });
-      const data = await parser.getText();
-      if (data && typeof data.text === 'string' && data.text.trim().length > 0) {
-        return normalizeResumeText(data.text.trim());
-      }
-    } catch (error) {
-      logger.child('ResumeParser').error(`Failed to extract text using PDFParse for ${filename}:`, error);
+    const parser = new PDFParse({ data: buffer });
+    const data = await parser.getText();
+    if (!data || typeof data.text !== 'string' || data.text.trim().length === 0) {
+      throw new Error(`Failed to extract text from PDF file: ${filename}`);
     }
+    return normalizeResumeText(data.text.trim());
   }
 
   const rawText = buffer.toString('utf-8');
   const cleaned = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ' ').trim();
+  if (cleaned.length === 0) {
+    throw new Error(`Uploaded file is empty: ${filename}`);
+  }
   return normalizeResumeText(cleaned);
 }
