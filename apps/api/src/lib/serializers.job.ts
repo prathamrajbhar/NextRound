@@ -63,6 +63,7 @@ export function serializeJob(job: Rec): Rec {
     experienceLevel: job.experienceLevel || 'Mid-level',
     postedDate: createdDate,
     applicantsCount: applicantsCountOf(job),
+    skills: Array.isArray(job.skills) ? (job.skills as string[]) : [],
     stages: jobStages(job),
     assessmentConfig,
   };
