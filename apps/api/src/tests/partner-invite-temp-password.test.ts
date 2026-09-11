@@ -116,7 +116,7 @@ describe('Partner Invite with Temporary Password & Forced First-Login Reset', ()
     expect(res.status).toHaveBeenCalledWith(201);
     const responseJson = (res.json as ReturnType<typeof vi.fn>).mock.calls[0][0];
     expect(responseJson.success).toBe(true);
-    expect(responseJson.data.temporaryPassword).toMatch(/^Nr-/);
+    expect(responseJson.data.temporaryPassword).toBeUndefined();
     expect(responseJson.data.invitedEmail).toBe('partner@acme.com');
   });
 

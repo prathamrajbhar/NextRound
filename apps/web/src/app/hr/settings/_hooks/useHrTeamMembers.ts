@@ -48,10 +48,7 @@ export function useHrTeamMembers(orgId: string | null, onSaved: () => void) {
     loadMembers();
   }, [orgId, user]);
 
-  const [newlyInvitedCredential, setNewlyInvitedCredential] = useState<{
-    email: string;
-    temporaryPassword?: string;
-  } | null>(null);
+  const [lastInvitedEmail, setLastInvitedEmail] = useState<string | null>(null);
 
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +57,6 @@ export function useHrTeamMembers(orgId: string | null, onSaved: () => void) {
       const res = await apiClient.post<{
         member: { id: string; email: string; role: string; created_at: string };
         invitedEmail: string;
-        temporaryPassword?: string;
         message: string;
       }>(`/organizations/${orgId}/members/invite`, {
         email: inviteEmail.trim(),
@@ -68,12 +64,7 @@ export function useHrTeamMembers(orgId: string | null, onSaved: () => void) {
         partnerRole: inviteRole,
       });
 
-      if (res?.temporaryPassword) {
-        setNewlyInvitedCredential({
-          email: res.invitedEmail,
-          temporaryPassword: res.temporaryPassword,
-        });
-      }
+      setLastInvitedEmail(res?.invitedEmail || inviteEmail.trim());
 
       setTeam([
         ...team,
@@ -82,7 +73,7 @@ export function useHrTeamMembers(orgId: string | null, onSaved: () => void) {
           name: inviteEmail.split('@')[0],
           email: inviteEmail.trim(),
           role: inviteRole,
-          status: res?.temporaryPassword ? 'Temp Password Active' : 'Invited',
+          status: 'Invited',
         },
       ]);
       setInviteEmail('');
@@ -106,8 +97,8 @@ export function useHrTeamMembers(orgId: string | null, onSaved: () => void) {
     setInviteEmail,
     inviteRole,
     setInviteRole,
-    newlyInvitedCredential,
-    clearCredential: () => setNewlyInvitedCredential(null),
+    lastInvitedEmail,
+    clearInvitedBanner: () => setLastInvitedEmail(null),
     handleInviteSubmit,
     handleRemoveMember,
   };

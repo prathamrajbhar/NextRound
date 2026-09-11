@@ -76,8 +76,8 @@ export default function HrSettingsPage() {
               setInviteEmail={s.setInviteEmail}
               inviteRole={s.inviteRole}
               setInviteRole={s.setInviteRole}
-              newlyInvitedCredential={s.newlyInvitedCredential}
-              clearCredential={s.clearCredential}
+              lastInvitedEmail={s.lastInvitedEmail}
+              clearInvitedBanner={s.clearInvitedBanner}
               handleInviteSubmit={s.handleInviteSubmit}
               handleRemoveMember={s.handleRemoveMember}
             />

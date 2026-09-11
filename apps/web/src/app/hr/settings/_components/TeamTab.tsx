@@ -17,8 +17,8 @@ interface TeamTabProps {
   setInviteEmail: (val: string) => void;
   inviteRole: 'Admin' | 'Recruiter' | 'Reviewer';
   setInviteRole: (val: 'Admin' | 'Recruiter' | 'Reviewer') => void;
-  newlyInvitedCredential?: { email: string; temporaryPassword?: string } | null;
-  clearCredential?: () => void;
+  lastInvitedEmail?: string | null;
+  clearInvitedBanner?: () => void;
   handleInviteSubmit: (e: React.FormEvent) => void;
   handleRemoveMember: (id: string) => void;
 }
@@ -29,19 +29,11 @@ export function TeamTab({
   setInviteEmail,
   inviteRole,
   setInviteRole,
-  newlyInvitedCredential,
-  clearCredential,
+  lastInvitedEmail,
+  clearInvitedBanner,
   handleInviteSubmit,
   handleRemoveMember,
 }: TeamTabProps) {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = () => {
-    if (!newlyInvitedCredential?.temporaryPassword) return;
-    navigator.clipboard.writeText(newlyInvitedCredential.temporaryPassword);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel space-y-4">
@@ -81,53 +73,31 @@ export function TeamTab({
           </button>
         </form>
 
-        {newlyInvitedCredential && newlyInvitedCredential.temporaryPassword && (
-          <div className="mt-4 p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-950/30 space-y-2 animate-in fade-in slide-in-from-top-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-300">
-                <KeyRound className="h-4 w-4" />
-                <span>Temporary Partner Credentials Created</span>
+        {lastInvitedEmail && (
+          <div className="mt-4 p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-950/30 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center gap-2.5">
+              <div className="h-7 w-7 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+                ✓
               </div>
-              {clearCredential && (
-                <button
-                  type="button"
-                  onClick={clearCredential}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                  title="Dismiss"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
+              <div>
+                <p className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                  Invitation Sent Successfully
+                </p>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                  An email containing login credentials and a temporary password was securely dispatched to <strong className="text-slate-900 dark:text-white">{lastInvitedEmail}</strong>.
+                </p>
+              </div>
             </div>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400">
-              An invitation email has been dispatched to <strong className="text-slate-900 dark:text-white">{newlyInvitedCredential.email}</strong>. You can also securely copy their temporary password below:
-            </p>
-            <div className="flex items-center gap-2 bg-white/80 dark:bg-slate-900/80 p-2.5 rounded-xl border border-amber-500/20">
-              <span className="text-xs text-slate-500 font-medium">Temp Password:</span>
-              <code className="font-mono font-extrabold text-xs text-orange-600 dark:text-orange-400 select-all">
-                {newlyInvitedCredential.temporaryPassword}
-              </code>
+            {clearInvitedBanner && (
               <button
                 type="button"
-                onClick={handleCopy}
-                className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-500/10 hover:bg-orange-500/20 text-orange-600 dark:text-orange-400 font-bold text-[11px] transition-all cursor-pointer"
+                onClick={clearInvitedBanner}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer p-1"
+                title="Dismiss"
               >
-                {copied ? (
-                  <>
-                    <Check className="h-3.5 w-3.5 text-emerald-500" />
-                    <span className="text-emerald-500">Copied!</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-3.5 w-3.5" />
-                    <span>Copy</span>
-                  </>
-                )}
+                <X className="h-4 w-4" />
               </button>
-            </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 italic">
-              * Note: The recruiting partner will be required to set a permanent private password on their first login.
-            </p>
+            )}
           </div>
         )}
       </div>

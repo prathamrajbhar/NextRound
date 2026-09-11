@@ -135,7 +135,6 @@ export async function inviteOrgMember(req: Request, res: Response, next: NextFun
       data: {
         member: newUser,
         invitedEmail: validated.email,
-        temporaryPassword,
         message: `Invitation email sent to ${validated.email} with temporary credentials.`,
       },
     });

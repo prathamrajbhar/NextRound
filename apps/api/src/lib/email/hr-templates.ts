@@ -29,6 +29,7 @@ export function buildWelcomeHREmail(params: {
 
 export function buildMemberInviteEmail(params: {
   inviteUrl: string;
+  recipientEmail?: string;
   organizationName?: string;
   invitedByEmail?: string;
   temporaryPassword?: string;
@@ -40,13 +41,25 @@ export function buildMemberInviteEmail(params: {
 
   const passwordBlock = params.temporaryPassword
     ? `
-    <div style="background:#0f172a; border:1px solid #334155; border-radius:12px; padding:16px 20px; margin:20px 0; color:#f8fafc;">
-      <p style="margin:0 0 8px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#94a3b8;">Your Temporary Access Credentials</p>
-      <div style="margin-bottom:8px;">
-        <span style="font-size:12px; color:#cbd5e1;">Temporary Password: </span>
-        <code style="background:#1e293b; color:#f97316; padding:4px 8px; border-radius:6px; font-weight:800; font-size:14px; letter-spacing:0.04em;">${escapeHtml(params.temporaryPassword)}</code>
+    <div style="background:#090d16; border:1px solid #1e293b; border-radius:14px; padding:20px; margin:24px 0; color:#f8fafc;">
+      <div style="display:flex; align-items:center; margin-bottom:14px;">
+        <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:#f97316; margin-right:8px;"></span>
+        <span style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#ea580c;">Your Temporary Access Credentials</span>
       </div>
-      <p style="margin:8px 0 0 0; font-size:11px; color:#94a3b8; line-height:1.4;">For security reasons, you will be prompted to set a new personal password immediately upon your first sign-in.</p>
+
+      <div style="background:#0f172a; border:1px solid #1e293b; border-radius:10px; padding:12px 14px; margin-bottom:10px;">
+        <div style="font-size:11px; font-weight:600; color:#64748b; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;">Sign-In Email</div>
+        <div style="font-size:13px; font-weight:700; color:#f8fafc; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">${escapeHtml(params.recipientEmail || 'your email')}</div>
+      </div>
+
+      <div style="background:#0f172a; border:1px solid #1e293b; border-radius:10px; padding:12px 14px; margin-bottom:12px;">
+        <div style="font-size:11px; font-weight:600; color:#64748b; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.04em;">Temporary Password</div>
+        <code style="display:inline-block; background:#182234; color:#fb923c; border:1px solid #334155; padding:4px 10px; border-radius:6px; font-weight:800; font-size:14px; letter-spacing:0.05em; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">${escapeHtml(params.temporaryPassword)}</code>
+      </div>
+
+      <p style="margin:0; font-size:11px; color:#94a3b8; line-height:1.5;">
+        🔒 <strong>Security Policy:</strong> You will be prompted to create your private, permanent password immediately upon your first sign-in.
+      </p>
     </div>
   `
     : '';
@@ -68,7 +81,7 @@ export function buildMemberInviteEmail(params: {
   });
 
   const textPassword = params.temporaryPassword
-    ? `\nTemporary Password: ${params.temporaryPassword}\n(You will be asked to create a new password on your first sign-in)\n`
+    ? `\n--- ACCESS CREDENTIALS ---\nEmail: ${params.recipientEmail || ''}\nTemporary Password: ${params.temporaryPassword}\n(You will be required to choose a new password on your first sign-in)\n--------------------------\n`
     : '';
 
   const text = `You have been invited to join ${org} on NextRound.

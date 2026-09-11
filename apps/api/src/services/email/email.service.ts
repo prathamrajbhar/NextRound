@@ -32,6 +32,7 @@ export class EmailService extends EmailCandidateService {
       : `${appUrl}/hr/dashboard?org=${organizationId}`;
     const email = buildMemberInviteEmail({
       inviteUrl,
+      recipientEmail: toEmail,
       organizationName,
       invitedByEmail,
       temporaryPassword,
