@@ -1,17 +1,21 @@
 import { generateText } from '../llm/llm.service';
 import { logger } from '../../lib/logger';
+import { buildJdRequirementsPrompt } from '../../prompts';
+
+export interface RubricSuggestion {
+  technical: number;
+  communication: number;
+  problemSolving: number;
+  experience: number;
+  [key: string]: number;
+}
 
 export interface ExtractedRequirements {
   skills: string[];
   softSkills: string[];
   cultureKeywords: string[];
-  rubric: {
-    technical: number;
-    communication: number;
-    problemSolving: number;
-    experience: number;
-  };
-  enhancedDescription?: string;
+  rubric: RubricSuggestion;
+  enhancedDescription: string;
 }
 
 export async function extractRequirementsFromJd(
@@ -22,33 +26,7 @@ export async function extractRequirementsFromJd(
     throw new Error('Job description too short for requirement extraction');
   }
 
-  const prompt = `You are an expert AI recruiter and technical talent architect.
-Analyze the following job title and job description text. Extract real, precise requirements directly present or implied in the text.
-
-JOB TITLE: ${title || 'Not specified'}
-JOB DESCRIPTION:
-${description.slice(0, 12000)}
-
-DIRECTIVES:
-1. "skills": Extract 3-10 core technical skills, programming languages, frameworks, vector databases, AI/ML tools, APIs, cloud platforms, or domain tools mentioned or directly implied.
-2. "softSkills": Extract 2-5 soft skills, interpersonal traits, or leadership capabilities mentioned or implied (e.g., "Stakeholder Management", "Cross-functional Collaboration", "Analytical Thinking").
-3. "cultureKeywords": Extract 2-5 company culture, mindset, or work value keywords (e.g., "Innovation", "Fast Execution", "Quality Focus", "Customer Obsessed").
-4. "rubric": Suggest balanced evaluation weights percentage (technical, communication, problemSolving, experience) summing to EXACTLY 100 based on the job role type.
-5. "enhancedDescription": Provide a clean, structured, ATS-friendly markdown job description with headers (Role Overview, Responsibilities, Requirements, Preferred Qualifications).
-
-Return ONLY a valid JSON object matching this schema:
-{
-  "skills": string[],
-  "softSkills": string[],
-  "cultureKeywords": string[],
-  "rubric": {
-    "technical": number,
-    "communication": number,
-    "problemSolving": number,
-    "experience": number
-  },
-  "enhancedDescription": string
-}`;
+  const prompt = buildJdRequirementsPrompt({ description, title });
 
   try {
     const text = await generateText(prompt);
