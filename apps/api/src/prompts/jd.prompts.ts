@@ -36,7 +36,8 @@ Return ONLY a valid JSON object matching this schema:
 }
 
 export interface GenerateJdPromptOptions {
-  title: string;
+  prompt?: string;
+  title?: string;
   department?: string;
   experienceLevel?: string;
   locationType?: string;
@@ -47,25 +48,24 @@ export interface GenerateJdPromptOptions {
 
 export function buildGenerateJdPrompt(options: GenerateJdPromptOptions): string {
   const {
-    title,
+    prompt: userPrompt = '',
+    title = '',
     department = 'Engineering',
     experienceLevel = 'Senior',
     locationType = 'Remote',
-    keySkills = '',
-    objectives = '',
-    tone = 'Professional & High Growth',
   } = options;
 
   return `You are an executive talent acquisition specialist and world-class job description copywriter for high-growth tech companies.
-Draft an exceptional, comprehensive, and attractive Job Description for the following position:
+Draft an exceptional, comprehensive, and attractive Job Description based on the recruiter's instructions:
 
-ROLE TITLE: ${title}
-DEPARTMENT: ${department}
-EXPERIENCE LEVEL: ${experienceLevel}
-WORK LOCATION: ${locationType}
-KEY TOOLS / SKILLS MENTIONED: ${keySkills || 'Standard industry best-practices for this seniority'}
-CORE OBJECTIVE / TEAM CONTEXT: ${objectives || 'Driving high-impact product execution and engineering velocity'}
-DESIRED TONE: ${tone}
+RECRUITER'S REQUIREMENTS / INSTRUCTIONS:
+${userPrompt || title || 'Create a world-class job description for this role.'}
+
+ROLE CONTEXT (IF KNOWN):
+- Proposed Title: ${title || 'Infer from recruiter instructions'}
+- Department: ${department}
+- Seniority / Level: ${experienceLevel}
+- Work Location Model: ${locationType}
 
 OUTPUT REQUIREMENTS:
 1. "description": Write an articulate, beautifully formatted Markdown job description with these distinct sections:
@@ -75,14 +75,16 @@ OUTPUT REQUIREMENTS:
    - ### Nice to Have: 3-4 bonus skills or domain experience that would make an applicant stand out.
    - ### What We Offer: 3-4 compelling points on compensation, career acceleration, ownership, and modern culture.
    Keep language inclusive, bias-free, and engaging. Avoid cliché buzzwords like 'rockstar' or 'ninja'.
-2. "skills": Array of 4-8 core technical skill chips (e.g., ["React", "TypeScript", "Node.js"]).
-3. "softSkills": Array of 3-5 behavioral competencies (e.g., ["Systems Thinking", "Cross-Functional Collaboration"]).
-4. "cultureKeywords": Array of 3-5 work value keywords (e.g., ["Extreme Ownership", "Continuous Learning"]).
-5. "rubric": Suggested candidate scoring percentages (technical, communication, problemSolving, experience) summing to EXACTLY 100.
+2. "detectedTitle": Infer or refine the most accurate job title from the prompt (e.g., "Senior Fullstack Engineer").
+3. "skills": Array of 4-8 core technical skill chips (e.g., ["React", "TypeScript", "Node.js"]).
+4. "softSkills": Array of 3-5 behavioral competencies (e.g., ["Systems Thinking", "Cross-Functional Collaboration"]).
+5. "cultureKeywords": Array of 3-5 work value keywords (e.g., ["Extreme Ownership", "Continuous Learning"]).
+6. "rubric": Suggested candidate scoring percentages (technical, communication, problemSolving, experience) summing to EXACTLY 100.
 
 Return ONLY a valid JSON object matching this schema:
 {
   "description": string,
+  "detectedTitle": string,
   "skills": string[],
   "softSkills": string[],
   "cultureKeywords": string[],
@@ -94,4 +96,5 @@ Return ONLY a valid JSON object matching this schema:
   }
 }`;
 }
+
 

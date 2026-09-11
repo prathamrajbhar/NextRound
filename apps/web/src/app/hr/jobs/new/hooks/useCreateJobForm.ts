@@ -90,32 +90,38 @@ export function useCreateJobForm() {
   };
 
   const handleGenerateJd = async (params: {
-    title: string;
+    prompt: string;
+    title?: string;
     department?: string;
     experienceLevel?: string;
     locationType?: string;
-    keySkills?: string;
-    objectives?: string;
-    tone?: string;
   }) => {
     setAssisting(true);
-    setAssistStep('AI is generating executive job description...');
+    setAssistStep('AI is crafting professional job description...');
 
     try {
+      const payload = {
+        prompt: params.prompt,
+        title: params.title || title,
+        department: params.department || department,
+        experienceLevel: params.experienceLevel || experienceLevel,
+        locationType: params.locationType || locationType,
+      };
+
       const res = await apiClient.post<{
         description?: string;
+        detectedTitle?: string;
         skills?: string[];
         softSkills?: string[];
         cultureKeywords?: string[];
         rubric?: Partial<RubricWeights>;
-      }>('/jobs/generate-jd', params);
+      }>('/jobs/generate-jd', payload);
 
       if (res) {
         if (res.description) setJd(res.description);
-        if (params.title) setTitle(params.title);
-        if (params.department) setDepartment(params.department);
-        if (params.experienceLevel) setExperienceLevel(params.experienceLevel);
-        if (params.locationType) setLocationType(params.locationType);
+        if (res.detectedTitle && !title.trim()) {
+          setTitle(res.detectedTitle);
+        }
 
         if (Array.isArray(res.skills) && res.skills.length > 0) setSkills(res.skills);
         if (Array.isArray(res.softSkills) && res.softSkills.length > 0) setSoftSkills(res.softSkills);
@@ -136,6 +142,7 @@ export function useCreateJobForm() {
       setAssisting(false);
     }
   };
+
 
   const handleWeightChange = (key: keyof RubricWeights, newValue: number) => {
     if (!autoBalance) {

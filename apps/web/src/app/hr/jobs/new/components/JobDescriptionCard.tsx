@@ -12,15 +12,7 @@ interface JobDescriptionProps {
   experienceLevel: string;
   locationType: string;
   onAiAssist: () => void;
-  onGenerateJd: (params: {
-    title: string;
-    department: string;
-    experienceLevel: string;
-    locationType: string;
-    keySkills: string;
-    objectives: string;
-    tone: string;
-  }) => Promise<void>;
+  onGenerateJd: (params: { prompt: string }) => Promise<void>;
   assisting: boolean;
 }
 
@@ -56,18 +48,11 @@ export default function JobDescriptionCard({
     }, 0);
   };
 
-  const handleModalGenerate = async (params: {
-    title: string;
-    department: string;
-    experienceLevel: string;
-    locationType: string;
-    keySkills: string;
-    objectives: string;
-    tone: string;
-  }) => {
+  const handleModalGenerate = async (params: { prompt: string }) => {
     await onGenerateJd(params);
     setIsGeneratorOpen(false);
   };
+
 
   return (
     <>
@@ -158,14 +143,11 @@ export default function JobDescriptionCard({
       <AiJdGeneratorModal
         isOpen={isGeneratorOpen}
         onClose={() => setIsGeneratorOpen(false)}
-        initialTitle={title}
-        initialDepartment={department}
-        initialExperienceLevel={experienceLevel}
-        initialLocationType={locationType}
         onGenerate={handleModalGenerate}
         loading={assisting}
       />
     </>
   );
 }
+
 

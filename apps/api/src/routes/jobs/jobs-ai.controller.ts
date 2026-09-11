@@ -71,14 +71,18 @@ export async function aiAssistJob(req: Request, res: Response, next: NextFunctio
 
 export async function generateJd(req: Request, res: Response, next: NextFunction) {
   try {
-    const { title, department, experienceLevel, locationType, keySkills, objectives, tone } = req.body;
-    if (!title || typeof title !== 'string' || title.trim().length === 0) {
-      return res.status(400).json({ success: false, error: 'Role title is required' });
+    const { prompt, title, department, experienceLevel, locationType, keySkills, objectives, tone } = req.body;
+    const userPrompt = typeof prompt === 'string' ? prompt.trim() : '';
+    const roleTitle = typeof title === 'string' ? title.trim() : '';
+
+    if (!userPrompt && !roleTitle) {
+      return res.status(400).json({ success: false, error: 'Please describe the job role or provide a title.' });
     }
 
     const { generateProfessionalJd } = await import('../../services/jd/jd-extractor.service');
     const result = await generateProfessionalJd({
-      title: title.trim(),
+      prompt: userPrompt,
+      title: roleTitle,
       department: typeof department === 'string' ? department : undefined,
       experienceLevel: typeof experienceLevel === 'string' ? experienceLevel : undefined,
       locationType: typeof locationType === 'string' ? locationType : undefined,
@@ -95,4 +99,5 @@ export async function generateJd(req: Request, res: Response, next: NextFunction
     return next(error);
   }
 }
+
 

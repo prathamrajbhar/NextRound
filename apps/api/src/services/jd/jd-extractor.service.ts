@@ -81,7 +81,8 @@ export async function extractRequirementsFromJd(
 }
 
 export interface GenerateJdInput {
-  title: string;
+  prompt?: string;
+  title?: string;
   department?: string;
   experienceLevel?: string;
   locationType?: string;
@@ -92,6 +93,7 @@ export interface GenerateJdInput {
 
 export interface GeneratedJdOutput {
   description: string;
+  detectedTitle?: string;
   skills: string[];
   softSkills: string[];
   cultureKeywords: string[];
@@ -101,8 +103,9 @@ export interface GeneratedJdOutput {
 export async function generateProfessionalJd(
   input: GenerateJdInput
 ): Promise<GeneratedJdOutput> {
-  if (!input.title || input.title.trim().length === 0) {
-    throw new Error('Role title is required to generate job description');
+  const userText = (input.prompt || input.title || '').trim();
+  if (userText.length === 0) {
+    throw new Error('Please enter some details or keywords about the job you want to generate.');
   }
 
   const { buildGenerateJdPrompt } = await import('../../prompts/jd.prompts');
@@ -143,6 +146,7 @@ export async function generateProfessionalJd(
 
     return {
       description: typeof parsed.description === 'string' ? parsed.description : '',
+      detectedTitle: typeof parsed.detectedTitle === 'string' ? parsed.detectedTitle : undefined,
       skills: Array.isArray(parsed.skills)
         ? parsed.skills.filter((s: unknown): s is string => typeof s === 'string' && s.trim().length > 0)
         : [],
@@ -159,4 +163,5 @@ export async function generateProfessionalJd(
     throw err instanceof Error ? err : new Error('Failed to generate professional job description');
   }
 }
+
 
