@@ -1,0 +1,30 @@
+# Signifyd — Staff Software Engineer, Cloud Platform & Database Infrastructure
+**Source:** Greenhouse (https://boards.greenhouse.io/signifyd)
+**Location:** Remote (US)
+**Level:** Staff / Principal
+
+## About Signifyd
+Signifyd is the market leader in Commerce Protection, providing an end-to-end commerce protection platform that guarantees payment security and prevents fraud across global enterprise e-commerce merchants.
+
+## The Role
+We are seeking a Staff Software Engineer to lead our Cloud Platform and Database Infrastructure engineering group. In this role, you will define the architectural vision, technical strategy, and implementation roadmap for our globally distributed cloud computing and data storage tier. You will lead high-impact architectural redesigns, optimize mission-critical transactional and analytical data stores, and champion automated self-healing platform infrastructure.
+
+## Key Responsibilities
+- Architect, scale, and optimize enterprise-grade database infrastructure and distributed data storage tiers supporting thousands of transactions per second.
+- Lead architecture and operational excellence for high-availability PostgreSQL clusters (HA/DR, multi-region replication, schema migration tooling, connection pooling, and sharding).
+- Drive cloud infrastructure automation, GitOps workflows, and container orchestration using Kubernetes, Helm, ArgoCD, Docker, and Terraform across AWS and GCP.
+- Build high-throughput data processing pipelines, event-driven streaming with Apache Kafka, and caching layers utilizing Redis.
+- Develop robust automation services and internal developer tooling using Python and Golang.
+- Collaborate with engineering leadership and cross-functional teams to design fault-tolerant microservices architectures and establish organization-wide infrastructure best practices.
+- Lead database tuning, query optimization, capacity planning, and cost governance across cloud data warehouses (BigQuery, Redshift, Snowflake).
+- Mentor senior engineers, lead comprehensive technical design reviews, and establish high standards for system resiliency and reliability.
+
+## Qualifications & Requirements
+- 8+ years of professional software engineering and cloud platform/database infrastructure experience.
+- Deep, hands-on mastery of PostgreSQL architecture, performance tuning, indexing, WAL replication, and distributed scaling.
+- Strong software development proficiency in Python and/or Golang for building backend services and platform automation tooling.
+- Extensive experience managing production Kubernetes clusters, containerization, and GitOps deployments (ArgoCD, Helm).
+- Demonstrated track record architecting enterprise cloud solutions on AWS and/or GCP with Infrastructure as Code (Terraform).
+- Hands-on experience with event streaming platforms (Apache Kafka) and distributed caching (Redis).
+- Proven ability to navigate ambiguous, organization-scale technical challenges and guide teams through complex architectural migrations.
+- Bachelor's or Master's degree in Computer Science, Computer Engineering, or equivalent practical experience.
