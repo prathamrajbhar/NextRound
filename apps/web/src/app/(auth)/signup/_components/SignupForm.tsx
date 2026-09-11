@@ -1,10 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
-  AudioLines,
   ArrowRight,
   Building,
   Eye,
@@ -12,94 +10,41 @@ import {
   Loader2,
   Lock,
   Mail,
-  Mic,
-  Scale,
   User,
   UserPlus,
 } from '@/lib/lucide-google-icons';
-import AuthShell, { AuthBenefit } from '@/components/auth/AuthShell';
+import AuthShell from '@/components/auth/AuthShell';
 import AuthField from '@/components/auth/AuthField';
 import PasswordStrength from '@/components/auth/PasswordStrength';
-import { useToast } from '@/contexts/ToastContext';
-import { useAuth } from '@/hooks/useAuth';
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LENGTH = 8;
-
-type Role = 'candidate' | 'hr';
-
-const BENEFITS: AuthBenefit[] = [
-  {
-    icon: Mic,
-    title: 'AI voice interviews',
-    description: 'Candidates are screened by voice agents with live transcripts and structured scoring.',
-  },
-  {
-    icon: Scale,
-    title: 'Objective rubric decisions',
-    description: 'Every evaluation is normalized and explained — clear, defensible shortlists.',
-  },
-  {
-    icon: AudioLines,
-    title: 'Candidate prep built in',
-    description: 'Mock interviews and practice content for every applicant, free of charge.',
-  },
-];
-
-const ROLE_OPTIONS: { value: Role; label: string; icon: AuthBenefit['icon'] }[] = [
-  { value: 'candidate', label: "I'm a Candidate", icon: User },
-  { value: 'hr', label: "I'm an Employer", icon: Building },
-];
+import { Role, BENEFITS } from './signup.constants';
+import { useSignupForm } from './useSignupForm';
+import { SignupRoleSelector } from './SignupRoleSelector';
 
 interface SignupFormProps {
-
   initialRole: Role;
 }
 
 export default function SignupForm({ initialRole }: SignupFormProps) {
-  const router = useRouter();
-  const { register } = useAuth();
-  const { toast } = useToast();
-
-  const [role, setRole] = useState<Role>(initialRole);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ name?: string; email?: string; companyName?: string; password?: string }>({});
-  const [formError, setFormError] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const clearError = (key: keyof typeof errors) => setErrors((prev) => ({ ...prev, [key]: undefined }));
-
-  const validate = (): boolean => {
-    const next: typeof errors = {};
-    if (name.trim().length < 2) next.name = 'Enter your full name.';
-    if (!email.trim()) next.email = 'Email is required.';
-    else if (!EMAIL_RE.test(email.trim())) next.email = 'Enter a valid email address.';
-    if (role === 'hr' && !companyName.trim()) next.companyName = 'Company name is required.';
-    if (password.length < MIN_PASSWORD_LENGTH) next.password = `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
-    setErrors(next);
-    return Object.keys(next).length === 0;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError('');
-    if (!validate()) return;
-    setLoading(true);
-
-    const result = await register(email.trim(), password, role, role === 'hr' ? companyName.trim() : undefined);
-    setLoading(false);
-
-    if (result.success && result.user) {
-      toast({ title: 'Account created successfully', variant: 'success' });
-      router.push(role === 'candidate' ? '/onboarding/candidate' : '/onboarding/company');
-    } else {
-      setFormError(result.error || 'Unable to create your account. Please try again.');
-    }
-  };
+  const {
+    role,
+    setRole,
+    name,
+    setName,
+    email,
+    setEmail,
+    companyName,
+    setCompanyName,
+    password,
+    setPassword,
+    showPassword,
+    setShowPassword,
+    errors,
+    clearError,
+    formError,
+    setFormError,
+    loading,
+    handleSubmit,
+  } = useSignupForm(initialRole);
 
   return (
     <AuthShell
@@ -118,26 +63,13 @@ export default function SignupForm({ initialRole }: SignupFormProps) {
           <p className="text-xs font-medium text-slate-400">Choose your account type to get started.</p>
         </div>
 
-        <div role="group" aria-label="Account type" className="grid grid-cols-2 gap-1.5 rounded-2xl border border-white/10 bg-slate-950/60 p-1.5">
-          {ROLE_OPTIONS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                setRole(option.value);
-                setFormError('');
-              }}
-              aria-pressed={role === option.value}
-              className={`flex cursor-pointer items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 text-xs font-extrabold transition-all ${role === option.value
-                  ? 'bg-orange-600 text-white shadow-lg shadow-orange-600/25'
-                  : 'text-slate-400 hover:text-white'
-                }`}
-            >
-              <option.icon className="h-4 w-4" />
-              {option.label}
-            </button>
-          ))}
-        </div>
+        <SignupRoleSelector
+          role={role}
+          onChange={(newRole) => {
+            setRole(newRole);
+            setFormError('');
+          }}
+        />
 
         {formError && (
           <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-950/40 p-3 text-xs font-semibold text-rose-300">

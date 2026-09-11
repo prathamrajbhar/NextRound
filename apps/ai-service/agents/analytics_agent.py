@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timezone
 from typing import TypedDict
 from core.http_client import callback_client
-from services.pdf_generator import generate_analytics_pdf
+from services.pdf.pdf_generator import generate_analytics_pdf
 
 logger = logging.getLogger("analytics_agent")
 

@@ -4,6 +4,7 @@ import React from 'react';
 import { Building, Globe, MapPin } from '@/lib/lucide-google-icons';
 import { CompanyStepProps } from './useCompanyOnboarding';
 import { inputCls, labelCls, selectCls } from './CompanyOnboardingShell';
+import { SingleCityInput } from '../../candidate/_components/SingleCityInput';
 
 const INDUSTRIES = [
   'Technology',
@@ -55,16 +56,11 @@ export function CompanyDetailsStep({ form, update }: CompanyStepProps) {
 
         <div>
           <label className={labelCls}>HQ Location</label>
-          <div className="relative">
-            <MapPin className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
-            <input
-              type="text"
-              value={form.hqLocation}
-              onChange={(e) => update('hqLocation', e.target.value)}
-              placeholder="e.g. Bengaluru, India"
-              className={`${inputCls} pl-10`}
-            />
-          </div>
+          <SingleCityInput
+            value={form.hqLocation}
+            onChange={(val) => update('hqLocation', val)}
+            placeholder="e.g. Bengaluru, India"
+          />
         </div>
       </div>
 

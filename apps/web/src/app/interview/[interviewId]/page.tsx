@@ -2,8 +2,6 @@
 
 import React, { use, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiClient } from '@/lib/apiClient';
-import { Application } from '@/types';
 import { useInterviewSession } from '@/hooks/useInterviewSession';
 import InterviewCheckScreen from '@/components/interview/InterviewCheckScreen';
 import UnifiedInterviewConsole from '@/components/interview/UnifiedInterviewConsole';
@@ -11,13 +9,19 @@ import { ProctoringGate } from '@/components/interview/ProctoringGate';
 import { useProctoringSession } from '@/lib/proctoring/useProctoringSession';
 import { getProctoringFlagMessage } from '@/lib/proctoring/flagMessages';
 import { useToast } from '@/contexts/ToastContext';
+import { useInterviewRoomData } from './_hooks/useInterviewRoomData';
+import { InterviewNotFoundScreen } from './_components/InterviewNotFoundScreen';
 
-export default function LiveInterviewRoom({ params }: { params: Promise<{ interviewId: string }> }) {
+export default function LiveInterviewRoom({
+  params,
+}: {
+  params: Promise<{ interviewId: string }>;
+}) {
   const router = useRouter();
   const { interviewId } = use(params);
   const { toast } = useToast();
-  const [app, setApp] = useState<Application | null>(null);
-  const [loadError, setLoadError] = useState(false);
+  const { app, candidateId, loadError } = useInterviewRoomData(interviewId);
+  const [captureStream, setCaptureStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     return () => {
@@ -26,42 +30,9 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
       }
     };
   }, []);
-  const [candidateId, setCandidateId] = useState<string | null>(null);
-  const [captureStream, setCaptureStream] = useState<MediaStream | null>(null);
 
   const companyName = app?.orgName || 'Interview';
   const jobTitle = app?.jobTitle || 'Candidate Interview';
-
-  useEffect(() => {
-    async function fetchApp() {
-      try {
-        const res = await apiClient.get<Application>(`/applications/${interviewId}`);
-        if (res) {
-          setApp(res);
-        } else {
-          setLoadError(true);
-        }
-      } catch (err) {
-        console.error('Failed to load application details:', err);
-        setLoadError(true);
-      }
-    }
-    fetchApp();
-  }, [interviewId]);
-
-  useEffect(() => {
-    async function loadProfile() {
-      try {
-        const res = await apiClient.get<{ profile: { id: string } }>('/candidate/profile');
-        if (res && res.profile) {
-          setCandidateId(res.profile.id);
-        }
-      } catch (err) {
-        console.warn('Failed to load candidate profile for proctoring:', err);
-      }
-    }
-    loadProfile();
-  }, []);
 
   const {
     stage,
@@ -107,9 +78,7 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
     },
     onDisqualified: () => {
       suppressViolations(true);
-      proctorEnd().catch((err) => {
-        console.error('Failed to end proctoring session on disqualify:', err);
-      });
+      proctorEnd().catch(() => {});
       eliminateInterview();
     },
   });
@@ -123,31 +92,13 @@ export default function LiveInterviewRoom({ params }: { params: Promise<{ interv
     }
     try {
       await proctorEnd();
-    } catch (err) {
-      console.error('Failed to end proctoring session:', err);
+    } catch {
+      // Ignored
     }
     wrapUp();
   };
 
-  if (loadError) {
-    return (
-      <div className="h-screen w-screen bg-slate-950 text-white flex items-center justify-center px-6">
-        <div className="max-w-sm w-full text-center space-y-3">
-          <h1 className="text-lg font-extrabold text-white font-display">Interview Not Found</h1>
-          <p className="text-xs text-slate-400 font-medium leading-relaxed">
-            We couldn&apos;t load this interview. Please go back and try again.
-          </p>
-          <button
-            type="button"
-            onClick={() => router.push('/candidate/dashboard')}
-            className="mt-2 px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-xs font-extrabold transition-all cursor-pointer"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (loadError) return <InterviewNotFoundScreen />;
 
   if (!app) {
     return (

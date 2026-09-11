@@ -2,7 +2,7 @@ import logging
 from typing import Optional, List, Dict, Any
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from services.video_analysis_service import (
+from services.audio_video.video_analysis_service import (
     analyze_frame_expression,
     analyze_video_session
 )

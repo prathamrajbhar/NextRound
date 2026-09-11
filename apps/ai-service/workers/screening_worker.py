@@ -1,6 +1,6 @@
 import logging
 from core.http_client import callback_client
-from services.embedding_service import embed_resume
+from services.embedding.embedding_service import embed_resume
 from agents.screening_agent import run_screening_agent
 from workers.worker_base import fetch_internal, run_agent_job
 

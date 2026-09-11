@@ -1,17 +1,22 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { Job, Application } from '@/types';
 import { JobCard, JobsGridSkeleton } from '@/components/ui';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { useToast } from '@/contexts/ToastContext';
 import { Search, Filter } from '@/lib/lucide-google-icons';
 
 export default function CandidateJobsPage() {
+  const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [applyingJobId, setApplyingJobId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('All');
   const [selectedExperience, setSelectedExperience] = useState('All');
@@ -77,6 +82,38 @@ export default function CandidateJobsPage() {
 
     return matchesSearch && matchesLocation && matchesExperience;
   });
+
+  const handleApply = async (jobId: string) => {
+    try {
+      setApplyingJobId(jobId);
+      const res = await apiClient.post<{ application?: { id: string }; id?: string }>(
+        '/applications',
+        { jobId }
+      );
+      toast({
+        title: 'Application submitted',
+        description: 'Your application has been successfully submitted.',
+        variant: 'success',
+      });
+      const newId = res?.application?.id || res?.id;
+      if (newId) {
+        await load();
+        router.push(`/candidate/applications/${newId}`);
+      } else {
+        await load();
+        router.push('/candidate/applications');
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to submit application. Please try again.';
+      toast({
+        title: 'Application failed',
+        description: message,
+        variant: 'error',
+      });
+    } finally {
+      setApplyingJobId(null);
+    }
+  };
 
   if (error) {
     return (
@@ -161,6 +198,8 @@ export default function CandidateJobsPage() {
                 status={job.status}
                 hasApplied={hasApplied}
                 viewHref={`/candidate/jobs/${job.id}`}
+                onApply={handleApply}
+                isApplying={applyingJobId === job.id}
               />
             );
           })}

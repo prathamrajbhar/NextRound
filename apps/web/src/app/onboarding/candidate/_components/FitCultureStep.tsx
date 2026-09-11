@@ -1,14 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Trophy, ScrollText, ChevronUp, ChevronDown, GripVertical, RefreshCw } from '@/lib/lucide-google-icons';
+import { Trophy, ScrollText, RefreshCw } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
 import { OnboardingStepProps } from './useCandidateOnboarding';
 import { inputCls, labelCls } from './CandidateOnboardingShell';
+import { WorkValuesRankingList } from './WorkValuesRankingList';
 
 export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingStepProps) {
-  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
-  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [reparsing, setReparsing] = useState<string | null>(null);
 
   const handleRegenerateField = async (field: 'proudProject' | 'bio') => {
@@ -54,55 +53,9 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
           }
         }
       }
-    } catch (err) {
-      console.error('Failed to regenerate AI field:', err);
     } finally {
       setReparsing(null);
     }
-  };
-
-  const moveValue = (idx: number, dir: -1 | 1) => {
-    const target = idx + dir;
-    if (target < 0 || target >= form.workValues.length) return;
-    const copy = [...form.workValues];
-    [copy[idx], copy[target]] = [copy[target], copy[idx]];
-    update('workValues', copy);
-  };
-
-  const handleDragStart = (e: React.DragEvent, idx: number) => {
-    setDraggedIdx(idx);
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', String(idx));
-  };
-
-  const handleDragOver = (e: React.DragEvent, idx: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (dragOverIdx !== idx) {
-      setDragOverIdx(idx);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent, dropIdx: number) => {
-    e.preventDefault();
-    if (draggedIdx === null || draggedIdx === dropIdx) {
-      setDraggedIdx(null);
-      setDragOverIdx(null);
-      return;
-    }
-
-    const copy = [...form.workValues];
-    const [removed] = copy.splice(draggedIdx, 1);
-    copy.splice(dropIdx, 0, removed);
-    update('workValues', copy);
-
-    setDraggedIdx(null);
-    setDragOverIdx(null);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedIdx(null);
-    setDragOverIdx(null);
   };
 
   return (
@@ -117,7 +70,11 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
             className="text-slate-400 hover:text-orange-400 p-1 transition-colors cursor-pointer disabled:opacity-50 focus:outline-none"
             title="Regenerate with AI"
           >
-            <RefreshCw className={`h-4 w-4 transition-transform duration-500 ease-in-out ${reparsing === 'proudProject' ? 'animate-spin' : 'hover:rotate-180 active:rotate-180'}`} />
+            <RefreshCw
+              className={`h-4 w-4 transition-transform duration-500 ease-in-out ${
+                reparsing === 'proudProject' ? 'animate-spin' : 'hover:rotate-180 active:rotate-180'
+              }`}
+            />
           </button>
         </div>
         <div className="relative">
@@ -130,7 +87,9 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
             className={`${inputCls} pl-10 resize-none leading-relaxed`}
           />
         </div>
-        <p className="text-xs text-slate-400 font-medium mt-1.5">Gives the evaluator agent concrete signal beyond the resume.</p>
+        <p className="text-xs text-slate-400 font-medium mt-1.5">
+          Gives the evaluator agent concrete signal beyond the resume.
+        </p>
       </div>
 
       <div>
@@ -144,7 +103,11 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
               className="text-slate-400 hover:text-orange-400 p-1 transition-colors cursor-pointer disabled:opacity-50 focus:outline-none"
               title="Regenerate with AI"
             >
-              <RefreshCw className={`h-4 w-4 transition-transform duration-500 ease-in-out ${reparsing === 'bio' ? 'animate-spin' : 'hover:rotate-180 active:rotate-180'}`} />
+              <RefreshCw
+                className={`h-4 w-4 transition-transform duration-500 ease-in-out ${
+                  reparsing === 'bio' ? 'animate-spin' : 'hover:rotate-180 active:rotate-180'
+                }`}
+              />
             </button>
             <span className="text-xs font-mono font-bold text-slate-400">{form.bio.length} / 1000</span>
           </div>
@@ -162,74 +125,10 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
         </div>
       </div>
 
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className={labelCls}>Work Values — Drag &amp; Drop Priority Ranking</label>
-        </div>
-        <p className="text-xs text-slate-400 font-medium mb-3">Drag handles or use arrows to reorder values based on your personal priority.</p>
-
-        <div className="space-y-2.5">
-          {form.workValues.map((val, idx) => {
-            const isDragging = draggedIdx === idx;
-            const isDragOver = dragOverIdx === idx && draggedIdx !== idx;
-
-            return (
-              <div
-                key={val}
-                draggable
-                onDragStart={(e) => handleDragStart(e, idx)}
-                onDragOver={(e) => handleDragOver(e, idx)}
-                onDrop={(e) => handleDrop(e, idx)}
-                onDragEnd={handleDragEnd}
-                className={`flex justify-between items-center p-3.5 rounded-xl border text-sm font-bold text-slate-200 transition-all duration-150 cursor-grab active:cursor-grabbing select-none ${
-                  isDragging
-                    ? 'opacity-40 bg-orange-500/20 border-orange-500 scale-[0.98]'
-                    : isDragOver
-                      ? 'bg-orange-500/15 border-orange-400 shadow-lg shadow-orange-500/10 translate-y-0.5'
-                      : 'bg-slate-900/90 border-slate-800 hover:border-slate-700 hover:bg-slate-850 shadow-sm'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="text-slate-500 hover:text-orange-400 transition-colors shrink-0">
-                    <GripVertical className="h-4.5 w-4.5" />
-                  </div>
-                  <span className="flex items-center">
-                    <span className="text-orange-400 font-black mr-2.5 font-mono">{idx + 1}.</span>
-                    <span>{val}</span>
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1 text-slate-400">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      moveValue(idx, -1);
-                    }}
-                    disabled={idx === 0}
-                    className="p-1 rounded-lg hover:bg-slate-800 hover:text-white disabled:opacity-20 cursor-pointer"
-                    aria-label="Move up"
-                  >
-                    <ChevronUp className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      moveValue(idx, 1);
-                    }}
-                    disabled={idx === form.workValues.length - 1}
-                    className="p-1 rounded-lg hover:bg-slate-800 hover:text-white disabled:opacity-20 cursor-pointer"
-                    aria-label="Move down"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <WorkValuesRankingList
+        workValues={form.workValues}
+        onChange={(values) => update('workValues', values)}
+      />
     </div>
   );
 }

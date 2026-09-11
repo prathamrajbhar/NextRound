@@ -2,29 +2,15 @@
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  Mic,
-  ArrowRight,
-  Sparkles,
-  Building2,
-  Star,
-  Trophy,
-  User,
-  Sliders,
-  Award,
-  Layers,
-  ShieldCheck,
-  Terminal,
-  Target,
-  CheckCircle2,
-} from '@/lib/lucide-google-icons';
+import { Mic, ArrowRight } from '@/lib/lucide-google-icons';
 import CalibrationPanel, { AssessmentTrack } from './components/CalibrationPanel';
-import { CompanyLogo, SearchableSelect } from '@/components/ui';
-import type { SearchableSelectOption } from '@/components/ui';
 import { apiClient } from '@/lib/apiClient';
-import { useSafeMediaStream } from '@/hooks/useSafeMediaStream';
-import { useJobs, useMockSessions } from '@/hooks/queries';
-import { deriveJobOptions, normalizeJobs } from '@/lib/jobOptions';
+import { useMockSessions } from '@/hooks/queries';
+import { useMockSetupMic } from './components/useMockSetupMic';
+import { useMockJobOptions } from './components/useMockJobOptions';
+import { MockSetupHeader } from './components/MockSetupHeader';
+import { CompanyRoleSelectionCard } from './components/CompanyRoleSelectionCard';
+import { TrackSelectionCard } from './components/TrackSelectionCard';
 
 function MockInterviewSetupForm() {
   const router = useRouter();
@@ -32,8 +18,6 @@ function MockInterviewSetupForm() {
 
   const initialCompany = searchParams.get('company');
   const initialRole = searchParams.get('role');
-  const [company, setCompany] = useState(initialCompany || '');
-  const [role, setRole] = useState(initialRole || '');
   const initialTrack = (searchParams.get('track') as AssessmentTrack) || 'comprehensive';
   const [track, setTrack] = useState<AssessmentTrack>(initialTrack);
   const [difficulty, setDifficulty] = useState<'junior' | 'mid' | 'senior'>('mid');
@@ -46,62 +30,11 @@ function MockInterviewSetupForm() {
     return typeof score === 'number' ? score : null;
   }, [mockSessionsData]);
 
-  const [orgId, setOrgId] = useState<string | null>(null);
-  const [micActive, setMicActive] = useState(true);
-  const [camActive, setCamActive] = useState(true);
-  const [micLevel, setMicLevel] = useState(45);
+  const [micActive, setMicActive] = useState(false);
+  const [camActive, setCamActive] = useState(false);
   const [consent, setConsent] = useState(true);
 
-  const { start } = useSafeMediaStream({
-    constraints: { audio: true },
-    enabled: micActive,
-  });
-
-  useEffect(() => {
-    if (!micActive) {
-      setTimeout(() => setMicLevel(0), 0);
-      return;
-    }
-    let audioContext: AudioContext | null = null;
-    let analyser: AnalyserNode | null = null;
-    let rafId: number | null = null;
-    let active = true;
-
-    start()
-      .then((stream) => {
-        if (!stream || !active) return;
-        audioContext = new AudioContext();
-        analyser = audioContext.createAnalyser();
-        const microphone = audioContext.createMediaStreamSource(stream);
-        microphone.connect(analyser);
-        analyser.fftSize = 256;
-        const bufferLength = analyser.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-
-        const updateLevel = () => {
-          if (!analyser || !active) return;
-          analyser.getByteFrequencyData(dataArray);
-          const average = dataArray.reduce((a, b) => a + b) / bufferLength;
-          setMicLevel(Math.floor((average / 255) * 100));
-          rafId = requestAnimationFrame(updateLevel);
-        };
-        updateLevel();
-      })
-      .catch((err) => {
-        const name = err instanceof DOMException ? err.name : '';
-        if (!['NotAllowedError', 'NotFoundError', 'AbortError'].includes(name)) {
-          console.error('Microphone access failed:', err);
-        }
-        setMicLevel(0);
-      });
-
-    return () => {
-      active = false;
-      if (rafId) cancelAnimationFrame(rafId);
-      if (audioContext) void audioContext.close();
-      setMicLevel(0);
-    };
-  }, [micActive, start]);
+  const micLevel = useMockSetupMic(micActive);
 
   useEffect(() => {
     if (!isCalibrating) return;
@@ -109,302 +42,71 @@ function MockInterviewSetupForm() {
     return () => clearTimeout(t);
   }, [isCalibrating]);
 
-  const { data: jobsData, isLoading: postedLoading, isError: postedError } = useJobs();
-  const postedErrorMessage = postedError ? 'Could not load posted roles.' : undefined;
-
-  const { companies: companyOptions, rolesByOrgId } = useMemo(
-    () => deriveJobOptions(normalizeJobs(jobsData)),
-    [jobsData]
-  );
-
-  useEffect(() => {
-    if (postedLoading) return;
-    if (companyOptions.length === 0) {
-      setOrgId(null);
-      setCompany('');
-      setRole('');
-      return;
-    }
-    const matchedCompany =
-      companyOptions.find((c) => c.label.toLowerCase() === (initialCompany || '').toLowerCase()) ||
-      companyOptions[0];
-    const orgRoles = rolesByOrgId[matchedCompany.value] || [];
-    const matchedRole =
-      orgRoles.find((r) => r.toLowerCase() === (initialRole || '').toLowerCase()) ||
-      orgRoles[0] ||
-      '';
-    setOrgId(matchedCompany.value);
-    setCompany(matchedCompany.label);
-    setRole(matchedRole);
-  }, [postedLoading, companyOptions, rolesByOrgId, initialCompany, initialRole]);
-
-  const handleCompanySelect = (opt: SearchableSelectOption) => {
-    setCompany(opt.label);
-    setOrgId(opt.value);
-    setRole((rolesByOrgId[opt.value] || [])[0] || '');
-    setIsCalibrating(true);
-  };
-  const handleRoleSelect = (opt: SearchableSelectOption) => setRole(opt.label);
-
-  const roleOptions: SearchableSelectOption[] = orgId
-    ? (rolesByOrgId[orgId] || []).map((r) => ({ value: r, label: r }))
-    : [];
-  const selectedCompany = companyOptions.find((c) => c.value === orgId) || null;
-  const selectedRole = roleOptions.find((r) => r.value === role) || null;
+  const jobOpts = useMockJobOptions({
+    initialCompany,
+    initialRole,
+    onCalibrate: () => setIsCalibrating(true),
+  });
 
   const handleStart = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!consent || !orgId || !role) return;
+    if (!consent || !jobOpts.orgId || !jobOpts.role) return;
     setLoading(true);
     try {
       const res = await apiClient.post<{ sessionId: string }>('/mock/sessions', {
-        topic: track === 'coding' ? 'Data Structures & Algorithms' : track === 'aptitude' ? 'Behavioral & STAR Method' : 'System Design & Architecture',
-        targetCompany: company,
-        targetRole: role,
+        topic:
+          track === 'coding'
+            ? 'Data Structures & Algorithms'
+            : track === 'aptitude'
+            ? 'Behavioral & STAR Method'
+            : 'System Design & Architecture',
+        targetCompany: jobOpts.company,
+        targetRole: jobOpts.role,
         difficulty,
         focusAreas: [track],
       });
       if (res?.sessionId) {
         router.push(
-          `/candidate/mock/${res.sessionId}?track=${track}&company=${encodeURIComponent(company)}&role=${encodeURIComponent(role)}&difficulty=${difficulty}`
+          `/candidate/mock/${res.sessionId}?track=${track}&company=${encodeURIComponent(
+            jobOpts.company
+          )}&role=${encodeURIComponent(jobOpts.role)}&difficulty=${difficulty}`
         );
       }
-    } catch (err) {
-      console.error('Failed to create mock session:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  const tracks = [
-    {
-      key: 'comprehensive' as const,
-      label: 'Full Mock Interview',
-      badge: 'ALL-IN-ONE ROUND',
-      featured: true,
-      sub: 'End-to-end hiring simulation covering Aptitude, Live Coding & Technical Voice AI.',
-      icon: Trophy,
-    },
-    {
-      key: 'aptitude' as const,
-      label: 'Aptitude & Reasoning',
-      badge: 'MATH & LOGIC',
-      featured: false,
-      sub: 'Quantitative puzzles, series logic, and analytical problem solving.',
-      icon: Target,
-    },
-    {
-      key: 'coding' as const,
-      label: 'Live Coding Round',
-      badge: 'HANDS-ON CODE',
-      featured: false,
-      sub: 'Algorithmic challenges, data structures & time complexity.',
-      icon: Terminal,
-    },
-    {
-      key: 'technical' as const,
-      label: 'Technical Voice AI',
-      badge: 'VOICE AI VETTING',
-      featured: false,
-      sub: 'Conversational voice AI covering architecture, stack & system design.',
-      icon: Sparkles,
-    },
-  ];
-
-  const difficulties = [
-    { key: 'junior' as const, label: 'Junior', sub: '0 - 2 Yrs', icon: User },
-    { key: 'mid' as const, label: 'Mid Level', sub: '2 - 5 Yrs', icon: Star },
-    { key: 'senior' as const, label: 'Senior', sub: '5+ Yrs', icon: Trophy },
-  ];
-
   return (
     <div className="w-full space-y-6 pb-12 animate-in fade-in duration-300 font-sans">
-
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200/60 dark:border-slate-800 pb-4">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider text-brand-600 dark:text-orange-400 bg-brand-50 dark:bg-orange-950/80 border border-brand-200/60 dark:border-orange-900/60 uppercase mb-1.5">
-            <Sparkles className="h-3 w-3 text-brand-500 dark:text-orange-400" />
-            <span>AI PRACTICE ARENA • REAL-TIME INTERVIEW SIMULATOR</span>
-          </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-display">
-            Configure Practice Session
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1">
-            Tailor company rubrics, assessment round focus, and verify hardware feed before entering the arena.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="px-3.5 py-2 rounded-2xl bg-white/60 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 backdrop-blur-md glass-panel flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm">
-            <ShieldCheck className="h-4 w-4 text-emerald-500" />
-            <span>AI Engine: <strong className="text-emerald-600 dark:text-emerald-400 font-extrabold">Active</strong></span>
-          </div>
-
-          <div className="px-3.5 py-2 rounded-2xl bg-white/60 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 backdrop-blur-md glass-panel flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm">
-            <Award className="h-4 w-4 text-amber-500" />
-            <span>Latest Practice: <strong className="text-amber-600 dark:text-amber-400 font-extrabold">{latestScore !== null ? `${latestScore}% Score` : 'No sessions yet'}</strong></span>
-          </div>
-        </div>
-      </div>
+      <MockSetupHeader latestScore={latestScore} />
 
       <form onSubmit={handleStart} className="space-y-6">
-
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-
           <div className="rounded-3xl border border-white/60 dark:border-slate-800 bg-white/45 dark:bg-slate-900/60 p-6 md:p-7 shadow-md backdrop-blur-md glass-panel flex flex-col justify-between space-y-6">
             <div className="space-y-6">
+              <CompanyRoleSelectionCard
+                company={jobOpts.company}
+                companyOptions={jobOpts.companyOptions}
+                selectedCompany={jobOpts.selectedCompany}
+                roleOptions={jobOpts.roleOptions}
+                selectedRole={jobOpts.selectedRole}
+                postedLoading={jobOpts.postedLoading}
+                postedErrorMessage={jobOpts.postedErrorMessage}
+                orgId={jobOpts.orgId}
+                onCompanySelect={jobOpts.handleCompanySelect}
+                onRoleSelect={jobOpts.handleRoleSelect}
+              />
 
-              <div className="space-y-4 border-b border-slate-200/60 dark:border-slate-800 pb-5">
-                <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
-                  <Building2 className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
-                  Target Role &amp; Enterprise
-                </h3>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                      Target Enterprise
-                    </label>
-                    <div className="flex items-center gap-2">
-                      {postedLoading || !company ? (
-                        <span className="h-12 w-12 flex-shrink-0 rounded-2xl bg-slate-200/70 dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700 animate-pulse" />
-                      ) : (
-                        <CompanyLogo
-                          name={company}
-                          logoUrl={selectedCompany?.logoUrl}
-                          size="md"
-                          className="shadow-xs flex-shrink-0"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <SearchableSelect
-                          options={companyOptions}
-                          selected={selectedCompany}
-                          onSelect={handleCompanySelect}
-                          loading={postedLoading}
-                          emptyMessage="No companies have posted roles yet"
-                          placeholder="Search companies with open roles..."
-                          icon={<Building2 className="h-4 w-4" />}
-                          error={postedErrorMessage}
-                          className="text-xs font-semibold"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                      Target Position Title
-                    </label>
-                    <SearchableSelect
-                      options={roleOptions}
-                      selected={selectedRole}
-                      onSelect={handleRoleSelect}
-                      loading={postedLoading}
-                      disabled={!orgId}
-                      emptyMessage="Pick a company to see its open roles"
-                      placeholder="Roles posted by this company..."
-                      icon={<Target className="h-4 w-4" />}
-                      className="text-xs font-semibold"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 border-b border-slate-200/60 dark:border-slate-800 pb-5">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
-                    <Layers className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
-                    Select Assessment Round
-                  </h3>
-                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-brand-50 dark:bg-orange-950/60 text-brand-700 dark:text-orange-300 border border-brand-200 dark:border-orange-900">
-                    4 Rounds Available
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {tracks.map((t) => {
-                    const Icon = t.icon;
-                    const isSelected = track === t.key;
-                    return (
-                      <button
-                        key={t.key}
-                        type="button"
-                        onClick={() => {
-                          setTrack(t.key);
-                          setIsCalibrating(true);
-                        }}
-                        className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between space-y-2 relative overflow-hidden ${
-                          t.featured ? 'sm:col-span-2' : ''
-                        } ${
-                          isSelected
-                            ? 'border-brand-500 dark:border-orange-500 bg-brand-500/10 dark:bg-orange-500/10 text-slate-900 dark:text-slate-100 ring-2 ring-brand-500/30'
-                            : 'border-slate-200/80 dark:border-slate-800 bg-white/40 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Icon
-                              className={`h-4 w-4 ${
-                                isSelected ? 'text-brand-500 dark:text-orange-400' : 'text-slate-400'
-                              }`}
-                            />
-                            <span className="text-xs font-extrabold">{t.label}</span>
-                            {t.featured && (
-                              <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/30 uppercase">
-                                {t.badge}
-                              </span>
-                            )}
-                          </div>
-                          {isSelected && (
-                            <CheckCircle2 className="h-4 w-4 text-brand-500 dark:text-orange-400 flex-shrink-0" />
-                          )}
-                        </div>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
-                          {t.sub}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h3 className="text-xs font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2 uppercase tracking-wider">
-                  <Sliders className="h-4.5 w-4.5 text-brand-500 dark:text-orange-400" />
-                  Target Seniority Level
-                </h3>
-
-                <div className="grid grid-cols-3 gap-3">
-                  {difficulties.map((d) => {
-                    const Icon = d.icon;
-                    const isSelected = difficulty === d.key;
-                    return (
-                      <button
-                        key={d.key}
-                        type="button"
-                        onClick={() => setDifficulty(d.key)}
-                        className={`flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all cursor-pointer ${
-                          isSelected
-                            ? 'border-brand-500 dark:border-orange-500 bg-brand-500/10 dark:bg-orange-500/10 text-brand-700 dark:text-orange-300 ring-2 ring-brand-500/30'
-                            : 'border-slate-200/80 dark:border-slate-800 bg-white/40 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700'
-                        }`}
-                      >
-                        <Icon
-                          className={`h-4.5 w-4.5 mb-1 ${
-                            isSelected ? 'text-brand-500 dark:text-orange-400' : 'text-slate-400'
-                          }`}
-                        />
-                        <span className="text-xs font-extrabold block">{d.label}</span>
-                        <span className="text-[9px] font-semibold text-slate-400 block mt-0.5">
-                          {d.sub}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
+              <TrackSelectionCard
+                track={track}
+                onSelectTrack={(newTrack) => {
+                  setTrack(newTrack);
+                  setIsCalibrating(true);
+                }}
+                difficulty={difficulty}
+                onSelectDifficulty={setDifficulty}
+              />
             </div>
 
             <div className="space-y-4 pt-4 border-t border-slate-200/60 dark:border-slate-800">
@@ -423,20 +125,19 @@ function MockInterviewSetupForm() {
 
               <button
                 type="submit"
-                disabled={loading || !consent || !orgId || !role}
+                disabled={loading || !consent || !jobOpts.orgId || !jobOpts.role}
                 className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-600 dark:bg-orange-600 hover:bg-brand-700 dark:hover:bg-orange-700 text-white font-extrabold py-3.5 px-8 text-xs transition-all shadow-lg hover:shadow-xl disabled:opacity-50 cursor-pointer transform hover:scale-[1.01] active:scale-[0.99]"
               >
                 <Mic className="h-4.5 w-4.5" />
-                <span>{loading ? 'Launching Session...' : `Start ${tracks.find(t=>t.key===track)?.label}`}</span>
+                <span>{loading ? 'Launching Session...' : 'Start Session'}</span>
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>
-
           </div>
 
           <CalibrationPanel
-            company={company}
-            role={role}
+            company={jobOpts.company}
+            role={jobOpts.role}
             track={track}
             micActive={micActive}
             camActive={camActive}
@@ -445,9 +146,7 @@ function MockInterviewSetupForm() {
             onToggleMic={() => setMicActive(!micActive)}
             onToggleCam={() => setCamActive(!camActive)}
           />
-
         </div>
-
       </form>
     </div>
   );

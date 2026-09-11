@@ -3,12 +3,15 @@
 import React, { ReactNode } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Check, ArrowLeft, ArrowRight, Loader2, Plus, X } from '@/lib/lucide-google-icons';
+import { Check, ArrowLeft, ArrowRight, Loader2 } from '@/lib/lucide-google-icons';
+import { EmailInput } from './EmailInput';
 
 export const inputCls =
   'w-full px-3.5 py-2.5 text-xs rounded-xl border border-white/15 bg-slate-900/40 text-white placeholder:text-slate-400 focus:outline-none focus:border-orange-400 focus:bg-slate-900/70 font-semibold transition-all';
 export const labelCls = 'block text-[11px] font-bold text-slate-300 mb-1.5';
 export const selectCls = `${inputCls} appearance-none [&>option]:bg-slate-900 [&>option]:text-white`;
+
+export { EmailInput };
 
 export interface CompanyStep {
   label: string;
@@ -155,69 +158,6 @@ export function CompanyOnboardingShell({
           </div>
         </section>
       </div>
-    </div>
-  );
-}
-
-interface EmailInputProps {
-  label: string;
-  placeholder: string;
-  emails: string[];
-  onAdd: (email: string) => void;
-  onRemove: (email: string) => void;
-}
-
-export function EmailInput({ label, placeholder, emails, onAdd, onRemove }: EmailInputProps) {
-  const [draft, setDraft] = React.useState('');
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const email = draft.trim();
-    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      onAdd(email);
-      setDraft('');
-    }
-  };
-
-  return (
-    <div>
-      <label className={labelCls}>{label}</label>
-      {emails.length > 0 && (
-        <div className="space-y-1.5 mb-3">
-          {emails.map((email) => (
-            <div
-              key={email}
-              className="flex items-center justify-between p-2 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-slate-200"
-            >
-              <span>{email}</span>
-              <button
-                type="button"
-                onClick={() => onRemove(email)}
-                className="text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
-                aria-label={`Remove ${email}`}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-      <form onSubmit={submit} className="flex gap-2">
-        <input
-          type="email"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder={placeholder}
-          className={inputCls}
-        />
-        <button
-          type="submit"
-          className="shrink-0 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-4 cursor-pointer flex items-center justify-center gap-1 border border-white/15 transition-all"
-        >
-          <Plus className="h-4 w-4" />
-          Add
-        </button>
-      </form>
     </div>
   );
 }

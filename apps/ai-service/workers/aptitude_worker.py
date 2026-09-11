@@ -1,7 +1,7 @@
 import logging
 from core.http_client import callback_client
 from agents.assessment_agent import run_assessment_agent
-from services.question_cache_service import (
+from services.cache.question_cache_service import (
     get_cached_assessment_data,
     set_cached_assessment_data,
 )

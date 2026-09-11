@@ -1,7 +1,7 @@
 import logging
 from core.http_client import callback_client
 from agents.interviewer_agent import run_interviewer_agent, InterviewerState
-from services.sentiment_service import analyze_interview_sentiment
+from services.sentiment.sentiment_service import analyze_interview_sentiment
 from workers.worker_base import fetch_internal, run_agent_job, AgentJobSkip
 
 logger = logging.getLogger("interview_worker")

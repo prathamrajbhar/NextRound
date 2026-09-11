@@ -9,7 +9,9 @@ interface TrackedAudioContext {
 
 class MediaManager {
   private streams = new Set<MediaStream>();
+  private tracks = new Set<MediaStreamTrack>();
   private audioContexts = new Map<MediaStream, TrackedAudioContext>();
+  private standaloneAudioContexts = new Set<AudioContext>();
   private blobUrls = new Set<string>();
   private unloadBound = false;
 
@@ -17,33 +19,66 @@ class MediaManager {
     if (!this.streams.has(stream)) {
       this.streams.add(stream);
       stream.getTracks().forEach((track) => {
-        track.addEventListener('ended', () => this.removeTrack(stream), { once: true });
+        this.tracks.add(track);
+        track.addEventListener(
+          'ended',
+          () => {
+            this.tracks.delete(track);
+            this.removeTrack(stream);
+          },
+          { once: true }
+        );
       });
     }
+    this.bindUnloadGuard();
+  }
+
+  acquireTrack(track: MediaStreamTrack) {
+    this.tracks.add(track);
+    track.addEventListener(
+      'ended',
+      () => {
+        this.tracks.delete(track);
+      },
+      { once: true }
+    );
     this.bindUnloadGuard();
   }
 
   release(stream: MediaStream) {
     this.releaseAudioContext(stream);
     this.streams.delete(stream);
-    stream.getTracks().forEach((track) => track.stop());
+    stream.getTracks().forEach((track) => {
+      this.tracks.delete(track);
+      track.stop();
+    });
   }
 
   stopAll() {
+    for (const track of Array.from(this.tracks)) {
+      try {
+        track.stop();
+      } catch {}
+    }
+    this.tracks.clear();
+
     for (const stream of Array.from(this.streams)) {
       this.release(stream);
     }
     this.streams.clear();
+
+    for (const ctx of Array.from(this.standaloneAudioContexts)) {
+      if (ctx.state !== 'closed') {
+        ctx.close().catch(() => {});
+      }
+    }
+    this.standaloneAudioContexts.clear();
+
     this.releaseAllBlobUrls();
   }
 
   stopAllTracksOnly() {
-    for (const stream of Array.from(this.streams)) {
-      this.releaseAudioContext(stream);
-      stream.getTracks().forEach((track) => track.stop());
-    }
-    this.streams.clear();
-    this.releaseAllBlobUrls();
+    this.stopAll();
   }
 
   trackAudioContext(
@@ -59,6 +94,14 @@ class MediaManager {
       existing.ctx.close().catch(() => {});
     }
     this.audioContexts.set(stream, { ctx, source, analyser, rafId });
+  }
+
+  trackStandaloneAudioContext(ctx: AudioContext) {
+    this.standaloneAudioContexts.add(ctx);
+  }
+
+  untrackStandaloneAudioContext(ctx: AudioContext) {
+    this.standaloneAudioContexts.delete(ctx);
   }
 
   trackBlobUrl(url: string) {
@@ -77,9 +120,7 @@ class MediaManager {
     for (const url of this.blobUrls) {
       try {
         URL.revokeObjectURL(url);
-      } catch {
-
-      }
+      } catch {}
     }
     this.blobUrls.clear();
   }

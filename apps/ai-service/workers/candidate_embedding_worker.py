@@ -1,5 +1,5 @@
 import logging
-from services.embedding_service import embed_text_with_source
+from services.embedding.embedding_service import embed_text_with_source
 from workers.worker_base import fetch_internal, run_agent_job, callback_client
 
 logger = logging.getLogger("candidate_embedding_worker")

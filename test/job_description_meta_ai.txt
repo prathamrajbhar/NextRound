@@ -1,0 +1,24 @@
+# Meta AI — Research Engineer / Deep Learning Systems
+**Source:** Meta AI Careers / LinkedIn
+**Location:** Menlo Park, CA / Remote (US)
+**Domain:** Deep Learning, Large Language Models, PyTorch Systems
+
+## About Meta AI
+Meta AI Research develops state-of-the-art artificial intelligence models (such as Llama, Segment Anything, and PyTorch ecosystem technologies) to advance open science and empower billions of users worldwide.
+
+## The Role
+We are seeking a Research / Deep Learning Engineer to join our AI Research & Infrastructure team. You will work alongside research scientists to design, optimize, and train next-generation deep learning architectures, transformer foundation models, and distributed training systems.
+
+## Key Responsibilities
+- Design, implement, and benchmark state-of-the-art deep learning architectures using PyTorch, CUDA, and distributed computation frameworks.
+- Optimize transformer pre-training, fine-tuning (LoRA, QLoRA), and inference acceleration pipelines.
+- Build high-performance scientific simulations, stochastic data pipelines, and numerical algorithms in Python, Scala, C++, or Java.
+- Scale multi-node distributed training infrastructure across GPU/TPU clusters, profiling memory consumption and throughput bottlenecks.
+- Collaborate with research teams on scientific publications, open-source model releases, and algorithmic innovation.
+
+## Qualifications & Requirements
+- 4+ years of hands-on experience in machine learning engineering, deep learning research, or high-performance scientific computing.
+- Deep expertise in PyTorch, neural network theory, attention mechanisms, and transformer architectures.
+- Strong software engineering foundation in Python, C++, Java, or Scala.
+- Demonstrated experience in distributed systems, model training optimization, and profiling GPU/memory performance.
+- Master's or PhD degree in Computer Science, Applied Mathematics, Computational Biology, Physics, or equivalent technical experience.

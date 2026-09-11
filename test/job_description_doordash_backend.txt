@@ -1,0 +1,27 @@
+# DoorDash — Senior / Staff Software Engineer, Backend & Platform APIs
+**Source:** DoorDash Careers / HaToU / Lever
+**Location:** Remote (US / Canada)
+**Domain:** Distributed Systems, High-Concurrency APIs, Logistics
+
+## About DoorDash
+DoorDash is a technology company that connects consumers with their favorite local businesses across more than 30 countries. We build high-availability microservices infrastructure powering millions of real-time transactions, logistical routings, and merchant store management daily.
+
+## The Role
+We are seeking an experienced Senior / Staff Backend Engineer to lead architecture for our high-throughput Marketplace & Logistics APIs. You will design mission-critical API platforms, asynchronous task queues, and data models that coordinate dashers, merchants, and consumers with sub-50ms latency.
+
+## Key Responsibilities
+- Architect, build, and maintain high-volume distributed backend services and RESTful / GraphQL APIs.
+- Lead schema design, query optimization, and connection pooling across PostgreSQL and distributed caching tiers in Redis.
+- Build asynchronous background worker architectures and event processing pipelines handling tens of millions of daily orders.
+- Drive reliability, rate limiting, and observability across microservices boundaries with Prometheus, Datadog, and OpenTelemetry.
+- Champion code quality, unit testing, integration testing, and automated CI/CD deployment pipelines using Docker and Kubernetes on AWS.
+- Mentor senior engineers, lead technical architecture reviews, and enforce engineering invariants and security policies.
+
+## Qualifications & Requirements
+- 6+ years of professional software engineering experience building scalable backend platforms.
+- Deep expertise in backend service design, REST APIs, OpenAPI, and asynchronous event-driven architectures.
+- Strong proficiency in modern backend languages (PHP/Laravel/Symfony, Python, TypeScript/Node.js, or Go).
+- Hands-on mastery of relational databases (PostgreSQL, MySQL) and caching systems (Redis).
+- Experience with infrastructure automation, Docker containers, and cloud deployments on AWS.
+- Strong grounding in software testing (TDD, PHPUnit/Pytest/Jest), observability, and rate limiting.
+- Bachelor's degree in Computer Science or equivalent practical experience.

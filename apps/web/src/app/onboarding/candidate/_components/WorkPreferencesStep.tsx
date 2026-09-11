@@ -3,7 +3,8 @@
 import React from 'react';
 import { Sun, Clock } from '@/lib/lucide-google-icons';
 import { OnboardingStepProps, WorkMode } from './useCandidateOnboarding';
-import { labelCls, TagInput } from './CandidateOnboardingShell';
+import { labelCls } from './CandidateOnboardingShell';
+import { CityAutocompleteInput } from './CityAutocompleteInput';
 
 const WORK_MODES: WorkMode[] = ['Remote', 'Hybrid', 'Onsite'];
 
@@ -43,7 +44,7 @@ export function WorkPreferencesStep({ form, update, addTag, removeTag }: Onboard
         </div>
       </div>
 
-      <TagInput
+      <CityAutocompleteInput
         label="Target Locations"
         placeholder="e.g. Bengaluru, Mumbai, Remote (IN)"
         hint="Cities or regions you can work from. Leave open to match anywhere."

@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { QueryProvider } from "@/lib/query-client";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { MediaRouteGuard } from "@/components/media/MediaRouteGuard";
 
 const googleSans = Google_Sans_Flex({
   variable: "--font-google-sans",
@@ -78,6 +79,7 @@ export default function RootLayout({
           <ThemeProvider>
             <AuthProvider>
               <ToastProvider>
+                <MediaRouteGuard />
                 <main className="flex-grow flex flex-col">{children}</main>
         <ServiceWorkerRegistration />
               </ToastProvider>

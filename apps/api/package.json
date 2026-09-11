@@ -10,13 +10,15 @@
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test:social-sync": "tsx src/scripts/test-social-sync.ts",
-    "test:resume-builder": "node --env-file=../../.env node_modules/tsx/dist/cli.mjs src/scripts/test-resume-builder.ts"
+    "test:resume-builder": "tsx src/scripts/test-resume-builder.ts",
+    "test:email": "tsx src/tests/email.service.test.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1127.0",
+    "@aws-sdk/s3-request-presigner": "^3.1127.0",
     "@google/genai": "^2.16.0",
     "@nextround/database": "*",
     "@nextround/shared": "*",
-    "@supabase/supabase-js": "^2.112.3",
     "bcryptjs": "^2.4.3",
     "bullmq": "^6.0.9",
     "cookie-parser": "^1.4.7",
@@ -43,7 +45,7 @@
     "@types/node": "^22.10.0",
     "@types/nodemailer": "^6.4.17",
     "@types/pdf-parse": "^1.1.5",
-    "tsx": "^4.19.2",
-    "@typescript/native": "npm:typescript@^7.0.2"
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "tsx": "^4.19.2"
   }
 }

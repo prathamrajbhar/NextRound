@@ -1,31 +1,12 @@
 import json
 import logging
-from typing import Dict, Any, TypedDict, List, Optional
-from services.llm_service import generate_text, extract_json_object
+from typing import Dict, Any, List, Optional
+from services.llm.llm_service import generate_text, extract_json_object
+from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
+from services.code.code_executor_service import execute_code_sandbox
+from agents.coding_types import CodingState
 
 logger = logging.getLogger("coding_agent")
-
-from core.langgraph_shim import LANGGRAPH_AVAILABLE, StateGraph, END
-
-class CodingState(TypedDict, total=False):
-    application_id: str
-    problem_id: str
-    code: str
-    language: str
-    submission_id: str
-    test_cases: List[dict]
-    passed_cases: int
-    total_cases: int
-    pass_rate: float
-    execution_time_ms: float
-    memory_kb: Optional[int]
-    complexity: Optional[str]
-
-    complexity_source: Optional[str]
-    passed: bool
-    feedback: str
-
-from services.code_executor_service import execute_code_sandbox
 
 def execute_sandbox_node(state: CodingState) -> CodingState:
     code = state.get("code", "")
@@ -55,7 +36,6 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
     state["total_cases"] = exec_res.get("total_cases", len(test_cases))
     state["pass_rate"] = exec_res.get("pass_rate", 0.0)
     state["execution_time_ms"] = exec_res.get("execution_time_ms", 0.0)
-
     state["memory_kb"] = exec_res.get("memory_kb")
 
     if not exec_res.get("security_passed", True):
@@ -64,7 +44,7 @@ def execute_sandbox_node(state: CodingState) -> CodingState:
     return state
 
 def analyze_complexity_node(state: CodingState) -> CodingState:
-    from services.complexity_cache_service import get_cached_complexity, set_cached_complexity
+    from services.cache.complexity_cache_service import get_cached_complexity, set_cached_complexity
 
     code = state.get("code", "")
     pass_rate = state.get("pass_rate", 0.0)
@@ -74,12 +54,10 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
     feedback = ""
 
     if code:
-
         cached = get_cached_complexity(code)
         if cached:
             complexity, complexity_source = cached
         else:
-
             prompt = (
                 f"Analyze the time and space complexity of this candidate python code:\n\n"
                 f"```python\n{code}\n```\n\n"
@@ -91,7 +69,6 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
                 feedback = parsed.get("summary", "")
                 if complexity:
                     complexity_source = "llm"
-
                     set_cached_complexity(code, complexity, complexity_source)
 
     if complexity is None and code:

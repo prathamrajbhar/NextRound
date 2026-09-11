@@ -1,27 +1,26 @@
 'use client';
 
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
-import { apiClient } from '@/lib/apiClient';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   useAptitudeQuestions,
   normalizeCategory,
   STANDARD_CATEGORIES,
   type AptitudeQuestion,
 } from './useAptitudeQuestions';
-import { computeAptitudeScore, resolveCategoryQuestionCount } from './scoring';
+import { resolveCategoryQuestionCount } from './scoring';
+import {
+  submitAptitudeAssessment,
+  computeCategoryScore,
+  prepareActiveQuestions,
+} from './aptitudeSessionApi';
+import {
+  useAptitudeTimers,
+  QUESTION_TIME_LIMIT,
+  TOTAL_TIME_LIMIT,
+} from './useAptitudeTimers';
+import type { UseAptitudeSessionOptions } from './aptitude.types';
 
-export const QUESTION_TIME_LIMIT = 60;
-export const TOTAL_TIME_LIMIT = 900;
-
-interface UseAptitudeSessionOptions {
-  questions?: AptitudeQuestion[];
-  applicationId?: string;
-  sessionId?: string;
-  role: string;
-  company: string;
-  onComplete: (score: number) => void;
-  disableProctoring?: boolean;
-}
+export { QUESTION_TIME_LIMIT, TOTAL_TIME_LIMIT };
 
 export function useAptitudeSession({
   questions = [],
@@ -44,37 +43,27 @@ export function useAptitudeSession({
   const [isStarted, setIsStarted] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
-  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME_LIMIT);
-  const [questionTimeLeft, setQuestionTimeLeft] = useState(QUESTION_TIME_LIMIT);
-  const timeLeftRef = useRef(TOTAL_TIME_LIMIT);
-  const questionTimeLeftRef = useRef(QUESTION_TIME_LIMIT);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [finalScore, setFinalScore] = useState<number | null>(null);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [strikeCount, setStrikeCount] = useState(0);
 
-  const activeQuestions = useMemo(() => {
-    const list = fetchedQuestions.length > 0 ? fetchedQuestions : questions;
-    const mapped = list.map((q) => ({
-      ...q,
-      category: normalizeCategory(q.category),
-    }));
-
-    return mapped.sort((a, b) => {
-      const idxA = (STANDARD_CATEGORIES as readonly string[]).indexOf(a.category);
-      const idxB = (STANDARD_CATEGORIES as readonly string[]).indexOf(b.category);
-      return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
-    });
-  }, [fetchedQuestions, questions]);
+  const activeQuestions = useMemo(
+    () => prepareActiveQuestions(fetchedQuestions, questions, normalizeCategory, STANDARD_CATEGORIES),
+    [fetchedQuestions, questions]
+  );
 
   const availableCategories = useMemo(() => {
     return [...STANDARD_CATEGORIES] as string[];
   }, []);
 
-  const getCategoryQuestionCount = useCallback((category: string): number => {
-    return resolveCategoryQuestionCount(mcqDistribution, activeQuestions, category);
-  }, [activeQuestions, mcqDistribution]);
+  const getCategoryQuestionCount = useCallback(
+    (category: string): number => {
+      return resolveCategoryQuestionCount(mcqDistribution, activeQuestions, category);
+    },
+    [activeQuestions, mcqDistribution]
+  );
 
   const activeCategoryQuestions = useMemo(() => {
     if (!selectedCategory) return [];
@@ -87,51 +76,26 @@ export function useAptitudeSession({
 
   const handleFinalSubmit = useCallback(async () => {
     setIsSubmitting(true);
-    let percentage = 0;
-
-    if (applicationId) {
-      try {
-        const formattedAnswers = Object.entries(answers).map(([qId, sel]) => ({
-          questionId: qId,
-          selectedOption: sel,
-        }));
-        const res = await apiClient.post<{ score?: number }>(`/applications/${applicationId}/assessment/aptitude`, {
-          answers: formattedAnswers,
-          totalTimeSeconds: TOTAL_TIME_LIMIT - timeLeft,
-          tabSwitchCount: strikeCount,
-        });
-        if (res && typeof res.score === 'number') {
-          percentage = Math.max(0, Math.min(100, Math.round(res.score)));
-        }
-      } catch (err) {
-        console.error('Failed to submit aptitude assessment:', err);
-      }
-    } else {
-      percentage = computeAptitudeScore(answers, activeQuestions);
-    }
+    const percentage = await submitAptitudeAssessment({
+      applicationId,
+      answers,
+      activeQuestions,
+      timeLeft: timers.timeLeft,
+      totalTimeLimit: TOTAL_TIME_LIMIT,
+      strikeCount,
+    });
 
     setFinalScore(percentage);
     setSubmitted(true);
     setIsSubmitting(false);
-  }, [answers, applicationId, activeQuestions, strikeCount, timeLeft]);
+  }, [answers, applicationId, activeQuestions, strikeCount]);
 
   const handleCategorySubmit = useCallback(async () => {
     if (!selectedCategory) return;
-
-    let catCorrect = 0;
-    activeCategoryQuestions.forEach((q) => {
-      if (q.correctIndex !== undefined && answers[q.id] === q.correctIndex) {
-        catCorrect++;
-      }
-    });
-
-    const catScore = activeCategoryQuestions.length > 0
-      ? Math.round((catCorrect / activeCategoryQuestions.length) * 100)
-      : 100;
+    const catScore = computeCategoryScore(activeCategoryQuestions, answers);
 
     setCompletedCategoryScores((prev) => {
       const nextScores = { ...prev, [selectedCategory]: catScore };
-
       const allDone = availableCategories.every((cat) => nextScores[cat] !== undefined);
       if (allDone) setTimeout(() => handleFinalSubmit(), 100);
       return nextScores;
@@ -140,6 +104,26 @@ export function useAptitudeSession({
     setSelectedCategory(null);
     setIsStarted(false);
   }, [selectedCategory, activeCategoryQuestions, answers, availableCategories, handleFinalSubmit]);
+
+  const onQuestionTimeout = useCallback(() => {
+    if (currentIndex < activeCategoryQuestions.length - 1) {
+      setCurrentIndex((idx) => idx + 1);
+      timers.resetQuestionTimer();
+    } else {
+      handleCategorySubmit();
+    }
+  }, [currentIndex, activeCategoryQuestions.length, handleCategorySubmit]);
+
+  const timers = useAptitudeTimers({
+    isStarted,
+    selectedCategory,
+    submitted,
+    showWarningModal,
+    currentIndex,
+    totalQuestionsInCategory: activeCategoryQuestions.length,
+    onQuestionTimeout,
+    onTotalTimeout: handleFinalSubmit,
+  });
 
   useEffect(() => {
     if (disableProctoring || submitted || !isStarted || !selectedCategory) return;
@@ -157,53 +141,6 @@ export function useAptitudeSession({
     return () => document.removeEventListener('visibilitychange', handleVisibilityViolation);
   }, [disableProctoring, submitted, isStarted, selectedCategory]);
 
-  useEffect(() => {
-    if (!isStarted || !selectedCategory) return;
-    const timer = setTimeout(() => {
-      questionTimeLeftRef.current = QUESTION_TIME_LIMIT;
-      setQuestionTimeLeft(QUESTION_TIME_LIMIT);
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [currentIndex, isStarted, selectedCategory]);
-
-  useEffect(() => {
-    if (submitted || showWarningModal || !isStarted || !selectedCategory) return;
-
-    const interval = setInterval(() => {
-      if (questionTimeLeftRef.current <= 0) return;
-      questionTimeLeftRef.current -= 1;
-      setQuestionTimeLeft(questionTimeLeftRef.current);
-
-      if (questionTimeLeftRef.current === 0) {
-        if (currentIndex < activeCategoryQuestions.length - 1) {
-          setCurrentIndex((idx) => idx + 1);
-          questionTimeLeftRef.current = QUESTION_TIME_LIMIT;
-          setQuestionTimeLeft(QUESTION_TIME_LIMIT);
-        } else {
-          handleCategorySubmit();
-        }
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [submitted, showWarningModal, isStarted, selectedCategory, currentIndex, activeCategoryQuestions.length, handleCategorySubmit]);
-
-  useEffect(() => {
-    if (submitted || showWarningModal || !isStarted) return;
-
-    const interval = setInterval(() => {
-      if (timeLeftRef.current <= 0) return;
-      timeLeftRef.current -= 1;
-      setTimeLeft(timeLeftRef.current);
-
-      if (timeLeftRef.current === 0) {
-        handleFinalSubmit();
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [submitted, showWarningModal, isStarted, handleFinalSubmit]);
-
   const handleSelectOption = (optIndex: number) => {
     const currentQ = activeCategoryQuestions[currentIndex];
     if (currentQ) {
@@ -213,9 +150,7 @@ export function useAptitudeSession({
 
   const handleResumeFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error('Failed to enter fullscreen:', err);
-      });
+      document.documentElement.requestFullscreen().catch(() => {});
     }
     setShowWarningModal(false);
   };
@@ -228,8 +163,7 @@ export function useAptitudeSession({
   const handleStartCategorySection = (catName: string) => {
     setSelectedCategory(catName);
     setCurrentIndex(0);
-    setQuestionTimeLeft(QUESTION_TIME_LIMIT);
-    questionTimeLeftRef.current = QUESTION_TIME_LIMIT;
+    timers.resetQuestionTimer();
     setIsStarted(true);
   };
 
@@ -245,8 +179,8 @@ export function useAptitudeSession({
     currentIndex,
     setCurrentIndex,
     answers,
-    timeLeft,
-    questionTimeLeft,
+    timeLeft: timers.timeLeft,
+    questionTimeLeft: timers.questionTimeLeft,
     submitted,
     isSubmitting,
     finalScore,

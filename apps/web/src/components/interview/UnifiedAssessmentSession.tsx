@@ -3,26 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useInterviewSession } from '@/hooks/useInterviewSession';
 import InterviewCheckScreen from '@/components/interview/InterviewCheckScreen';
-import UnifiedInterviewConsole from '@/components/interview/UnifiedInterviewConsole';
-import AptitudeTestConsole from '@/components/interview/AptitudeTestConsole';
-import CodingAssessmentConsole from '@/components/interview/CodingAssessmentConsole';
-import { AssessmentStageShell } from '@/components/interview/AssessmentStageShell';
-import { NextRoundTransitionCard } from '@/components/interview/NextRoundTransitionCard';
 import { useAssessmentDetails } from '@/components/interview/useAssessmentDetails';
 import { useAssessmentCompletion } from '@/components/interview/useAssessmentCompletion';
 import { useProctoringSession } from '@/lib/proctoring/useProctoringSession';
 import { getProctoringFlagMessage } from '@/lib/proctoring/flagMessages';
 import { useToast } from '@/contexts/ToastContext';
 import { ProctoringGate } from '@/components/interview/ProctoringGate';
-import { apiClient } from '@/lib/apiClient';
-
-interface InterRoundData {
-  completedStageName: string;
-  completedScore: number;
-  nextStageName: string;
-  nextStep: 'coding' | 'technical';
-  stageNumber: number;
-}
+import { useCandidateProfileId } from './unified/useCandidateProfileId';
+import { UnifiedStageRenderer, InterRoundData } from './unified/UnifiedStageRenderer';
 
 export interface UnifiedAssessmentSessionProps {
   sessionId: string;
@@ -41,6 +29,7 @@ export function UnifiedAssessmentSession({
 }: UnifiedAssessmentSessionProps) {
   const { toast } = useToast();
   const { targetCompany, targetRole } = useAssessmentDetails({ sessionId, applicationId, company, role });
+  const candidateId = useCandidateProfileId();
 
   useEffect(() => {
     return () => {
@@ -52,22 +41,7 @@ export function UnifiedAssessmentSession({
 
   const [comprehensiveStep, setComprehensiveStep] = useState<'aptitude' | 'coding' | 'technical'>('aptitude');
   const [pendingNextRound, setPendingNextRound] = useState<InterRoundData | null>(null);
-  const [candidateId, setCandidateId] = useState<string | null>(null);
   const [captureStream, setCaptureStream] = useState<MediaStream | null>(null);
-
-  useEffect(() => {
-    async function loadProfile() {
-      try {
-        const res = await apiClient.get<{ profile: { id: string } }>('/candidate/profile');
-        if (res && res.profile) {
-          setCandidateId(res.profile.id);
-        }
-      } catch (err) {
-        console.warn('Failed to load candidate profile for proctoring:', err);
-      }
-    }
-    loadProfile();
-  }, []);
 
   const {
     stage,
@@ -84,7 +58,10 @@ export function UnifiedAssessmentSession({
     role: targetRole,
     interviewId: applicationId || sessionId,
     onComplete: (results) => {
-      const score = results && typeof results === 'object' && 'score' in results ? (results as { score?: number }).score : undefined;
+      const score =
+        results && typeof results === 'object' && 'score' in results
+          ? (results as { score?: number }).score
+          : undefined;
       handleCompleteWithProctor(score);
     },
   });
@@ -104,7 +81,14 @@ export function UnifiedAssessmentSession({
   } = useProctoringSession({
     sessionId,
     candidateId: candidateId || '',
-    sessionType: track === 'coding' ? 'coding' : track === 'aptitude' ? 'aptitude' : track === 'video' ? 'video' : 'interview',
+    sessionType:
+      track === 'coding'
+        ? 'coding'
+        : track === 'aptitude'
+        ? 'aptitude'
+        : track === 'video'
+        ? 'video'
+        : 'interview',
     applicationId: applicationId || undefined,
     mockSessionId: applicationId ? undefined : sessionId,
     policyVersion: 'assessment-v1',
@@ -133,9 +117,7 @@ export function UnifiedAssessmentSession({
     }
     try {
       await proctorEnd();
-    } catch (err) {
-      console.error('Failed to end proctoring session:', err);
-    }
+    } catch {}
     handleComplete(score);
   };
 
@@ -175,100 +157,33 @@ export function UnifiedAssessmentSession({
     );
   }
 
-  if (pendingNextRound) {
-    return (
-      <NextRoundTransitionCard
-        companyName={targetCompany}
-        roleTitle={targetRole}
-        stageNumber={pendingNextRound.stageNumber}
-        completedStageName={pendingNextRound.completedStageName}
-        completedScore={pendingNextRound.completedScore}
-        nextStageName={pendingNextRound.nextStageName}
-        onLaunch={handleLaunchNextRound}
-      />
-    );
-  }
-
-  if (activeRoundTrack === 'aptitude') {
-    return (
-      <AssessmentStageShell>
-        <AptitudeTestConsole
-          company={targetCompany}
-          role={targetRole}
-          applicationId={applicationId}
-          sessionId={sessionId}
-          proctoringClient={proctoringClient}
-          strikeCount={proctorStrikeCount}
-          showWarningModal={proctorShowWarning}
-          onResumeFullscreen={proctorResumeFS}
-          recordingActive={recordingActive}
-          recordingDurationMs={recordingDurationMs}
-          onComplete={(score) => {
-            if (track === 'comprehensive') {
-              setPendingNextRound({
-                completedStageName: 'Aptitude & Reasoning Test',
-                completedScore: score,
-                nextStageName: 'Live Coding Round',
-                nextStep: 'coding',
-                stageNumber: 1,
-              });
-            } else {
-              handleCompleteWithProctor(score);
-            }
-          }}
-        />
-      </AssessmentStageShell>
-    );
-  }
-
-  if (activeRoundTrack === 'coding') {
-    return (
-      <AssessmentStageShell>
-        <CodingAssessmentConsole
-          company={targetCompany}
-          role={targetRole}
-          applicationId={applicationId}
-          sessionId={sessionId}
-          proctoringClient={proctoringClient}
-          strikeCount={proctorStrikeCount}
-          showWarningModal={proctorShowWarning}
-          onResumeFullscreen={proctorResumeFS}
-          recordingActive={recordingActive}
-          recordingDurationMs={recordingDurationMs}
-          onComplete={(score) => {
-            if (track === 'comprehensive') {
-              setPendingNextRound({
-                completedStageName: 'Live Coding Round',
-                completedScore: score,
-                nextStageName: 'Technical Voice AI',
-                nextStep: 'technical',
-                stageNumber: 2,
-              });
-            } else {
-              handleCompleteWithProctor(score);
-            }
-          }}
-        />
-      </AssessmentStageShell>
-    );
-  }
-
   return (
-    <UnifiedInterviewConsole
-      mode="mock-practice"
-      companyName={targetCompany}
-      jobTitle={targetRole}
+    <UnifiedStageRenderer
+      activeRoundTrack={activeRoundTrack}
+      targetCompany={targetCompany}
+      targetRole={targetRole}
+      applicationId={applicationId}
+      sessionId={sessionId}
+      track={track}
+      pendingNextRound={pendingNextRound}
+      onLaunchNextRound={handleLaunchNextRound}
+      onStageComplete={(score, nextData) => {
+        if (nextData) setPendingNextRound(nextData);
+        else handleCompleteWithProctor(score);
+      }}
+      onEndSession={handleCompleteWithProctor}
+      proctoringClient={proctoringClient}
+      proctorStrikeCount={proctorStrikeCount}
+      proctorShowWarning={proctorShowWarning}
+      proctorResumeFS={proctorResumeFS}
+      recordingActive={recordingActive}
+      recordingDurationMs={recordingDurationMs}
       timeRemaining={timeRemaining}
       messages={messages}
       phase={phase}
       isAnalyzing={isAnalyzing}
       onSubmitAnswer={submitAnswer}
-      onEndSession={handleCompleteWithProctor}
-      strikeCount={proctorStrikeCount}
-      showWarningModal={proctorShowWarning}
-      onResumeFullscreen={proctorResumeFS}
       onEliminate={onEliminate}
-      proctoringClient={proctoringClient}
     />
   );
 }

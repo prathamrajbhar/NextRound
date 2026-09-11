@@ -3,7 +3,7 @@ import logging
 from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from services.embedding_service import (
+from services.embedding.embedding_service import (
     embed_text_with_source,
     embed_resume_with_source,
     cosine_similarity,

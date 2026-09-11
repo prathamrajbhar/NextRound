@@ -1,58 +1,24 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { apiClient } from '@/lib/apiClient';
-import { siteConfig } from '@/lib/config';
-import { playAudio, stopAudio, unlockAudio, replayLastAudio as replayAudioManager } from '@/lib/audioManager';
+import {
+  playAudio,
+  stopAudio,
+  unlockAudio,
+  replayLastAudio as replayAudioManager,
+} from '@/lib/audioManager';
+import { useResumeSpeech } from './useResumeSpeech';
+import { useResumeTurnManager } from './useResumeTurnManager';
+import { ConversationTurn, finalizeResumeSession } from './resumeVoiceApi';
 
-export interface ConversationTurn {
-  role: 'ai' | 'candidate';
-  content: string;
-  timestamp: string;
-}
-
-interface SpeechRecognitionEvent {
-  resultIndex: number;
-  results: {
-    length: number;
-    [key: number]: {
-      isFinal: boolean;
-      [key: number]: {
-        transcript: string;
-      };
-    };
-  };
-}
-
-interface SpeechRecognitionErrorEvent {
-  error: string;
-}
-
-interface SpeechRecognitionInstance {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  onstart: (() => void) | null;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-}
-
-type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
-
-const SpeechRecognitionClass =
-  typeof window !== 'undefined'
-    ? ((window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).SpeechRecognition ||
-       (window as unknown as { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition)
-    : null;
+export type { ConversationTurn };
 
 interface UseResumeVoiceSessionProps {
   targetRole: string;
   experienceLevel: string;
   initialSessionId?: string | null;
+  existingResume?: string | null;
+  careerGoals?: string | null;
   onComplete: (sessionId: string, transcript: ConversationTurn[]) => void;
 }
 
@@ -60,175 +26,93 @@ export function useResumeVoiceSession({
   targetRole,
   experienceLevel,
   initialSessionId = null,
+  existingResume = null,
+  careerGoals = null,
   onComplete,
 }: UseResumeVoiceSessionProps) {
-  const [sessionId, setSessionId] = useState<string | null>(initialSessionId);
-  const [turnIndex, setTurnIndex] = useState(0);
-  const [stage, setStage] = useState<string>('intro');
-  const [conversationHistory, setConversationHistory] = useState<ConversationTurn[]>([]);
   const [aiState, setAiState] = useState<'speaking' | 'listening' | 'evaluating'>('speaking');
-  const [candidateSpeechText, setCandidateSpeechText] = useState('');
-  const [realtimeInsight, setRealtimeInsight] = useState<string | null>(null);
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [memory, setMemory] = useState<Record<string, unknown>>({});
 
-  const conversationHistoryRef = useRef<ConversationTurn[]>([]);
-  const turnIndexRef = useRef(0);
-  const stageRef = useRef('intro');
-  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const memoryRef = useRef<Record<string, unknown>>({});
-  const speechStartRef = useRef(0);
-  const recognitionActiveRef = useRef(false);
-  // Lock: prevents concurrent AI calls from overlapping (e.g. speech onend firing mid-fetch)
-  const isProcessingRef = useRef(false);
-  // Tracks component mount state so stale fetch callbacks don't mutate unmounted state
-  const mountedRef = useRef(true);
-  // Holds the AbortController for the current in-flight AI request
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    conversationHistoryRef.current = conversationHistory;
-  }, [conversationHistory]);
-
-  useEffect(() => {
-    turnIndexRef.current = turnIndex;
-  }, [turnIndex]);
-
-  useEffect(() => {
-    stageRef.current = stage;
-  }, [stage]);
-
-  useEffect(() => {
-    memoryRef.current = memory;
-  }, [memory]);
-
-  const candidateSpeechTextRef = useRef('');
   const aiStateRef = useRef<'speaking' | 'listening' | 'evaluating'>('speaking');
-
-  useEffect(() => {
-    candidateSpeechTextRef.current = candidateSpeechText;
-  }, [candidateSpeechText]);
+  const submitResponseRef = useRef<((text: string) => Promise<void>) | null>(null);
+  const finalizeExtrasRef = useRef<{
+    memory: Record<string, unknown>;
+    profileType: string | null;
+  }>({ memory: {}, profileType: null });
 
   useEffect(() => {
     aiStateRef.current = aiState;
   }, [aiState]);
 
-  const submitResponseRef = useRef<((text: string) => Promise<void>) | null>(null);
-
   useEffect(() => {
-    mountedRef.current = true;
     return () => {
-      mountedRef.current = false;
-      // Cancel any in-flight AI request so its callback can't play audio after navigation
-      abortControllerRef.current?.abort();
       stopAudio();
-      const recognition = recognitionRef.current;
-      if (recognition) {
-        try {
-          recognition.abort();
-        } catch {}
-      }
     };
   }, []);
 
-  const startSpeechRecognition = useCallback(() => {
-    if (!SpeechRecognitionClass || !micActive) return;
+  const speech = useResumeSpeech({
+    micActive,
+    getAiState: () => aiStateRef.current,
+    onFinalTranscript: (text) => submitResponseRef.current?.(text),
+    onError: (msg) => setError(msg),
+  });
 
-    if (recognitionActiveRef.current) return;
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {}
-    }
+  const speakText = useCallback(
+    (text: string, audioUrl?: string, callback?: () => void) => {
+      setAiState('speaking');
+      speech.markSpeechStart();
+      speech.startSpeechRecognition();
 
-    const recognition = new SpeechRecognitionClass();
-    recognitionRef.current = recognition;
-    recognitionActiveRef.current = true;
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
+      playAudio(text, audioUrl, () => {
+        setTimeout(() => {
+          setAiState('listening');
+          if (callback) callback();
+          if (!speech.isRecognitionActive()) {
+            speech.startSpeechRecognition();
+          }
+        }, 600);
+      });
+    },
+    [speech]
+  );
 
-    recognition.onstart = () => {
-      setCandidateSpeechText('');
+  const handleFinalize = useCallback(
+    async (activeSessionId: string, finalHistory: ConversationTurn[]) => {
+      speech.stopSpeechRecognition();
+      await finalizeResumeSession(activeSessionId, finalHistory, {
+        memory: finalizeExtrasRef.current.memory,
+        profileType: finalizeExtrasRef.current.profileType,
+        existingResume,
+        careerGoals,
+      });
+      onComplete(activeSessionId, finalHistory);
+    },
+    [speech, existingResume, careerGoals, onComplete]
+  );
+
+  const turns = useResumeTurnManager({
+    targetRole,
+    experienceLevel,
+    initialSessionId,
+    existingResume,
+    careerGoals,
+    onSpeakText: speakText,
+    onStopSpeech: speech.stopSpeechRecognition,
+    onStartSpeech: speech.startSpeechRecognition,
+    onFinalize: handleFinalize,
+    setAiState,
+    setError,
+  });
+
+  // Keep finalize extras ref in sync so handleFinalize always reads latest values
+  useEffect(() => {
+    finalizeExtrasRef.current = {
+      memory: turns.memory,
+      profileType: turns.profileType,
     };
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-      const displayTranscript = finalTranscript || interimTranscript;
-      if (displayTranscript) {
-        setCandidateSpeechText(displayTranscript);
-      }
-
-      if (aiStateRef.current === 'speaking') {
-        const elapsed = Date.now() - (speechStartRef.current || 0);
-        const isSubstantial = (finalTranscript || interimTranscript).trim().length >= 5;
-        if (elapsed > 900 && isSubstantial) {
-          stopAudio();
-        }
-      }
-    };
-
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-
-      if (event.error === 'aborted' || event.error === 'no-speech' || event.error === 'network') {
-        return;
-      }
-      if (event.error === 'not-allowed') {
-        setError('Microphone permission denied. Please allow access or type your response.');
-      } else {
-        console.warn('SpeechRecognition error:', event.error);
-      }
-    };
-
-    recognition.onend = () => {
-      recognitionActiveRef.current = false;
-
-      if (aiStateRef.current === 'listening') {
-        const spokenText = candidateSpeechTextRef.current;
-        if (spokenText && spokenText.trim().length > 1) {
-          submitResponseRef.current?.(spokenText);
-        } else {
-          // Create a FRESH recognition instance — the ended one can't be restarted
-          setTimeout(() => startSpeechRecognition(), 100);
-        }
-      }
-    };
-
-    try {
-      recognition.start();
-    } catch (e) {
-      recognitionActiveRef.current = false;
-      console.error('Failed to start SpeechRecognition:', e);
-    }
-  }, [micActive]);
-
-  const speakText = useCallback((text: string, audioUrl?: string, callback?: () => void) => {
-    setAiState('speaking');
-    speechStartRef.current = Date.now();
-
-    startSpeechRecognition();
-    playAudio(text, audioUrl, () => {
-
-      setTimeout(() => {
-        setAiState('listening');
-        if (callback) callback();
-        if (!recognitionActiveRef.current) {
-          startSpeechRecognition();
-        }
-      }, 600);
-    });
-  }, [startSpeechRecognition]);
+  }, [turns.memory, turns.profileType]);
 
   const replayLastAudio = useCallback(() => {
     setAiState('speaking');
@@ -237,196 +121,18 @@ export function useResumeVoiceSession({
     });
   }, []);
 
-  const stopSpeechRecognition = useCallback(() => {
-    recognitionActiveRef.current = false;
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {}
-      recognitionRef.current = null;
-    }
-  }, []);
-
-  const handleFinalize = useCallback(
-    async (activeSessionId: string, finalHistory: ConversationTurn[]) => {
-      stopSpeechRecognition();
-      try {
-        await apiClient.post(`/resume-builder/${activeSessionId}/end`, {
-          transcript: finalHistory.map((h) => ({
-            speaker: h.role,
-            text: h.content,
-          })),
-          // Pass the structured memory so the resume generator uses real facts, not hallucinations
-          memory: memoryRef.current,
-        });
-      } catch (err) {
-        console.warn('Backend end-session call warning (proceeding to resume stage):', err);
-      } finally {
-        onComplete(activeSessionId, finalHistory);
-      }
-    },
-    [stopSpeechRecognition, onComplete]
-  );
-
-  const getAIResponse = useCallback(
-    async (
-      candidateResponse: string,
-      currentSessionId: string,
-      currentTurnIndex: number,
-      currentStage: string
-    ) => {
-      // Prevent concurrent AI calls (e.g. speech onend firing while a fetch is in-flight)
-      if (isProcessingRef.current) return;
-      isProcessingRef.current = true;
-
-      setAiState('evaluating');
-      stopSpeechRecognition();
-
-      const newHistory = [...conversationHistoryRef.current];
-      if (candidateResponse.trim()) {
-        newHistory.push({
-          role: 'candidate',
-          content: candidateResponse,
-          timestamp: new Date().toLocaleTimeString(),
-        });
-        setConversationHistory(newHistory);
-      }
-
-      // Create a fresh AbortController for this request
-      abortControllerRef.current?.abort();
-      const controller = new AbortController();
-      abortControllerRef.current = controller;
-
-      try {
-        const res = await fetch(`${siteConfig.aiServiceUrl}/api/v1/ai/resume-builder/respond`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal,
-          body: JSON.stringify({
-            sessionId: currentSessionId,
-            transcript: candidateResponse,
-            targetRole,
-            targetCompany: 'Target Enterprise',
-            experienceLevel,
-            stage: currentStage,
-            turnNumber: currentTurnIndex,
-            conversationHistory: newHistory.map((h) => ({
-              speaker: h.role,
-              text: h.content,
-            })),
-            memory: memoryRef.current,
-          }),
-        });
-
-        // If the component unmounted while we were waiting, bail out silently
-        if (!mountedRef.current) return;
-
-        if (!res.ok) {
-          throw new Error(`AI Service error: ${res.statusText}`);
-        }
-
-        const data = (await res.json()) as {
-          text: string;
-          stage: string;
-          turnNumber: number;
-          isComplete: boolean;
-          realtimeInsight?: string;
-          memory?: Record<string, unknown>;
-          audioUrl?: string;
-        };
-
-        if (!mountedRef.current) return;
-
-        if (data.memory) {
-          setMemory(data.memory);
-        }
-
-        const updatedHistory = [
-          ...newHistory,
-          {
-            role: 'ai' as const,
-            content: data.text,
-            timestamp: new Date().toLocaleTimeString(),
-          },
-        ];
-        setConversationHistory(updatedHistory);
-        setTurnIndex(data.turnNumber);
-        setStage(data.stage);
-        if (data.realtimeInsight) {
-          setRealtimeInsight(data.realtimeInsight);
-        }
-
-        if (data.isComplete) {
-          setAiState('speaking');
-          speakText(data.text, data.audioUrl, () => {
-            if (mountedRef.current) handleFinalize(currentSessionId, updatedHistory);
-          });
-        } else {
-          speakText(data.text, data.audioUrl, () => {
-            if (!mountedRef.current) return;
-            setAiState('listening');
-            startSpeechRecognition();
-          });
-        }
-      } catch (err: unknown) {
-        // Ignore AbortError — these happen on intentional navigation / cleanup
-        if (err instanceof Error && err.name === 'AbortError') return;
-        if (!mountedRef.current) return;
-        const message = err instanceof Error ? err.message : 'Unknown error';
-        console.error('Failed to get AI respond turn:', err);
-        setError(message || 'Error communicating with AI voice agent.');
-        // Clear stale speech text so recognition onend doesn't immediately re-submit it
-        setCandidateSpeechText('');
-        setAiState('listening');
-      } finally {
-        isProcessingRef.current = false;
-      }
-    },
-    [targetRole, experienceLevel, speakText, startSpeechRecognition, stopSpeechRecognition, handleFinalize]
-  );
-
   const startCall = useCallback(async () => {
     unlockAudio();
-    setError(null);
-    setConversationHistory([]);
-    setTurnIndex(0);
-    setStage('intro');
-    setAiState('speaking');
-    setMemory({});
-    memoryRef.current = {};
-
-    try {
-      let activeSessionId = initialSessionId;
-
-      if (!activeSessionId) {
-        const sessionRes = await apiClient.post<{ sessionId: string }>('/resume-builder/sessions', {
-          targetRole,
-          experienceLevel,
-        });
-
-        if (!sessionRes?.sessionId) {
-          throw new Error('Failed to obtain session ID from backend.');
-        }
-
-        activeSessionId = sessionRes.sessionId;
-        setSessionId(activeSessionId);
-      }
-
-      await getAIResponse('', activeSessionId, 0, 'intro');
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown error';
-      console.error('Start call failed:', err);
-      setError(message || 'Failed to start resume builder session.');
-    }
-  }, [targetRole, experienceLevel, initialSessionId, getAIResponse]);
+    await turns.startCall();
+  }, [turns]);
 
   const submitResponse = useCallback(
     async (text: string) => {
-      if (aiState !== 'listening' || !sessionId) return;
-      setCandidateSpeechText('');
-      await getAIResponse(text, sessionId, turnIndex, stage);
+      if (aiState !== 'listening' || !turns.sessionId) return;
+      speech.setCandidateSpeechText('');
+      await turns.getAIResponse(text, turns.sessionId, turns.turnIndex, turns.stage);
     },
-    [aiState, sessionId, turnIndex, stage, getAIResponse]
+    [aiState, turns, speech]
   );
 
   useEffect(() => {
@@ -434,58 +140,44 @@ export function useResumeVoiceSession({
   }, [submitResponse]);
 
   const submitVoiceResponse = useCallback(() => {
-    if (aiState !== 'listening' || !candidateSpeechText.trim()) return;
-    submitResponse(candidateSpeechText);
-  }, [aiState, candidateSpeechText, submitResponse]);
+    if (aiState !== 'listening' || !speech.candidateSpeechText.trim()) return;
+    submitResponse(speech.candidateSpeechText);
+  }, [aiState, speech.candidateSpeechText, submitResponse]);
 
   const endCall = useCallback(async () => {
-    if (!sessionId) return;
+    if (!turns.sessionId) return;
     stopAudio();
-    await handleFinalize(sessionId, conversationHistoryRef.current);
-  }, [sessionId, handleFinalize]);
+    await handleFinalize(turns.sessionId, turns.conversationHistoryRef.current);
+  }, [turns.sessionId, turns.conversationHistoryRef, handleFinalize]);
 
   const handleToggleMic = useCallback(() => {
     setMicActive((prev) => {
       const next = !prev;
       if (!next) {
-        stopSpeechRecognition();
+        speech.stopSpeechRecognition();
       } else if (aiState === 'listening') {
-        setTimeout(startSpeechRecognition, 100);
+        setTimeout(speech.startSpeechRecognition, 100);
       }
       return next;
     });
-  }, [aiState, stopSpeechRecognition, startSpeechRecognition]);
+  }, [aiState, speech]);
 
   const abortCall = useCallback(() => {
-    // Cancel any in-flight request and release the processing lock
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = null;
-    isProcessingRef.current = false;
     stopAudio();
-    stopSpeechRecognition();
-    setSessionId(null);
-    setTurnIndex(0);
-    setStage('intro');
-    setConversationHistory([]);
+    speech.stopSpeechRecognition();
     setAiState('speaking');
-    setCandidateSpeechText('');
-    setRealtimeInsight(null);
-    setError(null);
-    setMemory({});
-    conversationHistoryRef.current = [];
-    turnIndexRef.current = 0;
-    stageRef.current = 'intro';
-    memoryRef.current = {};
-  }, [stopSpeechRecognition]);
+    speech.setCandidateSpeechText('');
+    turns.resetAll();
+  }, [speech, turns]);
 
   return {
-    sessionId,
-    stage,
-    turnIndex,
-    conversationHistory,
+    sessionId: turns.sessionId,
+    stage: turns.stage,
+    turnIndex: turns.turnIndex,
+    conversationHistory: turns.conversationHistory,
     aiState,
-    candidateSpeechText,
-    realtimeInsight,
+    candidateSpeechText: speech.candidateSpeechText,
+    realtimeInsight: turns.realtimeInsight,
     micActive,
     camActive,
     setCamActive,

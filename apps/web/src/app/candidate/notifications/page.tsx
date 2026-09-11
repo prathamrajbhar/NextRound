@@ -4,20 +4,10 @@ import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { NotificationsListSkeleton, Skeleton } from '@/components/ui';
-import { Bell, CheckCircle2, Sparkles, Bot, ShieldCheck, ArrowUpRight, CheckCheck, Trash2, Check, Clock } from '@/lib/lucide-google-icons';
 import { useNotifications } from '@/hooks/queries';
-
-interface CandidateNotification {
-  id: string;
-  message: string;
-  title?: string;
-  read: boolean;
-  type: string;
-  created_at: string;
-  link?: string;
-}
-
-type FilterCategory = 'all' | 'unread';
+import { CandidateNotification, FilterCategory } from './_components/notification.types';
+import { NotificationHeader } from './_components/NotificationHeader';
+import { NotificationItem } from './_components/NotificationItem';
 
 export default function CandidateNotificationsPage() {
   const router = useRouter();
@@ -25,12 +15,12 @@ export default function CandidateNotificationsPage() {
 
   const { data, isLoading, refetch } = useNotifications();
 
-  const rawData = data as { notifications?: CandidateNotification[] } | CandidateNotification[] | undefined;
+  const rawData = data as
+    | { notifications?: CandidateNotification[] }
+    | CandidateNotification[]
+    | undefined;
   const list = Array.isArray(rawData) ? rawData : rawData?.notifications;
-  const notifications = useMemo(
-    () => (Array.isArray(list) ? list : []),
-    [list]
-  );
+  const notifications = useMemo(() => (Array.isArray(list) ? list : []), [list]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -74,19 +64,6 @@ export default function CandidateNotificationsPage() {
     if (n.link) router.push(n.link);
   };
 
-  const getTypeIcon = (type: CandidateNotification['type']) => {
-    switch (type) {
-      case 'evaluation':
-        return <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />;
-      case 'shortlist':
-        return <Sparkles className="h-4 w-4 text-brand-500 shrink-0" />;
-      case 'agent':
-        return <Bot className="h-4 w-4 text-indigo-500 shrink-0" />;
-      default:
-        return <ShieldCheck className="h-4 w-4 text-sky-500 shrink-0" />;
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-6 max-w-5xl mx-auto pb-16 animate-in fade-in duration-200">
@@ -101,47 +78,11 @@ export default function CandidateNotificationsPage() {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-16 animate-in fade-in duration-200">
-      <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 rounded-2xl bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20">
-            <Bell className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-              Notifications & Activity Feed
-              {unreadCount > 0 && (
-                <span className="px-2 py-0.5 rounded-full bg-brand-500 text-white text-xs font-black">
-                  {unreadCount} Unread
-                </span>
-              )}
-            </h1>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Real-time events from AI screening agents, evaluation pipelines, and recruiter shortlists.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 text-xs font-bold self-end sm:self-auto">
-          {unreadCount > 0 && (
-            <button
-              type="button"
-              onClick={markAllAsRead}
-              className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-200 dark:border-slate-700"
-            >
-              <CheckCheck className="h-3.5 w-3.5 text-brand-500" />
-              Mark all read
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={clearAll}
-            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 text-slate-500 dark:text-slate-400 transition-colors flex items-center gap-1.5 cursor-pointer border border-slate-200 dark:border-slate-700"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-            Clear feed
-          </button>
-        </div>
-      </div>
+      <NotificationHeader
+        unreadCount={unreadCount}
+        onMarkAllAsRead={markAllAsRead}
+        onClearAll={clearAll}
+      />
 
       <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl border border-slate-200/80 dark:border-slate-800 text-xs font-bold w-fit">
         <button
@@ -177,60 +118,13 @@ export default function CandidateNotificationsPage() {
         {visibleNotifications.length > 0 ? (
           <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
             {visibleNotifications.map((n) => (
-              <div
+              <NotificationItem
                 key={n.id}
+                notification={n}
                 onClick={() => handleRowClick(n)}
-                className={`group p-4 px-5 transition-all text-xs cursor-pointer flex items-center justify-between gap-4 ${
-                  n.read
-                    ? 'hover:bg-slate-50 dark:hover:bg-slate-800/40 text-slate-600 dark:text-slate-400'
-                    : 'bg-slate-50/50 dark:bg-slate-800/30 hover:bg-slate-100/60 dark:hover:bg-slate-800/60 text-slate-900 dark:text-white font-bold'
-                }`}
-              >
-                <div className="flex items-center gap-3.5 min-w-0">
-                  <span
-                    className={`h-2 w-2 rounded-full shrink-0 ${
-                      n.read ? 'bg-transparent' : 'bg-brand-500 animate-pulse'
-                    }`}
-                  />
-
-                  <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200/60 dark:border-slate-700/60">
-                    {getTypeIcon(n.type)}
-                  </div>
-
-                  <p className="truncate text-xs font-semibold leading-relaxed">
-                    {n.title || n.message}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-4 shrink-0">
-                  <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {n.created_at ? new Date(n.created_at).toLocaleString() : ''}
-                  </span>
-
-                  <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                    {!n.read && (
-                      <button
-                        type="button"
-                        onClick={(e) => markAsRead(n.id, e)}
-                        className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-brand-600 dark:hover:text-brand-400 transition-colors"
-                        title="Mark as read"
-                      >
-                        <Check className="h-4 w-4" />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={(e) => deleteNotification(n.id, e)}
-                      className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition-colors"
-                      title="Remove"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                    <ArrowUpRight className="h-4 w-4 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
-                  </div>
-                </div>
-              </div>
+                onMarkAsRead={(e) => markAsRead(n.id, e)}
+                onDelete={(e) => deleteNotification(n.id, e)}
+              />
             ))}
           </div>
         ) : (

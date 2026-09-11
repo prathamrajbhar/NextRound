@@ -9,7 +9,7 @@ from unittest.mock import patch, AsyncMock
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from agents.resume_builder_agent import run_resume_builder_agent
-from services.llm_service import generate_text
+from services.llm.llm_service import generate_text
 from workers.resume_builder_worker import process_resume_builder_job
 
 # Configure logging
@@ -92,17 +92,18 @@ async def main():
     root_pdf_path = "/home/pratham/Disk1/NextRound/generated_resume.pdf"
     
     # Custom mock function to copy the generated PDF to project root before deletion
-    def mock_upload_to_supabase(file_path, key, content_type="application/pdf"):
+    def mock_upload_to_s3(file_path, key, content_type="application/pdf"):
         print(f"💾 Intercepted PDF file from production pipeline at: {file_path}")
         shutil.copy(file_path, root_pdf_path)
         print(f"🎉 PDF Resume successfully saved to root folder at: {root_pdf_path}")
-        return "https://mock-supabase-storage-url/generated_resume.pdf"
+        return "https://mock-s3-storage-url/generated_resume.pdf"
 
     # Async mock for post_internal API backend update
     mock_post_internal = AsyncMock(return_value=True)
 
-    with patch("services.pdf_generator.upload_to_supabase", side_effect=mock_upload_to_supabase), \
+    with patch("services.pdf_generator.upload_to_s3", side_effect=mock_upload_to_s3), \
          patch("workers.resume_builder_worker.post_internal", mock_post_internal):
+
         
         success = await process_resume_builder_job(job_payload)
 

@@ -77,3 +77,9 @@ docs/reviewer-prep.md
 
 # Local FastEmbed models
 apps/ai-service/local_models/
+apps/ai-service/services/local_models/
+
+# Playwright test artifacts
+test-results/
+playwright-report/
+/dist/e2e/

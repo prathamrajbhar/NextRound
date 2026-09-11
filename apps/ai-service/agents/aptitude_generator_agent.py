@@ -2,7 +2,7 @@ import json
 import logging
 from typing import List, Dict, Any
 from core.config import settings
-from services.llm_service import generate_text, extract_json_array
+from services.llm.llm_service import generate_text, extract_json_array
 
 logger = logging.getLogger("aptitude_generator_agent")
 
@@ -86,62 +86,16 @@ JSON Format required:
     "options": ["Option 0", "Option 1", "Option 2", "Option 3"],
     "correctIndex": 0
   }}
-]
-    Generates a single progressive chunk (section) of aptitude questions.
-    Passes previously generated question stems to prevent repetition across chunks.
-    Supports category-targeted generation per chunk.
-    You are a principal assessment architect generating a PROGRESSIVE CHUNK of aptitude questions.
-
-<JOB_TITLE>{job_title}</JOB_TITLE>
-<JOB_DESCRIPTION>{(job_description or "").strip()[:800]}</JOB_DESCRIPTION>
-<DIFFICULTY>{difficulty}</DIFFICULTY>
-<CHUNK_INDEX>{chunk_index}</CHUNK_INDEX>
-<TARGET_CATEGORY>{target_category}</TARGET_CATEGORY>
-<CHUNK_SIZE>{chunk_size}</CHUNK_SIZE>
-
-<PREVIOUSLY_GENERATED_QUESTIONS>
-{"- " + prev_stems if prev_stems else "None"}
-</PREVIOUSLY_GENERATED_QUESTIONS>
-
-CRITICAL INSTRUCTIONS:
-- Generate EXACTLY {chunk_size} NEW, DISTINCT multiple choice questions for category "{target_category}".
-- Do NOT repeat any question stem or concept listed in PREVIOUSLY_GENERATED_QUESTIONS.
-- Return ONLY valid raw JSON array of {chunk_size} objects.
-
-Each object must have:
-- "id": "chunk_{chunk_index}_q1", "chunk_{chunk_index}_q2", etc.
-- "category": "{target_category}"
-- "difficulty": "{difficulty}"
-- "question": clear, unambiguous question stem
-- "options": list of exactly 4 distinct choice strings
-- "correctIndex": integer (0, 1, 2, or 3)
-- "explanation": 1-sentence step-by-step explanation
-
-Return ONLY raw JSON array:
-[
-  {{
-    "id": "chunk_{chunk_index}_q1",
-    "category": "{target_category}",
-    "difficulty": "{difficulty}",
-    "question": "Question stem text...",
-    "options": ["A", "B", "C", "D"],
-    "correctIndex": 0,
-    "explanation": "Explanation..."
-  }}
 ]"""
 
     gemini_text = generate_text(prompt)
     if gemini_text:
-        questions = _parse_llm_json_response(gemini_text, chunk_size, job_title)
+        questions = _parse_llm_json_response(gemini_text, count, job_title)
         if questions:
-
-            for idx, q in enumerate(questions):
-                if not q["id"].startswith(f"chunk_{chunk_index}_"):
-                    q["id"] = f"chunk_{chunk_index}_q{idx + 1}"
-                q["source"] = "ai-chunk"
-            logger.info(f"Generated chunk {chunk_index} ({len(questions)} questions) via Gemini for {job_title}.")
             return questions
+
     raise RuntimeError(
-        f"AI aptitude chunk generation failed via Gemini for chunk {chunk_index} of '{job_title}'."
+        f"AI aptitude question generation failed via LLM for '{job_title}'."
     )
+
 

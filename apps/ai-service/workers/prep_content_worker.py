@@ -1,6 +1,6 @@
 import json
 import logging
-from services.llm_service import generate_text, extract_json_object
+from services.llm.llm_service import generate_text, extract_json_object
 from workers.worker_base import post_internal, fetch_internal
 
 logger = logging.getLogger("prep_content_worker")

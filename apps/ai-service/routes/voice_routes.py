@@ -9,8 +9,8 @@ from pydantic import BaseModel, Field
 from agents.interviewer_agent import run_interviewer_agent, InterviewerState
 from workers.resume_builder_worker import process_resume_builder_job
 
-from services.stt_service import transcribe_audio_bytes
-from services.tts_service import generate_tts_audio_base64, stream_sentence_tts
+from services.stt_tts.stt_service import transcribe_audio_bytes
+from services.stt_tts.tts_service import generate_tts_audio_base64, stream_sentence_tts
 from core.config import settings
 
 logger = logging.getLogger("voice_routes")
@@ -22,6 +22,10 @@ class GenerateResumeRequest(BaseModel):
     targetRole: Optional[str] = None
     targetCompany: Optional[str] = None
     transcript: Optional[List[Dict[str, Any]]] = None
+    memory: Optional[Dict[str, Any]] = None
+    profileType: Optional[str] = None
+    existingResume: Optional[str] = None
+    careerGoals: Optional[str] = None
 
 class TranscribeRequest(BaseModel):
     audio_base64: Optional[str] = None
@@ -187,6 +191,10 @@ async def generate_resume_endpoint(request: GenerateResumeRequest, background_ta
         "targetRole": request.targetRole,
         "targetCompany": request.targetCompany,
         "transcript": request.transcript,
+        "memory": request.memory or {},
+        "profileType": request.profileType,
+        "existingResume": request.existingResume,
+        "careerGoals": request.careerGoals,
     }
     background_tasks.add_task(process_resume_builder_job, job_payload)
     return {"success": True, "message": "Resume generation background task initialized"}

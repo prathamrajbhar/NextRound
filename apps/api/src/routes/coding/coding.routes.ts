@@ -1,11 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { selectCodingProblem } from '../../services/question-bank.service';
-import { enqueueSubmissionExecution } from '../../services/submission-queue.service';
+import { selectCodingProblem } from '../../services/questions/question-bank.service';
+import { enqueueSubmissionExecution } from '../../services/submission/submission-queue.service';
 import { authenticate } from '../../middleware/auth';
 import { CodingExecutionRequestSchema } from '@nextround/shared';
 import { prisma } from '@nextround/database';
-import { executeCodingSubmission } from '../../services/coding-executor.service';
-import { updateApplicationCodingScore } from '../../services/scoring.service';
+import { executeCodingSubmission } from '../../services/coding/coding-executor.service';
+import { updateApplicationCodingScore } from '../../services/scoring/scoring.service';
 import crypto from 'crypto';
 
 export const codingRouter = Router();

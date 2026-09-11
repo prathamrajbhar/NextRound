@@ -1,65 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import {
-  X,
-  Save,
-  Plus,
-  Trash2,
-  Sparkles,
-} from '@/lib/lucide-google-icons';
+import { X, Save, Sparkles } from '@/lib/lucide-google-icons';
+import type { GeneratedResumeData, ResumeItem } from './resume.types';
+import { EditResumeSkillsSection } from './EditResumeSkillsSection';
+import { EditResumeExperienceSection } from './EditResumeExperienceSection';
 
-export interface GeneratedResumeData {
-  name?: string;
-  title?: string;
-  email?: string;
-  phone?: string;
-  location?: string;
-  summary?: string;
-  atsScore?: number;
-  contact?: {
-    name?: string;
-    email?: string;
-    phone?: string;
-    location?: string;
-    linkedin?: string;
-    github?: string;
-    portfolio?: string;
-  };
-  experience?: Array<{
-    title?: string;
-    company?: string;
-    duration?: string;
-    highlights?: string[];
-  }>;
-  skills?: string[];
-  linkedin?: string;
-  github?: string;
-  portfolio?: string;
-  projects?: Array<{
-    title?: string;
-    name?: string;
-    techStack?: string[];
-    tech_stack?: string[];
-    description?: string;
-    impact?: string;
-  }>;
-  education?: Array<{
-    degree?: string;
-    institution?: string;
-    year?: string;
-    dates?: string;
-    gpa?: string;
-  }>;
-  certifications?: string[];
-}
-
-export interface ResumeItem {
-  id: string;
-  targetRole: string;
-  targetCompany: string;
-  generatedResume: GeneratedResumeData | null;
-}
+export type { GeneratedResumeData, ResumeItem };
 
 interface EditResumeModalProps {
   isOpen: boolean;
@@ -92,54 +39,18 @@ function ModalContent({
   const [name, setName] = useState(initialData.name || '');
   const [email, setEmail] = useState(initialData.email || '');
   const [summary, setSummary] = useState(initialData.summary || '');
-  const [skills, setSkills] = useState<string[]>(initialData.skills || []);
-  const [newSkill, setNewSkill] = useState('');
+  const rawSkills = initialData.skills;
+  const initialSkillsList: string[] = Array.isArray(rawSkills) && typeof rawSkills[0] === 'string'
+    ? (rawSkills as string[])
+    : [];
+  const [skills, setSkills] = useState<string[]>(initialSkillsList);
   const [experiences, setExperiences] = useState<NonNullable<GeneratedResumeData['experience']>>(
     initialData.experience || []
   );
 
-  const handleAddSkill = () => {
-    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
-      setSkills([...skills, newSkill.trim()]);
-      setNewSkill('');
-    }
-  };
-
-  const handleRemoveSkill = (tag: string) => {
-    setSkills(skills.filter((s) => s !== tag));
-  };
-
-  const handleAddHighlight = (expIdx: number) => {
-    const updated = [...experiences];
-    const exp = updated[expIdx];
-    if (exp) {
-      if (!exp.highlights) exp.highlights = [];
-      exp.highlights.push('New key achievement or technical bullet point...');
-      setExperiences(updated);
-    }
-  };
-
-  const handleUpdateHighlight = (expIdx: number, hIdx: number, val: string) => {
-    const updated = [...experiences];
-    const exp = updated[expIdx];
-    if (exp && exp.highlights) {
-      exp.highlights[hIdx] = val;
-      setExperiences(updated);
-    }
-  };
-
-  const handleRemoveHighlight = (expIdx: number, hIdx: number) => {
-    const updated = [...experiences];
-    const exp = updated[expIdx];
-    if (exp && exp.highlights) {
-      exp.highlights.splice(hIdx, 1);
-      setExperiences(updated);
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const updatedGeneratedResume = {
+    const updatedGeneratedResume: GeneratedResumeData = {
       ...initialData,
       name,
       title: roleTitle,
@@ -160,7 +71,6 @@ function ModalContent({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200 font-sans">
       <div className="w-full max-w-2xl max-h-[90vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl flex flex-col overflow-hidden">
-
         <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-2.5">
             <div className="h-9 w-9 rounded-2xl bg-brand-50 dark:bg-orange-950/80 border border-brand-200 dark:border-orange-900 flex items-center justify-center text-brand-600 dark:text-orange-400 shadow-sm">
@@ -181,10 +91,11 @@ function ModalContent({
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-5">
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Target Role Title</label>
+              <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                Target Role Title
+              </label>
               <input
                 type="text"
                 value={roleTitle}
@@ -193,7 +104,9 @@ function ModalContent({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Candidate Name</label>
+              <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                Candidate Name
+              </label>
               <input
                 type="text"
                 value={name}
@@ -202,7 +115,9 @@ function ModalContent({
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Email Address</label>
+              <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                Email Address
+              </label>
               <input
                 type="email"
                 value={email}
@@ -213,7 +128,9 @@ function ModalContent({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Professional Summary</label>
+            <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+              Professional Summary
+            </label>
             <textarea
               rows={3}
               value={summary}
@@ -222,77 +139,8 @@ function ModalContent({
             />
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-            <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Extracted Skills Matrix</label>
-            <div className="flex flex-wrap gap-2">
-              {skills.map((s) => (
-                <span
-                  key={s}
-                  className="inline-flex items-center gap-1.5 text-xs font-extrabold px-3 py-1 rounded-xl bg-brand-50 dark:bg-orange-950/60 border border-brand-200 dark:border-orange-900/60 text-brand-700 dark:text-orange-300"
-                >
-                  {s}
-                  <button type="button" onClick={() => handleRemoveSkill(s)} className="hover:text-red-500 cursor-pointer">
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-            <div className="flex gap-2 pt-1">
-              <input
-                type="text"
-                placeholder="Add skill (e.g. Redis, Kubernetes)..."
-                value={newSkill}
-                onChange={(e) => setNewSkill(e.target.value)}
-                className="flex-grow px-3.5 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-medium focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleAddSkill}
-                className="px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-xs font-extrabold cursor-pointer"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-            <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Work Experience &amp; Accomplishments</label>
-            {experiences.map((exp, expIdx) => (
-              <div key={expIdx} className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-slate-900 dark:text-slate-100">{exp.title || 'Role'} • {exp.company || 'Company'}</span>
-                  <span className="text-[10px] text-slate-400 font-semibold">{exp.duration || ''}</span>
-                </div>
-
-                <div className="space-y-2">
-                  {(exp.highlights || []).map((h: string, hIdx: number) => (
-                    <div key={hIdx} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={h}
-                        onChange={(e) => handleUpdateHighlight(expIdx, hIdx, e.target.value)}
-                        className="flex-grow px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 font-medium focus:outline-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveHighlight(expIdx, hIdx)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 transition-all cursor-pointer"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => handleAddHighlight(expIdx)}
-                    className="text-[10px] font-extrabold text-brand-600 dark:text-orange-400 hover:underline flex items-center gap-1 cursor-pointer pt-1"
-                  >
-                    <Plus className="h-3 w-3" /> Add Bullet Highlight
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          <EditResumeSkillsSection skills={skills} setSkills={setSkills} />
+          <EditResumeExperienceSection experiences={experiences} setExperiences={setExperiences} />
 
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">
             <button
@@ -310,7 +158,6 @@ function ModalContent({
               <span>Save Resume Changes</span>
             </button>
           </div>
-
         </form>
       </div>
     </div>
