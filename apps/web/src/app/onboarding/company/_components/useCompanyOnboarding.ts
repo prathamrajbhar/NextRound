@@ -2,11 +2,6 @@
 
 import { useState } from 'react';
 
-export interface AvailabilitySlots {
-  weekday: { morning: boolean; afternoon: boolean; evening: boolean };
-  weekend: { morning: boolean; afternoon: boolean; evening: boolean };
-}
-
 export interface CompanyForm {
   name: string;
   website: string;
@@ -16,8 +11,6 @@ export interface CompanyForm {
 
   primaryRoles: string[];
   autoOffer: boolean;
-
-  availabilityHours: AvailabilitySlots;
 
   invites: string[];
 }
@@ -30,10 +23,6 @@ export const DEFAULT_FORM: CompanyForm = {
   hqLocation: '',
   primaryRoles: [],
   autoOffer: false,
-  availabilityHours: {
-    weekday: { morning: true, afternoon: true, evening: false },
-    weekend: { morning: false, afternoon: false, evening: false },
-  },
   invites: [],
 };
 
@@ -87,7 +76,6 @@ export function buildOrganizationPayload(form: CompanyForm) {
       website: form.website.trim() || undefined,
       hqLocation: form.hqLocation.trim() || undefined,
       primaryRoles: form.primaryRoles,
-      availabilityHours: form.availabilityHours,
       autoOffer: form.autoOffer,
     },
   };

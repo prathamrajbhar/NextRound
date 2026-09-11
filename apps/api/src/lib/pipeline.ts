@@ -69,19 +69,11 @@ export async function ensureInterviewAndSchedule(
 
   const candidateEmail = app.candidate?.user?.email ?? '';
 
-  const orgSettings = isObject(app.job.organization?.settings) ? app.job.organization.settings : {};
-  const availabilityHours = isObject(orgSettings.availabilityHours)
-    ? (orgSettings.availabilityHours as Record<string, unknown>)
-    : isObject(orgSettings.availability_hours)
-    ? (orgSettings.availability_hours as Record<string, unknown>)
-    : undefined;
-
   await enqueueScheduling(applicationId, {
     interviewId: interview.id,
     candidateEmail,
     jobTitle: app.job.title,
     orgId: app.job.org_id ?? undefined,
-    availabilityHours,
     action: 'generate_slots',
   }).catch((err) => {
     logger.child('Pipeline').error(`Failed to enqueue scheduling for application ${applicationId}:`, err);

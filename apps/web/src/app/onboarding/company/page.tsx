@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { Building, Target, Calendar, Users } from '@/lib/lucide-google-icons';
+import { Building, Target, Users } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
 import { CompanyOnboardingShell, CompanyStep } from './_components/CompanyOnboardingShell';
 import {
@@ -12,13 +12,11 @@ import {
 } from './_components/useCompanyOnboarding';
 import { CompanyDetailsStep } from './_components/CompanyDetailsStep';
 import { HiringContextStep } from './_components/HiringContextStep';
-import { SchedulingAutomationStep } from './_components/SchedulingAutomationStep';
 import { TeamInviteStep } from './_components/TeamInviteStep';
 
 const STEPS: CompanyStep[] = [
   { label: 'Company Details', description: 'Who you are', icon: Building },
   { label: 'Hiring Context', description: 'What you hire for', icon: Target },
-  { label: 'Scheduling & Automation', description: 'When interviews run', icon: Calendar },
   { label: 'Team & Launch', description: 'Invite partners', icon: Users },
 ];
 
@@ -51,7 +49,6 @@ export default function CompanyOnboarding() {
       const orgId = organization?.id;
 
       if (orgId && form.invites.length > 0) {
-
         await Promise.all(
           form.invites.map((email) =>
             apiClient.post(`/organizations/${orgId}/members/invite`, { email }).catch(() => null)
@@ -83,8 +80,7 @@ export default function CompanyOnboarding() {
     >
       {step === 0 && <CompanyDetailsStep {...stepProps} />}
       {step === 1 && <HiringContextStep {...stepProps} />}
-      {step === 2 && <SchedulingAutomationStep {...stepProps} />}
-      {step === 3 && <TeamInviteStep {...stepProps} />}
+      {step === 2 && <TeamInviteStep {...stepProps} />}
     </CompanyOnboardingShell>
   );
 }

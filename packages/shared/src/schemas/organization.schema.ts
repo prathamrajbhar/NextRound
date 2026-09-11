@@ -14,7 +14,6 @@ export const OrganizationUpdateSchema = z.object({
   industry: z.string().optional().nullable(),
   size: z.string().optional().nullable(),
   settings: z.record(z.string(), z.unknown()).optional(),
-  availabilityHours: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const OrganizationSettingsSchema = z.object({

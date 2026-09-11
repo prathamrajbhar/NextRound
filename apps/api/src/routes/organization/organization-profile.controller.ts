@@ -116,11 +116,10 @@ export async function updateOrg(req: Request, res: Response, next: NextFunction)
       return res.status(404).json({ success: false, error: 'Organization not found' });
     }
 
-    const mergedSettings = validated.settings || validated.availabilityHours
+    const mergedSettings = validated.settings
       ? {
           ...(existingOrg.settings as Record<string, unknown>),
-          ...(validated.settings || {}),
-          ...(validated.availabilityHours ? { availabilityHours: validated.availabilityHours } : {}),
+          ...validated.settings,
         }
       : undefined;
 
