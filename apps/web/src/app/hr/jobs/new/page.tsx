@@ -31,7 +31,7 @@ export default function HrCreateJob() {
         onPublish={form.handlePublish}
       />
 
-      <form onSubmit={form.handlePublish} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left / Primary Column: Complete comprehensive configuration */}
         <div className="lg:col-span-8 space-y-8">
           <section id="role-basics" className="scroll-mt-6">
@@ -125,7 +125,7 @@ export default function HrCreateJob() {
             minScore={form.minScore}
           />
         </div>
-      </form>
+      </div>
     </div>
   );
 }
