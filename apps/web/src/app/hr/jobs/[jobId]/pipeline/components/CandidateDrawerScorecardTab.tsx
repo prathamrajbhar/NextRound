@@ -59,16 +59,16 @@ export function CandidateDrawerScorecardTab({ app }: CandidateDrawerScorecardTab
         </div>
       )}
 
-      <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-2xs">
-        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
-          AI Evaluator Reasoning
-        </span>
-        <p className="text-xs text-slate-700 dark:text-slate-200 font-semibold leading-relaxed italic border-l-2 border-brand-500 pl-3 py-1 bg-white/60 dark:bg-slate-900/60 rounded-r-xl">
-          {app.reasoning
-            ? `"${app.reasoning}"`
-            : 'No evaluator reasoning is available for this candidate yet.'}
-        </p>
-      </div>
+      {app.reasoning && (
+        <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#161f30] border border-slate-200/80 dark:border-slate-800 space-y-2 shadow-2xs">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider block">
+            AI Evaluator Reasoning
+          </span>
+          <p className="text-xs text-slate-700 dark:text-slate-200 font-semibold leading-relaxed italic border-l-2 border-brand-500 pl-3 py-1 bg-white/60 dark:bg-slate-900/60 rounded-r-xl">
+            &ldquo;{app.reasoning}&rdquo;
+          </p>
+        </div>
+      )}
     </div>
   );
 }

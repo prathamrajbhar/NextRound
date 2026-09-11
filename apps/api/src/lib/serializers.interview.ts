@@ -16,6 +16,9 @@ export function firstEvaluation(evaluations: unknown): EvalLike | undefined {
   if (Array.isArray(evaluations) && evaluations.length > 0 && isObject(evaluations[0])) {
     return evaluations[0] as EvalLike & Rec;
   }
+  if (isObject(evaluations)) {
+    return evaluations as EvalLike & Rec;
+  }
   return undefined;
 }
 

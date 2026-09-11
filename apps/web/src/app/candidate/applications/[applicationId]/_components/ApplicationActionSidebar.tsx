@@ -40,9 +40,11 @@ export function ApplicationActionSidebar({
             Congratulations! The hiring decision team has compiled your evaluation and extended an official offer.
           </p>
 
-          <div className="bg-white/80 dark:bg-slate-900/80 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/60 text-xs text-slate-700 dark:text-slate-200 italic font-medium shadow-2xs">
-            &ldquo;{app.reasoning ? app.reasoning : 'No evaluator notes are available for this application.'}&rdquo;
-          </div>
+          {app.reasoning && (
+            <div className="bg-white/80 dark:bg-slate-900/80 p-4 rounded-2xl border border-emerald-100 dark:border-emerald-900/60 text-xs text-slate-700 dark:text-slate-200 italic font-medium shadow-2xs">
+              &ldquo;{app.reasoning}&rdquo;
+            </div>
+          )}
 
           {offer && (
             <Link

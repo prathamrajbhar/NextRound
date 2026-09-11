@@ -80,9 +80,11 @@ export function ScreeningAgentModal({
                 <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 <span>Screening Passed!</span>
               </div>
-              <p className="text-[11px] leading-relaxed text-emerald-800 dark:text-emerald-300 font-medium">
-                {app.reasoning ? app.reasoning : 'No screening notes are available for this application.'}
-              </p>
+              {app.reasoning && (
+                <p className="text-[11px] leading-relaxed text-emerald-800 dark:text-emerald-300 font-medium whitespace-pre-wrap">
+                  {app.reasoning}
+                </p>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -92,9 +94,11 @@ export function ScreeningAgentModal({
                     <XCircle className="h-5 w-5" />
                     <span>Screening Rejected</span>
                   </div>
-                  <p className="text-[11px] leading-relaxed text-rose-800 dark:text-rose-300 font-medium whitespace-pre-wrap">
-                    {app.reasoning ? app.reasoning : 'No rejection feedback is available for this application.'}
-                  </p>
+                  {app.reasoning && (
+                    <p className="text-[11px] leading-relaxed text-rose-800 dark:text-rose-300 font-medium whitespace-pre-wrap">
+                      {app.reasoning}
+                    </p>
+                  )}
                 </div>
               )}
 

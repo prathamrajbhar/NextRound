@@ -120,19 +120,6 @@ Return ONLY a JSON object matching:
     reasoning,
   };
 
-  const updatedApp = await prisma.application.update({
-    where: { id: applicationId },
-    data: {
-      status: result.status as any,
-    },
-    include: {
-      job: true,
-      candidate: {
-        include: { user: { select: { email: true } } },
-      },
-    },
-  });
-
   const evaluation = await prisma.evaluation.upsert({
     where: { application_id: applicationId },
     create: {
@@ -149,6 +136,20 @@ Return ONLY a JSON object matching:
       composite_score: result.compositeScore,
       reasoning: result.reasoning,
       decision: result.status === 'rejected' ? 'reject' : 'hire',
+    },
+  });
+
+  const updatedApp = await prisma.application.update({
+    where: { id: applicationId },
+    data: {
+      status: result.status as any,
+    },
+    include: {
+      job: true,
+      candidate: {
+        include: { user: { select: { email: true } } },
+      },
+      evaluations: true,
     },
   });
 
