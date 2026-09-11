@@ -13,6 +13,7 @@ import {
   resetPassword,
   changePassword,
   updateEmail,
+  completeFirstLoginPassword,
 } from './auth-password.controller';
 
 const isProduction = process.env.NODE_ENV === 'production';
@@ -33,5 +34,7 @@ authRouter.get('/me', authenticate, getMe);
 
 authRouter.post('/forgot-password', forgotPasswordRateLimiter, forgotPassword);
 authRouter.post('/reset-password', resetPassword);
+authRouter.post('/complete-first-login', authenticate, completeFirstLoginPassword);
 authRouter.patch('/change-password', authenticate, changePassword);
 authRouter.patch('/email', authenticate, updateEmail);
+

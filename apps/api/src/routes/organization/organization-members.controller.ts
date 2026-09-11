@@ -1,8 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import { MemberInviteSchema } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
 import { emailService } from '../../services/email/email.service';
 import { enforceOrgMatch } from './organization.helpers';
+
+function generateSecureTempPassword(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%&*';
+  const randomBytes = crypto.randomBytes(12);
+  let result = 'Nr-';
+  for (let i = 0; i < 9; i++) {
+    result += chars[randomBytes[i] % chars.length];
+  }
+  return result;
+}
 
 export async function getOrgMembers(req: Request, res: Response, next: NextFunction) {
   try {
@@ -15,13 +27,26 @@ export async function getOrgMembers(req: Request, res: Response, next: NextFunct
         id: true,
         email: true,
         role: true,
+        profile: true,
         created_at: true,
       },
     });
 
+    const sanitizedMembers = members.map((m) => {
+      const prof = (m.profile as Record<string, unknown>) || {};
+      return {
+        id: m.id,
+        email: m.email,
+        role: m.role,
+        must_change_password: !!prof.must_change_password,
+        invite_role: typeof prof.invite_role === 'string' ? prof.invite_role : 'Recruiter',
+        created_at: m.created_at,
+      };
+    });
+
     return res.json({
       success: true,
-      data: { members },
+      data: { members: sanitizedMembers },
     });
   } catch (error) {
     return next(error);
@@ -34,6 +59,15 @@ export async function inviteOrgMember(req: Request, res: Response, next: NextFun
     if (!enforceOrgMatch(req, res, id)) return;
 
     const validated = MemberInviteSchema.parse(req.body);
+
+    const org = await prisma.organization.findUnique({
+      where: { id },
+      select: { id: true, name: true },
+    });
+
+    if (!org) {
+      return res.status(404).json({ success: false, error: 'Organization not found' });
+    }
 
     const existingUser = await prisma.user.findUnique({
       where: { email: validated.email },
@@ -58,10 +92,35 @@ export async function inviteOrgMember(req: Request, res: Response, next: NextFun
       return res.status(400).json({ success: false, error: 'User belongs to another organization' });
     }
 
+    const temporaryPassword = generateSecureTempPassword();
+    const passwordHash = await bcrypt.hash(temporaryPassword, 10);
+
+    const newUser = await prisma.user.create({
+      data: {
+        email: validated.email,
+        password_hash: passwordHash,
+        role: 'hr',
+        org_id: id,
+        profile: {
+          must_change_password: true,
+          invited_by: req.user?.email || 'admin',
+          invite_role: req.body.partnerRole || 'Recruiter',
+        },
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        created_at: true,
+      },
+    });
+
     const invited = await emailService.sendMemberInvite(
       validated.email,
       id,
-      req.user?.email
+      req.user?.email,
+      org.name,
+      temporaryPassword
     );
 
     if (!invited) {
@@ -74,8 +133,10 @@ export async function inviteOrgMember(req: Request, res: Response, next: NextFun
     return res.status(201).json({
       success: true,
       data: {
+        member: newUser,
         invitedEmail: validated.email,
-        message: `Invitation email sent to ${validated.email}`,
+        temporaryPassword,
+        message: `Invitation email sent to ${validated.email} with temporary credentials.`,
       },
     });
   } catch (error) {

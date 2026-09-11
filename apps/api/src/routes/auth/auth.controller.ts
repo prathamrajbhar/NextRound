@@ -174,6 +174,7 @@ export async function getMe(req: Request, res: Response, next: NextFunction) {
         email: true,
         role: true,
         org_id: true,
+        profile: true,
         created_at: true,
       },
     });
@@ -182,12 +183,18 @@ export async function getMe(req: Request, res: Response, next: NextFunction) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
+    const profileObj = (user.profile && typeof user.profile === 'object') ? (user.profile as Record<string, unknown>) : {};
+
     return res.json({
       success: true,
       data: {
         user: {
-          ...user,
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          org_id: user.org_id,
           created_at: user.created_at.toISOString(),
+          must_change_password: !!profileObj.must_change_password,
         },
       },
     });

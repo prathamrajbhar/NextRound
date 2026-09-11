@@ -23,14 +23,18 @@ export class EmailService extends EmailCandidateService {
     toEmail: string,
     organizationId: string,
     invitedByEmail?: string,
-    organizationName?: string
+    organizationName?: string,
+    temporaryPassword?: string
   ): Promise<boolean> {
     const appUrl = env('APP_URL');
-    const inviteUrl = `${appUrl}/hr/dashboard?org=${organizationId}`;
+    const inviteUrl = temporaryPassword
+      ? `${appUrl}/login?email=${encodeURIComponent(toEmail)}`
+      : `${appUrl}/hr/dashboard?org=${organizationId}`;
     const email = buildMemberInviteEmail({
       inviteUrl,
       organizationName,
       invitedByEmail,
+      temporaryPassword,
     });
     return this.sendEmail({ to: toEmail, ...email });
   }

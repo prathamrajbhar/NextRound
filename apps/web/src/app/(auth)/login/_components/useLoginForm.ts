@@ -43,6 +43,11 @@ export function useLoginForm() {
     if (result.success && result.user) {
       toast({ title: 'Signed in successfully', variant: 'success' });
 
+      if (result.user.must_change_password) {
+        router.push('/change-password-required');
+        return;
+      }
+
       if (result.user.role === 'candidate') {
         try {
           const profileData = await apiClient.get<{ profile?: CandidateProfileData }>('/candidate/profile');

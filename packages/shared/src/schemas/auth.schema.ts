@@ -39,9 +39,21 @@ export const UpdateEmailSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
 
+export const FirstLoginPasswordSchema = z
+  .object({
+    newPassword: z.string().min(8, 'New password must be at least 8 characters long'),
+    confirmPassword: z.string().min(8, 'Confirm password must match'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
 export type LoginInput = z.infer<typeof LoginSchema>;
 export type RegisterInput = z.infer<typeof RegisterSchema>;
 export type ForgotPasswordInput = z.infer<typeof ForgotPasswordSchema>;
 export type ResetPasswordInput = z.infer<typeof ResetPasswordSchema>;
 export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;
 export type UpdateEmailInput = z.infer<typeof UpdateEmailSchema>;
+export type FirstLoginPasswordInput = z.infer<typeof FirstLoginPasswordSchema>;
+

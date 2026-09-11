@@ -48,22 +48,41 @@ export function useHrTeamMembers(orgId: string | null, onSaved: () => void) {
     loadMembers();
   }, [orgId, user]);
 
+  const [newlyInvitedCredential, setNewlyInvitedCredential] = useState<{
+    email: string;
+    temporaryPassword?: string;
+  } | null>(null);
+
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail.trim() || !orgId) return;
     try {
-      await apiClient.post(`/organizations/${orgId}/members/invite`, {
+      const res = await apiClient.post<{
+        member: { id: string; email: string; role: string; created_at: string };
+        invitedEmail: string;
+        temporaryPassword?: string;
+        message: string;
+      }>(`/organizations/${orgId}/members/invite`, {
         email: inviteEmail.trim(),
         role: 'hr',
+        partnerRole: inviteRole,
       });
+
+      if (res?.temporaryPassword) {
+        setNewlyInvitedCredential({
+          email: res.invitedEmail,
+          temporaryPassword: res.temporaryPassword,
+        });
+      }
+
       setTeam([
         ...team,
         {
-          id: `pending-${Date.now()}`,
+          id: res?.member?.id || `member-${Date.now()}`,
           name: inviteEmail.split('@')[0],
           email: inviteEmail.trim(),
           role: inviteRole,
-          status: 'Invited',
+          status: res?.temporaryPassword ? 'Temp Password Active' : 'Invited',
         },
       ]);
       setInviteEmail('');
@@ -87,6 +106,8 @@ export function useHrTeamMembers(orgId: string | null, onSaved: () => void) {
     setInviteEmail,
     inviteRole,
     setInviteRole,
+    newlyInvitedCredential,
+    clearCredential: () => setNewlyInvitedCredential(null),
     handleInviteSubmit,
     handleRemoveMember,
   };

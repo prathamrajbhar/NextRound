@@ -31,28 +31,49 @@ export function buildMemberInviteEmail(params: {
   inviteUrl: string;
   organizationName?: string;
   invitedByEmail?: string;
+  temporaryPassword?: string;
 }): { subject: string; html: string; text: string } {
   const org = params.organizationName || 'your organization';
   const title = `Invitation to join ${org}`;
   const subject = `Invitation to join ${org} on NextRound`;
   const inviterText = params.invitedByEmail ? ` by <strong>${escapeHtml(params.invitedByEmail)}</strong>` : '';
+
+  const passwordBlock = params.temporaryPassword
+    ? `
+    <div style="background:#0f172a; border:1px solid #334155; border-radius:12px; padding:16px 20px; margin:20px 0; color:#f8fafc;">
+      <p style="margin:0 0 8px 0; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#94a3b8;">Your Temporary Access Credentials</p>
+      <div style="margin-bottom:8px;">
+        <span style="font-size:12px; color:#cbd5e1;">Temporary Password: </span>
+        <code style="background:#1e293b; color:#f97316; padding:4px 8px; border-radius:6px; font-weight:800; font-size:14px; letter-spacing:0.04em;">${escapeHtml(params.temporaryPassword)}</code>
+      </div>
+      <p style="margin:8px 0 0 0; font-size:11px; color:#94a3b8; line-height:1.4;">For security reasons, you will be prompted to set a new personal password immediately upon your first sign-in.</p>
+    </div>
+  `
+    : '';
+
   const contentHtml = `
     <p style="margin:0 0 14px 0;">You have been invited${inviterText} to collaborate on NextRound as part of <strong>${escapeHtml(org)}</strong>.</p>
     <p style="margin:0 0 14px 0;">NextRound enables talent acquisition teams to build pipelines, review AI candidate evaluations, and manage autonomous assessment rounds seamlessly.</p>
-    <p style="margin:0;">Click below to accept the invitation and set up your workspace access.</p>
+    ${passwordBlock}
+    <p style="margin:0;">Click below to sign in and set up your workspace access.</p>
   `;
   const html = renderProfessionalEmailLayout({
     title,
     contentHtml,
     actionButton: {
-      text: 'Accept Invitation & Sign In',
+      text: 'Sign In & Access Workspace',
       url: params.inviteUrl,
     },
     secondaryText: 'If you believe this invitation was sent in error, please contact your workspace administrator.',
   });
-  const text = `You have been invited to join ${org} on NextRound.
 
-Accept invitation: ${params.inviteUrl}`;
+  const textPassword = params.temporaryPassword
+    ? `\nTemporary Password: ${params.temporaryPassword}\n(You will be asked to create a new password on your first sign-in)\n`
+    : '';
+
+  const text = `You have been invited to join ${org} on NextRound.
+${textPassword}
+Sign in: ${params.inviteUrl}`;
   return { subject, html, text };
 }
 

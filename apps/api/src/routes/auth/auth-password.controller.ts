@@ -6,13 +6,14 @@ import {
   ResetPasswordSchema,
   ChangePasswordSchema,
   UpdateEmailSchema,
+  FirstLoginPasswordSchema,
 } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
 import { JwtPayload } from '../../lib/jwt';
 import { emailService } from '../../services/email/email.service';
 import { logger } from '../../lib/logger';
 import { env } from '../../lib/env';
-import { setAuthCookies, clearAuthCookies } from './auth-cookies.helper';
+import { setAuthCookies, clearAuthCookies, serializeAuthUser } from './auth-cookies.helper';
 
 export function logout(_req: Request, res: Response) {
   clearAuthCookies(res);
@@ -105,6 +106,52 @@ export async function resetPassword(req: Request, res: Response, next: NextFunct
   }
 }
 
+export async function completeFirstLoginPassword(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+
+    const validated = FirstLoginPasswordSchema.parse(req.body);
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    const currentProfile = (user.profile && typeof user.profile === 'object')
+      ? (user.profile as Record<string, unknown>)
+      : {};
+
+    const newHash = await bcrypt.hash(validated.newPassword, 10);
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password_hash: newHash,
+        profile: {
+          ...currentProfile,
+          must_change_password: false,
+          password_changed_at: new Date().toISOString(),
+        },
+      },
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        message: 'Password updated successfully',
+        user: serializeAuthUser(updatedUser),
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 export async function changePassword(req: Request, res: Response, next: NextFunction) {
   try {
     if (!req.user) {
@@ -126,10 +173,20 @@ export async function changePassword(req: Request, res: Response, next: NextFunc
       return res.status(400).json({ success: false, error: 'Current password is incorrect' });
     }
 
+    const currentProfile = (user.profile && typeof user.profile === 'object')
+      ? (user.profile as Record<string, unknown>)
+      : {};
+
     const newHash = await bcrypt.hash(validated.newPassword, 10);
     await prisma.user.update({
       where: { id: user.id },
-      data: { password_hash: newHash },
+      data: {
+        password_hash: newHash,
+        profile: {
+          ...currentProfile,
+          must_change_password: false,
+        },
+      },
     });
 
     return res.json({

@@ -51,12 +51,21 @@ export function clearAuthCookies(res: Response) {
   });
 }
 
-export function serializeAuthUser(user: { id: string; email: string; role: string; org_id: string | null; created_at: Date }) {
+export function serializeAuthUser(user: {
+  id: string;
+  email: string;
+  role: string;
+  org_id: string | null;
+  created_at: Date;
+  profile?: unknown;
+}) {
+  const profileObj = (user.profile && typeof user.profile === 'object') ? (user.profile as Record<string, unknown>) : {};
   return {
     id: user.id,
     email: user.email,
     role: user.role,
     org_id: user.org_id,
     created_at: user.created_at.toISOString(),
+    must_change_password: !!profileObj.must_change_password,
   };
 }

@@ -6,6 +6,7 @@ export interface UserPublic {
   role: 'hr' | 'candidate';
   org_id?: string | null;
   created_at: string;
+  must_change_password?: boolean;
 }
 
 export interface AuthResponse {
@@ -18,4 +19,5 @@ export interface User {
   role: UserRole;
   org_id?: string | null;
   created_at: string;
+  must_change_password?: boolean;
 }
