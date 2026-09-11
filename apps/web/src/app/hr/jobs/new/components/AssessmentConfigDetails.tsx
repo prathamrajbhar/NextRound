@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Brain, BookOpen, BarChart3, Cpu, ClipboardCheck } from 'lucide-react';
+import { Brain, BookOpen, BarChart3, Cpu, ClipboardCheck } from '@/lib/lucide-google-icons';
 
 interface AssessmentConfig {
   mcqCount: number;
@@ -30,10 +30,10 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  'Quantitative Aptitude': 'text-blue-500 dark:text-blue-400',
+  'Quantitative Aptitude': 'text-amber-500 dark:text-amber-400',
   'Logical Reasoning': 'text-purple-500 dark:text-purple-400',
   'Verbal Ability': 'text-emerald-500 dark:text-emerald-400',
-  'Data Interpretation': 'text-amber-500 dark:text-amber-400',
+  'Data Interpretation': 'text-brand-500 dark:text-brand-400',
 };
 
 const PRESETS = [
@@ -84,9 +84,9 @@ export function AssessmentConfigDetails({
   return (
     <div className="pl-9 pr-1 pt-2 space-y-4 animate-in fade-in duration-150">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Total Questions</span>
+        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Total Assessment Questions</span>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-black text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-2.5 py-0.5 rounded-lg border border-indigo-200/50 dark:border-indigo-800/40">
+          <span className="text-xs font-extrabold text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/80 px-2.5 py-0.5 rounded-lg border border-amber-200/50 dark:border-amber-800/40">
             {assessmentConfig.mcqCount} MCQs
           </span>
           <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
@@ -97,13 +97,13 @@ export function AssessmentConfigDetails({
 
       <div className="space-y-2 border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-            Aptitude Categories
+          <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+            Question Distribution
           </span>
           <button
             type="button"
             onClick={resetEqual}
-            className="text-[9px] font-bold text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
+            className="text-[10px] font-bold text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
           >
             Reset Equal
           </button>
@@ -115,16 +115,16 @@ export function AssessmentConfigDetails({
             const Icon = CATEGORY_ICONS[cat] || ClipboardCheck;
             const colorClass = CATEGORY_COLORS[cat] || 'text-slate-500';
             return (
-              <div key={cat} className="flex items-center justify-between p-2 rounded-xl bg-slate-50/50 dark:bg-slate-900/60 border border-slate-200/45 dark:border-slate-800/60 gap-2">
+              <div key={cat} className="flex items-center justify-between p-2 rounded-xl bg-slate-50/70 dark:bg-slate-850/80 border border-slate-200/60 dark:border-slate-800 gap-2">
                 <div className="flex items-center gap-2">
                   <Icon className={`h-3.5 w-3.5 ${colorClass}`} />
-                  <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">{cat}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{cat}</span>
                 </div>
-                <div className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 bg-white dark:bg-slate-800">
+                <div className="flex items-center gap-1 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 bg-white dark:bg-slate-800">
                   <button
                     type="button"
                     onClick={() => handleCategoryCountChange(cat, count - 1)}
-                    className="h-4.5 w-4.5 rounded bg-slate-50 dark:bg-slate-750 text-slate-800 dark:text-slate-200 flex items-center justify-center cursor-pointer font-bold text-[10px] hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="h-5 w-5 rounded bg-slate-50 dark:bg-slate-750 text-slate-800 dark:text-slate-200 flex items-center justify-center cursor-pointer font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
                     disabled={count <= 0}
                   >
                     -
@@ -135,12 +135,12 @@ export function AssessmentConfigDetails({
                     max="50"
                     value={count}
                     onChange={(e) => handleCategoryCountChange(cat, Math.max(0, Math.min(50, parseInt(e.target.value) || 0)))}
-                    className="w-8 text-center font-extrabold text-[10px] text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-7 text-center font-extrabold text-xs text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <button
                     type="button"
                     onClick={() => handleCategoryCountChange(cat, Math.min(50, count + 1))}
-                    className="h-4.5 w-4.5 rounded bg-slate-50 dark:bg-slate-750 text-slate-800 dark:text-slate-200 flex items-center justify-center cursor-pointer font-bold text-[10px] hover:bg-slate-100 dark:hover:bg-slate-700"
+                    className="h-5 w-5 rounded bg-slate-50 dark:bg-slate-750 text-slate-800 dark:text-slate-200 flex items-center justify-center cursor-pointer font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700"
                   >
                     +
                   </button>
@@ -150,8 +150,8 @@ export function AssessmentConfigDetails({
           })}
         </div>
 
-        <div className="flex gap-1 pt-1">
-          <span className="text-[9px] font-semibold text-slate-500 dark:text-slate-400 mr-1">Presets:</span>
+        <div className="flex gap-1.5 pt-1 items-center">
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mr-1">Presets:</span>
           {PRESETS.map((preset) => (
             <button
               key={preset.name}
@@ -164,7 +164,7 @@ export function AssessmentConfigDetails({
                   mcqDistribution: preset.dist,
                 });
               }}
-              className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+              className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
             >
               {preset.name}
             </button>
@@ -173,8 +173,8 @@ export function AssessmentConfigDetails({
       </div>
 
       <div className="space-y-1 border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
-        <div className="flex justify-between text-[11px] font-bold text-slate-700 dark:text-slate-300">
-          <span>Passing Score</span>
+        <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+          <span>Passing Threshold</span>
           <span className="text-amber-600 dark:text-amber-400 font-extrabold">{assessmentConfig.passingScore}%</span>
         </div>
         <input

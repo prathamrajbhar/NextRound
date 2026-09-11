@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X } from '@/lib/lucide-google-icons';
 
 interface AiChipInputSectionProps {
   title: string;
@@ -40,11 +40,16 @@ export function AiChipInputSection({
 
   return (
     <div className="space-y-2">
-      <span className="text-[11px] font-extrabold text-slate-700 dark:text-slate-300 tracking-wider flex items-center gap-1.5">
-        {icon}
-        {title}
-      </span>
-      <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 min-h-[48px] items-center">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 tracking-tight flex items-center gap-1.5">
+          {icon}
+          {title}
+        </span>
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold">
+          {items.length} {items.length === 1 ? 'item' : 'items'}
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2 p-3 rounded-2xl bg-slate-50 dark:bg-slate-850/80 border border-slate-200/70 dark:border-slate-800 min-h-[48px] items-center">
         {items.length === 0 && emptyMessage && (
           <span className="text-[11px] text-slate-400 dark:text-slate-500 italic pl-1">
             {emptyMessage}
@@ -53,19 +58,19 @@ export function AiChipInputSection({
         {items.map((item) => (
           <span
             key={item}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-extrabold flex items-center gap-1.5 group transition-all border ${badgeClasses}`}
+            className={`px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all border ${badgeClasses}`}
           >
             {item}
             <button
               type="button"
               onClick={() => onRemove(item)}
-              className={`opacity-70 hover:opacity-100 cursor-pointer p-0.5 ${removeBtnClasses}`}
+              className={`opacity-70 hover:opacity-100 cursor-pointer p-0.5 rounded ${removeBtnClasses}`}
             >
               <X className="h-3 w-3" />
             </button>
           </span>
         ))}
-        <div className="flex items-center gap-1 max-w-[140px] ml-1">
+        <div className="flex items-center gap-1 max-w-[160px] ml-1">
           <input
             type="text"
             placeholder={placeholder}
@@ -77,7 +82,7 @@ export function AiChipInputSection({
                 handleAdd();
               }
             }}
-            className={`w-full bg-transparent border-b border-slate-300 dark:border-slate-700 focus:outline-none text-slate-900 dark:text-slate-100 text-[11px] py-1 font-bold transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 ${focusBorderClasses}`}
+            className={`w-full bg-transparent border-b border-slate-300 dark:border-slate-700 focus:outline-none text-slate-900 dark:text-slate-100 text-xs py-1 font-semibold transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 ${focusBorderClasses}`}
           />
           <button
             type="button"
