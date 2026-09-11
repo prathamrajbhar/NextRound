@@ -166,7 +166,7 @@ export function UnifiedInterviewConsole({
         camActive={camActive}
         onToggleMic={() => setMicActive((p) => !p)}
         onToggleCam={() => setCamActive((p) => !p)}
-        showTextFallback={Boolean(onSubmitAnswer)}
+        showTextInput={Boolean(onSubmitAnswer)}
         textInput={textInput}
         onTextInputChange={setTextInput}
         onTextSubmit={handleTextSubmit}

@@ -1,7 +1,6 @@
 import type { ParsedResumeData } from './resume-heuristic.service';
-import { fallbackHeuristicParsing } from './resume-heuristic.service';
 
-export function sanitizeParsedData(data: Record<string, unknown>, rawText: string): ParsedResumeData {
+export function sanitizeParsedData(data: Record<string, unknown>): ParsedResumeData {
   const toString = (...values: unknown[]): string | undefined => {
     for (const value of values) {
       if (typeof value === 'string' && value.trim().length > 0) return value.trim();
@@ -27,30 +26,28 @@ export function sanitizeParsedData(data: Record<string, unknown>, rawText: strin
     return [];
   };
 
-  const heuristic = fallbackHeuristicParsing(rawText);
+  const fullName = toString(data.fullName, data.full_name, data.name, data.candidateName);
+  const headline = toString(data.headline, data.professionalHeadline, data.title, data.currentRole, data.role);
+  const phone = toString(data.phone, data.phone_number, data.phoneNumber, data.mobile);
+  const location = toString(data.location, data.currentLocation, data.address, data.city);
+  const timezone = toString(data.timezone);
 
-  const fullName = toString(data.fullName, data.full_name, data.name, data.candidateName) || heuristic.fullName;
-  const headline = toString(data.headline, data.professionalHeadline, data.title, data.currentRole, data.role) || heuristic.headline;
-  const phone = toString(data.phone, data.phone_number, data.phoneNumber, data.mobile) || heuristic.phone;
-  const location = toString(data.location, data.currentLocation, data.address, data.city) || heuristic.location;
-  const timezone = toString(data.timezone) || heuristic.timezone;
-
-  let linkedinUrl = toString(data.linkedinUrl, data.linkedin) || heuristic.linkedinUrl;
+  let linkedinUrl = toString(data.linkedinUrl, data.linkedin);
   if (linkedinUrl && !linkedinUrl.startsWith('http')) {
     linkedinUrl = `https://${linkedinUrl}`;
   }
 
-  let githubUrl = toString(data.githubUrl, data.github) || heuristic.githubUrl;
+  let githubUrl = toString(data.githubUrl, data.github);
   if (githubUrl && !githubUrl.startsWith('http')) {
     githubUrl = `https://${githubUrl}`;
   }
 
-  let portfolioUrl = toString(data.portfolioUrl, data.portfolio, data.website) || heuristic.portfolioUrl;
+  let portfolioUrl = toString(data.portfolioUrl, data.portfolio, data.website);
   if (portfolioUrl && !portfolioUrl.startsWith('http')) {
     portfolioUrl = `https://${portfolioUrl}`;
   }
 
-  const skills = Array.from(new Set([...toStringArray(data.skills), ...(heuristic.skills || [])]));
+  const skills = Array.from(new Set(toStringArray(data.skills)));
 
   let targetRoles = toStringArray(data.targetRoles, data.roles);
   if (targetRoles.length === 0) {
@@ -67,14 +64,14 @@ export function sanitizeParsedData(data: Record<string, unknown>, rawText: strin
   }
 
   const targetLocations = toStringArray(data.targetLocations);
-  const yearsOfExperience = toNumber(data.yearsOfExperience, data.experienceYears) ?? heuristic.yearsOfExperience;
+  const yearsOfExperience = toNumber(data.yearsOfExperience, data.experienceYears);
 
   const workModeStr = toString(data.workMode);
   const workMode = ['Remote', 'Hybrid', 'Onsite'].includes(workModeStr || '')
     ? (workModeStr as 'Remote' | 'Hybrid' | 'Onsite')
     : undefined;
 
-  let bio = toString(data.bio, data.summary, data.professionalSummary) || heuristic.bio;
+  let bio = toString(data.bio, data.summary, data.professionalSummary);
   if (bio && (bio.includes('@') || bio.includes('+91') || bio.includes('http'))) {
     bio = bio
       .split('\n')
@@ -83,7 +80,7 @@ export function sanitizeParsedData(data: Record<string, unknown>, rawText: strin
       .trim();
   }
 
-  const proudProject = toString(data.proudProject, data.keyProject, data.featuredProject) || heuristic.proudProject;
+  const proudProject = toString(data.proudProject, data.keyProject, data.featuredProject);
   const currentCtc = toNumber(data.currentCtc);
   const expectedSalary = toNumber(data.expectedSalary);
   const noticePeriod = toString(data.noticePeriod);

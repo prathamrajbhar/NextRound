@@ -63,14 +63,9 @@ def _compose_response(analysis: Dict[str, Any]) -> str:
 
 def _generate_closing(state: ResumeBuilderState, target_role: str, target_company: str) -> str:
     closing = generate_text(_build_closing_prompt(state, target_role, target_company))
-    if closing and closing.strip():
-        return closing.strip()
-    user_name = state.get("user_name") or ""
-    name_suffix = f" {user_name}" if user_name else ""
-    return (
-        f"Thank you so much{name_suffix} — your professional resume is being prepared right now. "
-        "You've done a great job today!"
-    )
+    if not closing or not closing.strip():
+        raise RuntimeError("ResumeBuilderAgent: LLM failed to generate closing message.")
+    return closing.strip()
 
 
 def _handle_greeting(
@@ -175,9 +170,8 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
     analysis = _generate_turn(state, memory, asked, target_role, target_company)
 
     if not analysis:
-        logger.warning("ResumeBuilderAgent: LLM returned invalid/missing JSON — retrying with clarify fallback.")
-        state["latest_ai_response"] = "I didn't quite catch that — could you say that again?"
-        return state
+        logger.error("ResumeBuilderAgent: LLM returned invalid or missing response for turn.")
+        raise RuntimeError("ResumeBuilderAgent: LLM failed to generate turn response.")
 
     # Duplicate question guard — regenerate instead of silently dropping
     generated_q = analysis.get("next_question") or ""

@@ -48,11 +48,11 @@ export function computeCategoryScore(
 
 export function prepareActiveQuestions(
   fetched: AptitudeQuestion[],
-  fallback: AptitudeQuestion[],
+  initialQuestions: AptitudeQuestion[] = [],
   normalizeFn: (cat: string) => string,
   categories: readonly string[]
 ): AptitudeQuestion[] {
-  const list = fetched.length > 0 ? fetched : fallback;
+  const list = fetched.length > 0 ? fetched : initialQuestions;
   return list
     .map((q) => ({
       ...q,

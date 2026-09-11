@@ -28,7 +28,7 @@ export function useInterviewSession({
   interviewId,
   onComplete,
 }: UseInterviewSessionProps) {
-  const [stage, setStage] = useState<'check' | 'session' | 'fallback'>('check');
+  const [stage, setStage] = useState<'check' | 'session'>('check');
   const [phase, setPhase] = useState<InterviewPhase>('Introduction');
   const [messages, setMessages] = useState<Message[]>([]);
   const [timeRemaining, setTimeRemaining] = useState(900);
@@ -53,7 +53,7 @@ export function useInterviewSession({
   }, [messages]);
 
   useEffect(() => {
-    if (stage !== 'session' && stage !== 'fallback') return;
+    if (stage !== 'session') return;
     if (showWarningModal) return;
     const timer = setInterval(() => {
       setTimeRemaining((prev) => (prev > 0 ? prev - 1 : 0));

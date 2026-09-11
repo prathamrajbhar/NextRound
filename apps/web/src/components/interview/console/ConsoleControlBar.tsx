@@ -8,7 +8,7 @@ interface ConsoleControlBarProps {
   camActive: boolean;
   onToggleMic: () => void;
   onToggleCam: () => void;
-  showTextFallback: boolean;
+  showTextInput: boolean;
   textInput: string;
   onTextInputChange: (text: string) => void;
   onTextSubmit: (e: React.FormEvent) => void;
@@ -21,7 +21,7 @@ export function ConsoleControlBar({
   camActive,
   onToggleMic,
   onToggleCam,
-  showTextFallback,
+  showTextInput,
   textInput,
   onTextInputChange,
   onTextSubmit,
@@ -52,13 +52,13 @@ export function ConsoleControlBar({
         </button>
       </div>
 
-      {showTextFallback && (
+      {showTextInput && (
         <form onSubmit={onTextSubmit} className="hidden sm:flex flex-1 max-w-lg mx-4 items-center gap-2">
           <input
             type="text"
             value={textInput}
             onChange={(e) => onTextInputChange(e.target.value)}
-            placeholder="Type your response as text fallback..."
+            placeholder="Type your response..."
             className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
           />
           <button

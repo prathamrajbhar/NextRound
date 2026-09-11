@@ -5,8 +5,8 @@ from agents.resume_builder_agent import run_resume_builder_agent, _build_turn_pr
 def test_system_prompt_conciseness_rules():
     """Verify that the system prompt strictly enforces concise human-like questions."""
     assert "under 15 words" in SYSTEM_PROMPT.lower()
-    assert "one single, short question" in SYSTEM_PROMPT.lower()
-    assert "never repeat yourself" in SYSTEM_PROMPT.lower()
+    assert "one atomic question" in SYSTEM_PROMPT.lower()
+    assert "never repeat a question" in SYSTEM_PROMPT.lower()
 
 def test_build_turn_prompt_formatting():
     """Test turn prompt formatting for resume builder agent."""
@@ -39,7 +39,7 @@ def test_build_turn_prompt_formatting():
 @patch("agents.resume_builder_agent.generate_text")
 def test_run_resume_builder_agent_initial_turn(mock_generate):
     """Test initial greeting turn of resume builder agent."""
-    mock_generate.return_value = '{"response": "Hi there! Glad to help you build your resume today.", "extracted_facts": {}, "suggested_stage": "intro"}'
+    mock_generate.return_value = '{"response": "Hi there! Glad to help you build your resume today.", "next_question": "What is your name?", "action": "NEXT_TOPIC"}'
 
     initial_state = {
         "session_id": "session-1",
@@ -69,7 +69,7 @@ def test_run_resume_builder_agent_closing(mock_generate):
         "target_role": "Backend Engineer",
         "target_company": "Acme Inc",
         "current_stage": "education",
-        "turn_number": 13,
+        "turn_number": 30,
         "latest_candidate_response": "I graduated with a CS degree.",
         "conversation_history": [],
         "memory": {}

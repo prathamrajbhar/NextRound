@@ -1,7 +1,7 @@
 import { generateText } from '../llm/llm.service';
 import { logger } from '../../lib/logger';
 import type { ParsedResumeData } from './resume-heuristic.service';
-import { sanitizeParsedData, fallbackHeuristicParsing } from './resume-heuristic.service';
+import { sanitizeParsedData } from './resume-heuristic.service';
 
 export * from './resume-extractor.service';
 export * from './resume-heuristic.service';
@@ -76,14 +76,16 @@ Return ONLY the generated text string for the field without markdown formatting,
     return responseText.trim().replace(/^["']|["']$/g, '');
   } catch (error) {
     logger.child('ResumeParser').error('Field regeneration error:', error);
-    return currentValue || '';
+    throw error instanceof Error ? error : new Error('Failed to regenerate resume field');
   }
 }
 
 export async function parseResumeWithGemini(rawText: string): Promise<ParsedResumeData> {
-  if (rawText.length > 20) {
-    try {
-      const prompt = `You are an executive AI recruiter & professional technical resume strategist.
+  if (rawText.trim().length <= 20) {
+    throw new Error('Resume text too short for parsing');
+  }
+
+  const prompt = `You are an executive AI recruiter & professional technical resume strategist.
 Analyze the candidate's uploaded raw resume text. DO NOT simply copy-paste raw text snippets ("take and put"). Instead, synthesize, elevate, and craft polished, recruiter-ready profile fields based strictly on the uploaded resume content.
 
 WRITING & SYNTHESIS DIRECTIVES:
@@ -119,17 +121,18 @@ Return ONLY a valid raw JSON object without markdown formatting.
 RESUME CONTENT:
 ${rawText.slice(0, 12000)}`;
 
-      const responseText = await generateText(prompt);
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+  try {
+    const responseText = await generateText(prompt);
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
 
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-        return sanitizeParsedData(parsed, rawText);
-      }
-    } catch (error) {
-      logger.child('ResumeParser').error('LLM resume parsing error:', error);
+    if (!jsonMatch) {
+      throw new Error('AI model did not return a valid JSON object for resume data');
     }
-  }
 
-  return fallbackHeuristicParsing(rawText);
+    const parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+    return sanitizeParsedData(parsed);
+  } catch (error) {
+    logger.child('ResumeParser').error('LLM resume parsing error:', error);
+    throw error instanceof Error ? error : new Error('Failed to parse resume with AI model');
+  }
 }
