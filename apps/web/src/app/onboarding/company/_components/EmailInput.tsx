@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, X } from '@/lib/lucide-google-icons';
+import { Plus, X, Mail } from '@/lib/lucide-google-icons';
 import { inputCls, labelCls } from './CompanyOnboardingShell';
 
 interface EmailInputProps {
@@ -28,17 +28,20 @@ export function EmailInput({ label, placeholder, emails, onAdd, onRemove }: Emai
     <div>
       <label className={labelCls}>{label}</label>
       {emails.length > 0 && (
-        <div className="space-y-1.5 mb-3">
+        <div className="space-y-2 mb-3.5">
           {emails.map((email) => (
             <div
               key={email}
-              className="flex items-center justify-between p-2 rounded-xl border border-white/10 bg-white/5 text-xs font-medium text-slate-200"
+              className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-800 bg-slate-900/60 text-sm font-medium text-slate-200"
             >
-              <span>{email}</span>
+              <div className="flex items-center gap-2.5">
+                <Mail className="h-4 w-4 text-orange-400" />
+                <span>{email}</span>
+              </div>
               <button
                 type="button"
                 onClick={() => onRemove(email)}
-                className="text-slate-400 hover:text-rose-400 transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-rose-400 transition-colors cursor-pointer p-1"
                 aria-label={`Remove ${email}`}
               >
                 <X className="h-4 w-4" />
@@ -47,7 +50,7 @@ export function EmailInput({ label, placeholder, emails, onAdd, onRemove }: Emai
           ))}
         </div>
       )}
-      <form onSubmit={submit} className="flex gap-2">
+      <form onSubmit={submit} className="flex gap-2.5">
         <input
           type="email"
           value={draft}
@@ -57,9 +60,9 @@ export function EmailInput({ label, placeholder, emails, onAdd, onRemove }: Emai
         />
         <button
           type="submit"
-          className="shrink-0 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs px-4 cursor-pointer flex items-center justify-center gap-1 border border-white/15 transition-all"
+          className="shrink-0 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs px-5 cursor-pointer flex items-center justify-center gap-1.5 border border-slate-800 transition-all shadow-sm"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4 text-orange-400" />
           Add
         </button>
       </form>

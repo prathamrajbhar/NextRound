@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Building, Globe, MapPin } from '@/lib/lucide-google-icons';
+import { Building, Globe } from '@/lib/lucide-google-icons';
 import { CompanyStepProps } from './useCompanyOnboarding';
 import { inputCls, labelCls, selectCls } from './CompanyOnboardingShell';
 import { SingleCityInput } from '../../candidate/_components/SingleCityInput';
@@ -22,13 +22,13 @@ const SIZES = ['1-10', '11-50', '51-200', '201-1000', '1000+'];
 
 export function CompanyDetailsStep({ form, update }: CompanyStepProps) {
   return (
-    <div className="space-y-5 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-in fade-in duration-200">
       <div>
         <label className={labelCls}>
           Organization Name <span className="text-orange-400">*</span>
         </label>
         <div className="relative">
-          <Building className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+          <Building className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
           <input
             type="text"
             value={form.name}
@@ -43,7 +43,7 @@ export function CompanyDetailsStep({ form, update }: CompanyStepProps) {
         <div>
           <label className={labelCls}>Website</label>
           <div className="relative">
-            <Globe className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
+            <Globe className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
             <input
               type="url"
               value={form.website}
