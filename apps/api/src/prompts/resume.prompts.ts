@@ -10,7 +10,7 @@ export function buildResumeFieldPrompt(options: FieldPromptOptions): string {
   } else if (options.field === 'bio') {
     fieldInstruction = `Craft a compelling, executive 2-4 sentence summary/bio for the candidate. Synthesize their experience level, technical stack (from GitHub/resume), engineering focus, major accomplishments, and career aspirations. Rely purely on demonstrable competencies and technical scope. Completely ignore and omit any demographic indicators, age, gender, nationality, or personal background. Do NOT include emails, phone numbers, or addresses. Write directly without preamble or quotation marks.`;
   } else {
-    fieldInstruction = `Generate a punchy, modern technical headline (e.g., "Full-Stack Engineer | React, Node.js & PyTorch"). Highlight their primary engineering role and 2-3 core technologies. Keep it strictly under 60-70 characters so it fits cleanly in profile banners. Write directly without preamble or quotation marks.`;
+    fieldInstruction = `Generate ONLY the clean professional job title / profession designation of the candidate (e.g., "Full-Stack Engineer", "Senior Backend Engineer", "AI/ML Systems Engineer", "DevOps Engineer"). Do NOT append any skills, technologies, programming languages, pipe symbols ('|'), or bullet points. Return strictly the professional title without preamble or quotation marks.`;
   }
 
   return `You are an elite AI technical recruiter & executive resume strategist.
@@ -34,7 +34,7 @@ Analyze the candidate's raw resume text and extract high-precision profile data.
 
 EXTRACTION & FAIR SYNTHESIS RULES:
 1. "fullName": The candidate's actual personal name found at the top of the resume. NEVER output a job title (e.g. "Software Engineer"), degree, section header, or generic phrase. If uncertain, return null.
-2. "headline": Synthesize a punchy, modern technical headline reflecting their actual engineering roles and top 2-3 core skills (e.g. "Full-Stack Engineer | React & Node.js" or "Backend & Cloud Engineer | Go & Kubernetes"). Keep concise (under 60-70 characters), never dump extensive skill lists into the headline.
+2. "headline": Extract ONLY the candidate's clean professional title / profession designation (e.g. "Full-Stack Engineer", "Backend Engineer", "Data Scientist", "Lead Mobile Developer"). STRICT REQUIREMENT: DO NOT include any programming languages, frameworks, skills, technologies, or pipe delimiters ('|'). Only the professional role title.
 3. "bio": A polished 2-4 sentence executive summary of the candidate's experience, technical depth, major engineering accomplishments, and domains. Grounded strictly in demonstrated technical facts from the resume. NEVER invent past companies or credentials. Disregard demographic markers, age, ethnicity, gender, or pedigree elitism. Do NOT include email, phone, or links.
 4. "proudProject": Identify the most technically complex or impactful project described in the resume. Rewrite into an objective narrative covering project objective, tech stack, key architectural/coding contributions, and measurable impact.
 5. "skills": Extract all verifiable technical skills, languages, frameworks, libraries, databases, and cloud tools explicitly mentioned in the resume.

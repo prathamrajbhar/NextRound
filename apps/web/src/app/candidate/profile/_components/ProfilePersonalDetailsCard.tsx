@@ -151,7 +151,7 @@ export function ProfilePersonalDetailsCard({
           <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Professional Headline</label>
           <input
             type="text"
-            placeholder="Senior Full Stack Engineer · React, TypeScript &amp; Distributed Systems"
+            placeholder="Senior Full Stack Engineer"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
             className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200/80 dark:border-slate-700 bg-white/60 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 font-semibold focus:outline-none focus:border-brand-500 dark:focus:border-orange-500 glass-input"
