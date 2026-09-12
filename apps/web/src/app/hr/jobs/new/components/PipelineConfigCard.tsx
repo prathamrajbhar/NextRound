@@ -26,13 +26,13 @@ interface PipelineConfigCardProps {
     codingProblemId: string;
     passingScore: number;
     mcqDistribution?: Record<string, number>;
+    customQuestions?: any[];
   };
-  setAssessmentConfig: React.Dispatch<React.SetStateAction<{
-    mcqCount: number;
-    codingProblemId: string;
-    passingScore: number;
-    mcqDistribution?: Record<string, number>;
-  }>>;
+  setAssessmentConfig: React.Dispatch<React.SetStateAction<any>>;
+  jdText?: string;
+  roleTitle?: string;
+  skills?: string[];
+  experienceLevel?: string;
 }
 
 const SEQUENCE_ORDER: PipelineStage[] = [
@@ -53,6 +53,10 @@ export default function PipelineConfigCard({
   setStages,
   assessmentConfig,
   setAssessmentConfig,
+  jdText,
+  roleTitle,
+  skills,
+  experienceLevel,
 }: PipelineConfigCardProps) {
   const toggleStage = (stage: 'screening' | 'assessment' | 'voice_screen' | 'panel') => {
     if (stages.includes(stage)) {
@@ -115,6 +119,10 @@ export default function PipelineConfigCard({
             <AssessmentConfigDetails
               assessmentConfig={assessmentConfig}
               setAssessmentConfig={setAssessmentConfig}
+              jdText={jdText}
+              roleTitle={roleTitle}
+              skills={skills}
+              experienceLevel={experienceLevel}
             />
           )}
         </div>

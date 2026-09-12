@@ -1,4 +1,5 @@
 import { Job } from '@/types';
+import { AssessmentQuestion } from '@/types/assessment-question';
 
 export type PipelineStage = 'screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision';
 
@@ -7,6 +8,7 @@ export interface AssessmentConfig {
   codingProblemId: string;
   passingScore: number;
   mcqDistribution?: Record<string, number>;
+  customQuestions?: AssessmentQuestion[];
 }
 
 export function normalizeLocationType(loc?: string): string {
@@ -70,6 +72,7 @@ export function buildAssessmentConfig(config?: Partial<AssessmentConfig>): Asses
         'Verbal Ability': base + (remainder > 2 ? 1 : 0),
         'Data Interpretation': base,
       },
+      customQuestions: config.customQuestions,
     };
   }
 
@@ -78,5 +81,6 @@ export function buildAssessmentConfig(config?: Partial<AssessmentConfig>): Asses
     codingProblemId: config.codingProblemId || 'virtualized-list',
     passingScore: config.passingScore ?? 80,
     mcqDistribution: config.mcqDistribution,
+    customQuestions: config.customQuestions,
   };
 }

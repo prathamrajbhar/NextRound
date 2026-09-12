@@ -2,17 +2,24 @@
 
 import React from 'react';
 import { Brain, BookOpen, BarChart3, Cpu, ClipboardCheck } from '@/lib/lucide-google-icons';
+import { AssessmentCustomQuestionsSection } from './AssessmentCustomQuestionsSection';
+import { AssessmentQuestion } from '@/types/assessment-question';
 
 interface AssessmentConfig {
   mcqCount: number;
   codingProblemId: string;
   passingScore: number;
   mcqDistribution?: Record<string, number>;
+  customQuestions?: AssessmentQuestion[];
 }
 
 interface AssessmentConfigDetailsProps {
   assessmentConfig: AssessmentConfig;
   setAssessmentConfig: React.Dispatch<React.SetStateAction<AssessmentConfig>>;
+  jdText?: string;
+  roleTitle?: string;
+  skills?: string[];
+  experienceLevel?: string;
 }
 
 const CATEGORIES = [
@@ -45,6 +52,10 @@ const PRESETS = [
 export function AssessmentConfigDetails({
   assessmentConfig,
   setAssessmentConfig,
+  jdText,
+  roleTitle,
+  skills,
+  experienceLevel,
 }: AssessmentConfigDetailsProps) {
   const distribution = assessmentConfig.mcqDistribution || {
     'Quantitative Aptitude': Math.ceil(assessmentConfig.mcqCount / 4),
@@ -186,6 +197,21 @@ export function AssessmentConfigDetails({
           className="w-full accent-amber-500 cursor-pointer"
         />
       </div>
+
+      <AssessmentCustomQuestionsSection
+        customQuestions={assessmentConfig.customQuestions}
+        onUpdateCustomQuestions={(questions) =>
+          setAssessmentConfig({
+            ...assessmentConfig,
+            customQuestions: questions,
+            mcqCount: questions.length > 0 ? questions.length : assessmentConfig.mcqCount,
+          })
+        }
+        jdText={jdText || ''}
+        roleTitle={roleTitle}
+        skills={skills}
+        experienceLevel={experienceLevel}
+      />
     </div>
   );
 }

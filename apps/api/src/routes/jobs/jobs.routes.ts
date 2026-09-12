@@ -14,7 +14,7 @@ import {
   closeJob,
   deleteJob,
 } from './jobs-mutation.controller';
-import { extractRequirements, aiAssistJob, generateJd } from './jobs-ai.controller';
+import { extractRequirements, aiAssistJob, generateJd, generateQuestions } from './jobs-ai.controller';
 import { getJobPipeline, getJobApplications } from './jobs-pipeline.controller';
 
 export const jobRouter = Router();
@@ -33,6 +33,7 @@ jobRouter.delete('/:id', authenticate, requireRole('hr'), requireOrgScope, delet
 
 jobRouter.post('/extract-requirements', authenticate, requireRole('hr'), extractRequirements);
 jobRouter.post('/generate-jd', authenticate, requireRole('hr'), generateJd);
+jobRouter.post('/generate-questions', authenticate, requireRole('hr'), generateQuestions);
 jobRouter.post('/:id/ai-assist', authenticate, requireRole('hr'), requireOrgScope, aiAssistJob);
 jobRouter.get('/:id/pipeline', authenticate, requireRole('hr'), requireOrgScope, getJobPipeline);
 jobRouter.get('/:id/applications', authenticate, requireRole('hr'), requireOrgScope, getJobApplications);

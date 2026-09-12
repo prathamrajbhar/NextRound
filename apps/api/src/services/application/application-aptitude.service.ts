@@ -44,18 +44,35 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
     orderBy: { created_at: 'desc' },
   });
 
+  const rawCustomQuestions = Array.isArray(assessmentConfig.customQuestions)
+    ? (assessmentConfig.customQuestions as unknown as StoredQuestion[])
+    : [];
+
   let allQuestions: StoredQuestion[] = [];
 
   const isCompleted = assessment?.status === 'completed';
   const storedCount = Array.isArray(assessment?.questions) ? (assessment!.questions as unknown[]).length : 0;
-  const countMatchesConfig = storedCount === totalCount;
+  const targetCount = rawCustomQuestions.length > 0 ? rawCustomQuestions.length : totalCount;
+  const countMatchesConfig = storedCount === targetCount;
 
   if (isCompleted && countMatchesConfig && storedCount > 0) {
     allQuestions = assessment!.questions as unknown as StoredQuestion[];
+  } else if (rawCustomQuestions.length > 0) {
+    allQuestions = rawCustomQuestions.map((cq, idx) => ({
+      id: cq.id || `custom_q_${idx + 1}`,
+      category: cq.category || 'General Technical',
+      question: cq.question || cq.text || '',
+      text: cq.text || cq.question || '',
+      options: Array.isArray(cq.options) ? cq.options : [],
+      difficulty: cq.difficulty || 'intermediate',
+      correct_index: cq.correctIndex !== undefined ? cq.correctIndex : cq.correct_index,
+      correctIndex: cq.correctIndex !== undefined ? cq.correctIndex : cq.correct_index,
+    }));
   } else {
     const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
     const selected = await selectAptitudeQuestions({ distribution });
     allQuestions = selected as unknown as StoredQuestion[];
+  }
 
     if (assessment) {
       assessment = await prisma.assessment.update({
@@ -78,7 +95,6 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
         },
       });
     }
-  }
 
   const sanitizedQuestions = allQuestions.map((questionItem) => ({
     id: questionItem.id,

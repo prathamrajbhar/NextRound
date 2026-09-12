@@ -1,3 +1,5 @@
+import { AssessmentQuestion } from '@/types/assessment-question';
+
 export interface RubricWeights {
   technical: number;
   communication: number;
@@ -5,7 +7,15 @@ export interface RubricWeights {
   experience: number;
 }
 
-export const DEFAULT_ASSESSMENT_CONFIG = {
+export interface AssessmentConfig {
+  mcqCount: number;
+  codingProblemId: string;
+  passingScore: number;
+  mcqDistribution?: Record<string, number>;
+  customQuestions?: AssessmentQuestion[];
+}
+
+export const DEFAULT_ASSESSMENT_CONFIG: AssessmentConfig = {
   mcqCount: 20,
   codingProblemId: 'virtualized-list',
   passingScore: 80,

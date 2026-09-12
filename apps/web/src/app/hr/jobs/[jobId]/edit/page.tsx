@@ -123,6 +123,10 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
               setStages={form.setStages}
               assessmentConfig={form.assessmentConfig}
               setAssessmentConfig={form.setAssessmentConfig}
+              jdText={form.jd}
+              roleTitle={form.title}
+              skills={form.skills}
+              experienceLevel={form.experienceLevel}
             />
           </section>
         </div>

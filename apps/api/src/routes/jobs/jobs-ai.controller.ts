@@ -100,4 +100,39 @@ export async function generateJd(req: Request, res: Response, next: NextFunction
   }
 }
 
+export async function generateQuestions(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { title, description, skills, experienceLevel, countPerTier } = req.body;
+    const jdText = typeof description === 'string' ? description.trim() : '';
+
+    if (!jdText) {
+      return res.status(400).json({ success: false, error: 'Job description is required to generate assessment questions.' });
+    }
+
+    const { generateJdAssessmentQuestions } = await import('../../services/assessment/assessment-generator.service');
+    const questions = await generateJdAssessmentQuestions({
+      title: typeof title === 'string' ? title.trim() : undefined,
+      description: jdText,
+      skills: Array.isArray(skills) ? skills.filter((s): s is string => typeof s === 'string') : undefined,
+      experienceLevel: typeof experienceLevel === 'string' ? experienceLevel : undefined,
+      countPerTier: typeof countPerTier === 'number' ? Math.max(1, Math.min(10, countPerTier)) : 4,
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        questions,
+        total: questions.length,
+        breakdown: {
+          easy: questions.filter((q) => q.difficulty === 'easy').length,
+          intermediate: questions.filter((q) => q.difficulty === 'intermediate').length,
+          advanced: questions.filter((q) => q.difficulty === 'advanced').length,
+        },
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
 
