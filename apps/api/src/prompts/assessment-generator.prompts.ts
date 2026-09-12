@@ -1,15 +1,25 @@
+export type AssessmentDifficulty = 'easy' | 'intermediate' | 'advanced';
+
 export interface AssessmentDifficultyDistribution {
   easy: number;
   intermediate: number;
   advanced: number;
 }
 
+export type AptitudeCategory =
+  | 'Quantitative Aptitude'
+  | 'Logical Reasoning'
+  | 'Verbal Ability'
+  | 'Data Interpretation';
+
 export interface AssessmentQuestionPromptOptions {
   title?: string;
   description: string;
   skills?: string[];
   experienceLevel?: string;
-  distribution: AssessmentDifficultyDistribution;
+  difficulty?: AssessmentDifficulty;
+  categoryDistribution?: Record<string, number>;
+  difficultyDistribution?: AssessmentDifficultyDistribution;
 }
 
 export function buildAssessmentQuestionGenPrompt(options: AssessmentQuestionPromptOptions): string {
@@ -18,47 +28,84 @@ export function buildAssessmentQuestionGenPrompt(options: AssessmentQuestionProm
     description,
     skills = [],
     experienceLevel = 'Mid-Level',
-    distribution,
+    difficulty = 'intermediate',
+    categoryDistribution,
+    difficultyDistribution,
   } = options;
 
-  const totalRequired = distribution.easy + distribution.intermediate + distribution.advanced;
+  let requirementsText = '';
+  let totalRequired = 0;
 
-  const tierRequirements: string[] = [];
-  if (distribution.easy > 0) {
-    tierRequirements.push(`- Generate exactly ${distribution.easy} question(s) with "difficulty": "easy" (core definitions, foundational concepts, basic syntax, fundamental knowledge).`);
-  }
-  if (distribution.intermediate > 0) {
-    tierRequirements.push(`- Generate exactly ${distribution.intermediate} question(s) with "difficulty": "intermediate" (practical problem-solving, debugging scenarios, framework API usage, real-world development trade-offs).`);
-  }
-  if (distribution.advanced > 0) {
-    tierRequirements.push(`- Generate exactly ${distribution.advanced} question(s) with "difficulty": "advanced" (performance optimization, edge cases, scalability, concurrency, distributed systems, deep architecture pitfalls).`);
+  if (categoryDistribution && Object.keys(categoryDistribution).length > 0) {
+    const lines: string[] = [];
+    for (const [cat, count] of Object.entries(categoryDistribution)) {
+      const num = Math.max(0, Number(count) || 0);
+      if (num > 0) {
+        totalRequired += num;
+        lines.push(`- Category "${cat}": exactly ${num} question(s) at difficulty "${difficulty}".`);
+      }
+    }
+    requirementsText = `TARGET DIFFICULTY LEVEL: "${difficulty}"\n` +
+      `CATEGORY BREAKDOWN (Generate exactly the counts specified per category at "${difficulty}" difficulty):\n` +
+      lines.join('\n');
+  } else if (difficultyDistribution) {
+    const lines: string[] = [];
+    if (difficultyDistribution.easy > 0) {
+      totalRequired += difficultyDistribution.easy;
+      lines.push(`- Easy: exactly ${difficultyDistribution.easy} question(s).`);
+    }
+    if (difficultyDistribution.intermediate > 0) {
+      totalRequired += difficultyDistribution.intermediate;
+      lines.push(`- Intermediate: exactly ${difficultyDistribution.intermediate} question(s).`);
+    }
+    if (difficultyDistribution.advanced > 0) {
+      totalRequired += difficultyDistribution.advanced;
+      lines.push(`- Advanced: exactly ${difficultyDistribution.advanced} question(s).`);
+    }
+    requirementsText = `DIFFICULTY BREAKDOWN (across Quantitative Aptitude, Logical Reasoning, Verbal Ability, Data Interpretation):\n` +
+      lines.join('\n');
+  } else {
+    totalRequired = 8;
+    requirementsText = `Generate 8 questions at "${difficulty}" difficulty across Quantitative Aptitude, Logical Reasoning, Verbal Ability, and Data Interpretation (2 each).`;
   }
 
-  return `You are a principal technical interviewer and assessment designer for top technology companies.
-Generate a high-quality, practical Multiple-Choice Assessment (MCQ) based on the provided Job Description and required competencies.
+  return `You are a principal assessment designer and aptitude test architect for top enterprise companies.
+Generate a high-quality, professional Multiple-Choice Assessment (MCQ) aligned with the provided Job Description and exact category & difficulty requirements.
 
 ROLE CONTEXT:
-- Title: ${title}
+- Target Role: ${title}
 - Seniority / Level: ${experienceLevel}
-- Core Skills: ${skills.join(', ') || 'Derived from description'}
+- Core Skills: ${skills.join(', ') || 'Derived from role description'}
 - Job Description:
 ${description.slice(0, 8000)}
 
-EXACT QUANTITY & DIFFICULTY BREAKDOWN (Total ${totalRequired} questions):
-${tierRequirements.join('\n')}
+EXACT QUANTITY & CATEGORY REQUIREMENTS (Total ${totalRequired} questions):
+${requirementsText}
 
-REQUIREMENTS:
-1. You MUST generate ONLY the exact counts specified above for each difficulty level. Do NOT generate difficulties that have a count of 0.
-2. Every question must have:
-   - "id": Unique string identifier (e.g. "q_easy_1", "q_int_1", "q_adv_1").
-   - "difficulty": Exactly "easy" | "intermediate" | "advanced".
-   - "category": Relevant skill or topic name (e.g., "Python", "System Design", "SQL", "React").
-   - "question": Clear, concise, professional question text.
-   - "options": Exactly 4 plausible options [Option 0, Option 1, Option 2, Option 3].
-   - "correctIndex": Integer index (0, 1, 2, or 3) indicating the single unambiguously correct answer.
-   - "explanation": 1-2 sentences explaining why the correct answer is right and why other options are incorrect.
+SPECIFIC APTITUDE CATEGORIES GUIDE:
+1. "Quantitative Aptitude": Numerical problem solving, arithmetic/algebra/geometry/percentages/ratios, computational math, estimation. Contextualize problem statements to real-world software, product, data, or business scenarios when possible.
+2. "Logical Reasoning": Deductive & inductive logic, pattern recognition, syllogisms, condition evaluation, sequencing, critical thinking, workflow analysis.
+3. "Verbal Ability": Technical comprehension, written communication clarity, grammar, critical passage reading, professional nuance, vocabulary in business/tech contexts.
+4. "Data Interpretation": Analysis of tables, metrics, charts, percentages, error rates, system uptime data, and statistical deduction from datasets.
 
-3. Zero bias, high technical accuracy, no trivial trick questions, and no duplicated questions.
+DIFFICULTY GUIDELINES:
+- "easy": Foundational logic, direct calculations, unambiguous reading comprehension, standard patterns.
+- "intermediate": Multi-step reasoning, realistic business/system scenarios, analytical deduction, situational trade-offs.
+- "advanced": Complex multi-variable problem solving, dense data sets, tricky edge cases, deep deductive logic.
+
+MANDATORY RULES:
+1. Generate EXACTLY the requested number of questions for each category. Do NOT omit any requested category or add extra questions.
+2. Every question MUST set "difficulty" to "${difficulty}".
+3. Every question MUST set "category" strictly to one of: "Quantitative Aptitude", "Logical Reasoning", "Verbal Ability", or "Data Interpretation" (matching the requested categories).
+4. Every question must have:
+   - "id": Unique string identifier (e.g. "q_qa_1", "q_lr_1", "q_va_1", "q_di_1").
+   - "difficulty": "${difficulty}".
+   - "category": Exact category name.
+   - "question": Clear, unambiguous, professional question prompt.
+   - "options": Exactly 4 distinct, plausible options [Option 0, Option 1, Option 2, Option 3].
+   - "correctIndex": Integer index (0, 1, 2, or 3) indicating the single correct answer.
+   - "explanation": 1-2 concise sentences detailing why the correct answer is right and why others are wrong.
+5. No duplicates, no trivia, zero ambiguity, and high mathematical and logical accuracy.
 
 Return ONLY a valid JSON object matching this schema:
 {

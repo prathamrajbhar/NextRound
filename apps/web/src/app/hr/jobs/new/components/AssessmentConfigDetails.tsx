@@ -22,27 +22,9 @@ interface AssessmentConfigDetailsProps {
   experienceLevel?: string;
 }
 
-const CATEGORIES = [
-  'Quantitative Aptitude',
-  'Logical Reasoning',
-  'Verbal Ability',
-  'Data Interpretation',
-] as const;
-
-const CATEGORY_ICONS: Record<string, React.ElementType> = {
-  'Quantitative Aptitude': Cpu,
-  'Logical Reasoning': Brain,
-  'Verbal Ability': BookOpen,
-  'Data Interpretation': BarChart3,
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  'Quantitative Aptitude': 'text-amber-500 dark:text-amber-400',
-  'Logical Reasoning': 'text-purple-500 dark:text-purple-400',
-  'Verbal Ability': 'text-emerald-500 dark:text-emerald-400',
-  'Data Interpretation': 'text-brand-500 dark:text-brand-400',
-};
-
+const CATEGORIES = ['Quantitative Aptitude', 'Logical Reasoning', 'Verbal Ability', 'Data Interpretation'] as const;
+const CATEGORY_ICONS: Record<string, React.ElementType> = { 'Quantitative Aptitude': Cpu, 'Logical Reasoning': Brain, 'Verbal Ability': BookOpen, 'Data Interpretation': BarChart3 };
+const CATEGORY_COLORS: Record<string, string> = { 'Quantitative Aptitude': 'text-amber-500 dark:text-amber-400', 'Logical Reasoning': 'text-purple-500 dark:text-purple-400', 'Verbal Ability': 'text-emerald-500 dark:text-emerald-400', 'Data Interpretation': 'text-brand-500 dark:text-brand-400' };
 const PRESETS = [
   { name: 'Quick (8Q)', dist: { 'Quantitative Aptitude': 2, 'Logical Reasoning': 2, 'Verbal Ability': 2, 'Data Interpretation': 2 } },
   { name: 'Standard (20Q)', dist: { 'Quantitative Aptitude': 5, 'Logical Reasoning': 5, 'Verbal Ability': 5, 'Data Interpretation': 5 } },
@@ -57,11 +39,13 @@ export function AssessmentConfigDetails({
   skills,
   experienceLevel,
 }: AssessmentConfigDetailsProps) {
+  const baseQ = Math.floor(assessmentConfig.mcqCount / 4);
+  const remQ = assessmentConfig.mcqCount % 4;
   const distribution = assessmentConfig.mcqDistribution || {
-    'Quantitative Aptitude': Math.ceil(assessmentConfig.mcqCount / 4),
-    'Logical Reasoning': Math.floor((assessmentConfig.mcqCount + 2) / 4),
-    'Verbal Ability': Math.floor((assessmentConfig.mcqCount + 1) / 4),
-    'Data Interpretation': Math.floor(assessmentConfig.mcqCount / 4),
+    'Quantitative Aptitude': baseQ + (remQ > 0 ? 1 : 0),
+    'Logical Reasoning': baseQ + (remQ > 1 ? 1 : 0),
+    'Verbal Ability': baseQ + (remQ > 2 ? 1 : 0),
+    'Data Interpretation': baseQ,
   };
 
   const handleCategoryCountChange = (category: string, newCount: number) => {
@@ -78,17 +62,16 @@ export function AssessmentConfigDetails({
   };
 
   const resetEqual = () => {
-    const equalDist = Math.floor(assessmentConfig.mcqCount / 4);
-    const remainder = assessmentConfig.mcqCount % 4;
-    const newDist = {
-      'Quantitative Aptitude': equalDist + (remainder > 0 ? 1 : 0),
-      'Logical Reasoning': equalDist + (remainder > 1 ? 1 : 0),
-      'Verbal Ability': equalDist + (remainder > 2 ? 1 : 0),
-      'Data Interpretation': equalDist,
-    };
+    const base = Math.floor(assessmentConfig.mcqCount / 4);
+    const rem = assessmentConfig.mcqCount % 4;
     setAssessmentConfig({
       ...assessmentConfig,
-      mcqDistribution: newDist,
+      mcqDistribution: {
+        'Quantitative Aptitude': base + (rem > 0 ? 1 : 0),
+        'Logical Reasoning': base + (rem > 1 ? 1 : 0),
+        'Verbal Ability': base + (rem > 2 ? 1 : 0),
+        'Data Interpretation': base,
+      },
     });
   };
 
@@ -132,29 +115,9 @@ export function AssessmentConfigDetails({
                   <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{cat}</span>
                 </div>
                 <div className="flex items-center gap-1 border border-slate-200 dark:border-slate-700 rounded-lg p-0.5 bg-white dark:bg-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => handleCategoryCountChange(cat, count - 1)}
-                    className="h-5 w-5 rounded bg-slate-50 dark:bg-slate-750 text-slate-800 dark:text-slate-200 flex items-center justify-center cursor-pointer font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
-                    disabled={count <= 0}
-                  >
-                    -
-                  </button>
-                  <input
-                    type="number"
-                    min="0"
-                    max="50"
-                    value={count}
-                    onChange={(e) => handleCategoryCountChange(cat, Math.max(0, Math.min(50, parseInt(e.target.value) || 0)))}
-                    className="w-7 text-center font-extrabold text-xs text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleCategoryCountChange(cat, Math.min(50, count + 1))}
-                    className="h-5 w-5 rounded bg-slate-50 dark:bg-slate-750 text-slate-800 dark:text-slate-200 flex items-center justify-center cursor-pointer font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700"
-                  >
-                    +
-                  </button>
+                  <button type="button" onClick={() => handleCategoryCountChange(cat, count - 1)} className="h-5 w-5 rounded bg-slate-50 dark:bg-slate-750 text-slate-800 dark:text-slate-200 flex items-center justify-center cursor-pointer font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed" disabled={count <= 0}>-</button>
+                  <input type="number" min="0" max="50" value={count} onChange={(e) => handleCategoryCountChange(cat, Math.max(0, Math.min(50, parseInt(e.target.value) || 0)))} className="w-7 text-center font-extrabold text-xs text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                  <button type="button" onClick={() => handleCategoryCountChange(cat, Math.min(50, count + 1))} className="h-5 w-5 rounded bg-slate-50 dark:bg-slate-750 text-slate-800 dark:text-slate-200 flex items-center justify-center cursor-pointer font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700">+</button>
                 </div>
               </div>
             );
@@ -207,6 +170,8 @@ export function AssessmentConfigDetails({
             mcqCount: questions.length > 0 ? questions.length : assessmentConfig.mcqCount,
           })
         }
+        categoryDistribution={distribution}
+        mcqCount={assessmentConfig.mcqCount}
         jdText={jdText || ''}
         roleTitle={roleTitle}
         skills={skills}

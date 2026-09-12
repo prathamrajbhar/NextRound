@@ -102,7 +102,7 @@ export async function generateJd(req: Request, res: Response, next: NextFunction
 
 export async function generateQuestions(req: Request, res: Response, next: NextFunction) {
   try {
-    const { title, description, skills, experienceLevel, distribution, totalCount } = req.body;
+    const { title, description, skills, experienceLevel, difficulty, categoryDistribution, distribution, totalCount } = req.body;
     const jdText = typeof description === 'string' ? description.trim() : '';
 
     if (!jdText) {
@@ -115,6 +115,8 @@ export async function generateQuestions(req: Request, res: Response, next: NextF
       description: jdText,
       skills: Array.isArray(skills) ? skills.filter((s): s is string => typeof s === 'string') : undefined,
       experienceLevel: typeof experienceLevel === 'string' ? experienceLevel : undefined,
+      difficulty: typeof difficulty === 'string' && ['easy', 'intermediate', 'advanced'].includes(difficulty) ? (difficulty as any) : undefined,
+      categoryDistribution: typeof categoryDistribution === 'object' && categoryDistribution !== null ? categoryDistribution : undefined,
       distribution: typeof distribution === 'object' && distribution !== null ? distribution : undefined,
       totalCount: typeof totalCount === 'number' ? totalCount : undefined,
     });

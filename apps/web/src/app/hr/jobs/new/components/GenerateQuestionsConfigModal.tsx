@@ -2,16 +2,36 @@
 
 import React, { useState } from 'react';
 import { Modal } from '@/components/ui';
-import { Sparkles, Loader2, Cpu, Check, Layers, AlertCircle } from '@/lib/lucide-google-icons';
+import { Sparkles, Loader2, Check, ShieldCheck } from '@/lib/lucide-google-icons';
 import { AssessmentDifficulty } from '@/types/assessment-question';
 
 interface GenerateQuestionsConfigModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onGenerate: (distribution: { easy: number; intermediate: number; advanced: number }) => Promise<void>;
+  onGenerate: (params: {
+    difficulty: AssessmentDifficulty;
+    categoryDistribution: Record<string, number>;
+  }) => Promise<void>;
   isGenerating: boolean;
   roleTitle?: string;
+  categoryDistribution?: Record<string, number>;
+  totalQuestions?: number;
 }
+interface DiffTier {
+  id: AssessmentDifficulty;
+  label: string;
+  badge: string;
+  description: string;
+  borderClass: string;
+  bgClass: string;
+  activeBorder: string;
+}
+
+const DIFFICULTIES: DiffTier[] = [
+  { id: 'easy', label: 'Easy', badge: 'Foundational & Core', description: 'Direct arithmetic, standard verbal comprehension, logical patterns, and basic charts.', borderClass: 'border-emerald-200/80 dark:border-emerald-800/60', bgClass: 'hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20', activeBorder: 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/80 dark:bg-emerald-950/40' },
+  { id: 'intermediate', label: 'Intermediate', badge: 'Standard & Applied', description: 'Multi-step problem solving, realistic data interpretation, situational logic, and professional verbal nuance.', borderClass: 'border-amber-200/80 dark:border-amber-800/60', bgClass: 'hover:bg-amber-50/50 dark:hover:bg-amber-950/20', activeBorder: 'border-amber-500 ring-2 ring-amber-500/20 bg-amber-50/80 dark:bg-amber-950/40' },
+  { id: 'advanced', label: 'Advanced', badge: 'Deep & Analytical', description: 'Complex multi-variable deductions, dense dataset tables, tricky logic gates, and advanced technical reasoning.', borderClass: 'border-purple-200/80 dark:border-purple-800/60', bgClass: 'hover:bg-purple-50/50 dark:hover:bg-purple-950/20', activeBorder: 'border-purple-500 ring-2 ring-purple-500/20 bg-purple-50/80 dark:bg-purple-950/40' },
+];
 
 export function GenerateQuestionsConfigModal({
   isOpen,
@@ -19,38 +39,34 @@ export function GenerateQuestionsConfigModal({
   onGenerate,
   isGenerating,
   roleTitle,
+  categoryDistribution = {
+    'Quantitative Aptitude': 2,
+    'Logical Reasoning': 2,
+    'Verbal Ability': 2,
+    'Data Interpretation': 2,
+  },
+  totalQuestions,
 }: GenerateQuestionsConfigModalProps) {
-  const [counts, setCounts] = useState<{ easy: number; intermediate: number; advanced: number }>({
-    easy: 3,
-    intermediate: 4,
-    advanced: 3,
-  });
+  const [selectedDifficulty, setSelectedDifficulty] = useState<AssessmentDifficulty>('intermediate');
 
-  const total = counts.easy + counts.intermediate + counts.advanced;
-
-  const handleCountChange = (tier: 'easy' | 'intermediate' | 'advanced', val: number) => {
-    setCounts((prev) => ({
-      ...prev,
-      [tier]: Math.max(0, Math.min(20, val)),
-    }));
-  };
-
-  const handleQuickPreset = (preset: { easy: number; intermediate: number; advanced: number }) => {
-    setCounts(preset);
-  };
+  const computedTotal =
+    typeof totalQuestions === 'number' && totalQuestions > 0
+      ? totalQuestions
+      : Object.values(categoryDistribution).reduce((sum, n) => sum + (Number(n) || 0), 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (total === 0 || isGenerating) return;
-    await onGenerate(counts);
+    if (computedTotal === 0 || isGenerating) return;
+    await onGenerate({
+      difficulty: selectedDifficulty,
+      categoryDistribution,
+    });
   };
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={() => {
-        if (!isGenerating) onClose();
-      }}
+      onClose={() => { if (!isGenerating) onClose(); }}
       size="md"
       title={
         <div className="flex items-center gap-2">
@@ -58,11 +74,9 @@ export function GenerateQuestionsConfigModal({
             <Sparkles className="h-4 w-4" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
-              Customize Question Difficulty &amp; Count
-            </h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">AI Assessment Questions</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              {roleTitle ? `Targeting: ${roleTitle}` : 'Configure number of questions per difficulty tier'}
+              {roleTitle ? `Targeting: ${roleTitle}` : 'Generate questions matching your HR question distribution'}
             </p>
           </div>
         </div>
@@ -70,7 +84,7 @@ export function GenerateQuestionsConfigModal({
       footer={
         <div className="flex items-center justify-between w-full pt-1">
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            Total to generate: <strong className="text-amber-600 dark:text-amber-400">{total} Questions</strong>
+            Total: <strong className="text-amber-600 dark:text-amber-400">{computedTotal} MCQs</strong>
           </span>
           <div className="flex items-center gap-2">
             <button
@@ -84,18 +98,18 @@ export function GenerateQuestionsConfigModal({
             <button
               type="button"
               onClick={handleSubmit}
-              disabled={total === 0 || isGenerating}
+              disabled={computedTotal === 0 || isGenerating}
               className="inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-700 dark:bg-amber-500 dark:hover:bg-amber-600 text-white shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {isGenerating ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  <span>Drafting Questions...</span>
+                  <span>Generating {computedTotal} Questions...</span>
                 </>
               ) : (
                 <>
                   <Sparkles className="h-3.5 w-3.5" />
-                  <span>Generate Questions</span>
+                  <span>Generate {computedTotal} Questions ({selectedDifficulty.charAt(0).toUpperCase() + selectedDifficulty.slice(1)})</span>
                 </>
               )}
             </button>
@@ -104,153 +118,62 @@ export function GenerateQuestionsConfigModal({
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-          Choose exactly how many questions you want for each difficulty tier. You can also turn any difficulty off completely by setting it to 0.
-        </p>
+        <div>
+          <label className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-1">
+            1. Select Assessment Difficulty
+          </label>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            Choose the difficulty tier for the generated questions.
+          </p>
 
-        {/* Presets */}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mr-1">Quick Presets:</span>
-          <button
-            type="button"
-            onClick={() => handleQuickPreset({ easy: 4, intermediate: 4, advanced: 2 })}
-            className="text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
-          >
-            Balanced (10Q)
-          </button>
-          <button
-            type="button"
-            onClick={() => handleQuickPreset({ easy: 5, intermediate: 3, advanced: 0 })}
-            className="text-[10px] font-bold px-2 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40 transition-colors"
-          >
-            Entry / Fresher (8Q)
-          </button>
-          <button
-            type="button"
-            onClick={() => handleQuickPreset({ easy: 0, intermediate: 4, advanced: 6 })}
-            className="text-[10px] font-bold px-2 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200/50 dark:border-purple-800/40 transition-colors"
-          >
-            Senior / Deep Tech (10Q)
-          </button>
+          <div className="space-y-2">
+            {DIFFICULTIES.map((diff) => {
+              const isSelected = selectedDifficulty === diff.id;
+              return (
+                <button
+                  key={diff.id}
+                  type="button"
+                  onClick={() => setSelectedDifficulty(diff.id)}
+                  className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
+                    isSelected ? diff.activeBorder : `${diff.borderClass} ${diff.bgClass} bg-white dark:bg-slate-900`
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{diff.label}</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        {diff.badge}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">{diff.description}</p>
+                  </div>
+                  <div className={`h-5 w-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
+                    isSelected ? 'border-amber-600 bg-amber-600 text-white dark:border-amber-500 dark:bg-amber-500' : 'border-slate-300 dark:border-slate-700'
+                  }`}>
+                    {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Tier Inputs */}
-        <div className="space-y-2.5 pt-1">
-          {/* Easy Tier */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60">
-            <div>
-              <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 block">
-                Easy Questions
-              </span>
-              <span className="text-[10px] text-emerald-600/80 dark:text-emerald-400 font-medium">
-                Syntax, core definitions, and foundational checks
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5 border border-emerald-300/80 dark:border-emerald-700 rounded-xl p-1 bg-white dark:bg-slate-900 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => handleCountChange('easy', counts.easy - 1)}
-                disabled={counts.easy <= 0}
-                className="h-6 w-6 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-              >
-                -
-              </button>
-              <input
-                type="number"
-                min="0"
-                max="20"
-                value={counts.easy}
-                onChange={(e) => handleCountChange('easy', parseInt(e.target.value) || 0)}
-                className="w-8 text-center font-black text-xs text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-              <button
-                type="button"
-                onClick={() => handleCountChange('easy', counts.easy + 1)}
-                disabled={counts.easy >= 20}
-                className="h-6 w-6 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
-              >
-                +
-              </button>
-            </div>
+        <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-850/80 border border-slate-200/80 dark:border-slate-800 space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-brand-500" />
+              <span>HR Configured Distribution ({computedTotal} total)</span>
+            </span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">Configured in Assessment card</span>
           </div>
 
-          {/* Intermediate Tier */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/60">
-            <div>
-              <span className="text-xs font-bold text-amber-800 dark:text-amber-300 block">
-                Intermediate Questions
-              </span>
-              <span className="text-[10px] text-amber-600/80 dark:text-amber-400 font-medium">
-                Debugging scenarios, practical framework usage, trade-offs
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5 border border-amber-300/80 dark:border-amber-700 rounded-xl p-1 bg-white dark:bg-slate-900 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => handleCountChange('intermediate', counts.intermediate - 1)}
-                disabled={counts.intermediate <= 0}
-                className="h-6 w-6 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-              >
-                -
-              </button>
-              <input
-                type="number"
-                min="0"
-                max="20"
-                value={counts.intermediate}
-                onChange={(e) => handleCountChange('intermediate', parseInt(e.target.value) || 0)}
-                className="w-8 text-center font-black text-xs text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-              <button
-                type="button"
-                onClick={() => handleCountChange('intermediate', counts.intermediate + 1)}
-                disabled={counts.intermediate >= 20}
-                className="h-6 w-6 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          {/* Advanced Tier */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/60">
-            <div>
-              <span className="text-xs font-bold text-purple-800 dark:text-purple-300 block">
-                Advanced Questions
-              </span>
-              <span className="text-[10px] text-purple-600/80 dark:text-purple-400 font-medium">
-                Performance optimization, edge cases, scalability, system architecture
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5 border border-purple-300/80 dark:border-purple-700 rounded-xl p-1 bg-white dark:bg-slate-900 shadow-2xs">
-              <button
-                type="button"
-                onClick={() => handleCountChange('advanced', counts.advanced - 1)}
-                disabled={counts.advanced <= 0}
-                className="h-6 w-6 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-              >
-                -
-              </button>
-              <input
-                type="number"
-                min="0"
-                max="20"
-                value={counts.advanced}
-                onChange={(e) => handleCountChange('advanced', parseInt(e.target.value) || 0)}
-                className="w-8 text-center font-black text-xs text-slate-900 dark:text-slate-100 bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-              <button
-                type="button"
-                onClick={() => handleCountChange('advanced', counts.advanced + 1)}
-                disabled={counts.advanced >= 20}
-                className="h-6 w-6 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200 flex items-center justify-center font-bold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer"
-              >
-                +
-              </button>
-            </div>
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            {Object.entries(categoryDistribution).map(([cat, count]) => (
+              <div key={cat} className="flex items-center justify-between px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-750 text-xs">
+                <span className="text-slate-600 dark:text-slate-400 font-medium truncate pr-2">{cat}</span>
+                <span className="font-extrabold text-amber-600 dark:text-amber-400 shrink-0">{count} Qs</span>
+              </div>
+            ))}
           </div>
         </div>
       </form>

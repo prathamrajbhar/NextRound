@@ -2,6 +2,7 @@ import { generateText } from '../llm/llm.service';
 import { logger } from '../../lib/logger';
 import {
   buildAssessmentQuestionGenPrompt,
+  AssessmentDifficulty,
   AssessmentDifficultyDistribution,
 } from '../../prompts/assessment-generator.prompts';
 
@@ -20,6 +21,8 @@ export interface GenerateAssessmentQuestionsInput {
   description: string;
   skills?: string[];
   experienceLevel?: string;
+  difficulty?: AssessmentDifficulty;
+  categoryDistribution?: Record<string, number>;
   distribution?: Partial<AssessmentDifficultyDistribution>;
   totalCount?: number;
 }
@@ -49,25 +52,32 @@ export async function generateJdAssessmentQuestions(
     throw new Error('Job description is required to generate assessment questions');
   }
 
-  const requestedDist = input.distribution || {};
-  const easy = Math.max(0, Number(requestedDist.easy) || 0);
-  const intermediate = Math.max(0, Number(requestedDist.intermediate) || 0);
-  const advanced = Math.max(0, Number(requestedDist.advanced) || 0);
+  const difficulty: AssessmentDifficulty =
+    input.difficulty === 'easy' || input.difficulty === 'intermediate' || input.difficulty === 'advanced'
+      ? input.difficulty
+      : 'intermediate';
 
-  let finalDistribution: AssessmentDifficultyDistribution;
+  const categoryDistribution = input.categoryDistribution;
 
-  if (easy + intermediate + advanced > 0) {
-    finalDistribution = { easy, intermediate, advanced };
-  } else {
-    // Default fallback if no specific distribution was supplied
-    const total = Math.max(1, Math.min(30, Number(input.totalCount) || 6));
-    const tierBase = Math.floor(total / 3);
-    const remainder = total % 3;
-    finalDistribution = {
-      easy: tierBase + (remainder > 0 ? 1 : 0),
-      intermediate: tierBase + (remainder > 1 ? 1 : 0),
-      advanced: tierBase,
-    };
+  let difficultyDistribution: AssessmentDifficultyDistribution | undefined;
+  if (!categoryDistribution || Object.keys(categoryDistribution).length === 0) {
+    const requestedDist = input.distribution || {};
+    const easy = Math.max(0, Number(requestedDist.easy) || 0);
+    const intermediate = Math.max(0, Number(requestedDist.intermediate) || 0);
+    const advanced = Math.max(0, Number(requestedDist.advanced) || 0);
+
+    if (easy + intermediate + advanced > 0) {
+      difficultyDistribution = { easy, intermediate, advanced };
+    } else {
+      const total = Math.max(1, Math.min(30, Number(input.totalCount) || 8));
+      const tierBase = Math.floor(total / 3);
+      const remainder = total % 3;
+      difficultyDistribution = {
+        easy: tierBase + (remainder > 0 ? 1 : 0),
+        intermediate: tierBase + (remainder > 1 ? 1 : 0),
+        advanced: tierBase,
+      };
+    }
   }
 
   const prompt = buildAssessmentQuestionGenPrompt({
@@ -75,7 +85,9 @@ export async function generateJdAssessmentQuestions(
     description: input.description,
     skills: input.skills,
     experienceLevel: input.experienceLevel,
-    distribution: finalDistribution,
+    difficulty,
+    categoryDistribution,
+    difficultyDistribution,
   });
 
   try {

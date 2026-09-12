@@ -60,10 +60,6 @@ export default function HrCreateJob() {
               title={form.title}
               experienceLevel={form.experienceLevel}
               onGenerateJd={form.handleGenerateJd}
-              onGenerateQuestions={() => {
-                const el = document.getElementById('hiring-pipeline');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
               assisting={form.assisting}
               assistStep={form.assistStep}
             />

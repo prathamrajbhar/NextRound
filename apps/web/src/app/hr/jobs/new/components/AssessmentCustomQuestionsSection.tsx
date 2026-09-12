@@ -11,6 +11,8 @@ import { useToast } from '@/contexts/ToastContext';
 interface AssessmentCustomQuestionsSectionProps {
   customQuestions?: AssessmentQuestion[];
   onUpdateCustomQuestions: (questions: AssessmentQuestion[]) => void;
+  categoryDistribution?: Record<string, number>;
+  mcqCount?: number;
   jdText: string;
   roleTitle?: string;
   skills?: string[];
@@ -20,6 +22,13 @@ interface AssessmentCustomQuestionsSectionProps {
 export function AssessmentCustomQuestionsSection({
   customQuestions = [],
   onUpdateCustomQuestions,
+  categoryDistribution = {
+    'Quantitative Aptitude': 2,
+    'Logical Reasoning': 2,
+    'Verbal Ability': 2,
+    'Data Interpretation': 2,
+  },
+  mcqCount,
   jdText,
   roleTitle,
   skills = [],
@@ -43,7 +52,10 @@ export function AssessmentCustomQuestionsSection({
     setIsConfigOpen(true);
   };
 
-  const handleExecuteGenerate = async (distribution: { easy: number; intermediate: number; advanced: number }) => {
+  const handleExecuteGenerate = async (params: {
+    difficulty: import('@/types/assessment-question').AssessmentDifficulty;
+    categoryDistribution: Record<string, number>;
+  }) => {
     setIsGenerating(true);
     try {
       const res = await apiClient.post<{
@@ -55,7 +67,8 @@ export function AssessmentCustomQuestionsSection({
         description: jdText,
         skills,
         experienceLevel,
-        distribution,
+        difficulty: params.difficulty,
+        categoryDistribution: params.categoryDistribution,
       });
 
       if (res && Array.isArray(res.questions) && res.questions.length > 0) {
@@ -64,7 +77,7 @@ export function AssessmentCustomQuestionsSection({
         setIsReviewOpen(true);
         toast({
           title: 'Questions Generated',
-          description: `Created ${res.questions.length} questions matching your difficulty specifications.`,
+          description: `Created ${res.questions.length} questions matching your HR distribution at ${params.difficulty} difficulty.`,
           variant: 'success',
         });
       }
@@ -94,7 +107,7 @@ export function AssessmentCustomQuestionsSection({
             <span>AI Assessment Questions (from JD)</span>
           </span>
           <span className="text-[11px] text-slate-500 dark:text-slate-400">
-            Choose exact counts for Easy, Intermediate, and Advanced tiers before generation
+            Generate Quantitative Aptitude, Logical Reasoning, Verbal Ability &amp; Data Interpretation MCQs
           </span>
         </div>
 
@@ -105,7 +118,7 @@ export function AssessmentCustomQuestionsSection({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300/40 dark:border-amber-700/50 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
         >
           <Sliders className="h-3.5 w-3.5" />
-          <span>{hasCustom ? 'Configure & Regenerate' : 'Configure & Generate'}</span>
+          <span>{hasCustom ? 'Select Difficulty & Regenerate' : 'Generate with AI'}</span>
         </button>
       </div>
 
@@ -141,13 +154,15 @@ export function AssessmentCustomQuestionsSection({
         </div>
       )}
 
-      {/* 1. Configuration Modal: Select Easy / Intermediate / Advanced quantities */}
+      {/* 1. Configuration Modal: Select Easy / Intermediate / Advanced */}
       <GenerateQuestionsConfigModal
         isOpen={isConfigOpen}
         onClose={() => setIsConfigOpen(false)}
         onGenerate={handleExecuteGenerate}
         isGenerating={isGenerating}
         roleTitle={roleTitle}
+        categoryDistribution={categoryDistribution}
+        totalQuestions={mcqCount}
       />
 
       {/* 2. Review Modal: Review, edit options, answers, delete, or save */}

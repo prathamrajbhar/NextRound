@@ -9,7 +9,6 @@ interface JobDescriptionProps {
   title?: string;
   experienceLevel?: string;
   onGenerateJd: (params: { prompt: string; experienceLevel?: string }) => Promise<void>;
-  onGenerateQuestions?: () => void;
   assisting: boolean;
   assistStep?: string;
 }
@@ -20,7 +19,6 @@ export default function JobDescriptionCard({
   title,
   experienceLevel,
   onGenerateJd,
-  onGenerateQuestions,
   assisting,
   assistStep,
 }: JobDescriptionProps) {
@@ -71,17 +69,6 @@ export default function JobDescriptionCard({
         </div>
 
         <div className="flex items-center gap-2">
-          {onGenerateQuestions && jd.trim().length > 15 && (
-            <button
-              type="button"
-              onClick={onGenerateQuestions}
-              className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-xl text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800/80 transition-all cursor-pointer shadow-2xs active:scale-95"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-              <span>Create Assessment Questions</span>
-            </button>
-          )}
-
           <button
             type="button"
             onClick={() => setShowPromptBar((prev) => !prev)}
