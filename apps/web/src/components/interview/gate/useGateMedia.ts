@@ -18,43 +18,62 @@ export function useGateMedia() {
     streamRef.current = null;
   }, []);
 
-  const runFaceCheckRef = useRef<() => void>(() => {});
+  const samplesRef = useRef<number[]>([]);
+
   const runFaceCheck = useCallback(async () => {
     const video = videoRef.current;
-    if (!video || !streamRef.current) return;
-    if (video.readyState < 2) {
-      setTimeout(() => runFaceCheckRef.current(), 300);
-      return;
-    }
+    if (!video || !streamRef.current || handedOffRef.current) return;
+    if (video.readyState < 2 || video.paused) return;
 
     const loaded = await loadFaceDetector();
     if (!loaded) {
       setFaceStatus('pass');
       setFaceCount(1);
+      setError(null);
       return;
     }
 
     const result = await detectFaces(video);
     if (!result.ok) {
-      setFaceStatus('pass');
-      setFaceCount(1);
       return;
     }
 
-    setFaceCount(result.count);
-    if (result.count === 0) {
-      setFaceStatus('fail');
-    } else if (result.count >= 2) {
-      setFaceStatus('fail');
-      setError('More than one person detected in the camera frame. Please ensure only you are visible.');
-    } else {
+    const currentCount = result.count;
+    samplesRef.current.push(currentCount);
+    if (samplesRef.current.length > 4) {
+      samplesRef.current.shift();
+    }
+
+    // Determine consensus count from recent samples
+    const counts = samplesRef.current;
+    const countOccurrences = new Map<number, number>();
+    for (const c of counts) {
+      countOccurrences.set(c, (countOccurrences.get(c) || 0) + 1);
+    }
+    let consensusCount = currentCount;
+    let maxOccurs = 0;
+    for (const [c, occurs] of countOccurrences.entries()) {
+      if (occurs > maxOccurs) {
+        maxOccurs = occurs;
+        consensusCount = c;
+      }
+    }
+
+    setFaceCount(consensusCount);
+
+    if (consensusCount === 1) {
       setFaceStatus('pass');
+      setError(null);
+    } else if (consensusCount === 0) {
+      setFaceStatus('fail');
+      setError('No person detected in frame. Please face the camera directly in good lighting.');
+    } else {
+      setFaceStatus('fail');
+      setError('Multiple people detected in the camera frame. Please ensure only you are visible.');
     }
   }, []);
 
-  useEffect(() => {
-    runFaceCheckRef.current = runFaceCheck;
-  }, [runFaceCheck]);
+
 
   useEffect(() => {
     let cancelled = false;
@@ -102,11 +121,13 @@ export function useGateMedia() {
   }, [runFaceCheck, stopStream]);
 
   useEffect(() => {
-    if (faceStatus === 'fail') {
-      const timer = setTimeout(runFaceCheck, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [faceStatus, runFaceCheck]);
+    if (checking || handedOffRef.current) return;
+    const interval = setInterval(() => {
+      runFaceCheck();
+    }, 500);
+    return () => clearInterval(interval);
+  }, [checking, runFaceCheck]);
+
 
   const handoff = () => {
     handedOffRef.current = true;

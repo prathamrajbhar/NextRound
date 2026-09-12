@@ -90,10 +90,12 @@ export function ProctoringGate({ company, role, onProceed }: ProctoringGateProps
                   <Video className="h-3.5 w-3.5 text-emerald-400" />
                 )}
                 <span className="text-[10px] font-bold text-slate-200">
-                  {faceStatus === 'fail'
-                    ? 'Multiple people'
-                    : faceCount !== null && faceCount >= 1
-                    ? `${faceCount} person in frame`
+                  {faceCount === 0
+                    ? 'No person detected'
+                    : faceCount !== null && faceCount > 1
+                    ? 'Multiple people detected'
+                    : faceCount === 1
+                    ? '1 person verified'
                     : 'Detecting…'}
                 </span>
               </div>
@@ -117,11 +119,6 @@ export function ProctoringGate({ company, role, onProceed }: ProctoringGateProps
               </div>
             )}
 
-            {!error && faceStatus === 'fail' && (
-              <div className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-400 text-xs font-semibold leading-relaxed">
-                The assessment requires exactly one person visible in frame. Please adjust and wait for verification.
-              </div>
-            )}
           </div>
 
           <GateChecklist

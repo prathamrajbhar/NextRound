@@ -86,11 +86,16 @@ export async function detectFaces(videoEl: HTMLVideoElement): Promise<FaceDetect
 
   try {
     const result = detector.detectForVideo(videoEl, now);
-    const detections = result.detections ?? [];
-    const confidence = detections.length > 0 ? detections[0].categories?.[0]?.score ?? 0 : 0;
-    return { ok: true, count: detections.length, confidence };
+    const rawDetections = result.detections ?? [];
+    const validDetections = rawDetections.filter((d) => {
+      const score = d.categories?.[0]?.score ?? 0;
+      return score >= 0.55;
+    });
+    const confidence = validDetections.length > 0 ? validDetections[0].categories?.[0]?.score ?? 0 : 0;
+    return { ok: true, count: validDetections.length, confidence };
   } catch (err) {
     console.warn('[faceDetector] Detection error:', err);
     return { ok: true, count: 1, confidence: 0 };
   }
+
 }
