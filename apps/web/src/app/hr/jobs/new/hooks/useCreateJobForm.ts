@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/contexts/ToastContext';
-import { RubricWeights, DEFAULT_ASSESSMENT_CONFIG, rebalanceRubric } from './rubricBalancing';
+import { RubricWeights, AssessmentConfig, DEFAULT_ASSESSMENT_CONFIG, rebalanceRubric } from './rubricBalancing';
 
 export type PipelineStage = 'screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision';
 
@@ -48,12 +48,7 @@ export function useCreateJobForm() {
     'hr_round',
     'decision',
   ]);
-  const [assessmentConfig, setAssessmentConfig] = useState<{
-    mcqCount: number;
-    codingProblemId: string;
-    passingScore: number;
-    mcqDistribution?: Record<string, number>;
-  }>(DEFAULT_ASSESSMENT_CONFIG);
+  const [assessmentConfig, setAssessmentConfig] = useState<AssessmentConfig>(DEFAULT_ASSESSMENT_CONFIG);
 
   const handleAiAssist = async () => {
     if (!jd) return;
