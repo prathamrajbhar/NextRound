@@ -14,6 +14,7 @@ export const JobCreateSchema = z.object({
     codingProblemId: z.string().optional(),
     passingScore: z.number().optional(),
     mcqDistribution: z.record(z.string(), z.number()).optional(),
+    customQuestions: z.array(z.any()).optional(),
   }).optional(),
   rubric: z.object({
     technical: z.number().min(0).max(100),
@@ -42,6 +43,7 @@ export const JobUpdateSchema = z.object({
     codingProblemId: z.string().optional(),
     passingScore: z.number().optional(),
     mcqDistribution: z.record(z.string(), z.number()).optional(),
+    customQuestions: z.array(z.any()).optional(),
   }).optional(),
   rubric: z.object({
     technical: z.number().min(0).max(100),

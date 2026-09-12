@@ -26,6 +26,7 @@ function defaultAssessmentConfig(): Rec {
       'Verbal Ability': 5,
       'Data Interpretation': 5,
     },
+    customQuestions: [],
   };
 }
 

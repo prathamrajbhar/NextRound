@@ -110,15 +110,27 @@ export async function generateJdAssessmentQuestions(
       const correct = Number(q.correctIndex);
       const safeCorrectIndex = Number.isInteger(correct) && correct >= 0 && correct < q.options.length ? correct : 0;
 
+      const VALID_CATS = ['Quantitative Aptitude', 'Logical Reasoning', 'Verbal Ability', 'Data Interpretation'];
+      let cat = typeof q.category === 'string' && q.category.trim() ? q.category.trim() : 'Logical Reasoning';
+      if (!VALID_CATS.includes(cat)) {
+        const lower = cat.toLowerCase();
+        if (lower.includes('quant') || lower.includes('math') || lower.includes('arithmetic')) cat = 'Quantitative Aptitude';
+        else if (lower.includes('logic') || lower.includes('reason') || lower.includes('deduction')) cat = 'Logical Reasoning';
+        else if (lower.includes('verbal') || lower.includes('english') || lower.includes('grammar')) cat = 'Verbal Ability';
+        else if (lower.includes('data') || lower.includes('chart') || lower.includes('graph') || lower.includes('interpretation')) cat = 'Data Interpretation';
+        else cat = 'Logical Reasoning';
+      }
+
       validatedQuestions.push({
         id: typeof q.id === 'string' && q.id.trim() ? q.id.trim() : `q_${diff}_${i + 1}`,
         difficulty: diff,
-        category: typeof q.category === 'string' && q.category.trim() ? q.category.trim() : 'General Technical',
+        category: cat,
         question: q.question.trim(),
         options: q.options.map((opt: unknown) => String(opt || '').trim()).filter(Boolean),
         correctIndex: safeCorrectIndex,
         explanation: typeof q.explanation === 'string' ? q.explanation.trim() : '',
       });
+
     }
 
     if (validatedQuestions.length === 0) {

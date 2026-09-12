@@ -1,9 +1,8 @@
 import { prisma, Prisma } from '@nextround/database';
-import {
-  selectAptitudeQuestions,
-  buildAptitudeDistribution,
-} from '../questions/question-bank.service';
 import { forbidden } from '../../lib/http-errors';
+import { resolveAptitudeQuestions } from './aptitude-questions.resolver';
+
+
 
 function getAppForCandidate(appId: string, userId: string) {
   return prisma.application.findUnique({
@@ -65,31 +64,12 @@ export async function getAptitudeChunk(
   }
 
   const assessmentConfig = (application.job?.assessmentConfig as Record<string, unknown>) || {};
-  const mcqDistribution = assessmentConfig.mcqDistribution as Record<string, number> | undefined;
-  const totalCount = mcqDistribution
-    ? Object.values(mcqDistribution).reduce((sum, val) => sum + Number(val), 0)
-    : Math.max(1, Math.min(100, Number(assessmentConfig.mcqCount) || 20));
+  const allQuestions = await resolveAptitudeQuestions({
+    assessmentConfig,
+    jobTitle: application.job?.title,
+    jobDescription: application.job?.description,
+  });
 
-  const rawCustomQuestions = Array.isArray(assessmentConfig.customQuestions)
-    ? (assessmentConfig.customQuestions as any[])
-    : [];
-
-  let allQuestions: any[] = [];
-  if (rawCustomQuestions.length > 0) {
-    allQuestions = rawCustomQuestions.map((cq, idx) => ({
-      id: cq.id || `custom_q_${idx + 1}`,
-      category: cq.category || 'General Technical',
-      question: cq.question || cq.text || '',
-      text: cq.text || cq.question || '',
-      options: Array.isArray(cq.options) ? cq.options : [],
-      difficulty: cq.difficulty || 'intermediate',
-      correct_index: cq.correctIndex !== undefined ? cq.correctIndex : cq.correct_index,
-      correctIndex: cq.correctIndex !== undefined ? cq.correctIndex : cq.correct_index,
-    }));
-  } else {
-    const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
-    allQuestions = await selectAptitudeQuestions({ distribution });
-  }
 
   if (assessment) {
     assessment = await prisma.assessment.update({

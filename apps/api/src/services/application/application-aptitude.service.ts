@@ -6,6 +6,8 @@ import {
   buildAptitudeDistribution,
 } from '../questions/question-bank.service';
 import { forbidden } from '../../lib/http-errors';
+import { resolveAptitudeQuestions } from './aptitude-questions.resolver';
+
 
 export * from './application-aptitude-chunk.service';
 
@@ -51,28 +53,23 @@ export async function getAptitudeAssessment(appId: string, userId: string) {
   let allQuestions: StoredQuestion[] = [];
 
   const isCompleted = assessment?.status === 'completed';
-  const storedCount = Array.isArray(assessment?.questions) ? (assessment!.questions as unknown[]).length : 0;
-  const targetCount = rawCustomQuestions.length > 0 ? rawCustomQuestions.length : totalCount;
-  const countMatchesConfig = storedCount === targetCount;
+  const storedQuestions = Array.isArray(assessment?.questions)
+    ? (assessment!.questions as unknown as StoredQuestion[])
+    : [];
 
-  if (isCompleted && countMatchesConfig && storedCount > 0) {
-    allQuestions = assessment!.questions as unknown as StoredQuestion[];
-  } else if (rawCustomQuestions.length > 0) {
-    allQuestions = rawCustomQuestions.map((cq, idx) => ({
-      id: cq.id || `custom_q_${idx + 1}`,
-      category: cq.category || 'General Technical',
-      question: cq.question || cq.text || '',
-      text: cq.text || cq.question || '',
-      options: Array.isArray(cq.options) ? cq.options : [],
-      difficulty: cq.difficulty || 'intermediate',
-      correct_index: cq.correctIndex !== undefined ? cq.correctIndex : cq.correct_index,
-      correctIndex: cq.correctIndex !== undefined ? cq.correctIndex : cq.correct_index,
-    }));
+  const storedCount = storedQuestions.length;
+  const targetCount = rawCustomQuestions.length > 0 ? rawCustomQuestions.length : totalCount;
+
+  if (storedCount > 0 && (isCompleted || storedCount === targetCount)) {
+    allQuestions = storedQuestions;
   } else {
-    const distribution = buildAptitudeDistribution(totalCount, mcqDistribution);
-    const selected = await selectAptitudeQuestions({ distribution });
-    allQuestions = selected as unknown as StoredQuestion[];
+    allQuestions = await resolveAptitudeQuestions({
+      assessmentConfig,
+      jobTitle: application.job?.title,
+      jobDescription: application.job?.description,
+    });
   }
+
 
     if (assessment) {
       assessment = await prisma.assessment.update({
