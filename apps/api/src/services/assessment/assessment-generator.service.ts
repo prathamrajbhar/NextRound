@@ -1,6 +1,9 @@
 import { generateText } from '../llm/llm.service';
 import { logger } from '../../lib/logger';
-import { buildAssessmentQuestionGenPrompt } from '../../prompts/assessment-generator.prompts';
+import {
+  buildAssessmentQuestionGenPrompt,
+  AssessmentDifficultyDistribution,
+} from '../../prompts/assessment-generator.prompts';
 
 export interface GeneratedAssessmentQuestion {
   id: string;
@@ -17,7 +20,8 @@ export interface GenerateAssessmentQuestionsInput {
   description: string;
   skills?: string[];
   experienceLevel?: string;
-  countPerTier?: number;
+  distribution?: Partial<AssessmentDifficultyDistribution>;
+  totalCount?: number;
 }
 
 function extractJsonPayload(text: string): Record<string, any> {
@@ -40,14 +44,38 @@ function extractJsonPayload(text: string): Record<string, any> {
 export async function generateJdAssessmentQuestions(
   input: GenerateAssessmentQuestionsInput
 ): Promise<GeneratedAssessmentQuestion[]> {
-  const { description, countPerTier = 4 } = input;
+  const { description } = input;
   if (!description || description.trim().length < 15) {
     throw new Error('Job description is required to generate assessment questions');
   }
 
+  const requestedDist = input.distribution || {};
+  const easy = Math.max(0, Number(requestedDist.easy) || 0);
+  const intermediate = Math.max(0, Number(requestedDist.intermediate) || 0);
+  const advanced = Math.max(0, Number(requestedDist.advanced) || 0);
+
+  let finalDistribution: AssessmentDifficultyDistribution;
+
+  if (easy + intermediate + advanced > 0) {
+    finalDistribution = { easy, intermediate, advanced };
+  } else {
+    // Default fallback if no specific distribution was supplied
+    const total = Math.max(1, Math.min(30, Number(input.totalCount) || 6));
+    const tierBase = Math.floor(total / 3);
+    const remainder = total % 3;
+    finalDistribution = {
+      easy: tierBase + (remainder > 0 ? 1 : 0),
+      intermediate: tierBase + (remainder > 1 ? 1 : 0),
+      advanced: tierBase,
+    };
+  }
+
   const prompt = buildAssessmentQuestionGenPrompt({
-    ...input,
-    countPerTier,
+    title: input.title,
+    description: input.description,
+    skills: input.skills,
+    experienceLevel: input.experienceLevel,
+    distribution: finalDistribution,
   });
 
   try {

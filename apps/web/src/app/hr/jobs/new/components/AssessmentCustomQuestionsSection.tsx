@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, ListChecks, Loader2 } from '@/lib/lucide-google-icons';
+import { Sparkles, CheckCircle2, ListChecks, Sliders, Loader2 } from '@/lib/lucide-google-icons';
 import { AssessmentQuestion } from '@/types/assessment-question';
 import { AssessmentQuestionReviewModal } from './AssessmentQuestionReviewModal';
+import { GenerateQuestionsConfigModal } from './GenerateQuestionsConfigModal';
 import { apiClient } from '@/lib/apiClient';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -25,11 +26,12 @@ export function AssessmentCustomQuestionsSection({
   experienceLevel,
 }: AssessmentCustomQuestionsSectionProps) {
   const { toast } = useToast();
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [tempQuestions, setTempQuestions] = useState<AssessmentQuestion[]>(customQuestions);
 
-  const handleGenerateQuestions = async () => {
+  const handleOpenConfig = () => {
     if (!jdText || jdText.trim().length < 15) {
       toast({
         title: 'Job Description Required',
@@ -38,7 +40,10 @@ export function AssessmentCustomQuestionsSection({
       });
       return;
     }
+    setIsConfigOpen(true);
+  };
 
+  const handleExecuteGenerate = async (distribution: { easy: number; intermediate: number; advanced: number }) => {
     setIsGenerating(true);
     try {
       const res = await apiClient.post<{
@@ -50,15 +55,16 @@ export function AssessmentCustomQuestionsSection({
         description: jdText,
         skills,
         experienceLevel,
-        countPerTier: 4,
+        distribution,
       });
 
       if (res && Array.isArray(res.questions) && res.questions.length > 0) {
         setTempQuestions(res.questions);
+        setIsConfigOpen(false);
         setIsReviewOpen(true);
         toast({
           title: 'Questions Generated',
-          description: `Created ${res.questions.length} questions across Easy, Intermediate, and Advanced tiers.`,
+          description: `Created ${res.questions.length} questions matching your difficulty specifications.`,
           variant: 'success',
         });
       }
@@ -88,22 +94,18 @@ export function AssessmentCustomQuestionsSection({
             <span>AI Assessment Questions (from JD)</span>
           </span>
           <span className="text-[11px] text-slate-500 dark:text-slate-400">
-            Tailored Easy, Intermediate, &amp; Advanced MCQs derived from role requirements
+            Choose exact counts for Easy, Intermediate, and Advanced tiers before generation
           </span>
         </div>
 
         <button
           type="button"
-          onClick={handleGenerateQuestions}
+          onClick={handleOpenConfig}
           disabled={isGenerating}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-300/40 dark:border-amber-700/50 transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
         >
-          {isGenerating ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Sparkles className="h-3.5 w-3.5" />
-          )}
-          <span>{isGenerating ? 'Drafting...' : hasCustom ? 'Regenerate' : 'Generate from JD'}</span>
+          <Sliders className="h-3.5 w-3.5" />
+          <span>{hasCustom ? 'Configure & Regenerate' : 'Configure & Generate'}</span>
         </button>
       </div>
 
@@ -131,7 +133,7 @@ export function AssessmentCustomQuestionsSection({
               setTempQuestions(customQuestions);
               setIsReviewOpen(true);
             }}
-            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-750 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors shadow-2xs cursor-pointer"
           >
             <ListChecks className="h-3 w-3 text-amber-500" />
             <span>Review &amp; Edit</span>
@@ -139,6 +141,16 @@ export function AssessmentCustomQuestionsSection({
         </div>
       )}
 
+      {/* 1. Configuration Modal: Select Easy / Intermediate / Advanced quantities */}
+      <GenerateQuestionsConfigModal
+        isOpen={isConfigOpen}
+        onClose={() => setIsConfigOpen(false)}
+        onGenerate={handleExecuteGenerate}
+        isGenerating={isGenerating}
+        roleTitle={roleTitle}
+      />
+
+      {/* 2. Review Modal: Review, edit options, answers, delete, or save */}
       <AssessmentQuestionReviewModal
         isOpen={isReviewOpen}
         onClose={() => setIsReviewOpen(false)}

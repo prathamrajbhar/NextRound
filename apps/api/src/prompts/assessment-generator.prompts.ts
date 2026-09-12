@@ -1,9 +1,15 @@
+export interface AssessmentDifficultyDistribution {
+  easy: number;
+  intermediate: number;
+  advanced: number;
+}
+
 export interface AssessmentQuestionPromptOptions {
   title?: string;
   description: string;
   skills?: string[];
   experienceLevel?: string;
-  countPerTier?: number;
+  distribution: AssessmentDifficultyDistribution;
 }
 
 export function buildAssessmentQuestionGenPrompt(options: AssessmentQuestionPromptOptions): string {
@@ -12,8 +18,21 @@ export function buildAssessmentQuestionGenPrompt(options: AssessmentQuestionProm
     description,
     skills = [],
     experienceLevel = 'Mid-Level',
-    countPerTier = 4,
+    distribution,
   } = options;
+
+  const totalRequired = distribution.easy + distribution.intermediate + distribution.advanced;
+
+  const tierRequirements: string[] = [];
+  if (distribution.easy > 0) {
+    tierRequirements.push(`- Generate exactly ${distribution.easy} question(s) with "difficulty": "easy" (core definitions, foundational concepts, basic syntax, fundamental knowledge).`);
+  }
+  if (distribution.intermediate > 0) {
+    tierRequirements.push(`- Generate exactly ${distribution.intermediate} question(s) with "difficulty": "intermediate" (practical problem-solving, debugging scenarios, framework API usage, real-world development trade-offs).`);
+  }
+  if (distribution.advanced > 0) {
+    tierRequirements.push(`- Generate exactly ${distribution.advanced} question(s) with "difficulty": "advanced" (performance optimization, edge cases, scalability, concurrency, distributed systems, deep architecture pitfalls).`);
+  }
 
   return `You are a principal technical interviewer and assessment designer for top technology companies.
 Generate a high-quality, practical Multiple-Choice Assessment (MCQ) based on the provided Job Description and required competencies.
@@ -25,15 +44,14 @@ ROLE CONTEXT:
 - Job Description:
 ${description.slice(0, 8000)}
 
-REQUIREMENTS:
-1. Generate exactly ${countPerTier} questions for EACH of the following 3 difficulty tiers (total ${countPerTier * 3} questions):
-   - "easy": Foundational concepts, definitions, core syntax, direct knowledge checks relevant to the role's stack.
-   - "intermediate": Practical problem solving, debugging scenarios, API/framework usage, architectural trade-offs.
-   - "advanced": Performance optimization, edge cases, distributed systems / concurrency, scalability, or tricky real-world system pitfalls.
+EXACT QUANTITY & DIFFICULTY BREAKDOWN (Total ${totalRequired} questions):
+${tierRequirements.join('\n')}
 
+REQUIREMENTS:
+1. You MUST generate ONLY the exact counts specified above for each difficulty level. Do NOT generate difficulties that have a count of 0.
 2. Every question must have:
    - "id": Unique string identifier (e.g. "q_easy_1", "q_int_1", "q_adv_1").
-   - "difficulty": Exactly one of "easy" | "intermediate" | "advanced".
+   - "difficulty": Exactly "easy" | "intermediate" | "advanced".
    - "category": Relevant skill or topic name (e.g., "Python", "System Design", "SQL", "React").
    - "question": Clear, concise, professional question text.
    - "options": Exactly 4 plausible options [Option 0, Option 1, Option 2, Option 3].
