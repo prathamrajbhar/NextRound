@@ -64,14 +64,15 @@ ${userPrompt || title || 'Create a world-class job description for this role.'}
 ROLE CONTEXT (IF KNOWN):
 - Proposed Title: ${title || 'Infer from recruiter instructions'}
 - Department: ${department}
-- Seniority / Level: ${experienceLevel}
+- Seniority / Level: ${experienceLevel || 'Mid-Level'}
 - Work Location Model: ${locationType}
 
 OUTPUT REQUIREMENTS:
 1. "description": Write an articulate, beautifully formatted Markdown job description with these distinct sections:
    - ### Role Overview: 2-3 engaging paragraphs explaining the mission, team context, and why this position matters.
    - ### Key Responsibilities: 5-7 clear, action-oriented bullet points outlining day-to-day deliverables and strategic duties.
-   - ### What You Bring (Requirements): 5-7 realistic, competence-based qualifications (technical proficiencies, architecture skills, problem-solving, collaboration).
+   - ### What You Bring (Requirements): 5-7 realistic, competence-based qualifications (technical proficiencies, problem-solving, collaboration).
+     CRITICAL: Strictly align the required years of experience and depth with the Seniority / Level ("${experienceLevel || 'Mid-Level'}"). If the level is Entry-Level (0-2 Yrs), Junior, or Fresher, you MUST NOT ask for 3+, 5+, or senior years of experience. Instead, focus on 0-2 years, foundational competence, academic/personal projects, and learning velocity.
    - ### Nice to Have: 3-4 bonus skills or domain experience that would make an applicant stand out.
    - ### What We Offer: 3-4 compelling points on compensation, career acceleration, ownership, and modern culture.
    Keep language inclusive, bias-free, and engaging. Avoid cliché buzzwords like 'rockstar' or 'ninja'.

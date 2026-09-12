@@ -7,7 +7,8 @@ interface JobDescriptionProps {
   jd: string;
   setJd: (val: string) => void;
   title?: string;
-  onGenerateJd: (params: { prompt: string }) => Promise<void>;
+  experienceLevel?: string;
+  onGenerateJd: (params: { prompt: string; experienceLevel?: string }) => Promise<void>;
   assisting: boolean;
   assistStep?: string;
 }
@@ -15,6 +16,8 @@ interface JobDescriptionProps {
 export default function JobDescriptionCard({
   jd,
   setJd,
+  title,
+  experienceLevel,
   onGenerateJd,
   assisting,
   assistStep,
@@ -45,7 +48,7 @@ export default function JobDescriptionCard({
     e.preventDefault();
     if (!promptText.trim() || assisting) return;
     try {
-      await onGenerateJd({ prompt: promptText.trim() });
+      await onGenerateJd({ prompt: promptText.trim(), experienceLevel });
       setShowPromptBar(false);
     } catch {
       // Handled via toast in hook
@@ -99,7 +102,7 @@ export default function JobDescriptionCard({
               rows={3}
               value={promptText}
               onChange={(e) => setPromptText(e.target.value)}
-              placeholder="e.g. Senior Fullstack React and Node engineer with 5+ years experience to build real-time dashboard and AI voice interview platform. Must know PostgreSQL, TypeScript, Tailwind. High ownership startup culture."
+              placeholder={`e.g. ${experienceLevel || 'Engineer'} to build real-time dashboard and AI platform. Must know PostgreSQL, TypeScript, Python. High ownership startup culture.`}
               className="w-full px-3.5 py-2.5 text-xs font-medium rounded-xl border border-brand-200 dark:border-brand-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all leading-relaxed"
             />
           </div>

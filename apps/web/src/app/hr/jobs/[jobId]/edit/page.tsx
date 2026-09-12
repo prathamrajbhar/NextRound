@@ -74,6 +74,7 @@ export default function HrEditJobPage({ params }: { params: Promise<{ jobId: str
               jd={form.jd}
               setJd={form.setJd}
               title={form.title}
+              experienceLevel={form.experienceLevel}
               onGenerateJd={form.handleGenerateJd}
               assisting={form.assisting}
               assistStep={form.assistStep}

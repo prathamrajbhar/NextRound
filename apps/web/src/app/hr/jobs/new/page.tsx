@@ -58,6 +58,7 @@ export default function HrCreateJob() {
               jd={form.jd}
               setJd={form.setJd}
               title={form.title}
+              experienceLevel={form.experienceLevel}
               onGenerateJd={form.handleGenerateJd}
               assisting={form.assisting}
               assistStep={form.assistStep}

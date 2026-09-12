@@ -48,10 +48,14 @@ export async function evaluateApplicationScreening(
     throw new Error(`Job ${app.job_id} has no minScore threshold configured; screening cannot run.`);
   }
 
+  const jobSkills: string[] = Array.isArray(app.job.skills) ? (app.job.skills as string[]) : [];
+
   const prompt = buildScreeningEvaluationPrompt({
     jobTitle,
     jobDesc,
     minScore,
+    jobExperienceLevel: app.job.experienceLevel || undefined,
+    jobSkills,
     candidateHeadline: app.candidate.headline || undefined,
     candidateSkills,
     candidateExp,
