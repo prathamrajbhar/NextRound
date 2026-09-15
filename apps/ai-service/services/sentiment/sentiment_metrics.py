@@ -1,16 +1,5 @@
 from typing import Any, Dict, List, Optional
 
-IDEAL_WPM = 135.0
-RATE_DEVIATION_WEIGHT = 0.45
-PAUSE_DENSITY_WEIGHT = 0.35
-TREMOR_WEIGHT = 0.20
-PAUSE_THRESHOLD_SEC = 0.6
-LONG_PAUSE_SEC = 3.0
-PAUSE_DENSITY_NORM = 12.0
-
-def _clamp_percent(value: float) -> int:
-    return int(round(max(0.0, min(value, 100.0))))
-
 def _compute_timing_metrics(words: List[Dict[str, Any]]) -> Optional[Dict[str, float]]:
     if not words:
         return None
@@ -21,11 +10,11 @@ def _compute_timing_metrics(words: List[Dict[str, Any]]) -> Optional[Dict[str, f
     pauses = [
         float(nxt["start"]) - float(prev["end"])
         for prev, nxt in zip(words, words[1:])
-        if float(nxt["start"]) - float(prev["end"]) > PAUSE_THRESHOLD_SEC
+        if float(nxt["start"]) - float(prev["end"]) > 0.6
     ]
     pauses_per_min = len(pauses) / (speech_duration / 60.0)
     avg_pause = (sum(pauses) / len(pauses)) if pauses else 0.0
-    long_pause_count = sum(1 for pause in pauses if pause > LONG_PAUSE_SEC)
+    long_pause_count = sum(1 for pause in pauses if pause > 3.0)
 
     return {
         "speakingRateWpm": round(len(words) / (speech_duration / 60.0), 1),
@@ -35,36 +24,16 @@ def _compute_timing_metrics(words: List[Dict[str, Any]]) -> Optional[Dict[str, f
         "speechDurationSec": round(speech_duration, 1),
     }
 
-def _derive_overall(
-    pitch: Dict[str, float], timing: Dict[str, float]
+def infer_speech_emotion_metrics(
+    pitch_metrics: Optional[Dict[str, float]] = None,
+    timing_metrics: Optional[Dict[str, float]] = None,
 ) -> Dict[str, Any]:
-    rate_deviation = abs(timing["speakingRateWpm"] - IDEAL_WPM) / IDEAL_WPM
-    pause_density = min(timing["pausesPerMinute"] / PAUSE_DENSITY_NORM, 1.0)
-    tremor_fraction = pitch.get("tremorPercent", 0.0) / 100.0
-
-    stress = (
-        rate_deviation * (RATE_DEVIATION_WEIGHT * 100)
-        + pause_density * (PAUSE_DENSITY_WEIGHT * 100)
-        + tremor_fraction * (TREMOR_WEIGHT * 100)
+    """
+    ML Extension Point: Speech Emotion Recognition (SER) / Acoustic Stress Model.
+    Integration point for dedicated neural model (e.g. emotion2vec+, wav2vec2-emotion).
+    Synthetic rate-deviation formulas and static heuristics have been removed.
+    """
+    raise NotImplementedError(
+        "Acoustic Speech Emotion Recognition (SER) ML model is pending model integration. "
+        "Static heuristics and synthetic stress formulas have been removed."
     )
-    stress_score = _clamp_percent(stress)
-    confidence_score = 100 - stress_score
-    clarity_score = _clamp_percent(
-        100 - pause_density * 55 - tremor_fraction * 45
-    )
-
-    if stress_score < 20:
-        tone = "calm"
-    elif stress_score < 40:
-        tone = "steady"
-    elif stress_score < 65:
-        tone = "anxious"
-    else:
-        tone = "stressed"
-
-    return {
-        "stressScore": stress_score,
-        "confidenceScore": confidence_score,
-        "clarityScore": clarity_score,
-        "tone": tone,
-    }

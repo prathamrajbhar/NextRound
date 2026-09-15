@@ -9,10 +9,10 @@ from services.sentiment.sentiment_audio import (
 )
 from services.sentiment.sentiment_metrics import (
     _compute_timing_metrics,
-    _derive_overall,
+    infer_speech_emotion_metrics,
 )
 from services.sentiment.sentiment_journey import (
-    _build_journey,
+    infer_temporal_emotion_journey,
     _build_narrative,
     _unavailable,
 )
@@ -20,6 +20,11 @@ from services.sentiment.sentiment_journey import (
 logger = logging.getLogger("sentiment_service")
 
 def analyze_interview_sentiment(interview_id: str, audio_url: str) -> Dict[str, Any]:
+    """
+    Analyzes interview audio using acoustic signals and speech emotion models.
+    ML Extension point: Dedicated neural SER model (emotion2vec / wav2vec2-emotion)
+    will be executed here without synthetic rate-deviation heuristics.
+    """
     audio_bytes = _resolve_audio_bytes(audio_url)
     if audio_bytes is None:
         logger.info(f"Sentiment analysis unavailable for interview {interview_id}: no audio at audio_url.")
@@ -51,8 +56,19 @@ def analyze_interview_sentiment(interview_id: str, audio_url: str) -> Dict[str, 
         logger.info(f"Sentiment analysis unavailable for interview {interview_id}: no speech detected.")
         return _unavailable(interview_id, "No speech segments were found in the audio for rate/pause analysis.")
 
-    overall = _derive_overall(pitch_metrics, timing_metrics)
-    journey = _build_journey(words)
+    try:
+        overall = infer_speech_emotion_metrics(pitch_metrics, timing_metrics)
+        journey = infer_temporal_emotion_journey(words)
+    except NotImplementedError:
+        logger.info(
+            f"Sentiment ML model pending integration for interview {interview_id}. "
+            "Heuristic fallbacks are disabled."
+        )
+        return _unavailable(
+            interview_id,
+            "Acoustic Speech Emotion Recognition (SER) ML model is pending model integration. "
+            "Static heuristics and synthetic stress calculations have been removed."
+        )
 
     return {
         "interviewId": interview_id,

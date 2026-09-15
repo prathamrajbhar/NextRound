@@ -71,20 +71,6 @@ def analyze_complexity_node(state: CodingState) -> CodingState:
                     complexity_source = "llm"
                     set_cached_complexity(code, complexity, complexity_source)
 
-    if complexity is None and code:
-        complexity_source = "heuristic"
-        if "for " in code and "while " in code:
-            complexity = "O(N^2) estimated (heuristic)"
-            feedback = "Nested iteration detected. Estimated O(N^2) — heuristic only. Consider linear scan O(N)."
-        elif "for " in code:
-            complexity = "O(N) estimated (heuristic)"
-            feedback = "Single-pass iteration detected. Estimated O(N) — heuristic only."
-        else:
-            complexity = "O(1) estimated (heuristic)"
-            feedback = "No iteration detected. Estimated O(1) — heuristic only."
-
-        set_cached_complexity(code, complexity, complexity_source)
-
     passed = pass_rate >= 0.8
     score = round(pass_rate * 100.0, 1)
 

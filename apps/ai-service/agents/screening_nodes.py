@@ -71,26 +71,35 @@ def score_against_rubric_node(state: ScreeningState) -> ScreeningState:
 
     return state
 
+import re
+
 def compute_gaps_node(state: ScreeningState) -> ScreeningState:
     skills = state.get("parsed_skills", [])
-    job_desc = state.get("job_description", "").lower()
+    job_desc = state.get("job_description", "")
 
-    key_jd_terms = [
-        ("system architecture", "System Architecture"),
-        ("postgresql", "PostgreSQL"),
-        ("redis", "Redis"),
-        ("bullmq", "BullMQ"),
-        ("webrtc", "WebRTC"),
-        ("docker", "Docker"),
-        ("kubernetes", "Kubernetes"),
-        ("microservices", "Microservices"),
-    ]
-    parsed_lower = [s.lower() for s in skills]
-    missing = [label for term, label in key_jd_terms if term in job_desc and term not in parsed_lower]
-
+    parsed_lower = {s.lower().strip() for s in skills if isinstance(s, str)}
     strengths = skills[:4]
-    exp_gaps = []
+    exp_gaps: list[str] = []
 
+    missing: list[str] = []
+    if job_desc:
+        potential_terms = re.findall(r"\b[A-Za-z0-9+#.-]+\b", job_desc)
+        stop_words = {
+            "we", "need", "someone", "with", "and", "or", "experience", "required", "role", 
+            "the", "for", "a", "an", "in", "to", "of", "is", "are", "some", "description",
+            "job", "candidate", "must", "have", "years", "knowledge", "strong", "understanding"
+        }
+        seen = set()
+        for term in potential_terms:
+            t_clean = term.strip()
+            t_lower = t_clean.lower()
+            if t_lower in stop_words or len(t_clean) < 2 or t_lower in seen:
+                continue
+            seen.add(t_lower)
+            if t_lower not in parsed_lower and not any(t_lower == s or (len(t_lower) > 3 and t_lower in s) for s in parsed_lower):
+                missing.append(t_clean)
+
+    missing = missing[:3]
     strengths_txt = ", ".join(strengths) if strengths else "No skills were extractable from the resume."
     feedback = (
         f"Strengths: {strengths_txt}. "
@@ -98,7 +107,7 @@ def compute_gaps_node(state: ScreeningState) -> ScreeningState:
     )
 
     state["gap_analysis"] = {
-        "missing_skills": missing[:3],
+        "missing_skills": missing,
         "experience_gaps": exp_gaps,
         "strengths": strengths,
         "feedback": feedback,
