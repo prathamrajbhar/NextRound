@@ -19,6 +19,16 @@ const redisUrlString = parseRedisUrl(rawRedisUrl);
 
 const connection = new Redis(redisUrlString, {
   maxRetriesPerRequest: null,
+  retryStrategy: (times) => Math.min(times * 500, 5000),
+  reconnectOnError: () => true,
+  enableOfflineQueue: true,
+  lazyConnect: false,
+});
+
+connection.on('error', (err: NodeJS.ErrnoException) => {
+  // Suppress noisy ECONNRESET/ECONNREFUSED logs — ioredis retries automatically
+  if (err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED') return;
+  console.error('[Redis] Unexpected connection error:', err.message);
 });
 
 
