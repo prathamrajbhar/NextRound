@@ -23,20 +23,7 @@ class Settings(BaseSettings):
 
     internal_service_secret: str = "internal_secret_key_change_in_production"
     api_base_url: str = "http://localhost:4000/api/v1"
-    redis_provider: str = Field("local", validation_alias="REDIS_PROVIDER")
-    local_redis_url: str = Field("redis://localhost:6379", validation_alias="LOCAL_REDIS_URL")
-    redis_url_raw: str = Field("redis://localhost:6379", validation_alias="REDIS_URL")
-
-    @property
-    def redis_url(self) -> str:
-        raw = (self.local_redis_url or self.redis_url_raw or "redis://localhost:6379").strip()
-        if raw.startswith("http://"):
-            raw = "redis://" + raw[len("http://"):]
-        elif raw.startswith("https://"):
-            raw = "rediss://" + raw[len("https://"):]
-        elif not raw.startswith("redis://") and not raw.startswith("rediss://"):
-            raw = "redis://" + raw
-        return raw.rstrip("/")
+    redis_url: str = Field("redis://localhost:6379", validation_alias="REDIS_URL")
 
     llm_provider: str = "gemini"
     gemini_api_key: str = ""
