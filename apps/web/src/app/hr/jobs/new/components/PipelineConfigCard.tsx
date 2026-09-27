@@ -144,8 +144,8 @@ export default function PipelineConfigCard({
         <div className="border-t border-slate-200/50 dark:border-slate-800/60 pt-3">
           <StageToggleRow
             icon={<Video className="h-4 w-4" />}
-            title="Final Team Interview"
-            description="In-depth technical or panel round with internal team lead"
+            title="1:1 HR & Team Video Interview"
+            description="Live face-to-face video interview with HR representative or hiring panel"
             checked={isActive('panel')}
             onChange={() => toggleStage('panel')}
             activeColorClass="bg-rose-500/15 text-rose-600 dark:text-rose-400"
