@@ -45,7 +45,7 @@ export async function requestAiTurn(params: {
   candidateResume?: string;
   candidateContext?: Record<string, unknown>;
   conversationHistory: { speaker: string; text: string }[];
-}): Promise<{ text: string; stage?: string; analysis?: unknown; turnRecord?: unknown }> {
+}): Promise<{ text: string; audioUrl?: string; stage?: string; analysis?: unknown; turnRecord?: unknown }> {
   const res = await fetch(`${siteConfig.aiServiceUrl}/api/v1/ai/interview/respond`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -63,6 +63,7 @@ export async function requestAiTurn(params: {
 
   return {
     text: data.text,
+    audioUrl: typeof data.audio_url === 'string' ? data.audio_url : typeof data.audioUrl === 'string' ? data.audioUrl : undefined,
     stage: data.stage,
     analysis: data.analysis,
     turnRecord: data.turnRecord,
@@ -72,7 +73,7 @@ export async function requestAiTurn(params: {
 export async function requestInitialAiTurn(
   interviewId: string,
   context: InterviewContextData
-): Promise<{ text: string }> {
+): Promise<{ text: string; audioUrl?: string }> {
   return requestAiTurn({
     interviewId,
     transcript: '',

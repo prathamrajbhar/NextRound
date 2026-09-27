@@ -41,6 +41,8 @@ export default function LiveInterviewRoom({
     timeRemaining,
     camActive,
     isAnalyzing,
+    isAiSpeaking,
+    candidateSpeechText,
     proctorTelemetry,
     startSession,
     submitAnswer,
@@ -141,6 +143,8 @@ export default function LiveInterviewRoom({
       messages={messages}
       phase={phase}
       isAnalyzing={isAnalyzing}
+      isAiSpeaking={isAiSpeaking}
+      candidateSpeechText={candidateSpeechText}
       proctorTelemetry={proctorTelemetry}
       onSubmitAnswer={submitAnswer}
       onEndSession={handleEndSession}

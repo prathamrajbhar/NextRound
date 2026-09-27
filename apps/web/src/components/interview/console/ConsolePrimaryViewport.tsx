@@ -9,6 +9,7 @@ interface ConsolePrimaryViewportProps {
   micActive: boolean;
   micLevel: number;
   lastMessage?: Message;
+  candidateSpeechText?: string;
   candidateName: string;
   companyName: string;
   remoteStream?: MediaStream | null;
@@ -23,6 +24,7 @@ export function ConsolePrimaryViewport({
   micActive,
   micLevel,
   lastMessage,
+  candidateSpeechText,
   candidateName,
   companyName,
   remoteStream,
@@ -95,17 +97,23 @@ export function ConsolePrimaryViewport({
             </div>
           </div>
 
-          <div className="space-y-1 max-w-sm">
+          <div className="space-y-2 max-w-md">
             <h2 className="text-base font-extrabold text-white font-display">
               {aiSpeaking ? 'AI Interviewer Speaking...' : isAnalyzing ? 'Evaluating Response...' : 'Listening to Candidate...'}
             </h2>
-            <p className="text-xs text-slate-400 font-medium leading-relaxed">
-              {lastMessage ? lastMessage.content : 'Welcome! The interview session has initialized. Speak clearly into your microphone.'}
-            </p>
+            {candidateSpeechText && !aiSpeaking && !isAnalyzing ? (
+              <div className="p-2.5 rounded-xl bg-slate-950/60 border border-brand-500/40 text-xs text-brand-300 font-medium leading-relaxed animate-pulse">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Hearing:</span>
+                &ldquo;{candidateSpeechText}&rdquo;
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400 font-medium leading-relaxed">
+                {lastMessage ? lastMessage.content : 'Welcome! The interview session has initialized. Speak clearly into your microphone.'}
+              </p>
+            )}
           </div>
         </div>
       ) : (
-
         <div className="relative w-full h-full bg-slate-950 flex flex-col items-center justify-center overflow-hidden">
           {connectionState === 'connected' && hasRemoteTracks ? (
             <video
@@ -115,7 +123,6 @@ export function ConsolePrimaryViewport({
               className="w-full h-full object-cover"
             />
           ) : (
-
             <div className="flex flex-col items-center justify-center p-6 text-center space-y-4 select-none">
               <div className="h-24 w-24 rounded-full bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-slate-400 shadow-inner relative">
                 <User className="h-12 w-12" />
@@ -157,4 +164,3 @@ export function ConsolePrimaryViewport({
     </div>
   );
 }
-

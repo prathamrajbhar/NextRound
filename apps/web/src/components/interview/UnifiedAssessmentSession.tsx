@@ -50,6 +50,8 @@ export function UnifiedAssessmentSession({
     timeRemaining,
     camActive,
     isAnalyzing,
+    isAiSpeaking,
+    candidateSpeechText,
     aiRespondError,
     startSession,
     submitAnswer,
@@ -119,22 +121,21 @@ export function UnifiedAssessmentSession({
     }
     try {
       await proctorEnd();
-    } catch {}
-    handleComplete(score);
+    } catch {
+      // Ignored
+    }
+    await handleComplete(score);
   };
-
-  const activeRoundTrack = track === 'comprehensive' ? comprehensiveStep : track;
 
   const handleLaunchNextRound = () => {
     if (!pendingNextRound) return;
-    suppressViolations(false);
     setComprehensiveStep(pendingNextRound.nextStep);
     setPendingNextRound(null);
   };
 
-  const needsProctoringGate =
-    (track === 'aptitude' || track === 'coding' || track === 'comprehensive') &&
-    !captureStream;
+  const activeRoundTrack = track === 'comprehensive' ? comprehensiveStep : track;
+  const isInterviewTrack = activeRoundTrack === 'technical' || activeRoundTrack === 'video';
+  const needsProctoringGate = Boolean(candidateId && !captureStream && (track === 'comprehensive' || isInterviewTrack));
 
   const handleGateProceed = (stream: MediaStream) => {
     startCapture(stream);
@@ -189,6 +190,8 @@ export function UnifiedAssessmentSession({
       messages={messages}
       phase={phase}
       isAnalyzing={isAnalyzing}
+      isAiSpeaking={isAiSpeaking}
+      candidateSpeechText={candidateSpeechText}
       aiRespondError={aiRespondError}
       onSubmitAnswer={submitAnswer}
       onEliminate={onEliminate}

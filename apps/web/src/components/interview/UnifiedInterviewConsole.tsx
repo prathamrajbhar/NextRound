@@ -29,6 +29,8 @@ export function UnifiedInterviewConsole({
   messages = [],
   phase = 'Introduction',
   isAnalyzing = false,
+  isAiSpeaking,
+  candidateSpeechText,
   proctorTelemetry,
   onSubmitAnswer,
   onEndSession,
@@ -81,7 +83,7 @@ export function UnifiedInterviewConsole({
   }, [messages, showTranscriptDrawer]);
 
   const lastMsg = messages[messages.length - 1];
-  const aiSpeaking = Boolean(lastMsg && lastMsg.role === 'ai');
+  const aiSpeaking = isAiSpeaking !== undefined ? isAiSpeaking : Boolean(lastMsg && lastMsg.role === 'ai');
 
   const handleTextSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,6 +141,7 @@ export function UnifiedInterviewConsole({
           micActive={micActive}
           micLevel={micLevel}
           lastMessage={lastMsg}
+          candidateSpeechText={candidateSpeechText}
           candidateName={candidateName}
           companyName={companyName}
           remoteStream={remoteStream}

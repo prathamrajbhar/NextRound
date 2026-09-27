@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Message, InterviewPhase } from '@/components/interview/console/types';
 import {
   fetchInterviewContext,
@@ -15,11 +15,12 @@ import {
   getTurnStage,
   deriveNextInterviewPhase,
 } from '@/lib/interview/interviewSessionEval';
-
 import {
   UseInterviewSessionProps,
   ProctorTelemetryState,
 } from '@/lib/interview/interviewSession.types';
+import { playAudio, stopAudio, unlockAudio } from '@/lib/audioManager';
+import { useInterviewSpeech } from '@/lib/interview/useInterviewSpeech';
 
 export type { Message, InterviewPhase };
 
@@ -35,6 +36,7 @@ export function useInterviewSession({
   const [micActive, setMicActive] = useState(true);
   const [camActive, setCamActive] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [aiRespondError, setAiRespondError] = useState<string | null>(null);
   const [proctorTelemetry, setProctorTelemetry] = useState<ProctorTelemetryState>({
     faceCount: null,
@@ -61,46 +63,24 @@ export function useInterviewSession({
     return () => clearInterval(timer);
   }, [stage, showWarningModal]);
 
-  const startSession = async () => {
-    setStage('session');
-    setPhase('Introduction');
-    setIsAnalyzing(true);
+  useEffect(() => {
+    return () => {
+      stopAudio();
+    };
+  }, []);
 
-    const fsPromise = !document.fullscreenElement
-      ? document.documentElement.requestFullscreen().catch(() => undefined)
-      : Promise.resolve();
+  const handleComplete = useCallback(async () => {
+    stopAudio();
+    await endInterviewSession(interviewId, messagesRef.current);
+    const results = evaluateCompletedInterview(role, transcriptData.current);
+    onComplete(results);
+  }, [interviewId, onComplete, role]);
 
-    contextDataRef.current = await fetchInterviewContext(interviewId, role);
-    await fsPromise;
-
-    try {
-      const response = await requestInitialAiTurn(interviewId, contextDataRef.current);
-      lastAiQuestion.current = response.text;
-      setMessages([
-        {
-          id: 'ai-init',
-          role: 'ai',
-          content: response.text,
-          timestamp: new Date().toLocaleTimeString(),
-        },
-      ]);
-    } catch (err) {
-      setAiRespondError(err instanceof Error ? err.message : 'Network error contacting AI service.');
-      setMessages([
-        {
-          id: 'ai-init-error',
-          role: 'ai',
-          content: 'I could not reach the AI voice engine to start the session. Please check your connection and try again.',
-          timestamp: new Date().toLocaleTimeString(),
-        },
-      ]);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const submitAnswer = async (text: string) => {
+  const submitAnswer = useCallback(async (text: string) => {
     if (!text.trim() || isAnalyzing) return;
+
+    stopAudio();
+    setIsAiSpeaking(false);
 
     const currentTimestamp = Date.now();
     const timestamp = new Date(currentTimestamp).toLocaleTimeString();
@@ -118,7 +98,7 @@ export function useInterviewSession({
         jobTitle: contextDataRef.current.jobTitle,
         candidateResume: contextDataRef.current.candidateResume,
         candidateContext: contextDataRef.current.candidateContext,
-        conversationHistory: messages.map((m) => ({ speaker: m.role, text: m.content })),
+        conversationHistory: messagesRef.current.map((m) => ({ speaker: m.role, text: m.content })),
       });
 
       transcriptData.current.push({
@@ -141,6 +121,13 @@ export function useInterviewSession({
         },
       ]);
       setIsAnalyzing(false);
+
+      if (response.text) {
+        setIsAiSpeaking(true);
+        playAudio(response.text, response.audioUrl, () => {
+          setIsAiSpeaking(false);
+        });
+      }
     } catch (err) {
       setAiRespondError(err instanceof Error ? err.message : 'Network error contacting AI service.');
       setMessages((prev) => [
@@ -153,14 +140,67 @@ export function useInterviewSession({
         },
       ]);
       setIsAnalyzing(false);
+      setIsAiSpeaking(false);
       setTimeout(handleComplete, 1200);
     }
-  };
+  }, [handleComplete, interviewId, isAnalyzing, phase, role]);
 
-  const handleComplete = async () => {
-    await endInterviewSession(interviewId, messagesRef.current);
-    const results = evaluateCompletedInterview(role, transcriptData.current);
-    onComplete(results);
+  const {
+    candidateSpeechText,
+    setCandidateSpeechText,
+  } = useInterviewSpeech({
+    micActive,
+    isAiSpeaking,
+    isAnalyzing,
+    onFinalTranscript: submitAnswer,
+    onError: (errText) => setAiRespondError(errText),
+  });
+
+  const startSession = async () => {
+    unlockAudio();
+    setStage('session');
+    setPhase('Introduction');
+    setIsAnalyzing(true);
+
+    const fsPromise = !document.fullscreenElement
+      ? document.documentElement.requestFullscreen().catch(() => undefined)
+      : Promise.resolve();
+
+    contextDataRef.current = await fetchInterviewContext(interviewId, role);
+    await fsPromise;
+
+    try {
+      const response = await requestInitialAiTurn(interviewId, contextDataRef.current);
+      lastAiQuestion.current = response.text;
+      setMessages([
+        {
+          id: 'ai-init',
+          role: 'ai',
+          content: response.text,
+          timestamp: new Date().toLocaleTimeString(),
+        },
+      ]);
+      setIsAnalyzing(false);
+
+      if (response.text) {
+        setIsAiSpeaking(true);
+        playAudio(response.text, response.audioUrl, () => {
+          setIsAiSpeaking(false);
+        });
+      }
+    } catch (err) {
+      setAiRespondError(err instanceof Error ? err.message : 'Network error contacting AI service.');
+      setMessages([
+        {
+          id: 'ai-init-error',
+          role: 'ai',
+          content: 'I could not reach the AI voice engine to start the session. Please check your connection and try again.',
+          timestamp: new Date().toLocaleTimeString(),
+        },
+      ]);
+      setIsAnalyzing(false);
+      setIsAiSpeaking(false);
+    }
   };
 
   const handleResumeFullscreen = () => {
@@ -171,6 +211,7 @@ export function useInterviewSession({
   };
 
   const handleEliminateCandidate = async () => {
+    stopAudio();
     await endInterviewSession(interviewId, messagesRef.current);
     onComplete(createEliminationResult(messagesRef.current));
   };
@@ -183,6 +224,9 @@ export function useInterviewSession({
     micActive,
     camActive,
     isAnalyzing,
+    isAiSpeaking,
+    candidateSpeechText,
+    setCandidateSpeechText,
     aiRespondError,
     proctorTelemetry,
     setProctorTelemetry,

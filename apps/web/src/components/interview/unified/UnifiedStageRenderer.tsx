@@ -38,6 +38,8 @@ interface UnifiedStageRendererProps {
   messages: Message[];
   phase: InterviewPhase;
   isAnalyzing: boolean;
+  isAiSpeaking?: boolean;
+  candidateSpeechText?: string;
   aiRespondError?: string | null;
   onSubmitAnswer: (text: string) => void;
   onEliminate: () => void;
@@ -64,6 +66,8 @@ export function UnifiedStageRenderer({
   messages,
   phase,
   isAnalyzing,
+  isAiSpeaking,
+  candidateSpeechText,
   aiRespondError,
   onSubmitAnswer,
   onEliminate,
@@ -155,6 +159,8 @@ export function UnifiedStageRenderer({
       messages={messages}
       phase={phase}
       isAnalyzing={isAnalyzing}
+      isAiSpeaking={isAiSpeaking}
+      candidateSpeechText={candidateSpeechText}
       aiRespondError={aiRespondError}
       onSubmitAnswer={onSubmitAnswer}
       onEndSession={onEndSession}
