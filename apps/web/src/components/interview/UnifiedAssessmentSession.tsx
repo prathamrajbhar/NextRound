@@ -78,6 +78,7 @@ export function UnifiedAssessmentSession({
     recordingActive,
     recordingDurationMs,
     proctoringClient,
+    startSession: startProctorSession,
   } = useProctoringSession({
     sessionId,
     candidateId: candidateId || '',
@@ -137,6 +138,12 @@ export function UnifiedAssessmentSession({
   const handleGateProceed = (stream: MediaStream) => {
     startCapture(stream);
     setCaptureStream(stream);
+    startProctorSession();
+    startSession();
+  };
+
+  const handleJoinFromCheckScreen = () => {
+    startProctorSession();
     startSession();
   };
 
@@ -150,7 +157,7 @@ export function UnifiedAssessmentSession({
           company={targetCompany}
           role={targetRole}
           camActive={camActive}
-          onJoin={startSession}
+          onJoin={handleJoinFromCheckScreen}
         />
       </div>
     );

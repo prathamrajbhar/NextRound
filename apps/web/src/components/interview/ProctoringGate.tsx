@@ -33,6 +33,9 @@ export function ProctoringGate({ company, role, onProceed }: ProctoringGateProps
   const [consented, setConsented] = useState(false);
 
   const handleProceed = () => {
+    if (typeof document !== 'undefined' && document.documentElement.requestFullscreen && !document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    }
     const stream = handoff();
     if (stream) {
       onProceed(stream);

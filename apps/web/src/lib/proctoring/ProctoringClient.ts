@@ -105,6 +105,7 @@ export class ProctoringClient implements ProctoringEventLogger {
   }
 
   trackMediaStream(stream: MediaStream): void {
+    this.sessionActive = true;
     this.mediaTracker.track(stream);
     if (stream.getAudioTracks().length > 0) {
       this.audioMonitor.start(stream);
