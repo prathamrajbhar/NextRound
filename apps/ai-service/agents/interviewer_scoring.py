@@ -31,7 +31,7 @@ def gemini_score_transcript(history: Any, job_title: str) -> Optional[Dict[str, 
         'Return JSON: {"technical_depth": float, "communication": float, "problem_solving": float, '
         '"overall_score": float, "summary_feedback": str}'
     )
-    return extract_json_object(generate_text(prompt, force_provider="groq"))
+    return extract_json_object(generate_text(prompt))
 
 def finalize_scores_node(state: InterviewerState) -> InterviewerState:
     scores = state.get("scores_so_far", {})

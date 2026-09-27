@@ -53,7 +53,7 @@ def evaluate_last_answer_node(state: InterviewerState) -> InterviewerState:
     is_start = (not has_ai_turns) and state.get("turn_number", 0) == 0
 
     if is_start:
-        raw = generate_text(build_greeting_prompt(state), force_provider="groq")
+        raw = generate_text(build_greeting_prompt(state))
         analysis = extract_json_object(raw) if raw else None
         if not analysis:
             analysis = {
@@ -84,7 +84,7 @@ def evaluate_last_answer_node(state: InterviewerState) -> InterviewerState:
         }
         return state
 
-    raw = generate_text(build_turn_prompt(state), force_provider="groq")
+    raw = generate_text(build_turn_prompt(state))
     analysis = extract_json_object(raw) if raw else None
     if not analysis:
         analysis = heuristic_analysis(state)
@@ -156,7 +156,7 @@ def close_interview_node(state: InterviewerState) -> InterviewerState:
             "Say goodbye to the candidate in 1-2 sentences, thank them for their time, and tell them "
             "their results are being prepared. Do not invent scores."
         )
-        closing = generate_text(prompt, force_provider="groq")
+        closing = generate_text(prompt)
         if not closing:
             raise RuntimeError("Interviewer LLM returned no closing message.")
 
