@@ -53,7 +53,7 @@ export function ProctoringWarningModal({
           </h2>
           <p className="text-xs text-slate-300 font-semibold max-w-md mx-auto leading-relaxed pt-1">
             {isEliminated
-              ? 'You have exceeded the maximum allowed proctoring violations. Your practice assessment has been terminated and disqualified.'
+              ? 'You have exceeded the maximum allowed proctoring violations. Your assessment session has been terminated and disqualified.'
               : 'You exited full-screen mode or switched windows during an active proctored assessment session. Please return to full screen immediately.'}
           </p>
         </div>

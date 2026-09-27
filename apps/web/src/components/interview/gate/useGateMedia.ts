@@ -1,11 +1,13 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { detectFaces, loadFaceDetector } from '@/lib/proctoring/faceDetector';
+import { detectBlobsFromCanvas } from '@/lib/proctoring/faceBlobDetector';
 
 export type FaceStatus = 'checking' | 'pass' | 'fail';
 
 export function useGateMedia() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [faceStatus, setFaceStatus] = useState<FaceStatus>('checking');
@@ -25,20 +27,25 @@ export function useGateMedia() {
     if (!video || !streamRef.current || handedOffRef.current) return;
     if (video.readyState < 2 || video.paused) return;
 
+    if (!canvasRef.current && typeof document !== 'undefined') {
+      canvasRef.current = document.createElement('canvas');
+      canvasRef.current.width = 160;
+      canvasRef.current.height = 120;
+    }
+
     const loaded = await loadFaceDetector();
-    if (!loaded) {
-      setFaceStatus('pass');
-      setFaceCount(1);
-      setError(null);
-      return;
-    }
+    let currentCount = 0;
 
-    const result = await detectFaces(video);
-    if (!result.ok) {
-      return;
+    if (loaded) {
+      const result = await detectFaces(video);
+      if (result.ok && result.confidence > 0) {
+        currentCount = result.count;
+      } else if (canvasRef.current) {
+        currentCount = detectBlobsFromCanvas(video, canvasRef.current);
+      }
+    } else if (canvasRef.current) {
+      currentCount = detectBlobsFromCanvas(video, canvasRef.current);
     }
-
-    const currentCount = result.count;
     samplesRef.current.push(currentCount);
     if (samplesRef.current.length > 4) {
       samplesRef.current.shift();
