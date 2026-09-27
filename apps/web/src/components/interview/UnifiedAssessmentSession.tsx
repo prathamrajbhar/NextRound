@@ -132,7 +132,6 @@ export function UnifiedAssessmentSession({
 
   const needsProctoringGate =
     (track === 'aptitude' || track === 'coding' || track === 'comprehensive') &&
-    !!candidateId &&
     !captureStream;
 
   const handleGateProceed = (stream: MediaStream) => {
