@@ -4,6 +4,7 @@ export interface FeedbackData {
   targetRole?: string;
   difficulty?: string;
   overallScore?: number;
+  isIncomplete?: boolean;
   detailedBreakdown?: { category: string; score: number; feedback: string }[];
   keyStrengths?: string[];
   areasToImprove?: string[];

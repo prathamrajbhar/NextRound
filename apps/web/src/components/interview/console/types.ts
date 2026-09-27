@@ -52,6 +52,7 @@ export interface UnifiedInterviewConsoleProps {
   messages?: Message[];
   phase?: InterviewPhase;
   isAnalyzing?: boolean;
+  aiRespondError?: string | null;
   proctorTelemetry?: ProctorTelemetry;
   onSubmitAnswer?: (text: string) => void;
   onEndSession: () => void;

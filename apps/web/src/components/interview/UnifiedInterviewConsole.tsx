@@ -38,6 +38,7 @@ export function UnifiedInterviewConsole({
   onResumeFullscreen,
   onEliminate,
   proctoringClient,
+  aiRespondError,
 }: UnifiedInterviewConsoleProps) {
 
   const [micActive, setMicActive] = useState(true);
@@ -48,6 +49,10 @@ export function UnifiedInterviewConsole({
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const candidateResponseCount = messages.filter(
+    (m) => m.role === 'candidate' && m.content && m.content.trim().length > 0
+  ).length;
 
   const [hrNotes, setHrNotes] = useState('');
   const [hrDecision, setHrDecision] = useState<'pass' | 'fail' | null>(null);
@@ -174,7 +179,12 @@ export function UnifiedInterviewConsole({
         onEndSession={() => setShowExitConfirm(true)}
       />
 
-      <ConsoleExitConfirm isOpen={showExitConfirm} onCancel={() => setShowExitConfirm(false)} onConfirm={handleEndSession} />
+      <ConsoleExitConfirm
+        isOpen={showExitConfirm}
+        onCancel={() => setShowExitConfirm(false)}
+        onConfirm={handleEndSession}
+        candidateResponseCount={candidateResponseCount}
+      />
 
       <ProctoringWarningModal
         isOpen={showWarningModal}

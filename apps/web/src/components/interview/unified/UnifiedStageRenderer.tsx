@@ -38,6 +38,7 @@ interface UnifiedStageRendererProps {
   messages: Message[];
   phase: InterviewPhase;
   isAnalyzing: boolean;
+  aiRespondError?: string | null;
   onSubmitAnswer: (text: string) => void;
   onEliminate: () => void;
 }
@@ -63,6 +64,7 @@ export function UnifiedStageRenderer({
   messages,
   phase,
   isAnalyzing,
+  aiRespondError,
   onSubmitAnswer,
   onEliminate,
 }: UnifiedStageRendererProps) {
@@ -153,6 +155,7 @@ export function UnifiedStageRenderer({
       messages={messages}
       phase={phase}
       isAnalyzing={isAnalyzing}
+      aiRespondError={aiRespondError}
       onSubmitAnswer={onSubmitAnswer}
       onEndSession={onEndSession}
       strikeCount={proctorStrikeCount}

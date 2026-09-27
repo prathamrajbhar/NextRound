@@ -50,6 +50,7 @@ export function UnifiedAssessmentSession({
     timeRemaining,
     camActive,
     isAnalyzing,
+    aiRespondError,
     startSession,
     submitAnswer,
     onEliminate,
@@ -188,6 +189,7 @@ export function UnifiedAssessmentSession({
       messages={messages}
       phase={phase}
       isAnalyzing={isAnalyzing}
+      aiRespondError={aiRespondError}
       onSubmitAnswer={submitAnswer}
       onEliminate={onEliminate}
     />

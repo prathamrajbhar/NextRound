@@ -20,17 +20,65 @@ export async function endMockSession(req: Request, res: Response, next: NextFunc
 
     const transcript = req.body.transcript;
     const safeTranscript = Array.isArray(transcript) && transcript.length > 0 ? transcript : [];
-    const score = typeof req.body.score === 'number' ? req.body.score : null;
+    const candidateTurns = safeTranscript.filter(
+      (t: { role?: string; text?: string }) => t.role === 'candidate' && typeof t.text === 'string' && t.text.trim().length > 0
+    );
+    const hasCandidateResponses = candidateTurns.length > 0;
+    const score = typeof req.body.score === 'number' ? req.body.score : (hasCandidateResponses ? null : 0);
+
+    const isAbandonedOrEmpty = !hasCandidateResponses && (req.body.score === undefined || req.body.score === 0 || req.body.score === null);
 
     const updated = await prisma.mockSession.update({
       where: { id: session.id },
       data: {
         status: 'completed',
-        score,
+        score: isAbandonedOrEmpty ? 0 : score,
         ended_at: new Date(),
         transcript: safeTranscript as Prisma.InputJsonValue,
       },
     });
+
+    if (isAbandonedOrEmpty) {
+      const incompleteFeedback = {
+        isIncomplete: true,
+        overallScore: 0,
+        rubricScores: { clarity: 0, depth: 0, examples: 0, technicalAccuracy: 0 },
+        strengths: [],
+        growthAreas: ['No candidate responses were recorded before the session was ended.'],
+        keyStrengths: [],
+        areasToImprove: ['Complete interview questions to receive detailed AI evaluation and rubric scoring.'],
+        metrics: {
+          'Technical Depth': 0,
+          'Communication & Tone': 0,
+          'System Architecture': 0,
+        },
+        targetCompany: session.target_company || 'Practice Mode',
+        targetRole: session.target_role || 'Software Engineering Role',
+        difficulty: session.difficulty || 'medium',
+        detailedBreakdown: [
+          {
+            category: 'Session Incomplete',
+            score: 0,
+            feedback: 'This session was ended before any candidate responses or code submissions were recorded.',
+          }
+        ],
+        starAnalysis: { situation: '', task: '', action: '', result: '' },
+        recommendedPrep: ['Start a new mock session and answer each question.'],
+      };
+      await prisma.mockSession.update({
+        where: { id: session.id },
+        data: { feedback: incompleteFeedback as Prisma.InputJsonValue },
+      });
+
+      return res.json({
+        success: true,
+        data: {
+          sessionId: updated.id,
+          status: 'completed',
+          message: 'Session ended as incomplete. No evaluation needed.',
+        },
+      });
+    }
 
     if (safeTranscript.length === 0 && score !== null) {
       const pct = Math.max(0, Math.min(100, score));
@@ -73,7 +121,7 @@ export async function endMockSession(req: Request, res: Response, next: NextFunc
       });
     }
 
-    if (safeTranscript.length > 0) {
+    if (hasCandidateResponses) {
       try {
         await enqueueMockEvaluation(
           updated.id,
@@ -91,8 +139,8 @@ export async function endMockSession(req: Request, res: Response, next: NextFunc
       success: true,
       data: {
         sessionId: updated.id,
-        status: safeTranscript.length > 0 ? 'pending_evaluation' : 'completed',
-        message: safeTranscript.length > 0
+        status: hasCandidateResponses ? 'pending_evaluation' : 'completed',
+        message: hasCandidateResponses
           ? 'Session completed and queued for AI evaluation.'
           : 'Session completed. Feedback is ready.',
       },
@@ -151,6 +199,7 @@ export async function getMockFeedback(req: Request, res: Response, next: NextFun
       targetRole: session.target_role || 'Software Engineering Role',
       difficulty: session.difficulty || 'medium',
       overallScore: score,
+      isIncomplete: Boolean(feedbackObj.isIncomplete),
       detailedBreakdown: feedbackObj.detailedBreakdown || [
         {
           category: 'Overall Assessment',

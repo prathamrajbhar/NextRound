@@ -9,28 +9,34 @@ interface FeedbackHeaderCardProps {
   targetCompany: string;
   targetRole: string;
   score: number;
+  isIncomplete?: boolean;
 }
 
 export function FeedbackHeaderCard({
   targetCompany,
   targetRole,
   score,
+  isIncomplete = false,
 }: FeedbackHeaderCardProps) {
-  const performance =
-    score >= 85
-      ? {
-          text: 'Excellent Match',
-          bg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/60',
-        }
-      : score >= 75
-      ? {
-          text: 'Strong Match',
-          bg: 'bg-brand-50 dark:bg-orange-950/60 text-brand-700 dark:text-orange-300 border-brand-200 dark:border-orange-900/60',
-        }
-      : {
-          text: 'Needs Calibration',
-          bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/60',
-        };
+  const performance = isIncomplete
+    ? {
+        text: 'Incomplete Session',
+        bg: 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900/60',
+      }
+    : score >= 85
+    ? {
+        text: 'Excellent Match',
+        bg: 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-900/60',
+      }
+    : score >= 75
+    ? {
+        text: 'Strong Match',
+        bg: 'bg-brand-50 dark:bg-orange-950/60 text-brand-700 dark:text-orange-300 border-brand-200 dark:border-orange-900/60',
+      }
+    : {
+        text: 'Needs Calibration',
+        bg: 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900/60',
+      };
 
   return (
     <div className="space-y-6">
