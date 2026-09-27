@@ -33,7 +33,6 @@ export default function CompanyOnboarding() {
     update,
     addRole,
     removeRole,
-    toggleStage,
     addInvite,
     removeInvite,
   } = useCompanyOnboarding();
@@ -76,7 +75,7 @@ export default function CompanyOnboarding() {
     }
   };
 
-  const stepProps: CompanyStepProps = { form, update, addRole, removeRole, toggleStage, addInvite, removeInvite };
+  const stepProps: CompanyStepProps = { form, update, addRole, removeRole, addInvite, removeInvite };
   const isLast = step === STEPS.length - 1;
 
   return (
