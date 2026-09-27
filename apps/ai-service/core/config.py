@@ -45,11 +45,11 @@ class Settings(BaseSettings):
     groq_model: str = "llama-3.3-70b-versatile"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2"
-    aws_endpoint_url: str = Field("http://192.168.31.239:4566", validation_alias="AWS_ENDPOINT_URL")
-    aws_default_region: str = Field("us-east-1", validation_alias="AWS_DEFAULT_REGION")
-    aws_access_key_id: str = Field("test", validation_alias="AWS_ACCESS_KEY_ID")
-    aws_secret_access_key: str = Field("test", validation_alias="AWS_SECRET_ACCESS_KEY")
-    aws_s3_bucket: str = Field("nextroundbucket", validation_alias="AWS_S3_BUCKET")
+    aws_endpoint_url: str | None = Field(None, validation_alias="AWS_ENDPOINT_URL")
+    aws_default_region: str = Field("ap-south-1", validation_alias="AWS_DEFAULT_REGION")
+    aws_access_key_id: str = Field("", validation_alias="AWS_ACCESS_KEY_ID")
+    aws_secret_access_key: str = Field("", validation_alias="AWS_SECRET_ACCESS_KEY")
+    aws_s3_bucket: str = Field("ledgerone-bucket", validation_alias="AWS_S3_BUCKET")
     profile_scraper_base_url: str = Field("http://127.0.0.1:18273", validation_alias="PROFILE_SCRAPER_BASE_URL")
     profile_scraper_timeout_ms: int = Field(90000, validation_alias="PROFILE_SCRAPER_TIMEOUT_MS")
 

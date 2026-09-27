@@ -8,14 +8,15 @@ from core.config import settings
 logger = logging.getLogger("pdf_s3")
 
 def get_s3_client():
-    return boto3.client(
-        "s3",
-        endpoint_url=settings.aws_endpoint_url,
-        region_name=settings.aws_default_region,
-        aws_access_key_id=settings.aws_access_key_id,
-        aws_secret_access_key=settings.aws_secret_access_key,
-        config=Config(s3={"addressing_style": "path"}),
-    )
+    kwargs: dict[str, Any] = {
+        "region_name": settings.aws_default_region,
+        "aws_access_key_id": settings.aws_access_key_id,
+        "aws_secret_access_key": settings.aws_secret_access_key,
+    }
+    if settings.aws_endpoint_url:
+        kwargs["endpoint_url"] = settings.aws_endpoint_url
+        kwargs["config"] = Config(s3={"addressing_style": "path"})
+    return boto3.client("s3", **kwargs)
 
 def upload_to_s3(file_path: str, key: str, content_type: str = "application/pdf") -> str:
     s3 = get_s3_client()
@@ -29,8 +30,10 @@ def upload_to_s3(file_path: str, key: str, content_type: str = "application/pdf"
             ContentType=content_type,
         )
 
-    clean_endpoint = settings.aws_endpoint_url.rstrip("/")
-    return f"{clean_endpoint}/{settings.aws_s3_bucket}/{normalized_key}"
+    if settings.aws_endpoint_url:
+        clean_endpoint = settings.aws_endpoint_url.rstrip("/")
+        return f"{clean_endpoint}/{settings.aws_s3_bucket}/{normalized_key}"
+    return f"https://{settings.aws_s3_bucket}.s3.{settings.aws_default_region}.amazonaws.com/{normalized_key}"
 
 def _esc(value: Any) -> str:
     return xml_escape(str(value))

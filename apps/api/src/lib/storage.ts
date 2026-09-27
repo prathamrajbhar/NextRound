@@ -8,20 +8,19 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from './env';
 import { logger } from './logger';
 
-const endpoint = env('AWS_ENDPOINT_URL');
-const region = process.env.AWS_DEFAULT_REGION || process.env.AWS_REGION || 'us-east-1';
+const endpoint = process.env.AWS_ENDPOINT_URL || undefined;
+const region = process.env.AWS_DEFAULT_REGION || process.env.AWS_REGION || 'ap-south-1';
 const accessKeyId = env('AWS_ACCESS_KEY_ID');
 const secretAccessKey = env('AWS_SECRET_ACCESS_KEY');
-const bucket = env('AWS_S3_BUCKET');
+const bucket = process.env.AWS_S3_BUCKET_NAME || env('AWS_S3_BUCKET');
 
 const s3Client = new S3Client({
-  endpoint,
+  ...(endpoint ? { endpoint, forcePathStyle: true } : {}),
   region,
   credentials: {
     accessKeyId,
     secretAccessKey,
   },
-  forcePathStyle: true,
 });
 
 function normalizeKey(key: string): string {
@@ -44,8 +43,11 @@ export async function uploadFile(
     })
   );
 
-  const cleanEndpoint = endpoint.replace(/\/+$/, '');
-  return `${cleanEndpoint}/${bucket}/${normalizedKey}`;
+  if (endpoint) {
+    const cleanEndpoint = endpoint.replace(/\/+$/, '');
+    return `${cleanEndpoint}/${bucket}/${normalizedKey}`;
+  }
+  return `https://${bucket}.s3.${region}.amazonaws.com/${normalizedKey}`;
 }
 
 export async function getPresignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
