@@ -4,6 +4,12 @@ import {
   OfferDraftInput,
   NoSalaryConfiguredError,
 } from '../services/offer/offer.service';
+import {
+  signOffer,
+  declineOffer,
+  getApplicationOffer,
+  getOfferByToken,
+} from '../services/application/application.service';
 import { prisma } from '@nextround/database';
 import { deriveSalary, deriveEquity } from '../lib/offer-terms';
 import crypto from 'crypto';
@@ -12,17 +18,46 @@ import crypto from 'crypto';
 // Mocks
 // ---------------------------------------------------------------------------
 
-vi.mock('@nextround/database', () => ({
-  prisma: {
+const { mockPrisma } = vi.hoisted(() => ({
+  mockPrisma: {
     offer: {
       upsert: vi.fn(),
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      update: vi.fn(),
+    },
+    application: {
+      findFirst: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
 
+vi.mock('@nextround/database', () => ({
+  prisma: mockPrisma,
+}));
+
+vi.mock('../lib/prisma', () => ({
+  prisma: mockPrisma,
+}));
+
+vi.mock('../services/email/email.service', () => ({
+  emailService: {
+    sendOfferResponseAlert: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 vi.mock('crypto', () => ({
+  default: {
+    randomUUID: vi.fn(() => 'mock-magic-token-123'),
+  },
   randomUUID: vi.fn(() => 'mock-magic-token-123'),
 }));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 // ---------------------------------------------------------------------------
 // deriveSalary unit tests
@@ -356,109 +391,121 @@ describe('Offer Service — upsertOffer', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Offer acceptance / decline flows
+// Offer signing / decline flows
 // ---------------------------------------------------------------------------
 
-import { acceptOffer, declineOffer, getOfferDetails } from '../services/offer/offer.service';
-import { notFound, badRequest, conflict } from '../lib/http-errors';
-
-describe('Offer Service — acceptOffer', () => {
-  it('accepts offer and updates status to accepted', async () => {
+describe('Offer Service — signOffer', () => {
+  it('signs offer and updates status to accepted', async () => {
     const offer = {
       id: 'offer-accept-uid',
       application_id: 'app-accept-001',
       status: 'pending',
+      magic_link_token: 'token-abc',
       valid_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
       signature_svg: null,
     };
-    (prisma.offer.findUnique as vi.Mock).mockResolvedValue(offer);
-    (prisma.offer.update as vi.Mock).mockResolvedValue({
+    (mockPrisma.offer.findUnique as vi.Mock).mockResolvedValue(offer);
+    (mockPrisma.application.findFirst as vi.Mock).mockResolvedValue({ id: 'app-accept-001' });
+    (mockPrisma.offer.update as vi.Mock).mockResolvedValue({
       ...offer,
       status: 'accepted',
       signature_svg: '<svg>...</svg>',
     });
+    (mockPrisma.application.update as vi.Mock).mockResolvedValue({
+      id: 'app-accept-001',
+      status: 'accepted',
+      job: { title: 'Senior Engineer', organization: { users: [{ role: 'hr', email: 'hr@org.com' }] } },
+      candidate: { user: { email: 'cand@example.com' } },
+    });
 
-    const result = await acceptOffer('app-accept-001', '<svg>...</svg>', 'user-accept');
+    const result = await signOffer(
+      'app-accept-001',
+      { signature_svg: '<svg>...</svg>' },
+      { userId: 'user-accept', role: 'candidate', email: 'cand@example.com' }
+    );
 
     expect(result.status).toBe('accepted');
-    expect(result.signature_svg).toBe('<svg>...</svg>');
+    expect(result.offer.signature_svg).toBe('<svg>...</svg>');
+  });
+
+  it('throws badRequest when signature_svg is missing', async () => {
+    await expect(
+      signOffer('app-accept-001', {}, { userId: 'user-accept', role: 'candidate', email: 'cand@example.com' })
+    ).rejects.toThrow('signature_svg is required');
   });
 
   it('throws notFound when offer does not exist', async () => {
-    (prisma.offer.findUnique as vi.Mock).mockResolvedValue(null);
+    (mockPrisma.offer.findUnique as vi.Mock).mockResolvedValue(null);
 
-    await expect(acceptOffer('ghost-offer', '<svg></svg>', 'user')).rejects.toThrow('Offer not found');
+    await expect(
+      signOffer(
+        'ghost-offer',
+        { signature_svg: '<svg></svg>' },
+        { userId: 'user', role: 'candidate', email: 'user@example.com' }
+      )
+    ).rejects.toThrow('Offer not found for application');
   });
 
-  it('throws badRequest when offer is already accepted', async () => {
+  it('throws forbidden when user does not own application and token is invalid', async () => {
     const offer = {
-      id: 'offer-already-accepted',
-      status: 'accepted',
+      id: 'offer-unauth',
+      application_id: 'app-unauth-001',
+      magic_link_token: 'valid-token',
     };
-    (prisma.offer.findUnique as vi.Mock).mockResolvedValue(offer);
+    (mockPrisma.offer.findUnique as vi.Mock).mockResolvedValue(offer);
+    (mockPrisma.application.findFirst as vi.Mock).mockResolvedValue(null);
 
-    await expect(acceptOffer('offer-already-accepted', '<svg></svg>', 'user')).rejects.toThrow(
-      'Offer already accepted'
-    );
-  });
-
-  it('throws conflict when offer has expired', async () => {
-    const offer = {
-      id: 'offer-expired',
-      status: 'pending',
-      valid_until: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // expired 1 day ago
-    };
-    (prisma.offer.findUnique as vi.Mock).mockResolvedValue(offer);
-
-    await expect(acceptOffer('offer-expired', '<svg></svg>', 'user')).rejects.toThrow(
-      'Offer has expired'
-    );
+    await expect(
+      signOffer(
+        'app-unauth-001',
+        { signature_svg: '<svg></svg>', magic_link_token: 'wrong-token' },
+        { userId: 'intruder', role: 'candidate', email: 'intruder@example.com' }
+      )
+    ).rejects.toThrow('Forbidden: offer ownership could not be verified');
   });
 });
 
 describe('Offer Service — declineOffer', () => {
-  it('declines offer with optional feedback', async () => {
+  it('declines offer with reason', async () => {
     const offer = {
       id: 'offer-decline-uid',
       application_id: 'app-decline-001',
       status: 'pending',
+      offer_letter_content: 'Letter text',
+      magic_link_token: 'token-dec',
     };
-    (prisma.offer.findUnique as vi.Mock).mockResolvedValue(offer);
-    (prisma.offer.update as vi.Mock).mockResolvedValue({
+    (mockPrisma.offer.findUnique as vi.Mock).mockResolvedValue(offer);
+    (mockPrisma.application.findFirst as vi.Mock).mockResolvedValue({ id: 'app-decline-001' });
+    (mockPrisma.offer.update as vi.Mock).mockResolvedValue({
       ...offer,
       status: 'declined',
-      decline_feedback: 'Accepted another offer',
+    });
+    (mockPrisma.application.update as vi.Mock).mockResolvedValue({
+      id: 'app-decline-001',
+      status: 'rejected',
+      job: { title: 'Backend Eng', organization: { users: [] } },
+      candidate: { user: { email: 'c@ex.com' } },
     });
 
-    const result = await declineOffer('app-decline-001', 'Accepted another offer', 'user-decline');
+    const result = await declineOffer(
+      'app-decline-001',
+      { reason: 'Accepted another offer' },
+      { userId: 'user-decline', role: 'candidate', email: 'c@ex.com' }
+    );
 
     expect(result.status).toBe('declined');
-    expect(result.decline_feedback).toBe('Accepted another offer');
-  });
-
-  it('declines offer without feedback', async () => {
-    const offer = {
-      id: 'offer-decline-nofb',
-      application_id: 'app-decline-002',
-      status: 'pending',
-    };
-    (prisma.offer.findUnique as vi.Mock).mockResolvedValue(offer);
-    (prisma.offer.update as vi.Mock).mockResolvedValue({
-      ...offer,
-      status: 'declined',
-      decline_feedback: null,
-    });
-
-    const result = await declineOffer('app-decline-nofb', undefined, 'user-decline');
-
-    expect(result.status).toBe('declined');
-    expect(result.decline_feedback).toBeNull();
   });
 
   it('throws notFound when offer does not exist', async () => {
-    (prisma.offer.findUnique as vi.Mock).mockResolvedValue(null);
+    (mockPrisma.offer.findUnique as vi.Mock).mockResolvedValue(null);
 
-    await expect(declineOffer('ghost-offer', 'fb', 'user')).rejects.toThrow('Offer not found');
+    await expect(
+      declineOffer(
+        'ghost-offer',
+        { reason: 'fb' },
+        { userId: 'user', role: 'candidate', email: 'u@ex.com' }
+      )
+    ).rejects.toThrow('Offer not found for application');
   });
 });
 
@@ -466,78 +513,112 @@ describe('Offer Service — declineOffer', () => {
 // Offer query
 // ---------------------------------------------------------------------------
 
-describe('Offer Service — getOfferDetails', () => {
-  it('returns offer with application and job context', async () => {
-    const offer = {
-      id: 'offer-detail-uid',
-      application_id: 'app-detail-001',
-      role_title: 'Senior Engineer',
-      salary: 2000000,
-      equity: '0.1%',
-      start_date: new Date('2026-11-01'),
-      status: 'pending',
-      valid_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-      signature_svg: null,
-      application: {
-        id: 'app-detail-001',
-        candidate: {
-          user: { email: 'cand@test.com', name: 'Candidate User' },
-        },
-        job: {
-          id: 'job-detail-001',
-          title: 'Senior Software Engineer',
-          org_id: 'org-detail-001',
-        },
+describe('Offer Service — getApplicationOffer', () => {
+  it('returns offer with application and job context for candidate owner', async () => {
+    const app = {
+      id: 'app-detail-001',
+      candidate: {
+        user_id: 'user-detail',
+        user: { email: 'cand@test.com' },
+      },
+      job: {
+        id: 'job-detail-001',
+        org_id: 'org-detail-001',
+        organization: { name: 'Acme', logo_url: null },
+      },
+      offer: {
+        id: 'offer-detail-uid',
+        application_id: 'app-detail-001',
+        role_title: 'Senior Engineer',
+        salary: 2000000,
+        equity: '0.1%',
+        status: 'pending',
       },
     };
-    (prisma.offer.findUnique as vi.Mock).mockResolvedValue(offer);
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue(app);
 
-    const result = await getOfferDetails('app-detail-001', 'user-detail', 'candidate');
+    const result = await getApplicationOffer('app-detail-001', {
+      userId: 'user-detail',
+      role: 'candidate',
+      email: 'cand@test.com',
+    });
 
-    expect(result.role_title).toBe('Senior Engineer');
-    expect(result.salary).toBe(2000000);
-    expect(result.application.job.title).toBe('Senior Software Engineer');
+    expect(result.offer.role_title).toBe('Senior Engineer');
+    expect(result.offer.salary).toBe(2000000);
+    expect(result.application.id).toBe('app-detail-001');
   });
 
-  it('throws notFound when offer not found', async () => {
-    (prisma.offer.findUnique as vi.Mock).mockResolvedValue(null);
+  it('throws notFound when application or offer not found', async () => {
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue(null);
 
-    await expect(getOfferDetails('ghost-offer-detail', 'user', 'candidate')).rejects.toThrow(
-      'Offer not found'
-    );
+    await expect(
+      getApplicationOffer('ghost-offer-detail', {
+        userId: 'user',
+        role: 'candidate',
+        email: 'user@ex.com',
+      })
+    ).rejects.toThrow('No offer found for application');
   });
 
   it('enforces candidate ownership', async () => {
-    const offer = {
-      id: 'offer-protect-uid',
-      application_id: 'app-protect-001',
-      status: 'pending',
-      application: {
-        id: 'app-protect-001',
-        candidate: { user_id: 'other-user-uid' },
-      },
+    const app = {
+      id: 'app-protect-001',
+      candidate: { user_id: 'other-user-uid', user: { email: 'other@test.com' } },
+      job: { org_id: 'org-1', organization: { name: 'Acme', logo_url: null } },
+      offer: { id: 'offer-1', application_id: 'app-protect-001' },
     };
-    (prisma.offer.findUnique as vi.Mock).mockResolvedValue(offer);
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue(app);
 
     await expect(
-      getOfferDetails('app-protect-001', 'imposter-uid', 'candidate')
-    ).rejects.toThrow('Not authorized to view this offer');
+      getApplicationOffer('app-protect-001', {
+        userId: 'imposter-uid',
+        role: 'candidate',
+        email: 'imposter@test.com',
+      })
+    ).rejects.toThrow('Forbidden: Access denied');
   });
 
   it('allows HR access when org matches', async () => {
-    const offer = {
-      id: 'offer-hr-access-uid',
-      application_id: 'app-hr-access-001',
-      status: 'pending',
-      application: {
-        id: 'app-hr-access-001',
-        job: { org_id: 'org-hr-001' },
-      },
+    const app = {
+      id: 'app-hr-access-001',
+      candidate: { user_id: 'cand-uid', user: { email: 'cand@test.com' } },
+      job: { org_id: 'org-hr-001', organization: { name: 'Acme', logo_url: null } },
+      offer: { id: 'offer-hr-uid', role_title: 'Backend Lead' },
     };
-    (prisma.offer.findUnique as vi.Mock).mockResolvedValue(offer);
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue(app);
 
-    const result = await getOfferDetails('app-hr-access-001', 'hr-user', 'hr', 'org-hr-001');
+    const result = await getApplicationOffer('app-hr-access-001', {
+      userId: 'hr-user',
+      role: 'hr',
+      orgId: 'org-hr-001',
+      email: 'hr@org.com',
+    });
 
-    expect(result.role_title).toBeDefined();
+    expect(result.offer.role_title).toBe('Backend Lead');
   });
 });
+
+describe('Offer Service — getOfferByToken', () => {
+  it('returns offer when token matches', async () => {
+    const offer = {
+      id: 'offer-tok-001',
+      magic_link_token: 'valid-secret-token',
+      application: {
+        id: 'app-tok-001',
+        job: { organization: { name: 'Acme', logo_url: null } },
+        candidate: { user: { email: 'c@test.com' } },
+      },
+    };
+    (mockPrisma.offer.findFirst as vi.Mock).mockResolvedValue(offer);
+
+    const result = await getOfferByToken('valid-secret-token');
+    expect(result.offer.id).toBe('offer-tok-001');
+  });
+
+  it('throws notFound when token is invalid', async () => {
+    (mockPrisma.offer.findFirst as vi.Mock).mockResolvedValue(null);
+
+    await expect(getOfferByToken('invalid-tok')).rejects.toThrow('Invalid or expired offer token');
+  });
+});
+

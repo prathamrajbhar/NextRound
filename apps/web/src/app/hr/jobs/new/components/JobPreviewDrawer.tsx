@@ -3,17 +3,10 @@
 import React from 'react';
 import {
   Briefcase,
-  Building2,
   MapPin,
   IndianRupee,
   Sparkles,
-  Award,
   CheckCircle2,
-  Sliders,
-  Eye,
-  AudioLines,
-  ClipboardCheck,
-  Video,
 } from '@/lib/lucide-google-icons';
 import { RubricWeights } from '../hooks/rubricBalancing';
 

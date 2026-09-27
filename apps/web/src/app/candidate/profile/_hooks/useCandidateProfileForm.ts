@@ -68,47 +68,87 @@ export function useCandidateProfileForm() {
     getPayload: buildPayload,
   });
 
+  const {
+    setName,
+    setPhone,
+    setLocation,
+    setHeadline,
+    setAvatar,
+    setCustomAvatar,
+    setLinkedinUrl,
+    setGithubUrl,
+    setPortfolioUrl,
+    setSkills,
+    setTargetRoles,
+    setExperienceYears,
+    setExpectedSalary,
+    setBio,
+    setEmail,
+  } = fields;
+
+  const { setResumeUrl, setResumeName, setResumeDate } = resumeActions;
+
   useEffect(() => {
-    if (user?.email) fields.setEmail(user.email);
-  }, [user]);
+    if (user?.email) setEmail(user.email);
+  }, [user?.email, setEmail]);
 
   useEffect(() => {
     if (profileStatus === 'pending') return;
     const p = (profileRes?.profile ?? null) as Record<string, unknown> | null;
     if (!p) return;
 
-    if (typeof p.full_name === 'string' && p.full_name.trim()) fields.setName(p.full_name);
-    if (typeof p.phone === 'string') fields.setPhone(p.phone);
-    if (typeof p.location === 'string') fields.setLocation(p.location);
-    if (typeof p.headline === 'string') fields.setHeadline(p.headline);
+    if (typeof p.full_name === 'string' && p.full_name.trim()) setName(p.full_name);
+    if (typeof p.phone === 'string') setPhone(p.phone);
+    if (typeof p.location === 'string') setLocation(p.location);
+    if (typeof p.headline === 'string') setHeadline(p.headline);
     if (typeof p.avatar_url === 'string') {
       if (p.avatar_url.startsWith('data:')) {
-        fields.setCustomAvatar(p.avatar_url);
+        setCustomAvatar(p.avatar_url);
       } else {
-        fields.setAvatar(p.avatar_url);
-        fields.setCustomAvatar(null);
+        setAvatar(p.avatar_url);
+        setCustomAvatar(null);
       }
     }
-    if (typeof p.linkedin_url === 'string') fields.setLinkedinUrl(p.linkedin_url);
-    if (typeof p.github_url === 'string') fields.setGithubUrl(p.github_url);
-    if (typeof p.portfolio_url === 'string') fields.setPortfolioUrl(p.portfolio_url);
-    if (Array.isArray(p.skills) && p.skills.length > 0) fields.setSkills(p.skills.map(String));
+    if (typeof p.linkedin_url === 'string') setLinkedinUrl(p.linkedin_url);
+    if (typeof p.github_url === 'string') setGithubUrl(p.github_url);
+    if (typeof p.portfolio_url === 'string') setPortfolioUrl(p.portfolio_url);
+    if (Array.isArray(p.skills) && p.skills.length > 0) setSkills(p.skills.map(String));
     if (Array.isArray(p.target_roles) && p.target_roles.length > 0)
-      fields.setTargetRoles(p.target_roles.map(String));
+      setTargetRoles(p.target_roles.map(String));
     if (p.years_of_experience !== undefined && p.years_of_experience !== null)
-      fields.setExperienceYears(String(p.years_of_experience));
-    fields.setExpectedSalary(formatExpectedSalary(p.expected_salary as number | null | undefined));
-    if (typeof p.bio === 'string') fields.setBio(p.bio);
+      setExperienceYears(String(p.years_of_experience));
+    setExpectedSalary(formatExpectedSalary(p.expected_salary as number | null | undefined));
+    if (typeof p.bio === 'string') setBio(p.bio);
     if (typeof p.resume_url === 'string' && p.resume_url) {
-      resumeActions.setResumeUrl(p.resume_url);
-      resumeActions.setResumeName(p.resume_url.split('/').pop() || 'candidate_resume.pdf');
-      resumeActions.setResumeDate('Uploaded recently');
+      setResumeUrl(p.resume_url);
+      setResumeName(p.resume_url.split('/').pop() || 'candidate_resume.pdf');
+      setResumeDate('Uploaded recently');
     } else {
-      resumeActions.setResumeUrl('');
-      resumeActions.setResumeName('No resume uploaded');
-      resumeActions.setResumeDate('');
+      setResumeUrl('');
+      setResumeName('No resume uploaded');
+      setResumeDate('');
     }
-  }, [profileStatus, profileRes]);
+  }, [
+    profileStatus,
+    profileRes,
+    setName,
+    setPhone,
+    setLocation,
+    setHeadline,
+    setAvatar,
+    setCustomAvatar,
+    setLinkedinUrl,
+    setGithubUrl,
+    setPortfolioUrl,
+    setSkills,
+    setTargetRoles,
+    setExperienceYears,
+    setExpectedSalary,
+    setBio,
+    setResumeUrl,
+    setResumeName,
+    setResumeDate,
+  ]);
 
   const readiness = calculateReadinessScore({
     name: fields.name,

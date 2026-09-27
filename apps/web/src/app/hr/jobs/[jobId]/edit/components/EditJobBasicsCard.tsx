@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Briefcase, Building2, MapPin, Layers, IndianRupee, ShieldCheck } from '@/lib/lucide-google-icons';
+import { Briefcase, Building2, MapPin, Layers, IndianRupee } from '@/lib/lucide-google-icons';
 import { Autocomplete } from '@/components/ui';
 import { SUGGESTED_ROLES } from '@/lib/suggestedOptions';
 

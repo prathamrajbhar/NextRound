@@ -2,6 +2,7 @@ import { generateText } from '../llm/llm.service';
 import { prisma } from '../../lib/prisma';
 import { ensureInterviewAndSchedule } from '../../lib/pipeline';
 import { buildScreeningEvaluationPrompt } from '../../prompts';
+import type { Application, Evaluation, ApplicationStatus } from '@nextround/database';
 
 export interface ScreeningEvaluationResult {
   status: 'screening_completed' | 'rejected';
@@ -19,7 +20,7 @@ export interface ScreeningEvaluationResult {
 
 export async function evaluateApplicationScreening(
   applicationId: string
-): Promise<{ application: any; evaluation: any }> {
+): Promise<{ application: Application; evaluation: Evaluation }> {
   const app = await prisma.application.findUnique({
     where: { id: applicationId },
     include: {
@@ -42,7 +43,7 @@ export async function evaluateApplicationScreening(
   const candidateRawText = app.candidate.raw_resume_text || app.candidate.bio || '';
   const candidateExp = app.candidate.years_of_experience || 0;
 
-  const thresholds = (app.job.thresholds as any) || {};
+  const thresholds = (app.job.thresholds as Record<string, unknown>) || {};
   const minScore = typeof thresholds.minScore === 'number' ? thresholds.minScore : null;
   if (minScore === null) {
     throw new Error(`Job ${app.job_id} has no minScore threshold configured; screening cannot run.`);
@@ -67,9 +68,9 @@ export async function evaluateApplicationScreening(
   if (!jsonMatch) {
     throw new Error('AI screening LLM returned no parseable JSON.');
   }
-  let parsed: any;
+  let parsed: Record<string, unknown>;
   try {
-    parsed = JSON.parse(jsonMatch[0]);
+    parsed = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
   } catch (err) {
     throw new Error(`AI screening LLM returned malformed JSON: ${(err as Error).message}`);
   }
@@ -82,7 +83,7 @@ export async function evaluateApplicationScreening(
   const score = Math.max(0, Math.min(100, rawScore));
   const semantic = Math.max(0, Math.min(100, rawSemantic));
 
-  const gap = parsed.gapAnalysis || {};
+  const gap = (parsed.gapAnalysis as Record<string, unknown>) || {};
   const matchingSkills = Array.isArray(gap.matchingSkills) ? gap.matchingSkills.map(String) : [];
   const missingSkills = Array.isArray(gap.missingSkills) ? gap.missingSkills.map(String) : [];
   const keyStrengths = Array.isArray(gap.keyStrengths) ? gap.keyStrengths.map(String) : [];
@@ -125,7 +126,7 @@ export async function evaluateApplicationScreening(
   const updatedApp = await prisma.application.update({
     where: { id: applicationId },
     data: {
-      status: result.status as any,
+      status: result.status as ApplicationStatus,
     },
     include: {
       job: true,

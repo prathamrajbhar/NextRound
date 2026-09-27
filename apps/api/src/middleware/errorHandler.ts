@@ -2,21 +2,28 @@ import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { logger } from '../lib/logger';
 
+interface StructuredError extends Error {
+  statusCode?: number;
+  status?: number;
+  issues?: unknown[];
+  errors?: unknown[];
+}
+
 export function errorHandler(
-  err: Error,
+  err: StructuredError,
   req: Request,
   res: Response,
   _next: NextFunction
 ) {
-  if (err instanceof ZodError || err?.name === 'ZodError' || Array.isArray((err as any)?.issues) || Array.isArray((err as any)?.errors)) {
+  if (err instanceof ZodError || err?.name === 'ZodError' || Array.isArray(err?.issues) || Array.isArray(err?.errors)) {
     return res.status(400).json({
       success: false,
       error: 'Validation Error',
-      details: (err as any).issues || (err as any).errors,
+      details: err.issues || err.errors,
     });
   }
 
-  const statusCode = (err as any).statusCode || 500;
+  const statusCode = typeof err.statusCode === 'number' ? err.statusCode : typeof err.status === 'number' ? err.status : 500;
 
   if (statusCode >= 500) {
     logger.error(`Unhandled error on ${req.method} ${req.originalUrl}`, err, {

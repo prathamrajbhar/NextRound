@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { cn } from '@/lib/cn';
 import { Skeleton, CardSkeleton } from './BaseSkeleton';
 
 export function JobsGridSkeleton({ count = 6 }: { count?: number }) {

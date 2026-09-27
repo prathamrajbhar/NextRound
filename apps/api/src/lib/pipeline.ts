@@ -26,9 +26,9 @@ function isObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
 }
 
-function boolFlag(cfg: Record<string, unknown>, key: string, fallback: boolean): boolean {
+function boolFlag(cfg: Record<string, unknown>, key: string, defaultValue: boolean): boolean {
   if (typeof cfg[key] === 'boolean') return cfg[key];
-  return fallback;
+  return defaultValue;
 }
 
 function enabledModalities(job: JobLike): { aptitude: boolean; coding: boolean } {
@@ -66,6 +66,7 @@ export async function ensureInterviewAndSchedule(
       },
     });
   }
+  if (!interview) return { interviewId: null };
 
   const candidateEmail = app.candidate?.user?.email ?? '';
 

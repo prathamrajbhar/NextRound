@@ -1,13 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { prisma } from '@nextround/database';
 import { register, login, refresh, getMe } from '../routes/auth/auth.controller';
-import { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } from '../lib/jwt';
-import { badRequest, notFound, forbidden } from '../lib/http-errors';
 import bcrypt from 'bcryptjs';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 
-vi.mock('@nextround/database', () => ({
-  prisma: {
+const { mockPrisma } = vi.hoisted(() => ({
+  mockPrisma: {
     user: {
       findUnique: vi.fn(),
       create: vi.fn(),
@@ -21,25 +18,13 @@ vi.mock('@nextround/database', () => ({
   },
 }));
 
-vi.mock('@nextround/database', async (original) => {
-  const actual = await original();
-  return {
-    ...actual,
-    prisma: {
-      ...actual.prisma,
-      user: {
-        findUnique: vi.fn(),
-        create: vi.fn(),
-      },
-      candidateProfile: {
-        create: vi.fn(),
-      },
-      organization: {
-        create: vi.fn(),
-      },
-    },
-  };
-});
+vi.mock('@nextround/database', () => ({
+  prisma: mockPrisma,
+}));
+
+vi.mock('../lib/prisma', () => ({
+  prisma: mockPrisma,
+}));
 
 vi.mock('../lib/jwt', () => ({
   signAccessToken: vi.fn(() => 'mock-access-token'),
@@ -48,8 +33,14 @@ vi.mock('../lib/jwt', () => ({
   verifyRefreshToken: vi.fn(),
 }));
 
+vi.mock('../services/email/email.service', () => ({
+  emailService: {
+    sendWelcomeHR: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 const createMockReq = (overrides: Partial<Request> = {}): Request =>
-  ({ body: {}, cookies: {}, user: undefined, ...overrides } as Request);
+  ({ body: {}, cookies: {}, user: undefined, ...overrides } as unknown as Request);
 
 const createMockRes = () => {
   const res: Response = {
@@ -61,7 +52,7 @@ const createMockRes = () => {
   return res;
 };
 
-interface PrismaUser {
+interface MockUser {
   id: string;
   email: string;
   password_hash: string;
@@ -70,10 +61,8 @@ interface PrismaUser {
   created_at: Date;
 }
 
-let mockUser: PrismaUser | null = null;
-
-function seedUser(overrides: Partial<PrismaUser> = {}): PrismaUser {
-  const user: PrismaUser = {
+function seedUser(overrides: Partial<MockUser> = {}): MockUser {
+  return {
     id: 'user-uuid-001',
     email: 'test@example.com',
     password_hash: bcrypt.hashSync('Password123!', 10),
@@ -82,14 +71,11 @@ function seedUser(overrides: Partial<PrismaUser> = {}): PrismaUser {
     created_at: new Date('2026-01-01'),
     ...overrides,
   };
-  mockUser = user;
-  return user;
 }
 
 describe('Auth Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUser = null;
   });
 
   describe('register', () => {
@@ -104,25 +90,25 @@ describe('Auth Service', () => {
       const res = createMockRes();
       const next = vi.fn();
 
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
-      vi.mocked(prisma.user.create).mockResolvedValue({
+      mockPrisma.user.findUnique.mockResolvedValue(null);
+      mockPrisma.user.create.mockResolvedValue({
         id: 'u-1',
         email: 'cand@test.com',
         role: 'candidate',
         org_id: null,
         created_at: new Date(),
       });
-      vi.mocked(prisma.candidateProfile.create).mockResolvedValue({
+      mockPrisma.candidateProfile.create.mockResolvedValue({
         id: 'cp-1',
         user_id: 'u-1',
       });
 
       await register(req, res, next);
 
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'cand@test.com' },
       });
-      expect(prisma.user.create).toHaveBeenCalledWith(
+      expect(mockPrisma.user.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             email: 'cand@test.com',
@@ -130,7 +116,7 @@ describe('Auth Service', () => {
           }),
         })
       );
-      expect(prisma.candidateProfile.create).toHaveBeenCalledWith({
+      expect(mockPrisma.candidateProfile.create).toHaveBeenCalledWith({
         data: { user_id: 'u-1' },
       });
       expect(res.status).toHaveBeenCalledWith(201);
@@ -150,7 +136,7 @@ describe('Auth Service', () => {
       const res = createMockRes();
       const next = vi.fn();
 
-      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+      mockPrisma.user.findUnique.mockResolvedValue({
         id: 'existing-uuid',
         email: 'dup@test.com',
       });
@@ -168,6 +154,9 @@ describe('Auth Service', () => {
   describe('login', () => {
     it('authenticates valid credentials and sets JWT cookies', async () => {
       const user = seedUser({ email: 'login@test.com' });
+      mockPrisma.user.findUnique.mockResolvedValue(user);
+      const compareSpy = vi.spyOn(bcrypt, 'compare');
+
       const req = createMockReq({
         body: { email: 'login@test.com', password: 'Password123!' },
       });
@@ -176,10 +165,10 @@ describe('Auth Service', () => {
 
       await login(req, res, next);
 
-      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'login@test.com' },
       });
-      expect(bcrypt.compare).toHaveBeenCalledWith('Password123!', user.password_hash);
+      expect(compareSpy).toHaveBeenCalledWith('Password123!', user.password_hash);
       expect(res.cookie).toHaveBeenCalled();
     });
 
@@ -190,7 +179,7 @@ describe('Auth Service', () => {
       const res = createMockRes();
       const next = vi.fn();
 
-      vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+      mockPrisma.user.findUnique.mockResolvedValue(null);
 
       await login(req, res, next);
 

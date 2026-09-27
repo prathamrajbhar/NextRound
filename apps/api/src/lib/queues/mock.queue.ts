@@ -5,13 +5,13 @@ export interface MockJobPayload {
   candidateId: string;
   topic?: string;
   difficulty?: string;
-  transcript?: any;
+  transcript?: unknown;
 }
 
 export async function enqueueMockEvaluation(
   sessionId: string,
   candidateId: string,
-  transcript?: any,
+  transcript?: unknown,
   topic?: string,
   difficulty?: string
 ) {

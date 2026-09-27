@@ -115,7 +115,7 @@ export async function generateQuestions(req: Request, res: Response, next: NextF
       description: jdText,
       skills: Array.isArray(skills) ? skills.filter((s): s is string => typeof s === 'string') : undefined,
       experienceLevel: typeof experienceLevel === 'string' ? experienceLevel : undefined,
-      difficulty: typeof difficulty === 'string' && ['easy', 'intermediate', 'advanced'].includes(difficulty) ? (difficulty as any) : undefined,
+      difficulty: typeof difficulty === 'string' && (difficulty === 'easy' || difficulty === 'intermediate' || difficulty === 'advanced') ? difficulty : undefined,
       categoryDistribution: typeof categoryDistribution === 'object' && categoryDistribution !== null ? categoryDistribution : undefined,
       distribution: typeof distribution === 'object' && distribution !== null ? distribution : undefined,
       totalCount: typeof totalCount === 'number' ? totalCount : undefined,

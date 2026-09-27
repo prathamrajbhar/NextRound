@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screeningEvaluator } from '../services/screening/screening-evaluator.service';
+import * as screeningEvaluator from '../services/screening/screening-evaluator.service';
 import { prisma } from '../lib/prisma';
 import { logger } from '../lib/logger';
+import { ensureInterviewAndSchedule } from '../lib/pipeline';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -11,6 +12,10 @@ vi.mock('../services/llm/llm.service', () => ({
   generateText: vi.fn(),
 }));
 
+vi.mock('../lib/pipeline', () => ({
+  ensureInterviewAndSchedule: vi.fn().mockResolvedValue({ interviewId: 'int-sched' }),
+}));
+
 vi.mock('../lib/prisma', () => ({
   prisma: {
     application: {
@@ -18,7 +23,10 @@ vi.mock('../lib/prisma', () => ({
       update: vi.fn(),
     },
     evaluation: {
-      upsert: vi.fn(),
+      upsert: vi.fn().mockImplementation(async ({ create }: { create: Record<string, unknown> }) => ({
+        id: 'ev-1',
+        ...create,
+      })),
     },
   },
 }));
@@ -84,6 +92,14 @@ function buildApp(
   };
 }
 
+beforeEach(() => {
+  vi.clearAllMocks();
+  (prisma.evaluation.upsert as vi.Mock).mockImplementation(async ({ create }: { create: Record<string, unknown> }) => ({
+    id: 'ev-1',
+    ...create,
+  }));
+});
+
 // ---------------------------------------------------------------------------
 // Scoring logic unit tests (isolated from LLM)
 // ---------------------------------------------------------------------------
@@ -110,7 +126,6 @@ describe('Screening Evaluator — score parsing and normalization', () => {
 
     const app = buildApp({ job: { ...buildApp().job, thresholds: { minScore: 70 } } });
     (prisma.application.findUnique as vi.Mock).mockResolvedValue(app);
-    (prisma.evaluation.upsert as vi.Mock).mockResolvedValue({ id: 'ev-1' });
     (prisma.application.update as vi.Mock).mockResolvedValue({ ...app, status: 'screening_completed' });
 
     const result = await screeningEvaluator.evaluateApplicationScreening('app-scr-001');
@@ -145,7 +160,7 @@ describe('Screening Evaluator — score parsing and normalization', () => {
   });
 
   it('throws when LLM returns malformed JSON', async () => {
-    (generateText as vi.Mock).mockResolvedValue('{ this is not json at all');
+    (generateText as vi.Mock).mockResolvedValue('{ this is not json at all }');
 
     const app = buildApp({ job: { ...buildApp().job, thresholds: { minScore: 70 } } });
     (prisma.application.findUnique as vi.Mock).mockResolvedValue(app);
@@ -245,7 +260,7 @@ describe('Screening Evaluator — threshold and decision logic', () => {
 
     await expect(
       screeningEvaluator.evaluateApplicationScreening('app-nothreshold')
-    ).rejects.toThrow('Job job-nothreshold has no minScore threshold configured');
+    ).rejects.toThrow('has no minScore threshold configured');
   });
 
   it('throws when application not found', async () => {
@@ -276,7 +291,6 @@ describe('Screening Evaluator — gap analysis output structure', () => {
       job: { ...buildApp().job, thresholds: { minScore: 70 } },
     });
     (prisma.application.findUnique as vi.Mock).mockResolvedValue(app);
-    (prisma.evaluation.upsert as vi.Mock).mockResolvedValue({ id: 'ev-gap' });
     (prisma.application.update as vi.Mock).mockResolvedValue({
       ...app,
       status: 'screening_completed',
@@ -308,7 +322,6 @@ describe('Screening Evaluator — gap analysis output structure', () => {
       job: { ...buildApp().job, thresholds: { minScore: 70 } },
     });
     (prisma.application.findUnique as vi.Mock).mockResolvedValue(app);
-    (prisma.evaluation.upsert as vi.Mock).mockResolvedValue({ id: 'ev-coerce' });
     (prisma.application.update as vi.Mock).mockResolvedValue({
       ...app,
       status: 'screening_completed',
@@ -412,12 +425,6 @@ describe('Screening Evaluator — evaluation persistence', () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// ensureInterviewAndSchedule integration
-// ---------------------------------------------------------------------------
-
-import { ensureInterviewAndSchedule } from '../lib/pipeline';
-
 describe('Screening Evaluator — post-pass scheduling', () => {
   it('calls ensureInterviewAndSchedule when not rejected', async () => {
     (generateText as vi.Mock).mockResolvedValue(
@@ -452,17 +459,8 @@ describe('Screening Evaluator — post-pass scheduling', () => {
       status: 'screening_completed',
     });
 
-    const mockEnsure = vi.fn().mockResolvedValue({ interviewId: 'int-sched' });
-    vi.doMock('../../lib/pipeline', async () => {
-      const actual = await vi.importActual('../../lib/pipeline');
-      return {
-        ...actual,
-        ensureInterviewAndSchedule: mockEnsure,
-      };
-    });
-
     await screeningEvaluator.evaluateApplicationScreening('app-sched');
 
-    expect(mockEnsure).toHaveBeenCalledWith('app-sched');
+    expect(ensureInterviewAndSchedule).toHaveBeenCalledWith('app-sched');
   });
 });

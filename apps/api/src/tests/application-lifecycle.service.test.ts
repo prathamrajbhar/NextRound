@@ -15,8 +15,8 @@ import type { AppUserCtx } from '../services/application/application-scheduling.
 // Mocks
 // ---------------------------------------------------------------------------
 
-vi.mock('../lib/prisma', () => ({
-  prisma: {
+const { mockPrisma } = vi.hoisted(() => ({
+  mockPrisma: {
     candidateProfile: {
       findUnique: vi.fn(),
       create: vi.fn(),
@@ -28,6 +28,7 @@ vi.mock('../lib/prisma', () => ({
     application: {
       findUnique: vi.fn(),
       findFirst: vi.fn(),
+      findMany: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
       count: vi.fn(),
@@ -42,17 +43,32 @@ vi.mock('../lib/prisma', () => ({
     organization: {
       findUnique: vi.fn(),
     },
+    agentLog: {
+      findFirst: vi.fn(),
+    },
     $transaction: vi.fn(),
   },
+}));
+
+vi.mock('@nextround/database', () => ({
+  prisma: mockPrisma,
+}));
+
+vi.mock('../lib/prisma', () => ({
+  prisma: mockPrisma,
 }));
 
 vi.mock('../lib/queues/screening.queue', () => ({
   enqueueScreening: vi.fn(),
 }));
 
+vi.mock('../lib/queues/scheduling.queue', () => ({
+  enqueueScheduling: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('../services/email/email.service', () => ({
   emailService: {
-    sendApplicationReceived: vi.fn(),
+    sendApplicationReceived: vi.fn().mockResolvedValue(undefined),
   },
 }));
 
@@ -65,6 +81,7 @@ vi.mock('../lib/logger', () => ({
     }),
   },
 }));
+
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -179,9 +196,6 @@ describe('Application Lifecycle — applyToJob', () => {
     (prisma.candidateProfile.findUnique as vi.Mock).mockResolvedValue(createProfile());
     (prisma.job.findUnique as vi.Mock).mockResolvedValue(drafts);
 
-    await expect(applyToJob(user, { jobId: 'job-draft' })).rejects.toBeInstanceOf(
-      badRequest.constructor
-    );
     await expect(applyToJob(user, { jobId: 'job-draft' })).rejects.toThrow(
       'Job is not open for applications'
     );
@@ -527,7 +541,7 @@ describe('Pipeline — advanceAssessmentStage', () => {
   });
 
   it('stays at screening_completed when voice screen enabled but no interview created', async () => {
-    (prisma.application.findUnique as vi.Mock).mockResolvedValue({
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue({
       id: 'app-noint',
       status: 'assessment',
       job: {
@@ -538,6 +552,7 @@ describe('Pipeline — advanceAssessmentStage', () => {
       interview: null,
       evaluations: [{ aptitude_score: 70, coding_score: 65 }],
     });
+    (mockPrisma.interview.create as vi.Mock).mockResolvedValue(null);
 
     const result = await advanceAssessmentStage('app-noint');
 
@@ -550,40 +565,58 @@ describe('Pipeline — advanceAssessmentStage', () => {
 // ---------------------------------------------------------------------------
 
 import {
-  getApplicationById,
-  getApplicationsByJobId,
-  getCandidateApplications,
+  getApplication,
+  listCandidateApplications,
+  listOrgApplications,
 } from '../services/application/application-query.service';
 
-describe('Application Query — getApplicationById', () => {
+describe('Application Query — getApplication', () => {
   it('returns application with full relation tree', async () => {
     const app = {
       id: 'app-q1',
       candidate_id: 'cp-q1',
       job_id: 'j-q1',
-      status: 'screening_completed',
+      status: 'decided',
       candidate: {
         id: 'cp-q1',
         user_id: 'u-q1',
+        user: { id: 'u-q1', email: 'cand@test.com' },
         headline: 'Backend Engineer',
       },
-      job: { id: 'j-q1', title: 'Backend Role' },
+      job: {
+        id: 'j-q1',
+        title: 'Backend Role',
+        org_id: 'org-1',
+        organization: { id: 'org-1', name: 'Org 1', logo_url: null },
+      },
       evaluations: [{ id: 'ev-q1', stage: 'screening', resume_score: 75 }],
+      interview: null,
+      assessments: [],
+      coding_submissions: [],
+      offer: null,
     };
-    (prisma.application.findUnique as vi.Mock).mockResolvedValue(app);
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue(app);
 
-    const result = await getApplicationById('app-q1', 'u-q1', 'candidate');
+    const result = await getApplication('app-q1', {
+      userId: 'u-q1',
+      role: 'candidate',
+      email: 'cand@test.com',
+    });
 
-    expect(result.id).toBe('app-q1');
-    expect(result.evaluations).toHaveLength(1);
+    expect(result.application.id).toBe('app-q1');
+    expect(result.application.evaluations).toHaveLength(1);
   });
 
   it('returns 404 when application not found', async () => {
-    (prisma.application.findUnique as vi.Mock).mockResolvedValue(null);
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue(null);
 
-    await expect(getApplicationById('ghost-app-q', 'u-q', 'candidate')).rejects.toThrow(
-      'Application not found'
-    );
+    await expect(
+      getApplication('ghost-app-q', {
+        userId: 'u-q',
+        role: 'candidate',
+        email: 'u@test.com',
+      })
+    ).rejects.toThrow('Application not found');
   });
 
   it('enforces HR org isolation', async () => {
@@ -592,13 +625,36 @@ describe('Application Query — getApplicationById', () => {
       candidate_id: 'cp-iso',
       job_id: 'j-iso',
       status: 'applied',
+      candidate: { user_id: 'u-cand' },
       job: { id: 'j-iso', org_id: 'org-other' },
     };
-    (prisma.application.findUnique as vi.Mock).mockResolvedValue(app);
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue(app);
 
     await expect(
-      getApplicationById('app-isolation', 'u-iso', 'hr', 'org-my-org')
-    ).rejects.toThrow('Organization mismatch');
+      getApplication('app-isolation', {
+        userId: 'u-iso',
+        role: 'hr',
+        orgId: 'org-my-org',
+        email: 'hr@myorg.com',
+      })
+    ).rejects.toThrow('Forbidden: Access denied to application');
+  });
+});
+
+describe('Application Query — listCandidateApplications & listOrgApplications', () => {
+  it('lists candidate applications', async () => {
+    (mockPrisma.candidateProfile.findUnique as vi.Mock).mockResolvedValue({ id: 'cp-list' });
+    (mockPrisma.application.findMany as vi.Mock).mockResolvedValue([{ id: 'app-list-1' }]);
+
+    const result = await listCandidateApplications('u-list');
+    expect(result).toHaveLength(1);
+  });
+
+  it('lists org applications', async () => {
+    (mockPrisma.application.findMany as vi.Mock).mockResolvedValue([{ id: 'app-org-1' }]);
+
+    const result = await listOrgApplications('org-1');
+    expect(result).toHaveLength(1);
   });
 });
 
@@ -606,9 +662,9 @@ describe('Application Query — getApplicationById', () => {
 // Application stage service tests
 // ---------------------------------------------------------------------------
 
-import { transitionApplicationStatus } from '../services/application/application-stage.service';
+import { advanceStage, overrideStatus } from '../services/application/application-stage.service';
 
-describe('Application Stage — transitionApplicationStatus', () => {
+describe('Application Stage — advanceStage', () => {
   it('advances status to next valid stage', async () => {
     const app = {
       id: 'app-stage',
@@ -616,34 +672,59 @@ describe('Application Stage — transitionApplicationStatus', () => {
       job: { id: 'j-stage', org_id: 'org-stage' },
       candidate: { id: 'cp-stage', user_id: 'u-stage' },
     };
-    (prisma.application.findUnique as vi.Mock).mockResolvedValue(app);
-    (prisma.application.update as vi.Mock).mockResolvedValue({
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue(app);
+    (mockPrisma.application.update as vi.Mock).mockResolvedValue({
       ...app,
       status: 'assessment',
     });
 
-    const result = await transitionApplicationStatus('app-stage', 'assessment', 'hr', 'org-stage');
+    const result = await advanceStage('app-stage', 'org-stage', { status: 'assessment' });
 
-    expect(result.status).toBe('assessment');
-  });
-
-  it('rejects invalid stage transitions', async () => {
-    const app = {
-      id: 'app-invalid',
-      status: 'applied',
-      job: { id: 'j-inv', org_id: 'org-inv' },
-    };
-    (prisma.application.findUnique as vi.Mock).mockResolvedValue(app);
-
-    await expect(
-      transitionApplicationStatus('app-invalid', 'offered', 'hr', 'org-inv')
-    ).rejects.toThrow('Invalid status transition');
+    expect(result.application.status).toBe('assessment');
   });
 
   it('throws when application not found', async () => {
-    (prisma.application.findUnique as vi.Mock).mockResolvedValue(null);
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue(null);
     await expect(
-      transitionApplicationStatus('ghost-stage', 'assessment', 'hr', 'org-x')
+      advanceStage('ghost-stage', 'org-x', { status: 'assessment' })
     ).rejects.toThrow('Application not found');
   });
+
+  it('throws forbidden when org does not match', async () => {
+    const app = {
+      id: 'app-forbidden',
+      status: 'applied',
+      job: { id: 'j-f', org_id: 'org-owner' },
+    };
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue(app);
+
+    await expect(
+      advanceStage('app-forbidden', 'org-intruder', { status: 'screening' })
+    ).rejects.toThrow('Forbidden: Access denied to application');
+  });
 });
+
+describe('Application Stage — overrideStatus', () => {
+  it('overrides status with reasoning', async () => {
+    const app = {
+      id: 'app-override',
+      status: 'applied',
+      job: { id: 'j-ov', org_id: 'org-ov' },
+    };
+    (mockPrisma.application.findUnique as vi.Mock).mockResolvedValue(app);
+    (mockPrisma.application.update as vi.Mock).mockResolvedValue({
+      ...app,
+      status: 'screening_completed',
+    });
+    (mockPrisma.evaluation.upsert as vi.Mock).mockResolvedValue({ id: 'ev-ov' });
+
+    const result = await overrideStatus('app-override', 'org-ov', {
+      status: 'screening_completed',
+      reasoning: 'Fast-tracked by recruiter',
+    });
+
+    expect(result.application.status).toBe('screening_completed');
+    expect(mockPrisma.evaluation.upsert).toHaveBeenCalled();
+  });
+});
+

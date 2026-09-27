@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { describe, it, expect } from 'vitest';
 import {
   renderProfessionalEmailLayout,
   buildWelcomeCandidateEmail,
@@ -15,6 +16,12 @@ import {
   buildOfferResponseAlertEmail,
   buildProctoringAnomalyAlertEmail,
 } from '../lib/email/templates';
+
+describe('Email Templates', () => {
+  it('renders all email templates with valid HTML and branding', () => {
+    runTemplateTests();
+  });
+});
 
 export function runTemplateTests() {
   const layout = renderProfessionalEmailLayout({

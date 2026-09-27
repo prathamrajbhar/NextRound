@@ -128,6 +128,7 @@ export function CityAutocompleteInput({
             role="combobox"
             aria-autocomplete="list"
             aria-expanded={isOpen}
+            aria-controls="city-autocomplete-suggestions"
           />
           <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
             {isLoading ? (

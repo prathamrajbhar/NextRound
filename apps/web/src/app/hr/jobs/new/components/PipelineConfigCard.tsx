@@ -5,8 +5,17 @@ import { Settings, AudioLines, ClipboardCheck, Video, Eye, Sparkles } from '@/li
 import { PipelineBreadcrumbs } from './PipelineBreadcrumbs';
 import { StageToggleRow } from './StageToggleRow';
 import { AssessmentConfigDetails } from './AssessmentConfigDetails';
+import { AssessmentQuestion } from '@/types/assessment-question';
 
 type PipelineStage = 'screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision';
+
+interface AssessmentConfig {
+  mcqCount: number;
+  codingProblemId: string;
+  passingScore: number;
+  mcqDistribution?: Record<string, number>;
+  customQuestions?: AssessmentQuestion[];
+}
 
 interface PipelineConfigCardProps {
   minScore: number;
@@ -21,14 +30,8 @@ interface PipelineConfigCardProps {
   setVoiceProfile: (val: string) => void;
   stages: PipelineStage[];
   setStages: (val: PipelineStage[]) => void;
-  assessmentConfig: {
-    mcqCount: number;
-    codingProblemId: string;
-    passingScore: number;
-    mcqDistribution?: Record<string, number>;
-    customQuestions?: any[];
-  };
-  setAssessmentConfig: React.Dispatch<React.SetStateAction<any>>;
+  assessmentConfig: AssessmentConfig;
+  setAssessmentConfig: React.Dispatch<React.SetStateAction<AssessmentConfig>>;
   jdText?: string;
   roleTitle?: string;
   skills?: string[];

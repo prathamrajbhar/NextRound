@@ -28,7 +28,7 @@ export function CitySuggestionsDropdown({
   if (!isOpen) return null;
 
   return (
-    <div className="absolute left-0 right-0 z-50 mt-2 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 max-h-64 overflow-y-auto">
+    <div id="city-autocomplete-suggestions" className="absolute left-0 right-0 z-50 mt-2 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 max-h-64 overflow-y-auto">
       {isLoading && results.length === 0 ? (
         <div className="p-4 text-xs font-semibold text-slate-400 flex items-center justify-center gap-2">
           <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
