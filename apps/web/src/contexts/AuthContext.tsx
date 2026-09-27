@@ -9,7 +9,7 @@ interface AuthContextType {
   user: UserPublic | null;
   loading: boolean;
   login: (email: string, pass: string) => Promise<{ success: boolean; error?: string; user?: UserPublic }>;
-  register: (email: string, pass: string, role: 'hr' | 'candidate', orgName?: string) => Promise<{ success: boolean; error?: string; user?: UserPublic }>;
+  register: (email: string, pass: string, role: 'hr' | 'candidate', orgName?: string, name?: string) => Promise<{ success: boolean; error?: string; user?: UserPublic }>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -69,7 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     role: 'hr' | 'candidate',
-    orgName?: string
+    orgName?: string,
+    name?: string
   ) => {
     try {
       apiClient.clearCache();
@@ -78,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
         role,
         orgName,
+        name,
       });
 
       if (data?.user) {

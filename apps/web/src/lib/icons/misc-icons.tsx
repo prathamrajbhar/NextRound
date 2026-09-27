@@ -115,3 +115,7 @@ export const Sun = createMaterialIcon('light_mode');
 export const Moon = createMaterialIcon('dark_mode');
 export const Loader2 = createMaterialIcon('progress_activity');
 export const Edit = createMaterialIcon('edit');
+export const GraduationCap = createMaterialIcon('school');
+export const AlignLeft = createMaterialIcon('notes');
+export const Laptop = createMaterialIcon('laptop');
+export const Workflow = createMaterialIcon('schema');

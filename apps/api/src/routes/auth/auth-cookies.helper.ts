@@ -51,20 +51,34 @@ export function clearAuthCookies(res: Response) {
   });
 }
 
-export function serializeAuthUser(user: {
-  id: string;
-  email: string;
-  role: string;
-  org_id: string | null;
-  created_at: Date;
-  profile?: unknown;
-}) {
+export function serializeAuthUser(
+  user: {
+    id: string;
+    email: string;
+    role: string;
+    org_id: string | null;
+    created_at: Date;
+    profile?: unknown;
+    candidate_profile?: { full_name?: string | null } | null;
+    organization?: { name?: string | null } | null;
+  },
+  extra?: { name?: string | null; orgName?: string | null }
+) {
   const profileObj = (user.profile && typeof user.profile === 'object') ? (user.profile as Record<string, unknown>) : {};
+  const name =
+    extra?.name ??
+    (typeof profileObj.name === 'string' ? profileObj.name : undefined) ??
+    user.candidate_profile?.full_name ??
+    null;
+  const orgName = extra?.orgName ?? user.organization?.name ?? null;
+
   return {
     id: user.id,
     email: user.email,
+    name,
     role: user.role,
     org_id: user.org_id,
+    orgName,
     created_at: user.created_at.toISOString(),
     must_change_password: !!profileObj.must_change_password,
   };

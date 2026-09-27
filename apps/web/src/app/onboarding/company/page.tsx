@@ -22,8 +22,21 @@ const STEPS: CompanyStep[] = [
 
 export default function CompanyOnboarding() {
   const router = useRouter();
-  const { form, step, setStep, submitting, setSubmitting, error, setError, update, addRole, removeRole, addInvite, removeInvite } =
-    useCompanyOnboarding();
+  const {
+    form,
+    step,
+    setStep,
+    submitting,
+    setSubmitting,
+    error,
+    setError,
+    update,
+    addRole,
+    removeRole,
+    toggleStage,
+    addInvite,
+    removeInvite,
+  } = useCompanyOnboarding();
 
   const handleNext = () => {
     if (step === 0 && !form.name.trim()) {
@@ -63,7 +76,7 @@ export default function CompanyOnboarding() {
     }
   };
 
-  const stepProps: CompanyStepProps = { form, update, addRole, removeRole, addInvite, removeInvite };
+  const stepProps: CompanyStepProps = { form, update, addRole, removeRole, toggleStage, addInvite, removeInvite };
   const isLast = step === STEPS.length - 1;
 
   return (

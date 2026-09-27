@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Briefcase, Plus, X } from '@/lib/lucide-google-icons';
-import { CompanyStepProps } from './useCompanyOnboarding';
-import { inputCls, labelCls } from './CompanyOnboardingShell';
+import { Briefcase, Plus, X, Workflow, Clock, Compass, Check } from '@/lib/lucide-google-icons';
+import { CompanyStepProps, DEFAULT_PIPELINE_STAGES } from './useCompanyOnboarding';
+import { inputCls, labelCls, selectCls } from './CompanyOnboardingShell';
 
 const ROLE_SUGGESTIONS = [
   'Software Engineer',
@@ -18,7 +18,28 @@ const ROLE_SUGGESTIONS = [
   'Sales / Account Executive',
 ];
 
-export function HiringContextStep({ form, update, addRole, removeRole }: CompanyStepProps) {
+const TIMEZONES = [
+  'Asia/Kolkata',
+  'Asia/Dubai',
+  'Asia/Singapore',
+  'Europe/London',
+  'Europe/Berlin',
+  'America/New_York',
+  'America/Los_Angeles',
+  'America/Toronto',
+  'Australia/Sydney',
+  'UTC',
+];
+
+const STAGE_DESCRIPTIONS: Record<string, string> = {
+  'AI Resume Screen': 'Fast semantic matching against job requirements',
+  'Cognitive Assessment': 'Aptitude & problem-solving evaluation',
+  'Technical Coding Sandbox': 'Real-time coding & unit test verification',
+  'AI Voice Interview': 'Interactive voice-based behavioral & domain interview',
+  'HR Final Round': 'Culture fit & offer alignment with human recruiter',
+};
+
+export function HiringContextStep({ form, update, addRole, removeRole, toggleStage }: CompanyStepProps) {
   const [draft, setDraft] = React.useState('');
 
   const submitRole = (e: React.FormEvent) => {
@@ -89,6 +110,87 @@ export function HiringContextStep({ form, update, addRole, removeRole }: Company
               {role}
             </button>
           ))}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 space-y-3 shadow-sm">
+        <div className="flex items-center gap-2">
+          <Workflow className="h-4 w-4 text-orange-400" />
+          <label className="text-xs font-black uppercase tracking-wider text-slate-300">
+            Default AI Pipeline Stages
+          </label>
+        </div>
+        <p className="text-xs text-slate-400">
+          Choose the default evaluation rounds enabled for newly posted jobs. You can customize them per job.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+          {DEFAULT_PIPELINE_STAGES.map((stage) => {
+            const isSelected = form.defaultStages.includes(stage);
+            return (
+              <button
+                key={stage}
+                type="button"
+                onClick={() => toggleStage(stage)}
+                className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex items-start gap-3 ${
+                  isSelected
+                    ? 'bg-orange-500/15 border-orange-500/50 text-white shadow-sm'
+                    : 'bg-slate-950/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                }`}
+              >
+                <div
+                  className={`mt-0.5 h-4 w-4 rounded flex items-center justify-center shrink-0 border ${
+                    isSelected
+                      ? 'bg-orange-500 border-orange-400 text-white'
+                      : 'border-slate-700 bg-slate-900'
+                  }`}
+                >
+                  {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                </div>
+                <div>
+                  <p className={`text-xs font-bold ${isSelected ? 'text-orange-300' : 'text-slate-300'}`}>
+                    {stage}
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    {STAGE_DESCRIPTIONS[stage] || 'Pipeline evaluation round'}
+                  </p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className={labelCls}>Interview Availability Timezone</label>
+          <div className="relative">
+            <Compass className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500 pointer-events-none" />
+            <select
+              value={form.interviewTimezone}
+              onChange={(e) => update('interviewTimezone', e.target.value)}
+              className={`${selectCls} pl-10`}
+            >
+              {TIMEZONES.map((tz) => (
+                <option key={tz} value={tz}>
+                  {tz}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className={labelCls}>Standard Working / Interview Hours</label>
+          <div className="relative">
+            <Clock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+            <input
+              type="text"
+              value={form.interviewHours}
+              onChange={(e) => update('interviewHours', e.target.value)}
+              placeholder="e.g. 09:00 - 18:00"
+              className={`${inputCls} pl-10`}
+            />
+          </div>
         </div>
       </div>
 

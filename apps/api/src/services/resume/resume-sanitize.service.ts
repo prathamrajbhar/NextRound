@@ -44,6 +44,28 @@ export function sanitizeParsedData(data: Record<string, unknown>): ParsedResumeD
   }
 
   const headline = toString(data.headline, data.professionalHeadline, data.title, data.currentRole, data.role);
+  const currentCompany = toString(data.currentCompany, data.company, data.employer, data.currentEmployer);
+  const currentTitle = toString(data.currentTitle, data.jobTitle, data.designation, data.currentDesignation) || (headline ? headline.split('|')[0].trim() : undefined);
+
+  let education = undefined;
+  if (Array.isArray(data.education)) {
+    education = data.education
+      .filter((e) => typeof e === 'object' && e !== null)
+      .map((e: Record<string, unknown>) => {
+        const deg = toString(e.degree, e.degreeName, e.title) || '';
+        const inst = toString(e.institution, e.university, e.college, e.school) || '';
+        const field = toString(e.fieldOfStudy, e.field, e.major, e.branch);
+        const gradYear = toNumber(e.graduationYear, e.gradYear, e.year);
+        return {
+          degree: deg,
+          institution: inst,
+          fieldOfStudy: field || undefined,
+          graduationYear: gradYear && gradYear >= 1970 && gradYear <= 2035 ? gradYear : undefined,
+        };
+      })
+      .filter((e) => e.degree.length > 0 && e.institution.length > 0);
+  }
+
   const phone = toString(data.phone, data.phone_number, data.phoneNumber, data.mobile);
   const location = toString(data.location, data.currentLocation, data.address, data.city);
   const timezone = toString(data.timezone);
@@ -155,6 +177,9 @@ export function sanitizeParsedData(data: Record<string, unknown>): ParsedResumeD
   return {
     fullName,
     headline,
+    currentCompany,
+    currentTitle,
+    education,
     phone,
     location,
     timezone,
