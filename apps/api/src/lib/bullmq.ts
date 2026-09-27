@@ -2,22 +2,9 @@ import { Queue, type JobsOptions } from 'bullmq';
 import Redis from 'ioredis';
 import { env } from './env';
 
-function parseRedisUrl(rawUrl: string): string {
-  let url = rawUrl.trim();
-  if (url.startsWith('http://')) {
-    url = url.replace(/^http:\/\//, 'redis://');
-  } else if (url.startsWith('https://')) {
-    url = url.replace(/^https:\/\//, 'rediss://');
-  } else if (!url.startsWith('redis://') && !url.startsWith('rediss://')) {
-    url = `redis://${url}`;
-  }
-  return url.replace(/\/+$/, '');
-}
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
-const rawRedisUrl = process.env.REDIS_URL || process.env.LOCAL_REDIS_URL || 'redis://localhost:6379';
-const redisUrlString = parseRedisUrl(rawRedisUrl);
-
-const connection = new Redis(redisUrlString, {
+const connection = new Redis(redisUrl, {
   maxRetriesPerRequest: null,
   retryStrategy: (times) => Math.min(times * 500, 5000),
   reconnectOnError: () => true,
