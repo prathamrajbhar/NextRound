@@ -22,6 +22,7 @@ vi.mock('../lib/prisma', () => ({
 
 vi.mock('../lib/storage', () => ({
   uploadFile: vi.fn().mockResolvedValue('https://s3.example.com/bucket/org-logos/logo.png'),
+  getPresignedUrl: vi.fn().mockResolvedValue('https://s3.example.com/bucket/org-logos/logo.png'),
 }));
 
 describe('Organization Logo Upload Handler', () => {
