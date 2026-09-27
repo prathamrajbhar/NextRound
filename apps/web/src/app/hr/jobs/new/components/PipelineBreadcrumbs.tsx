@@ -48,7 +48,7 @@ export function PipelineBreadcrumbs({ stages }: PipelineBreadcrumbsProps) {
       {isActive('panel') && (
         <>
           <span className="text-[10px] font-bold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/60 px-2.5 py-1 rounded-lg border border-rose-200/50 dark:border-rose-800/40">
-            Hiring Team Interview
+            HR & Team Interview
           </span>
           <ChevronRight className="h-3 w-3 text-slate-400 dark:text-slate-600" />
         </>
