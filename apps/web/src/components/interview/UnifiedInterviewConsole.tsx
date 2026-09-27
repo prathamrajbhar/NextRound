@@ -115,7 +115,7 @@ export function UnifiedInterviewConsole({
   const showTranscriptToggle = mode === 'ai-voice' || mode === 'mock-practice';
 
   return (
-    <div className="fixed inset-0 w-screen h-screen bg-slate-50/60 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans overflow-hidden select-none transition-colors duration-300">
+    <div className="fixed inset-0 w-screen h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden select-none">
       <ConsoleHeader
         mode={mode}
         companyName={companyName}
@@ -154,6 +154,8 @@ export function UnifiedInterviewConsole({
             mode={mode}
             candidateName={candidateName}
             camActive={camActive}
+            micActive={micActive}
+            micLevel={micLevel}
             hasCamPermission={hasCamPermission}
             videoRef={videoRef}
             hrNotes={hrNotes}

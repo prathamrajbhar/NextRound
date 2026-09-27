@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { Bot, User } from '@/lib/lucide-google-icons';
+import { Bot, User, Volume2, Sparkles, Activity } from '@/lib/lucide-google-icons';
 import { Message, InterviewConsoleMode } from './types';
 
 interface ConsolePrimaryViewportProps {
@@ -64,52 +64,129 @@ export function ConsolePrimaryViewport({
   }
 
   return (
-    <div className="relative rounded-3xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 overflow-hidden flex flex-col items-center justify-center shadow-lg dark:shadow-2xl backdrop-blur-md">
+    <div className="relative rounded-3xl bg-slate-900/90 border border-slate-800/90 overflow-hidden flex flex-col items-center justify-center shadow-2xl backdrop-blur-xl">
+      {/* Background ambient lighting glow */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden flex items-center justify-center opacity-30">
+        <div className={`w-96 h-96 rounded-full blur-3xl transition-all duration-700 ${
+          aiSpeaking
+            ? 'bg-amber-500/40 scale-125'
+            : isAnalyzing
+            ? 'bg-indigo-600/40 scale-110'
+            : candidateSpeechText
+            ? 'bg-emerald-500/30 scale-110'
+            : 'bg-brand-600/20 scale-90'
+        }`} />
+      </div>
+
       {!isVideoCall ? (
-        <div className="flex flex-col items-center justify-center space-y-6 p-6 text-center">
-          <div className="relative">
-            <div
-              className={`h-36 w-36 sm:h-44 sm:w-44 rounded-full flex items-center justify-center transition-all duration-300 ${
-                aiSpeaking
-                  ? 'bg-gradient-to-tr from-amber-500/30 via-brand-500/20 to-orange-500/40 border-2 border-amber-400 shadow-[0_0_50px_rgba(245,158,11,0.4)] animate-pulse'
-                  : isAnalyzing
-                  ? 'bg-gradient-to-tr from-indigo-500/30 via-purple-500/20 to-blue-500/40 border-2 border-indigo-400 shadow-[0_0_50px_rgba(99,102,241,0.4)]'
-                  : 'bg-slate-950/80 border-2 border-slate-800 shadow-xl'
-              }`}
-            >
-              <Bot className={`h-16 w-16 sm:h-20 sm:w-20 ${aiSpeaking ? 'text-amber-400' : isAnalyzing ? 'text-indigo-400' : 'text-slate-400'}`} />
+        <div className="relative z-10 w-full h-full flex flex-col items-center justify-between p-6 text-center select-none">
+          {/* Top Status Pill */}
+          <div className="flex items-center gap-2">
+            <span className={`px-3 py-1 rounded-full border text-[10px] font-extrabold tracking-wide uppercase flex items-center gap-1.5 backdrop-blur-md shadow-lg ${
+              aiSpeaking
+                ? 'bg-amber-950/80 border-amber-500/50 text-amber-300'
+                : isAnalyzing
+                ? 'bg-indigo-950/80 border-indigo-500/50 text-indigo-300'
+                : 'bg-slate-950/80 border-slate-800 text-slate-300'
+            }`}>
+              {aiSpeaking ? (
+                <>
+                  <Volume2 className="h-3 w-3 text-amber-400 animate-pulse" />
+                  <span>AI Voice Active</span>
+                </>
+              ) : isAnalyzing ? (
+                <>
+                  <Activity className="h-3 w-3 text-indigo-400 animate-spin" />
+                  <span>Analyzing Turn</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3 w-3 text-brand-400" />
+                  <span>AI Interviewer Ready</span>
+                </>
+              )}
+            </span>
+          </div>
+
+          {/* Central Animated Avatar & Visualizer */}
+          <div className="flex flex-col items-center justify-center my-auto space-y-5">
+            <div className="relative">
+              {/* Outer pulsing ring */}
+              <div
+                className={`absolute -inset-4 rounded-full opacity-60 blur-md transition-all duration-500 ${
+                  aiSpeaking
+                    ? 'bg-gradient-to-tr from-amber-500 to-orange-500 animate-pulse'
+                    : isAnalyzing
+                    ? 'bg-gradient-to-tr from-indigo-500 to-cyan-500 animate-spin'
+                    : 'bg-gradient-to-tr from-brand-600 to-indigo-600'
+                }`}
+              />
+
+              <div
+                className={`relative h-32 w-32 sm:h-40 sm:w-40 rounded-full flex items-center justify-center transition-all duration-300 border-2 ${
+                  aiSpeaking
+                    ? 'bg-slate-950 border-amber-400/80 shadow-[0_0_50px_rgba(245,158,11,0.35)]'
+                    : isAnalyzing
+                    ? 'bg-slate-950 border-indigo-400/80 shadow-[0_0_50px_rgba(99,102,241,0.35)]'
+                    : 'bg-slate-950 border-slate-800 shadow-xl'
+                }`}
+              >
+                <Bot
+                  className={`h-14 w-14 sm:h-18 sm:w-18 transition-colors duration-300 ${
+                    aiSpeaking ? 'text-amber-400' : isAnalyzing ? 'text-indigo-400' : 'text-slate-300'
+                  }`}
+                />
+              </div>
             </div>
 
-            <div className="flex items-center justify-center gap-1.5 mt-4 h-8">
-              {[40, 70, 90, 60, 80, 50, 95, 65, 45].map((h, i) => (
+            {/* AI Waveform Equalizer */}
+            <div className="flex items-center justify-center gap-1.5 h-7 px-4 py-1.5 rounded-full bg-slate-950/70 border border-slate-800/80 backdrop-blur-md">
+              {[30, 60, 90, 50, 100, 70, 40, 85, 55, 35].map((h, i) => (
                 <span
                   key={i}
-                  className={`w-1 rounded-full transition-all duration-200 ${
+                  className={`w-1 rounded-full transition-all duration-150 ${
                     aiSpeaking
-                      ? 'bg-amber-400 animate-pulse'
-                      : micActive
-                      ? 'bg-brand-500 dark:bg-orange-500'
+                      ? 'bg-gradient-to-t from-amber-500 to-orange-400 animate-pulse'
+                      : isAnalyzing
+                      ? 'bg-gradient-to-t from-indigo-500 to-cyan-400'
                       : 'bg-slate-700'
                   }`}
-                  style={{ height: aiSpeaking ? `${(h * micLevel) / 100}%` : micActive ? `${(h * micLevel) / 150}%` : '8px' }}
+                  style={{
+                    height: aiSpeaking
+                      ? `${Math.max(20, Math.floor(Math.sin((Date.now() / 150) + i) * 40 + 60))}%`
+                      : '6px',
+                  }}
                 />
               ))}
             </div>
           </div>
 
-          <div className="space-y-2 max-w-md">
-            <h2 className="text-base font-extrabold text-white font-display">
-              {aiSpeaking ? 'AI Interviewer Speaking...' : isAnalyzing ? 'Evaluating Response...' : 'Listening to Candidate...'}
-            </h2>
+          {/* Bottom Card: Live Spoken Transcript or Last Question */}
+          <div className="w-full max-w-lg space-y-2">
             {candidateSpeechText && !aiSpeaking && !isAnalyzing ? (
-              <div className="p-2.5 rounded-xl bg-slate-950/60 border border-brand-500/40 text-xs text-brand-300 font-medium leading-relaxed animate-pulse">
-                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Hearing:</span>
-                &ldquo;{candidateSpeechText}&rdquo;
+              <div className="p-3.5 rounded-2xl bg-slate-950/90 border border-emerald-500/50 shadow-[0_0_25px_rgba(16,185,129,0.15)] text-left backdrop-blur-md transition-all">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                  <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Candidate Speaking...</span>
+                </div>
+                <p className="text-xs text-white font-medium leading-relaxed font-sans">
+                  &ldquo;{candidateSpeechText}&rdquo;
+                </p>
               </div>
             ) : (
-              <p className="text-xs text-slate-400 font-medium leading-relaxed">
-                {lastMessage ? lastMessage.content : 'Welcome! The interview session has initialized. Speak clearly into your microphone.'}
-              </p>
+              <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-left backdrop-blur-md">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {aiSpeaking ? 'AI Prompt' : 'Current Topic'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    {lastMessage ? lastMessage.timestamp : 'Turn 1'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-200 font-medium leading-relaxed line-clamp-3">
+                  {lastMessage ? lastMessage.content : 'Welcome! The interview session has initialized. Speak clearly into your microphone.'}
+                </p>
+              </div>
             )}
           </div>
         </div>
