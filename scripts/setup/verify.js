@@ -1,36 +1,28 @@
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
-const { printStep, printSection, printBox, createSpinner, c } = require('./ui');
+const { printStep, printSection, printBox, c } = require('./ui');
+const { runTaskWithSpinner } = require('./runner');
 
 const ROOT_DIR = path.resolve(__dirname, '..', '..');
 
 async function buildSharedPackages() {
   printSection('Monorepo Package Compilation', '⚡');
 
-  const spinner = createSpinner('Building shared workspace packages...');
-  spinner.start();
+  const { result: buildRes, spinner } = await runTaskWithSpinner(
+    'Building shared packages (@nextround/shared, @nextround/database)...',
+    'npx',
+    ['turbo', 'build', '--filter=@nextround/shared', '--filter=@nextround/database'],
+    { cwd: ROOT_DIR, env: { ...process.env } }
+  );
 
-  try {
-    const buildRes = spawnSync('npx', ['turbo', 'build', '--filter=@nextround/shared', '--filter=@nextround/database'], {
-      cwd: ROOT_DIR,
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env },
-    });
-
-    if (buildRes.status !== 0) {
-      spinner.fail(`Workspace build failed: ${buildRes.stderr}`);
-      return false;
-    }
-
-    spinner.succeed('Shared workspace packages compiled successfully');
-    printStep('success', '@nextround/shared');
-    printStep('success', '@nextround/database');
-    return true;
-  } catch (err) {
-    spinner.fail(`Package build error: ${err.message}`);
+  if (!buildRes.ok) {
+    spinner.fail(`Workspace build failed: ${buildRes.stderr}`);
     return false;
   }
+
+  spinner.succeed('Shared workspace packages compiled successfully');
+  printStep('success', '@nextround/shared');
+  printStep('success', '@nextround/database');
+  return true;
 }
 
 function printSummaryCard(results) {
