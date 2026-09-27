@@ -24,6 +24,7 @@ export class ProctoringClient implements ProctoringEventLogger {
   private isPaused = false;
   private isEnded = false;
   private suppressViolations = false;
+  private sessionActive = false;
   private apiSessionId: string;
 
   private audioMonitor: ProctoringAudioMonitor;
@@ -54,7 +55,10 @@ export class ProctoringClient implements ProctoringEventLogger {
       this, config.onViolation, (trigger) => this.snapshotter.capture(trigger), () => this.isPaused
     );
     this.systemMonitor = new ProctoringSystemMonitor(this, config.onViolation, () => ({
-      isEnded: this.isEnded, isPaused: this.isPaused, suppressViolations: this.suppressViolations,
+      isEnded: this.isEnded,
+      isPaused: this.isPaused,
+      suppressViolations: this.suppressViolations,
+      sessionActive: this.sessionActive,
     }));
     this.mediaTracker = new ProctoringMediaTracker(this, config.onViolation, () => this.isEnded);
   }
@@ -118,6 +122,18 @@ export class ProctoringClient implements ProctoringEventLogger {
 
   getRecordingState(): { active: boolean; durationMs: number } {
     return this.recorder.getRecordingState();
+  }
+
+  setSessionActive(active: boolean): void {
+    this.sessionActive = active;
+  }
+
+  startSession(): void {
+    this.sessionActive = true;
+  }
+
+  endSession(): void {
+    this.sessionActive = false;
   }
 
   private async sendHeartbeat(): Promise<void> {

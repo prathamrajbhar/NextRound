@@ -1,18 +1,21 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { useAptitudeSession } from './aptitude/useAptitudeSession';
+import {
+  useAptitudeSession,
+} from './aptitude/useAptitudeSession';
 import { AptitudeStateCard } from './aptitude/AptitudeStateCard';
 import { AptitudeResultScreen } from './aptitude/AptitudeResultScreen';
 import { AptitudeCategoryHub } from './aptitude/AptitudeCategoryHub';
 import { AptitudeQuestionScreen } from './aptitude/AptitudeQuestionScreen';
 import { AptitudeErrorScreen } from './aptitude/AptitudeErrorScreen';
+import { ProctoringWarningModal } from './ProctoringWarningModal';
 import { RecordingBadge } from './RecordingBadge';
 import type { AptitudeTestConsoleProps } from './aptitude/aptitude.types';
 
 const MAX_STRIKES = 3;
 
-export default function AptitudeTestConsole({
+export function AptitudeTestConsole({
   questions = [],
   companyName,
   company,
@@ -31,16 +34,6 @@ export default function AptitudeTestConsole({
 }: AptitudeTestConsoleProps) {
   const displayCompany = company || companyName || 'NextRound';
   const displayRole = role || roleTitle || 'Candidate';
-
-  const session = useAptitudeSession({
-    questions,
-    applicationId,
-    sessionId,
-    role: displayRole,
-    company: displayCompany,
-    onComplete,
-    disableProctoring: !!proctoringClient,
-  });
 
   const {
     isLoading,
@@ -66,12 +59,20 @@ export default function AptitudeTestConsole({
     handleEliminateCandidate,
     handleStartCategorySection,
     getCategoryQuestionCount,
-  } = session;
+  } = useAptitudeSession({
+    questions,
+    applicationId,
+    sessionId,
+    role: displayRole,
+    company: displayCompany,
+    onComplete,
+    disableProctoring: !!proctoringClient,
+  });
 
-  const displayStrikeCount = strikeCount !== undefined ? strikeCount : session.strikeCount;
-  const displayShowWarning = showWarningModal !== undefined ? showWarningModal : session.showWarningModal;
-  const displayResumeFullscreen =
-    onResumeFullscreen !== undefined ? onResumeFullscreen : localResumeFS;
+  const displayStrikeCount = strikeCount ?? 0;
+  const displayShowWarning = showWarningModal ?? false;
+  const displayResumeFullscreen = onResumeFullscreen ?? localResumeFS;
+  const sessionActive = isStarted && selectedCategory !== null;
 
   useEffect(() => {
     if (submitted && typeof document !== 'undefined' && document.fullscreenElement) {
@@ -94,21 +95,50 @@ export default function AptitudeTestConsole({
 
   if (isLoading) {
     return (
-      <AptitudeStateCard
-        title="Loading Assessment Questions"
-        subtitle={`Preparing category questions for ${displayRole}...`}
-        spinningIcon
-      />
+      <>
+        <ProctoringWarningModal
+          isOpen={displayShowWarning}
+          strikeCount={displayStrikeCount}
+          maxStrikes={MAX_STRIKES}
+          onResumeFullscreen={displayResumeFullscreen}
+          onEliminate={handleEliminateCandidate}
+        />
+        <AptitudeStateCard
+          title="Loading Assessment Questions"
+          subtitle={`Preparing category questions for ${displayRole}...`}
+          spinningIcon
+          showFullscreenWarning={displayShowWarning}
+          onResumeFullscreen={displayResumeFullscreen}
+        />
+      </>
     );
   }
 
   if (fetchError || activeQuestions.length === 0) {
-    return <AptitudeErrorScreen error={fetchError} />;
+    return (
+      <>
+        <ProctoringWarningModal
+          isOpen={displayShowWarning}
+          strikeCount={displayStrikeCount}
+          maxStrikes={MAX_STRIKES}
+          onResumeFullscreen={displayResumeFullscreen}
+          onEliminate={handleEliminateCandidate}
+        />
+        <AptitudeErrorScreen error={fetchError} />
+      </>
+    );
   }
 
   if (!selectedCategory || !isStarted) {
     return (
       <>
+        <ProctoringWarningModal
+          isOpen={displayShowWarning}
+          strikeCount={displayStrikeCount}
+          maxStrikes={MAX_STRIKES}
+          onResumeFullscreen={displayResumeFullscreen}
+          onEliminate={handleEliminateCandidate}
+        />
         <RecordingBadge active={recordingActive} durationMs={recordingDurationMs} />
         <AptitudeCategoryHub
           companyName={displayCompany}
@@ -129,12 +159,23 @@ export default function AptitudeTestConsole({
   const currentQ = activeCategoryQuestions[currentIndex];
   if (!currentQ) {
     return (
-      <AptitudeStateCard
-        title={`Initializing ${selectedCategory}`}
-        subtitle="Loading section questions..."
-        actionLabel="Return to Assessment Hub"
-        onAction={handleCategorySubmit}
-      />
+      <>
+        <ProctoringWarningModal
+          isOpen={displayShowWarning}
+          strikeCount={displayStrikeCount}
+          maxStrikes={MAX_STRIKES}
+          onResumeFullscreen={displayResumeFullscreen}
+          onEliminate={handleEliminateCandidate}
+        />
+        <AptitudeStateCard
+          title={`Initializing ${selectedCategory}`}
+          subtitle="Loading section questions..."
+          actionLabel="Return to Assessment Hub"
+          onAction={handleCategorySubmit}
+          showFullscreenWarning={displayShowWarning}
+          onResumeFullscreen={displayResumeFullscreen}
+        />
+      </>
     );
   }
 
@@ -165,3 +206,5 @@ export default function AptitudeTestConsole({
     </>
   );
 }
+
+export default AptitudeTestConsole;

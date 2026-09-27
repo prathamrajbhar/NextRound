@@ -127,6 +127,7 @@ export function useProctoringSession({
       clientRef.current.logEvent('fullscreen_enter', 'info', 'browser', {
         resumed: true,
       });
+      clientRef.current.setSessionActive(true);
     }
   };
 
@@ -146,6 +147,7 @@ export function useProctoringSession({
     isEndedRef.current = true;
     setShowWarningModal(false);
     if (clientRef.current) {
+      clientRef.current.endSession();
       await clientRef.current.end();
     }
   };
@@ -153,6 +155,9 @@ export function useProctoringSession({
   const suppressViolations = (suppress: boolean) => {
     if (clientRef.current) {
       clientRef.current.setSuppressViolations(suppress);
+      if (!suppress) {
+        clientRef.current.setSessionActive(true);
+      }
     }
     if (suppress) {
       setShowWarningModal(false);
@@ -184,5 +189,10 @@ export function useProctoringSession({
     trackMediaStream,
     startCapture,
     proctoringClient,
+    startSession: () => {
+      if (clientRef.current) {
+        clientRef.current.startSession();
+      }
+    },
   };
 }

@@ -7,6 +7,7 @@
     "packages/*"
   ],
   "scripts": {
+    "setup": "node scripts/setup/index.js",
     "dev": "concurrently --kill-others \"node --env-file=.env node_modules/turbo/bin/turbo dev\" \"node --env-file=.env scripts/run-ai-service.js\"",
     "build": "node --env-file=.env node_modules/turbo/bin/turbo build",
     "lint": "turbo lint && node scripts/lint-python.js",

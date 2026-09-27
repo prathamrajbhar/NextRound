@@ -18,6 +18,14 @@ interface CacheEntry {
 const apiCache = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 20000;
 
+function stripLeadingSlash(s: string): string {
+  return s.startsWith('/') ? s.slice(1) : s;
+}
+
+function stripTrailingSlash(s: string): string {
+  return s.endsWith('/') ? s.slice(0, -1) : s;
+}
+
 export function clearApiCache(endpointPattern?: string) {
   if (!endpointPattern) {
     apiCache.clear();
@@ -37,9 +45,10 @@ export async function fetchApi<T>(
 ): Promise<ApiResult<T>> {
   const method = (options.method || 'GET').toUpperCase();
   const cacheKey = `${method}:${endpoint}`;
+  const FETCH_TIMEOUT_MS = 25000;
 
   if (method !== 'GET') {
-    const resource = endpoint.replace(/^\//, '').split('/')[0];
+    const resource = stripLeadingSlash(endpoint).split('/')[0];
     if (resource) clearApiCache(resource);
   }
 
@@ -59,7 +68,7 @@ export async function fetchApi<T>(
     }
   }
 
-  const result = await fetchNetworkApi<T>(endpoint, options, isRetry);
+  const result = await fetchNetworkApi<T>(endpoint, options, isRetry, FETCH_TIMEOUT_MS);
 
   if (method === 'GET' && result.success) {
     apiCache.set(cacheKey, { data: result, timestamp: Date.now() });
@@ -70,7 +79,8 @@ export async function fetchApi<T>(
 
 async function refreshAccessToken(): Promise<boolean> {
   try {
-    const refreshRes = await fetch(`${API_BASE_URL.replace(/\/$/, '')}/auth/refresh`, {
+    const base = stripTrailingSlash(API_BASE_URL);
+    const refreshRes = await fetch(base + '/auth/refresh', {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -87,7 +97,8 @@ async function refreshAccessToken(): Promise<boolean> {
 async function fetchNetworkApi<T>(
   endpoint: string,
   options: RequestInit = {},
-  isRetry = false
+  isRetry = false,
+  timeoutMs?: number
 ): Promise<ApiResult<T>> {
 
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
@@ -96,14 +107,25 @@ async function fetchNetworkApi<T>(
     ...(options.headers as Record<string, string>),
   };
 
-  const url = `${API_BASE_URL.replace(/\/$/, '')}/${endpoint.replace(/^\//, '')}`;
+  const url = stripTrailingSlash(API_BASE_URL) + '/' + stripLeadingSlash(endpoint);
 
   try {
-    const res = await fetch(url, {
+    const fetchOptions: RequestInit = {
       ...options,
       headers,
       credentials: 'include',
-    });
+    };
+
+    let res: Response;
+    if (timeoutMs && timeoutMs > 0) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      fetchOptions.signal = controller.signal;
+      res = await fetch(url, fetchOptions);
+      clearTimeout(timeoutId);
+    } else {
+      res = await fetch(url, fetchOptions);
+    }
 
     if (res.status === 401 && !isRetry && !endpoint.includes('/auth/refresh') && !endpoint.includes('/auth/login')) {
 
@@ -142,6 +164,13 @@ async function fetchNetworkApi<T>(
       };
     }
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      return {
+        success: false,
+        error: 'Request timed out after ' + timeoutMs + 'ms',
+        errorCode: 'TIMEOUT',
+      };
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Network error',
