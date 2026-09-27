@@ -51,9 +51,19 @@ export async function uploadFile(
 }
 
 export async function getPresignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
-  const normalizedKey = normalizeKey(key);
+  let normalizedKey = normalizeKey(key);
   if (normalizedKey.startsWith('http://') || normalizedKey.startsWith('https://')) {
-    return normalizedKey;
+    try {
+      const parsed = new URL(normalizedKey);
+      const pathParts = parsed.pathname.replace(/^\/+/, '').split('/');
+      if (pathParts.length > 1 && pathParts[0] === bucket) {
+        normalizedKey = pathParts.slice(1).join('/');
+      } else {
+        normalizedKey = pathParts.join('/');
+      }
+    } catch {
+      return normalizedKey;
+    }
   }
 
   const command = new GetObjectCommand({

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import { UploadCloud, Check, Loader2, X, Building2 } from '@/lib/lucide-google-icons';
 import { apiClient } from '@/lib/apiClient';
@@ -13,7 +13,17 @@ interface CompanyLogoUploadProps {
 export function CompanyLogoUpload({ logoUrl, onLogoChange }: CompanyLogoUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -30,6 +40,9 @@ export function CompanyLogoUpload({ logoUrl, onLogoChange }: CompanyLogoUploadPr
       return;
     }
 
+    const localPreview = URL.createObjectURL(file);
+    setPreviewUrl(localPreview);
+    setImageError(false);
     setUploading(true);
     setError(null);
 
@@ -56,9 +69,16 @@ export function CompanyLogoUpload({ logoUrl, onLogoChange }: CompanyLogoUploadPr
   };
 
   const handleRemove = () => {
+    if (previewUrl && previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setImageError(false);
     onLogoChange(undefined);
     setError(null);
   };
+
+  const activeDisplayUrl = previewUrl || logoUrl;
 
   return (
     <div className="space-y-2">
@@ -76,14 +96,15 @@ export function CompanyLogoUpload({ logoUrl, onLogoChange }: CompanyLogoUploadPr
 
       <div className="flex items-center gap-4 p-4 rounded-2xl border border-slate-800 bg-slate-900/60 backdrop-blur-md">
         <div className="relative h-16 w-16 rounded-2xl overflow-hidden border border-slate-700/80 bg-slate-950 flex items-center justify-center shrink-0 shadow-inner">
-          {logoUrl ? (
+          {activeDisplayUrl && !imageError ? (
             <Image
-              src={logoUrl}
+              src={activeDisplayUrl}
               alt="Company Logo"
               fill
               sizes="64px"
               className="object-contain p-1.5"
               unoptimized
+              onError={() => setImageError(true)}
             />
           ) : (
             <Building2 className="h-7 w-7 text-slate-600" />
@@ -99,9 +120,9 @@ export function CompanyLogoUpload({ logoUrl, onLogoChange }: CompanyLogoUploadPr
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold text-white">
-              {logoUrl ? 'Logo Uploaded' : 'Upload Organization Brand'}
+              {activeDisplayUrl ? 'Logo Uploaded' : 'Upload Organization Brand'}
             </span>
-            {logoUrl && (
+            {activeDisplayUrl && (
               <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
                 <Check className="h-3 w-3" /> S3 Synced
               </span>
@@ -113,7 +134,7 @@ export function CompanyLogoUpload({ logoUrl, onLogoChange }: CompanyLogoUploadPr
         </div>
 
         <div className="shrink-0 flex items-center gap-2">
-          {logoUrl ? (
+          {activeDisplayUrl ? (
             <>
               <button
                 type="button"
