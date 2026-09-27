@@ -10,26 +10,7 @@ const { setupDatabase } = require('./database');
 const { setupLocalStorage } = require('./storage');
 const { buildSharedPackages, printSummaryCard } = require('./verify');
 
-async function installNodeDeps() {
-  printSection('Monorepo Node Dependencies', '📦');
-  const spinner = createSpinner('Installing npm workspace packages...');
-  spinner.start();
-  try {
-    const res = spawnSync('npm', ['install'], {
-      encoding: 'utf-8',
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
-    if (res.status !== 0) {
-      spinner.fail(`npm install failed: ${res.stderr}`);
-      return false;
-    }
-    spinner.succeed('Monorepo Node dependencies installed');
-    return true;
-  } catch (err) {
-    spinner.fail(`npm install error: ${err.message}`);
-    return false;
-  }
-}
+const { installNodeDeps } = require('./deps');
 
 async function runFullSetup(interactive = false) {
   const results = {};
