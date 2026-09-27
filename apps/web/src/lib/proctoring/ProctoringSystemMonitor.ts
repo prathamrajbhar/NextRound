@@ -4,7 +4,7 @@ export class ProctoringSystemMonitor {
   constructor(
     private logger: ProctoringEventLogger,
     private onViolation: (kind: string) => void,
-    private isActiveGetter: () => { isEnded: boolean; isPaused: boolean; suppressViolations: boolean }
+    private isActiveGetter: () => { isEnded: boolean; isPaused: boolean; suppressViolations: boolean; sessionActive: boolean }
   ) {}
 
   addEventListeners(): void {
@@ -36,8 +36,8 @@ export class ProctoringSystemMonitor {
   }
 
   private handleVisibilityChange = (): void => {
-    const { isEnded, isPaused, suppressViolations } = this.isActiveGetter();
-    if (isEnded || isPaused || suppressViolations) return;
+    const { isEnded, isPaused, suppressViolations, sessionActive } = this.isActiveGetter();
+    if (isEnded || isPaused || suppressViolations || !sessionActive) return;
     const isHidden = document.hidden;
     const kind = isHidden ? 'tab_hidden' : 'tab_visible';
     const severity = isHidden ? 'warning' : 'info';
@@ -48,8 +48,8 @@ export class ProctoringSystemMonitor {
   };
 
   private handleFullscreenChange = (): void => {
-    const { isEnded, isPaused, suppressViolations } = this.isActiveGetter();
-    if (isEnded || isPaused || suppressViolations) return;
+    const { isEnded, isPaused, suppressViolations, sessionActive } = this.isActiveGetter();
+    if (isEnded || isPaused || suppressViolations || !sessionActive) return;
     const isFS = !!document.fullscreenElement;
     const kind = isFS ? 'fullscreen_enter' : 'fullscreen_exit';
     const severity = isFS ? 'info' : 'warning';
@@ -60,27 +60,27 @@ export class ProctoringSystemMonitor {
   };
 
   private handleFocus = (): void => {
-    const { isEnded, isPaused, suppressViolations } = this.isActiveGetter();
-    if (isEnded || isPaused || suppressViolations) return;
+    const { isEnded, isPaused, suppressViolations, sessionActive } = this.isActiveGetter();
+    if (isEnded || isPaused || suppressViolations || !sessionActive) return;
     this.logger.logEvent('window_focus', 'info', 'browser');
   };
 
   private handleBlur = (): void => {
-    const { isEnded, isPaused, suppressViolations } = this.isActiveGetter();
-    if (isEnded || isPaused || suppressViolations) return;
+    const { isEnded, isPaused, suppressViolations, sessionActive } = this.isActiveGetter();
+    if (isEnded || isPaused || suppressViolations || !sessionActive) return;
     this.logger.logEvent('window_blur', 'warning', 'browser');
     this.onViolation('window_blur');
   };
 
   private handleOnline = (): void => {
-    const { isEnded } = this.isActiveGetter();
-    if (isEnded) return;
+    const { isEnded, sessionActive } = this.isActiveGetter();
+    if (isEnded || !sessionActive) return;
     this.logger.logEvent('network_reconnected', 'info', 'system');
   };
 
   private handleOffline = (): void => {
-    const { isEnded, suppressViolations } = this.isActiveGetter();
-    if (isEnded || suppressViolations) return;
+    const { isEnded, suppressViolations, sessionActive } = this.isActiveGetter();
+    if (isEnded || suppressViolations || !sessionActive) return;
     this.logger.logEvent('network_disconnected', 'high', 'system');
     this.onViolation('network_disconnected');
   };

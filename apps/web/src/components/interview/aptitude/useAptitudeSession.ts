@@ -5,7 +5,6 @@ import {
   useAptitudeQuestions,
   normalizeCategory,
   STANDARD_CATEGORIES,
-  type AptitudeQuestion,
 } from './useAptitudeQuestions';
 import { resolveCategoryQuestionCount } from './scoring';
 import {
@@ -80,7 +79,7 @@ export function useAptitudeSession({
       applicationId,
       answers,
       activeQuestions,
-      timeLeft: timers.timeLeft,
+      timeLeft: 0,
       totalTimeLimit: TOTAL_TIME_LIMIT,
       strikeCount,
     });
@@ -108,7 +107,6 @@ export function useAptitudeSession({
   const onQuestionTimeout = useCallback(() => {
     if (currentIndex < activeCategoryQuestions.length - 1) {
       setCurrentIndex((idx) => idx + 1);
-      timers.resetQuestionTimer();
     } else {
       handleCategorySubmit();
     }

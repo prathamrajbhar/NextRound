@@ -1,14 +1,17 @@
 import { GoogleGenAI } from '@google/genai';
 
-export async function generateText(prompt: string): Promise<string> {
+export async function generateText(prompt: string, timeoutMs = 30000): Promise<string> {
   const provider = (process.env.LLM_PROVIDER || 'gemini').toLowerCase();
 
   if (provider === 'ollama') {
     const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
     const ollamaModel = process.env.OLLAMA_MODEL || 'llama3.2';
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
     try {
-      const response = await fetch(`${ollamaUrl.replace(/\/$/, '')}/api/generate`, {
+      const response = await fetch(ollamaUrl + '/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -16,11 +19,14 @@ export async function generateText(prompt: string): Promise<string> {
           prompt: prompt,
           stream: false,
           options: { temperature: 0.2 }
-        })
+        }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error(`Ollama request failed: ${response.statusText}`);
+        throw new Error('Ollama request failed: ' + response.statusText);
       }
 
       const data = (await response.json()) as { response?: string };
@@ -30,7 +36,10 @@ export async function generateText(prompt: string): Promise<string> {
       }
       return text.trim();
     } catch (err) {
-      throw new Error(`Ollama text generation failed: ${err instanceof Error ? err.message : err}`);
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw new Error('Ollama text generation timed out after ' + timeoutMs + 'ms');
+      }
+      throw new Error('Ollama text generation failed: ' + (err instanceof Error ? err.message : err));
     }
   }
 
@@ -44,14 +53,26 @@ export async function generateText(prompt: string): Promise<string> {
     );
   }
 
-  const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-  const response = await ai.models.generateContent({
-    model: geminiModel,
-    contents: prompt,
-  });
-  const text = response.text || '';
-  if (!text.trim()) {
-    throw new Error('Gemini returned empty text');
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+    const response = await ai.models.generateContent({
+      model: geminiModel,
+      contents: prompt,
+    });
+    clearTimeout(timeoutId);
+    const text = response.text || '';
+    if (!text.trim()) {
+      throw new Error('Gemini returned empty text');
+    }
+    return text;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error('Gemini text generation timed out after ' + timeoutMs + 'ms');
+    }
+    throw err instanceof Error ? err : new Error('Assessment question generation failed');
   }
-  return text;
 }

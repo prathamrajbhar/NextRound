@@ -118,8 +118,33 @@ export async function resolveAptitudeQuestions(
       }));
     } catch (aiErr) {
       logger.child('AptitudeResolver').error('AI question generation failed during resolver:', aiErr);
+      // Return any DB-found questions if available; otherwise return empty
+      if (selected.length > 0) {
+        logger.child('AptitudeResolver').info(`Returning ${selected.length} DB questions despite AI failure.`);
+        return selected.map((q) => ({
+          id: q.id,
+          category: normalizeAptitudeCategory(q.category),
+          question: q.question,
+          text: q.question,
+          options: q.options,
+          difficulty: q.difficulty,
+          correct_index: q.correct_index,
+          correctIndex: q.correct_index,
+        }));
+      }
     }
   }
 
-  return [];
+  return selected.length > 0
+    ? selected.map((q) => ({
+        id: q.id,
+        category: normalizeAptitudeCategory(q.category),
+        question: q.question,
+        text: q.question,
+        options: q.options,
+        difficulty: q.difficulty,
+        correct_index: q.correct_index,
+        correctIndex: q.correct_index,
+      }))
+    : [];
 }
