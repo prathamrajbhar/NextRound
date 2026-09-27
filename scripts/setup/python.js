@@ -1,7 +1,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { printStep, printSection, createSpinner } = require('./ui');
+const { printStep, printSection } = require('./ui');
+const { runTaskWithSpinner } = require('./runner');
 
 const AI_SERVICE_DIR = path.resolve(__dirname, '..', '..', 'apps', 'ai-service');
 const VENV_DIR = path.join(AI_SERVICE_DIR, '.venv');
@@ -33,47 +34,40 @@ async function setupPythonEnvironment() {
     return false;
   }
 
-  const spinner = createSpinner('Setting up Python virtual environment...');
-  spinner.start();
+  if (!fs.existsSync(VENV_DIR)) {
+    const { result: venvRes, spinner: venvSpinner } = await runTaskWithSpinner(
+      'Creating virtualenv at apps/ai-service/.venv...',
+      hostPython,
+      ['-m', 'venv', '.venv'],
+      { cwd: AI_SERVICE_DIR }
+    );
 
-  try {
-    if (!fs.existsSync(VENV_DIR)) {
-      spinner.update('Creating virtualenv at apps/ai-service/.venv...');
-      const createRes = spawnSync(hostPython, ['-m', 'venv', '.venv'], {
-        cwd: AI_SERVICE_DIR,
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-
-      if (createRes.status !== 0) {
-        spinner.fail(`Failed to create virtual environment: ${createRes.stderr}`);
-        return false;
-      }
+    if (!venvRes.ok) {
+      venvSpinner.fail(`Failed to create virtual environment: ${venvRes.stderr}`);
+      return false;
     }
-
-    spinner.update('Upgrading pip & installing Python requirements...');
-    const reqPath = path.join(AI_SERVICE_DIR, 'requirements.txt');
-
-    if (fs.existsSync(reqPath)) {
-      const pipRes = spawnSync(pipBin, ['install', '--upgrade', 'pip', '-r', 'requirements.txt'], {
-        cwd: AI_SERVICE_DIR,
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'pipe'],
-      });
-
-      if (pipRes.status !== 0) {
-        spinner.fail(`Failed to install Python dependencies: ${pipRes.stderr}`);
-        return false;
-      }
-    }
-
-    spinner.succeed('Python virtual environment & packages configured successfully');
-    printStep('success', 'FastAPI 0.141, LangGraph 1.2, GenAI & Groq SDKs installed in .venv');
-    return true;
-  } catch (err) {
-    spinner.fail(`Python environment setup error: ${err.message}`);
-    return false;
+    venvSpinner.succeed('Python virtual environment created');
+  } else {
+    printStep('success', 'Virtual environment existing at apps/ai-service/.venv');
   }
+
+  const reqPath = path.join(AI_SERVICE_DIR, 'requirements.txt');
+  if (fs.existsSync(reqPath)) {
+    const { result: pipRes, spinner: pipSpinner } = await runTaskWithSpinner(
+      'Installing AI service dependencies from requirements.txt...',
+      pipBin,
+      ['install', '--upgrade', 'pip', '-r', 'requirements.txt'],
+      { cwd: AI_SERVICE_DIR }
+    );
+
+    if (!pipRes.ok) {
+      pipSpinner.fail(`Failed to install Python packages: ${pipRes.stderr}`);
+      return false;
+    }
+    pipSpinner.succeed('Python packages installed in .venv (FastAPI, LangGraph, GenAI)');
+  }
+
+  return true;
 }
 
 module.exports = {
