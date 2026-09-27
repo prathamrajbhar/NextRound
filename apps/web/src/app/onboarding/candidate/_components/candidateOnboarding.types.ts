@@ -1,8 +1,12 @@
+import type { EducationEntry } from '@nextround/shared';
+
 export type WorkMode = 'Remote' | 'Hybrid' | 'Onsite';
 
 export interface CandidateForm {
   fullName: string;
   headline: string;
+  currentCompany: string;
+  currentTitle: string;
   phone: string;
   location: string;
   timezone: string;
@@ -18,6 +22,7 @@ export interface CandidateForm {
   dataConsent: boolean;
 
   yearsOfExperience: string;
+  education: EducationEntry[];
   targetRoles: string[];
   skills: string[];
 
@@ -46,6 +51,8 @@ export interface CandidateForm {
 export const DEFAULT_FORM: CandidateForm = {
   fullName: '',
   headline: '',
+  currentCompany: '',
+  currentTitle: '',
   phone: '',
   location: '',
   timezone: 'Asia/Kolkata',
@@ -57,6 +64,7 @@ export const DEFAULT_FORM: CandidateForm = {
   portfolioUrl: '',
   dataConsent: true,
   yearsOfExperience: '',
+  education: [],
   targetRoles: [],
   skills: [],
   workMode: 'Remote',
@@ -73,7 +81,7 @@ export const DEFAULT_FORM: CandidateForm = {
   expectedSalaryMax: '30',
   currentCtc: '15',
   noticePeriod: '30 days',
-  workAuthorization: 'Authorized',
+  workAuthorization: 'Citizen / Permanent Resident',
   proudProject: '',
   bio: '',
   workValues: [
@@ -90,6 +98,9 @@ export type TagField = 'targetRoles' | 'skills' | 'targetLocations';
 export interface ParsedProfilePayload {
   fullName?: string;
   headline?: string;
+  currentCompany?: string;
+  currentTitle?: string;
+  education?: EducationEntry[];
   phone?: string;
   location?: string;
   timezone?: string;
@@ -123,9 +134,14 @@ export interface OnboardingStepProps {
 
 export function buildCandidatePayload(form: CandidateForm) {
   const toNumber = (v: string) => (v.trim() === '' ? undefined : Number(v.trim()));
+  const validEducation = form.education?.filter((e) => e.degree.trim() && e.institution.trim());
+
   return {
     fullName: form.fullName.trim() || undefined,
     headline: form.headline.trim() || undefined,
+    currentCompany: form.currentCompany.trim() || undefined,
+    currentTitle: form.currentTitle.trim() || undefined,
+    education: validEducation && validEducation.length > 0 ? validEducation : undefined,
     phone: form.phone.trim() || undefined,
     location: form.location.trim() || undefined,
     timezone: form.timezone || undefined,

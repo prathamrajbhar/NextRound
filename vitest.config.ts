@@ -9,6 +9,12 @@ export default defineConfig({
     exclude: ['**/node_modules/**', '**/dist/**', '**/.next/**', '**/playwright/**'],
     setupFiles: [],
     testTimeout: 10000,
+    env: {
+      PROFILE_SCRAPER_TIMEOUT_MS: '15000',
+      JWT_SECRET: 'test-jwt-secret-at-least-32-chars-long-123456',
+      JWT_REFRESH_SECRET: 'test-jwt-refresh-secret-at-least-32-chars-long-123456',
+      NODE_ENV: 'test',
+    },
   },
   resolve: {
     alias: {

@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { apiClient } from '@/lib/apiClient';
 import {
   CandidateForm,
   DEFAULT_FORM,
@@ -15,10 +17,57 @@ export type { WorkMode, CandidateForm, TagField, ParsedProfilePayload, Onboardin
 export { DEFAULT_FORM, buildCandidatePayload };
 
 export function useCandidateOnboarding() {
-  const [form, setForm] = useState<CandidateForm>(DEFAULT_FORM);
+  const { user } = useAuth();
+  const [form, setForm] = useState<CandidateForm>(() => ({
+    ...DEFAULT_FORM,
+    fullName: user?.name || '',
+  }));
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchExisting = async () => {
+      try {
+        const res = await apiClient.get<{ profile?: Record<string, unknown> }>('/candidate/profile');
+        if (mounted && res?.profile) {
+          const p = res.profile;
+          setForm((f) => ({
+            ...f,
+            fullName: (p.fullName as string) || (p.full_name as string) || user?.name || f.fullName,
+            headline: (p.headline as string) || f.headline,
+            phone: (p.phone as string) || f.phone,
+            location: (p.location as string) || f.location,
+            timezone: (p.timezone as string) || f.timezone,
+            currentCompany: (p.currentCompany as string) || f.currentCompany,
+            currentTitle: (p.currentTitle as string) || f.currentTitle,
+            education: Array.isArray(p.education) ? p.education : f.education,
+            yearsOfExperience: p.yearsOfExperience !== undefined && p.yearsOfExperience !== null ? String(p.yearsOfExperience) : f.yearsOfExperience,
+            skills: Array.isArray(p.skills) && p.skills.length > 0 ? (p.skills as string[]) : f.skills,
+            targetRoles: Array.isArray(p.targetRoles) && p.targetRoles.length > 0 ? (p.targetRoles as string[]) : f.targetRoles,
+            workMode: (p.workMode as WorkMode) || f.workMode,
+            currentCtc: p.currentCtc !== undefined && p.currentCtc !== null ? String(p.currentCtc) : f.currentCtc,
+            expectedSalary: p.expectedSalary !== undefined && p.expectedSalary !== null ? String(p.expectedSalary) : f.expectedSalary,
+            noticePeriod: (p.noticePeriod as string) || f.noticePeriod,
+            workAuthorization: (p.workAuthorization as string) || f.workAuthorization,
+            bio: (p.bio as string) || f.bio,
+            proudProject: (p.proudProject as string) || f.proudProject,
+          }));
+        } else if (mounted && user?.name && !form.fullName) {
+          setForm((f) => ({ ...f, fullName: user.name || f.fullName }));
+        }
+      } catch {
+        if (mounted && user?.name && !form.fullName) {
+          setForm((f) => ({ ...f, fullName: user.name || f.fullName }));
+        }
+      }
+    };
+    fetchExisting();
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
 
   const update = <K extends keyof CandidateForm>(key: K, value: CandidateForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -46,6 +95,9 @@ export function useCandidateOnboarding() {
         parsedResume: (parsed as Record<string, unknown>) || f.parsedResume,
         fullName: parsed.fullName || f.fullName,
         headline: parsed.headline || f.headline,
+        currentCompany: parsed.currentCompany || f.currentCompany,
+        currentTitle: parsed.currentTitle || f.currentTitle,
+        education: Array.isArray(parsed.education) && parsed.education.length > 0 ? parsed.education : f.education,
         phone: parsed.phone || f.phone,
         location: parsed.location || f.location,
         timezone: parsed.timezone || f.timezone,

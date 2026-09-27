@@ -22,6 +22,13 @@ const NOTICE_PERIODS = [
 
 const numberInputCls = `${inputCls} [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none`;
 
+const WORK_AUTH_OPTIONS = [
+  { value: 'Citizen / Permanent Resident', label: 'Citizen / Permanent Resident', desc: 'No sponsorship needed' },
+  { value: 'Work Visa (H1B / EU Blue Card / Skilled Worker)', label: 'Valid Work Visa', desc: 'H1B, Blue Card, Tier 2' },
+  { value: 'Requires Visa Sponsorship', label: 'Requires Sponsorship', desc: 'Need visa transfer or support' },
+  { value: 'Student / OPT / Trainee', label: 'Student / OPT / Trainee', desc: 'Eligible for training work' },
+];
+
 export function CompensationEligibilityStep({ form, update }: OnboardingStepProps) {
   const currentCtcNum = Number(form.currentCtc) || 0;
   const minSalNum = Number(form.expectedSalaryMin) || Number(form.expectedSalary) || 0;
@@ -174,9 +181,35 @@ export function CompensationEligibilityStep({ form, update }: OnboardingStepProp
         </div>
       </div>
 
+      <div>
+        <label className={labelCls}>Work Authorization / Visa Status</label>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {WORK_AUTH_OPTIONS.map((opt) => {
+            const isSelected = form.workAuthorization === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => update('workAuthorization', opt.value)}
+                className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                  isSelected
+                    ? 'bg-orange-500/20 border-orange-500/60 text-white shadow-md shadow-orange-500/10'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                }`}
+              >
+                <span className={`text-xs font-bold ${isSelected ? 'text-orange-300' : 'text-slate-200'}`}>
+                  {opt.label}
+                </span>
+                <span className="text-[11px] text-slate-500 font-medium mt-0.5">{opt.desc}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <p className="flex items-center gap-2.5 text-xs text-slate-300 font-medium rounded-2xl border border-slate-800 bg-slate-900/80 p-4 shadow-sm">
         <ShieldCheck className="h-4.5 w-4.5 text-emerald-400 shrink-0" />
-        <span>Salary targets &amp; notice period are strictly private — only shared with employers you apply to.</span>
+        <span>Salary targets, notice period &amp; work rights are strictly private — only shared with employers you apply to.</span>
       </p>
     </div>
   );

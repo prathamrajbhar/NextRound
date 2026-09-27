@@ -7,6 +7,7 @@ export const LoginSchema = z.object({
 });
 
 export const RegisterSchema = z.object({
+  name: z.string().optional(),
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters long'),
   role: z.nativeEnum(UserRole).default(UserRole.CANDIDATE),

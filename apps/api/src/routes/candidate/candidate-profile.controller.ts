@@ -50,9 +50,21 @@ export async function upsertProfile(req: Request, res: Response, next: NextFunct
 
     const existingProfile = await prisma.candidateProfile.findUnique({
       where: { user_id: req.user.userId },
-      select: { full_name: true },
+      select: { full_name: true, settings: true },
     });
     const isFirstOnboarding = !existingProfile?.full_name && Boolean(validated.fullName);
+
+    const existingSettings =
+      existingProfile?.settings && typeof existingProfile.settings === 'object'
+        ? (existingProfile.settings as Record<string, unknown>)
+        : {};
+
+    const mergedSettings: Prisma.InputJsonValue = {
+      ...existingSettings,
+      ...(validated.currentCompany !== undefined ? { currentCompany: validated.currentCompany } : {}),
+      ...(validated.currentTitle !== undefined ? { currentTitle: validated.currentTitle } : {}),
+      ...(validated.education !== undefined ? { education: validated.education } : {}),
+    };
 
     const profile = await prisma.candidateProfile.upsert({
       where: { user_id: req.user.userId },
@@ -84,6 +96,7 @@ export async function upsertProfile(req: Request, res: Response, next: NextFunct
         raw_resume_text: validated.rawResumeText || extractedRawText,
         parsed_resume: ((validated.parsedResume || extractedParsedResume || {}) as Prisma.InputJsonValue),
         social_data: (((validated as Record<string, unknown>).socialData || {}) as Prisma.InputJsonValue),
+        settings: mergedSettings,
         data_consent: validated.dataConsent || false,
         data_consent_at: validated.consentAt
           ? new Date(validated.consentAt)
@@ -118,6 +131,7 @@ export async function upsertProfile(req: Request, res: Response, next: NextFunct
         ...(extractedRawText || (bodyHas('rawResumeText') && validated.rawResumeText) ? { raw_resume_text: validated.rawResumeText || extractedRawText } : {}),
         ...(extractedParsedResume || (bodyHas('parsedResume') && validated.parsedResume) ? { parsed_resume: ((validated.parsedResume || extractedParsedResume) as Prisma.InputJsonValue) } : {}),
         ...(bodyHas('socialData') && (validated as Record<string, unknown>).socialData ? { social_data: ((validated as Record<string, unknown>).socialData as Prisma.InputJsonValue) } : {}),
+        settings: mergedSettings,
         ...(bodyHas('dataConsent') ? { data_consent: validated.dataConsent ?? false } : {}),
         ...(bodyHas('dataConsent') && validated.dataConsent ? { data_consent_at: new Date() } : {}),
       },
@@ -139,9 +153,17 @@ export async function upsertProfile(req: Request, res: Response, next: NextFunct
         );
     }
 
+    const settingsObj = (profile.settings && typeof profile.settings === 'object') ? (profile.settings as Record<string, unknown>) : {};
+    const formattedProfile = {
+      ...profile,
+      currentCompany: settingsObj.currentCompany || null,
+      currentTitle: settingsObj.currentTitle || null,
+      education: Array.isArray(settingsObj.education) ? settingsObj.education : [],
+    };
+
     return res.json({
       success: true,
-      data: { profile },
+      data: { profile: formattedProfile },
     });
   } catch (error) {
     return next(error);
@@ -162,9 +184,17 @@ export async function getProfile(req: Request, res: Response, next: NextFunction
       return res.status(404).json({ success: false, error: 'Candidate profile not found' });
     }
 
+    const settingsObj = (profile.settings && typeof profile.settings === 'object') ? (profile.settings as Record<string, unknown>) : {};
+    const formattedProfile = {
+      ...profile,
+      currentCompany: settingsObj.currentCompany || null,
+      currentTitle: settingsObj.currentTitle || null,
+      education: Array.isArray(settingsObj.education) ? settingsObj.education : [],
+    };
+
     return res.json({
       success: true,
-      data: { profile },
+      data: { profile: formattedProfile },
     });
   } catch (error) {
     return next(error);

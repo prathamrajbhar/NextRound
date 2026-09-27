@@ -117,7 +117,7 @@ describe('Auth Service', () => {
         })
       );
       expect(mockPrisma.candidateProfile.create).toHaveBeenCalledWith({
-        data: { user_id: 'u-1' },
+        data: { user_id: 'u-1', full_name: null },
       });
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith(
@@ -167,6 +167,10 @@ describe('Auth Service', () => {
 
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
         where: { email: 'login@test.com' },
+        include: {
+          candidate_profile: { select: { full_name: true } },
+          organization: { select: { name: true } },
+        },
       });
       expect(compareSpy).toHaveBeenCalledWith('Password123!', user.password_hash);
       expect(res.cookie).toHaveBeenCalled();

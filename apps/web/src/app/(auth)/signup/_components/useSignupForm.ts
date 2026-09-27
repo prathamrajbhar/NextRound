@@ -40,7 +40,13 @@ export function useSignupForm(initialRole: Role) {
     if (!validate()) return;
     setLoading(true);
 
-    const result = await register(email.trim(), password, role, role === 'hr' ? companyName.trim() : undefined);
+    const result = await register(
+      email.trim(),
+      password,
+      role,
+      role === 'hr' ? companyName.trim() : undefined,
+      name.trim()
+    );
     setLoading(false);
 
     if (result.success && result.user) {

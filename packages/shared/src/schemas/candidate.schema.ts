@@ -1,5 +1,14 @@
 import { z } from 'zod';
 
+export const EducationEntrySchema = z.object({
+  degree: z.string().min(1),
+  fieldOfStudy: z.string().optional().nullable(),
+  institution: z.string().min(1),
+  graduationYear: z.coerce.number().optional().nullable(),
+});
+
+export type EducationEntry = z.infer<typeof EducationEntrySchema>;
+
 export const CandidateProfileSchema = z.object({
   fullName: z.string().max(120).optional().nullable(),
   headline: z.string().max(160).optional().nullable(),
@@ -18,6 +27,9 @@ export const CandidateProfileSchema = z.object({
   skills: z.array(z.string()).default([]),
   targetRoles: z.array(z.string()).default([]),
   yearsOfExperience: z.number().min(0).max(60).optional().nullable(),
+  currentCompany: z.string().max(160).optional().nullable(),
+  currentTitle: z.string().max(160).optional().nullable(),
+  education: z.array(EducationEntrySchema).optional().default([]),
   workMode: z.string().optional().nullable(),
   currentCtc: z.number().min(0).optional().nullable(),
   targetLocations: z.array(z.string()).default([]),
@@ -40,6 +52,9 @@ export const CandidateProfileUpdateSchema = z.object({
   portfolioUrl: z.string().url().optional().nullable(),
   bio: z.string().max(1000).optional().nullable(),
   yearsOfExperience: z.number().min(0).max(60).optional().nullable(),
+  currentCompany: z.string().max(160).optional().nullable(),
+  currentTitle: z.string().max(160).optional().nullable(),
+  education: z.array(EducationEntrySchema).optional(),
   workMode: z.string().optional().nullable(),
   currentCtc: z.number().min(0).optional().nullable(),
   targetLocations: z.array(z.string()).optional(),

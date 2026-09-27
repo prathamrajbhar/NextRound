@@ -1,6 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { apiClient } from '@/lib/apiClient';
+
+export type WorkplaceType = 'Remote-first' | 'Hybrid' | 'Onsite';
 
 export interface CompanyForm {
   name: string;
@@ -9,12 +13,26 @@ export interface CompanyForm {
   industry: string;
   size: string;
   hqLocation: string;
+  description: string;
+  workplaceType: WorkplaceType;
 
   primaryRoles: string[];
+  defaultStages: string[];
+  interviewTimezone: string;
+  interviewHours: string;
   autoOffer: boolean;
 
   invites: string[];
+  isPreConfigured?: boolean;
 }
+
+export const DEFAULT_PIPELINE_STAGES = [
+  'AI Resume Screen',
+  'Cognitive Assessment',
+  'Technical Coding Sandbox',
+  'AI Voice Interview',
+  'HR Final Round',
+];
 
 export const DEFAULT_FORM: CompanyForm = {
   name: '',
@@ -23,9 +41,15 @@ export const DEFAULT_FORM: CompanyForm = {
   industry: 'Technology',
   size: '11-50',
   hqLocation: '',
+  description: '',
+  workplaceType: 'Remote-first',
   primaryRoles: [],
+  defaultStages: ['AI Resume Screen', 'Technical Coding Sandbox', 'AI Voice Interview'],
+  interviewTimezone: 'Asia/Kolkata',
+  interviewHours: '09:00 - 18:00',
   autoOffer: false,
   invites: [],
+  isPreConfigured: false,
 };
 
 export interface CompanyStepProps {
@@ -33,15 +57,61 @@ export interface CompanyStepProps {
   update: <K extends keyof CompanyForm>(key: K, value: CompanyForm[K]) => void;
   addRole: (value: string) => void;
   removeRole: (value: string) => void;
+  toggleStage: (stage: string) => void;
   addInvite: (email: string) => void;
   removeInvite: (email: string) => void;
 }
 
 export function useCompanyOnboarding() {
-  const [form, setForm] = useState<CompanyForm>(DEFAULT_FORM);
+  const { user } = useAuth();
+  const [form, setForm] = useState<CompanyForm>(() => ({
+    ...DEFAULT_FORM,
+    name: user?.orgName || '',
+    isPreConfigured: Boolean(user?.orgName),
+  }));
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchOrg = async () => {
+      try {
+        const res = await apiClient.get<{ organization?: { name?: string; logo_url?: string; industry?: string; size?: string; settings?: Record<string, unknown> } }>('/organizations/me');
+        if (mounted && res?.organization) {
+          const o = res.organization;
+          const s = (o.settings || {}) as Record<string, unknown>;
+          setForm((f) => ({
+            ...f,
+            name: o.name || f.name || user?.orgName || '',
+            logoUrl: o.logo_url || f.logoUrl,
+            industry: o.industry || f.industry,
+            size: o.size || f.size,
+            website: (s.website as string) || f.website,
+            hqLocation: (s.hqLocation as string) || f.hqLocation,
+            description: (s.description as string) || f.description,
+            workplaceType: (s.workplaceType as WorkplaceType) || f.workplaceType,
+            primaryRoles: Array.isArray(s.primaryRoles) && s.primaryRoles.length > 0 ? (s.primaryRoles as string[]) : f.primaryRoles,
+            defaultStages: Array.isArray(s.defaultStages) && s.defaultStages.length > 0 ? (s.defaultStages as string[]) : f.defaultStages,
+            interviewTimezone: (s.interviewTimezone as string) || f.interviewTimezone,
+            interviewHours: (s.interviewHours as string) || f.interviewHours,
+            autoOffer: typeof s.autoOffer === 'boolean' ? s.autoOffer : f.autoOffer,
+            isPreConfigured: true,
+          }));
+        } else if (mounted && user?.orgName && !form.name) {
+          setForm((f) => ({ ...f, name: user.orgName || '', isPreConfigured: true }));
+        }
+      } catch {
+        if (mounted && user?.orgName && !form.name) {
+          setForm((f) => ({ ...f, name: user.orgName || '', isPreConfigured: true }));
+        }
+      }
+    };
+    fetchOrg();
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
 
   const update = <K extends keyof CompanyForm>(key: K, value: CompanyForm[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
@@ -56,6 +126,16 @@ export function useCompanyOnboarding() {
   const removeRole = (value: string) =>
     setForm((f) => ({ ...f, primaryRoles: f.primaryRoles.filter((v) => v !== value) }));
 
+  const toggleStage = (stage: string) => {
+    setForm((f) => {
+      const exists = f.defaultStages.includes(stage);
+      const next = exists
+        ? f.defaultStages.filter((s) => s !== stage)
+        : [...f.defaultStages, stage];
+      return { ...f, defaultStages: next.length > 0 ? next : [stage] };
+    });
+  };
+
   const addInvite = (email: string) => {
     const trimmed = email.trim();
     if (trimmed && !form.invites.includes(trimmed)) {
@@ -66,7 +146,7 @@ export function useCompanyOnboarding() {
   const removeInvite = (email: string) =>
     setForm((f) => ({ ...f, invites: f.invites.filter((v) => v !== email) }));
 
-  return { form, setForm, step, setStep, submitting, setSubmitting, error, setError, update, addRole, removeRole, addInvite, removeInvite };
+  return { form, setForm, step, setStep, submitting, setSubmitting, error, setError, update, addRole, removeRole, toggleStage, addInvite, removeInvite };
 }
 
 export function buildOrganizationPayload(form: CompanyForm) {
@@ -78,7 +158,12 @@ export function buildOrganizationPayload(form: CompanyForm) {
     settings: {
       website: form.website.trim() || undefined,
       hqLocation: form.hqLocation.trim() || undefined,
+      description: form.description.trim() || undefined,
+      workplaceType: form.workplaceType,
       primaryRoles: form.primaryRoles,
+      defaultStages: form.defaultStages,
+      interviewTimezone: form.interviewTimezone,
+      interviewHours: form.interviewHours,
       autoOffer: form.autoOffer,
     },
   };

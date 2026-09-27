@@ -38,12 +38,16 @@ export async function register(req: Request, res: Response, next: NextFunction) 
         password_hash: passwordHash,
         role: validated.role === 'hr' ? 'hr' : 'candidate',
         org_id: orgId,
+        profile: validated.name ? { name: validated.name } : {},
       },
     });
 
     if (user.role === 'candidate') {
       await prisma.candidateProfile.create({
-        data: { user_id: user.id },
+        data: {
+          user_id: user.id,
+          full_name: validated.name || null,
+        },
       });
     }
 
@@ -56,7 +60,7 @@ export async function register(req: Request, res: Response, next: NextFunction) 
 
     setAuthCookies(res, jwtPayload);
 
-    const displayName = user.email.split('@')[0];
+    const displayName = validated.name || user.email.split('@')[0];
     if (user.role === 'hr') {
       emailService
         .sendWelcomeHR(user.email, displayName, validated.orgName)
@@ -65,7 +69,7 @@ export async function register(req: Request, res: Response, next: NextFunction) 
 
     return res.status(201).json({
       success: true,
-      data: { user: serializeAuthUser(user) },
+      data: { user: serializeAuthUser(user, { name: validated.name, orgName: validated.orgName }) },
     });
   } catch (error) {
     return next(error);
@@ -78,6 +82,10 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 
     const user = await prisma.user.findUnique({
       where: { email: validated.email },
+      include: {
+        candidate_profile: { select: { full_name: true } },
+        organization: { select: { name: true } },
+      },
     });
 
     if (!user) {
@@ -129,6 +137,10 @@ export async function refresh(req: Request, res: Response, next: NextFunction) {
 
     const user = await prisma.user.findUnique({
       where: { id: payload.userId },
+      include: {
+        candidate_profile: { select: { full_name: true } },
+        organization: { select: { name: true } },
+      },
     });
 
     if (!user) {
@@ -169,13 +181,9 @@ export async function getMe(req: Request, res: Response, next: NextFunction) {
 
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        org_id: true,
-        profile: true,
-        created_at: true,
+      include: {
+        candidate_profile: { select: { full_name: true } },
+        organization: { select: { name: true } },
       },
     });
 
@@ -183,19 +191,10 @@ export async function getMe(req: Request, res: Response, next: NextFunction) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    const profileObj = (user.profile && typeof user.profile === 'object') ? (user.profile as Record<string, unknown>) : {};
-
     return res.json({
       success: true,
       data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          org_id: user.org_id,
-          created_at: user.created_at.toISOString(),
-          must_change_password: !!profileObj.must_change_password,
-        },
+        user: serializeAuthUser(user),
       },
     });
   } catch (error) {

@@ -1,3 +1,4 @@
+import type { EducationEntry } from '@nextround/shared';
 import { sanitizeParsedData } from './resume-sanitize.service';
 
 export { sanitizeParsedData };
@@ -5,6 +6,9 @@ export { sanitizeParsedData };
 export interface ParsedResumeData {
   fullName?: string;
   headline?: string;
+  currentCompany?: string;
+  currentTitle?: string;
+  education?: EducationEntry[];
   phone?: string;
   location?: string;
   timezone?: string;
