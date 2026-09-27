@@ -623,6 +623,7 @@ class TestGenerateFeedbackNode:
         def _test(mock_generate):
             mock_generate.return_value = "Feedback text"
             result = generate_feedback_node(state)
+            assert result["rejection_feedback"] == "Feedback text"
             call_args = mock_generate.call_args[0][0]
             assert "Kubernetes" in call_args
             assert "Redis" in call_args

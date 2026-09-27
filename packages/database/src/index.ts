@@ -7,7 +7,7 @@ declare global {
   var pgPoolGlobal: Pool | undefined;
 }
 
-const rawConnectionString = process.env.DATABASE_URL;
+const rawConnectionString = process.env.DATABASE_URL || (process.env.NODE_ENV === 'test' || process.env.VITEST ? 'postgresql://postgres:postgres@localhost:5432/nextround_test' : '');
 if (!rawConnectionString) {
   throw new Error('DATABASE_URL environment variable is required.');
 }

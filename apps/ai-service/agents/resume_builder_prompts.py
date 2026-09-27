@@ -252,7 +252,6 @@ def _build_turn_prompt(
     stage = state.get("current_stage") or "intro"
     stage_guidance = _STAGE_GUIDANCE.get(stage, "")
     context = _context_block(state, memory, asked, target_role, target_company)
-    profile_type = memory.get("profile_type") or state.get("profile_type") or "unknown"
     stage_turns = (memory.get("stage_turns") or {}).get(stage, 0)
 
     # Advance hint — tell LLM it's allowed to move on when min turns are done

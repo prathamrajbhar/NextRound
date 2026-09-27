@@ -7,5 +7,5 @@ export interface AptitudeQuestion {
   options: string[];
   correctIndex: number;
   explanation?: string;
-  source: 'ai-generated' | 'fallback';
+  source: 'ai-generated' | 'bank';
 }

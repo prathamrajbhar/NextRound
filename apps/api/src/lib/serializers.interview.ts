@@ -22,8 +22,8 @@ export function firstEvaluation(evaluations: unknown): EvalLike | undefined {
   return undefined;
 }
 
-function parseScoreNumber(scoreValue: number | null | undefined, fallbackScore: number): number {
-  return typeof scoreValue === 'number' ? scoreValue : fallbackScore;
+function parseScoreNumber(scoreValue: number | null | undefined, defaultValue: number): number {
+  return typeof scoreValue === 'number' ? scoreValue : defaultValue;
 }
 
 export function serializeScores(evaluationRecord: EvalLike | undefined): Rec | undefined {

@@ -4,20 +4,20 @@ export interface InterviewJobPayload {
   interviewId: string;
   applicationId: string;
   audioUrl?: string;
-  transcript?: any;
-  extraData?: Record<string, any>;
+  transcript?: unknown;
+  extraData?: Record<string, unknown>;
 }
 
 export async function enqueueInterview(
   interviewId: string,
   applicationId: string,
-  extraData?: Record<string, any>
+  extraData?: Record<string, unknown>
 ) {
   const payload: InterviewJobPayload = {
     interviewId,
     applicationId,
     transcript: extraData?.transcript,
-    audioUrl: extraData?.audioUrl,
+    audioUrl: typeof extraData?.audioUrl === 'string' ? extraData.audioUrl : undefined,
     extraData,
   };
 

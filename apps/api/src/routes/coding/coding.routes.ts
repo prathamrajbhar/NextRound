@@ -3,8 +3,8 @@ import { selectCodingProblem } from '../../services/questions/question-bank.serv
 import { enqueueSubmissionExecution } from '../../services/submission/submission-queue.service';
 import { authenticate } from '../../middleware/auth';
 import { CodingExecutionRequestSchema } from '@nextround/shared';
-import { prisma } from '@nextround/database';
-import { executeCodingSubmission } from '../../services/coding/coding-executor.service';
+import { prisma, Prisma } from '@nextround/database';
+import { executeCodingSubmission, TestCaseInput } from '../../services/coding/coding-executor.service';
 import { updateApplicationCodingScore } from '../../services/scoring/scoring.service';
 import crypto from 'crypto';
 
@@ -70,7 +70,9 @@ codingRouter.post('/run', authenticate, async (req: Request, res: Response, next
       return res.status(404).json({ success: false, error: 'Coding problem not found' });
     }
 
-    const publicTests = (problem.public_tests as any[]) || [];
+    const publicTests = Array.isArray(problem.public_tests)
+      ? (problem.public_tests as unknown as TestCaseInput[])
+      : [];
 
     const summary = executeCodingSubmission(code, language, publicTests, problem.entry_point || 'solution');
 
@@ -108,8 +110,12 @@ codingRouter.post('/submit', authenticate, async (req: Request, res: Response, n
       return res.status(404).json({ success: false, error: 'Coding problem not found' });
     }
 
-    const publicTests = (problem.public_tests as any[]) || [];
-    const hiddenTests = (problem.hidden_tests as any[]) || [];
+    const publicTests = Array.isArray(problem.public_tests)
+      ? (problem.public_tests as unknown as TestCaseInput[])
+      : [];
+    const hiddenTests = Array.isArray(problem.hidden_tests)
+      ? (problem.hidden_tests as unknown as TestCaseInput[])
+      : [];
     const testCases = [...publicTests, ...hiddenTests];
 
     const summary = executeCodingSubmission(code, language, testCases, problem.entry_point || 'solution');
@@ -142,7 +148,7 @@ codingRouter.post('/submit', authenticate, async (req: Request, res: Response, n
           code,
           code_hash: codeHash,
           status: finalStatus,
-          test_results: summary.results as any,
+          test_results: summary.results as unknown as Prisma.InputJsonValue,
           pass_rate: summary.passRate,
           pass_rate_percent: summary.passRate,
           pass_rate_ratio: summary.passRateRatio,

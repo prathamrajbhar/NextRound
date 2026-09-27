@@ -72,7 +72,6 @@ export function AptitudeTestConsole({
   const displayStrikeCount = strikeCount ?? 0;
   const displayShowWarning = showWarningModal ?? false;
   const displayResumeFullscreen = onResumeFullscreen ?? localResumeFS;
-  const sessionActive = isStarted && selectedCategory !== null;
 
   useEffect(() => {
     if (submitted && typeof document !== 'undefined' && document.fullscreenElement) {

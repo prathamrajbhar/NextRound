@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { HRProfileUpdateSchema, CandidateSettingsSchema } from '@nextround/shared';
 import { prisma } from '../../lib/prisma';
+import { Prisma } from '@nextround/database';
 import { authenticate } from '../../middleware/auth';
 import { requireRole } from '../../middleware/rbac';
 
@@ -91,7 +92,7 @@ accountRouter.patch(
 
       const updatedUser = await prisma.user.update({
         where: { id: user.id },
-        data: { profile: { ...stored, ...updates } as any },
+        data: { profile: { ...stored, ...updates } as unknown as Prisma.InputJsonValue },
         include: { organization: { select: { id: true, name: true, logo_url: true } } },
       });
 
@@ -170,8 +171,8 @@ accountRouter.patch(
 
       const profile = await prisma.candidateProfile.upsert({
         where: { user_id: req.user!.userId },
-        create: { user_id: req.user!.userId, settings: merged as any },
-        update: { settings: merged as any },
+        create: { user_id: req.user!.userId, settings: merged as unknown as Prisma.InputJsonValue },
+        update: { settings: merged as unknown as Prisma.InputJsonValue },
       });
 
       return res.json({

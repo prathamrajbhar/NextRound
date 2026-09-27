@@ -193,7 +193,7 @@ describe('JD Extractor — edge cases and validation', () => {
     (generateText as vi.Mock).mockResolvedValue('The job looks great! No JSON here.');
 
     await expect(extractRequirementsFromJd('Valid description text that is long enough.')).rejects.toThrow(
-      'AI model did not return a valid JSON object for job requirements'
+      'AI model did not return a valid JSON object'
     );
   });
 

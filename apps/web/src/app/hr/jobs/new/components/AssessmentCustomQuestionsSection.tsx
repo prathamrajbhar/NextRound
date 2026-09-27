@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, CheckCircle2, ListChecks, Sliders, Loader2 } from '@/lib/lucide-google-icons';
+import { Sparkles, CheckCircle2, ListChecks, Sliders } from '@/lib/lucide-google-icons';
 import { AssessmentQuestion } from '@/types/assessment-question';
 import { AssessmentQuestionReviewModal } from './AssessmentQuestionReviewModal';
 import { GenerateQuestionsConfigModal } from './GenerateQuestionsConfigModal';

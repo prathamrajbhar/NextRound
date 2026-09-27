@@ -32,11 +32,11 @@ vi.mock('../lib/env', () => ({
 
 vi.mock('../lib/email/templates', () => ({
   buildWelcomeCandidateEmail: vi.fn(() => ({ subject: 'Welcome', html: '<h1>Hi</h1>', text: 'Hi' })),
-  buildPasswordResetEmail: vi.fn(() => ({ subject: 'Reset', html: '<button>Reset</button>', text: 'Reset' })),
+  buildPasswordResetEmail: vi.fn((opts?: any) => ({ subject: 'Reset', html: `<button>${opts?.resetUrl || 'Reset'}</button>`, text: 'Reset' })),
   buildApplicationReceivedEmail: vi.fn(() => ({ subject: 'Applied', html: '<p>Thanks</p>', text: 'Thanks' })),
   buildInterviewSchedulingEmail: vi.fn(() => ({ subject: 'Schedule', html: '<p>Pick a time</p>', text: 'Pick a time' })),
-  buildOfferLetterEmail: vi.fn(() => ({ subject: 'Offer', html: '<p>Offer</p>', text: 'Offer' })),
-  buildConstructiveRejectionEmail: vi.fn(() => ({ subject: 'Rejection', html: '<p>Sorry</p>', text: 'Sorry' })),
+  buildOfferLetterEmail: vi.fn((opts?: any) => ({ subject: 'Offer', html: `<p>${opts?.salary || ''} ${opts?.equity || ''}</p>`, text: 'Offer' })),
+  buildConstructiveRejectionEmail: vi.fn((opts?: any) => ({ subject: 'Rejection', html: `<p>${(opts?.gaps || []).join(' ')}</p>`, text: 'Sorry' })),
   buildAssessmentReminderEmail: vi.fn(() => ({ subject: 'Reminder', html: '<p>Take test</p>', text: 'Take test' })),
   buildInterviewConfirmationEmail: vi.fn(() => ({ subject: 'Confirmed', html: '<p>Confirmed</p>', text: 'Confirmed' })),
   buildWelcomeHREmail: vi.fn(() => ({ subject: 'HR Welcome', html: '<h1>HR</h1><p>Welcome</p>', text: 'Welcome' })),
@@ -335,19 +335,12 @@ describe('Email Service — sendHRHoldAlert', () => {
   });
 
   it('returns false if any email fails', async () => {
-    // This requires mocking EmailTransportService.sendEmail to fail for one recipient
-    vi.doMock('../../services/email/email-transport.service', () => ({
-      EmailTransportService: class {
-        async sendEmail(to: string) {
-          if (to === 'fail@acme.com') return false;
-          return true;
-        }
-        async sendImmediate() { return true; }
-        async verifyConnection() { return true; }
-      },
-    }));
-
     const service = new EmailService();
+    vi.spyOn(service, 'sendEmail').mockImplementation(async (opts: any) => {
+      const to = typeof opts === 'string' ? opts : opts?.to;
+      return to !== 'fail@acme.com';
+    });
+
     const hrEmails = ['hr1@acme.com', 'fail@acme.com', 'hr3@acme.com'];
     const result = await service.sendHRHoldAlert(
       hrEmails,

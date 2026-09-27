@@ -104,7 +104,7 @@ export default function JobDescriptionCard({
               rows={3}
               value={promptText}
               onChange={(e) => setPromptText(e.target.value)}
-              placeholder={`e.g. ${experienceLevel || 'Engineer'} to build real-time dashboard and AI platform. Must know PostgreSQL, TypeScript, Python. High ownership startup culture.`}
+              placeholder={`e.g. ${title || experienceLevel || 'Engineer'} to build real-time dashboard and AI platform. Must know PostgreSQL, TypeScript, Python. High ownership startup culture.`}
               className="w-full px-3.5 py-2.5 text-xs font-medium rounded-xl border border-brand-200 dark:border-brand-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30 transition-all leading-relaxed"
             />
           </div>

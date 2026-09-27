@@ -2,7 +2,7 @@
 
 import React from 'react';
 import UnifiedInterviewConsole from '@/components/interview/UnifiedInterviewConsole';
-import AptitudeTestConsole, { AptitudeTestConsole as AptitudeTestConsoleDefault } from '@/components/interview/AptitudeTestConsole';
+import AptitudeTestConsole from '@/components/interview/AptitudeTestConsole';
 import CodingAssessmentConsole from '@/components/interview/CodingAssessmentConsole';
 import { AssessmentStageShell } from '@/components/interview/AssessmentStageShell';
 import { NextRoundTransitionCard } from '@/components/interview/NextRoundTransitionCard';

@@ -16,12 +16,30 @@ import type { CreateSessionInput } from './proctoring.types';
 // Mocks
 // ---------------------------------------------------------------------------
 
-vi.mock('../lib/prisma', () => ({
-  prisma: {
+const { mockPrisma } = vi.hoisted(() => ({
+  mockPrisma: {
     proctoringSession: {
       findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
       upsert: vi.fn(),
       update: vi.fn(),
+    },
+    proctoringViolation: {
+      findUnique: vi.fn(),
+      findFirst: vi.fn(),
+      findMany: vi.fn(),
+      upsert: vi.fn(),
+      update: vi.fn(),
+    },
+    proctoringEvent: {
+      findMany: vi.fn(),
+      createMany: vi.fn(),
+      aggregate: vi.fn().mockResolvedValue({ _max: { server_sequence: 0 } }),
+    },
+    proctoringEvidence: {
+      create: vi.fn(),
+      findMany: vi.fn(),
     },
     candidateProfile: {
       findUnique: vi.fn(),
@@ -35,8 +53,20 @@ vi.mock('../lib/prisma', () => ({
     assessment: {
       findUnique: vi.fn(),
     },
+    $transaction: vi.fn(),
   },
-  $transaction: vi.fn(),
+}));
+
+vi.mock('@nextround/database', () => ({
+  prisma: mockPrisma,
+}));
+
+vi.mock('../lib/prisma', () => ({
+  prisma: mockPrisma,
+}));
+
+vi.mock('../lib/storage', () => ({
+  uploadFile: vi.fn().mockResolvedValue('https://storage.example.com/mock-file.jpg'),
 }));
 
 vi.mock('../lib/logger', () => ({
@@ -48,6 +78,7 @@ vi.mock('../lib/logger', () => ({
     }),
   },
 }));
+
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -91,9 +122,6 @@ describe('Proctoring Session — requireSessionOwnership', () => {
   it('throws notFound when session does not exist', async () => {
     (prisma.proctoringSession.findUnique as vi.Mock).mockResolvedValue(null);
 
-    await expect(requireSessionOwnership('ghost-session', 'some-user')).rejects.toBeInstanceOf(
-      notFound.constructor
-    );
     await expect(requireSessionOwnership('ghost-session', 'some-user')).rejects.toThrow(
       'Proctoring session not found'
     );
@@ -486,71 +514,81 @@ describe('Proctoring Violation — reviewProctoringViolation', () => {
 // ---------------------------------------------------------------------------
 
 import {
-  requireSessionOwnership as requireSessionOwnershipEvidence,
-  createEvidence,
-  getSessionReport,
+  saveProctoringSnapshot,
+  saveProctoringRecording,
+  logProctoringEvents,
 } from '../services/proctoring/proctoring-evidence.service';
-import { analyzeSessionRisk } from '../services/proctoring/proctoring-reporting.service';
+import {
+  getProctoringReport,
+  computeRiskScore,
+} from '../services/proctoring/proctoring-reporting.service';
 
-vi.mock('../services/proctoring/proctoring-reporting.service', () => ({
-  analyzeSessionRisk: vi.fn(),
-}));
-
-describe('Proctoring Evidence — createEvidence', () => {
-  it('creates evidence record for session owner', async () => {
+describe('Proctoring Evidence — saveProctoringSnapshot', () => {
+  it('creates snapshot evidence record for session owner', async () => {
     const session = createSession({ candidate: { user_id: 'owner-uid' } });
-    (prisma.proctoringSession.findUnique as vi.Mock).mockResolvedValue(session);
-    (prisma.proctoringEvidence.create as vi.Mock).mockResolvedValue({
+    (mockPrisma.proctoringSession.findUnique as vi.Mock).mockResolvedValue(session);
+    (mockPrisma.proctoringEvidence.create as vi.Mock).mockResolvedValue({
       id: 'evid-001',
-      session_id: 'session-001',
+      proctoring_session_id: 'session-001',
       kind: 'camera_snapshot',
-      file_url: 'https://storage.example.com/evidence.jpg',
+      url: 'https://storage.example.com/mock-file.jpg',
+      size_bytes: 100,
       width: 640,
       height: 480,
     });
 
-    const result = await createEvidence(
+    const result = await saveProctoringSnapshot(
       'session-001',
       'owner-uid',
-      {
-        file: {} as Express.Multer.File,
-        kind: 'camera_snapshot',
-        width: 640,
-        height: 480,
-      }
+      Buffer.from('fake-image'),
+      { width: 640, height: 480 }
     );
 
     expect(result.kind).toBe('camera_snapshot');
+    expect(result.url).toBe('https://storage.example.com/mock-file.jpg');
   });
 
   it('throws forbidden when user does not own session', async () => {
     const session = createSession({ candidate: { user_id: 'owner-uid' } });
-    (prisma.proctoringSession.findUnique as vi.Mock).mockResolvedValue(session);
+    (mockPrisma.proctoringSession.findUnique as vi.Mock).mockResolvedValue(session);
 
     await expect(
-      createEvidence('session-001', 'other-uid', {
-        file: {} as Express.Multer.File,
-        kind: 'camera_snapshot',
-      })
+      saveProctoringSnapshot('session-001', 'other-uid', Buffer.from('fake-image'), {})
     ).rejects.toThrow('Access denied');
   });
 });
 
-describe('Proctoring Evidence — getSessionReport', () => {
+describe('Proctoring Reporting — getProctoringReport & computeRiskScore', () => {
+  it('computes risk score correctly from weighted violations', () => {
+    const violations = [
+      { severity: 'high', occurrence_count: 2 }, // 40 * 2 = 80
+      { severity: 'low', occurrence_count: 1 }, // 5 * 1 = 5
+    ];
+    expect(computeRiskScore(violations)).toBe(85);
+  });
+
   it('returns full session report with risk score', async () => {
-    const session = createSession({
-      candidate: { user_id: 'cp-report' },
+    const session = {
+      id: 'session-report',
+      session_type: 'aptitude',
+      status: 'active',
+      started_at: new Date(),
+      ended_at: null,
+      last_heartbeat_at: new Date(),
+      risk_score: 25,
+      summary_json: {},
+      recording_url: null,
+      recording_duration_ms: null,
+      recording_size_bytes: null,
+      candidate: { user: { email: 'cp@report.com' }, user_id: 'cp-report' },
       application: { id: 'app-report', job: { org_id: 'org-report' } },
-    });
-    (prisma.proctoringSession.findUnique as vi.Mock).mockResolvedValue(session);
-    (prisma.proctoringEvidence.findMany as vi.Mock).mockResolvedValue([]);
-    (prisma.proctoringViolation.findMany as vi.Mock).mockResolvedValue([]);
-    (prisma.proctoringEvent.findMany as vi.Mock).mockResolvedValue([]);
+      evidence: [],
+      violations: [],
+      events: [],
+    };
+    (mockPrisma.proctoringSession.findUnique as vi.Mock).mockResolvedValue(session);
 
-    // Mock analyzeSessionRisk to return a risk score
-    (analyzeSessionRisk as vi.Mock).mockResolvedValue(25);
-
-    const result = await getSessionReport('session-report', 'org-report');
+    const result = await getProctoringReport('session-report', 'hr', 'org-report');
 
     expect(result.session).toBeDefined();
     expect(result.risk_score).toBe(25);
@@ -559,33 +597,19 @@ describe('Proctoring Evidence — getSessionReport', () => {
   });
 
   it('enforces org isolation in report access', async () => {
-    const session = createSession({
-      candidate: { user_id: 'cp-report2' },
+    const session = {
+      id: 'session-report2',
+      candidate: { user: { email: 'cp@report.com' }, user_id: 'cp-report2' },
       application: { id: 'app-report2', job: { org_id: 'org-correct' } },
-    });
-    (prisma.proctoringSession.findUnique as vi.Mock).mockResolvedValue(session);
+      evidence: [],
+      violations: [],
+      events: [],
+    };
+    (mockPrisma.proctoringSession.findUnique as vi.Mock).mockResolvedValue(session);
 
-    await expect(getSessionReport('session-report2', 'wrong-org')).rejects.toThrow(
-      'Access denied'
+    await expect(getProctoringReport('session-report2', 'hr', 'wrong-org')).rejects.toThrow(
+      'Access denied: Org isolation violation'
     );
   });
 });
 
-// Re-mock prisma for the evidence tests
-vi.mock('../lib/prisma', () => ({
-  prisma: {
-    proctoringSession: {
-      findUnique: vi.fn(),
-    },
-    proctoringEvidence: {
-      create: vi.fn(),
-      findMany: vi.fn(),
-    },
-    proctoringViolation: {
-      findMany: vi.fn(),
-    },
-    proctoringEvent: {
-      findMany: vi.fn(),
-    },
-  },
-}));

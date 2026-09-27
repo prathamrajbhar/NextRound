@@ -35,7 +35,6 @@ async function generateQueryEmbedding(queryText: string): Promise<number[] | nul
   } catch {
     return null;
   }
-  if (typeof body.data?.model === 'string' && body.data.model.toLowerCase().includes('fallback')) return null;
   const embedding = body.data?.embedding;
   if (!Array.isArray(embedding) || embedding.length !== EMBEDDING_DIM) return null;
   return embedding as number[];

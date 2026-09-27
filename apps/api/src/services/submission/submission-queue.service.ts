@@ -1,4 +1,4 @@
-import { prisma } from '@nextround/database';
+import { prisma, Prisma } from '@nextround/database';
 import { executeCodingSubmission, TestCaseInput } from '../coding/coding-executor.service';
 import { updateApplicationCodingScore } from '../scoring/scoring.service';
 import { logger } from '../../lib/logger';
@@ -48,7 +48,6 @@ export async function enqueueSubmissionExecution(input: CreateSubmissionInput) {
   });
 
   processSubmissionJob(submission.id).catch((err) => {
-
     logger.child('SubmissionQueue').error(`Submission ${submission.id} failed processing:`, err);
     prisma.codingSubmission
       .update({
@@ -67,7 +66,6 @@ export async function enqueueSubmissionExecution(input: CreateSubmissionInput) {
 }
 
 export async function processSubmissionJob(submissionId: string) {
-
   await prisma.codingSubmission.update({
     where: { id: submissionId },
     data: { status: 'running' },
@@ -87,16 +85,17 @@ export async function processSubmissionJob(submissionId: string) {
 
   if (submission.problem) {
     entryPoint = submission.problem.entry_point || 'solution';
-    const publicTests = (submission.problem.public_tests as any[]) || [];
-    const hiddenTests = (submission.problem.hidden_tests as any[]) || [];
+    const publicTests = Array.isArray(submission.problem.public_tests)
+      ? (submission.problem.public_tests as unknown as TestCaseInput[])
+      : [];
+    const hiddenTests = Array.isArray(submission.problem.hidden_tests)
+      ? (submission.problem.hidden_tests as unknown as TestCaseInput[])
+      : [];
     testCases = [...publicTests, ...hiddenTests];
   }
 
   if (testCases.length === 0) {
-    testCases = [
-      { name: 'Default Case 1', args: [[50, 50, 50, 50, 50], 100, 100], expected: [2, 4] },
-      { name: 'Default Case 2', args: [[30, 40, 50, 60, 70], 0, 80], expected: [0, 2] },
-    ];
+    throw new Error(`Coding problem ${submission.problem_id || ''} has no configured test cases.`);
   }
 
   const summary = executeCodingSubmission(
@@ -106,13 +105,13 @@ export async function processSubmissionJob(submissionId: string) {
     entryPoint
   );
 
-  const finalStatus = summary.allPassed ? 'passed' : summary.passRate > 0 ? 'failed' : 'failed';
+  const finalStatus = summary.allPassed ? 'passed' : 'failed';
 
   const updated = await prisma.codingSubmission.update({
     where: { id: submissionId },
     data: {
       status: finalStatus,
-      test_results: summary.results as any,
+      test_results: summary.results as unknown as Prisma.InputJsonValue,
       pass_rate: summary.passRate,
       pass_rate_percent: summary.passRate,
       pass_rate_ratio: summary.passRateRatio,

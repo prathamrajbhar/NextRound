@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Users, Plus, Trash2, KeyRound, Copy, Check, X } from '@/lib/lucide-google-icons';
+import React from 'react';
+import { Users, Plus, Trash2, X } from '@/lib/lucide-google-icons';
 
 interface TeamMember {
   id: string;

@@ -37,6 +37,17 @@ export function EditJobHeader({
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
             Edit Job Opening
           </h1>
+          <span
+            className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider ${
+              status === 'active'
+                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
+                : status === 'closed'
+                ? 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20'
+                : 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20'
+            }`}
+          >
+            {status}
+          </span>
           <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-500/10 dark:bg-brand-500/20 text-brand-700 dark:text-brand-300 border border-brand-500/20 text-[11px] font-bold">
             <Sparkles className="h-3 w-3 text-brand-600 dark:text-brand-400" />
             <span>AI Automated Pipeline</span>

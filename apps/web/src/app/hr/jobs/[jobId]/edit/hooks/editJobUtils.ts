@@ -1,4 +1,3 @@
-import { Job } from '@/types';
 import { AssessmentQuestion } from '@/types/assessment-question';
 
 export type PipelineStage = 'screening' | 'assessment' | 'voice_screen' | 'hr_round' | 'panel' | 'decision';

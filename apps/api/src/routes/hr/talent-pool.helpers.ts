@@ -66,11 +66,6 @@ export async function generateQueryEmbedding(queryText: string): Promise<number[
     return null;
   }
 
-  const model = typeof body.data?.model === 'string' ? body.data.model : '';
-  if (model.toLowerCase().includes('fallback')) {
-    return null;
-  }
-
   const embedding = body.data?.embedding;
   if (!Array.isArray(embedding) || embedding.length !== 768) {
     return null;

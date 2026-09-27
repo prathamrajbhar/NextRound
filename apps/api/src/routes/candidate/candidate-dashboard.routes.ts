@@ -53,7 +53,7 @@ candidateDashboardRouter.get(
           orderBy: { applied_at: 'desc' },
         }),
         prisma.job.findMany({
-          where: { status: { in: ['published', 'active'] as any } },
+          where: { status: { in: ['published', 'active'] } },
           orderBy: { created_at: 'desc' },
           take: 10,
           include: {

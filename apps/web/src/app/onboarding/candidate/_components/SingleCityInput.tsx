@@ -85,6 +85,7 @@ export function SingleCityInput({
           role="combobox"
           aria-autocomplete="list"
           aria-expanded={isOpen}
+          aria-controls="single-city-suggestions"
           className={`${inputCls} pl-10 pr-10 ${className}`}
         />
         <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
@@ -93,7 +94,7 @@ export function SingleCityInput({
       </div>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 z-50 mt-1.5 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 max-h-60 overflow-y-auto">
+        <div id="single-city-suggestions" className="absolute left-0 right-0 z-50 mt-1.5 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl shadow-black/80 overflow-hidden backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 max-h-60 overflow-y-auto">
           {isLoading && results.length === 0 ? (
             <div className="p-3.5 text-xs font-semibold text-slate-400 flex items-center justify-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-orange-400" />
