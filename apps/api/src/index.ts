@@ -2,6 +2,7 @@ import './env';
 import { prisma } from '@nextround/database';
 import { app } from './app';
 
+// Database & server bootstrap
 import { setupWeeklyAnalyticsCron } from './lib/queues/analytics.queue';
 import { envNumber } from './lib/env';
 import { logger } from './lib/logger';
