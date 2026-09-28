@@ -4,12 +4,20 @@ const fs = require('fs');
 
 const isWindows = process.platform === 'win32';
 
-const pythonBin = isWindows
+const dotVenvBin = isWindows
   ? path.join(__dirname, '..', 'apps', 'ai-service', '.venv', 'Scripts', 'python.exe')
   : path.join(__dirname, '..', 'apps', 'ai-service', '.venv', 'bin', 'python');
 
+const venvBin = isWindows
+  ? path.join(__dirname, '..', 'apps', 'ai-service', 'venv', 'Scripts', 'python.exe')
+  : path.join(__dirname, '..', 'apps', 'ai-service', 'venv', 'bin', 'python');
+
 const fallbackPython = isWindows ? 'python' : 'python3';
-const executable = fs.existsSync(pythonBin) ? pythonBin : fallbackPython;
+const executable = fs.existsSync(dotVenvBin)
+  ? dotVenvBin
+  : fs.existsSync(venvBin)
+    ? venvBin
+    : fallbackPython;
 
 const mainPy = path.join(__dirname, '..', 'apps', 'ai-service', 'main.py');
 
