@@ -6,6 +6,7 @@ import { SetupHeaderBar } from './SetupHeaderBar';
 import { SetupRoleTargetCard } from './SetupRoleTargetCard';
 import { SetupSeniorityCard } from './SetupSeniorityCard';
 import { SetupMicPrecheckCard } from './SetupMicPrecheckCard';
+import { formatExperienceDisplay } from '../formatters';
 
 interface SetupStageProps {
   targetRole: string;
@@ -59,7 +60,7 @@ export function SetupStage({
           <p className="text-[10.5px] text-slate-500 dark:text-slate-400 font-medium">
             Targeting{' '}
             <strong className="text-orange-600 dark:text-orange-400">{targetRole}</strong> •{' '}
-            {experienceLevel}
+            {formatExperienceDisplay(experienceLevel)}
           </p>
         </div>
 

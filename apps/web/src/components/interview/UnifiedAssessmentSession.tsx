@@ -54,6 +54,7 @@ export function UnifiedAssessmentSession({
     candidateSpeechText,
     aiRespondError,
     startSession,
+    setStage,
     submitAnswer,
     onEliminate,
   } = useInterviewSession({
@@ -129,8 +130,12 @@ export function UnifiedAssessmentSession({
 
   const handleLaunchNextRound = () => {
     if (!pendingNextRound) return;
-    setComprehensiveStep(pendingNextRound.nextStep);
+    const nextStep = pendingNextRound.nextStep;
+    setComprehensiveStep(nextStep);
     setPendingNextRound(null);
+    if (nextStep === 'technical') {
+      startSession();
+    }
   };
 
   const activeRoundTrack = track === 'comprehensive' ? comprehensiveStep : track;
@@ -141,12 +146,20 @@ export function UnifiedAssessmentSession({
     startCapture(stream);
     setCaptureStream(stream);
     startProctorSession();
-    startSession();
+    if (isInterviewTrack) {
+      startSession();
+    } else {
+      setStage('session');
+    }
   };
 
   const handleJoinFromCheckScreen = () => {
     startProctorSession();
-    startSession();
+    if (isInterviewTrack) {
+      startSession();
+    } else {
+      setStage('session');
+    }
   };
 
   if (stage === 'check') {

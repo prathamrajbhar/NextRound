@@ -39,23 +39,37 @@ except Exception as e:
 
   try {
     const inputJson = JSON.stringify({ code, entryPoint, args });
-    const proc = spawnSync('python3', ['-c', runnerScript], {
+    let proc = spawnSync('python3', ['-c', runnerScript], {
       input: inputJson,
       timeout: 3000,
       encoding: 'utf-8',
     });
 
-    if (proc.error && (proc.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
-      return { actual: null, timedOut: true, error: 'Python process timed out (3.0s limit)' };
+    if (proc.error && (proc.error as NodeJS.ErrnoException).code === 'ENOENT') {
+      proc = spawnSync('python', ['-c', runnerScript], {
+        input: inputJson,
+        timeout: 3000,
+        encoding: 'utf-8',
+      });
+    }
+
+    if (proc.error) {
+      if ((proc.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
+        return { actual: null, timedOut: true, error: 'Python process timed out (3.0s limit)' };
+      }
+      return { actual: null, error: `Process error: ${proc.error.message}` };
     }
 
     if (proc.stdout) {
-      const parsed = JSON.parse(proc.stdout.trim().split('\n').pop() || '{}') as {
-        error?: string;
-        result?: unknown;
-      };
-      if (parsed.error) return { actual: null, error: parsed.error };
-      return { actual: parsed.result };
+      const lines = proc.stdout.trim().split('\n');
+      const lastLine = lines.pop() || '{}';
+      try {
+        const parsed = JSON.parse(lastLine) as { error?: string; result?: unknown };
+        if (parsed.error) return { actual: null, error: parsed.error };
+        return { actual: parsed.result };
+      } catch (err) {
+        return { actual: null, error: `Output parsing failed: ${proc.stdout}` };
+      }
     }
 
     return { actual: null, error: proc.stderr ? proc.stderr.trim() : 'Python process execution failed' };
@@ -114,17 +128,23 @@ process.stdin.on('end', () => {
       encoding: 'utf-8',
     });
 
-    if (proc.error && (proc.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
-      return { actual: null, timedOut: true, error: 'Node process timed out (3.0s limit)' };
+    if (proc.error) {
+      if ((proc.error as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
+        return { actual: null, timedOut: true, error: 'Node process timed out (3.0s limit)' };
+      }
+      return { actual: null, error: `Process error: ${proc.error.message}` };
     }
 
     if (proc.stdout) {
-      const parsed = JSON.parse(proc.stdout.trim().split('\n').pop() || '{}') as {
-        error?: string;
-        result?: unknown;
-      };
-      if (parsed.error) return { actual: null, error: parsed.error };
-      return { actual: parsed.result };
+      const lines = proc.stdout.trim().split('\n');
+      const lastLine = lines.pop() || '{}';
+      try {
+        const parsed = JSON.parse(lastLine) as { error?: string; result?: unknown };
+        if (parsed.error) return { actual: null, error: parsed.error };
+        return { actual: parsed.result };
+      } catch (err) {
+        return { actual: null, error: `Output parsing failed: ${proc.stdout}` };
+      }
     }
 
     return { actual: null, error: proc.stderr ? proc.stderr.trim() : 'Node execution failed' };

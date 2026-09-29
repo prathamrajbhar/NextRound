@@ -12,6 +12,7 @@ export interface ResumeAiTurnRequest {
   transcript: string;
   targetRole: string;
   targetCompany: string;
+  experienceLevel?: string | null;
   stage: string;
   turnNumber: number;
   conversationHistory: { speaker: string; text: string }[];

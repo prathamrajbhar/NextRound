@@ -83,33 +83,36 @@ class AgentWorkerManager:
                     await asyncio.sleep(3)
                     continue
 
-                job_id = await redis.rpop(f"bull:{queue_name}:wait")
+                # Use BRPOP (blocking pop) with a 5s timeout so the worker
+                # waits at the Redis level instead of busy-looping with rpop+sleep.
+                # Returns None cleanly on empty queues — no timeout exceptions.
+                result = await redis.brpop(f"bull:{queue_name}:wait", timeout=5)
 
-                if not job_id:
-
+                if result is None:
+                    # No job arrived within 5s — also check prioritized queue
                     prioritized = await redis.zrange(f"bull:{queue_name}:prioritized", 0, 0, withscores=True)
-                    if prioritized:
-                        job_id = prioritized[0][0]
-                        await redis.zrem(f"bull:{queue_name}:prioritized", job_id)
-
-                if job_id:
-
-                    job_key = f"bull:{queue_name}:{job_id}"
-                    job_data_raw = await redis.hget(job_key, "data")
-
-                    await self._acknowledge_and_clean_job(redis, queue_name, job_id)
-
-                    if job_data_raw:
-                        payload = json.loads(job_data_raw)
-                        logger.info(f"Dequeued job {job_id} from {queue_name} with action: {payload.get('action')}")
-
-                        handler = _dispatch(queue_name, payload)
-                        if handler is None:
-                            logger.warning(f"No handler registered for queue '{queue_name}'; skipping job {job_id}.")
-                        else:
-                            await handler(payload)
+                    if not prioritized:
+                        continue
+                    job_id = prioritized[0][0]
+                    await redis.zrem(f"bull:{queue_name}:prioritized", job_id)
                 else:
-                    await asyncio.sleep(2)
+                    # brpop returns (key, value)
+                    _, job_id = result
+
+                job_key = f"bull:{queue_name}:{job_id}"
+                job_data_raw = await redis.hget(job_key, "data")
+
+                await self._acknowledge_and_clean_job(redis, queue_name, job_id)
+
+                if job_data_raw:
+                    payload = json.loads(job_data_raw)
+                    logger.info(f"Dequeued job {job_id} from {queue_name} with action: {payload.get('action')}")
+
+                    handler = _dispatch(queue_name, payload)
+                    if handler is None:
+                        logger.warning(f"No handler registered for queue '{queue_name}'; skipping job {job_id}.")
+                    else:
+                        await handler(payload)
 
             except asyncio.CancelledError:
                 break

@@ -8,7 +8,7 @@ import { Loader2 } from '@/lib/lucide-google-icons';
 
 export default function AIResumeBuilderSetupPage() {
   const router = useRouter();
-  const [targetRole, setTargetRole] = useState('Senior Full Stack Engineer');
+  const [targetRole, setTargetRole] = useState('Full Stack Engineer');
   const [experienceLevel, setExperienceLevel] = useState('Fresher (0-2 Years)');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +26,12 @@ export default function AIResumeBuilderSetupPage() {
         throw new Error('Failed to obtain session ID from backend.');
       }
 
-      router.push(`/candidate/resume-builder/${sessionRes.sessionId}`);
+      const searchParams = new URLSearchParams({
+        role: targetRole,
+        level: experienceLevel,
+      });
+
+      router.push(`/candidate/resume-builder/${sessionRes.sessionId}?${searchParams.toString()}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to start session');
       setLoading(false);

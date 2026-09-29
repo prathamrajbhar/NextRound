@@ -84,6 +84,7 @@ export function useResumeTurnManager({
           transcript: candidateResponse,
           targetRole,
           targetCompany: 'Target Enterprise',
+          experienceLevel,
           stage: currentStage,
           turnNumber: currentTurnIndex,
           conversationHistory: newHistory.map((h) => ({
@@ -131,7 +132,7 @@ export function useResumeTurnManager({
         setAiState('listening');
       }
     },
-    [targetRole, existingResume, careerGoals, onSpeakText, onStopSpeech, onStartSpeech, onFinalize, setAiState, setError]
+    [targetRole, experienceLevel, existingResume, careerGoals, onSpeakText, onStopSpeech, onStartSpeech, onFinalize, setAiState, setError]
   );
 
   const startCall = useCallback(async () => {

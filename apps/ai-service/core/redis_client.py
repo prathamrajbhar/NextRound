@@ -10,7 +10,9 @@ async def get_redis_client() -> redis.Redis:
             settings.redis_url,
             protocol=2,
             decode_responses=True,
-            socket_timeout=10.0,
+            # Must be well above the BRPOP blocking timeout (5s) so the socket
+            # doesn't fire a timeout exception while legitimately waiting for jobs.
+            socket_timeout=30.0,
             socket_connect_timeout=10.0,
             socket_keepalive=True,
             health_check_interval=15,

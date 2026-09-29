@@ -50,7 +50,7 @@ services:
   # Local S3 Object Storage: LocalStack
   # ---------------------------------------------------------------------------
   localstack:
-    image: localstack/localstack:latest
+    image: localstack/localstack:3.8.1
     container_name: nextround-localstack
     restart: unless-stopped
     ports:

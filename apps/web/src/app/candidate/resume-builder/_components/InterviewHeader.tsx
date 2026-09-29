@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Bot, Clock, ArrowLeft, MessageSquare } from '@/lib/lucide-google-icons';
+import { formatExperienceDisplay } from '../formatters';
 
 interface InterviewHeaderProps {
   targetRole: string;
@@ -50,7 +51,7 @@ export function InterviewHeader({
             </span>
           </div>
           <p className="text-[11px] text-slate-400 font-medium mt-0.5">
-            {targetRole} • {experienceLevel}
+            {targetRole} • {formatExperienceDisplay(experienceLevel)}
           </p>
         </div>
       </div>

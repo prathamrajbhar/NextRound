@@ -142,14 +142,23 @@ export function AptitudeQuestionScreen({
               <ChevronLeft className="h-4 w-4" /> Previous
             </button>
 
-            <button
-              type="button"
-              disabled={currentIndex === questionCount - 1}
-              onClick={onNext}
-              className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white dark:text-slate-950 font-black text-xs shadow-md transition-all cursor-pointer flex items-center gap-1"
-            >
-              <span>Next Question</span> <ChevronRight className="h-4 w-4" />
-            </button>
+            {currentIndex === questionCount - 1 ? (
+              <button
+                type="button"
+                onClick={onSectionSubmit}
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white dark:text-slate-950 font-black text-xs shadow-md transition-all cursor-pointer flex items-center gap-1"
+              >
+                <span>Submit Section</span> <CheckCircle2 className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onNext}
+                className="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 dark:bg-brand-500 dark:hover:bg-brand-600 text-white dark:text-slate-950 font-black text-xs shadow-md transition-all cursor-pointer flex items-center gap-1"
+              >
+                <span>Next Question</span> <ChevronRight className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 

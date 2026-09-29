@@ -1,13 +1,10 @@
 import { logger } from '../../lib/logger';
 import {
   normalizeUsername,
-  fetchScraperProfile,
   scrapeOutcome,
-  parseJsonBody,
   str,
   toNumber,
   capitalize,
-  PROFILE_SCRAPER_TIMEOUT_MS,
   type SocialSyncOutcome,
   type SyncedSocialData,
 } from './social-sync.types';
@@ -21,26 +18,36 @@ export async function syncGitHubProfileScraper(githubInput: string): Promise<Soc
   const username = normalized.username;
 
   const started = Date.now();
-  const { status, body, timedOut } = await fetchScraperProfile('github', username);
-  logger
-    .child('SocialSync')
-    .http(`GitHub scraper responded for ${username}: HTTP ${status || 'ERR'} (${body.length} bytes) in ${Date.now() - started}ms`);
-  if (status === 404) {
-    return scrapeOutcome('github', username, `GitHub profile '${username}' was not found by the scraper.`, 'not_found');
-  }
-  if (status === 429) {
-    return scrapeOutcome('github', username, 'GitHub scraper is rate limited. Try again in a few minutes.', 'failed');
-  }
-  if (timedOut) {
-    return scrapeOutcome('github', username, `GitHub sync failed: request timed out after ${PROFILE_SCRAPER_TIMEOUT_MS}ms`);
-  }
-  if (status >= 400 || !body) {
-    return scrapeOutcome('github', username, `GitHub scraper returned HTTP ${status}.`);
-  }
+  let data: any = {};
+  
+  try {
+    const headers = { 'User-Agent': 'NextRound-App' };
+    const [profileRes, reposRes] = await Promise.all([
+      fetch(`https://api.github.com/users/${username}`, { headers }),
+      fetch(`https://api.github.com/users/${username}/repos?sort=updated&per_page=30`, { headers })
+    ]);
 
-  const data = parseJsonBody(body);
-  if (!data) {
-    return scrapeOutcome('github', username, 'GitHub scraper returned a malformed response that could not be parsed.');
+    logger
+      .child('SocialSync')
+      .http(`GitHub API responded for ${username}: HTTP ${profileRes.status} in ${Date.now() - started}ms`);
+
+    if (profileRes.status === 404) {
+      return scrapeOutcome('github', username, `GitHub profile '${username}' was not found.`, 'not_found');
+    }
+    if (profileRes.status === 403) {
+      return scrapeOutcome('github', username, 'GitHub API is rate limited. Try again in a few minutes.', 'failed');
+    }
+    if (!profileRes.ok) {
+       return scrapeOutcome('github', username, `GitHub API returned HTTP ${profileRes.status}.`);
+    }
+
+    data = {
+      profile: await profileRes.json(),
+      recent_repositories: await reposRes.json(),
+      pinned_repositories: []
+    };
+  } catch (error: any) {
+    return scrapeOutcome('github', username, `GitHub API request failed: ${error.message}`);
   }
 
   const profile = (data.profile && typeof data.profile === 'object' ? data.profile : {}) as Record<string, unknown>;

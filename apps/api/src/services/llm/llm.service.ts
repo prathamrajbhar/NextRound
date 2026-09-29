@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 
-export async function generateText(prompt: string, timeoutMs = 30000): Promise<string> {
+export async function generateText(prompt: string, timeoutMs = 120000): Promise<string> {
   const provider = (process.env.LLM_PROVIDER || 'gemini').toLowerCase();
 
   if (provider === 'ollama') {

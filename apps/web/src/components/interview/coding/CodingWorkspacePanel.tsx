@@ -53,7 +53,10 @@ export function CodingWorkspacePanel({
         </div>
 
         <div className="flex-1 flex overflow-hidden bg-slate-50 dark:bg-[#1e1e1e]">
-          <div className="w-10 py-3 bg-slate-100 dark:bg-[#181818] border-r border-slate-200 dark:border-slate-800 text-right pr-2 text-slate-400 dark:text-slate-600 font-mono text-xs select-none leading-relaxed">
+          <div 
+            id="line-numbers"
+            className="w-10 py-3 bg-slate-100 dark:bg-[#181818] border-r border-slate-200 dark:border-slate-800 text-right pr-2 text-slate-400 dark:text-slate-600 font-mono text-xs select-none leading-relaxed overflow-hidden"
+          >
             {lineNumbers.map((n) => (
               <div key={n}>{n}</div>
             ))}
@@ -62,7 +65,28 @@ export function CodingWorkspacePanel({
           <textarea
             value={code}
             onChange={(e) => onCodeChange(e.target.value)}
-            className="flex-1 bg-slate-50 dark:bg-[#1e1e1e] text-slate-900 dark:text-slate-100 font-mono text-xs p-3 focus:outline-none resize-none leading-relaxed border-none"
+            onScroll={(e) => {
+              const lineNumbersEl = document.getElementById('line-numbers');
+              if (lineNumbersEl) {
+                lineNumbersEl.scrollTop = e.currentTarget.scrollTop;
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Tab') {
+                e.preventDefault();
+                const target = e.currentTarget;
+                const start = target.selectionStart;
+                const end = target.selectionEnd;
+                const newCode = code.substring(0, start) + '  ' + code.substring(end);
+                onCodeChange(newCode);
+                
+                setTimeout(() => {
+                  target.selectionStart = target.selectionEnd = start + 2;
+                }, 0);
+              }
+            }}
+            className="flex-1 bg-slate-50 dark:bg-[#1e1e1e] text-slate-900 dark:text-slate-100 font-mono text-xs p-3 focus:outline-none resize-none leading-relaxed border-none whitespace-pre"
+            wrap="off"
             spellCheck={false}
           />
         </div>

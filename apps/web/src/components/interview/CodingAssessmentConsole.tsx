@@ -121,7 +121,7 @@ export default function CodingAssessmentConsole({
   }
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-slate-900 text-slate-100 font-sans overflow-hidden">
+    <div className="flex flex-col h-full w-full rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-900 text-slate-100 font-sans overflow-hidden shadow-2xl">
       <CodingHeader
         company={company}
         role={role}

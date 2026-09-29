@@ -9,6 +9,7 @@ interface SetupRoleTargetCardProps {
 }
 
 const PRESET_ROLES = [
+  'Full Stack Engineer',
   'Senior Full Stack Engineer',
   'AI Product Engineer',
   'Backend Architect',

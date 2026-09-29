@@ -103,11 +103,11 @@ export default function CandidateLayout({
   );
 
   if (isAssessmentRoom) {
-    return <div className="w-screen h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-hidden font-sans">{children}</div>;
+    return <div suppressHydrationWarning className="w-screen h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-hidden font-sans">{children}</div>;
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50/50 dark:bg-slate-950/60 relative transition-colors duration-300">
+    <div suppressHydrationWarning className="flex h-screen overflow-hidden bg-slate-50/50 dark:bg-slate-950/60 relative transition-colors duration-300">
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}

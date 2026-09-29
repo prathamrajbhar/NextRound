@@ -13,7 +13,9 @@ export async function createResumeSession(req: Request, res: Response, next: Nex
     }
 
     const candidateId = await getCandidateProfileId(req.user!.userId);
-    const { targetRole, targetCompany, existingResumeText, careerGoals } = parsed.data;
+    const { targetRole, targetCompany, existingResumeText, careerGoals, experienceLevel, difficulty } = parsed.data;
+
+    const level = experienceLevel || difficulty || 'Fresher (0-2 Years)';
 
     const session = await prisma.mockSession.create({
       data: {
@@ -22,6 +24,7 @@ export async function createResumeSession(req: Request, res: Response, next: Nex
         status: 'active',
         target_role: targetRole,
         target_company: targetCompany || 'Target Enterprise',
+        difficulty: level,
         focus_areas: careerGoals ? [careerGoals] : [],
         rubric: (existingResumeText ? { rawText: existingResumeText } : {}) as Prisma.InputJsonValue,
       },
@@ -32,6 +35,9 @@ export async function createResumeSession(req: Request, res: Response, next: Nex
       data: {
         sessionId: session.id,
         session,
+        target_role: session.target_role,
+        difficulty: session.difficulty,
+        experienceLevel: session.difficulty,
       },
     });
   } catch (error) {
@@ -56,7 +62,17 @@ export async function getResumeSession(req: Request, res: Response, next: NextFu
 
     return res.json({
       success: true,
-      data: { session },
+      data: {
+        session,
+        target_role: session.target_role,
+        difficulty: session.difficulty,
+        experienceLevel: session.difficulty,
+        status: session.status,
+        rubric: session.rubric,
+        focus_areas: session.focus_areas,
+        generated_resume: session.generated_resume,
+        resume_pdf_url: session.resume_pdf_url,
+      },
     });
   } catch (error) {
     return next(error);

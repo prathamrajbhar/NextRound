@@ -70,6 +70,7 @@ class ResumeBuilderState(TypedDict, total=False):
     target_company: str
 
     # Candidate context (populated at session creation)
+    experience_level: Optional[str]   # e.g. "Fresher (0-2 Years)", "Senior Specialist"
     existing_resume: Optional[str]    # Raw text of any resume the candidate uploaded
     career_goals: Optional[str]       # Free-text career goals from the setup screen
     profile_type: Optional[str]       # One of PROFILE_TYPES — inferred during intro

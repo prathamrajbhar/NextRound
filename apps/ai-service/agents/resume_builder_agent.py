@@ -152,6 +152,16 @@ def run_resume_builder_agent(state: ResumeBuilderState) -> ResumeBuilderState:
     if memory.get("user_name") and not state.get("user_name"):
         state["user_name"] = memory["user_name"]
 
+    # If profile_type is not yet set, initialize from experience_level
+    if not state.get("profile_type") and not memory.get("profile_type"):
+        exp_level_str = (state.get("experience_level") or "").lower()
+        if any(w in exp_level_str for w in ["fresher", "entry", "0-2", "junior"]):
+            state["profile_type"] = "fresher"
+            memory["profile_type"] = "fresher"
+        elif any(w in exp_level_str for w in ["senior", "lead", "staff", "architect", "5+"]):
+            state["profile_type"] = "experienced"
+            memory["profile_type"] = "experienced"
+
     # Force close when max turns reached
     if turn > MAX_TURNS and not state.get("is_complete"):
         logger.info(f"ResumeBuilderAgent: MAX_TURNS ({MAX_TURNS}) reached — forcing close.")

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { apiClient } from '@/lib/apiClient';
 import type { RawResumeData } from './resumeResultMapper';
 import type { ResumeStatus } from './useResumePolling';
@@ -16,11 +17,15 @@ export function useResumeSessionDetails({
   sessionId,
   setResumeStatus,
 }: UseResumeSessionDetailsProps) {
+  const searchParams = useSearchParams();
+  const queryRole = searchParams?.get('role') || '';
+  const queryExp = searchParams?.get('level') || '';
+
   const [loadingSession, setLoadingSession] = useState(true);
   const [sessionError, setSessionError] = useState<string | null>(null);
   const [stage, setStage] = useState<Stage>('loading');
-  const [targetRole, setTargetRole] = useState('');
-  const [experienceLevel, setExperienceLevel] = useState('');
+  const [targetRole, setTargetRole] = useState(queryRole);
+  const [experienceLevel, setExperienceLevel] = useState(queryExp);
   const [existingResumeText, setExistingResumeText] = useState<string | null>(null);
   const [careerGoals, setCareerGoals] = useState<string | null>(null);
 
@@ -28,8 +33,19 @@ export function useResumeSessionDetails({
     let active = true;
     apiClient
       .get<{
+        session?: {
+          target_role?: string;
+          difficulty?: string;
+          experienceLevel?: string;
+          status?: string;
+          generated_resume?: RawResumeData;
+          resume_pdf_url?: string;
+          rubric?: Record<string, unknown>;
+          focus_areas?: string[];
+        };
         target_role?: string;
         difficulty?: string;
+        experienceLevel?: string;
         status?: string;
         generated_resume?: RawResumeData;
         resume_pdf_url?: string;
@@ -40,20 +56,30 @@ export function useResumeSessionDetails({
         if (!active) return;
         if (!res) throw new Error('Session not found');
 
-        setTargetRole(res.target_role || 'Senior Full Stack Engineer');
-        setExperienceLevel(res.difficulty || 'Senior (5+ Years)');
+        const sessionObj = res.session || res;
+        const resolvedRole = sessionObj.target_role || res.target_role || queryRole;
+        const resolvedExp =
+          sessionObj.difficulty ||
+          sessionObj.experienceLevel ||
+          res.difficulty ||
+          res.experienceLevel ||
+          queryExp;
+
+        setTargetRole(resolvedRole || 'Full Stack Engineer');
+        setExperienceLevel(resolvedExp || 'Fresher (0-2 Years)');
 
         // Extract existing resume text and career goals stored in session rubric/focus_areas
-        const rubric = res.rubric as Record<string, unknown> | undefined;
+        const rubric = (sessionObj.rubric || res.rubric) as Record<string, unknown> | undefined;
         if (rubric?.rawText && typeof rubric.rawText === 'string') {
           setExistingResumeText(rubric.rawText);
         }
-        const goals = res.focus_areas?.[0];
+        const focusAreas = sessionObj.focus_areas || res.focus_areas;
+        const goals = focusAreas?.[0];
         if (goals && typeof goals === 'string') {
           setCareerGoals(goals);
         }
 
-        const status = res.status || 'created';
+        const status = sessionObj.status || res.status || 'created';
         if (status === 'active' || status === 'created') {
           setStage('interview');
         } else {
@@ -73,7 +99,7 @@ export function useResumeSessionDetails({
     return () => {
       active = false;
     };
-  }, [sessionId, setResumeStatus]);
+  }, [sessionId, setResumeStatus, queryRole, queryExp]);
 
   return {
     loadingSession,
