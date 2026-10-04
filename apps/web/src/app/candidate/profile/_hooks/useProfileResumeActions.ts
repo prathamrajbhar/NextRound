@@ -35,7 +35,7 @@ export function useProfileResumeActions({
       const parsed = await apiClient.post<{
         resumeUrl?: string;
         profile?: ParsedProfilePayload;
-      }>('/candidate/profile/parse-resume', fd);
+      }>('/candidate/profile/parse-resume', fd, { timeoutMs: 120_000 });
 
       setResumeFile(file);
       const savedUrl = parsed?.resumeUrl;

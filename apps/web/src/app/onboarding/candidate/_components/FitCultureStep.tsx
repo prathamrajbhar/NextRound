@@ -40,7 +40,7 @@ export function FitCultureStep({ form, update, mergeParsedProfile }: OnboardingS
         const parsed = await apiClient.post<{
           profile?: { proudProject?: string; bio?: string };
           rawText?: string;
-        }>('/candidate/parse-resume', formData);
+        }>('/candidate/parse-resume', formData, { timeoutMs: 120_000 });
 
         if (parsed?.profile) {
           if (field === 'proudProject' && parsed.profile.proudProject) {

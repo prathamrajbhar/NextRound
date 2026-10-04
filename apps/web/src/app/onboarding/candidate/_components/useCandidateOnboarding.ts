@@ -84,6 +84,13 @@ export function useCandidateOnboarding() {
 
   const mergeParsedProfile = (parsed: ParsedProfilePayload, rawText?: string) => {
     setForm((f) => {
+      // When rawText is present this is a fresh new-file upload — AI-sourced fields must
+      // be fully replaced so stale data from a previously parsed resume doesn't bleed in.
+      // When rawText is absent (re-parse of same file) fall back to existing form values.
+      const isNewResume = !!rawText;
+      const fromParsed = <T>(parsedVal: T | undefined, formVal: T): T =>
+        isNewResume ? (parsedVal ?? ('' as unknown as T)) : (parsedVal || formVal);
+
       const hasValidExpectedSalary = parsed.expectedSalary !== undefined && Number(parsed.expectedSalary) > 0;
       const parsedSalaryNum = hasValidExpectedSalary ? Number(parsed.expectedSalary) : undefined;
       const expectedSalaryMin = parsedSalaryNum ? String(Math.max(1, Math.round(parsedSalaryNum * 0.8))) : f.expectedSalaryMin;
@@ -93,18 +100,18 @@ export function useCandidateOnboarding() {
         ...f,
         rawResumeText: rawText || f.rawResumeText,
         parsedResume: (parsed as Record<string, unknown>) || f.parsedResume,
-        fullName: parsed.fullName || f.fullName,
-        headline: parsed.headline || f.headline,
-        currentCompany: parsed.currentCompany || f.currentCompany,
-        currentTitle: parsed.currentTitle || f.currentTitle,
-        education: Array.isArray(parsed.education) && parsed.education.length > 0 ? parsed.education : f.education,
-        phone: parsed.phone || f.phone,
-        location: parsed.location || f.location,
+        fullName: fromParsed(parsed.fullName, f.fullName),
+        headline: fromParsed(parsed.headline, f.headline),
+        currentCompany: fromParsed(parsed.currentCompany, f.currentCompany),
+        currentTitle: fromParsed(parsed.currentTitle, f.currentTitle),
+        education: Array.isArray(parsed.education) && parsed.education.length > 0 ? parsed.education : (isNewResume ? [] : f.education),
+        phone: fromParsed(parsed.phone, f.phone),
+        location: fromParsed(parsed.location, f.location),
         timezone: parsed.timezone || f.timezone,
-        linkedinUrl: parsed.linkedinUrl || f.linkedinUrl,
-        githubUrl: parsed.githubUrl || f.githubUrl,
-        portfolioUrl: parsed.portfolioUrl || f.portfolioUrl,
-        yearsOfExperience: parsed.yearsOfExperience !== undefined ? String(parsed.yearsOfExperience) : f.yearsOfExperience,
+        linkedinUrl: fromParsed(parsed.linkedinUrl, f.linkedinUrl),
+        githubUrl: fromParsed(parsed.githubUrl, f.githubUrl),
+        portfolioUrl: fromParsed(parsed.portfolioUrl, f.portfolioUrl),
+        yearsOfExperience: parsed.yearsOfExperience !== undefined ? String(parsed.yearsOfExperience) : (isNewResume ? '' : f.yearsOfExperience),
         skills: parsed.skills && parsed.skills.length > 0 ? Array.from(new Set([...f.skills, ...parsed.skills])) : f.skills,
         targetRoles: parsed.targetRoles && parsed.targetRoles.length > 0 ? Array.from(new Set([...f.targetRoles, ...parsed.targetRoles])) : f.targetRoles,
         targetLocations: parsed.targetLocations && parsed.targetLocations.length > 0 ? Array.from(new Set([...f.targetLocations, ...parsed.targetLocations])) : f.targetLocations,
@@ -115,11 +122,12 @@ export function useCandidateOnboarding() {
         currentCtc: parsed.currentCtc !== undefined && Number(parsed.currentCtc) > 0 ? String(parsed.currentCtc) : f.currentCtc,
         noticePeriod: parsed.noticePeriod || f.noticePeriod,
         workAuthorization: parsed.workAuthorization || f.workAuthorization,
-        bio: parsed.bio || f.bio,
-        proudProject: parsed.proudProject || f.proudProject,
+        bio: fromParsed(parsed.bio, f.bio),
+        proudProject: fromParsed(parsed.proudProject, f.proudProject),
       };
     });
   };
+
 
   const mergeSocialData = (social: Record<string, unknown>, extractedSkills?: string[]) => {
     setForm((f) => ({

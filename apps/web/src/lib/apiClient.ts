@@ -1,7 +1,7 @@
-import { fetchApi, clearApiCache } from './api-fetcher';
+import { fetchApi, clearApiCache, type FetchApiOptions } from './api-fetcher';
 import { AppError, type AppErrorCode } from './errors';
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function request<T>(endpoint: string, options: FetchApiOptions = {}): Promise<T> {
   let attempts = 0;
   const maxAttempts = 2;
 
@@ -42,13 +42,13 @@ function serializeBody(body: unknown): BodyInit | undefined {
 }
 
 export const apiClient = {
-  get: <T>(endpoint: string, options?: RequestInit) => request<T>(endpoint, { method: 'GET', ...options }),
-  post: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
+  get: <T>(endpoint: string, options?: FetchApiOptions) => request<T>(endpoint, { method: 'GET', ...options }),
+  post: <T>(endpoint: string, body?: unknown, options?: FetchApiOptions) =>
     request<T>(endpoint, { method: 'POST', body: serializeBody(body), ...options }),
-  put: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
+  put: <T>(endpoint: string, body?: unknown, options?: FetchApiOptions) =>
     request<T>(endpoint, { method: 'PUT', body: serializeBody(body), ...options }),
-  patch: <T>(endpoint: string, body?: unknown, options?: RequestInit) =>
+  patch: <T>(endpoint: string, body?: unknown, options?: FetchApiOptions) =>
     request<T>(endpoint, { method: 'PATCH', body: serializeBody(body), ...options }),
-  delete: <T>(endpoint: string, options?: RequestInit) => request<T>(endpoint, { method: 'DELETE', ...options }),
+  delete: <T>(endpoint: string, options?: FetchApiOptions) => request<T>(endpoint, { method: 'DELETE', ...options }),
   clearCache: clearApiCache,
 };

@@ -44,6 +44,8 @@ EXTRACTION & FAIR SYNTHESIS RULES:
 9. "noticePeriod": Return "Immediate", "15 days", "30 days", "60 days", or "90 days" ONLY if explicitly mentioned in the resume text. Otherwise return null.
 10. "workMode": Return "Remote", "Hybrid", or "Onsite" ONLY if explicitly stated as a preference or current status. Otherwise return null.
 11. "workAuthorization": Return "Authorized", "Sponsorship Required", or "Student / On Work Permit" ONLY if explicitly stated in the resume. Otherwise return null.
+12. "currentCompany": Extract the name of the candidate's CURRENT active employer (where the date says "Present", "Current", or is ongoing). DO NOT return past employers or past internships that have already ended. NEVER return a university, college, or school name as the employer unless they hold an active paid staff/faculty role there. If they are not currently employed or interning, return null.
+13. "currentTitle": Extract the candidate's CURRENT active job title or internship role exactly as written in the employment/internship section. DO NOT return past titles from roles that have already ended. Do NOT derive titles from the education section. Return null if there is no current active role.
 
 JSON SCHEMAS TO RETURN:
 {
@@ -62,6 +64,8 @@ JSON SCHEMAS TO RETURN:
   "workMode": "Remote" | "Hybrid" | "Onsite" | null,
   "bio": string | null,
   "proudProject": string | null,
+  "currentCompany": string | null,
+  "currentTitle": string | null,
   "currentCtc": number | null,
   "expectedSalary": number | null,
   "noticePeriod": "Immediate" | "15 days" | "30 days" | "60 days" | "90 days" | null,
@@ -71,5 +75,5 @@ JSON SCHEMAS TO RETURN:
 Return ONLY a valid raw JSON object without markdown fences, explanation, or conversational filler.
 
 RESUME CONTENT:
-${rawText.slice(0, 12000)}`;
+${rawText.slice(0, 28000)}`;
 }

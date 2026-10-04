@@ -38,14 +38,22 @@ export function clearApiCache(endpointPattern?: string) {
   }
 }
 
+export interface FetchApiOptions extends RequestInit {
+  /** Override the per-request timeout in milliseconds. Defaults to 25 000 ms. */
+  timeoutMs?: number;
+}
+
+const DEFAULT_TIMEOUT_MS = 25_000;
+
 export async function fetchApi<T>(
   endpoint: string,
-  options: RequestInit = {},
+  options: FetchApiOptions = {},
   isRetry = false
 ): Promise<ApiResult<T>> {
-  const method = (options.method || 'GET').toUpperCase();
+  const { timeoutMs, ...fetchOptions } = options;
+  const method = (fetchOptions.method || 'GET').toUpperCase();
   const cacheKey = `${method}:${endpoint}`;
-  const FETCH_TIMEOUT_MS = 25000;
+  const resolvedTimeout = timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
   if (method !== 'GET') {
     const resource = stripLeadingSlash(endpoint).split('/')[0];
@@ -56,7 +64,7 @@ export async function fetchApi<T>(
     const cached = apiCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
 
-      fetchNetworkApi<T>(endpoint, options, isRetry).then((freshData) => {
+      fetchNetworkApi<T>(endpoint, fetchOptions, isRetry).then((freshData) => {
         if (freshData.success) {
           apiCache.set(cacheKey, { data: freshData, timestamp: Date.now() });
         }
@@ -68,7 +76,7 @@ export async function fetchApi<T>(
     }
   }
 
-  const result = await fetchNetworkApi<T>(endpoint, options, isRetry, FETCH_TIMEOUT_MS);
+  const result = await fetchNetworkApi<T>(endpoint, fetchOptions, isRetry, resolvedTimeout);
 
   if (method === 'GET' && result.success) {
     apiCache.set(cacheKey, { data: result, timestamp: Date.now() });

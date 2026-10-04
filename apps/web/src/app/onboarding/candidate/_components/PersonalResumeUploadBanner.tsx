@@ -34,7 +34,7 @@ export function PersonalResumeUploadBanner({
       const parsed = await apiClient.post<{
         profile?: ParsedProfilePayload;
         rawText?: string;
-      }>('/candidate/parse-resume', formData);
+      }>('/candidate/parse-resume', formData, { timeoutMs: 120_000 });
 
       if (parsed?.profile) {
         if (mergeParsedProfile) {
@@ -68,7 +68,7 @@ export function PersonalResumeUploadBanner({
       const parsed = await apiClient.post<{
         profile?: ParsedProfilePayload;
         rawText?: string;
-      }>('/candidate/parse-resume', formData);
+      }>('/candidate/parse-resume', formData, { timeoutMs: 120_000 });
 
       if (parsed?.profile) {
         if (mergeParsedProfile) {

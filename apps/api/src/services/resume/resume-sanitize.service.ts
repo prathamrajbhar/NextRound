@@ -45,7 +45,7 @@ export function sanitizeParsedData(data: Record<string, unknown>): ParsedResumeD
 
   const headline = toString(data.headline, data.professionalHeadline, data.title, data.currentRole, data.role);
   const currentCompany = toString(data.currentCompany, data.company, data.employer, data.currentEmployer);
-  const currentTitle = toString(data.currentTitle, data.jobTitle, data.designation, data.currentDesignation) || (headline ? headline.split('|')[0].trim() : undefined);
+  const currentTitle = toString(data.currentTitle, data.jobTitle, data.designation, data.currentDesignation);
 
   let education = undefined;
   if (Array.isArray(data.education)) {
